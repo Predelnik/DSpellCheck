@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "stdafx.h"
 #include "PluginInterface.h"
 #include "aspell.h"
 #include <iostream>
@@ -25,9 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <shlobj.h>
+#include <TCHAR.h>
 
-
-extern
 HANDLE		g_hModule;
 
 HINSTANCE   hInstLib = NULL; 
@@ -155,7 +153,7 @@ PFUNC_aspell_string_pair_enumeration_clone          aspell_string_pair_enumerati
 PFUNC_aspell_string_pair_enumeration_assign         aspell_string_pair_enumeration_assign         = NULL;
 
 
-BOOL LoadAspell(tSCProp* pSCProp)
+BOOL LoadAspell(TCHAR *path)
 {
     BOOL    bRet = FALSE;
     HKEY    hKey = NULL;
@@ -164,10 +162,10 @@ BOOL LoadAspell(tSCProp* pSCProp)
 
 	pszPath[0] = '\0';
 
-	if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Aspell"), 0, KEY_READ, &hKey))
+	if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T ("SOFTWARE\\Aspell"), 0, KEY_READ, &hKey))
     {
-		if (ERROR_SUCCESS == ::RegQueryValueEx(hKey, _T("Path"), NULL ,NULL, (LPBYTE)pszPath, &size))
-			_tcscat(pszPath, _T("\\aspell-15.dll"));
+		if (ERROR_SUCCESS == ::RegQueryValueEx(hKey, _T ("Path"), NULL ,NULL, (LPBYTE)pszPath, &size))
+			wcscat(pszPath, _T ("\\aspell-15.dll"));
 		::RegCloseKey(hKey);
 	}
 	else
@@ -176,7 +174,7 @@ BOOL LoadAspell(tSCProp* pSCProp)
 		GetModuleFileName((HMODULE)g_hModule, pszPath, sizeof(pszPath));
 		PathRemoveFileSpec(pszPath);
 		PathRemoveFileSpec(pszPath);
-		PathAppend(pszPath, pSCProp->szRelPath);
+		PathAppend(pszPath, path);
 		PathAppend(pszPath, _T("\\aspell-15.dll"));
 	}
 

@@ -9,10 +9,9 @@
 #ifndef ASPELL_ASPELL__H
 #define ASPELL_ASPELL__H
 
-#include "SpellChecker.h"
 
 
-BOOL LoadAspell(tSCProp* pSCProp);
+BOOL LoadAspell(TCHAR *path);
 void UnloadAspell(void);
 void AspellErrorMsgBox(HWND hWnd, LPCSTR error);
 

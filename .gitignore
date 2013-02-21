@@ -1,13 +1,14 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.sdf
+*.sln
+CMakeCache.txt
+*.cmake
+DSpellCheck.dir/*
+CMakeFiles/*
+Debug/*
+Release/*
+Win32/*
+src/config.h
