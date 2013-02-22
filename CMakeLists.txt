@@ -44,6 +44,7 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/Notepad_plus_msgs.h
 	${SRC_DIR}/aspell.h
 	${SRC_DIR}/aspell.cpp
+	${SRC_DIR}/MainDef.h
 	${SRC_DIR}/DockingFeature/Docking.h
 	${SRC_DIR}/DockingFeature/DockingDlgInterface.h
 	${SRC_DIR}/DockingFeature/dockingResource.h

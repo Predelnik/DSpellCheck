@@ -24,7 +24,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <shlwapi.h>
+#include "MainDef.h"
 #include "GoToLineDlg.h"
+
+#include "aspell.h"
 
 const TCHAR sectionName[] = TEXT("Insert Extesion");
 const TCHAR keyName[] = TEXT("doCloseTag");
@@ -57,8 +60,12 @@ bool doCloseTag = false;
 void pluginInit(HANDLE hModule)
 {
 	// Initialize dockable demo dialog
+  LoadAspell (0);
+  AspellInitSettings ();
+
 	_goToLine.init((HINSTANCE)hModule, NULL);
 }
+
 
 //
 // Here you can do the clean up, save the parameters (if any) for the next session
@@ -103,7 +110,7 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Hello Notepad++"), hello, NULL, false);
+    setCommand(0, TEXT("Check Current File"), CheckText, NULL, false);
     setCommand(1, TEXT("Hello (with FX)"), helloFX, NULL, false);
 	setCommand(2, TEXT("What is Notepad++?"), WhatIsNpp, NULL, false);
 
@@ -219,6 +226,92 @@ void helloFX()
     ::CloseHandle(hThread);
 }
 
+HWND getScintillaWindow()
+{
+    // Get the current scintilla
+    int which = -1;
+    SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
+    if (which == -1)
+        return NULL;
+    return (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
+}
+
+LRESULT SendMsgToEditor(UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    HWND wEditor = getScintillaWindow();
+    return SendMessage(wEditor, Msg, wParam, lParam);
+}
+
+void CreateWordUnderline (int start, int end)
+{
+    int oldid = SendMsgToEditor (SCI_GETINDICATORCURRENT);
+    SendMsgToEditor (SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+    SendMsgToEditor (SCI_INDICATORFILLRANGE, start, (end - start + 1));
+    SendMsgToEditor (SCI_SETINDICATORCURRENT, oldid);
+}
+
+void RemoveWordUnderline (int start, int end)
+{
+  int oldid = SendMsgToEditor (SCI_GETINDICATORCURRENT);
+  SendMsgToEditor (SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+  SendMsgToEditor (SCI_INDICATORCLEARRANGE, start, (end - start + 1));
+  SendMsgToEditor (SCI_SETINDICATORCURRENT, oldid);
+}
+
+// Warning - temporary buffer will be created
+char *GetDocumentText () 
+{
+    int lengthDoc = (SendMsgToEditor (SCI_GETLENGTH) + 1);
+    char * buf = (char *)malloc((sizeof(char) * lengthDoc));
+    SendMsgToEditor (SCI_GETTEXT, lengthDoc, (LPARAM)buf);
+    return buf;
+}
+
+void clearAllUnderlines ()
+{
+    int length = SendMsgToEditor(SCI_GETLENGTH);
+    if(length > 0){
+        int oldid = SendMsgToEditor(SCI_GETINDICATORCURRENT);
+        SendMsgToEditor (SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+        SendMsgToEditor (SCI_INDICATORCLEARRANGE, 1, length);
+        SendMsgToEditor (SCI_SETINDICATORCURRENT, oldid);
+    }
+}
+
+AspellSpeller * spell_checker = 0;
+BOOL AspellInitSettings ()
+{
+    AspellConfig * spell_config = new_aspell_config();
+    aspell_config_replace(spell_config, "lang", "en_US");
+    AspellCanHaveError * possible_err = new_aspell_speller(spell_config);
+     if (aspell_error_number(possible_err) != 0)
+       return FALSE;
+     else
+       spell_checker = to_aspell_speller(possible_err);
+     return TRUE;
+}
+
+BOOL CheckWord (char *word)
+{
+  return aspell_speller_check(spell_checker, word, strlen (word));
+}
+
+void CheckText ()
+{
+  char *text_to_check = GetDocumentText ();
+  char *context = 0; // Temporary variable for strtok_s usage
+  const char *delim = " \n\r\t,.-";
+  char *token;
+  clearAllUnderlines ();
+  token = strtok_s (text_to_check, delim, &context);
+  while (token)
+    {
+      if (token && !CheckWord (token))
+        CreateWordUnderline (token - text_to_check, token - text_to_check + strlen (token) - 1);
+      token = strtok_s (NULL, delim, &context);
+    }
+  CLEAN_AND_ZERO_ARR (text_to_check);
+}
 
 //
 // This function help you to initialize your plugin commands

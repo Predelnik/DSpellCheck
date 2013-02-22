@@ -18,6 +18,7 @@
 #include "PluginDefinition.h"
 #include <shlwapi.h>
 #include "GoToLineDlg.h"
+#include "MainDef.h"
 
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
@@ -77,6 +78,13 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 			commandMenuCleanUp();
 		}
 		break;
+
+    case NPPN_READY:
+    {
+       SendMsgToEditor(SCI_INDICSETSTYLE ,SCE_SQUIGGLE_UNDERLINE_RED, INDIC_SQUIGGLE);
+       SendMsgToEditor(SCI_INDICSETFORE, SCE_SQUIGGLE_UNDERLINE_RED, 0x0000ff);
+    }
+    break;
 
 		case SCN_CHARADDED:
 		{

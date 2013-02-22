@@ -25,7 +25,7 @@
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("Decent Spell Check Plugin");
 
-const int nbFunc = 2;
+const int nbFunc = 1;
 
 
 //
@@ -60,6 +60,7 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 // Your plugin command functions
 //
 void hello();
+void CheckText ();
 void helloFX();
 void WhatIsNpp();
 void insertDateTime(bool format);
@@ -75,5 +76,7 @@ void getSessionFileNamesDemo();
 void saveCurrentSessionDemo();
 void DockableDlgDemo();
 
+LRESULT SendMsgToEditor(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+BOOL AspellInitSettings ();
 
 #endif //PLUGINDEFINITION_H
