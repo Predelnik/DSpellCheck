@@ -1,15 +1,13 @@
 /* Automatically generated file.  Do not edit directly. */
 
 /* This file is part of The New Aspell
- * Copyright (C) 2001-2002 by Kevin Atkinson under the GNU LGPL
- * license version 2.0 or 2.1.  You should have received a copy of the
- * LGPL license along with this library if you did not you can find it
- * at http://www.gnu.org/.                                              */
+* Copyright (C) 2001-2002 by Kevin Atkinson under the GNU LGPL
+* license version 2.0 or 2.1.  You should have received a copy of the
+* LGPL license along with this library if you did not you can find it
+* at http://www.gnu.org/.                                              */
 
 #ifndef ASPELL_ASPELL__H
 #define ASPELL_ASPELL__H
-
-
 
 BOOL LoadAspell(TCHAR *path);
 void UnloadAspell(void);
@@ -19,632 +17,530 @@ void AspellErrorMsgBox(HWND hWnd, LPCSTR error);
 extern "C" {
 #endif
 
+  /******************************* type id *******************************/
 
-/******************************* type id *******************************/
+  union AspellTypeId {
+    unsigned int num;
 
+    char str[4];
+  };
 
-union AspellTypeId {
+  typedef union AspellTypeId AspellTypeId;
 
-  unsigned int num;
+  /************************** mutable container **************************/
 
-  char str[4];
+  typedef struct AspellMutableContainer AspellMutableContainer;
 
-};
+  typedef int (__cdecl * PFUNC_aspell_mutable_container_add)(struct AspellMutableContainer * ths, const char * to_add);
 
+  typedef int (__cdecl * PFUNC_aspell_mutable_container_remove)(struct AspellMutableContainer * ths, const char * to_rem);
 
-typedef union AspellTypeId AspellTypeId;
+  typedef void (__cdecl * PFUNC_aspell_mutable_container_clear)(struct AspellMutableContainer * ths);
 
+  typedef struct AspellMutableContainer * (__cdecl * PFUNC_aspell_mutable_container_to_mutable_container)(struct AspellMutableContainer * ths);
 
-/************************** mutable container **************************/
+  /******************************* key info *******************************/
 
+  enum AspellKeyInfoType {AspellKeyInfoString, AspellKeyInfoInt, AspellKeyInfoBool, AspellKeyInfoList};
+  typedef enum AspellKeyInfoType AspellKeyInfoType;
 
-typedef struct AspellMutableContainer AspellMutableContainer;
+  struct AspellKeyInfo {
+    /* the name of the key */
+    const char * name;
 
+    /* the key type */
+    enum AspellKeyInfoType type;
 
-typedef int (__cdecl * PFUNC_aspell_mutable_container_add)(struct AspellMutableContainer * ths, const char * to_add);
+    /* the default value of the key */
+    const char * def;
 
-typedef int (__cdecl * PFUNC_aspell_mutable_container_remove)(struct AspellMutableContainer * ths, const char * to_rem);
+    /* a brief description of the key or null if internal value */
+    const char * desc;
 
-typedef void (__cdecl * PFUNC_aspell_mutable_container_clear)(struct AspellMutableContainer * ths);
+    /* other data used by config implementations
+    * should be set to 0 if not used */
+    char otherdata[16];
+  };
 
-typedef struct AspellMutableContainer * (__cdecl * PFUNC_aspell_mutable_container_to_mutable_container)(struct AspellMutableContainer * ths);
+  typedef struct AspellKeyInfo AspellKeyInfo;
 
+  /******************************** config ********************************/
 
+  typedef struct AspellKeyInfoEnumeration AspellKeyInfoEnumeration;
 
-/******************************* key info *******************************/
+  typedef int (__cdecl * PFUNC_aspell_key_info_enumeration_at_end)(const struct AspellKeyInfoEnumeration * ths);
 
+  typedef const struct AspellKeyInfo * (__cdecl * PFUNC_aspell_key_info_enumeration_next)(struct AspellKeyInfoEnumeration * ths);
 
+  typedef void (__cdecl * PFUNC_delete_aspell_key_info_enumeration)(struct AspellKeyInfoEnumeration * ths);
 
-enum AspellKeyInfoType {AspellKeyInfoString, AspellKeyInfoInt, AspellKeyInfoBool, AspellKeyInfoList};
-typedef enum AspellKeyInfoType AspellKeyInfoType;
+  typedef struct AspellKeyInfoEnumeration * (__cdecl * PFUNC_aspell_key_info_enumeration_clone)(const struct AspellKeyInfoEnumeration * ths);
 
+  typedef void (__cdecl * PFUNC_aspell_key_info_enumeration_assign)(struct AspellKeyInfoEnumeration * ths, const struct AspellKeyInfoEnumeration * other);
 
-struct AspellKeyInfo {
+  typedef struct AspellConfig AspellConfig;
 
-  /* the name of the key */
-  const char * name;
+  typedef struct AspellConfig * (__cdecl * PFUNC_new_aspell_config)();
 
-  /* the key type */
-  enum AspellKeyInfoType type;
+  typedef void (__cdecl * PFUNC_delete_aspell_config)(struct AspellConfig * ths);
 
-  /* the default value of the key */
-  const char * def;
+  typedef struct AspellConfig * (__cdecl * PFUNC_aspell_config_clone)(const struct AspellConfig * ths);
 
-  /* a brief description of the key or null if internal value */
-  const char * desc;
+  typedef void (__cdecl * PFUNC_aspell_config_assign)(struct AspellConfig * ths, const struct AspellConfig * other);
 
-  /* other data used by config implementations
-   * should be set to 0 if not used */
-  char otherdata[16];
+  typedef unsigned int (__cdecl * PFUNC_aspell_config_error_number)(const struct AspellConfig * ths);
 
-};
+  typedef const char * (__cdecl * PFUNC_aspell_config_error_message)(const struct AspellConfig * ths);
 
+  typedef const struct AspellError * (__cdecl * PFUNC_aspell_config_error)(const struct AspellConfig * ths);
 
-typedef struct AspellKeyInfo AspellKeyInfo;
+  /* sets extra keys which this config class should accept
+  * begin and end are expected to point to the begging
+  * and end of an array of Aspell Key Info */
+  typedef void (__cdecl * PFUNC_aspell_config_set_extra)(struct AspellConfig * ths, const struct AspellKeyInfo * begin, const struct AspellKeyInfo * end);
 
+  /* returns the KeyInfo object for the
+  * corresponding key or returns null and sets
+  * error_num to PERROR_UNKNOWN_KEY if the key is
+  * not valid. The pointer returned is valid for
+  * the lifetime of the object. */
+  typedef const struct AspellKeyInfo * (__cdecl * PFUNC_aspell_config_keyinfo)(struct AspellConfig * ths, const char * key);
 
-/******************************** config ********************************/
+  /* returns a newly allocated enumeration of all the
+  * possible objects this config class uses */
+  typedef struct AspellKeyInfoEnumeration * (__cdecl * PFUNC_aspell_config_possible_elements)(struct AspellConfig * ths, int include_extra);
 
+  /* returns the default value for given key which
+  * way involve substating variables, thus it is
+  * not the same as keyinfo(key)->def returns null
+  * and sets error_num to PERROR_UNKNOWN_KEY if
+  * the key is not valid. Uses the temporary
+  * string. */
+  typedef const char * (__cdecl * PFUNC_aspell_config_get_default)(struct AspellConfig * ths, const char * key);
 
-typedef struct AspellKeyInfoEnumeration AspellKeyInfoEnumeration;
+  /* returns a newly alloacted enumeration of all the
+  * key/value pairs. This DOES not include ones
+  * which are set to their default values */
+  typedef struct AspellStringPairEnumeration * (__cdecl * PFUNC_aspell_config_elements)(struct AspellConfig * ths);
+
+  /* inserts an item, if the item already exists it
+  * will be replaced. returns true if it succesed
+  * or false on error. If the key in not valid it
+  * sets error_num to PERROR_UNKNOWN_KEY, if the
+  * value is not valid it will sets error_num to
+  * PERROR_BAD_VALUE, if the value can not be
+  * changed it sets error_num to
+  * PERROR_CANT_CHANGE_VALUE, and if the value is
+  * a list and you are trying to set it directory
+  * it sets error_num to PERROR_LIST_SET */
+  typedef int (__cdecl * PFUNC_aspell_config_replace)(struct AspellConfig * ths, const char * key, const char * value);
+
+  /* remove a key and returns true if it exists
+  * otherise return false. This effictly sets the
+  * key to its default value. Calling replace with
+  * a value of "<default>" will also call
+  * remove. If the key does not exists sets
+  * error_num to 0 or PERROR_NOT, if the key in
+  * not valid sets error_num to
+  * PERROR_UNKNOWN_KEY, if the value can not be
+  * changed sets error_num to
+  * PERROR_CANT_CHANGE_VALUE */
+  typedef int (__cdecl * PFUNC_aspell_config_remove)(struct AspellConfig * ths, const char * key);
 
+  typedef int (__cdecl * PFUNC_aspell_config_have)(const struct AspellConfig * ths, const char * key);
 
-typedef int (__cdecl * PFUNC_aspell_key_info_enumeration_at_end)(const struct AspellKeyInfoEnumeration * ths);
+  /* returns null on error */
+  typedef const char * (__cdecl * PFUNC_aspell_config_retrieve)(struct AspellConfig * ths, const char * key);
 
-typedef const struct AspellKeyInfo * (__cdecl * PFUNC_aspell_key_info_enumeration_next)(struct AspellKeyInfoEnumeration * ths);
+  typedef int (__cdecl * PFUNC_aspell_config_retrieve_list)(struct AspellConfig * ths, const char * key, struct AspellMutableContainer * lst);
 
-typedef void (__cdecl * PFUNC_delete_aspell_key_info_enumeration)(struct AspellKeyInfoEnumeration * ths);
+  /* return -1 on error, 0 if false, 1 if true */
+  typedef int (__cdecl * PFUNC_aspell_config_retrieve_bool)(struct AspellConfig * ths, const char * key);
 
-typedef struct AspellKeyInfoEnumeration * (__cdecl * PFUNC_aspell_key_info_enumeration_clone)(const struct AspellKeyInfoEnumeration * ths);
+  /* return -1 on error */
+  typedef int (__cdecl * PFUNC_aspell_config_retrieve_int)(struct AspellConfig * ths, const char * key);
 
-typedef void (__cdecl * PFUNC_aspell_key_info_enumeration_assign)(struct AspellKeyInfoEnumeration * ths, const struct AspellKeyInfoEnumeration * other);
+  /******************************** error ********************************/
 
+  struct AspellError {
+    const char * mesg;
 
+    const struct AspellErrorInfo * err;
+  };
 
-typedef struct AspellConfig AspellConfig;
+  typedef struct AspellError AspellError;
 
+  int aspell_error_is_a(const struct AspellError * ths, const struct AspellErrorInfo * e);
 
-typedef struct AspellConfig * (__cdecl * PFUNC_new_aspell_config)();
+  struct AspellErrorInfo {
+    const struct AspellErrorInfo * isa;
 
-typedef void (__cdecl * PFUNC_delete_aspell_config)(struct AspellConfig * ths);
+    const char * mesg;
 
-typedef struct AspellConfig * (__cdecl * PFUNC_aspell_config_clone)(const struct AspellConfig * ths);
+    unsigned int num_parms;
 
-typedef void (__cdecl * PFUNC_aspell_config_assign)(struct AspellConfig * ths, const struct AspellConfig * other);
+    const char * parms[3];
+  };
 
-typedef unsigned int (__cdecl * PFUNC_aspell_config_error_number)(const struct AspellConfig * ths);
+  typedef struct AspellErrorInfo AspellErrorInfo;
 
-typedef const char * (__cdecl * PFUNC_aspell_config_error_message)(const struct AspellConfig * ths);
+  /**************************** can have error ****************************/
 
-typedef const struct AspellError * (__cdecl * PFUNC_aspell_config_error)(const struct AspellConfig * ths);
+  typedef struct AspellCanHaveError AspellCanHaveError;
 
-/* sets extra keys which this config class should accept
- * begin and end are expected to point to the begging
- * and end of an array of Aspell Key Info */
-typedef void (__cdecl * PFUNC_aspell_config_set_extra)(struct AspellConfig * ths, const struct AspellKeyInfo * begin, const struct AspellKeyInfo * end);
+  typedef unsigned int (__cdecl * PFUNC_aspell_error_number)(const struct AspellCanHaveError * ths);
 
-/* returns the KeyInfo object for the
- * corresponding key or returns null and sets
- * error_num to PERROR_UNKNOWN_KEY if the key is
- * not valid. The pointer returned is valid for
- * the lifetime of the object. */
-typedef const struct AspellKeyInfo * (__cdecl * PFUNC_aspell_config_keyinfo)(struct AspellConfig * ths, const char * key);
+  typedef const char * (__cdecl * PFUNC_aspell_error_message)(const struct AspellCanHaveError * ths);
 
-/* returns a newly allocated enumeration of all the
- * possible objects this config class uses */
-typedef struct AspellKeyInfoEnumeration * (__cdecl * PFUNC_aspell_config_possible_elements)(struct AspellConfig * ths, int include_extra);
+  typedef const struct AspellError * (__cdecl * PFUNC_aspell_error)(const struct AspellCanHaveError * ths);
 
-/* returns the default value for given key which
- * way involve substating variables, thus it is
- * not the same as keyinfo(key)->def returns null
- * and sets error_num to PERROR_UNKNOWN_KEY if
- * the key is not valid. Uses the temporary
- * string. */
-typedef const char * (__cdecl * PFUNC_aspell_config_get_default)(struct AspellConfig * ths, const char * key);
+  typedef void (__cdecl * PFUNC_delete_aspell_can_have_error)(struct AspellCanHaveError * ths);
 
-/* returns a newly alloacted enumeration of all the
- * key/value pairs. This DOES not include ones
- * which are set to their default values */
-typedef struct AspellStringPairEnumeration * (__cdecl * PFUNC_aspell_config_elements)(struct AspellConfig * ths);
+  /******************************** errors ********************************/
 
-/* inserts an item, if the item already exists it
- * will be replaced. returns true if it succesed
- * or false on error. If the key in not valid it
- * sets error_num to PERROR_UNKNOWN_KEY, if the
- * value is not valid it will sets error_num to
- * PERROR_BAD_VALUE, if the value can not be
- * changed it sets error_num to
- * PERROR_CANT_CHANGE_VALUE, and if the value is
- * a list and you are trying to set it directory
- * it sets error_num to PERROR_LIST_SET */
-typedef int (__cdecl * PFUNC_aspell_config_replace)(struct AspellConfig * ths, const char * key, const char * value);
+  extern const struct AspellErrorInfo * const aerror_other;
+  extern const struct AspellErrorInfo * const aerror_operation_not_supported;
+  extern const struct AspellErrorInfo * const   aerror_cant_copy;
+  extern const struct AspellErrorInfo * const aerror_file;
+  extern const struct AspellErrorInfo * const   aerror_cant_open_file;
+  extern const struct AspellErrorInfo * const     aerror_cant_read_file;
+  extern const struct AspellErrorInfo * const     aerror_cant_write_file;
+  extern const struct AspellErrorInfo * const   aerror_invalid_name;
+  extern const struct AspellErrorInfo * const   aerror_bad_file_format;
+  extern const struct AspellErrorInfo * const aerror_dir;
+  extern const struct AspellErrorInfo * const   aerror_cant_read_dir;
+  extern const struct AspellErrorInfo * const aerror_config;
+  extern const struct AspellErrorInfo * const   aerror_unknown_key;
+  extern const struct AspellErrorInfo * const   aerror_cant_change_value;
+  extern const struct AspellErrorInfo * const   aerror_bad_key;
+  extern const struct AspellErrorInfo * const   aerror_bad_value;
+  extern const struct AspellErrorInfo * const   aerror_duplicate;
+  extern const struct AspellErrorInfo * const aerror_language_related;
+  extern const struct AspellErrorInfo * const   aerror_unknown_language;
+  extern const struct AspellErrorInfo * const   aerror_unknown_soundslike;
+  extern const struct AspellErrorInfo * const   aerror_language_not_supported;
+  extern const struct AspellErrorInfo * const   aerror_no_wordlist_for_lang;
+  extern const struct AspellErrorInfo * const   aerror_mismatched_language;
+  extern const struct AspellErrorInfo * const aerror_encoding;
+  extern const struct AspellErrorInfo * const   aerror_unknown_encoding;
+  extern const struct AspellErrorInfo * const   aerror_encoding_not_supported;
+  extern const struct AspellErrorInfo * const   aerror_conversion_not_supported;
+  extern const struct AspellErrorInfo * const aerror_pipe;
+  extern const struct AspellErrorInfo * const   aerror_cant_create_pipe;
+  extern const struct AspellErrorInfo * const   aerror_process_died;
+  extern const struct AspellErrorInfo * const aerror_bad_input;
+  extern const struct AspellErrorInfo * const   aerror_invalid_word;
+  extern const struct AspellErrorInfo * const   aerror_word_list_flags;
+  extern const struct AspellErrorInfo * const     aerror_invalid_flag;
+  extern const struct AspellErrorInfo * const     aerror_conflicting_flags;
 
-/* remove a key and returns true if it exists
- * otherise return false. This effictly sets the
- * key to its default value. Calling replace with
- * a value of "<default>" will also call
- * remove. If the key does not exists sets
- * error_num to 0 or PERROR_NOT, if the key in
- * not valid sets error_num to
- * PERROR_UNKNOWN_KEY, if the value can not be
- * changed sets error_num to
- * PERROR_CANT_CHANGE_VALUE */
-typedef int (__cdecl * PFUNC_aspell_config_remove)(struct AspellConfig * ths, const char * key);
+  /******************************* speller *******************************/
 
-typedef int (__cdecl * PFUNC_aspell_config_have)(const struct AspellConfig * ths, const char * key);
+  typedef struct AspellSpeller AspellSpeller;
 
-/* returns null on error */
-typedef const char * (__cdecl * PFUNC_aspell_config_retrieve)(struct AspellConfig * ths, const char * key);
+  typedef struct AspellCanHaveError * (__cdecl * PFUNC_new_aspell_speller)(struct AspellConfig * config);
 
-typedef int (__cdecl * PFUNC_aspell_config_retrieve_list)(struct AspellConfig * ths, const char * key, struct AspellMutableContainer * lst);
+  typedef struct AspellSpeller * (__cdecl * PFUNC_to_aspell_speller)(struct AspellCanHaveError * obj);
 
-/* return -1 on error, 0 if false, 1 if true */
-typedef int (__cdecl * PFUNC_aspell_config_retrieve_bool)(struct AspellConfig * ths, const char * key);
+  typedef void (__cdecl * PFUNC_delete_aspell_speller)(struct AspellSpeller * ths);
 
-/* return -1 on error */
-typedef int (__cdecl * PFUNC_aspell_config_retrieve_int)(struct AspellConfig * ths, const char * key);
+  typedef unsigned int (__cdecl * PFUNC_aspell_speller_error_number)(const struct AspellSpeller * ths);
 
+  typedef const char * (__cdecl * PFUNC_aspell_speller_error_message)(const struct AspellSpeller * ths);
 
+  typedef const struct AspellError * (__cdecl * PFUNC_aspell_speller_error)(const struct AspellSpeller * ths);
 
-/******************************** error ********************************/
+  typedef struct AspellConfig * (__cdecl * PFUNC_aspell_speller_config)(struct AspellSpeller * ths);
 
+  /* returns  0 if it is not in the dictionary,
+  * 1 if it is, or -1 on error. */
+  typedef int (__cdecl * PFUNC_aspell_speller_check)(struct AspellSpeller * ths, const char * word, int word_size);
 
-struct AspellError {
+  typedef int (__cdecl * PFUNC_aspell_speller_add_to_personal)(struct AspellSpeller * ths, const char * word, int word_size);
 
-  const char * mesg;
+  typedef int (__cdecl * PFUNC_aspell_speller_add_to_session)(struct AspellSpeller * ths, const char * word, int word_size);
 
-  const struct AspellErrorInfo * err;
+  typedef const struct AspellWordList * (__cdecl * PFUNC_aspell_speller_personal_word_list)(struct AspellSpeller * ths);
 
-};
+  typedef const struct AspellWordList * (__cdecl * PFUNC_aspell_speller_session_word_list)(struct AspellSpeller * ths);
 
+  typedef const struct AspellWordList * (__cdecl * PFUNC_aspell_speller_main_word_list)(struct AspellSpeller * ths);
 
-typedef struct AspellError AspellError;
+  typedef int (__cdecl * PFUNC_aspell_speller_save_all_word_lists)(struct AspellSpeller * ths);
 
-int aspell_error_is_a(const struct AspellError * ths, const struct AspellErrorInfo * e);
+  typedef int (__cdecl * PFUNC_aspell_speller_clear_session)(struct AspellSpeller * ths);
 
+  /* Return null on error.
+  * the word list returned by suggest is only valid until the next
+  * call to suggest */
+  typedef const struct AspellWordList * (__cdecl * PFUNC_aspell_speller_suggest)(struct AspellSpeller * ths, const char * word, int word_size);
 
-struct AspellErrorInfo {
+  typedef int (__cdecl * PFUNC_aspell_speller_store_replacement)(struct AspellSpeller * ths, const char * mis, int mis_size, const char * cor, int cor_size);
 
-  const struct AspellErrorInfo * isa;
+  /******************************** filter ********************************/
 
-  const char * mesg;
+  typedef struct AspellFilter AspellFilter;
 
-  unsigned int num_parms;
+  typedef void (__cdecl * PFUNC_delete_aspell_filter)(struct AspellFilter * ths);
 
-  const char * parms[3];
+  typedef unsigned int (__cdecl * PFUNC_aspell_filter_error_number)(const struct AspellFilter * ths);
 
-};
+  typedef const char * (__cdecl * PFUNC_aspell_filter_error_message)(const struct AspellFilter * ths);
 
+  typedef const struct AspellError * (__cdecl * PFUNC_aspell_filter_error)(const struct AspellFilter * ths);
 
-typedef struct AspellErrorInfo AspellErrorInfo;
+  typedef struct AspellFilter * (__cdecl * PFUNC_to_aspell_filter)(struct AspellCanHaveError * obj);
 
+  /*************************** document checker ***************************/
 
-/**************************** can have error ****************************/
+  struct AspellToken {
+    unsigned int offset;
 
+    unsigned int len;
+  };
 
-typedef struct AspellCanHaveError AspellCanHaveError;
+  typedef struct AspellToken AspellToken;
 
+  typedef struct AspellDocumentChecker AspellDocumentChecker;
 
-typedef unsigned int (__cdecl * PFUNC_aspell_error_number)(const struct AspellCanHaveError * ths);
+  typedef void (__cdecl * PFUNC_delete_aspell_document_checker)(struct AspellDocumentChecker * ths);
 
-typedef const char * (__cdecl * PFUNC_aspell_error_message)(const struct AspellCanHaveError * ths);
+  typedef unsigned int (__cdecl * PFUNC_aspell_document_checker_error_number)(const struct AspellDocumentChecker * ths);
 
-typedef const struct AspellError * (__cdecl * PFUNC_aspell_error)(const struct AspellCanHaveError * ths);
+  typedef const char * (__cdecl * PFUNC_aspell_document_checker_error_message)(const struct AspellDocumentChecker * ths);
 
-typedef void (__cdecl * PFUNC_delete_aspell_can_have_error)(struct AspellCanHaveError * ths);
+  typedef const struct AspellError * (__cdecl * PFUNC_aspell_document_checker_error)(const struct AspellDocumentChecker * ths);
 
+  /* Creates a new document checker.
+  * The speller class is expect to last until this
+  * class is destroyed.
+  * If config is given it will be used to overwide
+  * any relevent options set by this speller class.
+  * The config class is not once this function is done.
+  * If filter is given then it will take ownership of
+  * the filter class and use it to do the filtering.
+  * You are expected to free the checker when done. */
+  typedef struct AspellCanHaveError * (__cdecl * PFUNC_new_aspell_document_checker)(struct AspellSpeller * speller);
 
+  typedef struct AspellDocumentChecker * (__cdecl * PFUNC_to_aspell_document_checker)(struct AspellCanHaveError * obj);
 
-/******************************** errors ********************************/
+  /* reset the internal state of the filter.
+  * should be called whenever a new document is being filtered */
+  typedef void (__cdecl * PFUNC_aspell_document_checker_reset)(struct AspellDocumentChecker * ths);
 
+  /* process a string
+  * The string passed in should only be split on white space
+  * characters.  Furthermore, between calles to reset, each string
+  * should be passed in exactly once and in the order they appeared
+  * in the document.  Passing in stings out of order, skipping
+  * strings or passing them in more than once may lead to undefined
+  * results. */
+  typedef void (__cdecl * PFUNC_aspell_document_checker_process)(struct AspellDocumentChecker * ths, const char * str, int size);
 
-extern const struct AspellErrorInfo * const aerror_other;
-extern const struct AspellErrorInfo * const aerror_operation_not_supported;
-extern const struct AspellErrorInfo * const   aerror_cant_copy;
-extern const struct AspellErrorInfo * const aerror_file;
-extern const struct AspellErrorInfo * const   aerror_cant_open_file;
-extern const struct AspellErrorInfo * const     aerror_cant_read_file;
-extern const struct AspellErrorInfo * const     aerror_cant_write_file;
-extern const struct AspellErrorInfo * const   aerror_invalid_name;
-extern const struct AspellErrorInfo * const   aerror_bad_file_format;
-extern const struct AspellErrorInfo * const aerror_dir;
-extern const struct AspellErrorInfo * const   aerror_cant_read_dir;
-extern const struct AspellErrorInfo * const aerror_config;
-extern const struct AspellErrorInfo * const   aerror_unknown_key;
-extern const struct AspellErrorInfo * const   aerror_cant_change_value;
-extern const struct AspellErrorInfo * const   aerror_bad_key;
-extern const struct AspellErrorInfo * const   aerror_bad_value;
-extern const struct AspellErrorInfo * const   aerror_duplicate;
-extern const struct AspellErrorInfo * const aerror_language_related;
-extern const struct AspellErrorInfo * const   aerror_unknown_language;
-extern const struct AspellErrorInfo * const   aerror_unknown_soundslike;
-extern const struct AspellErrorInfo * const   aerror_language_not_supported;
-extern const struct AspellErrorInfo * const   aerror_no_wordlist_for_lang;
-extern const struct AspellErrorInfo * const   aerror_mismatched_language;
-extern const struct AspellErrorInfo * const aerror_encoding;
-extern const struct AspellErrorInfo * const   aerror_unknown_encoding;
-extern const struct AspellErrorInfo * const   aerror_encoding_not_supported;
-extern const struct AspellErrorInfo * const   aerror_conversion_not_supported;
-extern const struct AspellErrorInfo * const aerror_pipe;
-extern const struct AspellErrorInfo * const   aerror_cant_create_pipe;
-extern const struct AspellErrorInfo * const   aerror_process_died;
-extern const struct AspellErrorInfo * const aerror_bad_input;
-extern const struct AspellErrorInfo * const   aerror_invalid_word;
-extern const struct AspellErrorInfo * const   aerror_word_list_flags;
-extern const struct AspellErrorInfo * const     aerror_invalid_flag;
-extern const struct AspellErrorInfo * const     aerror_conflicting_flags;
+  /* returns the next misspelled word in the processed string
+  * if there are no more misspelled word than token.word
+  * will be null and token.size will be 0 */
+  typedef struct AspellToken (__cdecl * PFUNC_aspell_document_checker_next_misspelling)(struct AspellDocumentChecker * ths);
 
+  /* returns the underlying filter class */
+  typedef struct AspellFilter * (__cdecl * PFUNC_aspell_document_checker_filter)(struct AspellDocumentChecker * ths);
 
-/******************************* speller *******************************/
+  /****************************** word list ******************************/
 
+  typedef struct AspellWordList AspellWordList;
 
-typedef struct AspellSpeller AspellSpeller;
+  typedef int (__cdecl * PFUNC_aspell_word_list_empty)(const struct AspellWordList * ths);
 
+  typedef unsigned int (__cdecl * PFUNC_aspell_word_list_size)(const struct AspellWordList * ths);
 
-typedef struct AspellCanHaveError * (__cdecl * PFUNC_new_aspell_speller)(struct AspellConfig * config);
+  typedef struct AspellStringEnumeration * (__cdecl * PFUNC_aspell_word_list_elements)(const struct AspellWordList * ths);
 
-typedef struct AspellSpeller * (__cdecl * PFUNC_to_aspell_speller)(struct AspellCanHaveError * obj);
+  /************************** string enumeration **************************/
 
-typedef void (__cdecl * PFUNC_delete_aspell_speller)(struct AspellSpeller * ths);
+  typedef struct AspellStringEnumeration AspellStringEnumeration;
 
-typedef unsigned int (__cdecl * PFUNC_aspell_speller_error_number)(const struct AspellSpeller * ths);
+  typedef void (__cdecl * PFUNC_delete_aspell_string_enumeration)(struct AspellStringEnumeration * ths);
 
-typedef const char * (__cdecl * PFUNC_aspell_speller_error_message)(const struct AspellSpeller * ths);
+  typedef struct AspellStringEnumeration * (__cdecl * PFUNC_aspell_string_enumeration_clone)(const struct AspellStringEnumeration * ths);
 
-typedef const struct AspellError * (__cdecl * PFUNC_aspell_speller_error)(const struct AspellSpeller * ths);
+  typedef void (__cdecl * PFUNC_aspell_string_enumeration_assign)(struct AspellStringEnumeration * ths, const struct AspellStringEnumeration * other);
 
-typedef struct AspellConfig * (__cdecl * PFUNC_aspell_speller_config)(struct AspellSpeller * ths);
+  typedef int (__cdecl * PFUNC_aspell_string_enumeration_at_end)(const struct AspellStringEnumeration * ths);
 
-/* returns  0 if it is not in the dictionary,
- * 1 if it is, or -1 on error. */
-typedef int (__cdecl * PFUNC_aspell_speller_check)(struct AspellSpeller * ths, const char * word, int word_size);
+  typedef const char * (__cdecl * PFUNC_aspell_string_enumeration_next)(struct AspellStringEnumeration * ths);
 
-typedef int (__cdecl * PFUNC_aspell_speller_add_to_personal)(struct AspellSpeller * ths, const char * word, int word_size);
+  /********************************* info *********************************/
 
-typedef int (__cdecl * PFUNC_aspell_speller_add_to_session)(struct AspellSpeller * ths, const char * word, int word_size);
+  struct AspellModuleInfo {
+    const char * name;
 
-typedef const struct AspellWordList * (__cdecl * PFUNC_aspell_speller_personal_word_list)(struct AspellSpeller * ths);
+    double order_num;
 
-typedef const struct AspellWordList * (__cdecl * PFUNC_aspell_speller_session_word_list)(struct AspellSpeller * ths);
+    const char * lib_dir;
 
-typedef const struct AspellWordList * (__cdecl * PFUNC_aspell_speller_main_word_list)(struct AspellSpeller * ths);
+    struct AspellStringList * dict_dirs;
 
-typedef int (__cdecl * PFUNC_aspell_speller_save_all_word_lists)(struct AspellSpeller * ths);
+    struct AspellStringList * dict_exts;
+  };
 
-typedef int (__cdecl * PFUNC_aspell_speller_clear_session)(struct AspellSpeller * ths);
+  typedef struct AspellModuleInfo AspellModuleInfo;
 
-/* Return null on error.
- * the word list returned by suggest is only valid until the next
- * call to suggest */
-typedef const struct AspellWordList * (__cdecl * PFUNC_aspell_speller_suggest)(struct AspellSpeller * ths, const char * word, int word_size);
+  struct AspellDictInfo {
+    /* name to identify the dictionary by */
+    const char * name;
 
-typedef int (__cdecl * PFUNC_aspell_speller_store_replacement)(struct AspellSpeller * ths, const char * mis, int mis_size, const char * cor, int cor_size);
+    const char * code;
 
+    const char * jargon;
 
+    int size;
 
-/******************************** filter ********************************/
+    const char * size_str;
 
+    struct AspellModuleInfo * module;
+  };
 
-typedef struct AspellFilter AspellFilter;
+  typedef struct AspellDictInfo AspellDictInfo;
 
+  typedef struct AspellModuleInfoList AspellModuleInfoList;
 
-typedef void (__cdecl * PFUNC_delete_aspell_filter)(struct AspellFilter * ths);
+  typedef struct AspellModuleInfoList * (__cdecl * PFUNC_get_aspell_module_info_list)(struct AspellConfig * config);
 
-typedef unsigned int (__cdecl * PFUNC_aspell_filter_error_number)(const struct AspellFilter * ths);
+  typedef int (__cdecl * PFUNC_aspell_module_info_list_empty)(const struct AspellModuleInfoList * ths);
 
-typedef const char * (__cdecl * PFUNC_aspell_filter_error_message)(const struct AspellFilter * ths);
+  typedef unsigned int (__cdecl * PFUNC_aspell_module_info_list_size)(const struct AspellModuleInfoList * ths);
 
-typedef const struct AspellError * (__cdecl * PFUNC_aspell_filter_error)(const struct AspellFilter * ths);
+  typedef struct AspellModuleInfoEnumeration * (__cdecl * PFUNC_aspell_module_info_list_elements)(const struct AspellModuleInfoList * ths);
 
-typedef struct AspellFilter * (__cdecl * PFUNC_to_aspell_filter)(struct AspellCanHaveError * obj);
+  typedef struct AspellDictInfoList AspellDictInfoList;
 
+  typedef struct AspellDictInfoList * (__cdecl * PFUNC_get_aspell_dict_info_list)(struct AspellConfig * config);
 
+  typedef int (__cdecl * PFUNC_aspell_dict_info_list_empty)(const struct AspellDictInfoList * ths);
 
-/*************************** document checker ***************************/
+  typedef unsigned int (__cdecl * PFUNC_aspell_dict_info_list_size)(const struct AspellDictInfoList * ths);
 
+  typedef struct AspellDictInfoEnumeration * (__cdecl * PFUNC_aspell_dict_info_list_elements)(const struct AspellDictInfoList * ths);
 
-struct AspellToken {
+  typedef struct AspellModuleInfoEnumeration AspellModuleInfoEnumeration;
 
-  unsigned int offset;
+  typedef int (__cdecl * PFUNC_aspell_module_info_enumeration_at_end)(const struct AspellModuleInfoEnumeration * ths);
 
-  unsigned int len;
+  typedef const struct AspellModuleInfo * (__cdecl * PFUNC_aspell_module_info_enumeration_next)(struct AspellModuleInfoEnumeration * ths);
 
-};
+  typedef void (__cdecl * PFUNC_delete_aspell_module_info_enumeration)(struct AspellModuleInfoEnumeration * ths);
 
+  typedef struct AspellModuleInfoEnumeration * (__cdecl * PFUNC_aspell_module_info_enumeration_clone)(const struct AspellModuleInfoEnumeration * ths);
 
-typedef struct AspellToken AspellToken;
+  typedef void (__cdecl * PFUNC_aspell_module_info_enumeration_assign)(struct AspellModuleInfoEnumeration * ths, const struct AspellModuleInfoEnumeration * other);
 
+  typedef struct AspellDictInfoEnumeration AspellDictInfoEnumeration;
 
-typedef struct AspellDocumentChecker AspellDocumentChecker;
+  typedef int (__cdecl * PFUNC_aspell_dict_info_enumeration_at_end)(const struct AspellDictInfoEnumeration * ths);
 
+  typedef const struct AspellDictInfo * (__cdecl * PFUNC_aspell_dict_info_enumeration_next)(struct AspellDictInfoEnumeration * ths);
 
-typedef void (__cdecl * PFUNC_delete_aspell_document_checker)(struct AspellDocumentChecker * ths);
+  typedef void (__cdecl * PFUNC_delete_aspell_dict_info_enumeration)(struct AspellDictInfoEnumeration * ths);
 
-typedef unsigned int (__cdecl * PFUNC_aspell_document_checker_error_number)(const struct AspellDocumentChecker * ths);
+  typedef struct AspellDictInfoEnumeration * (__cdecl * PFUNC_aspell_dict_info_enumeration_clone)(const struct AspellDictInfoEnumeration * ths);
 
-typedef const char * (__cdecl * PFUNC_aspell_document_checker_error_message)(const struct AspellDocumentChecker * ths);
+  typedef void (__cdecl * PFUNC_aspell_dict_info_enumeration_assign)(struct AspellDictInfoEnumeration * ths, const struct AspellDictInfoEnumeration * other);
 
-typedef const struct AspellError * (__cdecl * PFUNC_aspell_document_checker_error)(const struct AspellDocumentChecker * ths);
+  /***************************** string list *****************************/
 
-/* Creates a new document checker.
- * The speller class is expect to last until this
- * class is destroyed.
- * If config is given it will be used to overwide
- * any relevent options set by this speller class.
- * The config class is not once this function is done.
- * If filter is given then it will take ownership of
- * the filter class and use it to do the filtering.
- * You are expected to free the checker when done. */
-typedef struct AspellCanHaveError * (__cdecl * PFUNC_new_aspell_document_checker)(struct AspellSpeller * speller);
+  typedef struct AspellStringList AspellStringList;
 
-typedef struct AspellDocumentChecker * (__cdecl * PFUNC_to_aspell_document_checker)(struct AspellCanHaveError * obj);
+  typedef struct AspellStringList * (__cdecl * PFUNC_new_aspell_string_list)();
 
-/* reset the internal state of the filter.
- * should be called whenever a new document is being filtered */
-typedef void (__cdecl * PFUNC_aspell_document_checker_reset)(struct AspellDocumentChecker * ths);
+  typedef int (__cdecl * PFUNC_aspell_string_list_empty)(const struct AspellStringList * ths);
 
-/* process a string
- * The string passed in should only be split on white space
- * characters.  Furthermore, between calles to reset, each string
- * should be passed in exactly once and in the order they appeared
- * in the document.  Passing in stings out of order, skipping
- * strings or passing them in more than once may lead to undefined
- * results. */
-typedef void (__cdecl * PFUNC_aspell_document_checker_process)(struct AspellDocumentChecker * ths, const char * str, int size);
+  typedef unsigned int (__cdecl * PFUNC_aspell_string_list_size)(const struct AspellStringList * ths);
 
-/* returns the next misspelled word in the processed string
- * if there are no more misspelled word than token.word
- * will be null and token.size will be 0 */
-typedef struct AspellToken (__cdecl * PFUNC_aspell_document_checker_next_misspelling)(struct AspellDocumentChecker * ths);
+  typedef struct AspellStringEnumeration * (__cdecl * PFUNC_aspell_string_list_elements)(const struct AspellStringList * ths);
 
-/* returns the underlying filter class */
-typedef struct AspellFilter * (__cdecl * PFUNC_aspell_document_checker_filter)(struct AspellDocumentChecker * ths);
+  typedef int (__cdecl * PFUNC_aspell_string_list_add)(struct AspellStringList * ths, const char * to_add);
 
+  typedef int (__cdecl * PFUNC_aspell_string_list_remove)(struct AspellStringList * ths, const char * to_rem);
 
+  typedef void (__cdecl * PFUNC_aspell_string_list_clear)(struct AspellStringList * ths);
 
-/****************************** word list ******************************/
+  typedef struct AspellMutableContainer * (__cdecl * PFUNC_aspell_string_list_to_mutable_container)(struct AspellStringList * ths);
 
+  typedef void (__cdecl * PFUNC_delete_aspell_string_list)(struct AspellStringList * ths);
 
-typedef struct AspellWordList AspellWordList;
+  typedef struct AspellStringList * (__cdecl * PFUNC_aspell_string_list_clone)(const struct AspellStringList * ths);
 
+  typedef void (__cdecl * PFUNC_aspell_string_list_assign)(struct AspellStringList * ths, const struct AspellStringList * other);
 
-typedef int (__cdecl * PFUNC_aspell_word_list_empty)(const struct AspellWordList * ths);
+  /****************************** string map ******************************/
 
-typedef unsigned int (__cdecl * PFUNC_aspell_word_list_size)(const struct AspellWordList * ths);
+  typedef struct AspellStringMap AspellStringMap;
 
-typedef struct AspellStringEnumeration * (__cdecl * PFUNC_aspell_word_list_elements)(const struct AspellWordList * ths);
+  typedef struct AspellStringMap * (__cdecl * PFUNC_new_aspell_string_map)();
 
+  typedef int (__cdecl * PFUNC_aspell_string_map_add)(struct AspellStringMap * ths, const char * to_add);
 
+  typedef int (__cdecl * PFUNC_aspell_string_map_remove)(struct AspellStringMap * ths, const char * to_rem);
 
-/************************** string enumeration **************************/
+  typedef void (__cdecl * PFUNC_aspell_string_map_clear)(struct AspellStringMap * ths);
 
+  typedef struct AspellMutableContainer * (__cdecl * PFUNC_aspell_string_map_to_mutable_container)(struct AspellStringMap * ths);
 
-typedef struct AspellStringEnumeration AspellStringEnumeration;
+  typedef void (__cdecl * PFUNC_delete_aspell_string_map)(struct AspellStringMap * ths);
 
+  typedef struct AspellStringMap * (__cdecl * PFUNC_aspell_string_map_clone)(const struct AspellStringMap * ths);
 
-typedef void (__cdecl * PFUNC_delete_aspell_string_enumeration)(struct AspellStringEnumeration * ths);
+  typedef void (__cdecl * PFUNC_aspell_string_map_assign)(struct AspellStringMap * ths, const struct AspellStringMap * other);
 
-typedef struct AspellStringEnumeration * (__cdecl * PFUNC_aspell_string_enumeration_clone)(const struct AspellStringEnumeration * ths);
+  typedef int (__cdecl * PFUNC_aspell_string_map_empty)(const struct AspellStringMap * ths);
 
-typedef void (__cdecl * PFUNC_aspell_string_enumeration_assign)(struct AspellStringEnumeration * ths, const struct AspellStringEnumeration * other);
+  typedef unsigned int (__cdecl * PFUNC_aspell_string_map_size)(const struct AspellStringMap * ths);
 
-typedef int (__cdecl * PFUNC_aspell_string_enumeration_at_end)(const struct AspellStringEnumeration * ths);
+  typedef struct AspellStringPairEnumeration * (__cdecl * PFUNC_aspell_string_map_elements)(const struct AspellStringMap * ths);
 
-typedef const char * (__cdecl * PFUNC_aspell_string_enumeration_next)(struct AspellStringEnumeration * ths);
+  /* Insert a new element.
+  * Will NOT overright an existing entry.
+  * Returns false if the element already exists. */
+  typedef int (__cdecl * PFUNC_aspell_string_map_insert)(struct AspellStringMap * ths, const char * key, const char * value);
 
+  /* Insert a new element.
+  * Will overright an existing entry.
+  * Always returns true. */
+  typedef int (__cdecl * PFUNC_aspell_string_map_replace)(struct AspellStringMap * ths, const char * key, const char * value);
 
+  /* Looks up an element.
+  * Returns null if the element did not exist.
+  * Returns an empty string if the element exists but has a null value.
+  * Otherwises returns the value */
+  typedef const char * (__cdecl * PFUNC_aspell_string_map_lookup)(const struct AspellStringMap * ths, const char * key);
 
-/********************************* info *********************************/
+  /***************************** string pair *****************************/
 
+  struct AspellStringPair {
+    const char * first;
 
-struct AspellModuleInfo {
+    const char * second;
+  };
 
-  const char * name;
+  typedef struct AspellStringPair AspellStringPair;
 
-  double order_num;
+  /*********************** string pair enumeration ***********************/
 
-  const char * lib_dir;
+  typedef struct AspellStringPairEnumeration AspellStringPairEnumeration;
 
-  struct AspellStringList * dict_dirs;
+  typedef int (__cdecl * PFUNC_aspell_string_pair_enumeration_at_end)(const struct AspellStringPairEnumeration * ths);
 
-  struct AspellStringList * dict_exts;
+  typedef struct AspellStringPair (__cdecl * PFUNC_aspell_string_pair_enumeration_next)(struct AspellStringPairEnumeration * ths);
 
-};
+  typedef void (__cdecl * PFUNC_delete_aspell_string_pair_enumeration)(struct AspellStringPairEnumeration * ths);
 
+  typedef struct AspellStringPairEnumeration * (__cdecl * PFUNC_aspell_string_pair_enumeration_clone)(const struct AspellStringPairEnumeration * ths);
 
-typedef struct AspellModuleInfo AspellModuleInfo;
-
-
-struct AspellDictInfo {
-
-  /* name to identify the dictionary by */
-  const char * name;
-
-  const char * code;
-
-  const char * jargon;
-
-  int size;
-
-  const char * size_str;
-
-  struct AspellModuleInfo * module;
-
-};
-
-
-typedef struct AspellDictInfo AspellDictInfo;
-
-
-typedef struct AspellModuleInfoList AspellModuleInfoList;
-
-
-typedef struct AspellModuleInfoList * (__cdecl * PFUNC_get_aspell_module_info_list)(struct AspellConfig * config);
-
-typedef int (__cdecl * PFUNC_aspell_module_info_list_empty)(const struct AspellModuleInfoList * ths);
-
-typedef unsigned int (__cdecl * PFUNC_aspell_module_info_list_size)(const struct AspellModuleInfoList * ths);
-
-typedef struct AspellModuleInfoEnumeration * (__cdecl * PFUNC_aspell_module_info_list_elements)(const struct AspellModuleInfoList * ths);
-
-
-
-typedef struct AspellDictInfoList AspellDictInfoList;
-
-
-typedef struct AspellDictInfoList * (__cdecl * PFUNC_get_aspell_dict_info_list)(struct AspellConfig * config);
-
-typedef int (__cdecl * PFUNC_aspell_dict_info_list_empty)(const struct AspellDictInfoList * ths);
-
-typedef unsigned int (__cdecl * PFUNC_aspell_dict_info_list_size)(const struct AspellDictInfoList * ths);
-
-typedef struct AspellDictInfoEnumeration * (__cdecl * PFUNC_aspell_dict_info_list_elements)(const struct AspellDictInfoList * ths);
-
-
-
-typedef struct AspellModuleInfoEnumeration AspellModuleInfoEnumeration;
-
-
-typedef int (__cdecl * PFUNC_aspell_module_info_enumeration_at_end)(const struct AspellModuleInfoEnumeration * ths);
-
-typedef const struct AspellModuleInfo * (__cdecl * PFUNC_aspell_module_info_enumeration_next)(struct AspellModuleInfoEnumeration * ths);
-
-typedef void (__cdecl * PFUNC_delete_aspell_module_info_enumeration)(struct AspellModuleInfoEnumeration * ths);
-
-typedef struct AspellModuleInfoEnumeration * (__cdecl * PFUNC_aspell_module_info_enumeration_clone)(const struct AspellModuleInfoEnumeration * ths);
-
-typedef void (__cdecl * PFUNC_aspell_module_info_enumeration_assign)(struct AspellModuleInfoEnumeration * ths, const struct AspellModuleInfoEnumeration * other);
-
-
-
-typedef struct AspellDictInfoEnumeration AspellDictInfoEnumeration;
-
-
-typedef int (__cdecl * PFUNC_aspell_dict_info_enumeration_at_end)(const struct AspellDictInfoEnumeration * ths);
-
-typedef const struct AspellDictInfo * (__cdecl * PFUNC_aspell_dict_info_enumeration_next)(struct AspellDictInfoEnumeration * ths);
-
-typedef void (__cdecl * PFUNC_delete_aspell_dict_info_enumeration)(struct AspellDictInfoEnumeration * ths);
-
-typedef struct AspellDictInfoEnumeration * (__cdecl * PFUNC_aspell_dict_info_enumeration_clone)(const struct AspellDictInfoEnumeration * ths);
-
-typedef void (__cdecl * PFUNC_aspell_dict_info_enumeration_assign)(struct AspellDictInfoEnumeration * ths, const struct AspellDictInfoEnumeration * other);
-
-
-
-/***************************** string list *****************************/
-
-
-typedef struct AspellStringList AspellStringList;
-
-
-typedef struct AspellStringList * (__cdecl * PFUNC_new_aspell_string_list)();
-
-typedef int (__cdecl * PFUNC_aspell_string_list_empty)(const struct AspellStringList * ths);
-
-typedef unsigned int (__cdecl * PFUNC_aspell_string_list_size)(const struct AspellStringList * ths);
-
-typedef struct AspellStringEnumeration * (__cdecl * PFUNC_aspell_string_list_elements)(const struct AspellStringList * ths);
-
-typedef int (__cdecl * PFUNC_aspell_string_list_add)(struct AspellStringList * ths, const char * to_add);
-
-typedef int (__cdecl * PFUNC_aspell_string_list_remove)(struct AspellStringList * ths, const char * to_rem);
-
-typedef void (__cdecl * PFUNC_aspell_string_list_clear)(struct AspellStringList * ths);
-
-typedef struct AspellMutableContainer * (__cdecl * PFUNC_aspell_string_list_to_mutable_container)(struct AspellStringList * ths);
-
-typedef void (__cdecl * PFUNC_delete_aspell_string_list)(struct AspellStringList * ths);
-
-typedef struct AspellStringList * (__cdecl * PFUNC_aspell_string_list_clone)(const struct AspellStringList * ths);
-
-typedef void (__cdecl * PFUNC_aspell_string_list_assign)(struct AspellStringList * ths, const struct AspellStringList * other);
-
-
-
-/****************************** string map ******************************/
-
-
-typedef struct AspellStringMap AspellStringMap;
-
-
-typedef struct AspellStringMap * (__cdecl * PFUNC_new_aspell_string_map)();
-
-typedef int (__cdecl * PFUNC_aspell_string_map_add)(struct AspellStringMap * ths, const char * to_add);
-
-typedef int (__cdecl * PFUNC_aspell_string_map_remove)(struct AspellStringMap * ths, const char * to_rem);
-
-typedef void (__cdecl * PFUNC_aspell_string_map_clear)(struct AspellStringMap * ths);
-
-typedef struct AspellMutableContainer * (__cdecl * PFUNC_aspell_string_map_to_mutable_container)(struct AspellStringMap * ths);
-
-typedef void (__cdecl * PFUNC_delete_aspell_string_map)(struct AspellStringMap * ths);
-
-typedef struct AspellStringMap * (__cdecl * PFUNC_aspell_string_map_clone)(const struct AspellStringMap * ths);
-
-typedef void (__cdecl * PFUNC_aspell_string_map_assign)(struct AspellStringMap * ths, const struct AspellStringMap * other);
-
-typedef int (__cdecl * PFUNC_aspell_string_map_empty)(const struct AspellStringMap * ths);
-
-typedef unsigned int (__cdecl * PFUNC_aspell_string_map_size)(const struct AspellStringMap * ths);
-
-typedef struct AspellStringPairEnumeration * (__cdecl * PFUNC_aspell_string_map_elements)(const struct AspellStringMap * ths);
-
-/* Insert a new element.
- * Will NOT overright an existing entry.
- * Returns false if the element already exists. */
-typedef int (__cdecl * PFUNC_aspell_string_map_insert)(struct AspellStringMap * ths, const char * key, const char * value);
-
-/* Insert a new element.
- * Will overright an existing entry.
- * Always returns true. */
-typedef int (__cdecl * PFUNC_aspell_string_map_replace)(struct AspellStringMap * ths, const char * key, const char * value);
-
-/* Looks up an element.
- * Returns null if the element did not exist.
- * Returns an empty string if the element exists but has a null value.
- * Otherwises returns the value */
-typedef const char * (__cdecl * PFUNC_aspell_string_map_lookup)(const struct AspellStringMap * ths, const char * key);
-
-
-
-/***************************** string pair *****************************/
-
-
-struct AspellStringPair {
-
-  const char * first;
-
-  const char * second;
-
-};
-
-
-typedef struct AspellStringPair AspellStringPair;
-
-
-/*********************** string pair enumeration ***********************/
-
-
-typedef struct AspellStringPairEnumeration AspellStringPairEnumeration;
-
-
-typedef int (__cdecl * PFUNC_aspell_string_pair_enumeration_at_end)(const struct AspellStringPairEnumeration * ths);
-
-typedef struct AspellStringPair (__cdecl * PFUNC_aspell_string_pair_enumeration_next)(struct AspellStringPairEnumeration * ths);
-
-typedef void (__cdecl * PFUNC_delete_aspell_string_pair_enumeration)(struct AspellStringPairEnumeration * ths);
-
-typedef struct AspellStringPairEnumeration * (__cdecl * PFUNC_aspell_string_pair_enumeration_clone)(const struct AspellStringPairEnumeration * ths);
-
-typedef void (__cdecl * PFUNC_aspell_string_pair_enumeration_assign)(struct AspellStringPairEnumeration * ths, const struct AspellStringPairEnumeration * other);
-
-
+  typedef void (__cdecl * PFUNC_aspell_string_pair_enumeration_assign)(struct AspellStringPairEnumeration * ths, const struct AspellStringPairEnumeration * other);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 extern PFUNC_aspell_mutable_container_add                  aspell_mutable_container_add;
 extern PFUNC_aspell_mutable_container_remove               aspell_mutable_container_remove;
@@ -766,8 +662,6 @@ extern PFUNC_aspell_string_pair_enumeration_next           aspell_string_pair_en
 extern PFUNC_delete_aspell_string_pair_enumeration         delete_aspell_string_pair_enumeration;
 extern PFUNC_aspell_string_pair_enumeration_clone          aspell_string_pair_enumeration_clone;
 extern PFUNC_aspell_string_pair_enumeration_assign         aspell_string_pair_enumeration_assign;
-                                               
-
 
 #endif /* ASPELL_ASPELL__H */
 

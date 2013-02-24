@@ -45,16 +45,12 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/aspell.h
 	${SRC_DIR}/aspell.cpp
 	${SRC_DIR}/MainDef.h
-	${SRC_DIR}/DockingFeature/Docking.h
-	${SRC_DIR}/DockingFeature/DockingDlgInterface.h
-	${SRC_DIR}/DockingFeature/dockingResource.h
-	${SRC_DIR}/DockingFeature/GoToLineDlg.cpp
-	${SRC_DIR}/DockingFeature/GoToLineDlg.h
-	${SRC_DIR}/DockingFeature/resource.h
-	${SRC_DIR}/DockingFeature/StaticDialog.cpp
-	${SRC_DIR}/DockingFeature/StaticDialog.h
-	${SRC_DIR}/DockingFeature/Window.h
-	${SRC_DIR}/DockingFeature/goLine.rc
+	${SRC_DIR}/SettingsDlg.cpp
+	${SRC_DIR}/SettingsDlg.h
+	${SRC_DIR}/DSpellCheck.rc
+	${SRC_DIR}/StaticDialog.cpp
+	${SRC_DIR}/StaticDialog.h
+	${SRC_DIR}/Window.h
 	)
 
 

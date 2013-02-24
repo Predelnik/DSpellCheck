@@ -22,11 +22,11 @@
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
+#include "SettingsDlg.h"
 
-const TCHAR NPP_PLUGIN_NAME[] = TEXT("Decent Spell Check Plugin");
+const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 
-const int nbFunc = 1;
-
+const int nbFunc = 3;
 
 //
 // Initialization of your plugin data
@@ -51,16 +51,15 @@ void commandMenuInit();
 void commandMenuCleanUp();
 
 //
-// Function which sets your command 
+// Function which sets your command
 //
 bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
-
 
 //
 // Your plugin command functions
 //
 void hello();
-void CheckText ();
+void SwitchAutoCheckText ();
 void helloFX();
 void WhatIsNpp();
 void insertDateTime(bool format);
@@ -77,6 +76,17 @@ void saveCurrentSessionDemo();
 void DockableDlgDemo();
 
 LRESULT SendMsgToEditor(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-BOOL AspellInitSettings ();
+BOOL AspellReinitSettings ();
+BOOL AspellClear ();
+void RecheckDocument ();
+void SetLanguage (const char *Str);
+const char *GetLanguage ();
+void setEncodingById (int EncId);
+void CheckDocument ();
+BOOL GetAutoCheckText ();
+void startSettings ();
+void LoadSettings ();
+void updateAutocheckStatus ();
 
 #endif //PLUGINDEFINITION_H
+
