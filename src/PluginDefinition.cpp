@@ -21,15 +21,17 @@
 //
 // put the headers you need here
 //
+#include <mbstring.h>
 #include <stdlib.h>
 #include <time.h>
 #include <tchar.h>
 #include <shlwapi.h>
-#include "MainDef.h"
 
 #include "aspell.h"
+#include "CommonFunctions.h"
+#include "MainDef.h"
 
-const char configFileName[] = "DSpellCheck.ini";
+const TCHAR configFileName[] = _T ("DSpellCheck.ini");
 
 #ifdef UNICODE
 #define generic_itoa _itow
@@ -44,7 +46,7 @@ FuncItem funcItem[nbFunc];
 //
 NppData nppData;
 
-char iniFilePath[MAX_PATH];
+TCHAR iniFilePath[MAX_PATH];
 bool doCloseTag = false;
 BOOL AutoCheckText = false;
 
@@ -68,12 +70,18 @@ void pluginCleanUp ()
 
 void LoadSettings ()
 {
-  char Buf[DEFAULT_BUF_SIZE];
-  GetPrivateProfileStringA ("SpellCheck", "Autocheck", "0", Buf, DEFAULT_BUF_SIZE, iniFilePath);
-  AutoCheckText = atoi (Buf);
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  char *BufA = 0;
+  char *BufUtf8 = 0;
+  GetPrivateProfileString (_T ("SpellCheck"), _T ("Autocheck"), _T ("0"), Buf, DEFAULT_BUF_SIZE, iniFilePath);
+  AutoCheckText = _ttoi (Buf);
   updateAutocheckStatus ();
-  GetPrivateProfileStringA ("SpellCheck", "Language", "En_Us", Buf, DEFAULT_BUF_SIZE, iniFilePath);
-  SetLanguage (Buf);
+  GetPrivateProfileString (_T ("SpellCheck"), _T ("Language"), _T ("En_Us"), Buf, DEFAULT_BUF_SIZE, iniFilePath);
+  SetString (BufA, Buf);
+  SetLanguage (BufA);
+  GetPrivateProfileString (_T ("SpellCheck"), _T ("Delim"), _T (" \\n\\r\\t,.!?-\\\":;{}()[]\\\\/'"), Buf, DEFAULT_BUF_SIZE, iniFilePath);
+  SetStringDUtf8 (BufUtf8, Buf);
+  SetDelimeters (BufUtf8);
 }
 
 //
@@ -89,13 +97,13 @@ void commandMenuInit()
   ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, (LPARAM)iniFilePath);
 
   // if config path doesn't exist, we create it
-  if (PathFileExistsA(iniFilePath) == FALSE)
+  if (PathFileExists(iniFilePath) == FALSE)
   {
-    ::CreateDirectoryA(iniFilePath, NULL);
+    ::CreateDirectory(iniFilePath, NULL);
   }
 
   // make your plugin config file full file path name
-  PathAppendA(iniFilePath, configFileName);
+  PathAppend (iniFilePath, configFileName);
 
   //--------------------------------------------//
   //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
@@ -246,12 +254,12 @@ void setEncodingById (int EncId)
     {
       ConvertingIsNeeded = TRUE;
       /*
-      CCH = GetLocaleInfoA (GetSystemDefaultLCID(), // or any LCID you may be interested in
+      CCH = GetLocaleInfoA (GetSystemDefaultLCID(),
       LOCALE_IDEFAULTANSICODEPAGE,
       szCodePage,
       countof (szCodePage));
       FinalString = new char [2 + strlen (szCodePage) + 1];
-      strcpy (FinalString, "cp");
+      strcpy (FinalString, "cp"); // Actually this encoding may as well be ISO-XXXX, that's why this code sucks
       strcat (FinalString, szCodePage);
       SetEncoding (FinalString);
       break;
@@ -281,9 +289,32 @@ void RemoveWordUnderline (int start, int end)
 char *GetDocumentText ()
 {
   int lengthDoc = (SendMsgToEditor (SCI_GETLENGTH) + 1);
-  char * buf = (char *)malloc((sizeof(char) * lengthDoc));
+  char * buf = new char [lengthDoc];
   SendMsgToEditor (SCI_GETTEXT, lengthDoc, (LPARAM)buf);
   return buf;
+}
+
+char *GetVisibleText(long *offset)
+{
+  long top = SendMsgToEditor (SCI_GETFIRSTVISIBLELINE);
+  long bottom = top + SendMsgToEditor (SCI_LINESONSCREEN);
+  long line_count = SendMsgToEditor (SCI_GETLINECOUNT);
+  Sci_TextRange range;
+  range.chrg.cpMin = SendMsgToEditor (SCI_POSITIONFROMLINE, top);
+  // Not using end of line position cause utf-8 symbols could be more than one char
+  // So we use next line start as the end of our visible text
+  if (bottom + 1 < line_count)
+    range.chrg.cpMax = SendMsgToEditor (SCI_POSITIONFROMLINE, bottom + 1);
+  else
+    range.chrg.cpMax = SendMsgToEditor (SCI_GETTEXTLENGTH);
+
+  if (range.chrg.cpMax < 0)
+    return 0;
+  char *Buf = new char [range.chrg.cpMax - range.chrg.cpMin + 1]; // + one byte for terminating zero
+  range.lpstrText = Buf;
+  SendMsgToEditor (SCI_GETTEXTRANGE, NULL ,(LPARAM)&range);
+  *offset = range.chrg.cpMin;
+  return Buf;
 }
 
 void ClearAllUnderlines ()
@@ -291,25 +322,48 @@ void ClearAllUnderlines ()
   int length = SendMsgToEditor(SCI_GETLENGTH);
   if(length > 0){
     SendMsgToEditor (SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
-    SendMsgToEditor (SCI_INDICATORCLEARRANGE, 1, length);
+    SendMsgToEditor (SCI_INDICATORCLEARRANGE, 0, length - 1);
   }
 }
 
 AspellSpeller * spell_checker = 0;
 char *Language = 0;
+char *DelimUtf8 = 0; // String without special characters but maybe with escape characters (like '\n' and stuff)
+char *DelimUtf8Converted = 0; // String where escape characters are properly converted to corrsponding symbols
 
-void set_string (char *&Target, const char *Str)
-{
-  CLEAN_AND_ZERO (Target);
-  Target = new char[strlen (Str) + 1];
-  strcpy (Target, Str);
-}
-
+// Here parameter is in ANSI (may as well be utf-8 cause only english I guess)
 void SetLanguage (const char *Str)
 {
-  set_string (Language, Str);
-  WritePrivateProfileStringA ("SpellCheck", "Language", Language, iniFilePath);
+  SetString (Language, Str);
+  TCHAR *OutputString = 0;
+  SetString (OutputString, Str);
+  WritePrivateProfileString (_T ("SpellCheck"), _T ("Language"), OutputString, iniFilePath);
+  CLEAN_AND_ZERO_ARR (OutputString);
   AspellReinitSettings ();
+}
+
+const char *GetDelimeters ()
+{
+  return DelimUtf8;
+}
+
+// Here parameter is in utf-8
+void SetDelimeters (const char *Str)
+{
+  TCHAR *DestBuf = 0;
+  TCHAR *SrcBuf = 0;
+  SetString (DelimUtf8, Str);
+  SetStringSUtf8 (SrcBuf, DelimUtf8);
+  SetParsedString (DestBuf, SrcBuf);
+  SetStringDUtf8 (DelimUtf8Converted, DestBuf);
+  CLEAN_AND_ZERO_ARR (DestBuf);
+  CLEAN_AND_ZERO_ARR (SrcBuf);
+
+  TCHAR *OutputString = 0;
+  SetStringSUtf8 (OutputString, Str);
+  WritePrivateProfileString (_T ("SpellCheck"), _T ("Delimeters"), OutputString, iniFilePath);
+  CLEAN_AND_ZERO_ARR (OutputString);
+  RecheckDocument ();
 }
 
 const char *GetLanguage ()
@@ -348,43 +402,61 @@ BOOL AspellClear ()
   return TRUE;
 }
 
-BOOL CheckWord (char *word)
+BOOL CheckWord (char *Word)
 {
   if (ConvertingIsNeeded) // That's really part that sucks
   {
     // Well TODO: maybe convert only to unicode and tell aspell that we're using unicode
     // Cause double conversion kinda sucks
-    int Length = strlen(word) + 1;
-    WCHAR *WcharBuf = new WCHAR[strlen (word) + 1];
-    int Utf8Length = Length * 4;
-    char *Utf8Buf = new char[Utf8Length];
-    MultiByteToWideChar(CP_ACP, 0, word, Length, WcharBuf, Length);
-    WideCharToMultiByte (CP_UTF8, 0, WcharBuf, Length, Utf8Buf, Utf8Length, 0, 0);
-    BOOL Ret = aspell_speller_check(spell_checker, Utf8Buf, strlen (Utf8Buf));
-    CLEAN_AND_ZERO_ARR (WcharBuf);
+    char *Utf8Buf = 0;
+    SetStringDUtf8 (Utf8Buf, Word);
+    return aspell_speller_check(spell_checker, Utf8Buf, strlen (Word));
     CLEAN_AND_ZERO_ARR (Utf8Buf);
-    return Ret;
   }
-  return aspell_speller_check(spell_checker, word, strlen (word));
+  return aspell_speller_check(spell_checker, Word, strlen (Word));
 }
 
 void CheckDocument ()
 {
+  long offset;
+  char *text_to_check = GetVisibleText (&offset);
+  if (!text_to_check)
+    return;
+
   int oldid = SendMsgToEditor (SCI_GETINDICATORCURRENT);
   SendMsgToEditor (SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
-  char *text_to_check = GetDocumentText ();
   char *context = 0; // Temporary variable for strtok_s usage
-  const char *delim = " \n\r\t,.!?-\"";
+  char *Delim = 0;
   char *token;
   ClearAllUnderlines ();
-  token = strtok_s (text_to_check, delim, &context);
+
+  if (!DelimUtf8)
+    return;
+
+  if (ConvertingIsNeeded)
+    SetStringSUtf8 (Delim, DelimUtf8Converted);
+  // A little bit ugly but since only function in mbstr.h require unsigned char then
+  // we're gonna do explicitly all conversations before call to them.
+
+  if (!ConvertingIsNeeded)
+    token = (char *) _mbstok_s ((unsigned char *) text_to_check, (unsigned char *) DelimUtf8Converted, (unsigned char **) &context);
+  else
+    token = strtok_s (text_to_check, Delim, &context);
+
   while (token)
   {
     if (token && !CheckWord (token))
-      CreateWordUnderline (token - text_to_check, token - text_to_check + strlen (token) - 1);
-    token = strtok_s (NULL, delim, &context);
+      CreateWordUnderline (offset + token - text_to_check, offset + token - text_to_check + strlen (token) - 1);
+
+    if (!ConvertingIsNeeded)
+      token =  (char *) _mbstok_s (NULL, (unsigned char *) DelimUtf8Converted, (unsigned char **) &context);
+    else
+      token = strtok_s (NULL, Delim, &context);
   }
   CLEAN_AND_ZERO_ARR (text_to_check);
+  if (ConvertingIsNeeded)
+    CLEAN_AND_ZERO_ARR (Delim);
+
   SendMsgToEditor (SCI_SETINDICATORCURRENT, oldid);
 }
 
@@ -406,9 +478,9 @@ void RecheckDocument ()
 
 void updateAutocheckStatus ()
 {
-  char Buf[DEFAULT_BUF_SIZE];
-  itoa (AutoCheckText, Buf, DEFAULT_BUF_SIZE);
-  WritePrivateProfileStringA ("SpellCheck", "Autocheck", Buf, iniFilePath);
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  _itot (AutoCheckText, Buf, DEFAULT_BUF_SIZE);
+  WritePrivateProfileString (_T ("SpellCheck"), _T ("Autocheck"), Buf, iniFilePath);
   CheckMenuItem(GetMenu(nppData._nppHandle), funcItem[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
   RecheckDocument ();
 }

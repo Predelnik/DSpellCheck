@@ -1,5 +1,5 @@
 //this file is part of notepad++
-//Copyright (C)2003 Don HO <donho@altern.org>
+//Copyright (C)2003 Don HO ( donho@altern.org )
 //
 //This program is free software; you can redistribute it and/or
 //modify it under the terms of the GNU General Public License
@@ -19,17 +19,23 @@
 #define PLUGININTERFACE_H
 
 #include <windows.h>
+
+#ifndef SCINTILLA_H
 #include "Scintilla.h"
+#endif //SCINTILLA_H
+
+#ifndef NOTEPAD_PLUS_MSGS_H
 #include "Notepad_plus_msgs.h"
+#endif //NOTEPAD_PLUS_MSGS_H
 
 const int nbChar = 64;
 
 typedef const TCHAR * (__cdecl * PFUNCGETNAME)();
 
 struct NppData {
-	HWND _nppHandle;
-	HWND _scintillaMainHandle;
-	HWND _scintillaSecondHandle;
+  HWND _nppHandle;
+  HWND _scintillaMainHandle;
+  HWND _scintillaSecondHandle;
 };
 
 typedef void (__cdecl * PFUNCSETINFO)(NppData);
@@ -37,20 +43,19 @@ typedef void (__cdecl * PFUNCPLUGINCMD)();
 typedef void (__cdecl * PBENOTIFIED)(SCNotification *);
 typedef LRESULT (__cdecl * PMESSAGEPROC)(UINT Message, WPARAM wParam, LPARAM lParam);
 
-
 struct ShortcutKey {
-	bool _isCtrl;
-	bool _isAlt;
-	bool _isShift;
-	UCHAR _key;
+  bool _isCtrl;
+  bool _isAlt;
+  bool _isShift;
+  UCHAR _key;
 };
 
 struct FuncItem {
-	TCHAR _itemName[nbChar];
-	PFUNCPLUGINCMD _pFunc;
-	int _cmdID;
-	bool _init2Check;
-	ShortcutKey *_pShKey;
+  TCHAR _itemName[nbChar];
+  PFUNCPLUGINCMD _pFunc;
+  int _cmdID;
+  bool _init2Check;
+  ShortcutKey *_pShKey;
 };
 
 typedef FuncItem * (__cdecl * PFUNCGETFUNCSARRAY)(int *);

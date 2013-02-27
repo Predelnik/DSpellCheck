@@ -79,6 +79,8 @@ LRESULT SendMsgToEditor(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
 BOOL AspellReinitSettings ();
 BOOL AspellClear ();
 void RecheckDocument ();
+void SetDelimeters (const char *Str);
+const char *GetDelimeters ();
 void SetLanguage (const char *Str);
 const char *GetLanguage ();
 void setEncodingById (int EncId);

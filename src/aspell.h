@@ -8,6 +8,7 @@
 
 #ifndef ASPELL_ASPELL__H
 #define ASPELL_ASPELL__H
+#include <minwindef.h>
 
 BOOL LoadAspell(TCHAR *path);
 void UnloadAspell(void);

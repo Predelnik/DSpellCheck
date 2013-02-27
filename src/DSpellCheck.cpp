@@ -61,7 +61,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
   nppData = notpadPlusData;
   commandMenuInit();
-  SettingsDlgInstance.init((HINSTANCE) HModule, nppData);
+  SettingsDlgInstance.init((HINSTANCE) HModule, notpadPlusData._nppHandle, nppData);
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -89,7 +89,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
     {
       SendMsgToEditor(SCI_INDICSETSTYLE ,SCE_SQUIGGLE_UNDERLINE_RED, INDIC_SQUIGGLE);
       SendMsgToEditor(SCI_INDICSETFORE, SCE_SQUIGGLE_UNDERLINE_RED, 0x0000ff);
-      LoadSettings (); 
+      LoadSettings ();
     }
     break;
 
