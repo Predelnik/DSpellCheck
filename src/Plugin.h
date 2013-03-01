@@ -32,7 +32,7 @@ const int nbFunc = 3;
 // Initialization of your plugin data
 // It will be called while plugin loading
 //
-void pluginInit(HANDLE hModule);
+void pluginInit(HANDLE hModuleArg);
 
 //
 // Cleaning of your plugin
@@ -55,40 +55,28 @@ void commandMenuCleanUp();
 //
 bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
 
-//
-// Your plugin command functions
-//
-void hello();
-void SwitchAutoCheckText ();
-void helloFX();
-void WhatIsNpp();
-void insertDateTime(bool format);
-void insertShortDateTime();
-void insertLongDateTime();
-void insertCurrentPath(int which);
-void insertCurrentFullPath();
-void insertCurrentFileName();
-void insertCurrentDirectory();
-void insertHtmlCloseTag();
-void getFileNamesDemo();
-void getSessionFileNamesDemo();
-void saveCurrentSessionDemo();
-void DockableDlgDemo();
+typedef enum {
+  EID_SWITCH_AUTOCHECK,
+  EID_LOAD_SETTINGS,
+  EID_FILL_DIALOGS,
+  EID_APPLY_SETTINGS,
+  EID_HIDE_DIALOG,
+  EID_RECHECK_VISIBLE,
+  EID_KILLTHREAD,
+  EID_THREADKILLED,
+  EID_MAX
+} EventId;
 
-LRESULT SendMsgToEditor(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-BOOL AspellReinitSettings ();
-BOOL AspellClear ();
-void RecheckDocument ();
+void SendEvent (EventId Event);
 void SetDelimeters (const char *Str);
 const char *GetDelimeters ();
 void SetLanguage (const char *Str);
-const char *GetLanguage ();
 void setEncodingById (int EncId);
-void CheckDocument ();
 BOOL GetAutoCheckText ();
-void startSettings ();
-void LoadSettings ();
 void updateAutocheckStatus ();
+void LoadSettings ();
+void RecheckVisible ();
+FuncItem *get_funcItem ();
 
 #endif //PLUGINDEFINITION_H
 

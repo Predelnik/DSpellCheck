@@ -32,7 +32,6 @@
 #define _WIN32_IE	0x0600
 #endif //_WIN32_IE
 
-#include <windows.h>
 #include <commctrl.h>
 #include "Window.h"
 

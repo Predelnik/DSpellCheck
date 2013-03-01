@@ -34,9 +34,11 @@ else ( MSVC )
 endif ( MSVC )
 
 set (list_of_files_DSpellCheck 
-	${SRC_DIR}/PluginDefinition.cpp 
-	${SRC_DIR}/PluginDefinition.h 
-	${SRC_DIR}/DSpellCheck.cpp 
+	${SRC_DIR}/Plugin.cpp 
+	${SRC_DIR}/Plugin.h
+	${SRC_DIR}/SpellChecker.cpp 
+	${SRC_DIR}/SpellChecker.h
+	${SRC_DIR}/DllMain.cpp 
 	${SRC_DIR}/menuCmdID.h
 	${SRC_DIR}/scintilla.h 
 	${SRC_DIR}/PluginInterface.h
@@ -48,6 +50,8 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/SettingsDlg.h
 	${SRC_DIR}/CommonFunctions.cpp
 	${SRC_DIR}/CommonFunctions.h
+	${SRC_DIR}/PrecompiledHeader.cpp
+	${SRC_DIR}/PrecompiledHeader.h
 	${SRC_DIR}/DSpellCheck.rc
 	${SRC_DIR}/Controls/StaticDialog/StaticDialog.cpp
 	${SRC_DIR}/Controls/StaticDialog/StaticDialog.h
@@ -59,9 +63,10 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/Controls/TabBar/TabBar.h	
 	)
 
-
-
 SET(LINK_LIBRARY shlwapi comctl32)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
+
+include (PrecompiledHeader.cmake)
+add_precompiled_header(DSpellCheck PrecompiledHeader.h FORCEINCLUDE) 
 
 target_link_libraries(DSpellCheck ${LINK_LIBRARY})

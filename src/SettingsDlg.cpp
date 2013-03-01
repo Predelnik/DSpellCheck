@@ -1,10 +1,9 @@
-#include <windows.h>
-
 #include "aspell.h"
 #include "CommonFunctions.h"
 #include "MainDef.h"
-#include "PluginDefinition.h"
+#include "Plugin.h"
 #include "SettingsDlg.h"
+#include "SpellChecker.h"
 
 #include "resource.h"
 
@@ -18,7 +17,8 @@ void SimpleDlg::init (HINSTANCE hInst, HWND Parent, NppData nppData)
   return Window::init (hInst, Parent);
 }
 
-BOOL SimpleDlg::AddAvalaibleLanguages ()
+// Called from main thread, beware!
+BOOL SimpleDlg::AddAvalaibleLanguages (const char *CurrentLanguage)
 {
   AspellConfig* aspCfg;
   AspellDictInfoList* dlist;
@@ -48,7 +48,7 @@ BOOL SimpleDlg::AddAvalaibleLanguages ()
   {
     // Well since this strings comes in ansi, the simplest way is too call corresponding function
     // Without using windowsx.h
-    if (strcmp (GetLanguage (), entry->name) == 0)
+    if (strcmp (CurrentLanguage, entry->name) == 0)
       SelectedIndex = i;
 
     i++;
@@ -63,13 +63,14 @@ BOOL SimpleDlg::AddAvalaibleLanguages ()
   return TRUE;
 }
 
-void SimpleDlg::ApplySettings ()
+// Called from main thread, beware!
+void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
   int length = GetWindowTextLengthA (HComboLanguage);
   char *LangString = new char[length + 1];
   GetWindowTextA (HComboLanguage, LangString, length + 1);
-  SetLanguage (LangString);
-  RecheckDocument ();
+  SpellCheckerInstance->SetLanguage (LangString);
+  SpellCheckerInstance->RecheckVisible ();
   CLEAN_AND_ZERO_ARR (LangString);
 }
 
@@ -84,7 +85,6 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
     {
       // Retrieving handles of dialog controls
       HComboLanguage = ::GetDlgItem(_hSelf, IDC_COMBO_LANGUAGE);
-      AddAvalaibleLanguages ();
       return TRUE;
     }
   case WM_CLOSE:
@@ -96,7 +96,15 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
   return FALSE;
 }
 
-BOOL CALLBACK AdvanceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+void AdvancedDlg::FillDelimeters (const char *Delimeters)
+{
+  TCHAR *TBuf = 0;
+  SetStringSUtf8 (TBuf, Delimeters);
+  Edit_SetText (HEditDelimeters, TBuf);
+  CLEAN_AND_ZERO_ARR (TBuf);
+}
+
+BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
   {
@@ -104,10 +112,6 @@ BOOL CALLBACK AdvanceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
     {
       // Retrieving handles of dialog controls
       HEditDelimeters = ::GetDlgItem(_hSelf, IDC_DELIMETERS);
-      TCHAR *TBuf = 0;
-      SetStringSUtf8 (TBuf, GetDelimeters ());
-      Edit_SetText (HEditDelimeters, TBuf);
-      CLEAN_AND_ZERO_ARR (TBuf);
       return TRUE;
     }
   case WM_CLOSE:
@@ -119,7 +123,8 @@ BOOL CALLBACK AdvanceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
   return FALSE;
 }
 
-void AdvanceDlg::ApplySettings ()
+// Called from main thread, beware!
+void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
   TCHAR *TBuf = 0;
   int Length = Edit_GetTextLength (HEditDelimeters);
@@ -127,8 +132,18 @@ void AdvanceDlg::ApplySettings ()
   Edit_GetText (HEditDelimeters, TBuf, Length + 1);
   char *BufUtf8 = 0;
   SetStringDUtf8 (BufUtf8, TBuf);
-  SetDelimeters (BufUtf8);
+  SpellCheckerInstance->SetDelimeters (BufUtf8);
   CLEAN_AND_ZERO_ARR (BufUtf8);
+}
+
+SimpleDlg *SettingsDlg::GetSimpleDlg ()
+{
+  return &SimpleDlgInstance;
+}
+
+AdvancedDlg *SettingsDlg::GetAdvancedDlg ()
+{
+  return &AdvancedDlgInstance;
 }
 
 void SettingsDlg::init (HINSTANCE hInst, HWND Parent, NppData nppData)
@@ -157,6 +172,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       SimpleDlgInstance.display ();
       AdvancedDlgInstance.init(_hInst, _hSelf);
       AdvancedDlgInstance.create (IDD_ADVANCED, false, false);
+      SendEvent (EID_FILL_DIALOGS);
 
       WindowVectorInstance.push_back(DlgInfo(&SimpleDlgInstance, TEXT("Simple"), TEXT("Simple Options")));
       WindowVectorInstance.push_back(DlgInfo(&AdvancedDlgInstance, TEXT("Advanced"), TEXT("Advanced Options")));
@@ -197,9 +213,9 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       switch (wParam)
       {
       case IDOK:
-        SimpleDlgInstance.ApplySettings ();
+        SendEvent (EID_APPLY_SETTINGS);
       case IDCANCEL :
-        display(false);
+        SendEvent (EID_HIDE_DIALOG);
         return TRUE;
 
       default :

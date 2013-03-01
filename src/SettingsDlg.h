@@ -4,13 +4,15 @@
 #include "PluginInterface.h"
 #include "TabBar/ControlsTab.h"
 
+class SpellChecker;
+
 class SimpleDlg : public StaticDialog
 {
 public:
   __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
-  void ApplySettings ();
+  void ApplySettings (SpellChecker *SpellCheckerInstance);
+  BOOL AddAvalaibleLanguages (const char *CurrentLanguage);
 protected:
-  BOOL AddAvalaibleLanguages ();
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
@@ -23,10 +25,11 @@ private:
   HWND HCancel;
 };
 
-class AdvanceDlg : public StaticDialog
+class AdvancedDlg : public StaticDialog
 {
 public:
-  void ApplySettings ();
+  void ApplySettings (SpellChecker *SpellCheckerInstance);
+  void FillDelimeters (const char *Delimeters);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
@@ -41,13 +44,15 @@ class SettingsDlg : public StaticDialog
 public:
   UINT DoDialog (void);
   __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
+  SimpleDlg *GetSimpleDlg ();
+  AdvancedDlg *GetAdvancedDlg ();
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
   __override virtual void destroy ();
 private:
   NppData NppDataInstance;
   SimpleDlg SimpleDlgInstance;
-  AdvanceDlg AdvancedDlgInstance;
+  AdvancedDlg AdvancedDlgInstance;
   WindowVector WindowVectorInstance;
   ControlsTab ControlsTabInstance;
 };

@@ -18,8 +18,6 @@
 #ifndef PLUGININTERFACE_H
 #define PLUGININTERFACE_H
 
-#include <windows.h>
-
 #ifndef SCINTILLA_H
 #include "Scintilla.h"
 #endif //SCINTILLA_H

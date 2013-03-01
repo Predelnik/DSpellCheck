@@ -1,8 +1,6 @@
 #include "CommonFunctions.h"
 #include "MainDef.h"
-#include <windows.h>
-#include <string.h>
-#include <stringapiset.h>
+#include "PluginInterface.h"
 
 void SetString (char *&Target, const char *Str)
 {
@@ -167,7 +165,7 @@ BOOL MatchSpecialChar (TCHAR *Dest, TCHAR *&Source)
 
       buf[0] = (unsigned char) c;
       n = n << 4;
-      n += strtol (buf, NULL, 16);
+      n += (TCHAR) strtol (buf, NULL, 16);
     }
     *Dest = n;
     break;
@@ -210,4 +208,20 @@ void SetParsedString (TCHAR *&Dest, TCHAR *Source)
   }
   *Dest = 0;
   Dest = ResString;
+}
+
+HWND getScintillaWindow(const NppData *NppDataArg)
+{
+  // Get the current scintilla
+  int which = -1;
+  SendMessage(NppDataArg->_nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
+  if (which == -1)
+    return NULL;
+  return (which == 0)?NppDataArg->_scintillaMainHandle:NppDataArg->_scintillaSecondHandle;
+}
+
+LRESULT SendMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  HWND wEditor = getScintillaWindow(NppDataArg);
+  return SendMessage(wEditor, Msg, wParam, lParam);
 }

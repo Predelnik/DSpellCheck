@@ -28,7 +28,6 @@
 #ifndef STATIC_DIALOG_H
 #define STATIC_DIALOG_H
 
-#include "windows.h"
 #include "Window.h"
 
 #ifndef NOTEPAD_PLUS_MSGS_H
