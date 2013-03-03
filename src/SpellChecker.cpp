@@ -53,8 +53,21 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     return TRUE;
   case EID_KILLTHREAD:
     return FALSE;
+  case EID_GET_SUGGESTIONS:
+    CreateSuggestionsPopupMenu ();
+    return TRUE;
   }
   return TRUE;
+}
+
+void SpellChecker::CreateSuggestionsPopupMenu ()
+{
+  HMENU hPopupMenu = CreatePopupMenu ();
+  InsertMenu (hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 0, _T ("Test1"));
+  InsertMenu (hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 1, _T ("Test2"));
+  HWND hWnd = SettingsDlgInstance->getHSelf ();
+  SetForegroundWindow (hWnd);
+  TrackPopupMenu (hPopupMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, 100, 100, 0, hWnd, NULL);
 }
 
 void SpellChecker::UpdateAutocheckStatus ()
@@ -83,10 +96,10 @@ void SpellChecker::LoadSettings ()
   SetDelimeters (BufUtf8);
 }
 
-void SpellChecker::CreateWordUnderline (int start, int end)
+void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)
 {
-  SendMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
-  SendMsgToEditor (NppDataInstance, SCI_INDICATORFILLRANGE, start, (end - start + 1));
+  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORFILLRANGE, start, (end - start + 1));
 }
 
 void SpellChecker::RemoveWordUnderline (int start, int end)
@@ -132,10 +145,10 @@ void SpellChecker::ClearAllUnderlines ()
 {
   int length = SendMsgToEditor(NppDataInstance, SCI_GETLENGTH);
   if(length > 0)
-    {
-      SendMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
-      SendMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length - 1);
-    }
+  {
+    PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+    PostMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length - 1);
+  }
 }
 
 //
@@ -240,7 +253,8 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
   if (!TextToCheck || !*TextToCheck)
     return;
 
-  int oldid = SendMsgToEditor (NppDataInstance, SCI_GETINDICATORCURRENT);
+  HWND ScintillaWindow = GetScintillaWindow (NppDataInstance);
+  int oldid = SendMsgToEditor (ScintillaWindow, NppDataInstance, SCI_GETINDICATORCURRENT);
   char *context = 0; // Temporary variable for strtok_s usage
   char *Delim = 0;
   char *token;
@@ -261,7 +275,7 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
   while (token)
   {
     if (token && !CheckWord (token))
-      CreateWordUnderline (offset + token - TextToCheck, offset + token - TextToCheck + strlen (token) - 1);
+      CreateWordUnderline (ScintillaWindow, offset + token - TextToCheck, offset + token - TextToCheck + strlen (token) - 1);
 
     if (!ConvertingIsNeeded)
       token =  (char *) _mbstok_s (NULL, (unsigned char *) DelimUtf8Converted, (unsigned char **) &context);
@@ -271,7 +285,7 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
   if (ConvertingIsNeeded)
     CLEAN_AND_ZERO_ARR (Delim);
 
-  SendMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
+  SendMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
 }
 
 void SpellChecker::CheckVisible ()

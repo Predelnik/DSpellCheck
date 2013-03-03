@@ -136,6 +136,11 @@ void SwitchAutoCheckText ()
   SendEvent (EID_SWITCH_AUTOCHECK);
 }
 
+void GetSuggestions ()
+{
+  SendEvent (EID_GET_SUGGESTIONS);
+}
+
 void StartSettings ()
 {
   SettingsDlgInstance->DoDialog ();
@@ -184,7 +189,8 @@ void commandMenuInit()
   //            );
   setCommand(0, TEXT("Auto-check document"), SwitchAutoCheckText, NULL, false);
   setCommand(1, TEXT("---"), NULL, NULL, false);
-  setCommand(2, TEXT("Settings..."), StartSettings, NULL, false);
+  setCommand(2, TEXT("Get Suggestions for Word at Cursor..."), GetSuggestions, NULL, false);
+  setCommand(3, TEXT("Settings..."), StartSettings, NULL, false);
 
   SettingsDlgInstance = new SettingsDlg;
   SettingsDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle, nppData);

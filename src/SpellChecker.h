@@ -16,10 +16,11 @@ public:
   void ErrorMsgBox (const TCHAR * message);
 
 private:
-  void CreateWordUnderline (int start, int end);
+  void CreateWordUnderline (HWND ScintillaWindow, int start, int end);
   void RemoveWordUnderline (int start, int end);
   void ClearAllUnderlines ();
   void Cleanup ();
+  void CreateSuggestionsPopupMenu ();
   const char *GetDelimeters ();
   const char *GetLanguage ();
   BOOL AspellReinitSettings ();

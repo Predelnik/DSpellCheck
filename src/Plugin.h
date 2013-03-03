@@ -26,7 +26,7 @@
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 
-const int nbFunc = 3;
+const int nbFunc = 4;
 
 //
 // Initialization of your plugin data
@@ -62,6 +62,7 @@ typedef enum {
   EID_APPLY_SETTINGS,
   EID_HIDE_DIALOG,
   EID_RECHECK_VISIBLE,
+  EID_GET_SUGGESTIONS,
   EID_KILLTHREAD,
   EID_THREADKILLED,
   EID_MAX

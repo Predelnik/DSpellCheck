@@ -50,6 +50,9 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/SettingsDlg.h
 	${SRC_DIR}/CommonFunctions.cpp
 	${SRC_DIR}/CommonFunctions.h
+	${SRC_DIR}/Suggestions.cpp
+	${SRC_DIR}/Suggestions.h
+	${SRC_DIR}/resource.h
 	${SRC_DIR}/PrecompiledHeader.cpp
 	${SRC_DIR}/PrecompiledHeader.h
 	${SRC_DIR}/DSpellCheck.rc

@@ -210,7 +210,7 @@ void SetParsedString (TCHAR *&Dest, TCHAR *Source)
   Dest = ResString;
 }
 
-HWND getScintillaWindow(const NppData *NppDataArg)
+HWND GetScintillaWindow(const NppData *NppDataArg)
 {
   // Get the current scintilla
   int which = -1;
@@ -222,6 +222,24 @@ HWND getScintillaWindow(const NppData *NppDataArg)
 
 LRESULT SendMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  HWND wEditor = getScintillaWindow(NppDataArg);
+  HWND wEditor = GetScintillaWindow(NppDataArg);
   return SendMessage(wEditor, Msg, wParam, lParam);
+}
+
+LRESULT SendMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  return SendMessage(ScintillaWindow, Msg, wParam, lParam);
+}
+
+// Remember: it's better to use PostMsg wherever possible, to avoid gui update on each message send etc etc
+// Also it's better to avoid get current scintilla window too much times, since it's obviously uses 1 SendMsg call
+LRESULT PostMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  HWND wEditor = GetScintillaWindow(NppDataArg);
+  return PostMessage(wEditor, Msg, wParam, lParam);
+}
+
+LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  return PostMessage(ScintillaWindow, Msg, wParam, lParam);
 }
