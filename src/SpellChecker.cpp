@@ -6,16 +6,21 @@
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "Scintilla.h"
+#include "Suggestions.h"
 
-SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg)
+SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
+                            Suggestions *SuggestionsInstanceArg)
 {
   DelimUtf8 = 0;
   DelimUtf8Converted = 0;
-  spell_checker = 0;
+  Speller = 0;
   IniFilePath = 0;
   Language = 0;
+  VisibleText = 0;
+  VisibleTextLength = -1;
   SetString (IniFilePath, IniFilePathArg);
   SettingsDlgInstance = SettingsDlgInstanceArg;
+  SuggestionsInstance = SuggestionsInstanceArg;
   NppDataInstance = NppDataInstanceArg;
   LoadAspell (0);
   LoadSettings ();
@@ -53,21 +58,85 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     return TRUE;
   case EID_KILLTHREAD:
     return FALSE;
-  case EID_GET_SUGGESTIONS:
-    CreateSuggestionsPopupMenu ();
+  case EID_INITSUGGESTIONS:
+    InitSuggestions ();
     return TRUE;
   }
   return TRUE;
 }
 
-void SpellChecker::CreateSuggestionsPopupMenu ()
+char* SpellChecker::GetWordUnderMouse(){
+  char *ret = NULL;
+  POINT p;
+  if(GetCursorPos(&p) != 0){
+    ScreenToClient(WindowFromPoint(p), &p);
+
+    int initCharPos = SendMsgToEditor (NppDataInstance, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+    if(initCharPos != -1){
+      ret = GetWordAt (initCharPos, VisibleText);
+    }
+  }
+  return ret;
+}
+
+char *SpellChecker::GetWordAt (int CharPos, char *Text)
 {
-  HMENU hPopupMenu = CreatePopupMenu ();
-  InsertMenu (hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 0, _T ("Test1"));
-  InsertMenu (hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 1, _T ("Test2"));
-  HWND hWnd = SettingsDlgInstance->getHSelf ();
-  SetForegroundWindow (hWnd);
-  TrackPopupMenu (hPopupMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, 100, 100, 0, hWnd, NULL);
+  // Text here is already tokenized
+  if (!Text)
+    CheckVisible ();
+
+  int PrevZero = -1;
+
+  if (!Text || !*Text)
+    return 0;
+
+  for (int i = 0; i <= VisibleTextLength; i++)
+  {
+    if (VisibleText[i] == 0)
+    {
+      if (i > (CharPos - VisibleTextOffset))
+        return VisibleText + PrevZero + 1;
+      else
+        PrevZero = i;
+    }
+  }
+  return 0;
+}
+
+void SpellChecker::InitSuggestions ()
+{
+  char *Word = GetWordUnderMouse ();
+  if (!Word || !*Word || CheckWord (Word))
+    return;
+  int Pos = Word - VisibleText + VisibleTextOffset;
+  int XPos = SendMsgToEditor (NppDataInstance, SCI_POINTXFROMPOSITION, 0, Pos);
+  int YPos = SendMsgToEditor (NppDataInstance, SCI_POINTYFROMPOSITION, 0, Pos);
+  int Line = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, Pos);
+  int TextHeight = SendMsgToEditor (NppDataInstance, SCI_TEXTHEIGHT, Line);
+  POINT p;
+  p.x = XPos; p.y = YPos;
+  ClientToScreen (GetScintillaWindow (NppDataInstance), &p);
+
+  const AspellWordList *wl = aspell_speller_suggest (Speller, Word, -1);
+  if (!wl)
+    return;
+
+  AspellStringEnumeration * els = aspell_word_list_elements(wl);
+  const char *Suggestion;
+  TCHAR *Buf = 0;
+  HMENU PopupMenu = SuggestionsInstance->GetPopupMenu ();
+  int Counter = 0;
+
+  while ((Suggestion = aspell_string_enumeration_next(els)) != 0)
+  {
+    if (Counter >= 5)
+      break;
+    SetStringSUtf8 (Buf, Suggestion);
+    InsertMenu (PopupMenu, 0, MF_BYPOSITION, 0, Buf);
+    Counter++;
+  }
+
+  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight, 10, 10, TRUE);
 }
 
 void SpellChecker::UpdateAutocheckStatus ()
@@ -208,10 +277,10 @@ BOOL SpellChecker::AspellReinitSettings ()
   aspell_config_replace (spell_config, "encoding", "utf-8");
   if (Language)
     aspell_config_replace(spell_config, "lang", Language);
-  if (spell_checker)
+  if (Speller)
   {
-    delete_aspell_speller (spell_checker);
-    spell_checker = 0;
+    delete_aspell_speller (Speller);
+    Speller = 0;
   }
 
   AspellCanHaveError * possible_err = new_aspell_speller(spell_config);
@@ -222,14 +291,14 @@ BOOL SpellChecker::AspellReinitSettings ()
     return FALSE;
   }
   else
-    spell_checker = to_aspell_speller(possible_err);
+    Speller = to_aspell_speller(possible_err);
   delete_aspell_config (spell_config);
   return TRUE;
 }
 
 BOOL SpellChecker::AspellClear ()
 {
-  delete_aspell_speller (spell_checker);
+  delete_aspell_speller (Speller);
   return TRUE;
 }
 
@@ -241,11 +310,11 @@ BOOL SpellChecker::CheckWord (char *Word)
     // Cause double conversion kinda sucks
     char *Utf8Buf = 0;
     SetStringDUtf8 (Utf8Buf, Word);
-    BOOL res = aspell_speller_check(spell_checker, Utf8Buf, strlen (Utf8Buf));
+    BOOL res = aspell_speller_check(Speller, Utf8Buf, strlen (Utf8Buf));
     CLEAN_AND_ZERO_ARR (Utf8Buf);
     return res;
   }
-  return aspell_speller_check(spell_checker, Word, strlen (Word));
+  return aspell_speller_check(Speller, Word, strlen (Word));
 }
 
 void SpellChecker::CheckText (char *TextToCheck, long offset)
@@ -290,11 +359,11 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
 
 void SpellChecker::CheckVisible ()
 {
-  long offset;
-  char *TextToCheck = GetVisibleText (&offset);
+  CLEAN_AND_ZERO_ARR (VisibleText);
+  VisibleText = GetVisibleText (&VisibleTextOffset);
+  VisibleTextLength = strlen (VisibleText);
   ClearAllUnderlines ();
-  CheckText (TextToCheck, offset);
-  CLEAN_AND_ZERO_ARR (TextToCheck);
+  CheckText (VisibleText, VisibleTextOffset);
 }
 
 void SpellChecker::setEncodingById (int EncId)

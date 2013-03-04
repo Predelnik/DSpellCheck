@@ -1,8 +1,9 @@
+#include "SettingsDlg.h"
+
 #include "aspell.h"
 #include "CommonFunctions.h"
 #include "MainDef.h"
 #include "Plugin.h"
-#include "SettingsDlg.h"
 #include "SpellChecker.h"
 
 #include "resource.h"

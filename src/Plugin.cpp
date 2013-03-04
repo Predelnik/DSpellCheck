@@ -29,6 +29,7 @@
 #include "CommonFunctions.h"
 #include "MainDef.h"
 #include "SpellChecker.h"
+#include "Suggestions.h"
 
 const TCHAR configFileName[] = _T ("DSpellCheck.ini");
 
@@ -55,6 +56,7 @@ bool doCloseTag = false;
 BOOL AutoCheckText = false;
 SpellChecker *SpellCheckerInstance;
 SettingsDlg *SettingsDlgInstance;
+Suggestions *SuggestionsInstance;
 HANDLE hThread = NULL;
 HANDLE hEvent[EID_MAX]  = {NULL};
 HANDLE hModule = NULL;
@@ -138,7 +140,7 @@ void SwitchAutoCheckText ()
 
 void GetSuggestions ()
 {
-  SendEvent (EID_GET_SUGGESTIONS);
+  SendEvent (EID_INITSUGGESTIONS);
 }
 
 void StartSettings ()
@@ -189,17 +191,28 @@ void commandMenuInit()
   //            );
   setCommand(0, TEXT("Auto-check document"), SwitchAutoCheckText, NULL, false);
   setCommand(1, TEXT("---"), NULL, NULL, false);
-  setCommand(2, TEXT("Get Suggestions for Word at Cursor..."), GetSuggestions, NULL, false);
+
+  ShortcutKey *shKey = new ShortcutKey;
+  shKey->_isAlt = true;
+  shKey->_isCtrl = false;
+  shKey->_isShift = false;
+  shKey->_key = 0x42;
+  setCommand(2, TEXT("Get Suggestions for Word at Cursor..."), GetSuggestions, shKey, false);
   setCommand(3, TEXT("Settings..."), StartSettings, NULL, false);
+
+  SuggestionsInstance = new Suggestions;
+  SuggestionsInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
+  SuggestionsInstance->DoDialog ();
 
   SettingsDlgInstance = new SettingsDlg;
   SettingsDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle, nppData);
-  SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData);
+  SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance);
   CreateThreadResources ();
 }
 
 void commandMenuCleanUp()
 {
+  CLEAN_AND_ZERO (funcItem[2]._pShKey);
   // We should deallocate shortcuts here
 }
 

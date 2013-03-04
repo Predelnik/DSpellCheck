@@ -3,11 +3,13 @@
 // Class that will do most of the job with spellchecker
 
 class SettingsDlg;
+class Suggestions;
 
 class SpellChecker
 {
 public:
-  SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg);
+  SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
+    Suggestions *SuggestionsInstanceArg);
   ~SpellChecker ();
   BOOL WINAPI NotifyEvent (DWORD Event);
   void SetLanguage (const char *Str);
@@ -20,7 +22,6 @@ private:
   void RemoveWordUnderline (int start, int end);
   void ClearAllUnderlines ();
   void Cleanup ();
-  void CreateSuggestionsPopupMenu ();
   const char *GetDelimeters ();
   const char *GetLanguage ();
   BOOL AspellReinitSettings ();
@@ -34,6 +35,9 @@ private:
   void LoadSettings ();
   void UpdateAutocheckStatus ();
   void SwitchAutoCheck ();
+  void InitSuggestions ();
+  char *GetWordUnderMouse ();
+  char *GetWordAt (int CharPos, char *Text);
 
 private:
 
@@ -43,7 +47,11 @@ private:
   TCHAR *IniFilePath;
   SettingsDlg *SettingsDlgInstance;
   char *Language;
-  AspellSpeller * spell_checker;
+  AspellSpeller *Speller;
+  Suggestions *SuggestionsInstance;
+  char *VisibleText;
+  int VisibleTextLength;
+  long VisibleTextOffset;
   char *DelimUtf8; // String without special characters but maybe with escape characters (like '\n' and stuff)
   char *DelimUtf8Converted; // String where escape characters are properly converted to corrsponding symbols
 };
