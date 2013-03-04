@@ -7,4 +7,6 @@
 #define countof(A) sizeof(A)/sizeof((A)[0])
 #define DEFAULT_BUF_SIZE 4096
 
+#define WM_SHOWANDRECREATEMENU WM_USER + 1000
+
 #endif MAINDEF_H

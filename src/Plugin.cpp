@@ -128,9 +128,14 @@ void pluginCleanUp ()
   CLEAN_AND_ZERO (SettingsDlgInstance);
 }
 
-void SendEvent (EventId Event)
+void inline SendEvent (EventId Event)
 {
   SetEvent(hEvent[Event]);
+}
+
+void WaitForEvent (EventId Event, DWORD WaitTime)
+{
+  WaitForSingleObject (hEvent[Event], WaitTime);
 }
 
 void SwitchAutoCheckText ()

@@ -97,11 +97,11 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
   return FALSE;
 }
 
-void AdvancedDlg::FillDelimeters (const char *Delimeters)
+void AdvancedDlg::FillDelimiters (const char *Delimiters)
 {
   TCHAR *TBuf = 0;
-  SetStringSUtf8 (TBuf, Delimeters);
-  Edit_SetText (HEditDelimeters, TBuf);
+  SetStringSUtf8 (TBuf, Delimiters);
+  Edit_SetText (HEditDelimiters, TBuf);
   CLEAN_AND_ZERO_ARR (TBuf);
 }
 
@@ -112,7 +112,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
   case WM_INITDIALOG:
     {
       // Retrieving handles of dialog controls
-      HEditDelimeters = ::GetDlgItem(_hSelf, IDC_DELIMETERS);
+      HEditDelimiters = ::GetDlgItem(_hSelf, IDC_DELIMETERS);
       return TRUE;
     }
   case WM_CLOSE:
@@ -128,12 +128,12 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
 void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
   TCHAR *TBuf = 0;
-  int Length = Edit_GetTextLength (HEditDelimeters);
+  int Length = Edit_GetTextLength (HEditDelimiters);
   TBuf = new TCHAR[Length + 1];
-  Edit_GetText (HEditDelimeters, TBuf, Length + 1);
+  Edit_GetText (HEditDelimiters, TBuf, Length + 1);
   char *BufUtf8 = 0;
   SetStringDUtf8 (BufUtf8, TBuf);
-  SpellCheckerInstance->SetDelimeters (BufUtf8);
+  SpellCheckerInstance->SetDelimiters (BufUtf8);
   CLEAN_AND_ZERO_ARR (BufUtf8);
 }
 

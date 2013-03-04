@@ -1,5 +1,6 @@
 #include "Suggestions.h"
 
+#include "MainDef.h"
 #include "plugin.h"
 #include "resource.h"
 
@@ -45,6 +46,11 @@ HMENU Suggestions::GetPopupMenu ()
   return PopupMenu;
 }
 
+int Suggestions::GetResult ()
+{
+  return MenuResult;
+}
+
 BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
   POINT p;
@@ -58,11 +64,12 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     RegMsg(_hSelf, MOUSELEAVE);
     return TRUE;
 
-  case WM_SHOWWINDOW:
-  case WM_MOVE:
+  case WM_SHOWANDRECREATEMENU:
     p.x = 0; p.y = 0;
     ClientToScreen (_hSelf, &p);
-    TrackPopupMenu (PopupMenu, 0, p.x, p.y, 0, _hSelf, 0);
+    MenuResult = TrackPopupMenu (PopupMenu, TPM_RETURNCMD, p.x, p.y, 0, _hSelf, 0);
+    SendEvent (EID_APPLYMENUACTION);
+
     DestroyMenu (PopupMenu);
     PopupMenu = CreatePopupMenu ();
     return TRUE;

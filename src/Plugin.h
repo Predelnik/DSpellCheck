@@ -65,12 +65,14 @@ typedef enum {
   EID_KILLTHREAD,
   EID_THREADKILLED,
   EID_INITSUGGESTIONS,
-  EID_MAX
+  EID_APPLYMENUACTION,
+  EID_MAX,
 } EventId;
 
 void SendEvent (EventId Event);
-void SetDelimeters (const char *Str);
-const char *GetDelimeters ();
+void WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
+void SetDelimiters (const char *Str);
+const char *GetDelimiters ();
 void SetLanguage (const char *Str);
 void setEncodingById (int EncId);
 BOOL GetAutoCheckText ();

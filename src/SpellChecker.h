@@ -13,7 +13,7 @@ public:
   ~SpellChecker ();
   BOOL WINAPI NotifyEvent (DWORD Event);
   void SetLanguage (const char *Str);
-  void SetDelimeters (const char *Str);
+  void SetDelimiters (const char *Str);
   void RecheckVisible ();
   void ErrorMsgBox (const TCHAR * message);
 
@@ -22,7 +22,7 @@ private:
   void RemoveWordUnderline (int start, int end);
   void ClearAllUnderlines ();
   void Cleanup ();
-  const char *GetDelimeters ();
+  const char *GetDelimiters ();
   const char *GetLanguage ();
   BOOL AspellReinitSettings ();
   BOOL AspellClear ();

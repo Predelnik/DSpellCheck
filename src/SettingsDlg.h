@@ -29,13 +29,13 @@ class AdvancedDlg : public StaticDialog
 {
 public:
   void ApplySettings (SpellChecker *SpellCheckerInstance);
-  void FillDelimeters (const char *Delimeters);
+  void FillDelimiters (const char *Delimiters);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
-  HWND HEditDelimeters;
+  HWND HEditDelimiters;
   NppData NppDataInstance;
 };
 

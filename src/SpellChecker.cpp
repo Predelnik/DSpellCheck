@@ -38,7 +38,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   {
   case  EID_FILL_DIALOGS:
     SettingsDlgInstance->GetSimpleDlg ()->AddAvalaibleLanguages (Language);
-    SettingsDlgInstance->GetAdvancedDlg ()->FillDelimeters (DelimUtf8);
+    SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
     return TRUE;
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
@@ -81,25 +81,26 @@ char* SpellChecker::GetWordUnderMouse(){
 
 char *SpellChecker::GetWordAt (int CharPos, char *Text)
 {
-  // Text here is already tokenized
-  if (!Text)
-    CheckVisible ();
-
-  int PrevZero = -1;
-
-  if (!Text || !*Text)
+  char *UsedText = Text + CharPos - VisibleTextOffset;
+  if (!DelimUtf8)
     return 0;
 
-  for (int i = 0; i <= VisibleTextLength; i++)
-  {
-    if (VisibleText[i] == 0)
-    {
-      if (i > (CharPos - VisibleTextOffset))
-        return VisibleText + PrevZero + 1;
-      else
-        PrevZero = i;
-    }
-  }
+  while (*UsedText != 0 && UsedText > Text) // Finding closest zero before mouse pos
+    UsedText--;
+
+  UsedText++; // Then find first token after this zero
+
+  char *Delim = 0;
+  char *Context = 0;
+
+  if (ConvertingIsNeeded)
+    SetStringSUtf8 (Delim, DelimUtf8Converted);
+  // We're just taking the first token (basically repeating the same code as an in CheckVisible
+
+  if (!ConvertingIsNeeded)
+    return (char *) _mbstok_s ((unsigned char *) UsedText, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
+  else
+    return strtok_s (UsedText, Delim, &Context);
   return 0;
 }
 
@@ -108,7 +109,9 @@ void SpellChecker::InitSuggestions ()
   char *Word = GetWordUnderMouse ();
   if (!Word || !*Word || CheckWord (Word))
     return;
+
   int Pos = Word - VisibleText + VisibleTextOffset;
+  PostMsgToEditor (NppDataInstance, SCI_SETSEL, Pos, Pos + strlen (Word));
   int XPos = SendMsgToEditor (NppDataInstance, SCI_POINTXFROMPOSITION, 0, Pos);
   int YPos = SendMsgToEditor (NppDataInstance, SCI_POINTYFROMPOSITION, 0, Pos);
   int Line = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, Pos);
@@ -125,6 +128,7 @@ void SpellChecker::InitSuggestions ()
   const char *Suggestion;
   TCHAR *Buf = 0;
   HMENU PopupMenu = SuggestionsInstance->GetPopupMenu ();
+  PopupMenu = SuggestionsInstance->GetPopupMenu ();
   int Counter = 0;
 
   while ((Suggestion = aspell_string_enumeration_next(els)) != 0)
@@ -132,11 +136,27 @@ void SpellChecker::InitSuggestions ()
     if (Counter >= 5)
       break;
     SetStringSUtf8 (Buf, Suggestion);
-    InsertMenu (PopupMenu, 0, MF_BYPOSITION, 0, Buf);
+    AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, Counter + 1, Buf);
     Counter++;
   }
 
   MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight, 10, 10, TRUE);
+  // Here we go doing blocking call for menu, so shouldn't be any desync problems
+  SendMessage (SuggestionsInstance->getHSelf (), WM_SHOWANDRECREATEMENU, 0, 0);
+  WaitForEvent (EID_APPLYMENUACTION);
+  int Result = SuggestionsInstance->GetResult ();
+  if (Result != 0)
+  {
+    if (Result <= Counter)
+    {
+      els = aspell_word_list_elements(wl);
+      for (int i = 1; i <= Result; i++)
+      {
+        Suggestion = aspell_string_enumeration_next(els);
+      }
+      SendMsgToEditor (NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) Suggestion);
+    }
+  }
 }
 
 void SpellChecker::UpdateAutocheckStatus ()
@@ -160,9 +180,9 @@ void SpellChecker::LoadSettings ()
   GetPrivateProfileString (_T ("SpellCheck"), _T ("Language"), _T ("En_Us"), Buf, DEFAULT_BUF_SIZE, IniFilePath);
   SetString (BufA, Buf);
   SetLanguage (BufA);
-  GetPrivateProfileString (_T ("SpellCheck"), _T ("Delim"), _T (" \\n\\r\\t,.!?-\\\":;{}()[]\\\\/'"), Buf, DEFAULT_BUF_SIZE, IniFilePath);
-  SetStringDUtf8 (BufUtf8, Buf);
-  SetDelimeters (BufUtf8);
+  GetPrivateProfileString (_T ("SpellCheck"), _T ("Delimiters"), _T ("! \\n\\r\\t,.!?-\\\":;{}()[]\\\\/'"), Buf, DEFAULT_BUF_SIZE, IniFilePath);
+  SetStringDUtf8 (BufUtf8, Buf + 1);
+  SetDelimiters (BufUtf8);
 }
 
 void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)
@@ -242,13 +262,13 @@ void SpellChecker::SetLanguage (const char *Str)
   AspellReinitSettings ();
 }
 
-const char *SpellChecker::GetDelimeters ()
+const char *SpellChecker::GetDelimiters ()
 {
   return DelimUtf8;
 }
 
 // Here parameter is in utf-8
-void SpellChecker::SetDelimeters (const char *Str)
+void SpellChecker::SetDelimiters (const char *Str)
 {
   TCHAR *DestBuf = 0;
   TCHAR *SrcBuf = 0;
@@ -261,9 +281,15 @@ void SpellChecker::SetDelimeters (const char *Str)
 
   TCHAR *OutputString = 0;
   SetStringSUtf8 (OutputString, Str);
-  WritePrivateProfileString (_T ("SpellCheck"), _T ("Delimeters"), OutputString, IniFilePath);
+  TCHAR *OutputStringProtected = new TCHAR[_tcslen (OutputString) + 1 + 1];
+  OutputStringProtected[0] = _T ('!');
+  OutputStringProtected[1] = 0;
+  _tcscat (OutputStringProtected, OutputString);
+  WritePrivateProfileString (_T ("SpellCheck"), _T ("Delimiters"), OutputStringProtected, IniFilePath);
   CLEAN_AND_ZERO_ARR (OutputString);
-  // RecheckDocument ();
+  CLEAN_AND_ZERO_ARR (OutputStringProtected);
+
+  RecheckVisible ();
 }
 
 const char *SpellChecker::GetLanguage ()
@@ -324,7 +350,7 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
 
   HWND ScintillaWindow = GetScintillaWindow (NppDataInstance);
   int oldid = SendMsgToEditor (ScintillaWindow, NppDataInstance, SCI_GETINDICATORCURRENT);
-  char *context = 0; // Temporary variable for strtok_s usage
+  char *Context = 0; // Temporary variable for strtok_s usage
   char *Delim = 0;
   char *token;
 
@@ -337,9 +363,9 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
   // we're gonna do explicitly all conversations before call to them.
 
   if (!ConvertingIsNeeded)
-    token = (char *) _mbstok_s ((unsigned char *) TextToCheck, (unsigned char *) DelimUtf8Converted, (unsigned char **) &context);
+    token = (char *) _mbstok_s ((unsigned char *) TextToCheck, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
   else
-    token = strtok_s (TextToCheck, Delim, &context);
+    token = strtok_s (TextToCheck, Delim, &Context);
 
   while (token)
   {
@@ -347,9 +373,9 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
       CreateWordUnderline (ScintillaWindow, offset + token - TextToCheck, offset + token - TextToCheck + strlen (token) - 1);
 
     if (!ConvertingIsNeeded)
-      token =  (char *) _mbstok_s (NULL, (unsigned char *) DelimUtf8Converted, (unsigned char **) &context);
+      token =  (char *) _mbstok_s (NULL, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
     else
-      token = strtok_s (NULL, Delim, &context);
+      token = strtok_s (NULL, Delim, &Context);
   }
   if (ConvertingIsNeeded)
     CLEAN_AND_ZERO_ARR (Delim);

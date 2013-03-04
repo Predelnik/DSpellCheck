@@ -106,7 +106,7 @@ void SetStringDUtf8 (char *&Target, const char *Str)
   CLEAN_AND_ZERO (WcharBuf);
 }
 
-// This function is more or less transfered from gcc source
+// This function is more or less transferred from gcc source
 BOOL MatchSpecialChar (TCHAR *Dest, TCHAR *&Source)
 {
   int len, i;
