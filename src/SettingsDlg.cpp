@@ -69,16 +69,30 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
   int length = GetWindowTextLengthA (HComboLanguage);
   char *LangString = new char[length + 1];
+  TCHAR *Buf = 0;
   GetWindowTextA (HComboLanguage, LangString, length + 1);
   SpellCheckerInstance->SetLanguage (LangString);
   SpellCheckerInstance->RecheckVisible ();
+  Buf = new TCHAR[10];
+  Edit_GetText (HSuggestionsNum, Buf, 10);
+  SpellCheckerInstance->SetSuggestionsNum (_ttoi (Buf));
   CLEAN_AND_ZERO_ARR (LangString);
+}
+
+void SimpleDlg::FillSugestionsNum (int SuggestionsNum)
+{
+  TCHAR Buf[10];
+  _itot_s (SuggestionsNum, Buf, 10);
+  Edit_SetText (HSuggestionsNum, Buf);
 }
 
 BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
   char *LangString = NULL;
   int length = 0;
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  int x;
+  TCHAR *EndPtr;
 
   switch (message)
   {
@@ -86,12 +100,35 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
     {
       // Retrieving handles of dialog controls
       HComboLanguage = ::GetDlgItem(_hSelf, IDC_COMBO_LANGUAGE);
+      HSuggestionsNum = ::GetDlgItem(_hSelf, IDC_SUGGESTIONS_NUM);
       return TRUE;
     }
   case WM_CLOSE:
     {
       EndDialog(_hSelf, 0);
       return TRUE;
+    }
+  case WM_COMMAND:
+    {
+      if (LOWORD (wParam) == IDC_SUGGESTIONS_NUM)
+      {
+        if (HIWORD (wParam) == EN_CHANGE)
+        {
+          Edit_GetText (HSuggestionsNum, Buf, DEFAULT_BUF_SIZE);
+          if (!*Buf)
+            return TRUE;
+
+          x = _tcstol (Buf, &EndPtr, 10);
+          if (*EndPtr)
+            Edit_SetText (HSuggestionsNum, _T ("5"));
+          else if (x > 20)
+            Edit_SetText (HSuggestionsNum, _T ("20"));
+          else if (x < 1)
+            Edit_SetText (HSuggestionsNum, _T ("1"));
+
+          return TRUE;
+        }
+      }
     }
   }
   return FALSE;

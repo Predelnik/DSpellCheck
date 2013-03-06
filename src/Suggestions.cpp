@@ -64,6 +64,10 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     RegMsg(_hSelf, MOUSELEAVE);
     return TRUE;
 
+  case WM_LBUTTONUP:
+    SendEvent (EID_SHOW_SUGGESTION_MENU);
+    return TRUE;
+
   case WM_SHOWANDRECREATEMENU:
     p.x = 0; p.y = 0;
     ClientToScreen (_hSelf, &p);

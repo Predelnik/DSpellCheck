@@ -12,6 +12,8 @@ public:
   __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   BOOL AddAvalaibleLanguages (const char *CurrentLanguage);
+  void FillSugestionsNum (int SuggestionsNum);
+
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -20,9 +22,9 @@ private:
   NppData NppDataInstance;
 
   /* handles of controls */
+  HWND HSuggestionsNum;
+  HWND HSpinSuggestionsNum;
   HWND HComboLanguage;
-  HWND HOk;
-  HWND HCancel;
 };
 
 class AdvancedDlg : public StaticDialog

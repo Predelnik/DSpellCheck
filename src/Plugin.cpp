@@ -60,13 +60,28 @@ Suggestions *SuggestionsInstance;
 HANDLE hThread = NULL;
 HANDLE hEvent[EID_MAX]  = {NULL};
 HANDLE hModule = NULL;
+HHOOK HMouseHook = NULL;
 
 //
 // Initialize your plugin data here
 // It will be called while plugin loading
+LRESULT CALLBACK MouseProc (_In_  int nCode,
+                            _In_  WPARAM wParam,
+                            _In_  LPARAM lParam)
+{
+  switch (wParam)
+  {
+  case WM_MOUSEMOVE:
+    SendEvent (EID_INIT_SUGGESTIONS_BOX);
+    break;
+  }
+  return CallNextHookEx(HMouseHook, nCode, wParam, lParam);;
+}
+
 void pluginInit(HANDLE hModuleArg)
 {
   hModule = hModuleArg;
+  HMouseHook = SetWindowsHookEx (WH_MOUSE, MouseProc, 0, GetCurrentThreadId ());
   // Init it all dialog classes:
 }
 
@@ -145,7 +160,7 @@ void SwitchAutoCheckText ()
 
 void GetSuggestions ()
 {
-  SendEvent (EID_INITSUGGESTIONS);
+  //SendEvent (EID_INITSUGGESTIONS);
 }
 
 void StartSettings ()

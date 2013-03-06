@@ -71,6 +71,14 @@ extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
+  /*
+  // DEBUG_CODE:
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  _itot (notifyCode->nmhdr.code, Buf, 10);
+  OutputDebugString (Buf);
+  OutputDebugString (_T("\n"));
+  */
+
   switch (notifyCode->nmhdr.code)
   {
   case NPPN_SHUTDOWN:
@@ -94,6 +102,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
     }
 
   case SCN_UPDATEUI:
+    SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     if(notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
       RecheckVisible ();
     break;

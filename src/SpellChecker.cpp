@@ -38,29 +38,36 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   {
   case  EID_FILL_DIALOGS:
     SettingsDlgInstance->GetSimpleDlg ()->AddAvalaibleLanguages (Language);
+    SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
     SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
-    return TRUE;
+    break;
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
     SettingsDlgInstance->GetAdvancedDlg ()->ApplySettings (this);
-    return TRUE;
+    break;
   case EID_HIDE_DIALOG:
     SettingsDlgInstance->display (false);
-    return TRUE;
+    break;
   case EID_LOAD_SETTINGS:
     LoadSettings ();
-    return TRUE;
+    break;
   case EID_RECHECK_VISIBLE:
     RecheckVisible ();
-    return TRUE;
+    break;
   case EID_SWITCH_AUTOCHECK:
     SwitchAutoCheck ();
-    return TRUE;
+    break;
   case EID_KILLTHREAD:
     return FALSE;
-  case EID_INITSUGGESTIONS:
-    InitSuggestions ();
-    return TRUE;
+  case EID_INIT_SUGGESTIONS_BOX:
+    InitSuggestionsBox ();
+    break;
+  case EID_SHOW_SUGGESTION_MENU:
+    ShowSuggestionsMenu ();
+    break;
+  case EID_HIDE_SUGGESTIONS_BOX:
+    SuggestionsInstance->display (false);
+    break;
   }
   return TRUE;
 }
@@ -104,23 +111,48 @@ char *SpellChecker::GetWordAt (int CharPos, char *Text)
   return 0;
 }
 
-void SpellChecker::InitSuggestions ()
+void SpellChecker::InitSuggestionsBox ()
 {
+  if (!AutoCheckText) // If there's no red underline let's do nothing
+  {
+    SuggestionsInstance->display (false);
+    return;
+  }
+
   char *Word = GetWordUnderMouse ();
   if (!Word || !*Word || CheckWord (Word))
+  {
     return;
+  }
 
   int Pos = Word - VisibleText + VisibleTextOffset;
-  PostMsgToEditor (NppDataInstance, SCI_SETSEL, Pos, Pos + strlen (Word));
-  int XPos = SendMsgToEditor (NppDataInstance, SCI_POINTXFROMPOSITION, 0, Pos);
-  int YPos = SendMsgToEditor (NppDataInstance, SCI_POINTYFROMPOSITION, 0, Pos);
+  WUCPosition = Pos;
+  WUCLength = strlen (Word);
   int Line = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, Pos);
   int TextHeight = SendMsgToEditor (NppDataInstance, SCI_TEXTHEIGHT, Line);
+  int XPos = SendMsgToEditor (NppDataInstance, SCI_POINTXFROMPOSITION, 0, Pos);
+  int YPos = SendMsgToEditor (NppDataInstance, SCI_POINTYFROMPOSITION, 0, Pos);
   POINT p;
   p.x = XPos; p.y = YPos;
   ClientToScreen (GetScintillaWindow (NppDataInstance), &p);
+  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight, 10, 10, TRUE);
+  SuggestionsInstance->display ();
+}
 
-  const AspellWordList *wl = aspell_speller_suggest (Speller, Word, -1);
+void SpellChecker::ShowSuggestionsMenu ()
+{
+  if (WUCPosition - VisibleTextOffset < 0 || WUCPosition - VisibleTextOffset + WUCLength - 1 > VisibleTextLength)
+    return; // Word is already off-screen
+
+  int Pos = WUCPosition;
+  Sci_TextRange Range;
+  Range.chrg.cpMin = WUCPosition;
+  Range.chrg.cpMax = WUCPosition + WUCLength - 1;
+  Range.lpstrText = new char [WUCLength + 1];
+  PostMsgToEditor (NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
+  SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+
+  const AspellWordList *wl = aspell_speller_suggest (Speller, Range.lpstrText, -1);
   if (!wl)
     return;
 
@@ -133,14 +165,18 @@ void SpellChecker::InitSuggestions ()
 
   while ((Suggestion = aspell_string_enumeration_next(els)) != 0)
   {
-    if (Counter >= 5)
+    if (Counter >= SuggestionsNum)
       break;
     SetStringSUtf8 (Buf, Suggestion);
     AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, Counter + 1, Buf);
     Counter++;
   }
 
-  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight, 10, 10, TRUE);
+  if (Counter > 0)
+    AppendMenu (PopupMenu, MF_ENABLED | MF_SEPARATOR, 0, _T (""));
+
+  AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, MID_ADDTODICTIONARY, _T ("Add to Dictionary"));
+
   // Here we go doing blocking call for menu, so shouldn't be any desync problems
   SendMessage (SuggestionsInstance->getHSelf (), WM_SHOWANDRECREATEMENU, 0, 0);
   WaitForEvent (EID_APPLYMENUACTION);
@@ -159,30 +195,27 @@ void SpellChecker::InitSuggestions ()
   }
 }
 
-void SpellChecker::UpdateAutocheckStatus ()
+void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
 {
-  TCHAR Buf[DEFAULT_BUF_SIZE];
-  _itot (AutoCheckText, Buf, DEFAULT_BUF_SIZE);
-  WritePrivateProfileString (_T ("SpellCheck"), _T ("Autocheck"), Buf, IniFilePath);
+  if (SaveSetting)
+    SaveToIni (_T ("Autocheck"), AutoCheckText);
+
   CheckMenuItem(GetMenu(NppDataInstance->_nppHandle), get_funcItem ()[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
   RecheckVisible ();
 }
 
 void SpellChecker::LoadSettings ()
 {
-  TCHAR Buf[DEFAULT_BUF_SIZE];
-  char *BufA = 0;
   char *BufUtf8 = 0;
-  GetPrivateProfileString (_T ("SpellCheck"), _T ("Autocheck"), _T ("0"), Buf, DEFAULT_BUF_SIZE, IniFilePath);
-  AutoCheckText = _ttoi (Buf);
+  LoadFromIni (AutoCheckText, _T ("Autocheck"), 0);
   CheckMenuItem(GetMenu(NppDataInstance->_nppHandle), get_funcItem ()[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
-  UpdateAutocheckStatus ();
-  GetPrivateProfileString (_T ("SpellCheck"), _T ("Language"), _T ("En_Us"), Buf, DEFAULT_BUF_SIZE, IniFilePath);
-  SetString (BufA, Buf);
-  SetLanguage (BufA);
-  GetPrivateProfileString (_T ("SpellCheck"), _T ("Delimiters"), _T ("! \\n\\r\\t,.!?-\\\":;{}()[]\\\\/'"), Buf, DEFAULT_BUF_SIZE, IniFilePath);
-  SetStringDUtf8 (BufUtf8, Buf + 1);
-  SetDelimiters (BufUtf8);
+  UpdateAutocheckStatus (0);
+  LoadFromIniUtf8 (Language, _T ("Language"), "En_Us");
+  AspellReinitSettings ();
+  LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), " \\n\\r\\t,.!?-\\\":;{}()[]\\\\/", TRUE);
+  SetDelimiters (BufUtf8, 0);
+  LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
+  CLEAN_AND_ZERO_ARR (BufUtf8);
 }
 
 void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)
@@ -251,14 +284,87 @@ void SpellChecker::Cleanup()
   // We should deallocate shortcuts here
 }
 
+void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuotes)
+{
+  if (InQuotes)
+  {
+    int Len = 1 + _tcslen (Value) + 1 + 1;
+    TCHAR *Buf = new TCHAR[Len];
+    _stprintf (Buf, _T ("\"%s\""), Value, Len - 3);
+    WritePrivateProfileString (_T ("SpellCheck"), Name, Buf, IniFilePath);
+    CLEAN_AND_ZERO_ARR (Buf);
+  }
+  else
+  {
+    WritePrivateProfileString (_T ("SpellCheck"), Name, Value, IniFilePath);
+  }
+}
+
+void SpellChecker::SaveToIni (const TCHAR *Name, int Value)
+{
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  _itot_s (Value, Buf, 10);
+  SaveToIni (Name, Buf);
+}
+
+void SpellChecker::SaveToIniUtf8 (const TCHAR *Name, const char *Value, BOOL InQuotes)
+{
+  TCHAR *Buf = 0;
+  SetStringSUtf8 (Buf, Value);
+  SaveToIni (Name, Buf, InQuotes);
+  CLEAN_AND_ZERO_ARR (Buf);
+}
+
+void SpellChecker::LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *DefaultValue, BOOL InQuotes)
+{
+  CLEAN_AND_ZERO (Value);
+  Value = new TCHAR[DEFAULT_BUF_SIZE];
+
+  GetPrivateProfileString (_T ("SpellCheck"), Name, DefaultValue, Value, DEFAULT_BUF_SIZE, IniFilePath);
+
+  if (InQuotes)
+  {
+    int Len = _tcslen (Value);
+    // Proof check for quotes
+    if (Value[0] != '\"' || Value[Len] != '\"')
+    {
+      _tcscpy_s (Value, DEFAULT_BUF_SIZE, DefaultValue);
+      return;
+    }
+
+    for (int i = 0; i < Len; i++)
+      Value[i] = Value[i + 1];
+
+    Value[Len - 1] = 0;
+  }
+}
+
+void SpellChecker::LoadFromIni (int &Value, const TCHAR *Name, int DefaultValue)
+{
+  TCHAR BufDefault[DEFAULT_BUF_SIZE];
+  TCHAR *Buf = 0;
+  _itot_s (DefaultValue, BufDefault, 10);
+  LoadFromIni (Buf, Name, BufDefault);
+  Value = _ttoi (Buf);
+  CLEAN_AND_ZERO_ARR (Buf);
+}
+
+void SpellChecker::LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char *DefaultValue, BOOL InQuotes)
+{
+  TCHAR *BufDefault = 0;
+  TCHAR *Buf = 0;
+  SetStringSUtf8 (BufDefault, DefaultValue);
+  LoadFromIni (Buf, Name, BufDefault);
+  SetStringDUtf8 (Value, Buf);
+  CLEAN_AND_ZERO_ARR (Buf);
+  CLEAN_AND_ZERO_ARR (BufDefault);
+}
+
 // Here parameter is in ANSI (may as well be utf-8 cause only english I guess)
 void SpellChecker::SetLanguage (const char *Str)
 {
   SetString (Language, Str);
-  TCHAR *OutputString = 0;
-  SetString (OutputString, Str);
-  WritePrivateProfileString (_T ("SpellCheck"), _T ("Language"), OutputString, IniFilePath);
-  CLEAN_AND_ZERO_ARR (OutputString);
+  SaveToIniUtf8 (_T ("Language"), Language);
   AspellReinitSettings ();
 }
 
@@ -267,8 +373,14 @@ const char *SpellChecker::GetDelimiters ()
   return DelimUtf8;
 }
 
+void SpellChecker::SetSuggestionsNum (int Num)
+{
+  SuggestionsNum = Num;
+  SaveToIni (_T ("Suggestions_Number"), Num);
+}
+
 // Here parameter is in utf-8
-void SpellChecker::SetDelimiters (const char *Str)
+void SpellChecker::SetDelimiters (const char *Str, int SaveToIni)
 {
   TCHAR *DestBuf = 0;
   TCHAR *SrcBuf = 0;
@@ -279,16 +391,8 @@ void SpellChecker::SetDelimiters (const char *Str)
   CLEAN_AND_ZERO_ARR (DestBuf);
   CLEAN_AND_ZERO_ARR (SrcBuf);
 
-  TCHAR *OutputString = 0;
-  SetStringSUtf8 (OutputString, Str);
-  TCHAR *OutputStringProtected = new TCHAR[_tcslen (OutputString) + 1 + 1];
-  OutputStringProtected[0] = _T ('!');
-  OutputStringProtected[1] = 0;
-  _tcscat (OutputStringProtected, OutputString);
-  WritePrivateProfileString (_T ("SpellCheck"), _T ("Delimiters"), OutputStringProtected, IniFilePath);
-  CLEAN_AND_ZERO_ARR (OutputString);
-  CLEAN_AND_ZERO_ARR (OutputStringProtected);
-
+  if (SaveToIni)
+    SaveToIniUtf8 (_T ("Delimiters"), DelimUtf8, TRUE);
   RecheckVisible ();
 }
 
@@ -330,6 +434,15 @@ BOOL SpellChecker::AspellClear ()
 
 BOOL SpellChecker::CheckWord (char *Word)
 {
+  // Well Numbers have same codes for ansi and unicode I guess, so
+  // If word contains number then it's probably just a number or some crazy name
+  // TODO: add this to options
+  for (char c = '0'; c <= '9'; c++)
+  {
+    if (strchr (Word, c))
+      return TRUE;
+  }
+
   if (ConvertingIsNeeded) // That's really part that sucks
   {
     // Well TODO: maybe convert only to unicode and tell aspell that we're using unicode
