@@ -56,6 +56,9 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
   nppData = notpadPlusData;
   commandMenuInit();
+  InitClasses ();
+  CreateThreadResources ();
+  LoadSettings ();
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -71,13 +74,11 @@ extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
-  /*
   // DEBUG_CODE:
   TCHAR Buf[DEFAULT_BUF_SIZE];
-  _itot (notifyCode->nmhdr.code, Buf, 10);
+  _ultot (notifyCode->nmhdr.code, Buf, 10);
   OutputDebugString (Buf);
   OutputDebugString (_T("\n"));
-  */
 
   switch (notifyCode->nmhdr.code)
   {
@@ -91,7 +92,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
     {
       SendMsgToEditor(&nppData, SCI_INDICSETSTYLE ,SCE_SQUIGGLE_UNDERLINE_RED, INDIC_SQUIGGLE);
       SendMsgToEditor(&nppData, SCI_INDICSETFORE, SCE_SQUIGGLE_UNDERLINE_RED, 0x0000ff);
-      LoadSettings ();
+      SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
+      CreateHooks ();
     }
     break;
 
@@ -122,13 +124,13 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 // Please let me know if you need to access to some messages :
 
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
-{/*
- if (Message == WM_MOVE)
- {
- ::MessageBox(NULL, "move", "", MB_OK);
- }
- */
-  return TRUE;
+{
+  switch (Message)
+  {
+  case WM_MOVE:
+    SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+  }
+  return FALSE;
 }
 
 #ifdef UNICODE

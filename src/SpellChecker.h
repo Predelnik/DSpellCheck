@@ -40,6 +40,7 @@ private:
   void ShowSuggestionsMenu ();
   void InitSuggestionsBox ();
   char *GetWordUnderMouse ();
+  void SetSuggestionsBoxTransparency ();
   char *GetWordAt (int CharPos, char *Text);
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuotes = 0);

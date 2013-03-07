@@ -1,13 +1,13 @@
-- Do a major clean-up
-- Put all aspell operations to separate low priority thread
-- Make precompiled header with windows.h
-- Make ability to use several dictionaries at once
-- Add more options (её - exclusive Russian option)
-- Add suggestions support
-- Add find next misspeling support
-- Add adding to user dictionary support
+First Priority Stuff:
+- Fix random occuring segfault on close, that's a total bust
 - Add many failsafe checks for different situations (like aspell missing and such)
 - Add ability to choose aspell location
+- Add find next misspeling support
+- Add some clever options to do not look like a fool.
+
+"Some other day" Stuff:
+- Make ability to use several dictionaries at once
+- Add more options (её - exclusive Russian option)
 - Possibly ignore current language keywords
 - Possibly check if ANSI encoding file exist then do no conversion
 - Possibly add hunspell support

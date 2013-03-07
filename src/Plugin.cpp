@@ -81,7 +81,6 @@ LRESULT CALLBACK MouseProc (_In_  int nCode,
 void pluginInit(HANDLE hModuleArg)
 {
   hModule = hModuleArg;
-  HMouseHook = SetWindowsHookEx (WH_MOUSE, MouseProc, 0, GetCurrentThreadId ());
   // Init it all dialog classes:
 }
 
@@ -120,6 +119,11 @@ void CreateThreadResources ()
   SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
 }
 
+void CreateHooks ()
+{
+  HMouseHook = SetWindowsHookEx (WH_MOUSE, MouseProc, 0, GetCurrentThreadId ());
+}
+
 void KillThreadResources ()
 {
   SendEvent (EID_KILLTHREAD);
@@ -138,6 +142,7 @@ void KillThreadResources ()
 //
 void pluginCleanUp ()
 {
+  UnhookWindowsHookEx(HMouseHook);
   KillThreadResources ();
   CLEAN_AND_ZERO (SpellCheckerInstance);
   CLEAN_AND_ZERO (SettingsDlgInstance);
@@ -217,9 +222,11 @@ void commandMenuInit()
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x42;
-  setCommand(2, TEXT("Get Suggestions for Word at Cursor..."), GetSuggestions, shKey, false);
-  setCommand(3, TEXT("Settings..."), StartSettings, NULL, false);
+  setCommand(2, TEXT("Settings..."), StartSettings, NULL, false);
+}
 
+void InitClasses ()
+{
   SuggestionsInstance = new Suggestions;
   SuggestionsInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
   SuggestionsInstance->DoDialog ();
@@ -227,7 +234,6 @@ void commandMenuInit()
   SettingsDlgInstance = new SettingsDlg;
   SettingsDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle, nppData);
   SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance);
-  CreateThreadResources ();
 }
 
 void commandMenuCleanUp()

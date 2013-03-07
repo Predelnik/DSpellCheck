@@ -51,34 +51,92 @@ int Suggestions::GetResult ()
   return MenuResult;
 }
 
+Suggestions::Suggestions ()
+{
+  StatePressed = FALSE;
+  StateHovered = FALSE;
+  StateMenu = FALSE;
+}
+
 BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
   POINT p;
+  HDC Dc;
+  HBITMAP hBmp;
+  HBITMAP hOldBitmap;
+  BITMAP Bmp;
+  int idImg = 0;
+  PAINTSTRUCT ps;
+
   switch (Message)
   {
   case WM_INITDIALOG:
+
     display (false);
     PopupMenu = CreatePopupMenu ();
+
     return TRUE;
+
   case WM_MOUSEMOVE:
+    StateHovered = TRUE;
     RegMsg(_hSelf, MOUSELEAVE);
+    RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
+    return TRUE;
+
+  case WM_MOUSEHOVER:
+    return TRUE;
+
+  case WM_LBUTTONDOWN:
+    StatePressed = TRUE;
+    RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
     return TRUE;
 
   case WM_LBUTTONUP:
+    if (!StatePressed)
+      return TRUE;
     SendEvent (EID_SHOW_SUGGESTION_MENU);
     return TRUE;
 
+  case WM_PAINT:
+    if (!isVisible ())
+      return TRUE;
+
+    idImg = IDR_DOWNARROW;
+    if (StatePressed || StateMenu)
+      idImg = IDR_DOWNARROW_PUSH;
+    else if (StateHovered)
+      idImg = IDR_DOWNARROW_HOVER;
+
+    HDC hdcMemory;
+    Dc = BeginPaint(_hSelf, &ps);
+    hdcMemory = ::CreateCompatibleDC(Dc);
+    hBmp = LoadBitmap(_hInst, MAKEINTRESOURCE(idImg));
+    GetObject(hBmp, sizeof(Bmp), &Bmp);
+    hOldBitmap = (HBITMAP) SelectObject(hdcMemory, hBmp);
+    SetStretchBltMode (Dc, HALFTONE);
+    StretchBlt (Dc, 0, 0, 15, 15, hdcMemory, 0, 0, Bmp.bmWidth, Bmp.bmHeight, SRCCOPY);
+    SelectObject (hdcMemory, hOldBitmap);
+    DeleteDC(hdcMemory);
+    DeleteObject(hBmp);
+    EndPaint(_hSelf, &ps);
+    return TRUE;
+
   case WM_SHOWANDRECREATEMENU:
-    p.x = 0; p.y = 0;
+    p.x = getWidth (); p.y = 0;
     ClientToScreen (_hSelf, &p);
+    StateMenu = TRUE;
     MenuResult = TrackPopupMenu (PopupMenu, TPM_RETURNCMD, p.x, p.y, 0, _hSelf, 0);
     SendEvent (EID_APPLYMENUACTION);
+    StateMenu = FALSE;
 
     DestroyMenu (PopupMenu);
     PopupMenu = CreatePopupMenu ();
     return TRUE;
 
   case WM_MOUSELEAVE:
+    StateHovered = FALSE;
+    StatePressed = FALSE;
+    RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
     return TRUE;
   }
   return FALSE;

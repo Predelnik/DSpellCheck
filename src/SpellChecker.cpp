@@ -23,8 +23,8 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SuggestionsInstance = SuggestionsInstanceArg;
   NppDataInstance = NppDataInstanceArg;
   LoadAspell (0);
-  LoadSettings ();
   AspellReinitSettings ();
+  OutputDebugString (_T ("Init Spell Checker Class Done"));
 }
 
 SpellChecker::~SpellChecker ()
@@ -68,6 +68,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_HIDE_SUGGESTIONS_BOX:
     SuggestionsInstance->display (false);
     break;
+  case EID_SET_SUGGESTIONS_BOX_TRANSPARENCY:
+    SetSuggestionsBoxTransparency ();
+    break;
   }
   return TRUE;
 }
@@ -76,7 +79,7 @@ char* SpellChecker::GetWordUnderMouse(){
   char *ret = NULL;
   POINT p;
   if(GetCursorPos(&p) != 0){
-    ScreenToClient(WindowFromPoint(p), &p);
+    ScreenToClient(GetScintillaWindow (NppDataInstance), &p);
 
     int initCharPos = SendMsgToEditor (NppDataInstance, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
     if(initCharPos != -1){
@@ -104,11 +107,23 @@ char *SpellChecker::GetWordAt (int CharPos, char *Text)
     SetStringSUtf8 (Delim, DelimUtf8Converted);
   // We're just taking the first token (basically repeating the same code as an in CheckVisible
 
+  char *Res = 0;
   if (!ConvertingIsNeeded)
-    return (char *) _mbstok_s ((unsigned char *) UsedText, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
+    Res = (char *) _mbstok_s ((unsigned char *) UsedText, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
   else
-    return strtok_s (UsedText, Delim, &Context);
-  return 0;
+    Res = strtok_s (UsedText, Delim, &Context);
+  if (Res - Text + VisibleTextOffset > CharPos)
+    return 0;
+  else
+    return Res;
+}
+
+void SpellChecker::SetSuggestionsBoxTransparency ()
+{
+  // Set WS_EX_LAYERED on this window
+  SetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE,
+    GetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE) | WS_EX_LAYERED);
+  SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * 70) / 100, LWA_ALPHA);
 }
 
 void SpellChecker::InitSuggestionsBox ()
@@ -118,6 +133,11 @@ void SpellChecker::InitSuggestionsBox ()
     SuggestionsInstance->display (false);
     return;
   }
+
+  POINT p;
+  GetCursorPos (&p);
+  if (WindowFromPoint (p) != GetScintillaWindow (NppDataInstance))
+    return;
 
   char *Word = GetWordUnderMouse ();
   if (!Word || !*Word || CheckWord (Word))
@@ -130,12 +150,13 @@ void SpellChecker::InitSuggestionsBox ()
   WUCLength = strlen (Word);
   int Line = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, Pos);
   int TextHeight = SendMsgToEditor (NppDataInstance, SCI_TEXTHEIGHT, Line);
+  int TextWidth = SendMsgToEditor (NppDataInstance, SCI_TEXTWIDTH, STYLE_DEFAULT, (LPARAM) "_");
   int XPos = SendMsgToEditor (NppDataInstance, SCI_POINTXFROMPOSITION, 0, Pos);
   int YPos = SendMsgToEditor (NppDataInstance, SCI_POINTYFROMPOSITION, 0, Pos);
-  POINT p;
+
   p.x = XPos; p.y = YPos;
   ClientToScreen (GetScintillaWindow (NppDataInstance), &p);
-  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight, 10, 10, TRUE);
+  MoveWindow (SuggestionsInstance->getHSelf (), p.x - 7, p.y + TextHeight, 15, 15, TRUE);
   SuggestionsInstance->display ();
 }
 
@@ -147,7 +168,7 @@ void SpellChecker::ShowSuggestionsMenu ()
   int Pos = WUCPosition;
   Sci_TextRange Range;
   Range.chrg.cpMin = WUCPosition;
-  Range.chrg.cpMax = WUCPosition + WUCLength - 1;
+  Range.chrg.cpMax = WUCPosition + WUCLength;
   Range.lpstrText = new char [WUCLength + 1];
   PostMsgToEditor (NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
   SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
@@ -175,7 +196,15 @@ void SpellChecker::ShowSuggestionsMenu ()
   if (Counter > 0)
     AppendMenu (PopupMenu, MF_ENABLED | MF_SEPARATOR, 0, _T (""));
 
-  AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, MID_ADDTODICTIONARY, _T ("Add to Dictionary"));
+  TCHAR *MenuString = new TCHAR [WUCLength + 50 + 1]; // Add "" to dictionary
+  if (!ConvertingIsNeeded)
+    SetStringSUtf8 (Buf, Range.lpstrText);
+  else
+    SetString (Buf, Range.lpstrText);
+  _stprintf (MenuString, _T ("Ignore \"%s\" for this session"), Buf);
+  AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, MID_IGNOREALL, MenuString);
+  _stprintf (MenuString, _T ("Add \"%s\" to dictionary"), Buf);
+  AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, MID_ADDTODICTIONARY, MenuString);
 
   // Here we go doing blocking call for menu, so shouldn't be any desync problems
   SendMessage (SuggestionsInstance->getHSelf (), WM_SHOWANDRECREATEMENU, 0, 0);
@@ -183,7 +212,27 @@ void SpellChecker::ShowSuggestionsMenu ()
   int Result = SuggestionsInstance->GetResult ();
   if (Result != 0)
   {
-    if (Result <= Counter)
+    if (Result == MID_IGNOREALL)
+    {
+      aspell_speller_add_to_session (Speller, Range.lpstrText, WUCLength + 1);
+      aspell_speller_save_all_word_lists (Speller);
+      if (aspell_speller_error(Speller) != 0)
+      {
+        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(Speller));
+      }
+      RecheckVisible ();
+    }
+    else if (Result == MID_ADDTODICTIONARY)
+    {
+      aspell_speller_add_to_personal(Speller, Range.lpstrText, WUCLength + 1);
+      aspell_speller_save_all_word_lists (Speller);
+      if (aspell_speller_error(Speller) != 0)
+      {
+        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(Speller));
+      }
+      RecheckVisible ();
+    }
+    else if (Result <= Counter)
     {
       els = aspell_word_list_elements(wl);
       for (int i = 1; i <= Result; i++)
@@ -193,6 +242,9 @@ void SpellChecker::ShowSuggestionsMenu ()
       SendMsgToEditor (NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) Suggestion);
     }
   }
+  CLEAN_AND_ZERO_ARR (Range.lpstrText);
+  CLEAN_AND_ZERO_ARR (Buf);
+  CLEAN_AND_ZERO_ARR (MenuString);
 }
 
 void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
@@ -474,7 +526,6 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
     SetStringSUtf8 (Delim, DelimUtf8Converted);
   // A little bit ugly but since only function in mbstr.h require unsigned char then
   // we're gonna do explicitly all conversations before call to them.
-
   if (!ConvertingIsNeeded)
     token = (char *) _mbstok_s ((unsigned char *) TextToCheck, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
   else

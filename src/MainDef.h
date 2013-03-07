@@ -9,6 +9,7 @@
 
 // Menu IDs
 #define MID_ADDTODICTIONARY 101
+#define MID_IGNOREALL 102
 
 // Custom WMs (Only for our windows)
 #define WM_SHOWANDRECREATEMENU WM_USER + 1000
