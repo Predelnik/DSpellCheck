@@ -56,9 +56,6 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
   nppData = notpadPlusData;
   commandMenuInit();
-  InitClasses ();
-  CreateThreadResources ();
-  LoadSettings ();
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -78,7 +75,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
   TCHAR Buf[DEFAULT_BUF_SIZE];
   _ultot (notifyCode->nmhdr.code, Buf, 10);
   OutputDebugString (Buf);
-  OutputDebugString (_T("\n"));
+  OutputDebugString (_T ("\n"));
 
   switch (notifyCode->nmhdr.code)
   {
@@ -92,6 +89,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
     {
       SendMsgToEditor(&nppData, SCI_INDICSETSTYLE ,SCE_SQUIGGLE_UNDERLINE_RED, INDIC_SQUIGGLE);
       SendMsgToEditor(&nppData, SCI_INDICSETFORE, SCE_SQUIGGLE_UNDERLINE_RED, 0x0000ff);
+      InitClasses ();
+      CreateThreadResources ();
+      LoadSettings ();
       SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
       CreateHooks ();
     }
@@ -99,14 +99,17 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 
   case NPPN_BUFFERACTIVATED:
     {
+      SendEvent (EID_HIDE_SUGGESTIONS_BOX);
       RecheckVisible ();
       break;
     }
 
   case SCN_UPDATEUI:
-    SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     if(notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
+    {
       RecheckVisible ();
+    }
+    SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     break;
 
   case SCN_MODIFIED:
@@ -129,6 +132,7 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
   {
   case WM_MOVE:
     SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+    return FALSE;
   }
   return FALSE;
 }

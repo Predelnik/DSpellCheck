@@ -8,14 +8,17 @@
 
 #include "resource.h"
 
-#include <windowsx.h>
-
 #include <uxtheme.h>
 
 void SimpleDlg::init (HINSTANCE hInst, HWND Parent, NppData nppData)
 {
   NppDataInstance = nppData;
   return Window::init (hInst, Parent);
+}
+
+void SimpleDlg::DisableLanguageCombo (BOOL Disable)
+{
+  EnableWindow (HComboLanguage, !Disable);
 }
 
 // Called from main thread, beware!
@@ -25,6 +28,7 @@ BOOL SimpleDlg::AddAvalaibleLanguages (const char *CurrentLanguage)
   AspellDictInfoList* dlist;
   AspellDictInfoEnumeration* dels;
   const AspellDictInfo* entry;
+  ComboBox_ResetContent (HComboLanguage);
 
   aspCfg = new_aspell_config();
 
@@ -64,6 +68,40 @@ BOOL SimpleDlg::AddAvalaibleLanguages (const char *CurrentLanguage)
   return TRUE;
 }
 
+static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText)
+{
+  if (!toolID || !hDlg || !pszText)
+  {
+    return FALSE;
+  }
+  // Get the window of the tool.
+  HWND hwndTool = GetDlgItem(hDlg, toolID);
+
+  // Create the tooltip. g_hInst is the global instance handle.
+  HWND hwndTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
+    WS_POPUP |TTS_ALWAYSTIP | TTS_BALLOON,
+    CW_USEDEFAULT, CW_USEDEFAULT,
+    CW_USEDEFAULT, CW_USEDEFAULT,
+    hDlg, NULL,
+    (HINSTANCE) getHModule (), NULL);
+
+  if (!hwndTool || !hwndTip)
+  {
+    return (HWND)NULL;
+  }
+
+  // Associate the tooltip with the tool.
+  TOOLINFO toolInfo = { 0 };
+  toolInfo.cbSize = sizeof(toolInfo);
+  toolInfo.hwnd = hDlg;
+  toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+  toolInfo.uId = (UINT_PTR)hwndTool;
+  toolInfo.lpszText = pszText;
+  SendMessage(hwndTip, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
+
+  return hwndTip;
+}
+
 // Called from main thread, beware!
 void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
@@ -73,10 +111,33 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   GetWindowTextA (HComboLanguage, LangString, length + 1);
   SpellCheckerInstance->SetLanguage (LangString);
   SpellCheckerInstance->RecheckVisible ();
-  Buf = new TCHAR[10];
-  Edit_GetText (HSuggestionsNum, Buf, 10);
+  Buf = new TCHAR[DEFAULT_BUF_SIZE];
+  Edit_GetText (HSuggestionsNum, Buf, DEFAULT_BUF_SIZE);
   SpellCheckerInstance->SetSuggestionsNum (_ttoi (Buf));
   CLEAN_AND_ZERO_ARR (LangString);
+  Edit_GetText (HAspellPath, Buf, DEFAULT_BUF_SIZE);
+  SpellCheckerInstance->SetAspellPath (Buf);
+  CLEAN_AND_ZERO_ARR (Buf);
+  SendEvent (EID_FILL_DIALOGS);
+  SpellCheckerInstance->RecheckVisible ();
+}
+
+void SimpleDlg::FillAspellInfo (BOOL Status, TCHAR *AspellPath)
+{
+  if (Status)
+  {
+    AspellStatusColor = RGB (0, 144, 0);
+    Static_SetText (HAspellStatus, _T ("Status: Aspell is OK"));
+  }
+  else
+  {
+    AspellStatusColor = RGB (225, 0, 0);
+    Static_SetText (HAspellStatus, _T ("Status: Aspell is missing"));
+  }
+  TCHAR *Path = 0;
+  GetActualAspellPath (Path, AspellPath);
+  Edit_SetText (HAspellPath, Path);
+  CLEAN_AND_ZERO_ARR (Path);
 }
 
 void SimpleDlg::FillSugestionsNum (int SuggestionsNum)
@@ -93,6 +154,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
   TCHAR Buf[DEFAULT_BUF_SIZE];
   int x;
   TCHAR *EndPtr;
+  HBRUSH DefaultBrush = 0;
 
   switch (message)
   {
@@ -101,35 +163,87 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       // Retrieving handles of dialog controls
       HComboLanguage = ::GetDlgItem(_hSelf, IDC_COMBO_LANGUAGE);
       HSuggestionsNum = ::GetDlgItem(_hSelf, IDC_SUGGESTIONS_NUM);
+      HAspellStatus = ::GetDlgItem (_hSelf, IDC_ASPELL_STATUS);
+      HAspellPath = ::GetDlgItem (_hSelf, IDC_ASPELLPATH);
+      DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
       return TRUE;
     }
   case WM_CLOSE:
     {
       EndDialog(_hSelf, 0);
+      DeleteObject (DefaultBrush);
       return TRUE;
     }
   case WM_COMMAND:
     {
-      if (LOWORD (wParam) == IDC_SUGGESTIONS_NUM)
+      switch (LOWORD (wParam))
       {
-        if (HIWORD (wParam) == EN_CHANGE)
+      case IDC_SUGGESTIONS_NUM:
         {
-          Edit_GetText (HSuggestionsNum, Buf, DEFAULT_BUF_SIZE);
-          if (!*Buf)
+          if (HIWORD (wParam) == EN_CHANGE)
+          {
+            Edit_GetText (HSuggestionsNum, Buf, DEFAULT_BUF_SIZE);
+            if (!*Buf)
+              return TRUE;
+
+            x = _tcstol (Buf, &EndPtr, 10);
+            if (*EndPtr)
+              Edit_SetText (HSuggestionsNum, _T ("5"));
+            else if (x > 20)
+              Edit_SetText (HSuggestionsNum, _T ("20"));
+            else if (x < 1)
+              Edit_SetText (HSuggestionsNum, _T ("1"));
+
             return TRUE;
-
-          x = _tcstol (Buf, &EndPtr, 10);
-          if (*EndPtr)
-            Edit_SetText (HSuggestionsNum, _T ("5"));
-          else if (x > 20)
-            Edit_SetText (HSuggestionsNum, _T ("20"));
-          else if (x < 1)
-            Edit_SetText (HSuggestionsNum, _T ("1"));
-
-          return TRUE;
+          }
         }
+        break;
+      case IDC_RESETASPELLPATH:
+        {
+          if (HIWORD (wParam) == BN_CLICKED)
+          {
+            TCHAR *Path = 0;
+            GetDefaultAspellPath (Path);
+            Edit_SetText (HAspellPath, Path);
+            CLEAN_AND_ZERO_ARR (Path);
+            return TRUE;
+          }
+        }
+        break;
+      case IDC_BROWSEASPELLPATH:
+        OPENFILENAME ofn;
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = _hSelf;
+        TCHAR *Buf = new TCHAR [DEFAULT_BUF_SIZE];
+        Edit_GetText (HAspellPath, Buf, DEFAULT_BUF_SIZE);
+        ofn.lpstrFile = Buf;
+        // Set lpstrFile[0] to '\0' so that GetOpenFileName does not
+        // use the contents of szFile to initialize itself.
+        ofn.lpstrFile[0] = '\0';
+        ofn.nMaxFile = DEFAULT_BUF_SIZE;
+        ofn.lpstrFilter = _T ("Aspell Library (*.dll)\0*.dll\0");
+        ofn.nFilterIndex = 1;
+        ofn.lpstrFileTitle = NULL;
+        ofn.nMaxFileTitle = 0;
+        ofn.lpstrInitialDir = NULL;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+        if (GetOpenFileName(&ofn)==TRUE)
+          Edit_SetText (HAspellPath, ofn.lpstrFile);
+
+        break;
       }
     }
+  case WM_CTLCOLORSTATIC:
+    if(GetDlgItem(_hSelf, IDC_ASPELL_STATUS) == (HWND)lParam)
+    {
+      HDC hDC = (HDC)wParam;
+      SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
+      SetTextColor(hDC, AspellStatusColor);
+      SetBkMode(hDC, TRANSPARENT);
+      return (INT_PTR) DefaultBrush;
+    }
+    break;
   }
   return FALSE;
 }
@@ -150,6 +264,9 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
     {
       // Retrieving handles of dialog controls
       HEditDelimiters = ::GetDlgItem(_hSelf, IDC_DELIMETERS);
+      HDefaultDelimiters = ::GetDlgItem (_hSelf, IDC_DEFAULT_DELIMITERS);
+
+      CreateToolTip (IDC_DELIMETERS, _hSelf, _T ("Standard white-space symbols such as New Line ('\\n'), Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are always counted as delimiters"));
       return TRUE;
     }
   case WM_CLOSE:
@@ -157,8 +274,19 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       EndDialog(_hSelf, 0);
       return TRUE;
     }
+  case WM_COMMAND:
+    {
+      if (lParam == (LPARAM)HDefaultDelimiters && HIWORD (wParam) == BN_CLICKED)
+        SendEvent (EID_DEFAULT_DELIMITERS);
+      return TRUE;
+    }
   }
   return FALSE;
+}
+
+void AdvancedDlg::SetDelimetersEdit (TCHAR *Delimiters)
+{
+  Edit_SetText (HEditDelimiters, Delimiters);
 }
 
 // Called from main thread, beware!
@@ -250,9 +378,12 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     {
       switch (wParam)
       {
+      case IDAPPLY:
+        SendEvent (EID_APPLY_SETTINGS);
+        return TRUE;
       case IDOK:
         SendEvent (EID_APPLY_SETTINGS);
-      case IDCANCEL :
+      case IDCANCEL:
         SendEvent (EID_HIDE_DIALOG);
         return TRUE;
 

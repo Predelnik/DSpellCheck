@@ -8,9 +8,12 @@
 #include "Scintilla.h"
 #include "Suggestions.h"
 
+#define DEFAULT_DELIMITERS ",.!?\\\":;{}()[]\\\\/=+-"
+
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg)
 {
+  CurrentPosition = 0;
   DelimUtf8 = 0;
   DelimUtf8Converted = 0;
   Speller = 0;
@@ -22,9 +25,11 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SettingsDlgInstance = SettingsDlgInstanceArg;
   SuggestionsInstance = SuggestionsInstanceArg;
   NppDataInstance = NppDataInstanceArg;
-  LoadAspell (0);
+  AspellLoaded = FALSE;
+  AutoCheckText = 0;
   AspellReinitSettings ();
-  OutputDebugString (_T ("Init Spell Checker Class Done"));
+  LockSuggestionsBoxHide = FALSE;
+  AspellPath = 0;
 }
 
 SpellChecker::~SpellChecker ()
@@ -37,7 +42,11 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   switch (Event)
   {
   case  EID_FILL_DIALOGS:
-    SettingsDlgInstance->GetSimpleDlg ()->AddAvalaibleLanguages (Language);
+    if (AspellLoaded)
+      SettingsDlgInstance->GetSimpleDlg ()->AddAvalaibleLanguages (Language);
+
+    SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (!AspellLoaded);
+    SettingsDlgInstance->GetSimpleDlg ()->FillAspellInfo (AspellLoaded, AspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
     SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
     break;
@@ -66,13 +75,130 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     ShowSuggestionsMenu ();
     break;
   case EID_HIDE_SUGGESTIONS_BOX:
-    SuggestionsInstance->display (false);
+    HideSuggestionBox ();
     break;
   case EID_SET_SUGGESTIONS_BOX_TRANSPARENCY:
     SetSuggestionsBoxTransparency ();
     break;
+  case EID_DEFAULT_DELIMITERS:
+    SetDefaultDelimiters ();
+    break;
+  case EID_FIND_NEXT_MISTAKE:
+    FindNextMistake ();
+    break;
+  case EID_FIND_PREV_MISTAKE:
+    FindPrevMistake ();
+    break;
   }
   return TRUE;
+}
+
+void SpellChecker::HideSuggestionBox ()
+{
+  if (!LockSuggestionsBoxHide)
+    SuggestionsInstance->display (false);
+}
+
+#define STEP_SIZE 16384
+void SpellChecker::FindNextMistake ()
+{
+  // TODO: /n, /r should always be present in delimiters
+  CurrentPosition = SendMsgToEditor (NppDataInstance, SCI_GETCURRENTPOS);
+  int CurLine = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, CurrentPosition);
+  int LineStartPos = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, CurLine);
+  long DocLength = SendMsgToEditor (NppDataInstance, SCI_GETLENGTH);
+  int IteratorPos = LineStartPos;
+  Sci_TextRange Range;
+  BOOL Result = FALSE;
+  BOOL FullCheck = FALSE;
+
+  while (1)
+  {
+    Range.chrg.cpMin = IteratorPos;
+    Range.chrg.cpMax = IteratorPos + STEP_SIZE;
+    if (Range.chrg.cpMax > DocLength - 1)
+      Range.chrg.cpMax = DocLength - 1;
+    Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
+    SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+    Result = CheckText (Range.lpstrText, IteratorPos, FIND_FIRST);
+    CLEAN_AND_ZERO_ARR (Range.lpstrText);
+    if (Result)
+      break;
+
+    IteratorPos += STEP_SIZE;
+
+    if (IteratorPos > DocLength - 1)
+    {
+      if (!FullCheck)
+      {
+        CurrentPosition = 0;
+        IteratorPos = 0;
+        FullCheck = TRUE;
+      }
+      else
+        break;
+
+      if (FullCheck && IteratorPos > CurrentPosition)
+        break; // So nothing was found TODO: Message probably
+    }
+  }
+}
+
+void SpellChecker::FindPrevMistake ()
+{
+  // TODO: /n, /r should always be present in delimiters
+  CurrentPosition = SendMsgToEditor (NppDataInstance, SCI_GETCURRENTPOS);
+  int CurLine = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, CurrentPosition);
+  int LineCount = SendMsgToEditor (NppDataInstance, SCI_GETLINECOUNT);
+  long LineEndPos = 0;
+  long DocLength = SendMsgToEditor (NppDataInstance, SCI_GETLENGTH);
+  if (CurLine + 1 < LineCount)
+    LineEndPos = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, CurLine + 1);
+  else
+    LineEndPos = DocLength - 1;
+  int IteratorPos = LineEndPos + 1;
+  Sci_TextRange Range;
+  BOOL Result = FALSE;
+  BOOL FullCheck = FALSE;
+
+  while (1)
+  {
+    Range.chrg.cpMin = IteratorPos - STEP_SIZE;
+    Range.chrg.cpMax = IteratorPos;
+    if (Range.chrg.cpMin < 0)
+      Range.chrg.cpMin = 0;
+    Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
+    SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+    Result = CheckText (Range.lpstrText, Range.chrg.cpMin, FIND_LAST);
+    CLEAN_AND_ZERO_ARR (Range.lpstrText);
+    if (Result)
+      break;
+
+    IteratorPos -= STEP_SIZE;
+
+    if (IteratorPos < 0)
+    {
+      if (!FullCheck)
+      {
+        CurrentPosition = DocLength + 1;
+        IteratorPos = DocLength;
+        FullCheck = TRUE;
+      }
+      else
+        break;
+
+      if (FullCheck && IteratorPos < CurrentPosition - 1)
+        break; // So nothing was found TODO: Message probably
+    }
+  }
+}
+
+void SpellChecker::SetDefaultDelimiters ()
+{
+  TCHAR *Buf = 0;
+  SetStringSUtf8 (Buf, DEFAULT_DELIMITERS);
+  SettingsDlgInstance->GetAdvancedDlg ()->SetDelimetersEdit (Buf);
+  CLEAN_AND_ZERO_ARR (Buf);
 }
 
 char* SpellChecker::GetWordUnderMouse(){
@@ -95,7 +221,7 @@ char *SpellChecker::GetWordAt (int CharPos, char *Text)
   if (!DelimUtf8)
     return 0;
 
-  while (*UsedText != 0 && UsedText > Text) // Finding closest zero before mouse pos
+  while (*UsedText != 0 && UsedText >= Text) // Finding closest zero before mouse pos
     UsedText--;
 
   UsedText++; // Then find first token after this zero
@@ -124,30 +250,48 @@ void SpellChecker::SetSuggestionsBoxTransparency ()
   SetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE,
     GetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE) | WS_EX_LAYERED);
   SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * 70) / 100, LWA_ALPHA);
+  // Don't sure why but this helps to fix a bug with notepad++ window resizing
+  // TODO: Fix it normal way
+  SuggestionsInstance->display (true);
+  SuggestionsInstance->display (false);
 }
 
-void SpellChecker::InitSuggestionsBox ()
+void SpellChecker::InitSuggestionsBox (long OverridePos, long OverrideLen)
 {
-  if (!AutoCheckText) // If there's no red underline let's do nothing
-  {
-    SuggestionsInstance->display (false);
+  if (!AspellLoaded)
     return;
-  }
-
+  long Pos = 0;
   POINT p;
-  GetCursorPos (&p);
-  if (WindowFromPoint (p) != GetScintillaWindow (NppDataInstance))
-    return;
-
-  char *Word = GetWordUnderMouse ();
-  if (!Word || !*Word || CheckWord (Word))
+  if (OverridePos == -1)
   {
-    return;
+    if (!AutoCheckText) // If there's no red underline let's do nothing
+    {
+      SuggestionsInstance->display (false);
+      return;
+    }
+
+    GetCursorPos (&p);
+    if (WindowFromPoint (p) != GetScintillaWindow (NppDataInstance))
+    {
+      return;
+    }
+
+    char *Word = GetWordUnderMouse ();
+    if (!Word || !*Word || CheckWord (Word))
+    {
+      return;
+    }
+
+    Pos = Word - VisibleText + VisibleTextOffset;
+    WUCLength = strlen (Word);
+  }
+  else
+  {
+    Pos = OverridePos;
+    WUCLength = OverrideLen;
   }
 
-  int Pos = Word - VisibleText + VisibleTextOffset;
   WUCPosition = Pos;
-  WUCLength = strlen (Word);
   int Line = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, Pos);
   int TextHeight = SendMsgToEditor (NppDataInstance, SCI_TEXTHEIGHT, Line);
   int TextWidth = SendMsgToEditor (NppDataInstance, SCI_TEXTWIDTH, STYLE_DEFAULT, (LPARAM) "_");
@@ -156,13 +300,13 @@ void SpellChecker::InitSuggestionsBox ()
 
   p.x = XPos; p.y = YPos;
   ClientToScreen (GetScintillaWindow (NppDataInstance), &p);
-  MoveWindow (SuggestionsInstance->getHSelf (), p.x - 7, p.y + TextHeight, 15, 15, TRUE);
+  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight - 3, 15, 15, TRUE);
   SuggestionsInstance->display ();
 }
 
 void SpellChecker::ShowSuggestionsMenu ()
 {
-  if (WUCPosition - VisibleTextOffset < 0 || WUCPosition - VisibleTextOffset + WUCLength - 1 > VisibleTextLength)
+  if (!AspellLoaded || WUCPosition - VisibleTextOffset < 0 || WUCPosition - VisibleTextOffset + WUCLength - 1 > VisibleTextLength)
     return; // Word is already off-screen
 
   int Pos = WUCPosition;
@@ -201,9 +345,9 @@ void SpellChecker::ShowSuggestionsMenu ()
     SetStringSUtf8 (Buf, Range.lpstrText);
   else
     SetString (Buf, Range.lpstrText);
-  _stprintf (MenuString, _T ("Ignore \"%s\" for this session"), Buf);
+  _stprintf (MenuString, _T ("Ignore \"%s\" for Current Session"), Buf);
   AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, MID_IGNOREALL, MenuString);
-  _stprintf (MenuString, _T ("Add \"%s\" to dictionary"), Buf);
+  _stprintf (MenuString, _T ("Add \"%s\" to Dictionary"), Buf);
   AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, MID_ADDTODICTIONARY, MenuString);
 
   // Here we go doing blocking call for menu, so shouldn't be any desync problems
@@ -239,7 +383,7 @@ void SpellChecker::ShowSuggestionsMenu ()
       {
         Suggestion = aspell_string_enumeration_next(els);
       }
-      SendMsgToEditor (NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) Suggestion);
+      PostMsgToEditor (NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) Suggestion);
     }
   }
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
@@ -259,12 +403,16 @@ void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
 void SpellChecker::LoadSettings ()
 {
   char *BufUtf8 = 0;
+  LoadFromIni (AspellPath, _T ("Aspell_Path"), _T (""));
+  AspellLoaded = LoadAspell (AspellPath);
+  if (AspellLoaded)
+    AspellReinitSettings ();
+
   LoadFromIni (AutoCheckText, _T ("Autocheck"), 0);
-  CheckMenuItem(GetMenu(NppDataInstance->_nppHandle), get_funcItem ()[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
   UpdateAutocheckStatus (0);
   LoadFromIniUtf8 (Language, _T ("Language"), "En_Us");
   AspellReinitSettings ();
-  LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), " \\n\\r\\t,.!?-\\\":;{}()[]\\\\/", TRUE);
+  LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), DEFAULT_DELIMITERS, TRUE);
   SetDelimiters (BufUtf8, 0);
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
   CLEAN_AND_ZERO_ARR (BufUtf8);
@@ -278,8 +426,8 @@ void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end
 
 void SpellChecker::RemoveWordUnderline (int start, int end)
 {
-  SendMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
-  SendMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
+  PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+  PostMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
 }
 
 // Warning - temporary buffer will be created
@@ -291,19 +439,26 @@ char *SpellChecker::GetDocumentText ()
   return buf;
 }
 
-char *SpellChecker::GetVisibleText(long *offset)
+void SpellChecker::GetVisibleLimits(long &Start, long &Finish)
 {
   long top = SendMsgToEditor (NppDataInstance, SCI_GETFIRSTVISIBLELINE);
   long bottom = top + SendMsgToEditor (NppDataInstance, SCI_LINESONSCREEN);
-  long line_count = SendMsgToEditor (NppDataInstance, SCI_GETLINECOUNT);
-  Sci_TextRange range;
-  range.chrg.cpMin = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, top);
+  top = SendMsgToEditor (NppDataInstance, SCI_DOCLINEFROMVISIBLE, top);
+  bottom = SendMsgToEditor (NppDataInstance, SCI_DOCLINEFROMVISIBLE, bottom);
+  long LineCount = SendMsgToEditor (NppDataInstance, SCI_GETLINECOUNT);
+  Start = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, top);
   // Not using end of line position cause utf-8 symbols could be more than one char
   // So we use next line start as the end of our visible text
-  if (bottom + 1 < line_count)
-    range.chrg.cpMax = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, bottom + 1);
+  if (bottom + 1 < LineCount)
+    Finish = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, bottom + 1);
   else
-    range.chrg.cpMax = SendMsgToEditor (NppDataInstance, SCI_GETTEXTLENGTH);
+    Finish = SendMsgToEditor (NppDataInstance, SCI_GETTEXTLENGTH);
+}
+
+char *SpellChecker::GetVisibleText(long *offset)
+{
+  Sci_TextRange range;
+  GetVisibleLimits (range.chrg.cpMin, range.chrg.cpMax);
 
   if (range.chrg.cpMax < 0)
     return 0;
@@ -321,7 +476,7 @@ void SpellChecker::ClearAllUnderlines ()
   if(length > 0)
   {
     PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
-    PostMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length - 1);
+    PostMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length);
   }
 }
 
@@ -334,6 +489,21 @@ void SpellChecker::Cleanup()
   CLEAN_AND_ZERO_ARR (DelimUtf8);
   CLEAN_AND_ZERO_ARR (DelimUtf8Converted);
   // We should deallocate shortcuts here
+}
+
+void SpellChecker::SetAspellPath (const TCHAR *Path)
+{
+  SetString (AspellPath, Path);
+  AspellLoaded = LoadAspell (AspellPath);
+  if (AspellLoaded)
+    AspellReinitSettings ();
+
+  TCHAR *Buf = 0;
+  GetDefaultAspellPath (Buf);
+  if (_tcscmp (Buf, Path) != 0)
+    SaveToIni (_T ("Aspell_Path"), Path);
+  else
+    SaveToIni (_T ("Aspell_Path"), _T (""));
 }
 
 void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuotes)
@@ -439,9 +609,14 @@ void SpellChecker::SetDelimiters (const char *Str, int SaveToIni)
   SetString (DelimUtf8, Str);
   SetStringSUtf8 (SrcBuf, DelimUtf8);
   SetParsedString (DestBuf, SrcBuf);
-  SetStringDUtf8 (DelimUtf8Converted, DestBuf);
+  int TargetBufLength = _tcslen (DestBuf) + 5 + 1;
+  TCHAR *TargetBuf = new TCHAR [_tcslen (DestBuf) + 5 + 1];
+  _tcscpy (TargetBuf, DestBuf);
+  _tcscat_s (TargetBuf, TargetBufLength, _T (" \n\r\t\v"));
+  SetStringDUtf8 (DelimUtf8Converted, TargetBuf);
   CLEAN_AND_ZERO_ARR (DestBuf);
   CLEAN_AND_ZERO_ARR (SrcBuf);
+  CLEAN_AND_ZERO_ARR (TargetBuf);
 
   if (SaveToIni)
     SaveToIniUtf8 (_T ("Delimiters"), DelimUtf8, TRUE);
@@ -455,9 +630,12 @@ const char *SpellChecker::GetLanguage ()
 
 BOOL SpellChecker::AspellReinitSettings ()
 {
+  if (!AspellLoaded)
+    return FALSE;
+
   AspellConfig *spell_config = new_aspell_config();
   aspell_config_replace (spell_config, "encoding", "utf-8");
-  if (Language)
+  if (Language && *Language)
     aspell_config_replace(spell_config, "lang", Language);
   if (Speller)
   {
@@ -470,6 +648,7 @@ BOOL SpellChecker::AspellReinitSettings ()
   if (aspell_error_number(possible_err) != 0)
   {
     delete_aspell_config (spell_config);
+    AspellLoaded = FALSE;
     return FALSE;
   }
   else
@@ -480,12 +659,17 @@ BOOL SpellChecker::AspellReinitSettings ()
 
 BOOL SpellChecker::AspellClear ()
 {
+  if (!AspellLoaded)
+    return FALSE;
+
   delete_aspell_speller (Speller);
   return TRUE;
 }
 
 BOOL SpellChecker::CheckWord (char *Word)
 {
+  if (!AspellLoaded)
+    return TRUE;
   // Well Numbers have same codes for ansi and unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
   // TODO: add this to options
@@ -508,19 +692,21 @@ BOOL SpellChecker::CheckWord (char *Word)
   return aspell_speller_check(Speller, Word, strlen (Word));
 }
 
-void SpellChecker::CheckText (char *TextToCheck, long offset)
+BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode)
 {
   if (!TextToCheck || !*TextToCheck)
-    return;
+    return FALSE;
 
   HWND ScintillaWindow = GetScintillaWindow (NppDataInstance);
   int oldid = SendMsgToEditor (ScintillaWindow, NppDataInstance, SCI_GETINDICATORCURRENT);
   char *Context = 0; // Temporary variable for strtok_s usage
   char *Delim = 0;
   char *token;
+  BOOL stop = FALSE;
+  long ResultingWordEnd = -1, ResultingWordStart = -1;
 
   if (!DelimUtf8)
-    return;
+    return FALSE;
 
   if (ConvertingIsNeeded)
     SetStringSUtf8 (Delim, DelimUtf8Converted);
@@ -534,7 +720,36 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
   while (token)
   {
     if (token && !CheckWord (token))
-      CreateWordUnderline (ScintillaWindow, offset + token - TextToCheck, offset + token - TextToCheck + strlen (token) - 1);
+    {
+      long WordStart = offset + token - TextToCheck;
+      long WordEnd = offset + token - TextToCheck + strlen (token) - 1;
+      switch (Mode)
+      {
+      case UNDERLINE_ERRORS:
+        CreateWordUnderline (ScintillaWindow, WordStart, WordEnd);
+        break;
+      case FIND_FIRST:
+        if (WordEnd >= CurrentPosition)
+        {
+          SendMsgToEditor (NppDataInstance, SCI_SETSEL, WordStart, WordEnd + 1);
+          stop = TRUE;
+        }
+        break;
+      case FIND_LAST:
+        {
+          if (WordEnd >= CurrentPosition - 1)
+          {
+            stop = TRUE;
+            break;
+          }
+          ResultingWordStart = WordStart;
+          ResultingWordEnd = WordEnd;
+        }
+        break;
+      }
+      if (stop)
+        break;
+    }
 
     if (!ConvertingIsNeeded)
       token =  (char *) _mbstok_s (NULL, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
@@ -544,7 +759,34 @@ void SpellChecker::CheckText (char *TextToCheck, long offset)
   if (ConvertingIsNeeded)
     CLEAN_AND_ZERO_ARR (Delim);
 
-  SendMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
+  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
+
+  switch (Mode)
+  {
+  case UNDERLINE_ERRORS:
+    return TRUE;
+  case FIND_FIRST:
+    return stop;
+  case FIND_LAST:
+    if (ResultingWordStart == -1)
+      return FALSE;
+    else
+    {
+      SendMsgToEditor (NppDataInstance, SCI_SETSEL, ResultingWordStart, ResultingWordEnd + 1);
+      return TRUE;
+    }
+  };
+  return FALSE;
+}
+
+void SpellChecker::ClearVisibleUnderlines ()
+{
+  int length = SendMsgToEditor(NppDataInstance, SCI_GETLENGTH);
+  if(length > 0)
+  {
+    PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+    PostMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length);
+  }
 }
 
 void SpellChecker::CheckVisible ()
@@ -552,8 +794,8 @@ void SpellChecker::CheckVisible ()
   CLEAN_AND_ZERO_ARR (VisibleText);
   VisibleText = GetVisibleText (&VisibleTextOffset);
   VisibleTextLength = strlen (VisibleText);
-  ClearAllUnderlines ();
-  CheckText (VisibleText, VisibleTextOffset);
+  ClearVisibleUnderlines ();
+  CheckText (VisibleText, VisibleTextOffset, UNDERLINE_ERRORS);
 }
 
 void SpellChecker::setEncodingById (int EncId)
@@ -596,6 +838,12 @@ void SpellChecker::SwitchAutoCheck ()
 void SpellChecker::RecheckVisible ()
 {
   int CodepageId = 0;
+  if (!AspellLoaded)
+  {
+    ClearAllUnderlines ();
+    return;
+  }
+  LockSuggestionsBoxHide = FALSE;
   CodepageId = (int) SendMsgToEditor (NppDataInstance, SCI_GETCODEPAGE, 0, 0);
   setEncodingById (CodepageId); // For now it just changes should we convert it to utf-8 or no
   if (AutoCheckText)

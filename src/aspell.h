@@ -9,7 +9,9 @@
 #ifndef ASPELL_ASPELL__H
 #define ASPELL_ASPELL__H
 
-BOOL LoadAspell(TCHAR *path);
+BOOL LoadAspell(TCHAR *PathArg);
+void GetActualAspellPath (TCHAR *&Path, TCHAR *&PathArg);
+void GetDefaultAspellPath (TCHAR *&Path);
 void UnloadAspell(void);
 void AspellErrorMsgBox(HWND hWnd, LPCSTR error);
 

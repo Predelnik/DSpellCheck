@@ -25,7 +25,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <shlwapi.h>
 #include <shlobj.h>
 
-HANDLE		g_hModule;
+#include "CommonFunctions.h"
+#include "MainDef.h"
+
+HANDLE  g_hModule;
 
 HINSTANCE   hInstLib = NULL;
 
@@ -150,14 +153,12 @@ PFUNC_delete_aspell_string_pair_enumeration         delete_aspell_string_pair_en
 PFUNC_aspell_string_pair_enumeration_clone          aspell_string_pair_enumeration_clone          = NULL;
 PFUNC_aspell_string_pair_enumeration_assign         aspell_string_pair_enumeration_assign         = NULL;
 
-BOOL LoadAspell(TCHAR *path)
+void GetDefaultAspellPath (TCHAR *&Path)
 {
-  BOOL    bRet = FALSE;
+  TCHAR pszPath[MAX_PATH];
+  pszPath[0] = '\0';
   HKEY    hKey = NULL;
   DWORD   size = MAX_PATH;
-  TCHAR   pszPath[MAX_PATH];
-
-  pszPath[0] = '\0';
 
   if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T ("SOFTWARE\\Aspell"), 0, KEY_READ, &hKey))
   {
@@ -167,15 +168,39 @@ BOOL LoadAspell(TCHAR *path)
   }
   else
   {
-    /* module path of notepad */
-    GetModuleFileName((HMODULE)g_hModule, pszPath, sizeof(pszPath));
-    PathRemoveFileSpec(pszPath);
-    PathRemoveFileSpec(pszPath);
-    PathAppend(pszPath, path);
-    PathAppend(pszPath, _T("\\aspell-15.dll"));
+    TCHAR Pf[MAX_PATH];
+    SHGetSpecialFolderPath(
+      0,
+      Pf,
+      CSIDL_PROGRAM_FILES,
+      FALSE );
+    PathAppend(pszPath, Pf);
+    PathAppend(pszPath, _T("\\Aspell\\aspell-15.dll"));
   }
+  SetString (Path, pszPath);
+}
 
-  hInstLib = LoadLibrary(pszPath);
+void GetActualAspellPath (TCHAR *&Path, TCHAR *&PathArg)
+{
+  BOOL   bRet = FALSE;
+
+  if (!PathArg || !*PathArg)
+  {
+    GetDefaultAspellPath (Path);
+  }
+  else
+  {
+    SetString (Path, PathArg);
+  }
+}
+
+BOOL LoadAspell(TCHAR *PathArg)
+{
+  TCHAR *Path = 0;
+  GetActualAspellPath (Path, PathArg);
+  hInstLib = LoadLibrary(Path);
+  CLEAN_AND_ZERO_ARR (Path);
+  BOOL bRet = FALSE;
 
   if (hInstLib != NULL)
   {
@@ -299,6 +324,9 @@ BOOL LoadAspell(TCHAR *path)
     delete_aspell_string_pair_enumeration         = (PFUNC_delete_aspell_string_pair_enumeration        )GetProcAddress(hInstLib, "delete_aspell_string_pair_enumeration");
     aspell_string_pair_enumeration_clone          = (PFUNC_aspell_string_pair_enumeration_clone         )GetProcAddress(hInstLib, "aspell_string_pair_enumeration_clone");
     aspell_string_pair_enumeration_assign         = (PFUNC_aspell_string_pair_enumeration_assign        )GetProcAddress(hInstLib, "aspell_string_pair_enumeration_assign");
+
+    if (!new_aspell_config) // TODO: Add check for all used functions
+      return FALSE;
 
     bRet = TRUE;
   }

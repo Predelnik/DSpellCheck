@@ -13,6 +13,8 @@ public:
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   BOOL AddAvalaibleLanguages (const char *CurrentLanguage);
   void FillSugestionsNum (int SuggestionsNum);
+  void FillAspellInfo (BOOL Status, TCHAR *AspellPath);
+  void DisableLanguageCombo (BOOL Disable);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
@@ -22,6 +24,9 @@ private:
   NppData NppDataInstance;
 
   /* handles of controls */
+  COLORREF AspellStatusColor;
+  HWND HAspellStatus;
+  HWND HAspellPath;
   HWND HSuggestionsNum;
   HWND HSpinSuggestionsNum;
   HWND HComboLanguage;
@@ -32,12 +37,14 @@ class AdvancedDlg : public StaticDialog
 public:
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   void FillDelimiters (const char *Delimiters);
+  void SetDelimetersEdit (TCHAR *Delimiters);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
   HWND HEditDelimiters;
+  HWND HDefaultDelimiters;
   NppData NppDataInstance;
 };
 

@@ -63,8 +63,8 @@ HANDLE hModule = NULL;
 HHOOK HMouseHook = NULL;
 
 //
-// Initialize your plugin data here
-// It will be called while plugin loading
+// Initialize your plug-in data here
+// It will be called while plug-in loading
 LRESULT CALLBACK MouseProc (_In_  int nCode,
                             _In_  WPARAM wParam,
                             _In_  LPARAM lParam)
@@ -82,6 +82,11 @@ void pluginInit(HANDLE hModuleArg)
 {
   hModule = hModuleArg;
   // Init it all dialog classes:
+}
+
+HANDLE getHModule ()
+{
+  return hModule;
 }
 
 DWORD WINAPI ThreadMain (LPVOID lpParam)
@@ -146,6 +151,7 @@ void pluginCleanUp ()
   KillThreadResources ();
   CLEAN_AND_ZERO (SpellCheckerInstance);
   CLEAN_AND_ZERO (SettingsDlgInstance);
+  CLEAN_AND_ZERO (funcItem[1]._pShKey);
 }
 
 void inline SendEvent (EventId Event)
@@ -183,9 +189,19 @@ void RecheckVisible ()
   SendEvent (EID_RECHECK_VISIBLE);
 }
 
+void FindNextMistake ()
+{
+  SendEvent (EID_FIND_NEXT_MISTAKE);
+}
+
+void FindPrevMistake ()
+{
+  SendEvent (EID_FIND_PREV_MISTAKE);
+}
+
 //
-// Initialization of your plugin commands
-// You should fill your plugins commands here
+// Initialization of your plug-in commands
+// You should fill your plug-ins commands here
 void commandMenuInit()
 {
   //
@@ -215,14 +231,21 @@ void commandMenuInit()
   //            bool check0nInit                // optional. Make this menu item be checked visually
   //            );
   setCommand(0, TEXT("Auto-check document"), SwitchAutoCheckText, NULL, false);
-  setCommand(1, TEXT("---"), NULL, NULL, false);
-
   ShortcutKey *shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
   shKey->_isShift = false;
-  shKey->_key = 0x42;
-  setCommand(2, TEXT("Settings..."), StartSettings, NULL, false);
+  shKey->_key = 0x41 + 'n' - 'a';
+  setCommand(1, TEXT("Find Next Misspelling"), FindNextMistake, shKey, false);
+  shKey = new ShortcutKey;
+  shKey->_isAlt = true;
+  shKey->_isCtrl = false;
+  shKey->_isShift = false;
+  shKey->_key = 0x41 + 'b' - 'a';
+  setCommand(2, TEXT("Find Previous Misspelling"), FindPrevMistake, shKey, false);
+  setCommand(3, TEXT("---"), NULL, NULL, false);
+
+  setCommand(4, TEXT("Settings..."), StartSettings, NULL, false);
 }
 
 void InitClasses ()
@@ -248,7 +271,7 @@ BOOL GetAutoCheckText ()
 }
 
 //
-// Function that initializes plugin commands
+// Function that initializes plug-in commands
 //
 bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool check0nInit)
 {

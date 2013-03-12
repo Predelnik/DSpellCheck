@@ -122,13 +122,16 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     return TRUE;
 
   case WM_SHOWANDRECREATEMENU:
-    p.x = getWidth (); p.y = 0;
+    tagTPMPARAMS TPMParams;
+    TPMParams.cbSize = sizeof (tagTPMPARAMS);
+    GetWindowRect (_hSelf, &TPMParams.rcExclude);
+    p.x = 0; p.y = 0;
     ClientToScreen (_hSelf, &p);
     StateMenu = TRUE;
-    MenuResult = TrackPopupMenu (PopupMenu, TPM_RETURNCMD, p.x, p.y, 0, _hSelf, 0);
+    MenuResult = TrackPopupMenuEx (PopupMenu, TPM_HORIZONTAL | TPM_RETURNCMD | TPM_RIGHTALIGN, p.x, p.y, _hSelf, &TPMParams);
+    SetForegroundWindow (_hParent);
     SendEvent (EID_APPLYMENUACTION);
     StateMenu = FALSE;
-
     DestroyMenu (PopupMenu);
     PopupMenu = CreatePopupMenu ();
     return TRUE;

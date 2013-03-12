@@ -26,7 +26,7 @@
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 
-const int nbFunc = 3;
+const int nbFunc = 5;
 
 //
 // Initialization of your plugin data
@@ -69,6 +69,9 @@ typedef enum {
   EID_SHOW_SUGGESTION_MENU,
   EID_APPLYMENUACTION,
   EID_SET_SUGGESTIONS_BOX_TRANSPARENCY,
+  EID_DEFAULT_DELIMITERS,
+  EID_FIND_NEXT_MISTAKE,
+  EID_FIND_PREV_MISTAKE,
   EID_MAX,
 } EventId;
 
@@ -85,6 +88,7 @@ void RecheckVisible ();
 void CreateThreadResources ();
 void InitClasses ();
 void CreateHooks ();
+HANDLE getHModule ();
 FuncItem *get_funcItem ();
 
 #endif //PLUGINDEFINITION_H
