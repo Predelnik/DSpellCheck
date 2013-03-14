@@ -13,12 +13,17 @@ public:
   ~SpellChecker ();
   BOOL WINAPI NotifyEvent (DWORD Event);
   void RecheckVisible ();
+  void RecheckModified ();
   void ErrorMsgBox (const TCHAR * message);
 
   void SetLanguage (const char *Str);
   void SetDelimiters (const char *Str, int SaveToIni = 1);
   void SetSuggestionsNum (int Num);
   void SetAspellPath (const TCHAR *Path);
+  void SetIgnoreYo (BOOL Ignore);
+  void SetCheckThose (int CheckThoseArg);
+  void SetFileTypes (TCHAR *FileTypesArg);
+  void SetCheckComments (BOOL Value);
 
 private:
   enum CheckTextMode
@@ -29,18 +34,19 @@ private:
   };
 
   void CreateWordUnderline (HWND ScintillaWindow, int start, int end);
-  void RemoveWordUnderline (int start, int end);
+  void RemoveUnderline (HWND ScintillaWindow, int start, int end);
   void ClearAllUnderlines ();
   void FindNextMistake ();
   void FindPrevMistake ();
   void ClearVisibleUnderlines ();
   void Cleanup ();
+  void CheckFileName ();
   void UpdateOverridenSuggestionsBox ();
   const char *GetDelimiters ();
   const char *GetLanguage ();
   BOOL AspellReinitSettings ();
   BOOL AspellClear ();
-  BOOL CheckWord (char *Word);
+  BOOL CheckWord (char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
   char *GetVisibleText(long *offset);
   char *GetDocumentText ();
@@ -51,12 +57,16 @@ private:
   void UpdateAutocheckStatus (int SaveSetting = 1);
   void SwitchAutoCheck ();
   void ShowSuggestionsMenu ();
-  void InitSuggestionsBox (long OverridePos = -1, long OverrideLen = -1);
-  char *GetWordUnderMouse ();
+  void InitSuggestionsBox ();
+  BOOL GetWordUnderMouseIsRight (long &Pos, long &Length);
   void SetSuggestionsBoxTransparency ();
-  char *GetWordAt (int CharPos, char *Text);
+  char *GetWordAt (long CharPos, char *Text, long Offset);
   void SetDefaultDelimiters ();
   void HideSuggestionBox ();
+  void GetLimitsAndRecheckModified ();
+  BOOL CheckTextNeeded ();
+  int CheckWordInCommentOrString (int WordStart, int WordEnd);
+  void WriteSetting ();
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value);
@@ -70,14 +80,24 @@ private:
 
   BOOL AutoCheckText;
   BOOL AspellLoaded;
+  BOOL CheckTextEnabled;
   char *Language;
   int SuggestionsNum;
   char *DelimUtf8; // String without special characters but maybe with escape characters (like '\n' and stuff)
   char *DelimUtf8Converted; // String where escape characters are properly converted to corresponding symbols
+  char *DelimConverted; // Same but in ANSI encoding
+  TCHAR *FileTypes;
   TCHAR *AspellPath;
+  BOOL IgnoreYo;
+  BOOL CheckThose;
+  BOOL CheckComments;
 
+  int Lexer;
+  _locale_t  utf8_l;
+  long ModifiedStart;
+  long ModifiedEnd;
   long WUCPosition; // WUC = Word Under Cursor (Position in global doc coordinates
-  int WUCLength;
+  long WUCLength;
   long CurrentPosition;
   NppData *NppDataInstance;
   BOOL ConvertingIsNeeded;
@@ -88,6 +108,5 @@ private:
   char *VisibleText;
   int VisibleTextLength;
   long VisibleTextOffset;
-  BOOL LockSuggestionsBoxHide;
 };
 #endif // SPELLCHECKER_H

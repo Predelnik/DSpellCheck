@@ -5,10 +5,11 @@
 #include "Plugin.h"
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
+#include "SciLexer.h"
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS ",.!?\\\":;{}()[]\\\\/=+-"
+#define DEFAULT_DELIMITERS ",.!?\":;{}()[]\\/=+-*_<>"
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg)
@@ -20,6 +21,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   IniFilePath = 0;
   Language = 0;
   VisibleText = 0;
+  DelimConverted = 0;
   VisibleTextLength = -1;
   SetString (IniFilePath, IniFilePathArg);
   SettingsDlgInstance = SettingsDlgInstanceArg;
@@ -28,8 +30,9 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   AspellLoaded = FALSE;
   AutoCheckText = 0;
   AspellReinitSettings ();
-  LockSuggestionsBoxHide = FALSE;
   AspellPath = 0;
+  FileTypes = 0;
+  CheckThose = 0;
 }
 
 SpellChecker::~SpellChecker ()
@@ -48,11 +51,16 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (!AspellLoaded);
     SettingsDlgInstance->GetSimpleDlg ()->FillAspellInfo (AspellLoaded, AspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
+    SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
+    SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
     SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
+    SettingsDlgInstance->GetAdvancedDlg ()->setIgnoreYo (IgnoreYo);
     break;
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
     SettingsDlgInstance->GetAdvancedDlg ()->ApplySettings (this);
+    CheckFileName (); // Cause filters may change
+    RecheckVisible ();
     break;
   case EID_HIDE_DIALOG:
     SettingsDlgInstance->display (false);
@@ -89,14 +97,933 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_FIND_PREV_MISTAKE:
     FindPrevMistake ();
     break;
+  case EID_RECHECK_MODIFIED_ZONE:
+    GetLimitsAndRecheckModified ();
+    break;
+  case EID_CHECK_FILE_NAME:
+    CheckFileName ();
+    break;
+  case EID_WRITE_SETTING:
+    WriteSetting ();
+    break;
   }
   return TRUE;
 }
 
+// For now just int option, later maybe choose option type in wParam
+void SpellChecker::WriteSetting ()
+{
+  MSG Msg;
+  GetMessage (&Msg, 0, 0, 0);
+  std::pair<TCHAR *, int> *x = (std::pair<TCHAR *, int> *) Msg.lParam;
+  SaveToIni (x->first, x->second);
+  CLEAN_AND_ZERO_ARR (x->first);
+  CLEAN_AND_ZERO (x);
+}
+
+void SpellChecker::SetCheckComments (BOOL Value)
+{
+  CheckComments = Value;
+  SaveToIni (_T ("Check_Only_Comments_And_Strings"), Value);
+}
+
+void SpellChecker::CheckFileName ()
+{
+  TCHAR *Context = 0;
+  TCHAR *Token = 0;
+  TCHAR *FileTypesCopy = 0;
+  TCHAR FullPath[MAX_PATH];
+  SetString (FileTypesCopy, FileTypes);
+  Token = _tcstok_s (FileTypesCopy, _T(";"), &Context);
+  CheckTextEnabled = !CheckThose;
+  ::SendMessage(NppDataInstance->_nppHandle, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM) FullPath);
+
+  while (Token)
+  {
+    if (CheckThose)
+    {
+      CheckTextEnabled = CheckTextEnabled || PathMatchSpec (FullPath, Token);
+      if (CheckTextEnabled)
+        break;
+    }
+    else
+    {
+      CheckTextEnabled &= CheckTextEnabled && (!PathMatchSpec (FullPath, Token));
+      if (!CheckTextEnabled)
+        break;
+    }
+    Token = _tcstok_s (NULL, _T(";"), &Context);
+  }
+  CLEAN_AND_ZERO_ARR (FileTypesCopy);
+  Lexer = SendMsgToEditor (NppDataInstance, SCI_GETLEXER);
+}
+
+// Actually for all languages which operate mostly in strings it's better to check only comments
+// TODO: Fix it
+int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
+{
+  int Style = SendMsgToEditor (NppDataInstance, SCI_GETSTYLEAT, WordStart);
+  if (Style != SendMsgToEditor (NppDataInstance, SCI_GETSTYLEAT, WordEnd))
+    return FALSE;
+  switch (Lexer)
+  {
+  case SCLEX_CONTAINER:
+  case SCLEX_NULL:
+    return TRUE;
+  case SCLEX_PYTHON:
+    switch (Style)
+    {
+    case SCE_P_COMMENTLINE:
+    case SCE_P_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    };
+  case SCLEX_CPP:
+  case SCLEX_OBJC:
+  case SCLEX_BULLANT:
+    switch (Style)
+    {
+    case SCE_C_COMMENT:
+    case SCE_C_COMMENTLINE:
+    case SCE_C_COMMENTDOC:
+    case SCE_C_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    };
+  case SCLEX_HTML:
+  case SCLEX_XML:
+    switch (Style)
+    {
+    case SCE_H_COMMENT:
+    case SCE_H_DEFAULT:
+    case SCE_H_DOUBLESTRING:
+    case SCE_H_SINGLESTRING:
+    case SCE_H_XCCOMMENT:
+    case SCE_H_SGML_COMMENT:
+    case SCE_HJ_COMMENT:
+    case SCE_HJ_COMMENTLINE:
+    case SCE_HJ_COMMENTDOC:
+    case SCE_HJ_STRINGEOL:
+    case SCE_HJA_COMMENT:
+    case SCE_HJA_COMMENTLINE:
+    case SCE_HJA_COMMENTDOC:
+    case SCE_HJA_DOUBLESTRING:
+    case SCE_HJA_SINGLESTRING:
+    case SCE_HJA_STRINGEOL:
+    case SCE_HB_COMMENTLINE:
+    case SCE_HB_STRING:
+    case SCE_HB_STRINGEOL:
+    case SCE_HBA_COMMENTLINE:
+    case SCE_HBA_STRING:
+    case SCE_HP_COMMENTLINE:
+    case SCE_HP_STRING:
+    case SCE_HPA_COMMENTLINE:
+    case SCE_HPA_STRING:
+    case SCE_HPHP_SIMPLESTRING:
+    case SCE_HPHP_COMMENT:
+    case SCE_HPHP_COMMENTLINE:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_PERL:
+    switch (Style)
+    {
+    case SCE_PL_COMMENTLINE:
+    case SCE_PL_STRING_Q:
+    case SCE_PL_STRING_QQ:
+    case SCE_PL_STRING_QX:
+    case SCE_PL_STRING_QR:
+    case SCE_PL_STRING_QW:
+      return TRUE;
+    default:
+      return FALSE;
+    };
+  case SCLEX_SQL:
+    switch (Style)
+    {
+    case SCE_SQL_COMMENT:
+    case SCE_SQL_COMMENTLINE:
+    case SCE_SQL_COMMENTDOC:
+    case SCE_SQL_STRING:
+    case SCE_SQL_COMMENTLINEDOC:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_PROPERTIES:
+    switch (Style)
+    {
+    case SCE_PROPS_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_ERRORLIST:
+    return FALSE;
+  case SCLEX_MAKEFILE:
+    switch (Style)
+    {
+    case SCE_MAKE_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_BATCH:
+    switch (Style)
+    {
+    case SCE_BAT_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_XCODE:
+    return FALSE;
+  case SCLEX_LATEX:
+    switch (Style)
+    {
+    case SCE_L_DEFAULT:
+    case SCE_L_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_LUA:
+    switch (Style)
+    {
+    case SCE_LUA_COMMENT:
+    case SCE_LUA_COMMENTLINE:
+    case SCE_LUA_COMMENTDOC:
+    case SCE_LUA_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_DIFF:
+    switch (Style)
+    {
+    case SCE_DIFF_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_CONF:
+    switch (Style)
+    {
+    case SCE_CONF_COMMENT:
+    case SCE_CONF_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_PASCAL:
+    switch (Style)
+    {
+    case SCE_PAS_COMMENT:
+    case SCE_PAS_COMMENT2:
+    case SCE_PAS_COMMENTLINE:
+    case SCE_PAS_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_AVE:
+    switch (Style)
+    {
+    case SCE_AVE_COMMENT:
+    case SCE_AVE_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_ADA:
+    switch (Style)
+    {
+    case SCE_ADA_STRING:
+    case SCE_ADA_COMMENTLINE:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_LISP:
+    switch (Style)
+    {
+    case SCE_LISP_COMMENT:
+    case SCE_LISP_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_RUBY:
+    switch (Style)
+    {
+    case SCE_RB_COMMENTLINE:
+    case SCE_RB_STRING:
+    case SCE_RB_STRING_Q:
+    case SCE_RB_STRING_QQ:
+    case SCE_RB_STRING_QX:
+    case SCE_RB_STRING_QR:
+    case SCE_RB_STRING_QW:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_EIFFEL:
+  case SCLEX_EIFFELKW:
+    switch (Style)
+    {
+    case SCE_EIFFEL_COMMENTLINE:
+    case SCE_EIFFEL_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    };
+  case SCLEX_TCL:
+    switch (Style)
+    {
+    case SCE_TCL_COMMENT:
+    case SCE_TCL_COMMENTLINE:
+    case SCE_TCL_BLOCK_COMMENT:
+    case SCE_TCL_IN_QUOTE:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_NNCRONTAB:
+    switch (Style)
+    {
+    case SCE_NNCRONTAB_COMMENT:
+    case SCE_NNCRONTAB_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_BAAN:
+    switch (Style)
+    {
+    case SCE_BAAN_COMMENT:
+    case SCE_BAAN_COMMENTDOC:
+    case SCE_BAAN_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_MATLAB:
+    switch (Style)
+    {
+    case SCE_MATLAB_COMMENT:
+    case SCE_MATLAB_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_SCRIPTOL:
+    switch (Style)
+    {
+    case SCE_SCRIPTOL_COMMENTLINE:
+    case SCE_SCRIPTOL_COMMENTBLOCK:
+    case SCE_SCRIPTOL_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_ASM:
+    switch (Style)
+    {
+    case SCE_ASM_COMMENT:
+    case SCE_ASM_COMMENTBLOCK:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_CPPNOCASE:
+  case SCLEX_FORTRAN:
+  case SCLEX_F77:
+    switch (Style)
+    {
+    case SCE_F_COMMENT:
+    case SCE_F_STRING1:
+    case SCE_F_STRING2:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_CSS:
+    switch (Style)
+    {
+    case SCE_CSS_COMMENT:
+    case SCE_CSS_DOUBLESTRING:
+    case SCE_CSS_SINGLESTRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_POV:
+    switch (Style)
+    {
+    case SCE_POV_COMMENT:
+    case SCE_POV_COMMENTLINE:
+    case SCE_POV_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_LOUT:
+    switch (Style)
+    {
+    case SCE_LOUT_COMMENT:
+    case SCE_LOUT_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_ESCRIPT:
+    switch (Style)
+    {
+    case SCE_ESCRIPT_COMMENT:
+    case SCE_ESCRIPT_COMMENTLINE:
+    case SCE_ESCRIPT_COMMENTDOC:
+    case SCE_ESCRIPT_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_PS:
+    switch (Style)
+    {
+    case SCE_PS_COMMENT:
+    case SCE_PS_DSC_COMMENT:
+    case SCE_PS_TEXT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_NSIS:
+    switch (Style)
+    {
+    case SCE_NSIS_COMMENT:
+    case SCE_NSIS_STRINGDQ:
+    case SCE_NSIS_STRINGLQ:
+    case SCE_NSIS_STRINGRQ:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_MMIXAL:
+    switch (Style)
+    {
+    case SCE_MMIXAL_COMMENT:
+    case SCE_MMIXAL_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_CLW:
+    switch (Style)
+    {
+    case SCE_CLW_COMMENT:
+    case SCE_CLW_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_CLWNOCASE:
+  case SCLEX_LOT:
+    return FALSE;
+  case SCLEX_YAML:
+    switch (Style)
+    {
+    case SCE_YAML_COMMENT:
+    case SCE_YAML_TEXT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_TEX:
+    switch (Style)
+    {
+    case SCE_TEX_TEXT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_METAPOST:
+    switch (Style)
+    {
+    case SCE_METAPOST_TEXT:
+    case SCE_METAPOST_DEFAULT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_FORTH:
+    switch (Style)
+    {
+    case SCE_FORTH_COMMENT:
+    case SCE_FORTH_COMMENT_ML:
+    case SCE_FORTH_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_ERLANG:
+    switch (Style)
+    {
+    case SCE_ERLANG_COMMENT:
+    case SCE_ERLANG_STRING:
+    case SCE_ERLANG_COMMENT_FUNCTION:
+    case SCE_ERLANG_COMMENT_MODULE:
+    case SCE_ERLANG_COMMENT_DOC:
+    case SCE_ERLANG_COMMENT_DOC_MACRO:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_OCTAVE:
+  case SCLEX_MSSQL:
+    switch (Style)
+    {
+    case SCE_MSSQL_COMMENT:
+    case SCE_MSSQL_LINE_COMMENT:
+    case SCE_MSSQL_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_VERILOG:
+    switch (Style)
+    {
+    case SCE_V_COMMENT:
+    case SCE_V_COMMENTLINE:
+    case SCE_V_COMMENTLINEBANG:
+    case SCE_V_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_KIX:
+    switch (Style)
+    {
+    case SCE_KIX_COMMENT:
+    case SCE_KIX_STRING1:
+    case SCE_KIX_STRING2:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_GUI4CLI:
+    switch (Style)
+    {
+    case SCE_GC_COMMENTLINE:
+    case SCE_GC_COMMENTBLOCK:
+    case SCE_GC_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_SPECMAN:
+    switch (Style)
+    {
+    case SCE_SN_COMMENTLINE:
+    case SCE_SN_COMMENTLINEBANG:
+    case SCE_SN_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_AU3:
+    switch (Style)
+    {
+    case SCE_AU3_COMMENT:
+    case SCE_AU3_COMMENTBLOCK:
+    case SCE_AU3_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_APDL:
+    switch (Style)
+    {
+    case SCE_APDL_COMMENT:
+    case SCE_APDL_COMMENTBLOCK:
+    case SCE_APDL_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_BASH:
+    switch (Style)
+    {
+    case SCE_SH_COMMENTLINE:
+    case SCE_SH_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_ASN1:
+    switch (Style)
+    {
+    case SCE_ASN1_COMMENT:
+    case SCE_ASN1_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_VHDL:
+    switch (Style)
+    {
+    case SCE_VHDL_COMMENT:
+    case SCE_VHDL_COMMENTLINEBANG:
+    case SCE_VHDL_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_CAML:
+    switch (Style)
+    {
+    case SCE_CAML_STRING:
+    case SCE_CAML_COMMENT:
+    case SCE_CAML_COMMENT1:
+    case SCE_CAML_COMMENT2:
+    case SCE_CAML_COMMENT3:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_VB:
+  case SCLEX_VBSCRIPT:
+  case SCLEX_BLITZBASIC:
+  case SCLEX_PUREBASIC:
+  case SCLEX_FREEBASIC:
+  case SCLEX_POWERBASIC:
+    switch (Style)
+    {
+    case SCE_B_COMMENT:
+    case SCE_B_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_HASKELL:
+    switch (Style)
+    {
+    case SCE_HA_STRING:
+    case SCE_HA_COMMENTLINE:
+    case SCE_HA_COMMENTBLOCK:
+    case SCE_HA_COMMENTBLOCK2:
+    case SCE_HA_COMMENTBLOCK3:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_PHPSCRIPT:
+  case SCLEX_TADS3:
+    switch (Style)
+    {
+    case SCE_T3_BLOCK_COMMENT:
+    case SCE_T3_LINE_COMMENT:
+    case SCE_T3_S_STRING:
+    case SCE_T3_D_STRING:
+    case SCE_T3_X_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_REBOL:
+    switch (Style)
+    {
+    case SCE_REBOL_COMMENTLINE:
+    case SCE_REBOL_COMMENTBLOCK:
+    case SCE_REBOL_QUOTEDSTRING:
+    case SCE_REBOL_BRACEDSTRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_SMALLTALK:
+    switch (Style)
+    {
+    case SCE_ST_STRING:
+    case SCE_ST_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_FLAGSHIP:
+    switch (Style)
+    {
+    case SCE_FS_COMMENT:
+    case SCE_FS_COMMENTLINE:
+    case SCE_FS_COMMENTDOC:
+    case SCE_FS_COMMENTLINEDOC:
+    case SCE_FS_COMMENTDOCKEYWORD:
+    case SCE_FS_COMMENTDOCKEYWORDERROR:
+    case SCE_FS_STRING:
+    case SCE_FS_COMMENTDOC_C:
+    case SCE_FS_COMMENTLINEDOC_C:
+    case SCE_FS_STRING_C:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_CSOUND:
+    switch (Style)
+    {
+    case SCE_CSOUND_COMMENT:
+    case SCE_CSOUND_COMMENTBLOCK:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_INNOSETUP:
+    switch (Style)
+    {
+    case SCE_INNO_COMMENT:
+    case SCE_INNO_COMMENT_PASCAL:
+    case SCE_INNO_STRING_DOUBLE:
+    case SCE_INNO_STRING_SINGLE:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_OPAL:
+    switch (Style)
+    {
+    case SCE_OPAL_COMMENT_BLOCK:
+    case SCE_OPAL_COMMENT_LINE:
+    case SCE_OPAL_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_SPICE:
+    switch (Style)
+    {
+    case SCE_SPICE_COMMENTLINE:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_D:
+    switch (Style)
+    {
+    case SCE_D_COMMENT:
+    case SCE_D_COMMENTLINE:
+    case SCE_D_COMMENTDOC:
+    case SCE_D_COMMENTNESTED:
+    case SCE_D_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_CMAKE:
+    switch (Style)
+    {
+    case SCE_CMAKE_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_GAP:
+    switch (Style)
+    {
+    case SCE_GAP_COMMENT:
+    case SCE_GAP_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_PLM:
+    switch (Style)
+    {
+    case SCE_PLM_COMMENT:
+    case SCE_PLM_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_PROGRESS:
+    switch (Style)
+    {
+    case SCE_4GL_STRING:
+    case SCE_4GL_COMMENT1:
+    case SCE_4GL_COMMENT2:
+    case SCE_4GL_COMMENT3:
+    case SCE_4GL_COMMENT4:
+    case SCE_4GL_COMMENT5:
+    case SCE_4GL_COMMENT6:
+    case SCE_4GL_STRING_:
+    case SCE_4GL_COMMENT1_:
+    case SCE_4GL_COMMENT2_:
+    case SCE_4GL_COMMENT3_:
+    case SCE_4GL_COMMENT4_:
+    case SCE_4GL_COMMENT5_:
+    case SCE_4GL_COMMENT6_:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_ABAQUS:
+    switch (Style)
+    {
+    case SCE_ABAQUS_COMMENT:
+    case SCE_ABAQUS_COMMENTBLOCK:
+    case SCE_ABAQUS_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_ASYMPTOTE:
+    switch (Style)
+    {
+    case SCE_ASY_COMMENT:
+    case SCE_ASY_COMMENTLINE:
+    case SCE_ASY_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_R:
+    switch (Style)
+    {
+    case SCE_R_COMMENT:
+    case SCE_R_STRING:
+    case SCE_R_STRING2:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_MAGIK:
+    switch (Style)
+    {
+    case SCE_MAGIK_COMMENT:
+    case SCE_MAGIK_HYPER_COMMENT:
+    case SCE_MAGIK_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_POWERSHELL:
+    switch (Style)
+    {
+    case SCE_POWERSHELL_COMMENT:
+    case SCE_POWERSHELL_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_MYSQL:
+    switch (Style)
+    {
+    case SCE_MYSQL_COMMENT:
+    case SCE_MYSQL_COMMENTLINE:
+    case SCE_MYSQL_STRING:
+    case SCE_MYSQL_SQSTRING:
+    case SCE_MYSQL_DQSTRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_PO:
+    switch (Style)
+    {
+    case SCE_PO_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_TAL:
+  case SCLEX_COBOL:
+  case SCLEX_TACL:
+  case SCLEX_SORCUS:
+    switch (Style)
+    {
+    case SCE_SORCUS_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_POWERPRO:
+    switch (Style)
+    {
+    case SCE_POWERPRO_COMMENTBLOCK:
+    case SCE_POWERPRO_COMMENTLINE:
+    case SCE_POWERPRO_DOUBLEQUOTEDSTRING:
+    case SCE_POWERPRO_SINGLEQUOTEDSTRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_NIMROD:
+  case SCLEX_SML:
+    switch (Style)
+    {
+    case SCE_SML_STRING:
+    case SCE_SML_COMMENT:
+    case SCE_SML_COMMENT1:
+    case SCE_SML_COMMENT2:
+    case SCE_SML_COMMENT3:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_MARKDOWN:
+    return FALSE;
+  case SCLEX_TXT2TAGS:
+    switch (Style)
+    {
+    case SCE_TXT2TAGS_COMMENT:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_A68K:
+    switch (Style)
+    {
+    case SCE_A68K_COMMENT:
+    case SCE_A68K_STRING1:
+    case SCE_A68K_STRING2:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_MODULA:
+    switch (Style)
+    {
+    case SCE_MODULA_COMMENT:
+    case SCE_MODULA_STRING:
+      return TRUE;
+    default:
+      return FALSE;
+    }
+  case SCLEX_SEARCHRESULT:
+    return FALSE;
+  };
+  return FALSE;
+}
+
+BOOL SpellChecker::CheckTextNeeded ()
+{
+  return CheckTextEnabled && AutoCheckText;
+}
+
+void SpellChecker::GetLimitsAndRecheckModified ()
+{
+  MSG Msg;
+  GetMessage (&Msg, 0, 0, 0);
+  std::pair<long, long> *Pair = reinterpret_cast <std::pair<long, long> *> (Msg.lParam);
+  ModifiedStart = Pair->first;
+  ModifiedEnd = Pair->second;
+  CLEAN_AND_ZERO (Pair);
+  RecheckModified ();
+}
+
 void SpellChecker::HideSuggestionBox ()
 {
-  if (!LockSuggestionsBoxHide)
-    SuggestionsInstance->display (false);
+  SuggestionsInstance->display (false);
 }
 
 #define STEP_SIZE 16384
@@ -116,8 +1043,8 @@ void SpellChecker::FindNextMistake ()
   {
     Range.chrg.cpMin = IteratorPos;
     Range.chrg.cpMax = IteratorPos + STEP_SIZE;
-    if (Range.chrg.cpMax > DocLength - 1)
-      Range.chrg.cpMax = DocLength - 1;
+    if (Range.chrg.cpMax > DocLength)
+      Range.chrg.cpMax = DocLength;
     Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
     SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
     Result = CheckText (Range.lpstrText, IteratorPos, FIND_FIRST);
@@ -127,7 +1054,7 @@ void SpellChecker::FindNextMistake ()
 
     IteratorPos += STEP_SIZE;
 
-    if (IteratorPos > DocLength - 1)
+    if (IteratorPos > DocLength)
     {
       if (!FullCheck)
       {
@@ -152,11 +1079,14 @@ void SpellChecker::FindPrevMistake ()
   int LineCount = SendMsgToEditor (NppDataInstance, SCI_GETLINECOUNT);
   long LineEndPos = 0;
   long DocLength = SendMsgToEditor (NppDataInstance, SCI_GETLENGTH);
+  LineEndPos = SendMsgToEditor (NppDataInstance, SCI_GETLINEENDPOSITION, CurLine);
+  /*
   if (CurLine + 1 < LineCount)
-    LineEndPos = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, CurLine + 1);
+  LineEndPos = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, CurLine + 1);
   else
-    LineEndPos = DocLength - 1;
-  int IteratorPos = LineEndPos + 1;
+  LineEndPos = DocLength - 1;
+  */
+  int IteratorPos = LineEndPos;
   Sci_TextRange Range;
   BOOL Result = FALSE;
   BOOL FullCheck = FALSE;
@@ -201,44 +1131,88 @@ void SpellChecker::SetDefaultDelimiters ()
   CLEAN_AND_ZERO_ARR (Buf);
 }
 
-char* SpellChecker::GetWordUnderMouse(){
-  char *ret = NULL;
+BOOL SpellChecker::GetWordUnderMouseIsRight (long &Pos, long &Length)
+{
+  BOOL Ret = TRUE;
   POINT p;
   if(GetCursorPos(&p) != 0){
     ScreenToClient(GetScintillaWindow (NppDataInstance), &p);
 
     int initCharPos = SendMsgToEditor (NppDataInstance, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+
     if(initCharPos != -1){
-      ret = GetWordAt (initCharPos, VisibleText);
+      int Line = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, initCharPos);
+      long LineLength = SendMsgToEditor (NppDataInstance, SCI_LINELENGTH, Line);
+      char *Buf = new char[LineLength + 1];
+      SendMsgToEditor (NppDataInstance, SCI_GETLINE, Line, (LPARAM) Buf);
+      Buf [LineLength] = 0;
+      long Offset = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, Line);
+      char *Word = GetWordAt (initCharPos, Buf, Offset);
+      if (!Word || !*Word)
+      {
+        Ret = TRUE;
+      }
+      else
+      {
+        Pos = Word - Buf + Offset;
+        long WordLen = strlen (Word);
+        if (CheckWord (Word, Pos, Pos + WordLen - 1))
+        {
+          Ret = TRUE;
+        }
+        else
+        {
+          Ret = FALSE;
+          Length = WordLen;
+        }
+      }
+      CLEAN_AND_ZERO_ARR (Buf);
     }
   }
-  return ret;
+  return Ret;
 }
 
-char *SpellChecker::GetWordAt (int CharPos, char *Text)
+char *SpellChecker::GetWordAt (long CharPos, char *Text, long Offset)
 {
-  char *UsedText = Text + CharPos - VisibleTextOffset;
+  char *UsedText = 0;
   if (!DelimUtf8)
     return 0;
 
-  while (*UsedText != 0 && UsedText >= Text) // Finding closest zero before mouse pos
-    UsedText--;
+  char *Iterator = Text + CharPos - Offset;
 
-  UsedText++; // Then find first token after this zero
+  if (!ConvertingIsNeeded)
+  {
+    while ((!Utf8chr ( DelimUtf8Converted, Iterator)) && Text < Iterator)
+      Iterator = (char *) Utf8Dec (Text, Iterator);
+  }
+  else
+  {
+    while (!strchr (DelimConverted, *Iterator) && Text < Iterator)
+      Iterator--;
+  }
 
-  char *Delim = 0;
+  UsedText = Iterator;
+
+  if (!ConvertingIsNeeded)
+  {
+    if (Utf8chr ( DelimUtf8Converted, UsedText))
+      UsedText = Utf8Inc (UsedText); // Then find first token after this zero
+  }
+  else
+  {
+    if (strchr (DelimConverted, *UsedText))
+      UsedText++;
+  }
+
   char *Context = 0;
-
-  if (ConvertingIsNeeded)
-    SetStringSUtf8 (Delim, DelimUtf8Converted);
   // We're just taking the first token (basically repeating the same code as an in CheckVisible
 
   char *Res = 0;
   if (!ConvertingIsNeeded)
-    Res = (char *) _mbstok_s ((unsigned char *) UsedText, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
+    Res = (char *) Utf8strtok (UsedText, DelimUtf8Converted, &Context);
   else
-    Res = strtok_s (UsedText, Delim, &Context);
-  if (Res - Text + VisibleTextOffset > CharPos)
+    Res = strtok_s (UsedText, DelimConverted, &Context);
+  if (Res - Text + Offset > CharPos)
     return 0;
   else
     return Res;
@@ -256,39 +1230,27 @@ void SpellChecker::SetSuggestionsBoxTransparency ()
   SuggestionsInstance->display (false);
 }
 
-void SpellChecker::InitSuggestionsBox (long OverridePos, long OverrideLen)
+void SpellChecker::InitSuggestionsBox ()
 {
   if (!AspellLoaded)
     return;
   long Pos = 0;
   POINT p;
-  if (OverridePos == -1)
+  if (!CheckTextNeeded ()) // If there's no red underline let's do nothing
   {
-    if (!AutoCheckText) // If there's no red underline let's do nothing
-    {
-      SuggestionsInstance->display (false);
-      return;
-    }
-
-    GetCursorPos (&p);
-    if (WindowFromPoint (p) != GetScintillaWindow (NppDataInstance))
-    {
-      return;
-    }
-
-    char *Word = GetWordUnderMouse ();
-    if (!Word || !*Word || CheckWord (Word))
-    {
-      return;
-    }
-
-    Pos = Word - VisibleText + VisibleTextOffset;
-    WUCLength = strlen (Word);
+    SuggestionsInstance->display (false);
+    return;
   }
-  else
+
+  GetCursorPos (&p);
+  if (WindowFromPoint (p) != GetScintillaWindow (NppDataInstance))
   {
-    Pos = OverridePos;
-    WUCLength = OverrideLen;
+    return;
+  }
+
+  if (GetWordUnderMouseIsRight (Pos, WUCLength))
+  {
+    return;
   }
 
   WUCPosition = Pos;
@@ -316,8 +1278,15 @@ void SpellChecker::ShowSuggestionsMenu ()
   Range.lpstrText = new char [WUCLength + 1];
   PostMsgToEditor (NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
   SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+  char *Utf8Buf = 0;
+  char *AnsiBuf = 0;
 
-  const AspellWordList *wl = aspell_speller_suggest (Speller, Range.lpstrText, -1);
+  if (ConvertingIsNeeded)
+    SetStringDUtf8 (Utf8Buf, Range.lpstrText);
+  else
+    SetString (Utf8Buf, Range.lpstrText);
+
+  const AspellWordList *wl = aspell_speller_suggest (Speller, Utf8Buf, -1);
   if (!wl)
     return;
 
@@ -383,11 +1352,16 @@ void SpellChecker::ShowSuggestionsMenu ()
       {
         Suggestion = aspell_string_enumeration_next(els);
       }
-      PostMsgToEditor (NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) Suggestion);
+      if (ConvertingIsNeeded)
+        SetStringSUtf8 (AnsiBuf, Suggestion);
+      else
+        SetString (AnsiBuf, Suggestion);
+      PostMsgToEditor (NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
     }
   }
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
   CLEAN_AND_ZERO_ARR (Buf);
+  CLEAN_AND_ZERO_ARR (Utf8Buf);
   CLEAN_AND_ZERO_ARR (MenuString);
 }
 
@@ -398,6 +1372,18 @@ void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
 
   CheckMenuItem(GetMenu(NppDataInstance->_nppHandle), get_funcItem ()[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
   RecheckVisible ();
+}
+
+void SpellChecker::SetCheckThose (int CheckThoseArg)
+{
+  CheckThose = CheckThoseArg;
+  SaveToIni (_T ("Check_Those_\\_Not_Those"), CheckThose);
+}
+
+void SpellChecker::SetFileTypes (TCHAR *FileTypesArg)
+{
+  SetString (FileTypes, FileTypesArg);
+  SaveToIni (_T ("File_Types"), FileTypes);
 }
 
 void SpellChecker::LoadSettings ()
@@ -415,6 +1401,10 @@ void SpellChecker::LoadSettings ()
   LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), DEFAULT_DELIMITERS, TRUE);
   SetDelimiters (BufUtf8, 0);
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
+  LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 1);
+  LoadFromIni (CheckThose , _T ("Check_Those_\\_Not_Those"), 1);
+  LoadFromIni (FileTypes, _T ("File_Types"), _T ("*.*"));
+  LoadFromIni (CheckComments, _T ("Check_Only_Comments_And_Strings"), 1);
   CLEAN_AND_ZERO_ARR (BufUtf8);
 }
 
@@ -424,10 +1414,10 @@ void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end
   PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORFILLRANGE, start, (end - start + 1));
 }
 
-void SpellChecker::RemoveWordUnderline (int start, int end)
+void SpellChecker::RemoveUnderline (HWND ScintillaWindow, int start, int end)
 {
-  PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
-  PostMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
+  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
 }
 
 // Warning - temporary buffer will be created
@@ -488,6 +1478,8 @@ void SpellChecker::Cleanup()
   CLEAN_AND_ZERO_ARR (Language);
   CLEAN_AND_ZERO_ARR (DelimUtf8);
   CLEAN_AND_ZERO_ARR (DelimUtf8Converted);
+  CLEAN_AND_ZERO_ARR (DelimConverted);
+  CLEAN_AND_ZERO_ARR (AspellPath);
   // We should deallocate shortcuts here
 }
 
@@ -614,6 +1606,7 @@ void SpellChecker::SetDelimiters (const char *Str, int SaveToIni)
   _tcscpy (TargetBuf, DestBuf);
   _tcscat_s (TargetBuf, TargetBufLength, _T (" \n\r\t\v"));
   SetStringDUtf8 (DelimUtf8Converted, TargetBuf);
+  SetStringSUtf8 (DelimConverted, DelimUtf8Converted);
   CLEAN_AND_ZERO_ARR (DestBuf);
   CLEAN_AND_ZERO_ARR (SrcBuf);
   CLEAN_AND_ZERO_ARR (TargetBuf);
@@ -666,30 +1659,56 @@ BOOL SpellChecker::AspellClear ()
   return TRUE;
 }
 
-BOOL SpellChecker::CheckWord (char *Word)
+static const char Yo[] = "\xd0\x81";
+static const char Ye[] = "\xd0\x95";
+static const char yo[] = "\xd1\x91";
+static const char ye[] = "\xd0\xb5";
+
+BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 {
   if (!AspellLoaded)
     return TRUE;
   // Well Numbers have same codes for ansi and unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
-  // TODO: add this to options
   for (char c = '0'; c <= '9'; c++)
   {
     if (strchr (Word, c))
       return TRUE;
   }
 
+  if (CheckComments && !CheckWordInCommentOrString (Start, End))
+    return TRUE;
+
+  char *Utf8Buf = 0;
+
   if (ConvertingIsNeeded) // That's really part that sucks
   {
     // Well TODO: maybe convert only to unicode and tell aspell that we're using unicode
     // Cause double conversion kinda sucks
-    char *Utf8Buf = 0;
     SetStringDUtf8 (Utf8Buf, Word);
-    BOOL res = aspell_speller_check(Speller, Utf8Buf, strlen (Utf8Buf));
-    CLEAN_AND_ZERO_ARR (Utf8Buf);
-    return res;
   }
-  return aspell_speller_check(Speller, Word, strlen (Word));
+
+  if (IgnoreYo)
+  {
+    char *Iter = Utf8Buf;
+    while (Iter = strstr (Iter, Yo))
+    {
+      Iter[0] = Ye[0];
+      Iter[1] = Ye[1];
+    }
+    Iter = Utf8Buf;
+    while (Iter = strstr (Iter, yo))
+    {
+      Iter[0] = ye[0];
+      Iter[1] = ye[1];
+    }
+  }
+
+  BOOL res = aspell_speller_check(Speller, Utf8Buf, strlen (Utf8Buf));
+  if (ConvertingIsNeeded)
+    CLEAN_AND_ZERO_ARR (Utf8Buf);
+
+  return res;
 }
 
 BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode)
@@ -700,66 +1719,74 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
   HWND ScintillaWindow = GetScintillaWindow (NppDataInstance);
   int oldid = SendMsgToEditor (ScintillaWindow, NppDataInstance, SCI_GETINDICATORCURRENT);
   char *Context = 0; // Temporary variable for strtok_s usage
-  char *Delim = 0;
   char *token;
   BOOL stop = FALSE;
   long ResultingWordEnd = -1, ResultingWordStart = -1;
+  long TextLen = strlen (TextToCheck);
 
   if (!DelimUtf8)
     return FALSE;
 
-  if (ConvertingIsNeeded)
-    SetStringSUtf8 (Delim, DelimUtf8Converted);
-  // A little bit ugly but since only function in mbstr.h require unsigned char then
-  // we're gonna do explicitly all conversations before call to them.
   if (!ConvertingIsNeeded)
-    token = (char *) _mbstok_s ((unsigned char *) TextToCheck, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
+    token = Utf8strtok (TextToCheck, DelimUtf8Converted, &Context);
   else
-    token = strtok_s (TextToCheck, Delim, &Context);
+    token = strtok_s (TextToCheck, DelimConverted, &Context);
+
+  long WordStart = offset + token - TextToCheck;
+  RemoveUnderline (ScintillaWindow, offset, WordStart);
+  long WordEnd = 0;
 
   while (token)
   {
-    if (token && !CheckWord (token))
+    if (token)
     {
-      long WordStart = offset + token - TextToCheck;
-      long WordEnd = offset + token - TextToCheck + strlen (token) - 1;
-      switch (Mode)
+      WordStart = offset + token - TextToCheck;
+      RemoveUnderline (ScintillaWindow, WordEnd + 1, WordStart - 1);
+      WordEnd = offset + token - TextToCheck + strlen (token) - 1;
+      if (!CheckWord (token, WordStart, WordEnd))
       {
-      case UNDERLINE_ERRORS:
-        CreateWordUnderline (ScintillaWindow, WordStart, WordEnd);
-        break;
-      case FIND_FIRST:
-        if (WordEnd >= CurrentPosition)
+        switch (Mode)
         {
-          SendMsgToEditor (NppDataInstance, SCI_SETSEL, WordStart, WordEnd + 1);
-          stop = TRUE;
-        }
-        break;
-      case FIND_LAST:
-        {
-          if (WordEnd >= CurrentPosition - 1)
+        case UNDERLINE_ERRORS:
+          CreateWordUnderline (ScintillaWindow, WordStart, WordEnd);
+          break;
+        case FIND_FIRST:
+          if (WordEnd >= CurrentPosition)
           {
+            SendMsgToEditor (NppDataInstance, SCI_SETSEL, WordStart, WordEnd + 1);
             stop = TRUE;
-            break;
           }
-          ResultingWordStart = WordStart;
-          ResultingWordEnd = WordEnd;
+          break;
+        case FIND_LAST:
+          {
+            if (WordEnd >= CurrentPosition - 1)
+            {
+              stop = TRUE;
+              break;
+            }
+            ResultingWordStart = WordStart;
+            ResultingWordEnd = WordEnd;
+          }
+          break;
         }
-        break;
+        if (stop)
+          break;
       }
-      if (stop)
-        break;
+      else
+      {
+        if (Mode == UNDERLINE_ERRORS)
+          RemoveUnderline (ScintillaWindow, WordStart, WordEnd);
+      }
     }
 
     if (!ConvertingIsNeeded)
-      token =  (char *) _mbstok_s (NULL, (unsigned char *) DelimUtf8Converted, (unsigned char **) &Context);
+      token =  Utf8strtok (NULL, DelimUtf8Converted, &Context);
     else
-      token = strtok_s (NULL, Delim, &Context);
+      token = strtok_s (NULL, DelimConverted, &Context);
   }
-  if (ConvertingIsNeeded)
-    CLEAN_AND_ZERO_ARR (Delim);
+  RemoveUnderline (ScintillaWindow, WordEnd + 1, offset + TextLen + 100);
 
-  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
+  // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
 
   switch (Mode)
   {
@@ -794,7 +1821,6 @@ void SpellChecker::CheckVisible ()
   CLEAN_AND_ZERO_ARR (VisibleText);
   VisibleText = GetVisibleText (&VisibleTextOffset);
   VisibleTextLength = strlen (VisibleText);
-  ClearVisibleUnderlines ();
   CheckText (VisibleText, VisibleTextOffset, UNDERLINE_ERRORS);
 }
 
@@ -835,6 +1861,40 @@ void SpellChecker::SwitchAutoCheck ()
   UpdateAutocheckStatus ();
 }
 
+void SpellChecker::RecheckModified ()
+{
+  if (!AspellLoaded)
+  {
+    ClearAllUnderlines ();
+    return;
+  }
+
+  long FirstModifiedLine = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, ModifiedStart);
+  long LastModifiedLine = SendMsgToEditor (NppDataInstance, SCI_LINEFROMPOSITION, ModifiedEnd);
+  long LineCount = SendMsgToEditor (NppDataInstance, SCI_GETLINECOUNT);
+  long FirstPossiblyModifiedPos = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, FirstModifiedLine);
+  long LastPossiblyModifiedPos = 0;
+  if (LastModifiedLine + 1 < LineCount)
+    LastPossiblyModifiedPos = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, LastModifiedLine + 1);
+  else
+    LastPossiblyModifiedPos = SendMsgToEditor (NppDataInstance, SCI_GETLENGTH);
+
+  Sci_TextRange Range;
+  Range.chrg.cpMin = FirstPossiblyModifiedPos;
+  Range.chrg.cpMax = LastPossiblyModifiedPos;
+  Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
+  SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+
+  CheckText (Range.lpstrText, FirstPossiblyModifiedPos, UNDERLINE_ERRORS);
+  CLEAN_AND_ZERO_ARR (Range.lpstrText);
+}
+
+void SpellChecker::SetIgnoreYo (BOOL Ignore)
+{
+  IgnoreYo = Ignore;
+  SaveToIni (_T ("Ignore_Yo"), Ignore);
+}
+
 void SpellChecker::RecheckVisible ()
 {
   int CodepageId = 0;
@@ -843,10 +1903,9 @@ void SpellChecker::RecheckVisible ()
     ClearAllUnderlines ();
     return;
   }
-  LockSuggestionsBoxHide = FALSE;
   CodepageId = (int) SendMsgToEditor (NppDataInstance, SCI_GETCODEPAGE, 0, 0);
   setEncodingById (CodepageId); // For now it just changes should we convert it to utf-8 or no
-  if (AutoCheckText)
+  if (CheckTextNeeded ())
     CheckVisible ();
   else
     ClearAllUnderlines ();

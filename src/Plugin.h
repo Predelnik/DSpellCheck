@@ -55,23 +55,28 @@ void commandMenuCleanUp();
 //
 bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
 
+// WARNING: Consequent messages guaranteed to be delivered in order, only if they are in corresponding order in enum
+// TODO: Change events system to PostThreadMessage
 typedef enum {
   EID_SWITCH_AUTOCHECK,
   EID_LOAD_SETTINGS,
   EID_FILL_DIALOGS,
   EID_APPLY_SETTINGS,
   EID_HIDE_DIALOG,
+  EID_CHECK_FILE_NAME,
   EID_RECHECK_VISIBLE,
   EID_KILLTHREAD,
   EID_THREADKILLED,
   EID_INIT_SUGGESTIONS_BOX,
   EID_HIDE_SUGGESTIONS_BOX,
   EID_SHOW_SUGGESTION_MENU,
+  EID_RECHECK_MODIFIED_ZONE,
   EID_APPLYMENUACTION,
   EID_SET_SUGGESTIONS_BOX_TRANSPARENCY,
   EID_DEFAULT_DELIMITERS,
   EID_FIND_NEXT_MISTAKE,
   EID_FIND_PREV_MISTAKE,
+  EID_WRITE_SETTING,
   EID_MAX,
 } EventId;
 
@@ -90,6 +95,13 @@ void InitClasses ();
 void CreateHooks ();
 HANDLE getHModule ();
 FuncItem *get_funcItem ();
+void SetModifiedZoneShared (long Start, long End);
+void GetModifiedZoneShared (long &Start, long &End);
+void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam);
+
+// From DllMain, possibly move to DllMain.h
+void SetRecheckDelay (int Value);
+int GetRecheckDelay ();
 
 #endif //PLUGINDEFINITION_H
 

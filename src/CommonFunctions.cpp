@@ -243,3 +243,135 @@ LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Ms
 {
   return PostMessage(ScintillaWindow, Msg, wParam, lParam);
 }
+
+// These functions are mostly taken from http://research.microsoft.com
+
+BOOL Utf8IsLead (char c)
+{
+  return (((c & 0x80) == 0)                 // 0xxxxxxx
+    || ((c & 0xC0) == 0xC0 && (c & 0x20) == 0)    // 110xxxxx
+    || ((c & 0xE0) == 0xE0 && (c & 0x10) == 0)    // 1110xxxx
+    || ((c & 0xF0) == 0xF0 && (c & 0x08) == 0)    // 11110xxx
+    || ((c & 0xF8) == 0xF8 && (c & 0x04) == 0));  // 111110xx
+}
+
+BOOL Utf8IsCont (char c)
+{
+  return ((c & 0x80) == 0x80 && (c & 0x40) == 0);  // 10xxxxx
+}
+
+char *Utf8Dec(const char *string, const char *current)
+{
+  const char *temp;
+  if (string > current)
+    return 0;
+
+  temp = current - 1;
+  while ( string <= temp && (!Utf8IsLead (*temp) ))
+    temp--;
+
+  return (char *) temp;
+}
+
+char *Utf8Inc (const char *string)
+{
+  const char *temp;
+  temp = string + 1;
+  while (temp && !Utf8IsLead (*temp))
+    temp++;
+
+  return (char *) temp;
+}
+
+int Utf8GetCharSize (char c)
+{
+  if ((c & 0x80) == 0)
+    return 1;
+  else if ((c & 0xC0) > 0 && (c & 0x20) == 0)
+    return 2;
+  else if ((c & 0xE0) > 0 && (c & 0x10) == 0)
+    return 3;
+  else if ((c & 0xE0) > 0 && (c & 0x10) == 0)
+    return 4;
+  else if ((c & 0xF0) > 0 && (c & 0x08) == 0)
+    return 5;
+  else if ((c & 0xF8) > 0 && (c & 0x04) == 0)
+    return 6;
+  return 0;
+}
+
+BOOL Utf8FirstCharsAreEqual (const char *Str1, const char *Str2)
+{
+  int FirstCharSize1 = Utf8GetCharSize (*Str1);
+  int FirstCharSize2 = Utf8GetCharSize (*Str2);
+  if (FirstCharSize1 != FirstCharSize2)
+    return FALSE;
+  return (strncmp (Str1, Str2, FirstCharSize1) == 0);
+}
+
+char *Utf8pbrk(const char *s, const char *set)
+{
+  const char *x;
+  for (; *s; s = Utf8Inc (s))
+    for (x = set; *x; x = Utf8Inc (x))
+      if (Utf8FirstCharsAreEqual (s, x))
+        return (char *) s;
+  return NULL;
+}
+
+long Utf8spn (const char *s, const char *set)
+{
+  const char *x;
+  size_t i;
+
+  for (i = 0; *s; s = Utf8Inc (s), i++) {
+    for (x = set; *x; x = Utf8Inc (x))
+      if (Utf8FirstCharsAreEqual (s, x))
+        goto continue_outer;
+    break;
+continue_outer:;
+  }
+  return i;
+}
+
+char *Utf8chr (const char *s, const char *sfc) // Char is first from the string sfc (string with first char)
+{
+  while (*s)
+  {
+    if (s && Utf8FirstCharsAreEqual (s, sfc))
+      return (char *) s;
+    s = Utf8Inc (s);
+  }
+  return 0;
+}
+
+char * Utf8strtok (char *s1, const char *Delimit, char **Context)
+{
+  char *tmp;
+
+  /* Skip leading delimiters if new string. */
+  if ( s1 == NULL ) {
+    s1 = *Context;
+    if (s1 == NULL)         /* End of story? */
+      return NULL;
+  } else {
+    s1 += Utf8spn (s1, Delimit);
+  }
+
+  /* Find end of segment */
+  tmp = Utf8pbrk (s1, Delimit);
+  if (tmp) {
+    /* Found another delimiter, split string and save state. */
+    *tmp = '\0';
+    while (!Utf8IsLead (*(++tmp)))
+      *tmp = '\0';
+    tmp--;
+
+    *Context = tmp + 1;
+  } else {
+    /* Last segment, remember that. */
+    *Context = NULL;
+  }
+
+  return s1;
+}

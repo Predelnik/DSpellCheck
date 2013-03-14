@@ -21,9 +21,6 @@
 //
 // put the headers you need here
 //
-#include <stdlib.h>
-#include <time.h>
-#include <shlwapi.h>
 
 #include "aspell.h"
 #include "CommonFunctions.h"
@@ -40,6 +37,7 @@ const TCHAR configFileName[] = _T ("DSpellCheck.ini");
 #endif
 
 FuncItem funcItem[nbFunc];
+BOOL ResourcesInited = FALSE;
 
 FuncItem *get_funcItem ()
 {
@@ -96,6 +94,11 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
 
   BOOL bRun = SpellCheckerInstance->NotifyEvent(EID_MAX);
 
+  MSG Msg;
+
+  // Creating thread message queue
+  PeekMessage (&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+
   while (bRun)
   {
     dwWaitResult = WaitForMultipleObjects(EID_MAX, hEvent, FALSE, INFINITE);
@@ -115,6 +118,7 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
 void CreateThreadResources ()
 {
   DWORD dwThreadId = 0;
+
   /* create events */
   for (int i = 0; i < EID_MAX; i++)
     hEvent[i] = ::CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -122,6 +126,8 @@ void CreateThreadResources ()
   /* create thread */
   hThread = CreateThread (NULL, 0, ThreadMain, SpellCheckerInstance, 0, &dwThreadId);
   SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
+
+  ResourcesInited = TRUE;
 }
 
 void CreateHooks ()
@@ -133,11 +139,11 @@ void KillThreadResources ()
 {
   SendEvent (EID_KILLTHREAD);
 
-  WaitForSingleObject (hEvent[EID_THREADKILLED], INFINITE);
+  WaitForEvent (EID_THREADKILLED);
 
   CloseHandle(hThread);
 
-  /* create events */
+  /* kill events */
   for (int i = 0; i < EID_MAX; i++)
     CloseHandle(hEvent[i]);
 }
@@ -156,12 +162,22 @@ void pluginCleanUp ()
 
 void inline SendEvent (EventId Event)
 {
-  SetEvent(hEvent[Event]);
+  if (ResourcesInited)
+    SetEvent(hEvent[Event]);
+}
+
+void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam)
+{
+  if (ResourcesInited)
+  {
+    PostThreadMessage (GetThreadId (hThread), Msg, WParam, LParam);
+  }
 }
 
 void WaitForEvent (EventId Event, DWORD WaitTime)
 {
-  WaitForSingleObject (hEvent[Event], WaitTime);
+  if (ResourcesInited)
+    WaitForSingleObject (hEvent[Event], WaitTime);
 }
 
 void SwitchAutoCheckText ()
@@ -219,6 +235,16 @@ void commandMenuInit()
 
   // make your plugin config file full file path name
   PathAppend (IniFilePath, configFileName);
+
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  TCHAR *EndPtr;
+  int x;
+  GetPrivateProfileString (_T ("SpellCheck"), _T ("Recheck_Delay"), _T ("500"), Buf, DEFAULT_BUF_SIZE, IniFilePath);
+  x = _tcstol (Buf, &EndPtr, 10);
+  if (*EndPtr)
+    SetRecheckDelay (500);
+  else
+    SetRecheckDelay (x);
 
   //--------------------------------------------//
   //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//

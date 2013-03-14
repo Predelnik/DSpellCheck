@@ -25,4 +25,9 @@ LRESULT SendMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, 
 LRESULT SendMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
 LRESULT PostMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
 LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+
+char *Utf8Dec(const char *string, const char *current);
+char *Utf8chr (const char *s, const char *sfc);
+char * Utf8strtok (char *s1, const char *Delimit, char **Context);
+char *Utf8Inc (const char *string);
 #endif // COMMON_FUNCTIONS_H;

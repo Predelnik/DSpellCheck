@@ -117,9 +117,12 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   CLEAN_AND_ZERO_ARR (LangString);
   Edit_GetText (HAspellPath, Buf, DEFAULT_BUF_SIZE);
   SpellCheckerInstance->SetAspellPath (Buf);
+  SpellCheckerInstance->SetCheckThose (Button_GetCheck (HCheckOnlyThose) == BST_CHECKED ? 1 : 0);
+  Edit_GetText (HFileTypes, Buf, DEFAULT_BUF_SIZE);
+  SpellCheckerInstance->SetFileTypes (Buf);
   CLEAN_AND_ZERO_ARR (Buf);
+  SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
   SendEvent (EID_FILL_DIALOGS);
-  SpellCheckerInstance->RecheckVisible ();
 }
 
 void SimpleDlg::FillAspellInfo (BOOL Status, TCHAR *AspellPath)
@@ -147,6 +150,27 @@ void SimpleDlg::FillSugestionsNum (int SuggestionsNum)
   Edit_SetText (HSuggestionsNum, Buf);
 }
 
+void SimpleDlg::SetFileTypes (BOOL CheckThose, const TCHAR *FileTypes)
+{
+  if (!CheckThose)
+  {
+    Button_SetCheck (HCheckNotThose, BST_CHECKED);
+    Button_SetCheck (HCheckOnlyThose, BST_UNCHECKED);
+    Edit_SetText (HFileTypes, FileTypes);
+  }
+  else
+  {
+    Button_SetCheck (HCheckOnlyThose, BST_CHECKED);
+    Button_SetCheck (HCheckNotThose, BST_UNCHECKED);
+    Edit_SetText (HFileTypes, FileTypes);
+  }
+}
+
+void SimpleDlg::SetCheckComments (BOOL Value)
+{
+  Button_SetCheck (HCheckComments, Value ? BST_CHECKED : BST_UNCHECKED);
+}
+
 BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
   char *LangString = NULL;
@@ -165,6 +189,10 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HSuggestionsNum = ::GetDlgItem(_hSelf, IDC_SUGGESTIONS_NUM);
       HAspellStatus = ::GetDlgItem (_hSelf, IDC_ASPELL_STATUS);
       HAspellPath = ::GetDlgItem (_hSelf, IDC_ASPELLPATH);
+      HCheckNotThose = ::GetDlgItem (_hSelf, IDC_FILETYPES_CHECKNOTTHOSE);
+      HCheckOnlyThose = ::GetDlgItem (_hSelf, IDC_FILETYPES_CHECKTHOSE);
+      HFileTypes = ::GetDlgItem (_hSelf, IDC_FILETYPES);
+      HCheckComments = ::GetDlgItem (_hSelf, IDC_CHECKCOMMENTS);
       DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
       return TRUE;
     }
@@ -256,8 +284,16 @@ void AdvancedDlg::FillDelimiters (const char *Delimiters)
   CLEAN_AND_ZERO_ARR (TBuf);
 }
 
+void AdvancedDlg::setIgnoreYo (BOOL Value)
+{
+  Button_SetCheck (HIgnoreYo, Value ? BST_CHECKED : BST_UNCHECKED);
+}
+
 BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
+  TCHAR *EndPtr = 0;
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  int x;
   switch (message)
   {
   case WM_INITDIALOG:
@@ -265,6 +301,8 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       // Retrieving handles of dialog controls
       HEditDelimiters = ::GetDlgItem(_hSelf, IDC_DELIMETERS);
       HDefaultDelimiters = ::GetDlgItem (_hSelf, IDC_DEFAULT_DELIMITERS);
+      HIgnoreYo = ::GetDlgItem (_hSelf, IDC_IGNOREYO);
+      HRecheckDelay = ::GetDlgItem (_hSelf, IDC_RECHECK_DELAY);
 
       CreateToolTip (IDC_DELIMETERS, _hSelf, _T ("Standard white-space symbols such as New Line ('\\n'), Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are always counted as delimiters"));
       return TRUE;
@@ -275,10 +313,29 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       return TRUE;
     }
   case WM_COMMAND:
+    switch (LOWORD (wParam))
     {
-      if (lParam == (LPARAM)HDefaultDelimiters && HIWORD (wParam) == BN_CLICKED)
+    case IDC_DEFAULT_DELIMITERS:
+      if (HIWORD (wParam) == BN_CLICKED)
         SendEvent (EID_DEFAULT_DELIMITERS);
       return TRUE;
+    case IDC_RECHECK_DELAY:
+      if (HIWORD (wParam) == EN_CHANGE)
+      {
+        Edit_GetText (HRecheckDelay, Buf, DEFAULT_BUF_SIZE);
+        if (!*Buf)
+          return TRUE;
+
+        x = _tcstol (Buf, &EndPtr, 10);
+        if (*EndPtr)
+          Edit_SetText (HRecheckDelay, _T ("0"));
+        else if (x > 30000)
+          Edit_SetText (HRecheckDelay, _T ("30000"));
+        else if (x < 0)
+          Edit_SetText (HRecheckDelay, _T ("0"));
+
+        return TRUE;
+      }
     }
   }
   return FALSE;
@@ -287,6 +344,23 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
 void AdvancedDlg::SetDelimetersEdit (TCHAR *Delimiters)
 {
   Edit_SetText (HEditDelimiters, Delimiters);
+}
+
+void AdvancedDlg::SetRecheckDelay (int Delay)
+{
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  TCHAR *EndPtr;
+  _itot (Delay, Buf, 10);
+  Edit_SetText (HRecheckDelay, Buf);
+}
+
+int AdvancedDlg::GetRecheckDelay ()
+{
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  Edit_GetText (HRecheckDelay, Buf, DEFAULT_BUF_SIZE);
+  TCHAR *EndPtr;
+  int x = _tcstol (Buf, &EndPtr, 10);
+  return x;
 }
 
 // Called from main thread, beware!
@@ -299,6 +373,7 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   char *BufUtf8 = 0;
   SetStringDUtf8 (BufUtf8, TBuf);
   SpellCheckerInstance->SetDelimiters (BufUtf8);
+  SpellCheckerInstance->SetIgnoreYo (Button_GetCheck (HIgnoreYo) == BST_CHECKED ? TRUE : FALSE);
   CLEAN_AND_ZERO_ARR (BufUtf8);
 }
 
@@ -324,6 +399,13 @@ void SettingsDlg::destroy()
   AdvancedDlgInstance.destroy();
 };
 
+// Send appropriate event and set some npp thread properties
+void SettingsDlg::ApplySettings ()
+{
+  SendEvent (EID_APPLY_SETTINGS);
+  SetRecheckDelay (AdvancedDlgInstance.GetRecheckDelay ());
+}
+
 BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
   switch (Message)
@@ -338,6 +420,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       SimpleDlgInstance.display ();
       AdvancedDlgInstance.init(_hInst, _hSelf);
       AdvancedDlgInstance.create (IDD_ADVANCED, false, false);
+      AdvancedDlgInstance.SetRecheckDelay (GetRecheckDelay ());
       SendEvent (EID_FILL_DIALOGS);
 
       WindowVectorInstance.push_back(DlgInfo(&SimpleDlgInstance, TEXT("Simple"), TEXT("Simple Options")));
@@ -379,10 +462,10 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       switch (wParam)
       {
       case IDAPPLY:
-        SendEvent (EID_APPLY_SETTINGS);
+        ApplySettings ();
         return TRUE;
       case IDOK:
-        SendEvent (EID_APPLY_SETTINGS);
+        ApplySettings ();
       case IDCANCEL:
         SendEvent (EID_HIDE_DIALOG);
         return TRUE;

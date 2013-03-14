@@ -41,6 +41,7 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/DllMain.cpp 
 	${SRC_DIR}/menuCmdID.h
 	${SRC_DIR}/scintilla.h 
+	${SRC_DIR}/SciLexer.h
 	${SRC_DIR}/PluginInterface.h
 	${SRC_DIR}/Notepad_plus_msgs.h
 	${SRC_DIR}/aspell.h

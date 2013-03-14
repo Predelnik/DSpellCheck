@@ -15,6 +15,8 @@ public:
   void FillSugestionsNum (int SuggestionsNum);
   void FillAspellInfo (BOOL Status, TCHAR *AspellPath);
   void DisableLanguageCombo (BOOL Disable);
+  void SetFileTypes (BOOL CheckThose, const TCHAR *FileTypes);
+  void SetCheckComments (BOOL Value);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
@@ -30,6 +32,10 @@ private:
   HWND HSuggestionsNum;
   HWND HSpinSuggestionsNum;
   HWND HComboLanguage;
+  HWND HCheckNotThose;
+  HWND HCheckOnlyThose;
+  HWND HFileTypes;
+  HWND HCheckComments;
 };
 
 class AdvancedDlg : public StaticDialog
@@ -38,6 +44,9 @@ public:
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   void FillDelimiters (const char *Delimiters);
   void SetDelimetersEdit (TCHAR *Delimiters);
+  void setIgnoreYo (BOOL Value);
+  void SetRecheckDelay (int Delay);
+  int GetRecheckDelay ();
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
@@ -45,6 +54,9 @@ protected:
 private:
   HWND HEditDelimiters;
   HWND HDefaultDelimiters;
+  HWND HIgnoreYo;
+  HWND HRecheckDelay;
+
   NppData NppDataInstance;
 };
 
@@ -58,6 +70,7 @@ public:
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
   __override virtual void destroy ();
+  void ApplySettings ();
 private:
   NppData NppDataInstance;
   SimpleDlg SimpleDlgInstance;

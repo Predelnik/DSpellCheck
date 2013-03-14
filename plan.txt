@@ -3,10 +3,8 @@ Finalizing Stuff:
 - Some P.R.
 
 First Priority Stuff:
-- Fix random occuring segfault on close, that's a total bust (seen 1 times since then)
-- Add waiting 0.5 or more seconds (tunable) to check current word
+- Fix random occurring segfault on close, that's a total bust (seen 1 times since then)
 - Add some clever options to do not look like a fool. ( Yeah that's need some tuning):
-* Add more options (её - exclusive Russian option)
 * File types to ignore or check (maybe even regular expressions)
 * Size of buffer for finding next misspelling
 * Override right-click or create suggestion box (Hard stuff)
@@ -14,7 +12,7 @@ First Priority Stuff:
 * Ignore words starting from capital letter, all capital letters, containing any capital letters
 * Size of suggestion box
 * Underlining color and style
-- Link to aspell website.
+- Link to Aspell website.
 
 "Some other day" Stuff:
 - Make ability to use several dictionaries at once
