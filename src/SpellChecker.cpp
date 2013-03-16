@@ -1384,6 +1384,7 @@ void SpellChecker::ShowSuggestionsMenu ()
     SetString (Utf8Buf, Range.lpstrText);
 
   const AspellWordList *wl = 0;
+  AspellSpeller *SelectedSpeller = 0;
   if (!MultiLangMode)
   {
     wl = aspell_speller_suggest (Speller, Utf8Buf, -1);
@@ -1411,6 +1412,7 @@ void SpellChecker::ShowSuggestionsMenu ()
       if (Size > MaxSize)
       {
         MaxSize = Size;
+        SelectedSpeller = SpellerList[i];
         wl = CurWordList;
       }
     }
@@ -1456,11 +1458,13 @@ void SpellChecker::ShowSuggestionsMenu ()
   int Result = SuggestionsInstance->GetResult ();
   if (Result != 0)
   {
+    if (!MultiLangMode)
+      SelectedSpeller = Speller;
     if (Result == MID_IGNOREALL)
     {
-      aspell_speller_add_to_session (Speller, Range.lpstrText, WUCLength + 1);
-      aspell_speller_save_all_word_lists (Speller);
-      if (aspell_speller_error(Speller) != 0)
+      aspell_speller_add_to_session (SelectedSpeller, Range.lpstrText, WUCLength + 1);
+      aspell_speller_save_all_word_lists (SelectedSpeller);
+      if (aspell_speller_error(SelectedSpeller) != 0)
       {
         AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(Speller));
       }
@@ -1468,9 +1472,9 @@ void SpellChecker::ShowSuggestionsMenu ()
     }
     else if (Result == MID_ADDTODICTIONARY)
     {
-      aspell_speller_add_to_personal(Speller, Range.lpstrText, WUCLength + 1);
-      aspell_speller_save_all_word_lists (Speller);
-      if (aspell_speller_error(Speller) != 0)
+      aspell_speller_add_to_personal(SelectedSpeller, Range.lpstrText, WUCLength + 1);
+      aspell_speller_save_all_word_lists (SelectedSpeller);
+      if (aspell_speller_error(SelectedSpeller) != 0)
       {
         AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(Speller));
       }
@@ -2067,17 +2071,19 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
   long WordStart = offset + token - TextToCheck;
   if (Mode == UNDERLINE_ERRORS)
     RemoveUnderline (ScintillaWindow, offset, WordStart);
-  long WordEnd = 0;
+  long WordEnd = offset + token - TextToCheck + strlen (token) - 1;
 
   while (token)
   {
     if (token)
     {
       WordStart = offset + token - TextToCheck;
-      WordEnd = offset + token - TextToCheck + strlen (token) - 1;
 
       if (Mode == UNDERLINE_ERRORS)
         RemoveUnderline (ScintillaWindow, WordEnd + 1, WordStart - 1);
+
+      WordEnd = offset + token - TextToCheck + strlen (token) - 1;
+
       if (!CheckWord (token, WordStart, WordEnd))
       {
         switch (Mode)
