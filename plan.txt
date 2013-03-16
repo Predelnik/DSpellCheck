@@ -2,23 +2,10 @@ Finalizing Stuff:
 - Installation
 - Some P.R.
 
-First Priority Stuff:
-- Fix random occurring segfault on close, that's a total bust (seen 1 times since then)
-- Add some clever options to do not look like a fool. ( Yeah that's need some tuning):
-* File types to ignore or check (maybe even regular expressions)
-* Size of buffer for finding next misspelling
-* Override right-click or create suggestion box (Hard stuff)
-* Ignore or not words with numbers
-* Ignore words starting from capital letter, all capital letters, containing any capital letters
-* Size of suggestion box
-* Underlining color and style
-- Link to Aspell website.
-
 "Some other day" Stuff:
-- Make ability to use several dictionaries at once
+- Fix random occurring segfault on close, that's a total bust (Probably fixed, but I'm not so sure)
+- Override right-click or create suggestion box (Well I've figured out how to do it, but using these 2 additional hooks, looks really uncool
 - Possibly ignore current language keywords
 - Add some cache for known words probably ( Size of this cache tunable)
 - Possibly check if ANSI encoding file exist then do no conversion
-
-Almost denied stuff:
-- Looks like hunspell is not being encouraged to be used as shared library which is uncool for us.
+- Well about hunspell: Looks like some users on forum want hunspell dictionaries so I will add it as static perhaps.

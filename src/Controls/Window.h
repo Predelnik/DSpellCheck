@@ -7,10 +7,10 @@
 // version 2 of the License, or (at your option) any later version.
 //
 // Note that the GPL places important restrictions on "derived works", yet
-// it does not provide a detailed definition of that term.  To avoid      
-// misunderstandings, we consider an application to constitute a          
+// it does not provide a detailed definition of that term.  To avoid
+// misunderstandings, we consider an application to constitute a
 // "derivative work" for the purpose of this license if it does any of the
-// following:                                                             
+// following:
 // 1. Integrates source code from Notepad++.
 // 2. Integrates/includes/aggregates Notepad++ into a proprietary executable
 //    installer, such as those produced by InstallShield.
@@ -24,7 +24,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 
 #ifndef WINDOW_CONTROL_H
 #define WINDOW_CONTROL_H
@@ -46,15 +45,15 @@ public:
   virtual void display(bool toShow = true) const {
     ::ShowWindow(_hSelf, toShow?SW_SHOW:SW_HIDE);
   };
-  
+
   virtual void reSizeTo(RECT & rc) // should NEVER be const !!!
-  { 
+  {
     ::MoveWindow(_hSelf, rc.left, rc.top, rc.right, rc.bottom, TRUE);
     redraw();
   };
 
   virtual void reSizeToWH(RECT & rc) // should NEVER be const !!!
-  { 
+  {
     ::MoveWindow(_hSelf, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
     redraw();
   };
@@ -64,8 +63,8 @@ public:
     if (forceUpdate)
       ::UpdateWindow(_hSelf);
   };
-  
-    virtual void getClientRect(RECT & rc) const {
+
+  virtual void getClientRect(RECT & rc) const {
     ::GetClientRect(_hSelf, &rc);
   };
 
@@ -88,7 +87,7 @@ public:
   };
 
   virtual bool isVisible() const {
-      return (::IsWindowVisible(_hSelf)?true:false);
+    return (::IsWindowVisible(_hSelf)?true:false);
   };
 
   HWND getHSelf() const {
@@ -104,7 +103,7 @@ public:
     ::SetFocus(_hSelf);
   };
 
-    HINSTANCE getHinst() const {
+  HINSTANCE getHinst() const {
     //assert(_hInst != 0);
     return _hInst;
   };
@@ -115,5 +114,4 @@ protected:
 };
 
 #endif //WINDOW_CONTROL_H
-
 
