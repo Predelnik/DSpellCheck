@@ -26,7 +26,9 @@
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 
-const int nbFunc = 5;
+const int nbFunc = 6;
+
+class LangList;
 
 //
 // Initialization of your plugin data
@@ -59,9 +61,11 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 // TODO: Change events system to PostThreadMessage
 typedef enum {
   EID_SWITCH_AUTOCHECK,
+  EID_SET_SUGGESTIONS_BOX_TRANSPARENCY,
   EID_LOAD_SETTINGS,
   EID_FILL_DIALOGS,
   EID_APPLY_SETTINGS,
+  EID_APPLY_MULTI_LANG_SETTINGS,
   EID_HIDE_DIALOG,
   EID_CHECK_FILE_NAME,
   EID_RECHECK_VISIBLE,
@@ -71,8 +75,8 @@ typedef enum {
   EID_HIDE_SUGGESTIONS_BOX,
   EID_SHOW_SUGGESTION_MENU,
   EID_RECHECK_MODIFIED_ZONE,
+  EID_INIT_CONTEXT_MENU,
   EID_APPLYMENUACTION,
-  EID_SET_SUGGESTIONS_BOX_TRANSPARENCY,
   EID_DEFAULT_DELIMITERS,
   EID_FIND_NEXT_MISTAKE,
   EID_FIND_PREV_MISTAKE,
@@ -94,13 +98,14 @@ void CreateThreadResources ();
 void InitClasses ();
 void CreateHooks ();
 HANDLE getHModule ();
+LangList *GetLangList ();
 FuncItem *get_funcItem ();
 void SetModifiedZoneShared (long Start, long End);
 void GetModifiedZoneShared (long &Start, long &End);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam);
 
 // From DllMain, possibly move to DllMain.h
-void SetRecheckDelay (int Value);
+void SetRecheckDelay (int Value, int WriteToIni = 1);
 int GetRecheckDelay ();
 
 #endif //PLUGINDEFINITION_H

@@ -1,7 +1,9 @@
 #include "SettingsDlg.h"
 
 #include "aspell.h"
+#include "Controls/CheckedList/CheckedList.h"
 #include "CommonFunctions.h"
+#include "LangList.h"
 #include "MainDef.h"
 #include "Plugin.h"
 #include "SpellChecker.h"
@@ -22,13 +24,14 @@ void SimpleDlg::DisableLanguageCombo (BOOL Disable)
 }
 
 // Called from main thread, beware!
-BOOL SimpleDlg::AddAvalaibleLanguages (const char *CurrentLanguage)
+BOOL SimpleDlg::AddAvalaibleLanguages (const char *CurrentLanguage, const char *MultiLanguages)
 {
   AspellConfig* aspCfg;
   AspellDictInfoList* dlist;
   AspellDictInfoEnumeration* dels;
   const AspellDictInfo* entry;
   ComboBox_ResetContent (HComboLanguage);
+  ListBox_ResetContent (GetLangList ()->GetListBox ());
 
   aspCfg = new_aspell_config();
 
@@ -60,11 +63,32 @@ BOOL SimpleDlg::AddAvalaibleLanguages (const char *CurrentLanguage)
     TCHAR *TBuf = 0;
     SetString (TBuf, entry->name);
     ComboBox_AddString (HComboLanguage, TBuf);
+    ListBox_AddString (GetLangList ()->GetListBox (), TBuf);
     CLEAN_AND_ZERO_ARR (TBuf);
   }
+
+  if (strcmp (CurrentLanguage, "<MULTIPLE>") == 0)
+    SelectedIndex = i;
+  ComboBox_AddString (HComboLanguage, _T ("Multiple Languages..."));
+
   ComboBox_SetCurSel (HComboLanguage, SelectedIndex);
 
+  TCHAR *Context = 0;
+  TCHAR *MultiLanguagesCopy = 0;
+  TCHAR *Token = 0;
+  int Index = 0;
+  SetString (MultiLanguagesCopy, MultiLanguages);
+  CheckedListBox_EnableCheckAll (GetLangList ()->GetListBox (), BST_UNCHECKED);
+  Token = _tcstok_s (MultiLanguagesCopy, _T ("|"), &Context);
+  while (Token)
+  {
+    Index = ListBox_FindString (GetLangList ()->GetListBox (), -1, Token);
+    if (Index != -1)
+      CheckedListBox_SetCheckState (GetLangList ()->GetListBox (), Index, BST_CHECKED);
+    Token = _tcstok_s (NULL, _T ("|"), &Context);
+  }
   delete_aspell_dict_info_enumeration(dels);
+  CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
   return TRUE;
 }
 
@@ -105,16 +129,30 @@ static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText)
 // Called from main thread, beware!
 void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
-  int length = GetWindowTextLengthA (HComboLanguage);
-  char *LangString = new char[length + 1];
   TCHAR *Buf = 0;
-  GetWindowTextA (HComboLanguage, LangString, length + 1);
-  SpellCheckerInstance->SetLanguage (LangString);
+  char *Lang = 0;
+  int TextLen = 0;
+  int LangCount = ComboBox_GetCount (HComboLanguage);
+  int CurSel = ComboBox_GetCurSel (HComboLanguage);
+
+  if (CurSel == LangCount - 1)
+  {
+    SpellCheckerInstance->SetLanguage ("<MULTIPLE>");
+  }
+  else
+  {
+    TextLen = ComboBox_GetTextLength (HComboLanguage);
+    Buf = new TCHAR [TextLen + 1];
+    ComboBox_GetText (HComboLanguage, Buf, TextLen + 1);
+    SetStringDUtf8 (Lang, Buf);
+    SpellCheckerInstance->SetLanguage (Lang);
+    CLEAN_AND_ZERO_ARR (Buf);
+    CLEAN_AND_ZERO_ARR (Lang);
+  }
   SpellCheckerInstance->RecheckVisible ();
   Buf = new TCHAR[DEFAULT_BUF_SIZE];
   Edit_GetText (HSuggestionsNum, Buf, DEFAULT_BUF_SIZE);
   SpellCheckerInstance->SetSuggestionsNum (_ttoi (Buf));
-  CLEAN_AND_ZERO_ARR (LangString);
   Edit_GetText (HAspellPath, Buf, DEFAULT_BUF_SIZE);
   SpellCheckerInstance->SetAspellPath (Buf);
   SpellCheckerInstance->SetCheckThose (Button_GetCheck (HCheckOnlyThose) == BST_CHECKED ? 1 : 0);
@@ -193,6 +231,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HCheckOnlyThose = ::GetDlgItem (_hSelf, IDC_FILETYPES_CHECKTHOSE);
       HFileTypes = ::GetDlgItem (_hSelf, IDC_FILETYPES);
       HCheckComments = ::GetDlgItem (_hSelf, IDC_CHECKCOMMENTS);
+      HAspellLink = ::GetDlgItem (_hSelf, IDC_ASPELL_LINK);
       DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
       return TRUE;
     }
@@ -206,6 +245,15 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
     {
       switch (LOWORD (wParam))
       {
+      case IDC_COMBO_LANGUAGE:
+        if (HIWORD (wParam) == CBN_SELCHANGE)
+        {
+          if (ComboBox_GetCurSel (HComboLanguage) == ComboBox_GetCount (HComboLanguage) - 1)
+          {
+            GetLangList ()->DoDialog ();
+          }
+        }
+        break;
       case IDC_SUGGESTIONS_NUM:
         {
           if (HIWORD (wParam) == EN_CHANGE)
@@ -262,8 +310,27 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
         break;
       }
     }
+  case WM_NOTIFY:
+
+    switch (((LPNMHDR)lParam)->code)
+    {
+    case NM_CLICK:          // Fall through to the next case.
+    case NM_RETURN:
+      {
+        PNMLINK pNMLink = (PNMLINK)lParam;
+        LITEM   item    = pNMLink->item;
+
+        if ((((LPNMHDR)lParam)->hwndFrom == HAspellLink) && (item.iLink == 0))
+        {
+          ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
+        }
+
+        break;
+      }
+    }
+    break;
   case WM_CTLCOLORSTATIC:
-    if(GetDlgItem(_hSelf, IDC_ASPELL_STATUS) == (HWND)lParam)
+    if (GetDlgItem (_hSelf, IDC_ASPELL_STATUS) == (HWND)lParam)
     {
       HDC hDC = (HDC)wParam;
       SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
@@ -274,6 +341,12 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
     break;
   }
   return FALSE;
+}
+
+void AdvancedDlg::SetUnderlineSettings (int Color, int Style)
+{
+  UnderlineColorBtn = Color;
+  ComboBox_SetCurSel (HUnderlineStyle, Style);
 }
 
 void AdvancedDlg::FillDelimiters (const char *Delimiters)
@@ -289,6 +362,32 @@ void AdvancedDlg::setIgnoreYo (BOOL Value)
   Button_SetCheck (HIgnoreYo, Value ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void AdvancedDlg::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg)
+{
+  Button_SetCheck (HIgnoreNumbers, IgnoreNumbersArg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HIgnoreCStart, IgnoreCStartArg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HIgnoreCHave, IgnoreCHaveArg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HIgnoreCAll, IgnoreCAllArg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HIgnore_, Ignore_Arg ? BST_CHECKED : BST_UNCHECKED);
+}
+
+void AdvancedDlg::SetSuggBoxSettings (int Size, int Trans)
+{
+  SendMessage (HSliderSize, TBM_SETPOS, TRUE, Size);
+  SendMessage (HSliderTransparency, TBM_SETPOS, TRUE, Trans);
+}
+
+void AdvancedDlg::SetBufferSize (int Size)
+{
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  _itot_s (Size, Buf, 10);
+  Edit_SetText (HBufferSize, Buf);
+}
+
+const TCHAR *const IndicNames[] = {_T ("Plain"), _T ("Squiggle"), _T ("TT"), _T ("Diagonal"), _T ("Strike"), _T ("Hidden"),
+  _T ("Box"), _T ("Round Box"), _T ("Straight Box"), _T ("Dash"),
+  _T ("Dots"), _T ("Squiggle Low")};
+
 BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   TCHAR *EndPtr = 0;
@@ -303,14 +402,69 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       HDefaultDelimiters = ::GetDlgItem (_hSelf, IDC_DEFAULT_DELIMITERS);
       HIgnoreYo = ::GetDlgItem (_hSelf, IDC_IGNOREYO);
       HRecheckDelay = ::GetDlgItem (_hSelf, IDC_RECHECK_DELAY);
+      HUnderlineColor = ::GetDlgItem (_hSelf, IDC_UNDERLINE_COLOR);
+      HUnderlineStyle = ::GetDlgItem (_hSelf, IDC_UNDERLINE_STYLE);
+      HIgnoreNumbers = ::GetDlgItem (_hSelf, IDC_IGNORE_NUMBERS);
+      HIgnoreCStart = ::GetDlgItem (_hSelf, IDC_IGNORE_CSTART);
+      HIgnoreCHave = ::GetDlgItem (_hSelf,IDC_IGNORE_CHAVE);
+      HIgnoreCAll = ::GetDlgItem (_hSelf, IDC_IGNORE_CALL);
+      HIgnore_ = ::GetDlgItem (_hSelf, IDC_IGNORE_);
+      HSliderSize = ::GetDlgItem (_hSelf, IDC_SLIDER_SIZE);
+      HSliderTransparency = ::GetDlgItem (_hSelf, IDC_SLIDER_TRANSPARENCY);
+      HBufferSize = ::GetDlgItem (_hSelf, IDC_BUFFER_SIZE);
+      SendMessage (HSliderSize, TBM_SETRANGE, TRUE, MAKELPARAM (5, 22));
+      SendMessage (HSliderTransparency, TBM_SETRANGE, TRUE, MAKELPARAM (5, 100));
 
+      Brush = 0;
       CreateToolTip (IDC_DELIMETERS, _hSelf, _T ("Standard white-space symbols such as New Line ('\\n'), Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are always counted as delimiters"));
+
+      ComboBox_ResetContent (HUnderlineStyle);
+      for (int i = 0; i < countof (IndicNames); i++)
+        ComboBox_AddString (HUnderlineStyle, IndicNames[i]);
       return TRUE;
     }
   case WM_CLOSE:
     {
+      if (Brush)
+        DeleteObject (Brush);
       EndDialog(_hSelf, 0);
       return TRUE;
+    }
+  case WM_DRAWITEM:
+    switch (wParam)
+    {
+    case IDC_UNDERLINE_COLOR:
+      HDC Dc;
+      PAINTSTRUCT Ps;
+      DRAWITEMSTRUCT *Ds = (LPDRAWITEMSTRUCT) lParam;
+      Dc = Ds->hDC;
+      /*
+      Pen = CreatePen (PS_SOLID, 1, RGB (128, 128, 128));
+      SelectPen (Dc, Pen);
+      */
+      if (Ds->itemState & ODS_SELECTED)
+      {
+        DrawEdge (Dc, &Ds->rcItem, BDR_SUNKENINNER | BDR_SUNKENOUTER, BF_RECT);
+      }
+      else
+      {
+        DrawEdge (Dc, &Ds->rcItem,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT);
+      }
+      //DeleteObject (Pen);
+      EndPaint (HUnderlineColor, &Ps);
+      return TRUE;
+    }
+  case WM_CTLCOLORBTN:
+    if (GetDlgItem (_hSelf, IDC_UNDERLINE_COLOR) == (HWND)lParam)
+    {
+      HDC hDC = (HDC)wParam;
+      if (Brush)
+        DeleteObject (Brush);
+
+      SetBkColor (hDC, UnderlineColorBtn);
+      SetBkMode(hDC, TRANSPARENT);
+      Brush = CreateSolidBrush (UnderlineColorBtn);
+      return (INT_PTR) Brush;
     }
   case WM_COMMAND:
     switch (LOWORD (wParam))
@@ -336,6 +490,41 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
 
         return TRUE;
       }
+    case IDC_BUFFER_SIZE:
+      if (HIWORD (wParam) == EN_CHANGE)
+      {
+        Edit_GetText (HBufferSize, Buf, DEFAULT_BUF_SIZE);
+        if (!*Buf)
+          return TRUE;
+
+        x = _tcstol (Buf, &EndPtr, 10);
+        if (*EndPtr)
+          Edit_SetText (HBufferSize, _T ("1024"));
+        else if (x > 10 * 1024)
+          Edit_SetText (HBufferSize, _T ("10240"));
+        else if (x < 1)
+          Edit_SetText (HBufferSize, _T ("1"));
+
+        return TRUE;
+      }
+    case IDC_UNDERLINE_COLOR:
+      if (HIWORD (wParam) == BN_CLICKED)
+      {
+        CHOOSECOLOR Cc;
+        static COLORREF acrCustClr[16];
+        memset (&Cc, 0, sizeof (Cc));
+        Cc.hwndOwner = _hSelf;
+        Cc.lStructSize = sizeof (CHOOSECOLOR);
+        Cc.rgbResult = UnderlineColorBtn;
+        Cc.lpCustColors = acrCustClr;
+        Cc.Flags = CC_FULLOPEN  | CC_RGBINIT;
+        if (ChooseColor (&Cc) == TRUE)
+        {
+          UnderlineColorBtn = Cc.rgbResult;
+          RedrawWindow (HUnderlineColor, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE | RDW_ERASE);
+        }
+      }
+      break;
     }
   }
   return FALSE;
@@ -349,7 +538,6 @@ void AdvancedDlg::SetDelimetersEdit (TCHAR *Delimiters)
 void AdvancedDlg::SetRecheckDelay (int Delay)
 {
   TCHAR Buf[DEFAULT_BUF_SIZE];
-  TCHAR *EndPtr;
   _itot (Delay, Buf, 10);
   Edit_SetText (HRecheckDelay, Buf);
 }
@@ -372,9 +560,28 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   Edit_GetText (HEditDelimiters, TBuf, Length + 1);
   char *BufUtf8 = 0;
   SetStringDUtf8 (BufUtf8, TBuf);
+  CLEAN_AND_ZERO_ARR (TBuf);
   SpellCheckerInstance->SetDelimiters (BufUtf8);
   SpellCheckerInstance->SetIgnoreYo (Button_GetCheck (HIgnoreYo) == BST_CHECKED ? TRUE : FALSE);
+  SpellCheckerInstance->SetUnderlineColor (UnderlineColorBtn);
+  SpellCheckerInstance->SetUnderlineStyle (ComboBox_GetCurSel (HUnderlineStyle));
+  SpellCheckerInstance->SetIgnore (Button_GetCheck (HIgnoreNumbers) == BST_CHECKED,
+    Button_GetCheck (HIgnoreCStart) == BST_CHECKED,
+    Button_GetCheck (HIgnoreCHave) == BST_CHECKED,
+    Button_GetCheck (HIgnoreCAll) == BST_CHECKED,
+    Button_GetCheck (HIgnore_) == BST_CHECKED
+    );
+  SpellCheckerInstance->SetSuggBoxSettings (SendMessage (HSliderSize, TBM_GETPOS, 0, 0),
+    SendMessage (HSliderTransparency, TBM_GETPOS, 0, 0));
+  int Len = Edit_GetTextLength (HBufferSize) + 1;
+  TBuf = new TCHAR [Len];
+  Edit_GetText (HBufferSize, TBuf, Len);
+  TCHAR *EndPtr;
+  int x = _tcstol (TBuf, &EndPtr, 10);
+  SpellCheckerInstance->SetBufferSize (x);
+
   CLEAN_AND_ZERO_ARR (BufUtf8);
+  CLEAN_AND_ZERO_ARR (TBuf);
 }
 
 SimpleDlg *SettingsDlg::GetSimpleDlg ()
@@ -435,6 +642,9 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       SimpleDlgInstance.reSizeTo(rc);
       AdvancedDlgInstance.reSizeTo(rc);
 
+      GetLangList ()->init (_hInst, _hSelf);
+      GetLangList ()->DoDialog ();
+
       // This stuff is copied from npp source to make tabbed window looked totally nice and white
       ETDTProc enableDlgTheme = (ETDTProc)::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0);
       if (enableDlgTheme)
@@ -459,20 +669,30 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
 
   case WM_COMMAND :
     {
-      switch (wParam)
+      switch (LOWORD (wParam))
       {
       case IDAPPLY:
-        ApplySettings ();
-        return TRUE;
+        if (HIWORD (wParam) == BN_CLICKED)
+        {
+          ApplySettings ();
+          return TRUE;
+        }
+        break;
       case IDOK:
-        ApplySettings ();
+        if (HIWORD (wParam) == BN_CLICKED)
+        {
+          ApplySettings ();
+          SendEvent (EID_HIDE_DIALOG);
+          return TRUE;
+        }
+        break;
       case IDCANCEL:
-        SendEvent (EID_HIDE_DIALOG);
-        return TRUE;
-
-      default :
-        ::SendMessage(_hParent, WM_COMMAND, wParam, lParam);
-        return TRUE;
+        if (HIWORD (wParam) == BN_CLICKED)
+        {
+          SendEvent (EID_HIDE_DIALOG);
+          return TRUE;
+        }
+        break;
       }
     }
   }

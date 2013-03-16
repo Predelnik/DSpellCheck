@@ -28,6 +28,8 @@ LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Ms
 
 char *Utf8Dec(const char *string, const char *current);
 char *Utf8chr (const char *s, const char *sfc);
+int Utf8GetCharSize (char c);
 char * Utf8strtok (char *s1, const char *Delimit, char **Context);
 char *Utf8Inc (const char *string);
+char *Utf8pbrk(const char *s, const char *set);
 #endif // COMMON_FUNCTIONS_H;

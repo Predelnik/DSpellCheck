@@ -44,6 +44,8 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/SciLexer.h
 	${SRC_DIR}/PluginInterface.h
 	${SRC_DIR}/Notepad_plus_msgs.h
+	${SRC_DIR}/LangList.cpp
+	${SRC_DIR}/LangList.h
 	${SRC_DIR}/aspell.h
 	${SRC_DIR}/aspell.cpp
 	${SRC_DIR}/MainDef.h
@@ -55,7 +57,11 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/Suggestions.h
 	${SRC_DIR}/PrecompiledHeader.cpp
 	${SRC_DIR}/PrecompiledHeader.h
+	${SRC_DIR}/AboutDlg.cpp
+	${SRC_DIR}/AboutDlg.h
 	${SRC_DIR}/DSpellCheck.rc
+	${SRC_DIR}/Controls/CheckedList/CheckedList.h
+	${SRC_DIR}/Controls/CheckedList/CheckedList.cpp
 	${SRC_DIR}/Controls/StaticDialog/StaticDialog.cpp
 	${SRC_DIR}/Controls/StaticDialog/StaticDialog.h
 	${SRC_DIR}/Controls/Window.h

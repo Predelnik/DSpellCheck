@@ -4,21 +4,21 @@
 
 void SetString (char *&Target, const char *Str)
 {
-  CLEAN_AND_ZERO (Target);
+  CLEAN_AND_ZERO_ARR (Target);
   Target = new char[strlen (Str) + 1];
   strcpy (Target, Str);
 }
 
 void SetString (TCHAR *&Target, const TCHAR *Str)
 {
-  CLEAN_AND_ZERO (Target);
+  CLEAN_AND_ZERO_ARR (Target);
   Target = new TCHAR[_tcslen (Str) + 1];
   _tcscpy (Target, Str);
 }
 
 void SetString (char *&Target, const TCHAR *Str)
 {
-  CLEAN_AND_ZERO (Target);
+  CLEAN_AND_ZERO_ARR (Target);
   int size = _tcslen (Str) + 1;
   Target = new char[size];
 #ifndef UNICODE
@@ -30,7 +30,7 @@ void SetString (char *&Target, const TCHAR *Str)
 
 void SetString (TCHAR *&Target, const char *Str)
 {
-  CLEAN_AND_ZERO (Target);
+  CLEAN_AND_ZERO_ARR (Target);
   int size = strlen (Str) + 1;
   Target = new TCHAR[size];
 #ifndef UNICODE
@@ -43,7 +43,7 @@ void SetString (TCHAR *&Target, const char *Str)
 // In case source is in utf-8
 void SetStringSUtf8 (TCHAR *&Target, const char *Str)
 {
-  CLEAN_AND_ZERO (Target);
+  CLEAN_AND_ZERO_ARR (Target);
   int StrSize = strlen (Str) + 1;
   WCHAR *WcharBuf = new WCHAR[StrSize];
   MultiByteToWideChar(CP_UTF8, 0, Str, StrSize, WcharBuf, StrSize);
@@ -55,14 +55,14 @@ void SetStringSUtf8 (TCHAR *&Target, const char *Str)
   Target = new char[TargetSize];
   WideCharToMultiByte (CP_ACP, 0, WcharBuf, StrSize, Target, TargetSize, 0, 0);
 
-  CLEAN_AND_ZERO (WcharBuf);
+  CLEAN_AND_ZERO_ARR (WcharBuf);
 #endif
 }
 
 // In case destination is in utf-8
 void SetStringDUtf8 (char *&Target, const TCHAR *Str)
 {
-  CLEAN_AND_ZERO (Target);
+  CLEAN_AND_ZERO_ARR (Target);
   int StrSize = _tcslen (Str) + 1;
 #ifdef UNICODE
   const WCHAR *WcharBuf = Str;
@@ -75,14 +75,14 @@ void SetStringDUtf8 (char *&Target, const TCHAR *Str)
   Target = new char[TargetSize];
   WideCharToMultiByte (CP_UTF8, 0, WcharBuf, StrSize, Target, TargetSize, 0, 0);
 #ifndef UNICODE
-  CLEAN_AND_ZERO (WcharBuf);
+  CLEAN_AND_ZERO_ARR (WcharBuf);
 #endif UNICODE
 }
 
 // In case source is in utf-8
 void SetStringSUtf8 (char *&Target, const char *Str)
 {
-  CLEAN_AND_ZERO (Target);
+  CLEAN_AND_ZERO_ARR (Target);
   int StrSize = strlen (Str) + 1;
   WCHAR *WcharBuf = new WCHAR[StrSize];
   int TargetSize = 0;
@@ -90,20 +90,20 @@ void SetStringSUtf8 (char *&Target, const char *Str)
   Target = new char[TargetSize];
   TargetSize = MultiByteToWideChar(CP_UTF8, 0, Str, StrSize, WcharBuf, TargetSize);
   WideCharToMultiByte (CP_ACP, 0, WcharBuf, TargetSize, Target, TargetSize, 0, 0);
-  CLEAN_AND_ZERO (WcharBuf);
+  CLEAN_AND_ZERO_ARR (WcharBuf);
 }
 
 // In case destination is in utf-8
 void SetStringDUtf8 (char *&Target, const char *Str)
 {
-  CLEAN_AND_ZERO (Target);
+  CLEAN_AND_ZERO_ARR (Target);
   int StrSize = strlen (Str) + 1;
   WCHAR *WcharBuf = new WCHAR[StrSize];
   MultiByteToWideChar(CP_ACP, 0, Str, StrSize, WcharBuf, StrSize);
   int TargetSize = WideCharToMultiByte (CP_UTF8, 0, WcharBuf, StrSize, 0, 0, 0, 0);
   Target = new char[TargetSize];
   WideCharToMultiByte (CP_UTF8, 0, WcharBuf, StrSize, Target, TargetSize, 0, 0);
-  CLEAN_AND_ZERO (WcharBuf);
+  CLEAN_AND_ZERO_ARR (WcharBuf);
 }
 
 // This function is more or less transferred from gcc source

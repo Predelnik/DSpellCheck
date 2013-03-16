@@ -1,13 +1,11 @@
 #ifndef MAINDEF_H
 #define MAINDEF_H
 
-#define SCE_SQUIGGLE_UNDERLINE_RED INDIC_CONTAINER + 1
+#define SCE_ERROR_UNDERLINE INDIC_CONTAINER + 1
 #define CLEAN_AND_ZERO(x) do { if (x) {delete x; x = 0; }  } while (0);
 #define CLEAN_AND_ZERO_ARR(x) do { if (x) {delete[] x; x = 0; }  } while (0);
 #define countof(A) sizeof(A)/sizeof((A)[0])
 #define DEFAULT_BUF_SIZE 4096
-#define MBS(X) (unsigned char *)(X)
-#define PMBS(X) (unsigned char **)(X)
 
 // Menu IDs
 #define MID_ADDTODICTIONARY 101
@@ -17,4 +15,5 @@
 #define WM_SHOWANDRECREATEMENU WM_USER + 1000
 #define TM_MODIFIED_ZONE_INFO  WM_USER + 1001
 #define TM_SET_SETTING         WM_USER + 1002
+#define TM_CONTEXT_MENU        WM_USER + 1003
 #endif MAINDEF_H

@@ -24,7 +24,10 @@
 
 #include "aspell.h"
 #include "CommonFunctions.h"
+#include "controls/CheckedList/CheckedList.h"
 #include "MainDef.h"
+#include "AboutDlg.h"
+#include "LangList.h"
 #include "SpellChecker.h"
 #include "Suggestions.h"
 
@@ -52,13 +55,16 @@ NppData nppData;
 TCHAR IniFilePath[MAX_PATH];
 bool doCloseTag = false;
 BOOL AutoCheckText = false;
-SpellChecker *SpellCheckerInstance;
-SettingsDlg *SettingsDlgInstance;
-Suggestions *SuggestionsInstance;
+SpellChecker *SpellCheckerInstance = 0;
+SettingsDlg *SettingsDlgInstance = 0;
+Suggestions *SuggestionsInstance = 0;
+LangList *LangListInstance = 0;
+AboutDlg *AboutDlgInstance = 0;
 HANDLE hThread = NULL;
 HANDLE hEvent[EID_MAX]  = {NULL};
 HANDLE hModule = NULL;
 HHOOK HMouseHook = NULL;
+// HHOOK HCmHook = NULL;
 
 //
 // Initialize your plug-in data here
@@ -76,10 +82,41 @@ LRESULT CALLBACK MouseProc (_In_  int nCode,
   return CallNextHookEx(HMouseHook, nCode, wParam, lParam);;
 }
 
+/*
+static BOOL ContextMenu = FALSE;
+LRESULT CALLBACK ContextMenuProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+if(nCode != HC_ACTION)
+return CallNextHookEx(HCmHook, nCode, wParam, lParam);
+
+switch(((tagCWPSTRUCT *)lParam)->message){
+case WM_INITMENUPOPUP:
+{
+POINT Pos;
+
+GetCursorPos (&Pos);
+if (WindowFromPoint (Pos) == GetScintillaWindow (&nppData))
+{
+OutputDebugString (_T ("WM_INITMENUPOPUP\n"));
+SendEvent (EID_APPLYMENUACTION);
+PostThreadMessage (GetThreadId (hThread), TM_CONTEXT_MENU, ((tagCWPSTRUCT *)lParam)->wParam, 0);
+}
+break;
+}
+}
+return CallNextHookEx(HCmHook, nCode, wParam, lParam);
+}
+*/
+
 void pluginInit(HANDLE hModuleArg)
 {
   hModule = hModuleArg;
   // Init it all dialog classes:
+}
+
+LangList *GetLangList ()
+{
+  return LangListInstance;
 }
 
 HANDLE getHModule ()
@@ -112,6 +149,8 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
   }
 
   SendEvent (EID_THREADKILLED);
+  OutputDebugString (_T ("Death\n"));
+  ExitThread (0);
   return 0;
 }
 
@@ -133,31 +172,29 @@ void CreateThreadResources ()
 void CreateHooks ()
 {
   HMouseHook = SetWindowsHookEx (WH_MOUSE, MouseProc, 0, GetCurrentThreadId ());
+  // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0, GetCurrentThreadId());
 }
 
 void KillThreadResources ()
 {
-  SendEvent (EID_KILLTHREAD);
-
+  OutputDebugString (_T ("Waiting for death\n"));
   WaitForEvent (EID_THREADKILLED);
-
-  CloseHandle(hThread);
-
+  CloseHandle (hThread);
   /* kill events */
   for (int i = 0; i < EID_MAX; i++)
     CloseHandle(hEvent[i]);
 }
 
-//
-// Here you can do the clean up, save the parameters (if any) for the next session
-//
 void pluginCleanUp ()
 {
   UnhookWindowsHookEx(HMouseHook);
   KillThreadResources ();
+
   CLEAN_AND_ZERO (SpellCheckerInstance);
   CLEAN_AND_ZERO (SettingsDlgInstance);
-  CLEAN_AND_ZERO (funcItem[1]._pShKey);
+  CLEAN_AND_ZERO (AboutDlgInstance);
+  CLEAN_AND_ZERO (SuggestionsInstance);
+  CLEAN_AND_ZERO (LangListInstance);
 }
 
 void inline SendEvent (EventId Event)
@@ -193,6 +230,16 @@ void GetSuggestions ()
 void StartSettings ()
 {
   SettingsDlgInstance->DoDialog ();
+}
+
+void StartAboutDlg ()
+{
+  AboutDlgInstance->DoDialog ();
+}
+
+void StartLanguageList ()
+{
+  LangListInstance->DoDialog ();
 }
 
 void LoadSettings ()
@@ -242,9 +289,9 @@ void commandMenuInit()
   GetPrivateProfileString (_T ("SpellCheck"), _T ("Recheck_Delay"), _T ("500"), Buf, DEFAULT_BUF_SIZE, IniFilePath);
   x = _tcstol (Buf, &EndPtr, 10);
   if (*EndPtr)
-    SetRecheckDelay (500);
+    SetRecheckDelay (500, 0);
   else
-    SetRecheckDelay (x);
+    SetRecheckDelay (x, 0);
 
   //--------------------------------------------//
   //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
@@ -256,8 +303,13 @@ void commandMenuInit()
   //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
   //            bool check0nInit                // optional. Make this menu item be checked visually
   //            );
-  setCommand(0, TEXT("Auto-check document"), SwitchAutoCheckText, NULL, false);
   ShortcutKey *shKey = new ShortcutKey;
+  shKey->_isAlt = true;
+  shKey->_isCtrl = false;
+  shKey->_isShift = false;
+  shKey->_key = 0x41 + 'a' - 'a';
+  setCommand(0, TEXT("Auto-check Document"), SwitchAutoCheckText, shKey, false);
+  shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
   shKey->_isShift = false;
@@ -272,21 +324,39 @@ void commandMenuInit()
   setCommand(3, TEXT("---"), NULL, NULL, false);
 
   setCommand(4, TEXT("Settings..."), StartSettings, NULL, false);
+  setCommand(5, TEXT("About..."), StartAboutDlg, NULL, false);
 }
 
 void InitClasses ()
 {
+  INITCOMMONCONTROLSEX icc;
+
+  icc.dwSize = sizeof(icc);
+  icc.dwICC = ICC_WIN95_CLASSES;
+  InitCommonControlsEx(&icc);
+
+  InitCheckedListBox ((HINSTANCE) hModule);
+
   SuggestionsInstance = new Suggestions;
   SuggestionsInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
   SuggestionsInstance->DoDialog ();
 
   SettingsDlgInstance = new SettingsDlg;
   SettingsDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle, nppData);
-  SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance);
+
+  AboutDlgInstance = new AboutDlg;
+  AboutDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle);
+
+  LangListInstance = new LangList;
+  // Init would be called from Settings
+
+  SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance, LangListInstance);
 }
 
 void commandMenuCleanUp()
 {
+  CLEAN_AND_ZERO (funcItem[0]._pShKey);
+  CLEAN_AND_ZERO (funcItem[1]._pShKey);
   CLEAN_AND_ZERO (funcItem[2]._pShKey);
   // We should deallocate shortcuts here
 }

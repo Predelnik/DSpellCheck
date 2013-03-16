@@ -1,5 +1,6 @@
 #include "Aspell.h"
 #include "CommonFunctions.h"
+#include "LangList.h"
 #include "MainDef.h"
 #include "PluginInterface.h"
 #include "Plugin.h"
@@ -9,10 +10,10 @@
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS ",.!?\":;{}()[]\\/=+-*_<>"
+#define DEFAULT_DELIMITERS ",.!?\":;{}()[]\\/=+-*<>|#$"
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
-                            Suggestions *SuggestionsInstanceArg)
+                            Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)
 {
   CurrentPosition = 0;
   DelimUtf8 = 0;
@@ -20,6 +21,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   Speller = 0;
   IniFilePath = 0;
   Language = 0;
+  MultiLanguages = 0;
   VisibleText = 0;
   DelimConverted = 0;
   VisibleTextLength = -1;
@@ -27,17 +29,31 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SettingsDlgInstance = SettingsDlgInstanceArg;
   SuggestionsInstance = SuggestionsInstanceArg;
   NppDataInstance = NppDataInstanceArg;
+  LangListInstance = LangListInstanceArg;
   AspellLoaded = FALSE;
   AutoCheckText = 0;
+  MultiLangMode = 0;
   AspellReinitSettings ();
   AspellPath = 0;
   FileTypes = 0;
   CheckThose = 0;
+  SBTrans = 0;
+  SBSize = 0;
+  CurWordList = 0;
 }
 
 SpellChecker::~SpellChecker ()
 {
   AspellClear ();
+  CLEAN_AND_ZERO_ARR (DelimConverted);
+  CLEAN_AND_ZERO_ARR (DelimUtf8Converted);
+  CLEAN_AND_ZERO_ARR (DelimUtf8);
+  CLEAN_AND_ZERO_ARR (Language);
+  CLEAN_AND_ZERO_ARR (MultiLanguages);
+  CLEAN_AND_ZERO_ARR (IniFilePath)
+    CLEAN_AND_ZERO_ARR (AspellPath);
+  CLEAN_AND_ZERO_ARR (VisibleText);
+  CLEAN_AND_ZERO_ARR (FileTypes);
 }
 
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
@@ -46,7 +62,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   {
   case  EID_FILL_DIALOGS:
     if (AspellLoaded)
-      SettingsDlgInstance->GetSimpleDlg ()->AddAvalaibleLanguages (Language);
+      SettingsDlgInstance->GetSimpleDlg ()->AddAvalaibleLanguages (Language, MultiLanguages);
 
     SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (!AspellLoaded);
     SettingsDlgInstance->GetSimpleDlg ()->FillAspellInfo (AspellLoaded, AspellPath);
@@ -55,13 +71,22 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
     SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
     SettingsDlgInstance->GetAdvancedDlg ()->setIgnoreYo (IgnoreYo);
+    SettingsDlgInstance->GetAdvancedDlg ()->SetUnderlineSettings (UnderlineColor, UnderlineStyle);
+    SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_);
+    SettingsDlgInstance->GetAdvancedDlg ()->SetSuggBoxSettings (SBSize, SBTrans);
+    SettingsDlgInstance->GetAdvancedDlg ()->SetBufferSize (BufferSize / 1024);
     break;
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
     SettingsDlgInstance->GetAdvancedDlg ()->ApplySettings (this);
     CheckFileName (); // Cause filters may change
+    RefreshUnderlineStyle ();
     RecheckVisible ();
     break;
+  case EID_APPLY_MULTI_LANG_SETTINGS:
+    LangListInstance->ApplyChoice (this);
+    break;
+
   case EID_HIDE_DIALOG:
     SettingsDlgInstance->display (false);
     break;
@@ -106,15 +131,29 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_WRITE_SETTING:
     WriteSetting ();
     break;
+    /*
+    case EID_APPLYMENUACTION:
+    ApplyMenuActions ();
+    break;
+    */
   }
   return TRUE;
 }
+
+/*
+void SpellChecker::ApplyMenuActions ()
+{
+}
+*/
 
 // For now just int option, later maybe choose option type in wParam
 void SpellChecker::WriteSetting ()
 {
   MSG Msg;
   GetMessage (&Msg, 0, 0, 0);
+  if (Msg.message != TM_SET_SETTING)
+    return;
+
   std::pair<TCHAR *, int> *x = (std::pair<TCHAR *, int> *) Msg.lParam;
   SaveToIni (x->first, x->second);
   CLEAN_AND_ZERO_ARR (x->first);
@@ -158,20 +197,21 @@ void SpellChecker::CheckFileName ()
   Lexer = SendMsgToEditor (NppDataInstance, SCI_GETLEXER);
 }
 
+int SpellChecker::GetStyle (int Pos)
+{
+  return SendMsgToEditor (NppDataInstance, SCI_GETSTYLEAT, Pos);
+}
 // Actually for all languages which operate mostly in strings it's better to check only comments
 // TODO: Fix it
 int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
 {
-  int Style = SendMsgToEditor (NppDataInstance, SCI_GETSTYLEAT, WordStart);
-  if (Style != SendMsgToEditor (NppDataInstance, SCI_GETSTYLEAT, WordEnd))
-    return FALSE;
   switch (Lexer)
   {
   case SCLEX_CONTAINER:
   case SCLEX_NULL:
     return TRUE;
   case SCLEX_PYTHON:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_P_COMMENTLINE:
     case SCE_P_STRING:
@@ -182,7 +222,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_CPP:
   case SCLEX_OBJC:
   case SCLEX_BULLANT:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_C_COMMENT:
     case SCE_C_COMMENTLINE:
@@ -194,7 +234,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     };
   case SCLEX_HTML:
   case SCLEX_XML:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_H_COMMENT:
     case SCE_H_DEFAULT:
@@ -229,7 +269,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PERL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_PL_COMMENTLINE:
     case SCE_PL_STRING_Q:
@@ -242,7 +282,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     };
   case SCLEX_SQL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_SQL_COMMENT:
     case SCE_SQL_COMMENTLINE:
@@ -254,7 +294,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PROPERTIES:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_PROPS_COMMENT:
       return TRUE;
@@ -264,7 +304,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_ERRORLIST:
     return FALSE;
   case SCLEX_MAKEFILE:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_MAKE_COMMENT:
       return TRUE;
@@ -272,7 +312,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_BATCH:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_BAT_COMMENT:
       return TRUE;
@@ -282,7 +322,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_XCODE:
     return FALSE;
   case SCLEX_LATEX:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_L_DEFAULT:
     case SCE_L_COMMENT:
@@ -291,7 +331,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_LUA:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_LUA_COMMENT:
     case SCE_LUA_COMMENTLINE:
@@ -302,7 +342,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_DIFF:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_DIFF_COMMENT:
       return TRUE;
@@ -310,7 +350,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CONF:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_CONF_COMMENT:
     case SCE_CONF_STRING:
@@ -319,7 +359,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PASCAL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_PAS_COMMENT:
     case SCE_PAS_COMMENT2:
@@ -330,7 +370,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_AVE:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_AVE_COMMENT:
     case SCE_AVE_STRING:
@@ -339,7 +379,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ADA:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_ADA_STRING:
     case SCE_ADA_COMMENTLINE:
@@ -348,7 +388,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_LISP:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_LISP_COMMENT:
     case SCE_LISP_STRING:
@@ -357,7 +397,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_RUBY:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_RB_COMMENTLINE:
     case SCE_RB_STRING:
@@ -372,7 +412,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     }
   case SCLEX_EIFFEL:
   case SCLEX_EIFFELKW:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_EIFFEL_COMMENTLINE:
     case SCE_EIFFEL_STRING:
@@ -381,7 +421,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     };
   case SCLEX_TCL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_TCL_COMMENT:
     case SCE_TCL_COMMENTLINE:
@@ -392,7 +432,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_NNCRONTAB:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_NNCRONTAB_COMMENT:
     case SCE_NNCRONTAB_STRING:
@@ -401,7 +441,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_BAAN:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_BAAN_COMMENT:
     case SCE_BAAN_COMMENTDOC:
@@ -411,7 +451,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MATLAB:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_MATLAB_COMMENT:
     case SCE_MATLAB_STRING:
@@ -420,7 +460,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_SCRIPTOL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_SCRIPTOL_COMMENTLINE:
     case SCE_SCRIPTOL_COMMENTBLOCK:
@@ -430,7 +470,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ASM:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_ASM_COMMENT:
     case SCE_ASM_COMMENTBLOCK:
@@ -441,7 +481,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_CPPNOCASE:
   case SCLEX_FORTRAN:
   case SCLEX_F77:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_F_COMMENT:
     case SCE_F_STRING1:
@@ -451,7 +491,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CSS:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_CSS_COMMENT:
     case SCE_CSS_DOUBLESTRING:
@@ -461,7 +501,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_POV:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_POV_COMMENT:
     case SCE_POV_COMMENTLINE:
@@ -471,7 +511,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_LOUT:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_LOUT_COMMENT:
     case SCE_LOUT_STRING:
@@ -480,7 +520,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ESCRIPT:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_ESCRIPT_COMMENT:
     case SCE_ESCRIPT_COMMENTLINE:
@@ -491,7 +531,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PS:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_PS_COMMENT:
     case SCE_PS_DSC_COMMENT:
@@ -501,7 +541,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_NSIS:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_NSIS_COMMENT:
     case SCE_NSIS_STRINGDQ:
@@ -512,7 +552,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MMIXAL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_MMIXAL_COMMENT:
     case SCE_MMIXAL_STRING:
@@ -521,7 +561,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CLW:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_CLW_COMMENT:
     case SCE_CLW_STRING:
@@ -533,7 +573,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_LOT:
     return FALSE;
   case SCLEX_YAML:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_YAML_COMMENT:
     case SCE_YAML_TEXT:
@@ -542,7 +582,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_TEX:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_TEX_TEXT:
       return TRUE;
@@ -550,7 +590,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_METAPOST:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_METAPOST_TEXT:
     case SCE_METAPOST_DEFAULT:
@@ -559,7 +599,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_FORTH:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_FORTH_COMMENT:
     case SCE_FORTH_COMMENT_ML:
@@ -569,7 +609,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ERLANG:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_ERLANG_COMMENT:
     case SCE_ERLANG_STRING:
@@ -583,7 +623,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     }
   case SCLEX_OCTAVE:
   case SCLEX_MSSQL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_MSSQL_COMMENT:
     case SCE_MSSQL_LINE_COMMENT:
@@ -593,7 +633,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_VERILOG:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_V_COMMENT:
     case SCE_V_COMMENTLINE:
@@ -604,7 +644,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_KIX:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_KIX_COMMENT:
     case SCE_KIX_STRING1:
@@ -614,7 +654,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_GUI4CLI:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_GC_COMMENTLINE:
     case SCE_GC_COMMENTBLOCK:
@@ -624,7 +664,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_SPECMAN:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_SN_COMMENTLINE:
     case SCE_SN_COMMENTLINEBANG:
@@ -634,7 +674,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_AU3:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_AU3_COMMENT:
     case SCE_AU3_COMMENTBLOCK:
@@ -644,7 +684,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_APDL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_APDL_COMMENT:
     case SCE_APDL_COMMENTBLOCK:
@@ -654,7 +694,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_BASH:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_SH_COMMENTLINE:
     case SCE_SH_STRING:
@@ -663,7 +703,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ASN1:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_ASN1_COMMENT:
     case SCE_ASN1_STRING:
@@ -672,7 +712,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_VHDL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_VHDL_COMMENT:
     case SCE_VHDL_COMMENTLINEBANG:
@@ -682,7 +722,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CAML:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_CAML_STRING:
     case SCE_CAML_COMMENT:
@@ -699,7 +739,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_PUREBASIC:
   case SCLEX_FREEBASIC:
   case SCLEX_POWERBASIC:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_B_COMMENT:
     case SCE_B_STRING:
@@ -708,7 +748,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_HASKELL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_HA_STRING:
     case SCE_HA_COMMENTLINE:
@@ -721,7 +761,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     }
   case SCLEX_PHPSCRIPT:
   case SCLEX_TADS3:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_T3_BLOCK_COMMENT:
     case SCE_T3_LINE_COMMENT:
@@ -733,7 +773,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_REBOL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_REBOL_COMMENTLINE:
     case SCE_REBOL_COMMENTBLOCK:
@@ -744,7 +784,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_SMALLTALK:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_ST_STRING:
     case SCE_ST_COMMENT:
@@ -753,7 +793,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_FLAGSHIP:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_FS_COMMENT:
     case SCE_FS_COMMENTLINE:
@@ -770,7 +810,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CSOUND:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_CSOUND_COMMENT:
     case SCE_CSOUND_COMMENTBLOCK:
@@ -779,7 +819,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_INNOSETUP:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_INNO_COMMENT:
     case SCE_INNO_COMMENT_PASCAL:
@@ -790,7 +830,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_OPAL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_OPAL_COMMENT_BLOCK:
     case SCE_OPAL_COMMENT_LINE:
@@ -800,7 +840,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_SPICE:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_SPICE_COMMENTLINE:
       return TRUE;
@@ -808,7 +848,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_D:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_D_COMMENT:
     case SCE_D_COMMENTLINE:
@@ -820,7 +860,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CMAKE:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_CMAKE_COMMENT:
       return TRUE;
@@ -828,7 +868,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_GAP:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_GAP_COMMENT:
     case SCE_GAP_STRING:
@@ -837,7 +877,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PLM:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_PLM_COMMENT:
     case SCE_PLM_STRING:
@@ -846,7 +886,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PROGRESS:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_4GL_STRING:
     case SCE_4GL_COMMENT1:
@@ -867,7 +907,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ABAQUS:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_ABAQUS_COMMENT:
     case SCE_ABAQUS_COMMENTBLOCK:
@@ -877,7 +917,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ASYMPTOTE:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_ASY_COMMENT:
     case SCE_ASY_COMMENTLINE:
@@ -887,7 +927,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_R:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_R_COMMENT:
     case SCE_R_STRING:
@@ -897,7 +937,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MAGIK:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_MAGIK_COMMENT:
     case SCE_MAGIK_HYPER_COMMENT:
@@ -907,7 +947,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_POWERSHELL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_POWERSHELL_COMMENT:
     case SCE_POWERSHELL_STRING:
@@ -916,7 +956,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MYSQL:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_MYSQL_COMMENT:
     case SCE_MYSQL_COMMENTLINE:
@@ -928,7 +968,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PO:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_PO_COMMENT:
       return TRUE;
@@ -939,7 +979,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_COBOL:
   case SCLEX_TACL:
   case SCLEX_SORCUS:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_SORCUS_STRING:
       return TRUE;
@@ -947,7 +987,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_POWERPRO:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_POWERPRO_COMMENTBLOCK:
     case SCE_POWERPRO_COMMENTLINE:
@@ -959,7 +999,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     }
   case SCLEX_NIMROD:
   case SCLEX_SML:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_SML_STRING:
     case SCE_SML_COMMENT:
@@ -973,7 +1013,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_MARKDOWN:
     return FALSE;
   case SCLEX_TXT2TAGS:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_TXT2TAGS_COMMENT:
       return TRUE;
@@ -981,7 +1021,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_A68K:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_A68K_COMMENT:
     case SCE_A68K_STRING1:
@@ -991,7 +1031,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MODULA:
-    switch (Style)
+    switch (GetStyle (WordStart))
     {
     case SCE_MODULA_COMMENT:
     case SCE_MODULA_STRING:
@@ -1002,7 +1042,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_SEARCHRESULT:
     return FALSE;
   };
-  return FALSE;
+  return TRUE;
 }
 
 BOOL SpellChecker::CheckTextNeeded ()
@@ -1025,8 +1065,6 @@ void SpellChecker::HideSuggestionBox ()
 {
   SuggestionsInstance->display (false);
 }
-
-#define STEP_SIZE 16384
 void SpellChecker::FindNextMistake ()
 {
   // TODO: /n, /r should always be present in delimiters
@@ -1042,17 +1080,40 @@ void SpellChecker::FindNextMistake ()
   while (1)
   {
     Range.chrg.cpMin = IteratorPos;
-    Range.chrg.cpMax = IteratorPos + STEP_SIZE;
+    Range.chrg.cpMax = IteratorPos + BufferSize;
+    int IgnoreOffsetting = 0;
     if (Range.chrg.cpMax > DocLength)
+    {
+      IgnoreOffsetting = 1;
       Range.chrg.cpMax = DocLength;
+    }
     Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
     SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+    char *IteratingStart = Range.lpstrText + Range.chrg.cpMax - Range.chrg.cpMin - 1;
+    char *IteratingChar = IteratingStart;
+    if (!IgnoreOffsetting)
+    {
+      if (!ConvertingIsNeeded)
+      {
+        while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && Range.lpstrText < IteratingChar)
+        {
+          IteratingChar = (char *) Utf8Dec (Range.lpstrText, IteratingChar);
+        }
+      }
+      else
+      {
+        while (!strchr (DelimConverted, *IteratingChar) && Range.lpstrText < IteratingChar)
+          IteratingChar--;
+      }
+
+      *IteratingChar = '\0';
+    }
     Result = CheckText (Range.lpstrText, IteratorPos, FIND_FIRST);
     CLEAN_AND_ZERO_ARR (Range.lpstrText);
     if (Result)
       break;
 
-    IteratorPos += STEP_SIZE;
+    IteratorPos += (BufferSize + IteratingChar - IteratingStart);
 
     if (IteratorPos > DocLength)
     {
@@ -1080,12 +1141,7 @@ void SpellChecker::FindPrevMistake ()
   long LineEndPos = 0;
   long DocLength = SendMsgToEditor (NppDataInstance, SCI_GETLENGTH);
   LineEndPos = SendMsgToEditor (NppDataInstance, SCI_GETLINEENDPOSITION, CurLine);
-  /*
-  if (CurLine + 1 < LineCount)
-  LineEndPos = SendMsgToEditor (NppDataInstance, SCI_POSITIONFROMLINE, CurLine + 1);
-  else
-  LineEndPos = DocLength - 1;
-  */
+
   int IteratorPos = LineEndPos;
   Sci_TextRange Range;
   BOOL Result = FALSE;
@@ -1093,18 +1149,40 @@ void SpellChecker::FindPrevMistake ()
 
   while (1)
   {
-    Range.chrg.cpMin = IteratorPos - STEP_SIZE;
+    Range.chrg.cpMin = IteratorPos - BufferSize;
     Range.chrg.cpMax = IteratorPos;
+    int IgnoreOffsetting = 0;
     if (Range.chrg.cpMin < 0)
+    {
       Range.chrg.cpMin = 0;
+      IgnoreOffsetting = 1;
+    }
     Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
     SendMsgToEditor (NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
-    Result = CheckText (Range.lpstrText, Range.chrg.cpMin, FIND_LAST);
+    char *IteratingStart = Range.lpstrText;
+    char *IteratingChar = IteratingStart;
+    if (!IgnoreOffsetting)
+    {
+      if (!ConvertingIsNeeded)
+      {
+        while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && IteratingChar)
+        {
+          IteratingChar = (char *) Utf8Inc (Range.lpstrText);
+        }
+      }
+      else
+      {
+        while (!strchr (DelimConverted, *IteratingChar) && IteratingChar)
+          IteratingChar++;
+      }
+    }
+    int offset = IteratingChar - IteratingStart;
+    Result = CheckText (Range.lpstrText + offset, Range.chrg.cpMin + offset, FIND_LAST);
     CLEAN_AND_ZERO_ARR (Range.lpstrText);
     if (Result)
       break;
 
-    IteratorPos -= STEP_SIZE;
+    IteratorPos -= (BufferSize - offset);
 
     if (IteratorPos < 0)
     {
@@ -1223,11 +1301,9 @@ void SpellChecker::SetSuggestionsBoxTransparency ()
   // Set WS_EX_LAYERED on this window
   SetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE,
     GetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE) | WS_EX_LAYERED);
-  SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * 70) / 100, LWA_ALPHA);
-  // Don't sure why but this helps to fix a bug with notepad++ window resizing
-  // TODO: Fix it normal way
-  SuggestionsInstance->display (true);
+
   SuggestionsInstance->display (false);
+  SuggestionsInstance->display (true);
 }
 
 void SpellChecker::InitSuggestionsBox ()
@@ -1261,14 +1337,16 @@ void SpellChecker::InitSuggestionsBox ()
   int YPos = SendMsgToEditor (NppDataInstance, SCI_POINTYFROMPOSITION, 0, Pos);
 
   p.x = XPos; p.y = YPos;
+  RECT R;
+  GetWindowRect (SuggestionsInstance->getHSelf (), &R);
   ClientToScreen (GetScintillaWindow (NppDataInstance), &p);
-  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight - 3, 15, 15, TRUE);
+  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight - 3, SBSize, SBSize, TRUE);
   SuggestionsInstance->display ();
 }
 
 void SpellChecker::ShowSuggestionsMenu ()
 {
-  if (!AspellLoaded || WUCPosition - VisibleTextOffset < 0 || WUCPosition - VisibleTextOffset + WUCLength - 1 > VisibleTextLength)
+  if (!AspellLoaded)
     return; // Word is already off-screen
 
   int Pos = WUCPosition;
@@ -1286,9 +1364,43 @@ void SpellChecker::ShowSuggestionsMenu ()
   else
     SetString (Utf8Buf, Range.lpstrText);
 
-  const AspellWordList *wl = aspell_speller_suggest (Speller, Utf8Buf, -1);
+  const AspellWordList *wl = 0;
+  if (!MultiLangMode)
+  {
+    wl = aspell_speller_suggest (Speller, Utf8Buf, -1);
+  }
+  else
+  {
+    int MaxSize = -1;
+    int Size;
+    // In this mode we're finding maximum by length list from selected languages
+    CurWordList = 0;
+    for (int i = 0; i < (int) SpellerList.size (); i++)
+    {
+      CurWordList = aspell_speller_suggest (SpellerList[i], Utf8Buf, -1);
+
+      AspellStringEnumeration * els = aspell_word_list_elements(CurWordList);
+      Size = aspell_word_list_size (CurWordList);
+
+      if (Size > 0)
+      {
+        const char *FirstSug = aspell_string_enumeration_next(els);
+        if (Utf8GetCharSize (*Utf8Buf) != Utf8GetCharSize (*FirstSug))
+          continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
+      }
+
+      if (Size > MaxSize)
+      {
+        MaxSize = Size;
+        wl = CurWordList;
+      }
+    }
+  }
   if (!wl)
+  {
+    CLEAN_AND_ZERO_ARR (Utf8Buf);
     return;
+  }
 
   AspellStringEnumeration * els = aspell_word_list_elements(wl);
   const char *Suggestion;
@@ -1356,9 +1468,10 @@ void SpellChecker::ShowSuggestionsMenu ()
         SetStringSUtf8 (AnsiBuf, Suggestion);
       else
         SetString (AnsiBuf, Suggestion);
-      PostMsgToEditor (NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
+      SendMsgToEditor (NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
     }
   }
+  CLEAN_AND_ZERO_ARR (AnsiBuf);
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
   CLEAN_AND_ZERO_ARR (Buf);
   CLEAN_AND_ZERO_ARR (Utf8Buf);
@@ -1367,11 +1480,11 @@ void SpellChecker::ShowSuggestionsMenu ()
 
 void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
 {
-  if (SaveSetting)
-    SaveToIni (_T ("Autocheck"), AutoCheckText);
-
   CheckMenuItem(GetMenu(NppDataInstance->_nppHandle), get_funcItem ()[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
-  RecheckVisible ();
+  if (SaveSetting)
+  {
+    SaveToIni (_T ("Autocheck"), AutoCheckText);
+  }
 }
 
 void SpellChecker::SetCheckThose (int CheckThoseArg)
@@ -1386,6 +1499,47 @@ void SpellChecker::SetFileTypes (TCHAR *FileTypesArg)
   SaveToIni (_T ("File_Types"), FileTypes);
 }
 
+void SpellChecker::SetMultipleLanguages (const char *MultiLanguagesArg)
+{
+  SetString (MultiLanguages, MultiLanguagesArg);
+  TCHAR *TBuf = 0;
+  SetString (TBuf, MultiLanguages);
+  SaveToIni (_T ("Multiple_Languages"), TBuf);
+  CLEAN_AND_ZERO_ARR (TBuf);
+}
+
+void SpellChecker::RefreshUnderlineStyle ()
+{
+  SendMsgToEditor(NppDataInstance, SCI_INDICSETSTYLE, SCE_ERROR_UNDERLINE, UnderlineStyle);
+  SendMsgToEditor(NppDataInstance, SCI_INDICSETFORE, SCE_ERROR_UNDERLINE, UnderlineColor);
+}
+
+void SpellChecker::SetUnderlineColor (int Value)
+{
+  UnderlineColor = Value;
+  SaveToIni (_T ("Underline_Color"), UnderlineColor);
+}
+
+void SpellChecker::SetUnderlineStyle (int Value)
+{
+  UnderlineStyle = Value;
+  SaveToIni (_T ("Underline_Style"), UnderlineStyle);
+}
+
+void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg)
+{
+  IgnoreNumbers = IgnoreNumbersArg;
+  IgnoreCStart = IgnoreCStartArg;
+  IgnoreCHave = IgnoreCHaveArg;
+  IgnoreCAll = IgnoreCAllArg;
+  Ignore_ = Ignore_Arg;
+  SaveToIni (_T ("Ignore_Having_Number"), IgnoreNumbers);
+  SaveToIni (_T ("Ignore_Start_Capital"), IgnoreCStart);
+  SaveToIni (_T ("Ignore_Have_Capital"), IgnoreCHave);
+  SaveToIni (_T ("Ignore_All_Capital"), IgnoreCAll);
+  SaveToIni (_T ("Ignore_With_"), Ignore_);
+}
+
 void SpellChecker::LoadSettings ()
 {
   char *BufUtf8 = 0;
@@ -1396,8 +1550,9 @@ void SpellChecker::LoadSettings ()
 
   LoadFromIni (AutoCheckText, _T ("Autocheck"), 0);
   UpdateAutocheckStatus (0);
-  LoadFromIniUtf8 (Language, _T ("Language"), "En_Us");
-  AspellReinitSettings ();
+  LoadFromIniUtf8 (MultiLanguages, _T ("Multiple_Languages"), "");
+  LoadFromIniUtf8 (BufUtf8, _T ("Language"), "En_Us");
+  SetLanguage (BufUtf8, 0);
   LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), DEFAULT_DELIMITERS, TRUE);
   SetDelimiters (BufUtf8, 0);
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
@@ -1405,18 +1560,32 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (CheckThose , _T ("Check_Those_\\_Not_Those"), 1);
   LoadFromIni (FileTypes, _T ("File_Types"), _T ("*.*"));
   LoadFromIni (CheckComments, _T ("Check_Only_Comments_And_Strings"), 1);
+  LoadFromIni (UnderlineColor, _T ("Underline_Color"), 0x0000ff);
+  LoadFromIni (UnderlineStyle, _T ("Underline_Style"), INDIC_SQUIGGLE);
+  LoadFromIni (IgnoreNumbers, _T ("Ignore_Having_Number"), 1);
+  LoadFromIni (IgnoreCStart, _T ("Ignore_Start_Capital"), 0);
+  LoadFromIni (IgnoreCHave, _T ("Ignore_Have_Capital"), 1);
+  LoadFromIni (IgnoreCAll, _T ("Ignore_All_Capital"), 1);
+  LoadFromIni (Ignore_, _T ("Ignore_With_"), 1);
+  int Size, Trans;
+  LoadFromIni (Size, _T ("Suggestions_Button_Size"), 15);
+  LoadFromIni (Trans, _T ("Suggestions_Button_Opacity"), 70);
+  SetSuggBoxSettings (Size, Trans, 0);
+  LoadFromIni (Size, _T ("Find_Next_Buffer_Size"), 16);
+  SetBufferSize (Size, 0);
+  RefreshUnderlineStyle ();
   CLEAN_AND_ZERO_ARR (BufUtf8);
 }
 
 void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)
 {
-  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
   PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORFILLRANGE, start, (end - start + 1));
 }
 
 void SpellChecker::RemoveUnderline (HWND ScintillaWindow, int start, int end)
 {
-  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
   PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
 }
 
@@ -1465,7 +1634,7 @@ void SpellChecker::ClearAllUnderlines ()
   int length = SendMsgToEditor(NppDataInstance, SCI_GETLENGTH);
   if(length > 0)
   {
-    PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+    PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
     PostMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length);
   }
 }
@@ -1496,6 +1665,7 @@ void SpellChecker::SetAspellPath (const TCHAR *Path)
     SaveToIni (_T ("Aspell_Path"), Path);
   else
     SaveToIni (_T ("Aspell_Path"), _T (""));
+  CLEAN_AND_ZERO_ARR (Buf);
 }
 
 void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuotes)
@@ -1531,8 +1701,8 @@ void SpellChecker::SaveToIniUtf8 (const TCHAR *Name, const char *Value, BOOL InQ
 
 void SpellChecker::LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *DefaultValue, BOOL InQuotes)
 {
-  CLEAN_AND_ZERO (Value);
-  Value = new TCHAR[DEFAULT_BUF_SIZE];
+  CLEAN_AND_ZERO_ARR (Value);
+  Value = new TCHAR [DEFAULT_BUF_SIZE];
 
   GetPrivateProfileString (_T ("SpellCheck"), Name, DefaultValue, Value, DEFAULT_BUF_SIZE, IniFilePath);
 
@@ -1575,10 +1745,21 @@ void SpellChecker::LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char 
 }
 
 // Here parameter is in ANSI (may as well be utf-8 cause only english I guess)
-void SpellChecker::SetLanguage (const char *Str)
+void SpellChecker::SetLanguage (const char *Str, int SaveToIni)
 {
+  if (strcmp (Str, "<MULTIPLE>") == 0)
+    MultiLangMode = 1;
+  else
+  {
+    MultiLangMode = 0;
+  }
+
   SetString (Language, Str);
-  SaveToIniUtf8 (_T ("Language"), Language);
+
+  if (SaveToIni)
+  {
+    SaveToIniUtf8 (_T ("Language"), Language);
+  }
   AspellReinitSettings ();
 }
 
@@ -1613,7 +1794,6 @@ void SpellChecker::SetDelimiters (const char *Str, int SaveToIni)
 
   if (SaveToIni)
     SaveToIniUtf8 (_T ("Delimiters"), DelimUtf8, TRUE);
-  RecheckVisible ();
 }
 
 const char *SpellChecker::GetLanguage ()
@@ -1626,9 +1806,43 @@ BOOL SpellChecker::AspellReinitSettings ()
   if (!AspellLoaded)
     return FALSE;
 
+  if (MultiLangMode)
+  {
+    if (!MultiLanguages)
+    {
+      AspellLoaded = FALSE;
+      return FALSE;
+    }
+
+    char *Token = 0;
+    char *MultiLanguagesCopy = 0;
+    char *Context = 0;
+    SetString (MultiLanguagesCopy, MultiLanguages);
+    Token = strtok_s (MultiLanguagesCopy, "|", &Context);
+    for (int i = 0; i < (int) SpellerList.size (); i++)
+      delete_aspell_speller (SpellerList[i]);
+
+    SpellerList.clear ();
+    while (Token)
+    {
+      AspellConfig *spell_config = new_aspell_config();
+      aspell_config_replace (spell_config, "encoding", "utf-8");
+      aspell_config_replace(spell_config, "lang", Token);
+      AspellCanHaveError * possible_err = new_aspell_speller(spell_config);
+      if (aspell_error_number(possible_err) == 0)
+      {
+        SpellerList.push_back (to_aspell_speller(possible_err));
+      }
+      Token = strtok_s (NULL, "|", &Context);
+      delete_aspell_config (spell_config);
+    }
+    CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
+    return TRUE;
+  }
+
   AspellConfig *spell_config = new_aspell_config();
   aspell_config_replace (spell_config, "encoding", "utf-8");
-  if (Language && *Language)
+  if (!MultiLangMode && Language && *Language)
     aspell_config_replace(spell_config, "lang", Language);
   if (Speller)
   {
@@ -1641,6 +1855,11 @@ BOOL SpellChecker::AspellReinitSettings ()
   if (aspell_error_number(possible_err) != 0)
   {
     delete_aspell_config (spell_config);
+    if (strcmp (Language, "en") != 0)
+    {
+      SetLanguage ("en", 1);
+      return AspellReinitSettings ();
+    }
     AspellLoaded = FALSE;
     return FALSE;
   }
@@ -1655,8 +1874,44 @@ BOOL SpellChecker::AspellClear ()
   if (!AspellLoaded)
     return FALSE;
 
+  for (unsigned int i = 0; i < SpellerList.size (); i++)
+    delete_aspell_speller (SpellerList[i]);
   delete_aspell_speller (Speller);
   return TRUE;
+}
+
+void SpellChecker::SetBufferSize (int Size, BOOL SaveIni)
+{
+  if (Size < 1)
+    Size = 1;
+  if (Size > 10 * 1024)
+    Size = 10 * 1024;
+  BufferSize = Size * 1024;
+  if (SaveIni)
+    SaveToIni (_T ("Find_Next_Buffer_Size"), Size);
+}
+
+void SpellChecker::SetSuggBoxSettings (int Size, int Transparency, int SaveIni)
+{
+  if (SBSize != Size)
+  {
+    SBSize = Size;
+    if (SaveIni)
+      HideSuggestionBox ();
+  }
+
+  if (Transparency != SBTrans)
+  {
+    SBTrans = Transparency;
+    // Don't sure why but this helps to fix a bug with notepad++ window resizing
+    // TODO: Fix it normal way
+    SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * SBTrans) / 100, LWA_ALPHA);
+  }
+  if (SaveIni)
+  {
+    SaveToIni (_T ("Suggestions_Button_Size"), SBSize);
+    SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans);
+  }
 }
 
 static const char Yo[] = "\xd0\x81";
@@ -1666,26 +1921,71 @@ static const char ye[] = "\xd0\xb5";
 
 BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 {
+  BOOL res = FALSE;
   if (!AspellLoaded)
     return TRUE;
   // Well Numbers have same codes for ansi and unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
-  for (char c = '0'; c <= '9'; c++)
-  {
-    if (strchr (Word, c))
-      return TRUE;
-  }
-
   if (CheckComments && !CheckWordInCommentOrString (Start, End))
     return TRUE;
 
   char *Utf8Buf = 0;
 
+  // Since this moment we need to exit this function by settings res and going to cleanup mark
   if (ConvertingIsNeeded) // That's really part that sucks
   {
     // Well TODO: maybe convert only to unicode and tell aspell that we're using unicode
     // Cause double conversion kinda sucks
     SetStringDUtf8 (Utf8Buf, Word);
+  }
+  else
+    Utf8Buf = Word;
+
+  TCHAR *Ts = 0;
+
+  if (IgnoreNumbers && Utf8pbrk (Utf8Buf, "0123456789") != 0)
+  {
+    res = TRUE;
+    goto CleanUp;
+  }
+
+  if (IgnoreCStart || IgnoreCHave || IgnoreCAll)
+  {
+    SetStringSUtf8 (Ts, Utf8Buf);
+    if (IgnoreCStart && IsCharUpper (Ts[0]))
+    {
+      res = TRUE;
+      goto CleanUp;
+    }
+    if (IgnoreCHave || IgnoreCAll)
+    {
+      BOOL AllUpper = IsCharUpper (Ts[0]);
+      for (unsigned int i = 1; i < _tcslen (Ts); i++)
+      {
+        if (IsCharUpper (Ts[i]))
+        {
+          if (IgnoreCHave)
+          {
+            res = TRUE;
+            goto CleanUp;
+          }
+        }
+        else
+          AllUpper = FALSE;
+      }
+
+      if (AllUpper && IgnoreCAll)
+      {
+        res = TRUE;
+        goto CleanUp;
+      }
+    }
+  }
+
+  if (Ignore_ && strchr (Utf8Buf, '_') != 0)
+  {
+    res = TRUE;
+    goto CleanUp;
   }
 
   if (IgnoreYo)
@@ -1704,9 +2004,22 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     }
   }
 
-  BOOL res = aspell_speller_check(Speller, Utf8Buf, strlen (Utf8Buf));
+  if (!MultiLangMode)
+  {
+    res = aspell_speller_check(Speller, Utf8Buf, strlen (Utf8Buf));
+  }
+  else
+  {
+    for (int i = 0; i < (int )SpellerList.size () && !res; i++)
+    {
+      res = res || aspell_speller_check(SpellerList[i], Utf8Buf, strlen (Utf8Buf));
+    }
+  }
+
+CleanUp:
   if (ConvertingIsNeeded)
     CLEAN_AND_ZERO_ARR (Utf8Buf);
+  CLEAN_AND_ZERO_ARR (Ts);
 
   return res;
 }
@@ -1733,7 +2046,8 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
     token = strtok_s (TextToCheck, DelimConverted, &Context);
 
   long WordStart = offset + token - TextToCheck;
-  RemoveUnderline (ScintillaWindow, offset, WordStart);
+  if (Mode == UNDERLINE_ERRORS)
+    RemoveUnderline (ScintillaWindow, offset, WordStart);
   long WordEnd = 0;
 
   while (token)
@@ -1741,8 +2055,10 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
     if (token)
     {
       WordStart = offset + token - TextToCheck;
-      RemoveUnderline (ScintillaWindow, WordEnd + 1, WordStart - 1);
       WordEnd = offset + token - TextToCheck + strlen (token) - 1;
+
+      if (Mode == UNDERLINE_ERRORS)
+        RemoveUnderline (ScintillaWindow, WordEnd + 1, WordStart - 1);
       if (!CheckWord (token, WordStart, WordEnd))
       {
         switch (Mode)
@@ -1784,7 +2100,8 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
     else
       token = strtok_s (NULL, DelimConverted, &Context);
   }
-  RemoveUnderline (ScintillaWindow, WordEnd + 1, offset + TextLen + 100);
+  if (Mode == UNDERLINE_ERRORS)
+    RemoveUnderline (ScintillaWindow, WordEnd + 1, offset + TextLen + 100);
 
   // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
 
@@ -1811,7 +2128,7 @@ void SpellChecker::ClearVisibleUnderlines ()
   int length = SendMsgToEditor(NppDataInstance, SCI_GETLENGTH);
   if(length > 0)
   {
-    PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_SQUIGGLE_UNDERLINE_RED);
+    PostMsgToEditor (NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
     PostMsgToEditor (NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length);
   }
 }
@@ -1859,6 +2176,7 @@ void SpellChecker::SwitchAutoCheck ()
 {
   AutoCheckText = !AutoCheckText;
   UpdateAutocheckStatus ();
+  RecheckVisible ();
 }
 
 void SpellChecker::RecheckModified ()

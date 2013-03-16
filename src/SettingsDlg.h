@@ -11,7 +11,7 @@ class SimpleDlg : public StaticDialog
 public:
   __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings (SpellChecker *SpellCheckerInstance);
-  BOOL AddAvalaibleLanguages (const char *CurrentLanguage);
+  BOOL AddAvalaibleLanguages (const char *CurrentLanguage, const char *MultiLanguages);
   void FillSugestionsNum (int SuggestionsNum);
   void FillAspellInfo (BOOL Status, TCHAR *AspellPath);
   void DisableLanguageCombo (BOOL Disable);
@@ -36,6 +36,7 @@ private:
   HWND HCheckOnlyThose;
   HWND HFileTypes;
   HWND HCheckComments;
+  HWND HAspellLink;
 };
 
 class AdvancedDlg : public StaticDialog
@@ -47,6 +48,10 @@ public:
   void setIgnoreYo (BOOL Value);
   void SetRecheckDelay (int Delay);
   int GetRecheckDelay ();
+  void SetSuggBoxSettings (int Size, int Trans);
+  void SetUnderlineSettings (int Color, int Style);
+  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg);
+  void SetBufferSize (int Size);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
@@ -56,8 +61,20 @@ private:
   HWND HDefaultDelimiters;
   HWND HIgnoreYo;
   HWND HRecheckDelay;
+  HWND HUnderlineColor;
+  HWND HUnderlineStyle;
+  HWND HIgnoreNumbers;
+  HWND HIgnoreCStart;
+  HWND HIgnoreCHave;
+  HWND HIgnoreCAll;
+  HWND HIgnore_;
+  HWND HSliderSize;
+  HWND HSliderTransparency;
+  HWND HBufferSize;
 
+  HBRUSH Brush;
   NppData NppDataInstance;
+  COLORREF UnderlineColorBtn;
 };
 
 class SettingsDlg : public StaticDialog

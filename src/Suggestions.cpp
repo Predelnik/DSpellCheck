@@ -114,11 +114,16 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     GetObject(hBmp, sizeof(Bmp), &Bmp);
     hOldBitmap = (HBITMAP) SelectObject(hdcMemory, hBmp);
     SetStretchBltMode (Dc, HALFTONE);
-    StretchBlt (Dc, 0, 0, 15, 15, hdcMemory, 0, 0, Bmp.bmWidth, Bmp.bmHeight, SRCCOPY);
+    RECT R;
+    GetWindowRect (_hSelf, &R);
+    StretchBlt (Dc, 0, 0, R.right - R.left, R.bottom - R.top, hdcMemory, 0, 0, Bmp.bmWidth, Bmp.bmHeight, SRCCOPY);
     SelectObject (hdcMemory, hOldBitmap);
     DeleteDC(hdcMemory);
     DeleteObject(hBmp);
     EndPaint(_hSelf, &ps);
+    RECT Rect;
+    GetWindowRect (_hSelf, &Rect);
+    ValidateRect (_hSelf, &Rect);
     return TRUE;
 
   case WM_SHOWANDRECREATEMENU:

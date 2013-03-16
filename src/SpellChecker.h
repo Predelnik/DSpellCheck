@@ -2,21 +2,24 @@
 #define SPELLCHECKER_H
 // Class that will do most of the job with spellchecker
 
+struct AspellSpeller;
+struct AspellWordList;
 class SettingsDlg;
+class LangList;
 class Suggestions;
 
 class SpellChecker
 {
 public:
   SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
-    Suggestions *SuggestionsInstanceArg);
+    Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg);
   ~SpellChecker ();
   BOOL WINAPI NotifyEvent (DWORD Event);
   void RecheckVisible ();
   void RecheckModified ();
   void ErrorMsgBox (const TCHAR * message);
 
-  void SetLanguage (const char *Str);
+  void SetLanguage (const char *Str, int SaveToIni = 1);
   void SetDelimiters (const char *Str, int SaveToIni = 1);
   void SetSuggestionsNum (int Num);
   void SetAspellPath (const TCHAR *Path);
@@ -24,6 +27,12 @@ public:
   void SetCheckThose (int CheckThoseArg);
   void SetFileTypes (TCHAR *FileTypesArg);
   void SetCheckComments (BOOL Value);
+  void SetMultipleLanguages (const char *MultiLanguagesArg);
+  void SetUnderlineColor (int Value);
+  void SetUnderlineStyle (int Value);
+  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg);
+  void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
+  void SetBufferSize (int Size, BOOL SaveToIni = 1);
 
 private:
   enum CheckTextMode
@@ -67,6 +76,8 @@ private:
   BOOL CheckTextNeeded ();
   int CheckWordInCommentOrString (int WordStart, int WordEnd);
   void WriteSetting ();
+  int GetStyle (int Pos);
+  void RefreshUnderlineStyle ();
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value);
@@ -82,6 +93,8 @@ private:
   BOOL AspellLoaded;
   BOOL CheckTextEnabled;
   char *Language;
+  char *MultiLanguages;
+  int MultiLangMode;
   int SuggestionsNum;
   char *DelimUtf8; // String without special characters but maybe with escape characters (like '\n' and stuff)
   char *DelimUtf8Converted; // String where escape characters are properly converted to corresponding symbols
@@ -91,6 +104,17 @@ private:
   BOOL IgnoreYo;
   BOOL CheckThose;
   BOOL CheckComments;
+  int UnderlineColor;
+  int UnderlineStyle;
+  BOOL IgnoreNumbers;
+  BOOL IgnoreCStart;
+  BOOL IgnoreCHave;
+  BOOL IgnoreCAll;
+  BOOL Ignore_;
+  int SBSize;
+  int SBTrans;
+  int BufferSize;
+  const AspellWordList *CurWordList;
 
   int Lexer;
   _locale_t  utf8_l;
@@ -104,7 +128,9 @@ private:
   TCHAR *IniFilePath;
   SettingsDlg *SettingsDlgInstance;
   AspellSpeller *Speller;
+  std::vector <AspellSpeller *> SpellerList;
   Suggestions *SuggestionsInstance;
+  LangList *LangListInstance;
   char *VisibleText;
   int VisibleTextLength;
   long VisibleTextOffset;

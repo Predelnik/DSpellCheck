@@ -34,7 +34,7 @@ int GetRecheckDelay ()
   return RecheckDelay;
 }
 
-void SetRecheckDelay (int Value)
+void SetRecheckDelay (int Value, int WriteToIni)
 {
   if (Value < 0)
     Value = 0;
@@ -42,12 +42,15 @@ void SetRecheckDelay (int Value)
   if (Value > 20000)
     Value = 20000;
 
-  SendEvent (EID_WRITE_SETTING);
-  std::pair <TCHAR *, int> *x = new std::pair <TCHAR *, int>;
-  x->first = 0;
-  SetString (x->first, _T ("Recheck_Delay"));
-  x->second = Value;
-  PostMessageToMainThread (TM_SET_SETTING, 0, (LPARAM) x);
+  if (WriteToIni)
+  {
+    SendEvent (EID_WRITE_SETTING);
+    std::pair <TCHAR *, int> *x = new std::pair <TCHAR *, int>;
+    x->first = 0;
+    SetString (x->first, _T ("Recheck_Delay"));
+    x->second = Value;
+    PostMessageToMainThread (TM_SET_SETTING, 0, (LPARAM) x);
+  }
   RecheckDelay = Value;
 }
 
@@ -64,8 +67,8 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     break;
 
   case DLL_PROCESS_DETACH:
-    DeleteTimerQueueTimer (0, Timer, 0);
     pluginCleanUp();
+    _CrtDumpMemoryLeaks();
     break;
 
   case DLL_THREAD_ATTACH:
@@ -125,30 +128,28 @@ VOID CALLBACK ExecuteQueue (
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
   // DEBUG_CODE:
-  char Buf[DEFAULT_BUF_SIZE];
   long CurPos = SendMsgToEditor(&nppData, SCI_GETCURRENTPOS);
   int Style = SendMsgToEditor(&nppData, SCI_GETSTYLEAT, CurPos);
   // _ultot (Style /* notifyCode->nmhdr.code */, Buf, 10);
-  SendMsgToEditor (&nppData, SCI_PROPERTYNAMES, 0, (LPARAM) Buf);
-  OutputDebugStringA (Buf);
-  OutputDebugString (_T ("\n"));
+  // OutputDebugString (_T ("\n"));
   switch (notifyCode->nmhdr.code)
   {
   case NPPN_SHUTDOWN:
     {
+      SendEvent (EID_KILLTHREAD);
       commandMenuCleanUp();
+      DeleteTimerQueueTimer (0, Timer, 0);
     }
     break;
 
   case NPPN_READY:
     {
-      SendMsgToEditor(&nppData, SCI_INDICSETSTYLE ,SCE_SQUIGGLE_UNDERLINE_RED, INDIC_SQUIGGLE);
-      SendMsgToEditor(&nppData, SCI_INDICSETFORE, SCE_SQUIGGLE_UNDERLINE_RED, 0x0000ff);
       InitClasses ();
       CheckQueue.clear ();
       CreateThreadResources ();
-      LoadSettings ();
       SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
+      LoadSettings ();
+      SendEvent (EID_CHECK_FILE_NAME);
       CreateHooks ();
       CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
     }
