@@ -2088,7 +2088,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
           CreateWordUnderline (ScintillaWindow, WordStart, WordEnd);
           break;
         case FIND_FIRST:
-          if (WordEnd >= CurrentPosition)
+          if (WordEnd > CurrentPosition)
           {
             SendMsgToEditor (NppDataInstance, SCI_SETSEL, WordStart, WordEnd);
             stop = TRUE;
@@ -2096,7 +2096,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
           break;
         case FIND_LAST:
           {
-            if (WordEnd >= CurrentPosition - 1)
+            if (WordEnd >= CurrentPosition)
             {
               stop = TRUE;
               break;
