@@ -1608,6 +1608,8 @@ void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end
 
 void SpellChecker::RemoveUnderline (HWND ScintillaWindow, int start, int end)
 {
+  if (end < start)
+    return;
   PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
   PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
 }
@@ -1662,9 +1664,6 @@ void SpellChecker::ClearAllUnderlines ()
   }
 }
 
-//
-// Place for the clean up (especially for the shortcut)
-//
 void SpellChecker::Cleanup()
 {
   CLEAN_AND_ZERO_ARR (Language);
@@ -1672,7 +1671,6 @@ void SpellChecker::Cleanup()
   CLEAN_AND_ZERO_ARR (DelimUtf8Converted);
   CLEAN_AND_ZERO_ARR (DelimConverted);
   CLEAN_AND_ZERO_ARR (AspellPath);
-  // We should deallocate shortcuts here
 }
 
 void SpellChecker::SetAspellPath (const TCHAR *Path)
@@ -2068,10 +2066,8 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
   else
     token = strtok_s (TextToCheck, DelimConverted, &Context);
 
-  long WordStart = offset + token - TextToCheck;
-  if (Mode == UNDERLINE_ERRORS)
-    RemoveUnderline (ScintillaWindow, offset, WordStart);
-  long WordEnd = offset + token - TextToCheck + strlen (token) - 1;
+  long WordStart = 0;
+  long WordEnd = offset;
 
   while (token)
   {
@@ -2080,9 +2076,9 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
       WordStart = offset + token - TextToCheck;
 
       if (Mode == UNDERLINE_ERRORS)
-        RemoveUnderline (ScintillaWindow, WordEnd + 1, WordStart - 1);
+        RemoveUnderline (ScintillaWindow, WordEnd, WordStart - 1);
 
-      WordEnd = offset + token - TextToCheck + strlen (token) - 1;
+      WordEnd = offset + token - TextToCheck + strlen (token);
 
       if (!CheckWord (token, WordStart, WordEnd))
       {
@@ -2094,7 +2090,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
         case FIND_FIRST:
           if (WordEnd >= CurrentPosition)
           {
-            SendMsgToEditor (NppDataInstance, SCI_SETSEL, WordStart, WordEnd + 1);
+            SendMsgToEditor (NppDataInstance, SCI_SETSEL, WordStart, WordEnd);
             stop = TRUE;
           }
           break;
@@ -2126,7 +2122,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
       token = strtok_s (NULL, DelimConverted, &Context);
   }
   if (Mode == UNDERLINE_ERRORS)
-    RemoveUnderline (ScintillaWindow, WordEnd + 1, offset + TextLen + 100);
+    RemoveUnderline (ScintillaWindow, WordEnd, offset + TextLen + 100);
 
   // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
 
@@ -2141,7 +2137,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
       return FALSE;
     else
     {
-      SendMsgToEditor (NppDataInstance, SCI_SETSEL, ResultingWordStart, ResultingWordEnd + 1);
+      SendMsgToEditor (NppDataInstance, SCI_SETSEL, ResultingWordStart, ResultingWordEnd);
       return TRUE;
     }
   };
