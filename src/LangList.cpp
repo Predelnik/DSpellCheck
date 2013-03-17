@@ -32,7 +32,7 @@ void LangList::DoDialog ()
 {
   if (!isCreated())
   {
-    create (IDD_CHOOSE_MULTIPLE_LANGUAGES, false, false);
+    create (IDD_CHOOSE_MULTIPLE_LANGUAGES);
   }
   else
   {
@@ -89,6 +89,7 @@ BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
       HLangList = ::GetDlgItem (_hSelf, IDC_LANGLIST);
       return TRUE;
     }
+	break;
   case WM_COMMAND:
     {
       switch (LOWORD (wParam))
@@ -102,6 +103,7 @@ BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
         break;
       }
     }
+	break;
   };
   return FALSE;
 }

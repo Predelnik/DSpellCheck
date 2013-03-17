@@ -63,6 +63,8 @@ Suggestions *SuggestionsInstance = 0;
 LangList *LangListInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
 HANDLE hThread = NULL;
+DWORD  ThreadId = 0;
+
 HANDLE hEvent[EID_MAX]  = {NULL};
 HANDLE hModule = NULL;
 HHOOK HMouseHook = NULL;
@@ -71,9 +73,9 @@ HHOOK HMouseHook = NULL;
 //
 // Initialize your plug-in data here
 // It will be called while plug-in loading
-LRESULT CALLBACK MouseProc (_In_  int nCode,
-                            _In_  WPARAM wParam,
-                            _In_  LPARAM lParam)
+LRESULT CALLBACK MouseProc (int nCode,
+                            WPARAM wParam,
+                            LPARAM lParam)
 {
   switch (wParam)
   {
@@ -101,7 +103,7 @@ if (WindowFromPoint (Pos) == GetScintillaWindow (&nppData))
 {
 OutputDebugString (_T ("WM_INITMENUPOPUP\n"));
 SendEvent (EID_APPLYMENUACTION);
-PostThreadMessage (GetThreadId (hThread), TM_CONTEXT_MENU, ((tagCWPSTRUCT *)lParam)->wParam, 0);
+PostMessageToMainThread (TM_CONTEXT_MENU, ((tagCWPSTRUCT *)lParam)->wParam, 0);
 }
 break;
 }
@@ -134,6 +136,8 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
   BOOL bRun = SpellCheckerInstance->NotifyEvent(EID_MAX);
 
   MSG Msg;
+
+  ThreadId = GetCurrentThreadId ();
 
   // Creating thread message queue
   PeekMessage (&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
@@ -207,9 +211,9 @@ void inline SendEvent (EventId Event)
 
 void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam)
 {
-  if (ResourcesInited)
+  if (ResourcesInited && ThreadId != 0)
   {
-    PostThreadMessage (GetThreadId (hThread), Msg, WParam, LParam);
+    PostThreadMessage (ThreadId, Msg, WParam, LParam);
   }
 }
 

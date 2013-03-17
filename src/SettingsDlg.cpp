@@ -235,7 +235,6 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
   TCHAR Buf[DEFAULT_BUF_SIZE];
   int x;
   TCHAR *EndPtr;
-  HBRUSH DefaultBrush = 0;
 
   switch (message)
   {
@@ -251,15 +250,18 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HFileTypes = ::GetDlgItem (_hSelf, IDC_FILETYPES);
       HCheckComments = ::GetDlgItem (_hSelf, IDC_CHECKCOMMENTS);
       HAspellLink = ::GetDlgItem (_hSelf, IDC_ASPELL_LINK);
-      DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+      DefaultBrush = CreateSolidBrush(GetBkColor (GetDC (_hSelf)));
+      AspellStatusColor = RGB (0, 0, 0);
       return TRUE;
     }
+    break;
   case WM_CLOSE:
     {
       EndDialog(_hSelf, 0);
       DeleteObject (DefaultBrush);
       return TRUE;
     }
+    break;
   case WM_COMMAND:
     {
       switch (LOWORD (wParam))
@@ -329,6 +331,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
         break;
       }
     }
+    break;
   case WM_NOTIFY:
 
     switch (((LPNMHDR)lParam)->code)
@@ -353,8 +356,8 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
     {
       HDC hDC = (HDC)wParam;
       SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
-      SetTextColor(hDC, AspellStatusColor);
       SetBkMode(hDC, TRANSPARENT);
+      SetTextColor(hDC, AspellStatusColor);
       return (INT_PTR) DefaultBrush;
     }
     break;
@@ -442,6 +445,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
         ComboBox_AddString (HUnderlineStyle, IndicNames[i]);
       return TRUE;
     }
+    break;
   case WM_CLOSE:
     {
       if (Brush)
@@ -449,6 +453,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       EndDialog(_hSelf, 0);
       return TRUE;
     }
+    break;
   case WM_DRAWITEM:
     switch (wParam)
     {
@@ -473,6 +478,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       EndPaint (HUnderlineColor, &Ps);
       return TRUE;
     }
+    break;
   case WM_CTLCOLORBTN:
     if (GetDlgItem (_hSelf, IDC_UNDERLINE_COLOR) == (HWND)lParam)
     {
@@ -485,6 +491,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       Brush = CreateSolidBrush (UnderlineColorBtn);
       return (INT_PTR) Brush;
     }
+    break;
   case WM_COMMAND:
     switch (LOWORD (wParam))
     {
@@ -509,6 +516,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
 
         return TRUE;
       }
+      break;
     case IDC_BUFFER_SIZE:
       if (HIWORD (wParam) == EN_CHANGE)
       {
@@ -526,6 +534,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
 
         return TRUE;
       }
+      break;
     case IDC_UNDERLINE_COLOR:
       if (HIWORD (wParam) == BN_CLICKED)
       {
@@ -647,7 +656,6 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       AdvancedDlgInstance.init(_hInst, _hSelf);
       AdvancedDlgInstance.create (IDD_ADVANCED, false, false);
       AdvancedDlgInstance.SetRecheckDelay (GetRecheckDelay ());
-      SendEvent (EID_FILL_DIALOGS);
 
       WindowVectorInstance.push_back(DlgInfo(&SimpleDlgInstance, TEXT("Simple"), TEXT("Simple Options")));
       WindowVectorInstance.push_back(DlgInfo(&AdvancedDlgInstance, TEXT("Advanced"), TEXT("Advanced Options")));
@@ -669,9 +677,11 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       if (enableDlgTheme)
         enableDlgTheme(_hSelf, ETDT_ENABLETAB);
 
+      SendEvent (EID_FILL_DIALOGS);
+
       return TRUE;
     }
-
+    break;
   case WM_NOTIFY :
     {
       NMHDR *nmhdr = (NMHDR *)lParam;
@@ -685,7 +695,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       }
       break;
     }
-
+    break;
   case WM_COMMAND :
     {
       switch (LOWORD (wParam))

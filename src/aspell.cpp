@@ -177,7 +177,7 @@ void GetDefaultAspellPath (TCHAR *&Path)
       CSIDL_PROGRAM_FILES,
       FALSE );
     PathAppend(pszPath, Pf);
-    PathAppend(pszPath, _T("\\Aspell\\aspell-15.dll"));
+    PathAppend(pszPath, _T("\\Aspell\\bin\\aspell-15.dll"));
   }
   SetString (Path, pszPath);
 }

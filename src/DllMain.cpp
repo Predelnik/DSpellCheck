@@ -110,8 +110,8 @@ static void AddToQueue (long Start, long End)
 
 // For now doesn't look like there is such a need in check modified, but code stays until thorough testing
 VOID CALLBACK ExecuteQueue (
-  _In_  PVOID lpParameter,
-  _In_  BOOLEAN TimerOrWaitFired
+  PVOID lpParameter,
+   BOOLEAN TimerOrWaitFired
   )
 {
   /*
@@ -124,6 +124,8 @@ VOID CALLBACK ExecuteQueue (
   }
   CheckQueue.clear ();
   */
+  DeleteTimerQueueTimer (0, Timer, 0);
+  Timer = 0;
   SendEvent (EID_RECHECK_VISIBLE);
 }
 
@@ -162,8 +164,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       SendEvent (EID_CHECK_FILE_NAME);
       SendEvent (EID_HIDE_SUGGESTIONS_BOX);
       RecheckVisible ();
-      break;
     }
+	break;
 
   case SCN_UPDATEUI:
     if(notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
@@ -190,7 +192,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       }
 
       // AddToQueue (Start, End);
-      ChangeTimerQueueTimer (0, Timer, RecheckDelay, INFINITE);
+		if (Timer)
+		ChangeTimerQueueTimer (0, Timer, RecheckDelay, 0);
+		else
+      CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, RecheckDelay, 0 , 0);
     }
     break;
 

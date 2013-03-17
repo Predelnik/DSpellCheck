@@ -46,6 +46,7 @@ private:
 
   /* handles of controls */
   COLORREF AspellStatusColor;
+  HBRUSH DefaultBrush;
   HWND HAspellStatus;
   HWND HAspellPath;
   HWND HSuggestionsNum;
