@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS ",.!?\":;{}()[]\\/=+-*<>|#$"
+#define DEFAULT_DELIMITERS ",.!?\":;{}()[]\\/=+-*<>|#$@%"
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)
@@ -1462,7 +1462,7 @@ void SpellChecker::ShowSuggestionsMenu ()
       SelectedSpeller = Speller;
     if (Result == MID_IGNOREALL)
     {
-      aspell_speller_add_to_session (SelectedSpeller, Range.lpstrText, WUCLength + 1);
+      aspell_speller_add_to_session (SelectedSpeller, Utf8Buf, WUCLength + 1);
       aspell_speller_save_all_word_lists (SelectedSpeller);
       if (aspell_speller_error(SelectedSpeller) != 0)
       {
@@ -1472,7 +1472,7 @@ void SpellChecker::ShowSuggestionsMenu ()
     }
     else if (Result == MID_ADDTODICTIONARY)
     {
-      aspell_speller_add_to_personal(SelectedSpeller, Range.lpstrText, WUCLength + 1);
+      aspell_speller_add_to_personal(SelectedSpeller, Utf8Buf, WUCLength + 1);
       aspell_speller_save_all_word_lists (SelectedSpeller);
       if (aspell_speller_error(SelectedSpeller) != 0)
       {
