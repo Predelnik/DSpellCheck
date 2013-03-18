@@ -187,12 +187,12 @@ void SimpleDlg::FillAspellInfo (BOOL Status, TCHAR *AspellPath)
   if (Status)
   {
     AspellStatusColor = RGB (0, 144, 0);
-    Static_SetText (HAspellStatus, _T ("Status: Aspell is OK"));
+    Static_SetText (HAspellStatus, _T ("Aspell Status: OK"));
   }
   else
   {
     AspellStatusColor = RGB (225, 0, 0);
-    Static_SetText (HAspellStatus, _T ("Status: Aspell is missing"));
+    Static_SetText (HAspellStatus, _T ("Aspell Status: Fail"));
   }
   TCHAR *Path = 0;
   GetActualAspellPath (Path, AspellPath);

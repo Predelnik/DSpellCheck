@@ -1462,21 +1462,21 @@ void SpellChecker::ShowSuggestionsMenu ()
       SelectedSpeller = Speller;
     if (Result == MID_IGNOREALL)
     {
-      aspell_speller_add_to_session (SelectedSpeller, Utf8Buf, WUCLength + 1);
+      aspell_speller_add_to_session (SelectedSpeller, Utf8Buf, strlen (Utf8Buf) + 1);
       aspell_speller_save_all_word_lists (SelectedSpeller);
       if (aspell_speller_error(SelectedSpeller) != 0)
       {
-        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(Speller));
+        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
       }
       RecheckVisible ();
     }
     else if (Result == MID_ADDTODICTIONARY)
     {
-      aspell_speller_add_to_personal(SelectedSpeller, Utf8Buf, WUCLength + 1);
+      aspell_speller_add_to_personal(SelectedSpeller, Utf8Buf, strlen (Utf8Buf) + 1);
       aspell_speller_save_all_word_lists (SelectedSpeller);
       if (aspell_speller_error(SelectedSpeller) != 0)
       {
-        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(Speller));
+        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
       }
       RecheckVisible ();
     }
@@ -1876,7 +1876,7 @@ BOOL SpellChecker::AspellReinitSettings ()
   if (aspell_error_number(possible_err) != 0)
   {
     delete_aspell_config (spell_config);
-    if (strcmp (Language, "en") != 0)
+    if (!Language || strcmp (Language, "en") != 0)
     {
       SetLanguage ("en", 1);
       return AspellReinitSettings ();
