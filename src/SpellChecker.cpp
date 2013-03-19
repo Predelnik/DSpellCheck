@@ -1578,7 +1578,7 @@ void SpellChecker::SaveSettings ()
   SetStringDUtf8 (DefaultDelimUtf8, DEFAULT_DELIMITERS);
   SaveToIniUtf8 (_T ("Delimiters"), DelimUtf8, DefaultDelimUtf8, TRUE);
   CLEAN_AND_ZERO_ARR (DefaultDelimUtf8);
-  SaveToIni (_T ("Find_Next_Buffer_Size"), BufferSize / 1024, 16);
+  SaveToIni (_T ("Find_Next_Buffer_Size"), BufferSize / 1024, 4);
   SaveToIni (_T ("Suggestions_Button_Size"), SBSize, 15);
   SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans, 70);
   SaveToIniUtf8 (_T ("Language"), Language, "en");
@@ -1621,7 +1621,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (Size, _T ("Suggestions_Button_Size"), 15);
   LoadFromIni (Trans, _T ("Suggestions_Button_Opacity"), 70);
   SetSuggBoxSettings (Size, Trans, 0);
-  LoadFromIni (Size, _T ("Find_Next_Buffer_Size"), 16);
+  LoadFromIni (Size, _T ("Find_Next_Buffer_Size"), 4);
   SetBufferSize (Size, 0);
   RefreshUnderlineStyle ();
   CLEAN_AND_ZERO_ARR (BufUtf8);
