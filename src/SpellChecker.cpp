@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS ",.!?\":;{}()[]\\/=+-*<>|#$@%"
+#define DEFAULT_DELIMITERS ",.!?\":;{}()[]\\/=+-*<>|#$@%…’"
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)
@@ -89,9 +89,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
     SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
     SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
-    SettingsDlgInstance->GetAdvancedDlg ()->setIgnoreYo (IgnoreYo);
+    SettingsDlgInstance->GetAdvancedDlg ()->setConversionOpts (IgnoreYo, ConvertSingleQuotes);
     SettingsDlgInstance->GetAdvancedDlg ()->SetUnderlineSettings (UnderlineColor, UnderlineStyle);
-    SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_);
+    SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_, IgnoreSEApostrophe);
     SettingsDlgInstance->GetAdvancedDlg ()->SetSuggBoxSettings (SBSize, SBTrans);
     SettingsDlgInstance->GetAdvancedDlg ()->SetBufferSize (BufferSize / 1024);
     break;
@@ -1549,18 +1549,21 @@ void SpellChecker::SetUnderlineStyle (int Value)
   SaveToIni (_T ("Underline_Style"), UnderlineStyle);
 }
 
-void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg)
+void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg,
+                              BOOL IgnoreCAllArg, BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg)
 {
   IgnoreNumbers = IgnoreNumbersArg;
   IgnoreCStart = IgnoreCStartArg;
   IgnoreCHave = IgnoreCHaveArg;
   IgnoreCAll = IgnoreCAllArg;
   Ignore_ = Ignore_Arg;
+  IgnoreSEApostrophe = IgnoreSEApostropheArg;
   SaveToIni (_T ("Ignore_Having_Number"), IgnoreNumbers);
   SaveToIni (_T ("Ignore_Start_Capital"), IgnoreCStart);
   SaveToIni (_T ("Ignore_Have_Capital"), IgnoreCHave);
   SaveToIni (_T ("Ignore_All_Capital"), IgnoreCAll);
   SaveToIni (_T ("Ignore_With_"), Ignore_);
+  SaveToIni (_T ("Ignore_That_Start_or_End_with_'"), IgnoreSEApostrophe);
 }
 
 void SpellChecker::LoadSettings ()
@@ -1580,6 +1583,7 @@ void SpellChecker::LoadSettings ()
   SetDelimiters (BufUtf8, 0);
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
   LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 1);
+  LoadFromIni (ConvertSingleQuotes, _T ("Convert_Single_Quotes_To_Apostrophe"), 1);
   LoadFromIni (CheckThose , _T ("Check_Those_\\_Not_Those"), 1);
   LoadFromIni (FileTypes, _T ("File_Types"), _T ("*.*"));
   LoadFromIni (CheckComments, _T ("Check_Only_Comments_And_Strings"), 1);
@@ -1590,6 +1594,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (IgnoreCHave, _T ("Ignore_Have_Capital"), 1);
   LoadFromIni (IgnoreCAll, _T ("Ignore_All_Capital"), 1);
   LoadFromIni (Ignore_, _T ("Ignore_With_"), 1);
+  LoadFromIni (IgnoreSEApostrophe, _T ("Ignore_That_Start_or_End_with_'"), 1);
   int Size, Trans;
   LoadFromIni (Size, _T ("Suggestions_Button_Size"), 15);
   LoadFromIni (Trans, _T ("Suggestions_Button_Opacity"), 70);
@@ -1939,6 +1944,7 @@ static const char Yo[] = "\xd0\x81";
 static const char Ye[] = "\xd0\x95";
 static const char yo[] = "\xd1\x91";
 static const char ye[] = "\xd0\xb5";
+static const char PunctuationApostrophe[] = "\xe2\x80\x99";
 
 BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 {
@@ -1963,6 +1969,7 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     Utf8Buf = Word;
 
   TCHAR *Ts = 0;
+  long Len = strlen (Utf8Buf);
 
   if (IgnoreNumbers && Utf8pbrk (Utf8Buf, "0123456789") != 0)
   {
@@ -2016,24 +2023,55 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     {
       Iter[0] = Ye[0];
       Iter[1] = Ye[1];
+      Iter += 2;
     }
     Iter = Utf8Buf;
     while (Iter = strstr (Iter, yo))
     {
       Iter[0] = ye[0];
       Iter[1] = ye[1];
+      Iter += 2;
+    }
+  }
+
+  if (ConvertSingleQuotes)
+  {
+    char *Iter = Utf8Buf;
+    char *NestedIter = 0;
+    while (Iter = strstr (Iter, PunctuationApostrophe))
+    {
+      *Iter = '\'';
+      Iter++;
+      NestedIter = Iter;
+      while (*(NestedIter + 2))
+      {
+        *NestedIter =  *(NestedIter + 2);
+        NestedIter++;
+      }
+      *NestedIter = 0;
+      *(NestedIter + 1) = 0;
+    }
+    Len = strlen (Utf8Buf);
+  }
+
+  if (IgnoreSEApostrophe)
+  {
+    if (Utf8Buf[0] == '\'' || Utf8Buf[Len - 1] == '\'')
+    {
+      res = TRUE;
+      goto CleanUp;
     }
   }
 
   if (!MultiLangMode)
   {
-    res = aspell_speller_check(Speller, Utf8Buf, strlen (Utf8Buf));
+    res = aspell_speller_check(Speller, Utf8Buf, Len);
   }
   else
   {
     for (int i = 0; i < (int )SpellerList.size () && !res; i++)
     {
-      res = res || aspell_speller_check(SpellerList[i], Utf8Buf, strlen (Utf8Buf));
+      res = res || aspell_speller_check(SpellerList[i], Utf8Buf, Len);
     }
   }
 
@@ -2057,6 +2095,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
   BOOL stop = FALSE;
   long ResultingWordEnd = -1, ResultingWordStart = -1;
   long TextLen = strlen (TextToCheck);
+  std::vector<long> UnderlineBuffer;
 
   if (!DelimUtf8)
     return FALSE;
@@ -2075,9 +2114,6 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
     {
       WordStart = offset + token - TextToCheck;
 
-      if (Mode == UNDERLINE_ERRORS)
-        RemoveUnderline (ScintillaWindow, WordEnd, WordStart - 1);
-
       WordEnd = offset + token - TextToCheck + strlen (token);
 
       if (!CheckWord (token, WordStart, WordEnd))
@@ -2085,7 +2121,8 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
         switch (Mode)
         {
         case UNDERLINE_ERRORS:
-          CreateWordUnderline (ScintillaWindow, WordStart, WordEnd);
+          UnderlineBuffer.push_back (WordStart);
+          UnderlineBuffer.push_back (WordEnd);
           break;
         case FIND_FIRST:
           if (WordEnd > CurrentPosition)
@@ -2111,8 +2148,6 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
       }
       else
       {
-        if (Mode == UNDERLINE_ERRORS)
-          RemoveUnderline (ScintillaWindow, WordStart, WordEnd);
       }
     }
 
@@ -2121,8 +2156,18 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
     else
       token = strtok_s (NULL, DelimConverted, &Context);
   }
+
   if (Mode == UNDERLINE_ERRORS)
-    RemoveUnderline (ScintillaWindow, WordEnd, offset + TextLen + 100);
+  {
+    long PrevPos = offset;
+    for (long i = 0; i < (long) UnderlineBuffer.size () - 1; i += 2)
+    {
+      RemoveUnderline (ScintillaWindow, PrevPos, UnderlineBuffer[i] - 1);
+      CreateWordUnderline (ScintillaWindow, UnderlineBuffer[i], UnderlineBuffer[i + 1] - 1);
+      PrevPos = UnderlineBuffer[i + 1];
+    }
+    RemoveUnderline (ScintillaWindow, PrevPos, TextLen);
+  }
 
   // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
 
@@ -2228,10 +2273,12 @@ void SpellChecker::RecheckModified ()
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
 }
 
-void SpellChecker::SetIgnoreYo (BOOL Ignore)
+void SpellChecker::SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg)
 {
-  IgnoreYo = Ignore;
-  SaveToIni (_T ("Ignore_Yo"), Ignore);
+  IgnoreYo = ConvertYo;
+  SaveToIni (_T ("Ignore_Yo"), IgnoreYo);
+  ConvertSingleQuotes = ConvertSingleQuotesArg;
+  SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes);
 }
 
 void SpellChecker::RecheckVisible ()

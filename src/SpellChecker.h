@@ -42,14 +42,15 @@ public:
   void SetDelimiters (const char *Str, int SaveToIni = 1);
   void SetSuggestionsNum (int Num);
   void SetAspellPath (const TCHAR *Path);
-  void SetIgnoreYo (BOOL Ignore);
+  void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg);
   void SetCheckThose (int CheckThoseArg);
   void SetFileTypes (TCHAR *FileTypesArg);
   void SetCheckComments (BOOL Value);
   void SetMultipleLanguages (const char *MultiLanguagesArg);
   void SetUnderlineColor (int Value);
   void SetUnderlineStyle (int Value);
-  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg);
+  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
+                  BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg);
   void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
   void SetBufferSize (int Size, BOOL SaveToIni = 1);
 
@@ -121,6 +122,7 @@ private:
   TCHAR *FileTypes;
   TCHAR *AspellPath;
   BOOL IgnoreYo;
+  BOOL ConvertSingleQuotes;
   BOOL CheckThose;
   BOOL CheckComments;
   int UnderlineColor;
@@ -130,6 +132,7 @@ private:
   BOOL IgnoreCHave;
   BOOL IgnoreCAll;
   BOOL Ignore_;
+  BOOL IgnoreSEApostrophe;
   int SBSize;
   int SBTrans;
   int BufferSize;

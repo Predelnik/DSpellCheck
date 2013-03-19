@@ -65,12 +65,13 @@ public:
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   void FillDelimiters (const char *Delimiters);
   void SetDelimetersEdit (TCHAR *Delimiters);
-  void setIgnoreYo (BOOL Value);
+  void setConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg);
   void SetRecheckDelay (int Delay);
   int GetRecheckDelay ();
   void SetSuggBoxSettings (int Size, int Trans);
   void SetUnderlineSettings (int Color, int Style);
-  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg);
+  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
+                  BOOL Ignore_SA_Apostrophe_Arg);
   void SetBufferSize (int Size);
 
 protected:
@@ -80,6 +81,7 @@ private:
   HWND HEditDelimiters;
   HWND HDefaultDelimiters;
   HWND HIgnoreYo;
+  HWND HConvertSingleQuotes;
   HWND HRecheckDelay;
   HWND HUnderlineColor;
   HWND HUnderlineStyle;
@@ -88,6 +90,7 @@ private:
   HWND HIgnoreCHave;
   HWND HIgnoreCAll;
   HWND HIgnore_;
+  HWND HIgnoreSEApostrophe;
   HWND HSliderSize;
   HWND HSliderTransparency;
   HWND HBufferSize;

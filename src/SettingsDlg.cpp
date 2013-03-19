@@ -379,18 +379,21 @@ void AdvancedDlg::FillDelimiters (const char *Delimiters)
   CLEAN_AND_ZERO_ARR (TBuf);
 }
 
-void AdvancedDlg::setIgnoreYo (BOOL Value)
+void AdvancedDlg::setConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg)
 {
-  Button_SetCheck (HIgnoreYo, Value ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HIgnoreYo, ConvertYo ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HConvertSingleQuotes, ConvertSingleQuotesArg ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void AdvancedDlg::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg)
+void AdvancedDlg::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, 
+                             BOOL Ignore_Arg, BOOL Ignore_SA_Apostrophe_Arg)
 {
   Button_SetCheck (HIgnoreNumbers, IgnoreNumbersArg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnoreCStart, IgnoreCStartArg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnoreCHave, IgnoreCHaveArg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnoreCAll, IgnoreCAllArg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnore_, Ignore_Arg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HIgnoreSEApostrophe, Ignore_SA_Apostrophe_Arg ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void AdvancedDlg::SetSuggBoxSettings (int Size, int Trans)
@@ -422,7 +425,8 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       // Retrieving handles of dialog controls
       HEditDelimiters = ::GetDlgItem(_hSelf, IDC_DELIMETERS);
       HDefaultDelimiters = ::GetDlgItem (_hSelf, IDC_DEFAULT_DELIMITERS);
-      HIgnoreYo = ::GetDlgItem (_hSelf, IDC_IGNOREYO);
+      HIgnoreYo = ::GetDlgItem (_hSelf, IDC_COUNT_YO_AS_YE);
+      HConvertSingleQuotes = ::GetDlgItem (_hSelf, IDC_COUNT_SINGLE_QUOTES_AS_APOSTROPHE);
       HRecheckDelay = ::GetDlgItem (_hSelf, IDC_RECHECK_DELAY);
       HUnderlineColor = ::GetDlgItem (_hSelf, IDC_UNDERLINE_COLOR);
       HUnderlineStyle = ::GetDlgItem (_hSelf, IDC_UNDERLINE_STYLE);
@@ -431,6 +435,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       HIgnoreCHave = ::GetDlgItem (_hSelf,IDC_IGNORE_CHAVE);
       HIgnoreCAll = ::GetDlgItem (_hSelf, IDC_IGNORE_CALL);
       HIgnore_ = ::GetDlgItem (_hSelf, IDC_IGNORE_);
+      HIgnoreSEApostrophe = ::GetDlgItem (_hSelf, IDC_IGNORE_SE_APOSTROPHE);
       HSliderSize = ::GetDlgItem (_hSelf, IDC_SLIDER_SIZE);
       HSliderTransparency = ::GetDlgItem (_hSelf, IDC_SLIDER_TRANSPARENCY);
       HBufferSize = ::GetDlgItem (_hSelf, IDC_BUFFER_SIZE);
@@ -590,14 +595,16 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   SetStringDUtf8 (BufUtf8, TBuf);
   CLEAN_AND_ZERO_ARR (TBuf);
   SpellCheckerInstance->SetDelimiters (BufUtf8);
-  SpellCheckerInstance->SetIgnoreYo (Button_GetCheck (HIgnoreYo) == BST_CHECKED ? TRUE : FALSE);
+  SpellCheckerInstance->SetConversionOptions (Button_GetCheck (HIgnoreYo) == BST_CHECKED ? TRUE : FALSE,
+                                     Button_GetCheck (HConvertSingleQuotes) == BST_CHECKED ? TRUE : FALSE);
   SpellCheckerInstance->SetUnderlineColor (UnderlineColorBtn);
   SpellCheckerInstance->SetUnderlineStyle (ComboBox_GetCurSel (HUnderlineStyle));
   SpellCheckerInstance->SetIgnore (Button_GetCheck (HIgnoreNumbers) == BST_CHECKED,
     Button_GetCheck (HIgnoreCStart) == BST_CHECKED,
     Button_GetCheck (HIgnoreCHave) == BST_CHECKED,
     Button_GetCheck (HIgnoreCAll) == BST_CHECKED,
-    Button_GetCheck (HIgnore_) == BST_CHECKED
+    Button_GetCheck (HIgnore_) == BST_CHECKED,
+    Button_GetCheck (HIgnoreSEApostrophe) == BST_CHECKED
     );
   SpellCheckerInstance->SetSuggBoxSettings (SendMessage (HSliderSize, TBM_GETPOS, 0, 0),
     SendMessage (HSliderTransparency, TBM_GETPOS, 0, 0));
