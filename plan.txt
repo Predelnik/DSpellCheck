@@ -1,11 +1,5 @@
-Finalizing Stuff:
-- Installation
-- Some P.R.
-
-"Some other day" Stuff:
-- Fix random occurring segfault on close, that's a total bust (Probably fixed, but I'm not so sure)
-- Override right-click or create suggestion box (Well I've figured out how to do it, but using these 2 additional hooks, looks really uncool
-- Possibly ignore current language keywords
-- Add some cache for known words probably ( Size of this cache tunable)
-- Possibly check if ANSI encoding file exist then do no conversion
-- Well about hunspell: Looks like some users on forum want hunspell dictionaries so I will add it as static perhaps.
+- Probably rewrite hook through subclassing
+- Probably let conversion settings to affect adding words to dictionary as well.
+- Override right-click or create suggestion box (window subclass way)
+- (Now it would be too much fuss, almost denied) Possibly check if ANSI encoding file exist then do no conversion, the real hardship here is to determine correct encoding name for Aspell.
+- Well about Hunspell: Looks like some users on forum want Hunspell dictionaries so I will add it as static perhaps. 
