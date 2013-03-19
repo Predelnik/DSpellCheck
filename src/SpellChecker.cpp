@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-*<>|#$@%…")
+#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&…¹")
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)
