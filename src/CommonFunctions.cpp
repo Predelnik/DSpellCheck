@@ -230,12 +230,20 @@ void SetParsedString (TCHAR *&Dest, TCHAR *Source)
 
 HWND GetScintillaWindow(const NppData *NppDataArg)
 {
+  // Since we're working only with visible area, so:
+  return NppDataArg->_scintillaMainHandle;
+
   // Get the current scintilla
+
+  /*
   int which = -1;
   SendMessage(NppDataArg->_nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
   if (which == -1)
-    return NULL;
+  return NULL;
+  if (which == 1)
+  return NppDataArg->_scintillaSecondHandle;
   return (which == 0)?NppDataArg->_scintillaMainHandle:NppDataArg->_scintillaSecondHandle;
+  */
 }
 
 LRESULT SendMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)

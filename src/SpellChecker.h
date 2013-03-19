@@ -50,7 +50,7 @@ public:
   void SetUnderlineColor (int Value);
   void SetUnderlineStyle (int Value);
   void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
-                  BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg);
+    BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg);
   void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
   void SetBufferSize (int Size, BOOL SaveToIni = 1);
 
@@ -82,6 +82,7 @@ private:
   BOOL CheckText (char *TextToCheck, long offset, CheckTextMode Mode);
   void CheckVisible ();
   void setEncodingById (int EncId);
+  void SaveSettings ();
   void LoadSettings ();
   void UpdateAutocheckStatus (int SaveSetting = 1);
   void SwitchAutoCheck ();
@@ -99,9 +100,9 @@ private:
   int GetStyle (int Pos);
   void RefreshUnderlineStyle ();
 
-  void SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuotes = 0);
-  void SaveToIni (const TCHAR *Name, int Value);
-  void SaveToIniUtf8 (const TCHAR *Name, const char *Value, BOOL InQuotes = 0);
+  void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
+  void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);
+  void SaveToIniUtf8 (const TCHAR *Name, const char *Value, const char * DefaultValue, BOOL InQuotes = 0);
 
   void LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *DefaultValue, BOOL InQuotes = 0);
   void LoadFromIni (int &Value, const TCHAR *Name, int DefaultValue);
@@ -137,6 +138,7 @@ private:
   int SBTrans;
   int BufferSize;
   const AspellWordList *CurWordList;
+  HWND CurrentScintilla;
 
   int Lexer;
   _locale_t  utf8_l;

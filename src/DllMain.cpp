@@ -47,10 +47,10 @@ void SetRecheckDelay (int Value, int WriteToIni)
   if (WriteToIni)
   {
     SendEvent (EID_WRITE_SETTING);
-    std::pair <TCHAR *, int> *x = new std::pair <TCHAR *, int>;
+    std::pair <TCHAR *, DWORD> *x = new std::pair <TCHAR *, DWORD>;
     x->first = 0;
     SetString (x->first, _T ("Recheck_Delay"));
-    x->second = Value;
+    x->second = MAKELPARAM (Value, 500);
     PostMessageToMainThread (TM_SET_SETTING, 0, (LPARAM) x);
   }
   RecheckDelay = Value;

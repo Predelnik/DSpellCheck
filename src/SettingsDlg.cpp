@@ -122,7 +122,7 @@ static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText)
 
   // Create the tooltip. g_hInst is the global instance handle.
   HWND hwndTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
-    WS_POPUP |TTS_ALWAYSTIP | TTS_BALLOON,
+    WS_POPUP |TTS_ALWAYSTIP,
     CW_USEDEFAULT, CW_USEDEFAULT,
     CW_USEDEFAULT, CW_USEDEFAULT,
     hDlg, NULL,
@@ -385,7 +385,7 @@ void AdvancedDlg::setConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg
   Button_SetCheck (HConvertSingleQuotes, ConvertSingleQuotesArg ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void AdvancedDlg::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, 
+void AdvancedDlg::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
                              BOOL Ignore_Arg, BOOL Ignore_SA_Apostrophe_Arg)
 {
   Button_SetCheck (HIgnoreNumbers, IgnoreNumbersArg ? BST_CHECKED : BST_UNCHECKED);
@@ -443,7 +443,11 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       SendMessage (HSliderTransparency, TBM_SETRANGE, TRUE, MAKELPARAM (5, 100));
 
       Brush = 0;
+
       CreateToolTip (IDC_DELIMETERS, _hSelf, _T ("Standard white-space symbols such as New Line ('\\n'), Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are always counted as delimiters"));
+      CreateToolTip (IDC_RECHECK_DELAY, _hSelf, _T ("Delay between the end of typing and rechecking the the text after it"));
+      CreateToolTip (IDC_IGNORE_CSTART, _hSelf, _T ("Remember that words at the beginning of sentences would also be ignored that way."));
+      CreateToolTip (IDC_IGNORE_SE_APOSTROPHE, _hSelf, _T ("Words like this sadly cannot be added to Aspell user dictionary"));
 
       ComboBox_ResetContent (HUnderlineStyle);
       for (int i = 0; i < countof (IndicNames); i++)
@@ -596,7 +600,7 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   CLEAN_AND_ZERO_ARR (TBuf);
   SpellCheckerInstance->SetDelimiters (BufUtf8);
   SpellCheckerInstance->SetConversionOptions (Button_GetCheck (HIgnoreYo) == BST_CHECKED ? TRUE : FALSE,
-                                     Button_GetCheck (HConvertSingleQuotes) == BST_CHECKED ? TRUE : FALSE);
+    Button_GetCheck (HConvertSingleQuotes) == BST_CHECKED ? TRUE : FALSE);
   SpellCheckerInstance->SetUnderlineColor (UnderlineColorBtn);
   SpellCheckerInstance->SetUnderlineStyle (ComboBox_GetCurSel (HUnderlineStyle));
   SpellCheckerInstance->SetIgnore (Button_GetCheck (HIgnoreNumbers) == BST_CHECKED,

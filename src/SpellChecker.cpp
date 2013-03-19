@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS ",.!?\":;{}()[]\\/=+-*<>|#$@%…’"
+#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-*<>|#$@%…")
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)
@@ -98,6 +98,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
     SettingsDlgInstance->GetAdvancedDlg ()->ApplySettings (this);
+    SaveSettings ();
     CheckFileName (); // Cause filters may change
     RefreshUnderlineStyle ();
     RecheckVisible ();
@@ -173,8 +174,8 @@ void SpellChecker::WriteSetting ()
   if (Msg.message != TM_SET_SETTING)
     return;
 
-  std::pair<TCHAR *, int> *x = (std::pair<TCHAR *, int> *) Msg.lParam;
-  SaveToIni (x->first, x->second);
+  std::pair<TCHAR *, DWORD> *x = (std::pair<TCHAR *, DWORD> *) Msg.lParam;
+  SaveToIni (x->first, LOWORD (x->second), HIWORD (x->second));
   CLEAN_AND_ZERO_ARR (x->first);
   CLEAN_AND_ZERO (x);
 }
@@ -182,7 +183,6 @@ void SpellChecker::WriteSetting ()
 void SpellChecker::SetCheckComments (BOOL Value)
 {
   CheckComments = Value;
-  SaveToIni (_T ("Check_Only_Comments_And_Strings"), Value);
 }
 
 void SpellChecker::CheckFileName ()
@@ -1222,10 +1222,7 @@ void SpellChecker::FindPrevMistake ()
 
 void SpellChecker::SetDefaultDelimiters ()
 {
-  TCHAR *Buf = 0;
-  SetStringSUtf8 (Buf, DEFAULT_DELIMITERS);
-  SettingsDlgInstance->GetAdvancedDlg ()->SetDelimetersEdit (Buf);
-  CLEAN_AND_ZERO_ARR (Buf);
+  SettingsDlgInstance->GetAdvancedDlg ()->SetDelimetersEdit (DEFAULT_DELIMITERS);
 }
 
 BOOL SpellChecker::GetWordUnderMouseIsRight (long &Pos, long &Length)
@@ -1503,32 +1500,23 @@ void SpellChecker::ShowSuggestionsMenu ()
 
 void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
 {
+  SaveToIni (_T ("Autocheck"), AutoCheckText, 0);
   CheckMenuItem(GetMenu(NppDataInstance->_nppHandle), get_funcItem ()[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
-  if (SaveSetting)
-  {
-    SaveToIni (_T ("Autocheck"), AutoCheckText);
-  }
 }
 
 void SpellChecker::SetCheckThose (int CheckThoseArg)
 {
   CheckThose = CheckThoseArg;
-  SaveToIni (_T ("Check_Those_\\_Not_Those"), CheckThose);
 }
 
 void SpellChecker::SetFileTypes (TCHAR *FileTypesArg)
 {
   SetString (FileTypes, FileTypesArg);
-  SaveToIni (_T ("File_Types"), FileTypes);
 }
 
 void SpellChecker::SetMultipleLanguages (const char *MultiLanguagesArg)
 {
   SetString (MultiLanguages, MultiLanguagesArg);
-  TCHAR *TBuf = 0;
-  SetString (TBuf, MultiLanguages);
-  SaveToIni (_T ("Multiple_Languages"), TBuf);
-  CLEAN_AND_ZERO_ARR (TBuf);
 }
 
 void SpellChecker::RefreshUnderlineStyle ()
@@ -1540,13 +1528,11 @@ void SpellChecker::RefreshUnderlineStyle ()
 void SpellChecker::SetUnderlineColor (int Value)
 {
   UnderlineColor = Value;
-  SaveToIni (_T ("Underline_Color"), UnderlineColor);
 }
 
 void SpellChecker::SetUnderlineStyle (int Value)
 {
   UnderlineStyle = Value;
-  SaveToIni (_T ("Underline_Style"), UnderlineStyle);
 }
 
 void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg,
@@ -1558,18 +1544,51 @@ void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL 
   IgnoreCAll = IgnoreCAllArg;
   Ignore_ = Ignore_Arg;
   IgnoreSEApostrophe = IgnoreSEApostropheArg;
-  SaveToIni (_T ("Ignore_Having_Number"), IgnoreNumbers);
-  SaveToIni (_T ("Ignore_Start_Capital"), IgnoreCStart);
-  SaveToIni (_T ("Ignore_Have_Capital"), IgnoreCHave);
-  SaveToIni (_T ("Ignore_All_Capital"), IgnoreCAll);
-  SaveToIni (_T ("Ignore_With_"), Ignore_);
-  SaveToIni (_T ("Ignore_That_Start_or_End_with_'"), IgnoreSEApostrophe);
+}
+
+void SpellChecker::SaveSettings ()
+{
+  FILE *Fp;
+  _tfopen_s (&Fp, IniFilePath, _T ("w")); // Cleaning settings file (or creating it)
+  fclose (Fp);
+  TCHAR *TBuf = 0;
+  SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 1);
+  SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes, 1);
+  SaveToIni (_T ("Check_Only_Comments_And_Strings"), CheckComments, 1);
+  SaveToIni (_T ("Autocheck"), AutoCheckText, 0);
+  SaveToIni (_T ("Check_Those_\\_Not_Those"), CheckThose, 1);
+  SaveToIni (_T ("File_Types"), FileTypes, _T ("*.*"));
+  SaveToIniUtf8 (_T ("Multiple_Languages"), MultiLanguages, "");
+  SaveToIni (_T ("Ignore_Having_Number"), IgnoreNumbers, 1);
+  SaveToIni (_T ("Ignore_Start_Capital"), IgnoreCStart, 0);
+  SaveToIni (_T ("Ignore_Have_Capital"), IgnoreCHave, 1);
+  SaveToIni (_T ("Ignore_All_Capital"), IgnoreCAll, 1);
+  SaveToIni (_T ("Ignore_With_"), Ignore_, 1);
+  SaveToIni (_T ("Ignore_That_Start_or_End_with_'"), IgnoreSEApostrophe, 1);
+  SaveToIni (_T ("Underline_Color"), UnderlineColor, 0x0000ff);
+  SaveToIni (_T ("Underline_Style"), UnderlineStyle, INDIC_SQUIGGLE);
+  TCHAR *Path = 0;
+  GetDefaultAspellPath (Path);
+  SaveToIni (_T ("Aspell_Path"), AspellPath, Path);
+  CLEAN_AND_ZERO_ARR (Path);
+  SaveToIni (_T ("Suggestions_Number"), SuggestionsNum, 5);
+  char *DefaultDelimUtf8 = 0;
+  SetStringDUtf8 (DefaultDelimUtf8, DEFAULT_DELIMITERS);
+  SaveToIniUtf8 (_T ("Delimiters"), DelimUtf8, DefaultDelimUtf8, TRUE);
+  CLEAN_AND_ZERO_ARR (DefaultDelimUtf8);
+  SaveToIni (_T ("Find_Next_Buffer_Size"), BufferSize / 1024, 16);
+  SaveToIni (_T ("Suggestions_Button_Size"), SBSize, 15);
+  SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans, 70);
+  SaveToIniUtf8 (_T ("Language"), Language, "en");
 }
 
 void SpellChecker::LoadSettings ()
 {
   char *BufUtf8 = 0;
-  LoadFromIni (AspellPath, _T ("Aspell_Path"), _T (""));
+  TCHAR *Path = 0;
+  GetDefaultAspellPath (Path);
+  LoadFromIni (AspellPath, _T ("Aspell_Path"), Path);
+  CLEAN_AND_ZERO_ARR (Path);
   AspellLoaded = LoadAspell (AspellPath);
   if (AspellLoaded)
     AspellReinitSettings ();
@@ -1577,9 +1596,10 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (AutoCheckText, _T ("Autocheck"), 0);
   UpdateAutocheckStatus (0);
   LoadFromIniUtf8 (MultiLanguages, _T ("Multiple_Languages"), "");
-  LoadFromIniUtf8 (BufUtf8, _T ("Language"), "En_Us");
+  LoadFromIniUtf8 (BufUtf8, _T ("Language"), "en");
   SetLanguage (BufUtf8, 0);
-  LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), DEFAULT_DELIMITERS, TRUE);
+  SetStringDUtf8 (BufUtf8, DEFAULT_DELIMITERS);
+  LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), BufUtf8, TRUE);
   SetDelimiters (BufUtf8, 0);
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
   LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 1);
@@ -1684,18 +1704,13 @@ void SpellChecker::SetAspellPath (const TCHAR *Path)
   AspellLoaded = LoadAspell (AspellPath);
   if (AspellLoaded)
     AspellReinitSettings ();
-
-  TCHAR *Buf = 0;
-  GetDefaultAspellPath (Buf);
-  if (_tcscmp (Buf, Path) != 0)
-    SaveToIni (_T ("Aspell_Path"), Path);
-  else
-    SaveToIni (_T ("Aspell_Path"), _T (""));
-  CLEAN_AND_ZERO_ARR (Buf);
 }
 
-void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuotes)
+void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR *DefaultValue, BOOL InQuotes)
 {
+  if (DefaultValue && _tcscmp (Value, DefaultValue) == 0)
+    return;
+
   if (InQuotes)
   {
     int Len = 1 + _tcslen (Value) + 1 + 1;
@@ -1710,18 +1725,24 @@ void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, BOOL InQuot
   }
 }
 
-void SpellChecker::SaveToIni (const TCHAR *Name, int Value)
+void SpellChecker::SaveToIni (const TCHAR *Name, int Value, int DefaultValue)
 {
+  if (Value == DefaultValue)
+    return;
+
   TCHAR Buf[DEFAULT_BUF_SIZE];
   _itot_s (Value, Buf, 10);
-  SaveToIni (Name, Buf);
+  SaveToIni (Name, Buf, 0);
 }
 
-void SpellChecker::SaveToIniUtf8 (const TCHAR *Name, const char *Value, BOOL InQuotes)
+void SpellChecker::SaveToIniUtf8 (const TCHAR *Name, const char *Value,  const char *DefaultValue, BOOL InQuotes)
 {
+  if (DefaultValue && strcmp (Value, DefaultValue) == 0)
+    return;
+
   TCHAR *Buf = 0;
   SetStringSUtf8 (Buf, Value);
-  SaveToIni (Name, Buf, InQuotes);
+  SaveToIni (Name, Buf, 0, InQuotes);
   CLEAN_AND_ZERO_ARR (Buf);
 }
 
@@ -1782,10 +1803,6 @@ void SpellChecker::SetLanguage (const char *Str, int SaveToIni)
 
   SetString (Language, Str);
 
-  if (SaveToIni)
-  {
-    SaveToIniUtf8 (_T ("Language"), Language);
-  }
   AspellReinitSettings ();
 }
 
@@ -1797,7 +1814,6 @@ const char *SpellChecker::GetDelimiters ()
 void SpellChecker::SetSuggestionsNum (int Num)
 {
   SuggestionsNum = Num;
-  SaveToIni (_T ("Suggestions_Number"), Num);
 }
 
 // Here parameter is in utf-8
@@ -1817,9 +1833,6 @@ void SpellChecker::SetDelimiters (const char *Str, int SaveToIni)
   CLEAN_AND_ZERO_ARR (DestBuf);
   CLEAN_AND_ZERO_ARR (SrcBuf);
   CLEAN_AND_ZERO_ARR (TargetBuf);
-
-  if (SaveToIni)
-    SaveToIniUtf8 (_T ("Delimiters"), DelimUtf8, TRUE);
 }
 
 const char *SpellChecker::GetLanguage ()
@@ -1913,8 +1926,6 @@ void SpellChecker::SetBufferSize (int Size, BOOL SaveIni)
   if (Size > 10 * 1024)
     Size = 10 * 1024;
   BufferSize = Size * 1024;
-  if (SaveIni)
-    SaveToIni (_T ("Find_Next_Buffer_Size"), Size);
 }
 
 void SpellChecker::SetSuggBoxSettings (int Size, int Transparency, int SaveIni)
@@ -2083,7 +2094,7 @@ CleanUp:
   return res;
 }
 
-BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode)
+BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
 {
   if (!TextToCheck || !*TextToCheck)
     return FALSE;
@@ -2096,6 +2107,8 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
   long ResultingWordEnd = -1, ResultingWordStart = -1;
   long TextLen = strlen (TextToCheck);
   std::vector<long> UnderlineBuffer;
+  long WordStart = 0;
+  long WordEnd = 0;
 
   if (!DelimUtf8)
     return FALSE;
@@ -2105,16 +2118,12 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
   else
     token = strtok_s (TextToCheck, DelimConverted, &Context);
 
-  long WordStart = 0;
-  long WordEnd = offset;
-
   while (token)
   {
     if (token)
     {
-      WordStart = offset + token - TextToCheck;
-
-      WordEnd = offset + token - TextToCheck + strlen (token);
+      WordStart = Offset + token - TextToCheck;
+      WordEnd = Offset + token - TextToCheck + strlen (token);
 
       if (!CheckWord (token, WordStart, WordEnd))
       {
@@ -2159,14 +2168,14 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long offset, CheckTextMode Mode
 
   if (Mode == UNDERLINE_ERRORS)
   {
-    long PrevPos = offset;
+    long PrevPos = Offset;
     for (long i = 0; i < (long) UnderlineBuffer.size () - 1; i += 2)
     {
       RemoveUnderline (ScintillaWindow, PrevPos, UnderlineBuffer[i] - 1);
       CreateWordUnderline (ScintillaWindow, UnderlineBuffer[i], UnderlineBuffer[i + 1] - 1);
       PrevPos = UnderlineBuffer[i + 1];
     }
-    RemoveUnderline (ScintillaWindow, PrevPos, TextLen);
+    RemoveUnderline (ScintillaWindow, PrevPos, Offset + TextLen);
   }
 
   // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
@@ -2276,9 +2285,7 @@ void SpellChecker::RecheckModified ()
 void SpellChecker::SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg)
 {
   IgnoreYo = ConvertYo;
-  SaveToIni (_T ("Ignore_Yo"), IgnoreYo);
   ConvertSingleQuotes = ConvertSingleQuotesArg;
-  SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes);
 }
 
 void SpellChecker::RecheckVisible ()
