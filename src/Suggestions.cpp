@@ -28,7 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 void Suggestions::DoDialog ()
 {
+  HWND Temp = GetFocus ();
   create (IDD_SUGGESTIONS);
+  SetFocus (Temp);
 }
 
 BOOL RegMsg(HWND hWnd, DWORD dwMsgType)

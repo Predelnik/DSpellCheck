@@ -1317,9 +1317,9 @@ void SpellChecker::SetSuggestionsBoxTransparency ()
   // Set WS_EX_LAYERED on this window
   SetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE,
     GetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE) | WS_EX_LAYERED);
-
-  SuggestionsInstance->display (false);
+  SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * SBTrans) / 100, LWA_ALPHA);
   SuggestionsInstance->display (true);
+  SuggestionsInstance->display (false);
 }
 
 void SpellChecker::InitSuggestionsBox ()
@@ -1465,6 +1465,7 @@ void SpellChecker::ShowSuggestionsMenu ()
       {
         AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
       }
+      PostMsgToEditor (NppDataInstance, SCI_SETSEL, Pos + WUCLength, Pos + WUCLength);
       RecheckVisible ();
     }
     else if (Result == MID_ADDTODICTIONARY)
@@ -1475,6 +1476,7 @@ void SpellChecker::ShowSuggestionsMenu ()
       {
         AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
       }
+      PostMsgToEditor (NppDataInstance, SCI_SETSEL, Pos + WUCLength, Pos + WUCLength);
       RecheckVisible ();
     }
     else if (Result <= Counter)
@@ -1943,11 +1945,6 @@ void SpellChecker::SetSuggBoxSettings (int Size, int Transparency, int SaveIni)
     // Don't sure why but this helps to fix a bug with notepad++ window resizing
     // TODO: Fix it normal way
     SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * SBTrans) / 100, LWA_ALPHA);
-  }
-  if (SaveIni)
-  {
-    SaveToIni (_T ("Suggestions_Button_Size"), SBSize);
-    SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans);
   }
 }
 

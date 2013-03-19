@@ -111,7 +111,7 @@ static void AddToQueue (long Start, long End)
 // For now doesn't look like there is such a need in check modified, but code stays until thorough testing
 VOID CALLBACK ExecuteQueue (
   PVOID lpParameter,
-   BOOLEAN TimerOrWaitFired
+  BOOLEAN TimerOrWaitFired
   )
 {
   /*
@@ -151,21 +151,22 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       InitClasses ();
       CheckQueue.clear ();
       CreateThreadResources ();
-      SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
       LoadSettings ();
       SendEvent (EID_CHECK_FILE_NAME);
       CreateHooks ();
       CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
+      RecheckVisible ();
+      SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
     }
     break;
 
   case NPPN_BUFFERACTIVATED:
     {
       SendEvent (EID_CHECK_FILE_NAME);
-      SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+      //SendEvent (EID_HIDE_SUGGESTIONS_BOX);
       RecheckVisible ();
     }
-	break;
+    break;
 
   case SCN_UPDATEUI:
     if(notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
@@ -192,10 +193,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       }
 
       // AddToQueue (Start, End);
-		if (Timer)
-		ChangeTimerQueueTimer (0, Timer, RecheckDelay, 0);
-		else
-      CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, RecheckDelay, 0 , 0);
+      if (Timer)
+        ChangeTimerQueueTimer (0, Timer, RecheckDelay, 0);
+      else
+        CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, RecheckDelay, 0 , 0);
     }
     break;
 
