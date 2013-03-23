@@ -62,6 +62,7 @@ private:
     FIND_LAST = 2
   };
 
+  HWND GetCurrentScintilla ();
   void CreateWordUnderline (HWND ScintillaWindow, int start, int end);
   void RemoveUnderline (HWND ScintillaWindow, int start, int end);
   void ClearAllUnderlines ();
