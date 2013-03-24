@@ -23,3 +23,4 @@ Release/*
 Win32/*
 src/config.h
 ipch/*
+lib/*
