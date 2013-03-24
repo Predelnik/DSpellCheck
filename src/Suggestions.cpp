@@ -154,12 +154,17 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     p.x = 0; p.y = 0;
     ClientToScreen (_hSelf, &p);
     StateMenu = TRUE;
-    MenuResult = TrackPopupMenuEx (PopupMenu, TPM_HORIZONTAL | TPM_RETURNCMD | TPM_RIGHTALIGN, p.x, p.y, _hSelf, &TPMParams);
+    MenuResult = TrackPopupMenuEx (PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x, p.y, _hSelf, &TPMParams);
     SetForegroundWindow (_hParent);
     SendEvent (EID_APPLYMENUACTION);
     StateMenu = FALSE;
     DestroyMenu (PopupMenu);
     PopupMenu = CreatePopupMenu ();
+    return TRUE;
+
+  case WM_COMMAND:
+    if (HIWORD (wParam) == 0)
+      PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
     return TRUE;
 
   case WM_MOUSELEAVE:

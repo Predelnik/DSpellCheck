@@ -35,6 +35,7 @@ public:
   void FillAspellInfo (BOOL Status, TCHAR *AspellPath);
   void DisableLanguageCombo (BOOL Disable);
   void SetFileTypes (BOOL CheckThose, const TCHAR *FileTypes);
+  void SetSuggType (int SuggType);
   void SetCheckComments (BOOL Value);
 
 protected:
@@ -57,6 +58,7 @@ private:
   HWND HFileTypes;
   HWND HCheckComments;
   HWND HAspellLink;
+  HWND HSuggType;
 };
 
 class AdvancedDlg : public StaticDialog
@@ -71,7 +73,7 @@ public:
   void SetSuggBoxSettings (int Size, int Trans);
   void SetUnderlineSettings (int Color, int Style);
   void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
-                  BOOL Ignore_SA_Apostrophe_Arg);
+    BOOL Ignore_SA_Apostrophe_Arg);
   void SetBufferSize (int Size);
 
 protected:

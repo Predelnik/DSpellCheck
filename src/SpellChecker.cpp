@@ -59,21 +59,96 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SBTrans = 0;
   SBSize = 0;
   CurWordList = 0;
+  SelectedWord = 0;
+  SuggestionsMode = 1;
+  WUCLength = 0;
+  WUCPosition = 0;
+  WUCisRight = TRUE;
   CurrentScintilla = GetScintillaWindow (NppDataInstance);
+  SuggestionMenuItems = 0;
 }
 
 SpellChecker::~SpellChecker ()
 {
   AspellClear ();
+  CLEAN_AND_ZERO_ARR (SelectedWord);
   CLEAN_AND_ZERO_ARR (DelimConverted);
   CLEAN_AND_ZERO_ARR (DelimUtf8Converted);
   CLEAN_AND_ZERO_ARR (DelimUtf8);
   CLEAN_AND_ZERO_ARR (Language);
   CLEAN_AND_ZERO_ARR (MultiLanguages);
-  CLEAN_AND_ZERO_ARR (IniFilePath)
-    CLEAN_AND_ZERO_ARR (AspellPath);
+  CLEAN_AND_ZERO_ARR (IniFilePath);
+  CLEAN_AND_ZERO_ARR (AspellPath);
   CLEAN_AND_ZERO_ARR (VisibleText);
   CLEAN_AND_ZERO_ARR (FileTypes);
+}
+
+void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL Separator)
+{
+  MENUITEMINFO mi;
+  memset(&mi, 0, sizeof(mi));
+  mi.cbSize = sizeof(MENUITEMINFO);
+  if (Separator)
+  {
+    mi.fType = MFT_SEPARATOR;
+  }
+  else
+  {
+    mi.fType = MFT_STRING;
+    mi.fMask = MIIM_ID | MIIM_TYPE;
+    mi.wID = MAKEWORD (Id, DSPELLCHECK_MENU_ID);
+    mi.dwTypeData = 0;
+    SetString (mi.dwTypeData, Text);
+    mi.cch = _tcslen (Text) + 1;
+  }
+  if (InsertPos == -1)
+    InsertMenuItem (Menu, GetMenuItemCount (Menu), TRUE, &mi);
+  else
+    InsertMenuItem (Menu, InsertPos, TRUE, &mi);
+}
+
+BOOL WINAPI SpellChecker::NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  switch (Msg)
+  {
+  case TM_MENU_RESULT:
+    {
+      ProcessMenuResult (wParam);
+      return TRUE;
+    }
+    break;
+  case TM_PRECALCULATE_MENU:
+    {
+      if (CheckTextNeeded () && SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
+      {
+        long Pos, Length;
+        WUCisRight = GetWordUnderMouseIsRight (Pos, Length);
+        if (!WUCisRight)
+        {
+          WUCPosition = Pos;
+          WUCLength = Length;
+          FillSuggestionsMenu (0);
+        }
+      }
+
+      PostMessage (NppDataInstance->_nppHandle, WM_CONTEXTMENU, 0, (LPARAM)SuggestionMenuItems);
+      SuggestionMenuItems = 0;
+    }
+    break;
+  case TM_WRITE_SETTING:
+    {
+      WriteSetting (lParam);
+    }
+  default:
+    break;
+  }
+  return TRUE;
+}
+
+void SpellChecker::SetSuggType (int SuggType)
+{
+  SuggestionsMode = SuggType;
+  HideSuggestionBox ();
 }
 
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
@@ -90,6 +165,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
     SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
     SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
+    SettingsDlgInstance->GetSimpleDlg ()->SetSuggType (SuggestionsMode);
     SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
     SettingsDlgInstance->GetAdvancedDlg ()->setConversionOpts (IgnoreYo, ConvertSingleQuotes);
     SettingsDlgInstance->GetAdvancedDlg ()->SetUnderlineSettings (UnderlineColor, UnderlineStyle);
@@ -125,10 +201,16 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_KILLTHREAD:
     return FALSE;
   case EID_INIT_SUGGESTIONS_BOX:
-    InitSuggestionsBox ();
+    if (SuggestionsMode == SUGGESTIONS_BOX)
+      InitSuggestionsBox ();
+    else
+    {
+      /* placeholder */
+    }
     break;
   case EID_SHOW_SUGGESTION_MENU:
-    ShowSuggestionsMenu ();
+    FillSuggestionsMenu (SuggestionsInstance->GetPopupMenu ());
+    SendMessage (SuggestionsInstance->getHSelf (), WM_SHOWANDRECREATEMENU, 0, 0);
     break;
   case EID_HIDE_SUGGESTIONS_BOX:
     HideSuggestionBox ();
@@ -151,9 +233,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_CHECK_FILE_NAME:
     CheckFileName ();
     break;
-  case EID_WRITE_SETTING:
-    WriteSetting ();
-    break;
     /*
     case EID_APPLYMENUACTION:
     ApplyMenuActions ();
@@ -170,14 +249,9 @@ void SpellChecker::ApplyMenuActions ()
 */
 
 // For now just int option, later maybe choose option type in wParam
-void SpellChecker::WriteSetting ()
+void SpellChecker::WriteSetting (LPARAM lParam)
 {
-  MSG Msg;
-  GetMessage (&Msg, 0, 0, 0);
-  if (Msg.message != TM_SET_SETTING)
-    return;
-
-  std::pair<TCHAR *, DWORD> *x = (std::pair<TCHAR *, DWORD> *) Msg.lParam;
+  std::pair<TCHAR *, DWORD> *x = (std::pair<TCHAR *, DWORD> *) lParam;
   SaveToIni (x->first, LOWORD (x->second), HIWORD (x->second));
   CLEAN_AND_ZERO_ARR (x->first);
   CLEAN_AND_ZERO (x);
@@ -1334,7 +1408,6 @@ void SpellChecker::InitSuggestionsBox ()
 {
   if (!AspellLoaded)
     return;
-  long Pos = 0;
   POINT p;
   if (!CheckTextNeeded ()) // If there's no red underline let's do nothing
   {
@@ -1348,17 +1421,18 @@ void SpellChecker::InitSuggestionsBox ()
     return;
   }
 
-  if (GetWordUnderMouseIsRight (Pos, WUCLength))
+  long Pos, Length;
+  if (GetWordUnderMouseIsRight (Pos, Length))
   {
     return;
   }
 
+  WUCLength = Length;
   WUCPosition = Pos;
-  int Line = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, Pos);
+  int Line = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, WUCPosition);
   int TextHeight = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_TEXTHEIGHT, Line);
-  int TextWidth = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_TEXTWIDTH, STYLE_DEFAULT, (LPARAM) "_");
-  int XPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POINTXFROMPOSITION, 0, Pos);
-  int YPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POINTYFROMPOSITION, 0, Pos);
+  int XPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POINTXFROMPOSITION, 0, WUCPosition);
+  int YPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POINTYFROMPOSITION, 0, WUCPosition);
 
   p.x = XPos; p.y = YPos;
   RECT R;
@@ -1368,7 +1442,67 @@ void SpellChecker::InitSuggestionsBox ()
   SuggestionsInstance->display ();
 }
 
-void SpellChecker::ShowSuggestionsMenu ()
+void SpellChecker::ProcessMenuResult (UINT MenuId)
+{
+  OutputDebugString (_T ("Processing Menu Result\n"));
+  if (HIBYTE (MenuId) != DSPELLCHECK_MENU_ID)
+    return;
+  const char *Suggestion = 0;
+  char *AnsiBuf = 0;
+  int Result = LOBYTE (MenuId);
+  AspellStringEnumeration *els = 0;
+
+  if (Result != 0)
+  {
+    if (Result == MID_IGNOREALL)
+    {
+      aspell_speller_add_to_session (SelectedSpeller, SelectedWord, strlen (SelectedWord) + 1);
+      aspell_speller_save_all_word_lists (SelectedSpeller);
+      if (aspell_speller_error(SelectedSpeller) != 0)
+      {
+        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
+      }
+      if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
+        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength , WUCPosition  + WUCLength );
+      RecheckVisible ();
+    }
+    else if (Result == MID_ADDTODICTIONARY)
+    {
+      aspell_speller_add_to_personal(SelectedSpeller, SelectedWord, strlen (SelectedWord) + 1);
+      aspell_speller_save_all_word_lists (SelectedSpeller);
+      if (aspell_speller_error(SelectedSpeller) != 0)
+      {
+        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
+      }
+      if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
+        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
+      RecheckVisible ();
+    }
+    else if ((unsigned int)Result <= aspell_word_list_size (LastList))
+    {
+      els = aspell_word_list_elements(LastList);
+      for (int i = 1; i <= Result; i++)
+      {
+        Suggestion = aspell_string_enumeration_next(els);
+      }
+      if (ConvertingIsNeeded)
+        SetStringSUtf8 (AnsiBuf, Suggestion);
+      else
+        SetString (AnsiBuf, Suggestion);
+      if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
+      {
+        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
+        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETEND, WUCPosition  + WUCLength );
+        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACETARGET, -1, (LPARAM)AnsiBuf);
+        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + strlen (AnsiBuf), WUCPosition  + strlen (AnsiBuf));
+      }
+      else
+        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
+    }
+  }
+}
+
+void SpellChecker::FillSuggestionsMenu (HMENU Menu)
 {
   if (!AspellLoaded)
     return; // Word is already off-screen
@@ -1378,21 +1512,26 @@ void SpellChecker::ShowSuggestionsMenu ()
   Range.chrg.cpMin = WUCPosition;
   Range.chrg.cpMax = WUCPosition + WUCLength;
   Range.lpstrText = new char [WUCLength + 1];
-  PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
+  if (SuggestionsMode == SUGGESTIONS_BOX)
+    PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
+  else
+  {
+    SuggestionMenuItems = new std::vector <SuggestionsMenuItem*>;
+  }
+
   SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
-  char *Utf8Buf = 0;
   char *AnsiBuf = 0;
 
   if (ConvertingIsNeeded)
-    SetStringDUtf8 (Utf8Buf, Range.lpstrText);
+    SetStringDUtf8 (SelectedWord, Range.lpstrText);
   else
-    SetString (Utf8Buf, Range.lpstrText);
+    SetString (SelectedWord, Range.lpstrText);
 
-  const AspellWordList *wl = 0;
-  AspellSpeller *SelectedSpeller = 0;
+  SelectedSpeller = Speller;
+
   if (!MultiLangMode)
   {
-    wl = aspell_speller_suggest (Speller, Utf8Buf, -1);
+    LastList = aspell_speller_suggest (Speller, SelectedWord, -1);
   }
   else
   {
@@ -1402,7 +1541,7 @@ void SpellChecker::ShowSuggestionsMenu ()
     CurWordList = 0;
     for (int i = 0; i < (int) SpellerList.size (); i++)
     {
-      CurWordList = aspell_speller_suggest (SpellerList[i], Utf8Buf, -1);
+      CurWordList = aspell_speller_suggest (SpellerList[i], SelectedWord, -1);
 
       AspellStringEnumeration * els = aspell_word_list_elements(CurWordList);
       Size = aspell_word_list_size (CurWordList);
@@ -1410,7 +1549,7 @@ void SpellChecker::ShowSuggestionsMenu ()
       if (Size > 0)
       {
         const char *FirstSug = aspell_string_enumeration_next(els);
-        if (Utf8GetCharSize (*Utf8Buf) != Utf8GetCharSize (*FirstSug))
+        if (Utf8GetCharSize (*SelectedWord) != Utf8GetCharSize (*FirstSug))
           continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
       }
 
@@ -1418,21 +1557,19 @@ void SpellChecker::ShowSuggestionsMenu ()
       {
         MaxSize = Size;
         SelectedSpeller = SpellerList[i];
-        wl = CurWordList;
+        LastList = CurWordList;
       }
     }
   }
-  if (!wl)
+  if (!LastList)
   {
-    CLEAN_AND_ZERO_ARR (Utf8Buf);
+    CLEAN_AND_ZERO_ARR (SelectedWord);
     return;
   }
 
-  AspellStringEnumeration * els = aspell_word_list_elements(wl);
+  AspellStringEnumeration * els = aspell_word_list_elements(LastList);
   const char *Suggestion;
   TCHAR *Buf = 0;
-  HMENU PopupMenu = SuggestionsInstance->GetPopupMenu ();
-  PopupMenu = SuggestionsInstance->GetPopupMenu ();
   int Counter = 0;
 
   while ((Suggestion = aspell_string_enumeration_next(els)) != 0)
@@ -1440,12 +1577,21 @@ void SpellChecker::ShowSuggestionsMenu ()
     if (Counter >= SuggestionsNum)
       break;
     SetStringSUtf8 (Buf, Suggestion);
-    AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, Counter + 1, Buf);
+    if (SuggestionsMode == SUGGESTIONS_BOX)
+      InsertSuggMenuItem (Menu, Buf, Counter + 1, -1);
+    else
+      SuggestionMenuItems->push_back (new SuggestionsMenuItem (Buf, Counter + 1));
     Counter++;
   }
 
   if (Counter > 0)
-    AppendMenu (PopupMenu, MF_ENABLED | MF_SEPARATOR, 0, _T (""));
+  {
+    if (SuggestionsMode == SUGGESTIONS_BOX)
+      InsertSuggMenuItem (Menu, _T(""), 0, 103, TRUE);
+    else
+      SuggestionMenuItems->push_back (new SuggestionsMenuItem (_T (""), 0, TRUE));
+    Counter++;
+  }
 
   TCHAR *MenuString = new TCHAR [WUCLength + 50 + 1]; // Add "" to dictionary
   if (!ConvertingIsNeeded)
@@ -1453,58 +1599,23 @@ void SpellChecker::ShowSuggestionsMenu ()
   else
     SetString (Buf, Range.lpstrText);
   _stprintf (MenuString, _T ("Ignore \"%s\" for Current Session"), Buf);
-  AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, MID_IGNOREALL, MenuString);
+  if (SuggestionsMode == SUGGESTIONS_BOX)
+    InsertSuggMenuItem (Menu, MenuString, MID_IGNOREALL, -1);
+  else
+    SuggestionMenuItems->push_back (new SuggestionsMenuItem (MenuString, MID_IGNOREALL));
+  Counter++;
   _stprintf (MenuString, _T ("Add \"%s\" to Dictionary"), Buf);
-  AppendMenu (PopupMenu, MF_ENABLED | MF_STRING, MID_ADDTODICTIONARY, MenuString);
-
-  // Here we go doing blocking call for menu, so shouldn't be any desync problems
-  SendMessage (SuggestionsInstance->getHSelf (), WM_SHOWANDRECREATEMENU, 0, 0);
-  WaitForEvent (EID_APPLYMENUACTION);
-  int Result = SuggestionsInstance->GetResult ();
-  if (Result != 0)
-  {
-    if (!MultiLangMode)
-      SelectedSpeller = Speller;
-    if (Result == MID_IGNOREALL)
-    {
-      aspell_speller_add_to_session (SelectedSpeller, Utf8Buf, strlen (Utf8Buf) + 1);
-      aspell_speller_save_all_word_lists (SelectedSpeller);
-      if (aspell_speller_error(SelectedSpeller) != 0)
-      {
-        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
-      }
-      PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos + WUCLength, Pos + WUCLength);
-      RecheckVisible ();
-    }
-    else if (Result == MID_ADDTODICTIONARY)
-    {
-      aspell_speller_add_to_personal(SelectedSpeller, Utf8Buf, strlen (Utf8Buf) + 1);
-      aspell_speller_save_all_word_lists (SelectedSpeller);
-      if (aspell_speller_error(SelectedSpeller) != 0)
-      {
-        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
-      }
-      PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos + WUCLength, Pos + WUCLength);
-      RecheckVisible ();
-    }
-    else if (Result <= Counter)
-    {
-      els = aspell_word_list_elements(wl);
-      for (int i = 1; i <= Result; i++)
-      {
-        Suggestion = aspell_string_enumeration_next(els);
-      }
-      if (ConvertingIsNeeded)
-        SetStringSUtf8 (AnsiBuf, Suggestion);
-      else
-        SetString (AnsiBuf, Suggestion);
-      SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
-    }
-  }
+  if (SuggestionsMode == SUGGESTIONS_BOX)
+    InsertSuggMenuItem (Menu, MenuString, MID_ADDTODICTIONARY, -1);
+  else
+    SuggestionMenuItems->push_back (new SuggestionsMenuItem (MenuString, MID_ADDTODICTIONARY));
+  Counter++;
+  if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
+    SuggestionMenuItems->push_back (new SuggestionsMenuItem (_T (""), 0, TRUE));
   CLEAN_AND_ZERO_ARR (AnsiBuf);
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
   CLEAN_AND_ZERO_ARR (Buf);
-  CLEAN_AND_ZERO_ARR (Utf8Buf);
+
   CLEAN_AND_ZERO_ARR (MenuString);
 }
 
@@ -1562,6 +1673,7 @@ void SpellChecker::SaveSettings ()
   _tfopen_s (&Fp, IniFilePath, _T ("w")); // Cleaning settings file (or creating it)
   fclose (Fp);
   TCHAR *TBuf = 0;
+  SaveToIni (_T ("Suggentions_Control"), SuggestionsMode, 0);
   SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 1);
   SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes, 1);
   SaveToIni (_T ("Check_Only_Comments_And_Strings"), CheckComments, 1);
@@ -1603,6 +1715,7 @@ void SpellChecker::LoadSettings ()
   if (AspellLoaded)
     AspellReinitSettings ();
 
+  LoadFromIni (SuggestionsMode, _T ("Suggentions_Control"), 0);
   LoadFromIni (AutoCheckText, _T ("Autocheck"), 0);
   UpdateAutocheckStatus (0);
   LoadFromIniUtf8 (MultiLanguages, _T ("Multiple_Languages"), "");
@@ -1679,8 +1792,9 @@ char *SpellChecker::GetVisibleText(long *offset)
   Sci_TextRange range;
   GetVisibleLimits (range.chrg.cpMin, range.chrg.cpMax);
 
-  if (range.chrg.cpMax < 0)
+  if (range.chrg.cpMax < 0 || range.chrg.cpMin > range.chrg.cpMax)
     return 0;
+
   char *Buf = new char [range.chrg.cpMax - range.chrg.cpMin + 1]; // + one byte for terminating zero
   range.lpstrText = Buf;
   SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, NULL ,(LPARAM)&range);
@@ -2217,6 +2331,8 @@ void SpellChecker::CheckVisible ()
 {
   CLEAN_AND_ZERO_ARR (VisibleText);
   VisibleText = GetVisibleText (&VisibleTextOffset);
+  if (!VisibleText)
+    return;
   VisibleTextLength = strlen (VisibleText);
   CheckText (VisibleText, VisibleTextOffset, UNDERLINE_ERRORS);
 }

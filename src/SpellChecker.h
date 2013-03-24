@@ -26,6 +26,25 @@ struct AspellWordList;
 class SettingsDlg;
 class LangList;
 class Suggestions;
+struct SuggestionsMenuItem
+{
+  TCHAR *Text;
+  BYTE Id;
+  BOOL Separator;
+  SuggestionsMenuItem (TCHAR *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE)
+  {
+    Text = 0;
+    SetString (Text, TextArg);
+    Id = IdArg;
+    Separator = SeparatorArg;
+  }
+  ~SuggestionsMenuItem ()
+  {
+    CLEAN_AND_ZERO_ARR (Text);
+  };
+};
+
+void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL Separator = FALSE);
 
 class SpellChecker
 {
@@ -34,6 +53,7 @@ public:
     Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg);
   ~SpellChecker ();
   BOOL WINAPI NotifyEvent (DWORD Event);
+  BOOL WINAPI NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam);
   void RecheckVisible ();
   void RecheckModified ();
   void ErrorMsgBox (const TCHAR * message);
@@ -53,6 +73,7 @@ public:
     BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg);
   void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
   void SetBufferSize (int Size, BOOL SaveToIni = 1);
+  void SetSuggType (int SuggType);
 
 private:
   enum CheckTextMode
@@ -87,7 +108,8 @@ private:
   void LoadSettings ();
   void UpdateAutocheckStatus (int SaveSetting = 1);
   void SwitchAutoCheck ();
-  void ShowSuggestionsMenu ();
+  void FillSuggestionsMenu (HMENU Menu);
+  void ProcessMenuResult (UINT MenuId);
   void InitSuggestionsBox ();
   BOOL GetWordUnderMouseIsRight (long &Pos, long &Length);
   void SetSuggestionsBoxTransparency ();
@@ -100,6 +122,7 @@ private:
   void WriteSetting ();
   int GetStyle (int Pos);
   void RefreshUnderlineStyle ();
+  void WriteSetting (LPARAM lParam);
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);
@@ -114,10 +137,12 @@ private:
   BOOL AutoCheckText;
   BOOL AspellLoaded;
   BOOL CheckTextEnabled;
+  BOOL WUCisRight;
   char *Language;
   char *MultiLanguages;
   int MultiLangMode;
   int SuggestionsNum;
+  int SuggestionsMode;
   char *DelimUtf8; // String without special characters but maybe with escape characters (like '\n' and stuff)
   char *DelimUtf8Converted; // String where escape characters are properly converted to corresponding symbols
   char *DelimConverted; // Same but in ANSI encoding
@@ -142,15 +167,19 @@ private:
   HWND CurrentScintilla;
 
   int Lexer;
+  std::vector <SuggestionsMenuItem*> *SuggestionMenuItems;
   _locale_t  utf8_l;
   long ModifiedStart;
   long ModifiedEnd;
-  long WUCPosition; // WUC = Word Under Cursor (Position in global doc coordinates
+  long WUCPosition; // WUC = Word Under Cursor (Position in global doc coordinates),
   long WUCLength;
   long CurrentPosition;
   NppData *NppDataInstance;
   BOOL ConvertingIsNeeded;
   TCHAR *IniFilePath;
+  char *SelectedWord;
+  const AspellWordList *LastList;
+  AspellSpeller *SelectedSpeller; // Speller which was most appropriate for the last word, for that we seek suggestions .
   SettingsDlg *SettingsDlgInstance;
   AspellSpeller *Speller;
   std::vector <AspellSpeller *> SpellerList;

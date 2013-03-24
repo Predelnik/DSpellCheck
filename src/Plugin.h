@@ -82,11 +82,11 @@ typedef enum {
   EID_DEFAULT_DELIMITERS,
   EID_FIND_NEXT_MISTAKE,
   EID_FIND_PREV_MISTAKE,
-  EID_WRITE_SETTING,
   EID_MAX,
 } EventId;
 
 void SendEvent (EventId Event);
+void PostMessageToMainThread (UINT Msg, WPARAM WParam = 0, LPARAM LParam = 0);
 void WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();

@@ -26,13 +26,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define countof(A) sizeof(A)/sizeof((A)[0])
 #define DEFAULT_BUF_SIZE 4096
 
-// Menu IDs
+#define SUGGESTIONS_BOX 0
+#define SUGGESTIONS_CONTEXT_MENU 1
+
+// Global Menu ID
+#define DSPELLCHECK_MENU_ID 193
+
+// Menu item IDs
 #define MID_ADDTODICTIONARY 101
 #define MID_IGNOREALL 102
 
 // Custom WMs (Only for our windows and threads)
 #define WM_SHOWANDRECREATEMENU WM_USER + 1000
 #define TM_MODIFIED_ZONE_INFO  WM_USER + 1001
-#define TM_SET_SETTING         WM_USER + 1002
-#define TM_CONTEXT_MENU        WM_USER + 1003
+#define TM_WRITE_SETTING       WM_USER + 1002
+#define TM_MENU_RESULT         WM_USER + 1004
+#define TM_PRECALCULATE_MENU   WM_USER + 1005
 #endif MAINDEF_H

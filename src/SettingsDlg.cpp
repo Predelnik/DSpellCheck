@@ -177,9 +177,10 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   SpellCheckerInstance->SetCheckThose (Button_GetCheck (HCheckOnlyThose) == BST_CHECKED ? 1 : 0);
   Edit_GetText (HFileTypes, Buf, DEFAULT_BUF_SIZE);
   SpellCheckerInstance->SetFileTypes (Buf);
-  CLEAN_AND_ZERO_ARR (Buf);
+  SpellCheckerInstance->SetSuggType (ComboBox_GetCurSel (HSuggType));
   SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
   SendEvent (EID_FILL_DIALOGS);
+  CLEAN_AND_ZERO_ARR (Buf);
 }
 
 void SimpleDlg::FillAspellInfo (BOOL Status, TCHAR *AspellPath)
@@ -223,6 +224,11 @@ void SimpleDlg::SetFileTypes (BOOL CheckThose, const TCHAR *FileTypes)
   }
 }
 
+void SimpleDlg::SetSuggType (int SuggType)
+{
+  ComboBox_SetCurSel (HSuggType, SuggType);
+}
+
 void SimpleDlg::SetCheckComments (BOOL Value)
 {
   Button_SetCheck (HCheckComments, Value ? BST_CHECKED : BST_UNCHECKED);
@@ -250,7 +256,12 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HFileTypes = ::GetDlgItem (_hSelf, IDC_FILETYPES);
       HCheckComments = ::GetDlgItem (_hSelf, IDC_CHECKCOMMENTS);
       HAspellLink = ::GetDlgItem (_hSelf, IDC_ASPELL_LINK);
+      HSuggType = ::GetDlgItem (_hSelf, IDC_SUGG_TYPE);
+
+      ComboBox_AddString (HSuggType, _T ("Special Suggestion Button"));
+      ComboBox_AddString (HSuggType, _T ("Use N++ Context Menu"));
       DefaultBrush = CreateSolidBrush(GetBkColor (GetDC (_hSelf)));
+
       AspellStatusColor = RGB (0, 0, 0);
       return TRUE;
     }

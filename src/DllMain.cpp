@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "Plugin.h"
 #include "MainDef.h"
+#include "SpellChecker.h"
 
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
@@ -30,6 +31,7 @@ HANDLE HModule;
 int RecheckDelay;
 std::vector<std::pair <long, long> > CheckQueue;
 HANDLE Timer;
+WNDPROC wndProcNotepad = NULL;
 
 int GetRecheckDelay ()
 {
@@ -46,12 +48,11 @@ void SetRecheckDelay (int Value, int WriteToIni)
 
   if (WriteToIni)
   {
-    SendEvent (EID_WRITE_SETTING);
     std::pair <TCHAR *, DWORD> *x = new std::pair <TCHAR *, DWORD>;
     x->first = 0;
     SetString (x->first, _T ("Recheck_Delay"));
     x->second = MAKELPARAM (Value, 500);
-    PostMessageToMainThread (TM_SET_SETTING, 0, (LPARAM) x);
+    PostMessageToMainThread (TM_WRITE_SETTING, 0, (LPARAM) x);
   }
   RecheckDelay = Value;
 }
@@ -71,6 +72,8 @@ BOOL APIENTRY DllMain( HANDLE hModule,
   case DLL_PROCESS_DETACH:
     pluginCleanUp();
     _CrtDumpMemoryLeaks();
+    if (wndProcNotepad != NULL)
+      ::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LONG)wndProcNotepad); // Removing subclassing
     break;
 
   case DLL_THREAD_ATTACH:
@@ -83,10 +86,68 @@ BOOL APIENTRY DllMain( HANDLE hModule,
   return TRUE;
 }
 
+WPARAM LastHwnd  = NULL;
+LPARAM LastCoords = 0;
+std::vector <SuggestionsMenuItem*> *MenuList = NULL;
+// Ok, trying to use window subclassing to handle messages
+LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+  int ret;
+  switch (Message)
+  {
+  case WM_INITMENUPOPUP:
+    {
+      OutputDebugString (_T ("TM_CONTEXT_MENU sent\n"));
+      if (MenuList)
+      {
+        HMENU Menu = (HMENU) wParam;
+        for (unsigned int i = 0; i < MenuList->size (); i++)
+        {
+          InsertSuggMenuItem (Menu, (*MenuList)[i]->Text, (*MenuList)[i]->Id, i, (*MenuList)[i]->Separator);
+          CLEAN_AND_ZERO ((*MenuList)[i]);
+        }
+        CLEAN_AND_ZERO (MenuList);
+      }
+    }
+    break;
+  case WM_COMMAND:
+    if (HIWORD (wParam) == 0)
+    {
+      OutputDebugString (_T ("TM_MENU_RESULT sent\n"));
+      PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
+    }
+    break;
+  case WM_CONTEXTMENU:
+    if (wParam)
+    {
+      LastHwnd = wParam;
+      LastCoords = lParam;
+      PostMessageToMainThread (TM_PRECALCULATE_MENU, wParam, lParam);
+      return TRUE;
+    }
+    else
+    {
+      MenuList = (std::vector <SuggestionsMenuItem*> *) lParam;
+      wParam = LastHwnd;
+      lParam = LastCoords;
+    }
+    break;
+  }
+  /*
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  _itot (Message, Buf, 16);
+  _tcscat (Buf, _T ("\n"));
+  OutputDebugString (Buf);
+  */
+  ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
+  return ret;
+}
+
 extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
   nppData = notpadPlusData;
   commandMenuInit();
+  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNotepad);
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -134,8 +195,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
   // DEBUG_CODE:
   long CurPos = SendMsgToEditor(&nppData, SCI_GETCURRENTPOS);
   int Style = SendMsgToEditor(&nppData, SCI_GETSTYLEAT, CurPos);
-  // _ultot (Style /* notifyCode->nmhdr.code */, Buf, 10);
-  // OutputDebugString (_T ("\n"));
   switch (notifyCode->nmhdr.code)
   {
   case NPPN_SHUTDOWN:

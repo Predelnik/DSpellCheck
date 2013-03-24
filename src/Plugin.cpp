@@ -144,14 +144,24 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
 
   while (bRun)
   {
-    dwWaitResult = WaitForMultipleObjects(EID_MAX, hEvent, FALSE, INFINITE);
+    dwWaitResult = MsgWaitForMultipleObjectsEx (EID_MAX, hEvent, INFINITE, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
     if (dwWaitResult == (unsigned int) - 1)
     {
       SpellCheckerInstance->ErrorMsgBox (_T ("Thread has died"));
       break;
     }
 
-    bRun = SpellCheckerInstance->NotifyEvent(dwWaitResult);
+    if (dwWaitResult == EID_MAX)
+    {
+      MSG Msg;
+      while (PeekMessage (&Msg, 0, 0, 0, PM_REMOVE) && bRun)
+      {
+        OutputDebugString (_T ("Message is being processed\n"));
+        bRun = SpellCheckerInstance->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
+      }
+    }
+    else
+      bRun = SpellCheckerInstance->NotifyEvent(dwWaitResult);
   }
 
   SendEvent (EID_THREADKILLED);
