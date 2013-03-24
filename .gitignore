@@ -14,6 +14,8 @@ cmake_install.cmake
 *.ncb
 DSpellCheck.dir/*
 ZERO_CHECK.dir/*
+src/Hunspell/win_api/Release/*
+src/Hunspell/win_api/Debug/*
 CMakeFiles/*
 Debug/*
 MinSizeRel/*
