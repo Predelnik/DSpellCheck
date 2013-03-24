@@ -97,8 +97,7 @@ void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL S
     mi.fType = MFT_STRING;
     mi.fMask = MIIM_ID | MIIM_TYPE;
     mi.wID = MAKEWORD (Id, DSPELLCHECK_MENU_ID);
-    mi.dwTypeData = 0;
-    SetString (mi.dwTypeData, Text);
+    mi.dwTypeData = Text;
     mi.cch = _tcslen (Text) + 1;
   }
   if (InsertPos == -1)
@@ -1491,13 +1490,15 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
         SetString (AnsiBuf, Suggestion);
       if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
       {
-        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
-        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETEND, WUCPosition  + WUCLength );
-        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACETARGET, -1, (LPARAM)AnsiBuf);
-        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + strlen (AnsiBuf), WUCPosition  + strlen (AnsiBuf));
+        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
+        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETEND, WUCPosition  + WUCLength );
+        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACETARGET, -1, (LPARAM)AnsiBuf);
+        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + strlen (AnsiBuf), WUCPosition  + strlen (AnsiBuf));
       }
       else
         SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
+
+      CLEAN_AND_ZERO_ARR (AnsiBuf);
     }
   }
 }

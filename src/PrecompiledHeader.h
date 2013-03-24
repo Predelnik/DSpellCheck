@@ -16,8 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#include <stdlib.h>
-#include <crtdbg.h>
 #include <windows.h>
 
 #include <string>
@@ -30,9 +28,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <vector>
 #include <tchar.h>
 
+#define _CRTDBG_MAP_ALLOC
 #ifdef _DEBUG
 #ifndef DEBUG_NEW
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #define new DEBUG_NEW
 #endif
 #endif
+#include <stdlib.h>
+#include <crtdbg.h>
