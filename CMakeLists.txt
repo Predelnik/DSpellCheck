@@ -7,6 +7,7 @@ set (BIN_DIR ${PROJECT_SOURCE_DIR})
 configure_file ("${SRC_DIR}/config.h.in" "${SRC_DIR}/config.h")
 include_directories (${SRC_DIR}/Controls) 
 include_directories (${SRC_DIR})
+include_directories (${SRC_DIR}/Hunspell)
 
 # TODO: Add Hunspell Library to cmake project
 set(MSBUILD_PATH "" CACHE STRING "Path to MSBuild.exe to be able to build(rebuild) Hunspell Library")
@@ -69,6 +70,12 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/AboutDlg.cpp
 	${SRC_DIR}/AboutDlg.h
 	${SRC_DIR}/DSpellCheck.rc
+	${SRC_DIR}/AbstractSpellerInterface.cpp
+	${SRC_DIR}/AbstractSpellerInterface.h
+	${SRC_DIR}/AspellInterface.cpp
+	${SRC_DIR}/AspellInterface.h
+	${SRC_DIR}/HunspellInterface.cpp
+	${SRC_DIR}/HunspellInterface.h
 	${SRC_DIR}/Controls/CheckedList/CheckedList.h
 	${SRC_DIR}/Controls/CheckedList/CheckedList.cpp
 	${SRC_DIR}/Controls/StaticDialog/StaticDialog.cpp
@@ -83,6 +90,9 @@ set (list_of_files_DSpellCheck
 
 SET(LINK_LIBRARY shlwapi comctl32)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
+
+target_link_libraries (DSpellCheck debug ${BIN_DIR}/lib/Debug/libhunspell.lib)
+target_link_libraries (DSpellCheck optimized ${BIN_DIR}/lib/Release/libhunspell.lib)
 
 include (PrecompiledHeader.cmake)
 add_precompiled_header(DSpellCheck PrecompiledHeader.h FORCEINCLUDE) 

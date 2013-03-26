@@ -16,26 +16,4 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#include <windows.h>
-
-#include <string>
-#include <string.h>
-#include <algorithm>
-#include <stack>
-#include <cstring>
-#include <time.h>
-#include <shlwapi.h>
-#include <windowsx.h>
-#include <wchar.h>
-#include <vector>
-#include <tchar.h>
-
-#define _CRTDBG_MAP_ALLOC
-#ifdef _DEBUG
-#ifndef DEBUG_NEW
-#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
-#define new DEBUG_NEW
-#endif
-#endif
-#include <stdlib.h>
-#include <crtdbg.h>
+#include "AbstractSpellerInterface.h"

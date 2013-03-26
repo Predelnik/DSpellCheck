@@ -105,6 +105,7 @@ FuncItem *get_funcItem ();
 void SetModifiedZoneShared (long Start, long End);
 void GetModifiedZoneShared (long &Start, long &End);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam);
+void GetDefaultHunspellPath_ (TCHAR *&Path);
 
 // From DllMain, possibly move to DllMain.h
 void SetRecheckDelay (int Value, int WriteToIni = 1);

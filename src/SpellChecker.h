@@ -26,6 +26,10 @@ struct AspellWordList;
 class SettingsDlg;
 class LangList;
 class Suggestions;
+class AbstractSpellerInterface;
+class AspellInterface;
+class HunspellInterface;
+
 struct SuggestionsMenuItem
 {
   TCHAR *Text;
@@ -58,15 +62,18 @@ public:
   void RecheckModified ();
   void ErrorMsgBox (const TCHAR * message);
 
-  void SetLanguage (const char *Str, int SaveToIni = 1);
-  void SetDelimiters (const char *Str, int SaveToIni = 1);
+  void SetHunspellLanguage (const TCHAR *Str);
+  void SetAspellLanguage (const TCHAR *Str);
+  void SetDelimiters (const char *Str);
   void SetSuggestionsNum (int Num);
   void SetAspellPath (const TCHAR *Path);
+  void SetHunspellPath (const TCHAR *Path);
   void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg);
   void SetCheckThose (int CheckThoseArg);
   void SetFileTypes (TCHAR *FileTypesArg);
   void SetCheckComments (BOOL Value);
-  void SetMultipleLanguages (const char *MultiLanguagesArg);
+  void SetHunspellMultipleLanguages (const char *MultiLanguagesArg);
+  void SetAspellMultipleLanguages (const char *MultiLanguagesArg);
   void SetUnderlineColor (int Value);
   void SetUnderlineStyle (int Value);
   void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
@@ -74,6 +81,7 @@ public:
   void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
   void SetBufferSize (int Size, BOOL SaveToIni = 1);
   void SetSuggType (int SuggType);
+  void SetLibMode (int i);
 
 private:
   enum CheckTextMode
@@ -83,6 +91,7 @@ private:
     FIND_LAST = 2
   };
 
+  void ReinitLanguageLists (int SpellerId);
   HWND GetCurrentScintilla ();
   void CreateWordUnderline (HWND ScintillaWindow, int start, int end);
   void RemoveUnderline (HWND ScintillaWindow, int start, int end);
@@ -94,9 +103,10 @@ private:
   void CheckFileName ();
   void UpdateOverridenSuggestionsBox ();
   const char *GetDelimiters ();
-  const char *GetLanguage ();
+  const TCHAR *GetLanguage ();
   BOOL AspellReinitSettings ();
-  BOOL AspellClear ();
+  BOOL HunspellReinitSettings ();
+  void GetDefaultHunspellPath (TCHAR *&Path);
   BOOL CheckWord (char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
   char *GetVisibleText(long *offset);
@@ -135,11 +145,13 @@ private:
 private:
 
   BOOL AutoCheckText;
-  BOOL AspellLoaded;
   BOOL CheckTextEnabled;
   BOOL WUCisRight;
-  char *Language;
-  char *MultiLanguages;
+  TCHAR *HunspellLanguage;
+  TCHAR *HunspellMultiLanguages;
+  TCHAR *AspellLanguage;
+  TCHAR *AspellMultiLanguages;
+  int LibMode; // 0 - Aspell, 1 - Hunspell
   int MultiLangMode;
   int SuggestionsNum;
   int SuggestionsMode;
@@ -148,6 +160,7 @@ private:
   char *DelimConverted; // Same but in ANSI encoding
   TCHAR *FileTypes;
   TCHAR *AspellPath;
+  TCHAR *HunspellPath;
   BOOL IgnoreYo;
   BOOL ConvertSingleQuotes;
   BOOL CheckThose;
@@ -167,7 +180,8 @@ private:
   HWND CurrentScintilla;
 
   int Lexer;
-  std::vector <SuggestionsMenuItem*> *SuggestionMenuItems;
+  std::vector <SuggestionsMenuItem *> *SuggestionMenuItems;
+  std::vector <char *> *LastSuggestions;
   _locale_t  utf8_l;
   long ModifiedStart;
   long ModifiedEnd;
@@ -178,15 +192,15 @@ private:
   BOOL ConvertingIsNeeded;
   TCHAR *IniFilePath;
   char *SelectedWord;
-  const AspellWordList *LastList;
-  AspellSpeller *SelectedSpeller; // Speller which was most appropriate for the last word, for that we seek suggestions .
   SettingsDlg *SettingsDlgInstance;
-  AspellSpeller *Speller;
-  std::vector <AspellSpeller *> SpellerList;
   Suggestions *SuggestionsInstance;
   LangList *LangListInstance;
   char *VisibleText;
   int VisibleTextLength;
   long VisibleTextOffset;
+
+  AbstractSpellerInterface *CurrentSpeller;
+  AspellInterface *AspellSpeller;
+  HunspellInterface *HunspellSpeller;
 };
 #endif // SPELLCHECKER_H

@@ -43,50 +43,23 @@ void SimpleDlg::DisableLanguageCombo (BOOL Disable)
 }
 
 // Called from main thread, beware!
-BOOL SimpleDlg::AddAvalaibleLanguages (const char *CurrentLanguage, const char *MultiLanguages)
+BOOL SimpleDlg::AddAvailableLanguages (std::vector <TCHAR *> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages)
 {
-  AspellConfig* aspCfg;
-  AspellDictInfoList* dlist;
-  AspellDictInfoEnumeration* dels;
-  const AspellDictInfo* entry;
   ComboBox_ResetContent (HComboLanguage);
   ListBox_ResetContent (GetLangList ()->GetListBox ());
 
-  aspCfg = new_aspell_config();
-
-  /* the returned pointer should _not_ need to be deleted */
-  dlist = get_aspell_dict_info_list(aspCfg);
-
-  /* config is no longer needed */
-  delete_aspell_config(aspCfg);
-
-  dels = aspell_dict_info_list_elements(dlist);
-
-  if (aspell_dict_info_enumeration_at_end(dels) == TRUE)
-  {
-    delete_aspell_dict_info_enumeration(dels);
-    return FALSE;
-  }
-
-  UINT uElementCnt= 0;
   int SelectedIndex = 0;
-  int i = 0;
-  while ((entry = aspell_dict_info_enumeration_next(dels)) != 0)
+  unsigned int i = 0;
+  for (i = 0; i < LangsAvailable->size (); i++)
   {
-    // Well since this strings comes in ansi, the simplest way is too call corresponding function
-    // Without using windowsx.h
-    if (strcmp (CurrentLanguage, entry->name) == 0)
+    if (_tcscmp (CurrentLanguage, LangsAvailable->at (i)) == 0)
       SelectedIndex = i;
 
-    i++;
-    TCHAR *TBuf = 0;
-    SetString (TBuf, entry->name);
-    ComboBox_AddString (HComboLanguage, TBuf);
-    ListBox_AddString (GetLangList ()->GetListBox (), TBuf);
-    CLEAN_AND_ZERO_ARR (TBuf);
+    ComboBox_AddString (HComboLanguage, LangsAvailable->at (i));
+    ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i));
   }
 
-  if (strcmp (CurrentLanguage, "<MULTIPLE>") == 0)
+  if (_tcscmp (CurrentLanguage, _T ("<MULTIPLE>")) == 0)
     SelectedIndex = i;
   ComboBox_AddString (HComboLanguage, _T ("Multiple Languages..."));
 
@@ -106,8 +79,8 @@ BOOL SimpleDlg::AddAvalaibleLanguages (const char *CurrentLanguage, const char *
       CheckedListBox_SetCheckState (GetLangList ()->GetListBox (), Index, BST_CHECKED);
     Token = _tcstok_s (NULL, _T ("|"), &Context);
   }
-  delete_aspell_dict_info_enumeration(dels);
   CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
+  CLEAN_AND_ZERO_STRING_VECTOR (LangsAvailable);
   return TRUE;
 }
 
@@ -156,15 +129,21 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 
   if (CurSel == LangCount - 1)
   {
-    SpellCheckerInstance->SetLanguage ("<MULTIPLE>");
+    if (GetSelectedLib ())
+      SpellCheckerInstance->SetHunspellLanguage (_T ("<MULTIPLE>"));
+    else
+      SpellCheckerInstance->SetAspellLanguage (_T ("<MULTIPLE>"));
   }
   else
   {
     TextLen = ComboBox_GetTextLength (HComboLanguage);
     Buf = new TCHAR [TextLen + 1];
     ComboBox_GetText (HComboLanguage, Buf, TextLen + 1);
-    SetStringDUtf8 (Lang, Buf);
-    SpellCheckerInstance->SetLanguage (Lang);
+    if (GetSelectedLib () == 0)
+      SpellCheckerInstance->SetAspellLanguage (Buf);
+    else
+      SpellCheckerInstance->SetHunspellLanguage (Buf);
+      
     CLEAN_AND_ZERO_ARR (Buf);
     CLEAN_AND_ZERO_ARR (Lang);
   }
@@ -172,33 +151,56 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   Buf = new TCHAR[DEFAULT_BUF_SIZE];
   Edit_GetText (HSuggestionsNum, Buf, DEFAULT_BUF_SIZE);
   SpellCheckerInstance->SetSuggestionsNum (_ttoi (Buf));
-  Edit_GetText (HAspellPath, Buf, DEFAULT_BUF_SIZE);
-  SpellCheckerInstance->SetAspellPath (Buf);
+  Edit_GetText (HLibPath, Buf, DEFAULT_BUF_SIZE);
+  if (GetSelectedLib () == 0)
+    SpellCheckerInstance->SetAspellPath (Buf);
+  else
+    SpellCheckerInstance->SetHunspellPath (Buf);
+
   SpellCheckerInstance->SetCheckThose (Button_GetCheck (HCheckOnlyThose) == BST_CHECKED ? 1 : 0);
   Edit_GetText (HFileTypes, Buf, DEFAULT_BUF_SIZE);
   SpellCheckerInstance->SetFileTypes (Buf);
   SpellCheckerInstance->SetSuggType (ComboBox_GetCurSel (HSuggType));
   SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
+  SpellCheckerInstance->SetLibMode (GetSelectedLib ());
   SendEvent (EID_FILL_DIALOGS);
   CLEAN_AND_ZERO_ARR (Buf);
 }
 
-void SimpleDlg::FillAspellInfo (BOOL Status, TCHAR *AspellPath)
+void SimpleDlg::SetLibMode (int LibMode)
 {
-  if (Status)
+  ComboBox_SetCurSel (HLibrary, LibMode);
+}
+
+void SimpleDlg::FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR * HunspellPath)
+{
+  if (GetSelectedLib () == 0)
   {
-    AspellStatusColor = RGB (0, 144, 0);
-    Static_SetText (HAspellStatus, _T ("Aspell Status: OK"));
+    ShowWindow (HAspellStatus, 1);
+    if (Status)
+    {
+      AspellStatusColor = RGB (0, 144, 0);
+      Static_SetText (HAspellStatus, _T ("Aspell Status: OK"));
+    }
+    else
+    {
+      AspellStatusColor = RGB (225, 0, 0);
+      Static_SetText (HAspellStatus, _T ("Aspell Status: Fail"));
+    }
+    TCHAR *Path = 0;
+    GetActualAspellPath (Path, AspellPath);
+    Edit_SetText (HLibPath, Path);
+    Static_SetText (HLibGroupBox, _T ("Aspell Location"));
+    SetWindowText (HLibLink, _T ("<A HREF=\"http://aspell.net/win32/\">Aspell Library and Dictionaries for Win32</A>"));
+    CLEAN_AND_ZERO_ARR (Path);
   }
   else
   {
-    AspellStatusColor = RGB (225, 0, 0);
-    Static_SetText (HAspellStatus, _T ("Aspell Status: Fail"));
+    ShowWindow (HAspellStatus, 0);
+    SetWindowText (HLibLink, _T ("<A HREF=\"http://wiki.openoffice.org/wiki/Dictionaries\">Hunspell Dictionaries</A>"));
+    Static_SetText (HLibGroupBox, _T ("Hunspell Dictionaries Location"));
+    Edit_SetText (HLibPath, HunspellPath);
   }
-  TCHAR *Path = 0;
-  GetActualAspellPath (Path, AspellPath);
-  Edit_SetText (HAspellPath, Path);
-  CLEAN_AND_ZERO_ARR (Path);
 }
 
 void SimpleDlg::FillSugestionsNum (int SuggestionsNum)
@@ -234,6 +236,11 @@ void SimpleDlg::SetCheckComments (BOOL Value)
   Button_SetCheck (HCheckComments, Value ? BST_CHECKED : BST_UNCHECKED);
 }
 
+int SimpleDlg::GetSelectedLib ()
+{
+  return ComboBox_GetCurSel (HLibrary);
+}
+
 BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
   char *LangString = NULL;
@@ -250,13 +257,18 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HComboLanguage = ::GetDlgItem(_hSelf, IDC_COMBO_LANGUAGE);
       HSuggestionsNum = ::GetDlgItem(_hSelf, IDC_SUGGESTIONS_NUM);
       HAspellStatus = ::GetDlgItem (_hSelf, IDC_ASPELL_STATUS);
-      HAspellPath = ::GetDlgItem (_hSelf, IDC_ASPELLPATH);
+      HLibPath = ::GetDlgItem (_hSelf, IDC_ASPELLPATH);
       HCheckNotThose = ::GetDlgItem (_hSelf, IDC_FILETYPES_CHECKNOTTHOSE);
       HCheckOnlyThose = ::GetDlgItem (_hSelf, IDC_FILETYPES_CHECKTHOSE);
       HFileTypes = ::GetDlgItem (_hSelf, IDC_FILETYPES);
       HCheckComments = ::GetDlgItem (_hSelf, IDC_CHECKCOMMENTS);
-      HAspellLink = ::GetDlgItem (_hSelf, IDC_ASPELL_LINK);
+      HLibLink = ::GetDlgItem (_hSelf, IDC_LIB_LINK);
       HSuggType = ::GetDlgItem (_hSelf, IDC_SUGG_TYPE);
+      HLibrary = ::GetDlgItem (_hSelf, IDC_LIBRARY);
+      HLibGroupBox = ::GetDlgItem (_hSelf, IDC_LIB_GROUPBOX);
+
+      ComboBox_AddString (HLibrary, _T ("Aspell"));
+      ComboBox_AddString (HLibrary, _T ("Hunspell"));
 
       ComboBox_AddString (HSuggType, _T ("Special Suggestion Button"));
       ComboBox_AddString (HSuggType, _T ("Use N++ Context Menu"));
@@ -286,6 +298,12 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
           }
         }
         break;
+      case IDC_LIBRARY:
+        if (HIWORD (wParam) == CBN_SELCHANGE)
+        {
+          PostMessageToMainThread (TM_UPDATE_ON_LIB_CHANGE, GetSelectedLib ());
+        }
+        break;
       case IDC_SUGGESTIONS_NUM:
         {
           if (HIWORD (wParam) == EN_CHANGE)
@@ -311,34 +329,44 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
           if (HIWORD (wParam) == BN_CLICKED)
           {
             TCHAR *Path = 0;
-            GetDefaultAspellPath (Path);
-            Edit_SetText (HAspellPath, Path);
+            if (GetSelectedLib () == 0)
+              GetDefaultAspellPath (Path);
+            else
+              GetDefaultHunspellPath_ (Path);
+
+            Edit_SetText (HLibPath, Path);
             CLEAN_AND_ZERO_ARR (Path);
             return TRUE;
           }
         }
         break;
       case IDC_BROWSEASPELLPATH:
-        OPENFILENAME ofn;
-        ZeroMemory(&ofn, sizeof(ofn));
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = _hSelf;
-        TCHAR *Buf = new TCHAR [DEFAULT_BUF_SIZE];
-        Edit_GetText (HAspellPath, Buf, DEFAULT_BUF_SIZE);
-        ofn.lpstrFile = Buf;
-        // Set lpstrFile[0] to '\0' so that GetOpenFileName does not
-        // use the contents of szFile to initialize itself.
-        ofn.lpstrFile[0] = '\0';
-        ofn.nMaxFile = DEFAULT_BUF_SIZE;
-        ofn.lpstrFilter = _T ("Aspell Library (*.dll)\0*.dll\0");
-        ofn.nFilterIndex = 1;
-        ofn.lpstrFileTitle = NULL;
-        ofn.nMaxFileTitle = 0;
-        ofn.lpstrInitialDir = NULL;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-        if (GetOpenFileName(&ofn)==TRUE)
-          Edit_SetText (HAspellPath, ofn.lpstrFile);
-
+        if (GetSelectedLib () == 0)
+        {
+          OPENFILENAME ofn;
+          ZeroMemory(&ofn, sizeof(ofn));
+          ofn.lStructSize = sizeof(ofn);
+          ofn.hwndOwner = _hSelf;
+          TCHAR *Buf = new TCHAR [DEFAULT_BUF_SIZE];
+          Edit_GetText (HLibPath, Buf, DEFAULT_BUF_SIZE);
+          ofn.lpstrFile = Buf;
+          // Set lpstrFile[0] to '\0' so that GetOpenFileName does not
+          // use the contents of szFile to initialize itself.
+          ofn.lpstrFile[0] = '\0';
+          ofn.nMaxFile = DEFAULT_BUF_SIZE;
+          ofn.lpstrFilter = _T ("Aspell Library (*.dll)\0*.dll\0");
+          ofn.nFilterIndex = 1;
+          ofn.lpstrFileTitle = NULL;
+          ofn.nMaxFileTitle = 0;
+          ofn.lpstrInitialDir = NULL;
+          ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+          if (GetOpenFileName(&ofn)==TRUE)
+            Edit_SetText (HLibPath, ofn.lpstrFile);
+        }
+        else
+        {
+          // ... TODO:Use SHBrowseForFolder here
+        }
         break;
       }
     }
@@ -353,7 +381,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
         PNMLINK pNMLink = (PNMLINK)lParam;
         LITEM   item    = pNMLink->item;
 
-        if ((((LPNMHDR)lParam)->hwndFrom == HAspellLink) && (item.iLink == 0))
+        if ((((LPNMHDR)lParam)->hwndFrom == HLibLink) && (item.iLink == 0))
         {
           ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
         }
@@ -691,7 +719,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       SimpleDlgInstance.reSizeTo(rc);
       AdvancedDlgInstance.reSizeTo(rc);
 
-      GetLangList ()->init (_hInst, _hSelf);
+      GetLangList ()->init (_hInst, _hSelf, GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
       GetLangList ()->DoDialog ();
 
       // This stuff is copied from npp source to make tabbed window looked totally nice and white

@@ -41,8 +41,9 @@ void LangList::DoDialog ()
   }
 }
 
-void LangList::init (HINSTANCE hInst, HWND Parent)
+void LangList::init (HINSTANCE hInst, HWND Parent, HWND HLibArg)
 {
+  HLib = HLibArg;
   return Window::init (hInst, Parent);
 }
 
@@ -76,7 +77,10 @@ void LangList::ApplyChoice (SpellChecker *SpellCheckerInstance)
     }
   }
   SetStringDUtf8 (ConvertedBuf, Buf);
-  SpellCheckerInstance->SetMultipleLanguages (ConvertedBuf);
+  if (ComboBox_GetCurSel (HLib))
+    SpellCheckerInstance->SetHunspellMultipleLanguages (ConvertedBuf);
+  else
+    SpellCheckerInstance->SetAspellMultipleLanguages (ConvertedBuf);
   CLEAN_AND_ZERO_ARR (ConvertedBuf);
 }
 
@@ -89,7 +93,7 @@ BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
       HLangList = ::GetDlgItem (_hSelf, IDC_LANGLIST);
       return TRUE;
     }
-	break;
+    break;
   case WM_COMMAND:
     {
       switch (LOWORD (wParam))
@@ -103,7 +107,7 @@ BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
         break;
       }
     }
-	break;
+    break;
   };
   return FALSE;
 }

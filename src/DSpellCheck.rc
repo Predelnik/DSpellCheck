@@ -3,7 +3,7 @@
 // http://www.resedit.net
 
 #include <commctrl.h>
-#include <windows.h>
+#include <winres.h>
 #include "resource.h"
 
 
@@ -49,17 +49,17 @@ IDR_DOWNARROW_PUSH BITMAP         "..\\Resources\\downArrowButton_push.bmp"
 // Dialog resources
 //
 LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
-IDD_ABOUT DIALOGEX 0, 0, 129, 135
+IDD_ABOUT DIALOGEX 0, 0, 129, 153
 STYLE DS_SHELLFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
 CAPTION "About"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 {
-    DEFPUSHBUTTON   "OK", IDOK, 41, 118, 50, 14
+    DEFPUSHBUTTON   "OK", IDOK, 41, 134, 50, 14
     LTEXT           "DSpellCheck", IDC_STATIC, 43, 4, 42, 9, SS_LEFT
     LTEXT           "(Hopefully) Decent Spell-Checking Plug-in  for Notepad++", IDC_STATIC, 7, 22, 115, 19, SS_LEFT
     CONTROL         "Created by: Sergey Semushin <a href=""mailto:predelnik@gmail.com"">[predelnik@gmail.com]</a>", IDC_SYSLINK1, "SysLink", 0x50010000, 7, 50, 119, 21
     LTEXT           "License: GPL", IDC_STATIC, 7, 80, 41, 8, SS_LEFT
-    CONTROL         "Plug-in uses <a href=""http://aspell.net"">Aspell Library</a>", IDC_SYSLINK2, "SysLink", 0x50010000, 7, 98, 105, 10
+    CONTROL         "Plug-in uses <a href=""http://aspell.net"">Aspell Library</a> and <a href=""http://hunspell.sourceforge.net"">Hunspell Library</a>", IDC_SYSLINK2, "SysLink", 0x50010000, 7, 98, 108, 19
 }
 
 
@@ -131,23 +131,25 @@ IDD_SIMPLE DIALOGEX 0, 0, 203, 217
 STYLE DS_SHELLFONT | WS_CHILDWINDOW
 FONT 8, "MS Shell Dlg", 400, 0, 1
 {
-    LTEXT           "Language:", IDC_STATIC, 7, 66, 35, 8, SS_LEFT
-    COMBOBOX        IDC_COMBO_LANGUAGE, 91, 62, 94, 30, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT           "Max Number of Suggestions:", IDC_STATIC, 7, 82, 93, 8, SS_LEFT
-    EDITTEXT        IDC_SUGGESTIONS_NUM, 166, 80, 19, 12, ES_AUTOHSCROLL | ES_NUMBER
-    GROUPBOX        "Path to Aspell Library", IDC_STATIC, 7, 1, 189, 57
-    EDITTEXT        IDC_ASPELLPATH, 13, 12, 155, 12, ES_AUTOHSCROLL, WS_EX_ACCEPTFILES
-    PUSHBUTTON      "...", IDC_BROWSEASPELLPATH, 171, 12, 18, 12
-    PUSHBUTTON      "Reset to Default", IDC_RESETASPELLPATH, 13, 28, 69, 12
-    LTEXT           "Static", IDC_ASPELL_STATUS, 123, 31, 62, 9, SS_LEFT
-    GROUPBOX        "File Types (Separate with semicolon ("";"") )", IDC_STATIC, 7, 97, 183, 40
-    EDITTEXT        IDC_FILETYPES, 14, 120, 167, 12, ES_AUTOHSCROLL
-    AUTORADIOBUTTON "Check only those:", IDC_FILETYPES_CHECKTHOSE, 16, 107, 73, 10
-    AUTORADIOBUTTON "Check only NOT those:", IDC_FILETYPES_CHECKNOTTHOSE, 91, 107, 89, 10
-    CONTROL         "<A HREF=""http://aspell.net/win32/"">Aspell Library and Dictionaries for Win32</A>", IDC_ASPELL_LINK, "SysLink", 0x50010000, 13, 45, 163, 9
-    AUTOCHECKBOX    "Check Only Comments and Strings if Possible", IDC_CHECKCOMMENTS, 7, 142, 156, 10
-    COMBOBOX        IDC_SUGG_TYPE, 90, 160, 98, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS
-    LTEXT           "Suggestions Control:", IDC_STATIC, 8, 162, 75, 9, SS_LEFT
+    LTEXT           "Language:", IDC_STATIC, 1, 84, 35, 8, SS_LEFT
+    COMBOBOX        IDC_COMBO_LANGUAGE, 98, 82, 94, 30, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT           "Max Number of Suggestions:", IDC_STATIC, 1, 102, 93, 8, SS_LEFT
+    EDITTEXT        IDC_SUGGESTIONS_NUM, 173, 100, 19, 12, ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX        "Path to Aspell Library", IDC_LIB_GROUPBOX, 1, 21, 192, 57
+    EDITTEXT        IDC_ASPELLPATH, 13, 32, 155, 12, ES_AUTOHSCROLL, WS_EX_ACCEPTFILES
+    PUSHBUTTON      "...", IDC_BROWSEASPELLPATH, 171, 32, 18, 12
+    PUSHBUTTON      "Reset to Default", IDC_RESETASPELLPATH, 13, 48, 69, 12
+    LTEXT           "Static", IDC_ASPELL_STATUS, 123, 51, 62, 9, SS_LEFT
+    GROUPBOX        "File Types (Separate with semicolon ("";"") )", IDC_STATIC, 1, 117, 191, 40
+    EDITTEXT        IDC_FILETYPES, 14, 140, 167, 12, ES_AUTOHSCROLL
+    AUTORADIOBUTTON "Check only those:", IDC_FILETYPES_CHECKTHOSE, 16, 127, 73, 10
+    AUTORADIOBUTTON "Check only NOT those:", IDC_FILETYPES_CHECKNOTTHOSE, 91, 127, 89, 10
+    CONTROL         "<A HREF=""http://aspell.net/win32/"">Aspell Library and Dictionaries for Win32</A>", IDC_LIB_LINK, "SysLink", 0x50010000, 13, 65, 163, 9
+    AUTOCHECKBOX    "Check Only Comments and Strings if Possible", IDC_CHECKCOMMENTS, 1, 162, 156, 10
+    COMBOBOX        IDC_SUGG_TYPE, 94, 180, 98, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS
+    LTEXT           "Suggestions Control:", IDC_STATIC, 1, 182, 75, 9, SS_LEFT
+    LTEXT           "Library:", IDC_STATIC, 1, 5, 24, 8, SS_LEFT
+    COMBOBOX        IDC_LIBRARY, 40, 2, 63, 15, CBS_DROPDOWNLIST | CBS_HASSTRINGS
 }
 
 

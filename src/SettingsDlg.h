@@ -30,13 +30,15 @@ class SimpleDlg : public StaticDialog
 public:
   __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings (SpellChecker *SpellCheckerInstance);
-  BOOL AddAvalaibleLanguages (const char *CurrentLanguage, const char *MultiLanguages);
+  BOOL AddAvailableLanguages (std::vector<TCHAR *> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages);
   void FillSugestionsNum (int SuggestionsNum);
-  void FillAspellInfo (BOOL Status, TCHAR *AspellPath);
+  void FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR *HunspellPath);
   void DisableLanguageCombo (BOOL Disable);
   void SetFileTypes (BOOL CheckThose, const TCHAR *FileTypes);
   void SetSuggType (int SuggType);
   void SetCheckComments (BOOL Value);
+  int GetSelectedLib ();
+  void SetLibMode (int LibMode);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
@@ -49,7 +51,7 @@ private:
   COLORREF AspellStatusColor;
   HBRUSH DefaultBrush;
   HWND HAspellStatus;
-  HWND HAspellPath;
+  HWND HLibPath;
   HWND HSuggestionsNum;
   HWND HSpinSuggestionsNum;
   HWND HComboLanguage;
@@ -57,8 +59,10 @@ private:
   HWND HCheckOnlyThose;
   HWND HFileTypes;
   HWND HCheckComments;
-  HWND HAspellLink;
+  HWND HLibLink;
   HWND HSuggType;
+  HWND HLibrary;
+  HWND HLibGroupBox;
 };
 
 class AdvancedDlg : public StaticDialog

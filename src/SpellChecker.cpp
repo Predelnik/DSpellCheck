@@ -17,6 +17,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+#include "AbstractSpellerInterface.h"
+#include "AspellInterface.h"
+#include "HunspellInterface.h"
+
 #include "Aspell.h"
 #include "CommonFunctions.h"
 #include "LangList.h"
@@ -29,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&…¹")
+#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&…¹—")
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)
@@ -37,10 +41,11 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   CurrentPosition = 0;
   DelimUtf8 = 0;
   DelimUtf8Converted = 0;
-  Speller = 0;
   IniFilePath = 0;
-  Language = 0;
-  MultiLanguages = 0;
+  AspellLanguage = 0;
+  AspellMultiLanguages = 0;
+  HunspellLanguage = 0;
+  HunspellMultiLanguages = 0;
   VisibleText = 0;
   DelimConverted = 0;
   VisibleTextLength = -1;
@@ -49,11 +54,10 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SuggestionsInstance = SuggestionsInstanceArg;
   NppDataInstance = NppDataInstanceArg;
   LangListInstance = LangListInstanceArg;
-  AspellLoaded = FALSE;
   AutoCheckText = 0;
   MultiLangMode = 0;
-  AspellReinitSettings ();
   AspellPath = 0;
+  HunspellPath = 0;
   FileTypes = 0;
   CheckThose = 0;
   SBTrans = 0;
@@ -66,17 +70,25 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   WUCisRight = TRUE;
   CurrentScintilla = GetScintillaWindow (NppDataInstance);
   SuggestionMenuItems = 0;
+  AspellSpeller = new AspellInterface ();
+  HunspellSpeller = new HunspellInterface ();
+  CurrentSpeller = AspellSpeller;
+  LastSuggestions = 0;
 }
 
 SpellChecker::~SpellChecker ()
 {
-  AspellClear ();
+  CLEAN_AND_ZERO_STRING_VECTOR (LastSuggestions);
+  CLEAN_AND_ZERO (AspellSpeller);
+  CLEAN_AND_ZERO (HunspellSpeller);
   CLEAN_AND_ZERO_ARR (SelectedWord);
   CLEAN_AND_ZERO_ARR (DelimConverted);
   CLEAN_AND_ZERO_ARR (DelimUtf8Converted);
   CLEAN_AND_ZERO_ARR (DelimUtf8);
-  CLEAN_AND_ZERO_ARR (Language);
-  CLEAN_AND_ZERO_ARR (MultiLanguages);
+  CLEAN_AND_ZERO_ARR (AspellLanguage);
+  CLEAN_AND_ZERO_ARR (AspellMultiLanguages);
+  CLEAN_AND_ZERO_ARR (HunspellLanguage);
+  CLEAN_AND_ZERO_ARR (HunspellMultiLanguages);
   CLEAN_AND_ZERO_ARR (IniFilePath);
   CLEAN_AND_ZERO_ARR (AspellPath);
   CLEAN_AND_ZERO_ARR (VisibleText);
@@ -138,6 +150,13 @@ BOOL WINAPI SpellChecker::NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam)
     {
       WriteSetting (lParam);
     }
+    break;
+  case TM_UPDATE_ON_LIB_CHANGE:
+    {
+      ReinitLanguageLists ((int) wParam);
+      SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
+    }
+    break;
   default:
     break;
   }
@@ -150,17 +169,32 @@ void SpellChecker::SetSuggType (int SuggType)
   HideSuggestionBox ();
 }
 
+void SpellChecker::ReinitLanguageLists (int SpellerId)
+{
+  AbstractSpellerInterface *SpellerToUse = (SpellerId == 1 ?
+    (AbstractSpellerInterface *)HunspellSpeller :
+  (AbstractSpellerInterface *)AspellSpeller);
+
+  if (SpellerToUse->IsWorking ())
+  {
+    SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (FALSE);
+    SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (SpellerToUse->GetLanguageList (),
+      SpellerId == 1 ? HunspellLanguage : AspellLanguage,
+      SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages);
+  }
+  else
+    SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
+}
+
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
 {
   CurrentScintilla = GetScintillaWindow (NppDataInstance); // All operations should be done with current scintilla anyway
   switch (Event)
   {
   case  EID_FILL_DIALOGS:
-    if (AspellLoaded)
-      SettingsDlgInstance->GetSimpleDlg ()->AddAvalaibleLanguages (Language, MultiLanguages);
-
-    SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (!AspellLoaded);
-    SettingsDlgInstance->GetSimpleDlg ()->FillAspellInfo (AspellLoaded, AspellPath);
+    ReinitLanguageLists (LibMode);
+    SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
+    SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
     SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
     SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
@@ -1405,7 +1439,7 @@ void SpellChecker::SetSuggestionsBoxTransparency ()
 
 void SpellChecker::InitSuggestionsBox ()
 {
-  if (!AspellLoaded)
+  if (!CurrentSpeller->IsWorking ())
     return;
   POINT p;
   if (!CheckTextNeeded ()) // If there's no red underline let's do nothing
@@ -1446,7 +1480,6 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
   OutputDebugString (_T ("Processing Menu Result\n"));
   if (HIBYTE (MenuId) != DSPELLCHECK_MENU_ID)
     return;
-  const char *Suggestion = 0;
   char *AnsiBuf = 0;
   int Result = LOBYTE (MenuId);
   AspellStringEnumeration *els = 0;
@@ -1455,39 +1488,24 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
   {
     if (Result == MID_IGNOREALL)
     {
-      aspell_speller_add_to_session (SelectedSpeller, SelectedWord, strlen (SelectedWord) + 1);
-      aspell_speller_save_all_word_lists (SelectedSpeller);
-      if (aspell_speller_error(SelectedSpeller) != 0)
-      {
-        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
-      }
+      CurrentSpeller->IgnoreAll (SelectedWord);
       if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
         PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength , WUCPosition  + WUCLength );
       RecheckVisible ();
     }
     else if (Result == MID_ADDTODICTIONARY)
     {
-      aspell_speller_add_to_personal(SelectedSpeller, SelectedWord, strlen (SelectedWord) + 1);
-      aspell_speller_save_all_word_lists (SelectedSpeller);
-      if (aspell_speller_error(SelectedSpeller) != 0)
-      {
-        AspellErrorMsgBox(GetScintillaWindow (NppDataInstance), aspell_speller_error_message(SelectedSpeller));
-      }
+      CurrentSpeller->AddToDictionary (SelectedWord);
       if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
         PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
       RecheckVisible ();
     }
-    else if ((unsigned int)Result <= aspell_word_list_size (LastList))
+    else if ((unsigned int)Result <= LastSuggestions->size ())
     {
-      els = aspell_word_list_elements(LastList);
-      for (int i = 1; i <= Result; i++)
-      {
-        Suggestion = aspell_string_enumeration_next(els);
-      }
       if (ConvertingIsNeeded)
-        SetStringSUtf8 (AnsiBuf, Suggestion);
+        SetStringSUtf8 (AnsiBuf, LastSuggestions->at (Result - 1));
       else
-        SetString (AnsiBuf, Suggestion);
+        SetString (AnsiBuf, LastSuggestions->at (Result - 1));
       if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
       {
         SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
@@ -1505,11 +1523,12 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
 
 void SpellChecker::FillSuggestionsMenu (HMENU Menu)
 {
-  if (!AspellLoaded)
+  if (!CurrentSpeller->IsWorking ())
     return; // Word is already off-screen
 
   int Pos = WUCPosition;
   Sci_TextRange Range;
+  TCHAR *Buf = 0;
   Range.chrg.cpMin = WUCPosition;
   Range.chrg.cpMax = WUCPosition + WUCLength;
   Range.lpstrText = new char [WUCLength + 1];
@@ -1528,70 +1547,28 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   else
     SetString (SelectedWord, Range.lpstrText);
 
-  SelectedSpeller = Speller;
-
-  if (!MultiLangMode)
-  {
-    LastList = aspell_speller_suggest (Speller, SelectedWord, -1);
-  }
-  else
-  {
-    int MaxSize = -1;
-    int Size;
-    // In this mode we're finding maximum by length list from selected languages
-    CurWordList = 0;
-    for (int i = 0; i < (int) SpellerList.size (); i++)
-    {
-      CurWordList = aspell_speller_suggest (SpellerList[i], SelectedWord, -1);
-
-      AspellStringEnumeration * els = aspell_word_list_elements(CurWordList);
-      Size = aspell_word_list_size (CurWordList);
-
-      if (Size > 0)
-      {
-        const char *FirstSug = aspell_string_enumeration_next(els);
-        if (Utf8GetCharSize (*SelectedWord) != Utf8GetCharSize (*FirstSug))
-          continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
-      }
-
-      if (Size > MaxSize)
-      {
-        MaxSize = Size;
-        SelectedSpeller = SpellerList[i];
-        LastList = CurWordList;
-      }
-    }
-  }
-  if (!LastList)
-  {
-    CLEAN_AND_ZERO_ARR (SelectedWord);
+  CLEAN_AND_ZERO_STRING_VECTOR (LastSuggestions);
+  LastSuggestions = CurrentSpeller->GetSuggestions (SelectedWord);
+  if (!LastSuggestions)
     return;
-  }
 
-  AspellStringEnumeration * els = aspell_word_list_elements(LastList);
-  const char *Suggestion;
-  TCHAR *Buf = 0;
-  int Counter = 0;
-
-  while ((Suggestion = aspell_string_enumeration_next(els)) != 0)
+  for (unsigned int i = 0; i < LastSuggestions->size (); i++)
   {
-    if (Counter >= SuggestionsNum)
+    if (i >= (unsigned int) SuggestionsNum)
       break;
-    SetStringSUtf8 (Buf, Suggestion);
+    SetStringSUtf8 (Buf, LastSuggestions->at (i));
     if (SuggestionsMode == SUGGESTIONS_BOX)
-      InsertSuggMenuItem (Menu, Buf, Counter + 1, -1);
+      InsertSuggMenuItem (Menu, Buf, i + 1, -1);
     else
-      SuggestionMenuItems->push_back (new SuggestionsMenuItem (Buf, Counter + 1));
-    Counter++;
+      SuggestionMenuItems->push_back (new SuggestionsMenuItem (Buf, i + 1));
   }
 
-  if (Counter > 0)
+  if (LastSuggestions->size () > 0)
   {
     if (SuggestionsMode == SUGGESTIONS_BOX)
       InsertSuggMenuItem (Menu, _T(""), 0, 103, TRUE);
     else
       SuggestionMenuItems->push_back (new SuggestionsMenuItem (_T (""), 0, TRUE));
-    Counter++;
   }
 
   TCHAR *MenuString = new TCHAR [WUCLength + 50 + 1]; // Add "" to dictionary
@@ -1604,15 +1581,15 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
     InsertSuggMenuItem (Menu, MenuString, MID_IGNOREALL, -1);
   else
     SuggestionMenuItems->push_back (new SuggestionsMenuItem (MenuString, MID_IGNOREALL));
-  Counter++;
   _stprintf (MenuString, _T ("Add \"%s\" to Dictionary"), Buf);
   if (SuggestionsMode == SUGGESTIONS_BOX)
     InsertSuggMenuItem (Menu, MenuString, MID_ADDTODICTIONARY, -1);
   else
     SuggestionMenuItems->push_back (new SuggestionsMenuItem (MenuString, MID_ADDTODICTIONARY));
-  Counter++;
+
   if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
     SuggestionMenuItems->push_back (new SuggestionsMenuItem (_T (""), 0, TRUE));
+
   CLEAN_AND_ZERO_ARR (AnsiBuf);
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
   CLEAN_AND_ZERO_ARR (Buf);
@@ -1636,9 +1613,14 @@ void SpellChecker::SetFileTypes (TCHAR *FileTypesArg)
   SetString (FileTypes, FileTypesArg);
 }
 
-void SpellChecker::SetMultipleLanguages (const char *MultiLanguagesArg)
+void SpellChecker::SetHunspellMultipleLanguages (const char *MultiLanguagesArg)
 {
-  SetString (MultiLanguages, MultiLanguagesArg);
+  SetString (HunspellMultiLanguages, MultiLanguagesArg);
+}
+
+void SpellChecker::SetAspellMultipleLanguages (const char *MultiLanguagesArg)
+{
+  SetString (AspellMultiLanguages, MultiLanguagesArg);
 }
 
 void SpellChecker::RefreshUnderlineStyle ()
@@ -1668,20 +1650,30 @@ void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL 
   IgnoreSEApostrophe = IgnoreSEApostropheArg;
 }
 
+void SpellChecker::GetDefaultHunspellPath (TCHAR *&Path)
+{
+  Path = new TCHAR[MAX_PATH];
+  _tcscpy (Path, IniFilePath);
+  TCHAR *Pointer = _tcsrchr (Path, _T ('\\'));
+  *Pointer = 0;
+  _tcscat (Path, _T ("\\Hunspell"));
+}
+
 void SpellChecker::SaveSettings ()
 {
   FILE *Fp;
   _tfopen_s (&Fp, IniFilePath, _T ("w")); // Cleaning settings file (or creating it)
   fclose (Fp);
   TCHAR *TBuf = 0;
-  SaveToIni (_T ("Suggentions_Control"), SuggestionsMode, 0);
+  SaveToIni (_T ("Suggestions_Control"), SuggestionsMode, 0);
   SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 1);
   SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes, 1);
   SaveToIni (_T ("Check_Only_Comments_And_Strings"), CheckComments, 1);
   SaveToIni (_T ("Autocheck"), AutoCheckText, 0);
   SaveToIni (_T ("Check_Those_\\_Not_Those"), CheckThose, 1);
   SaveToIni (_T ("File_Types"), FileTypes, _T ("*.*"));
-  SaveToIniUtf8 (_T ("Multiple_Languages"), MultiLanguages, "");
+  SaveToIni (_T ("Hunspell_Multiple_Languages"), HunspellMultiLanguages, _T (""));
+  SaveToIni (_T ("Aspell_Multiple_Languages"), AspellMultiLanguages, _T (""));
   SaveToIni (_T ("Ignore_Having_Number"), IgnoreNumbers, 1);
   SaveToIni (_T ("Ignore_Start_Capital"), IgnoreCStart, 0);
   SaveToIni (_T ("Ignore_Have_Capital"), IgnoreCHave, 1);
@@ -1694,6 +1686,9 @@ void SpellChecker::SaveSettings ()
   GetDefaultAspellPath (Path);
   SaveToIni (_T ("Aspell_Path"), AspellPath, Path);
   CLEAN_AND_ZERO_ARR (Path);
+  GetDefaultHunspellPath (Path);
+  SaveToIni (_T ("Hunspell_Path"), HunspellPath, Path);
+  CLEAN_AND_ZERO_ARR (Path);
   SaveToIni (_T ("Suggestions_Number"), SuggestionsNum, 5);
   char *DefaultDelimUtf8 = 0;
   SetStringDUtf8 (DefaultDelimUtf8, DEFAULT_DELIMITERS);
@@ -1702,29 +1697,45 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Find_Next_Buffer_Size"), BufferSize / 1024, 4);
   SaveToIni (_T ("Suggestions_Button_Size"), SBSize, 15);
   SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans, 70);
-  SaveToIniUtf8 (_T ("Language"), Language, "en");
+  SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en-US"));
+  SaveToIni (_T ("Aspell_Language"), AspellLanguage, _T ("en"));
+  SaveToIni (_T ("Library"), LibMode, 1);
+}
+
+void SpellChecker::SetLibMode (int i)
+{
+  LibMode = i;
+  if (i == 0)
+    CurrentSpeller = AspellSpeller;
+  else
+    CurrentSpeller = HunspellSpeller;
 }
 
 void SpellChecker::LoadSettings ()
 {
   char *BufUtf8 = 0;
   TCHAR *Path = 0;
+  TCHAR *TBuf = 0;
   GetDefaultAspellPath (Path);
   LoadFromIni (AspellPath, _T ("Aspell_Path"), Path);
   CLEAN_AND_ZERO_ARR (Path);
-  AspellLoaded = LoadAspell (AspellPath);
-  if (AspellLoaded)
-    AspellReinitSettings ();
+  GetDefaultHunspellPath (Path);
+  LoadFromIni (HunspellPath, _T ("Hunspell_Path"), Path);
+  CLEAN_AND_ZERO_ARR (Path);
 
-  LoadFromIni (SuggestionsMode, _T ("Suggentions_Control"), 0);
+  LoadFromIni (SuggestionsMode, _T ("Suggestions_Control"), 0);
   LoadFromIni (AutoCheckText, _T ("Autocheck"), 0);
   UpdateAutocheckStatus (0);
-  LoadFromIniUtf8 (MultiLanguages, _T ("Multiple_Languages"), "");
-  LoadFromIniUtf8 (BufUtf8, _T ("Language"), "en");
-  SetLanguage (BufUtf8, 0);
+  LoadFromIni (AspellMultiLanguages, _T ("Aspell_Multiple_Languages"), _T (""));
+  LoadFromIni (HunspellMultiLanguages, _T ("Hunspell_Multiple_Languages"), _T (""));
+  LoadFromIni (TBuf, _T ("Aspell_Language"), _T ("en"));
+  SetAspellLanguage (TBuf);
+  LoadFromIni (TBuf, _T ("Hunspell_Language"), _T ("en.US"));
+  SetHunspellLanguage (TBuf);
+
   SetStringDUtf8 (BufUtf8, DEFAULT_DELIMITERS);
   LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), BufUtf8, TRUE);
-  SetDelimiters (BufUtf8, 0);
+  SetDelimiters (BufUtf8);
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
   LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 1);
   LoadFromIni (ConvertSingleQuotes, _T ("Convert_Single_Quotes_To_Apostrophe"), 1);
@@ -1739,6 +1750,9 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (IgnoreCAll, _T ("Ignore_All_Capital"), 1);
   LoadFromIni (Ignore_, _T ("Ignore_With_"), 1);
   LoadFromIni (IgnoreSEApostrophe, _T ("Ignore_That_Start_or_End_with_'"), 1);
+  int i;
+  LoadFromIni (i, _T ("Library"), 1);
+  SetLibMode (i);
   int Size, Trans;
   LoadFromIni (Size, _T ("Suggestions_Button_Size"), 15);
   LoadFromIni (Trans, _T ("Suggestions_Button_Opacity"), 70);
@@ -1746,6 +1760,8 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (Size, _T ("Find_Next_Buffer_Size"), 4);
   SetBufferSize (Size, 0);
   RefreshUnderlineStyle ();
+  AspellReinitSettings ();
+  HunspellReinitSettings ();
   CLEAN_AND_ZERO_ARR (BufUtf8);
 }
 
@@ -1816,7 +1832,10 @@ void SpellChecker::ClearAllUnderlines ()
 
 void SpellChecker::Cleanup()
 {
-  CLEAN_AND_ZERO_ARR (Language);
+  CLEAN_AND_ZERO_ARR (AspellLanguage);
+  CLEAN_AND_ZERO_ARR (HunspellLanguage);
+  CLEAN_AND_ZERO_ARR (AspellMultiLanguages);
+  CLEAN_AND_ZERO_ARR (HunspellMultiLanguages);
   CLEAN_AND_ZERO_ARR (DelimUtf8);
   CLEAN_AND_ZERO_ARR (DelimUtf8Converted);
   CLEAN_AND_ZERO_ARR (DelimConverted);
@@ -1826,9 +1845,13 @@ void SpellChecker::Cleanup()
 void SpellChecker::SetAspellPath (const TCHAR *Path)
 {
   SetString (AspellPath, Path);
-  AspellLoaded = LoadAspell (AspellPath);
-  if (AspellLoaded)
-    AspellReinitSettings ();
+  AspellReinitSettings ();
+}
+
+void SpellChecker::SetHunspellPath (const TCHAR *Path)
+{
+  SetString (HunspellPath, Path);
+  HunspellReinitSettings ();
 }
 
 void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR *DefaultValue, BOOL InQuotes)
@@ -1917,18 +1940,36 @@ void SpellChecker::LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char 
 }
 
 // Here parameter is in ANSI (may as well be utf-8 cause only english I guess)
-void SpellChecker::SetLanguage (const char *Str, int SaveToIni)
+void SpellChecker::SetAspellLanguage (const TCHAR *Str)
 {
-  if (strcmp (Str, "<MULTIPLE>") == 0)
-    MultiLangMode = 1;
+  SetString (AspellLanguage, Str);
+
+  if (_tcscmp (Str, _T ("<MULTIPLE>")) == 0)
+    AspellSpeller->SetMode (1);
   else
   {
-    MultiLangMode = 0;
+    TCHAR *TBuf = 0;
+    SetString (TBuf, Str);
+    AspellSpeller->SetLanguage (TBuf);
+    CLEAN_AND_ZERO_ARR (TBuf);
+    CurrentSpeller->SetMode (0);
   }
+}
 
-  SetString (Language, Str);
+void SpellChecker::SetHunspellLanguage (const TCHAR *Str)
+{
+  SetString (HunspellLanguage, Str);
 
-  AspellReinitSettings ();
+  if (_tcscmp (Str, _T ("<MULTIPLE>")) == 0)
+    HunspellSpeller->SetMode (1);
+  else
+  {
+    TCHAR *TBuf = 0;
+    SetString (TBuf, Str);
+    HunspellSpeller->SetLanguage (TBuf);
+    CLEAN_AND_ZERO_ARR (TBuf);
+    HunspellSpeller->SetMode (0);
+  }
 }
 
 const char *SpellChecker::GetDelimiters ()
@@ -1941,8 +1982,8 @@ void SpellChecker::SetSuggestionsNum (int Num)
   SuggestionsNum = Num;
 }
 
-// Here parameter is in utf-8
-void SpellChecker::SetDelimiters (const char *Str, int SaveToIni)
+// Here parameter is in UTF-8
+void SpellChecker::SetDelimiters (const char *Str)
 {
   TCHAR *DestBuf = 0;
   TCHAR *SrcBuf = 0;
@@ -1960,87 +2001,61 @@ void SpellChecker::SetDelimiters (const char *Str, int SaveToIni)
   CLEAN_AND_ZERO_ARR (TargetBuf);
 }
 
-const char *SpellChecker::GetLanguage ()
+BOOL SpellChecker::HunspellReinitSettings ()
 {
-  return Language;
+  TCHAR *TBuf = 0;
+  HunspellSpeller->SetDirectory (HunspellPath);
+  if (_tcscmp (HunspellLanguage, _T ("<MULTIPLE>")) != 0)
+  {
+    SetString (TBuf, HunspellLanguage);
+    HunspellSpeller->SetLanguage (TBuf);
+  }
+  std::vector<TCHAR *> *MultiLangList = new std::vector<TCHAR *>;
+  char *Context = 0;
+  char *Token = 0;
+  char *MultiLanguagesCopy = 0;
+  SetString (MultiLanguagesCopy, HunspellMultiLanguages);
+  Token = strtok_s (MultiLanguagesCopy, "|", &Context);
+  while (Token)
+  {
+    TBuf = 0;
+    SetString (TBuf, Token);
+    MultiLangList->push_back (TBuf);
+    Token = strtok_s (NULL, "|", &Context);
+  }
+  HunspellSpeller->SetMultipleLanguages (MultiLangList);
+  CLEAN_AND_ZERO_STRING_VECTOR (MultiLangList);
+
+  CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
+  return TRUE;
 }
 
 BOOL SpellChecker::AspellReinitSettings ()
 {
-  if (!AspellLoaded)
-    return FALSE;
-
-  if (MultiLangMode)
+  TCHAR *TBuf = 0;
+  AspellSpeller->Init (AspellPath);
+  if (_tcscmp (AspellLanguage, _T ("<MULTIPLE>")) != 0)
   {
-    if (!MultiLanguages)
-    {
-      AspellLoaded = FALSE;
-      return FALSE;
-    }
-
-    char *Token = 0;
-    char *MultiLanguagesCopy = 0;
-    char *Context = 0;
-    SetString (MultiLanguagesCopy, MultiLanguages);
-    Token = strtok_s (MultiLanguagesCopy, "|", &Context);
-    for (int i = 0; i < (int) SpellerList.size (); i++)
-      delete_aspell_speller (SpellerList[i]);
-
-    SpellerList.clear ();
-    while (Token)
-    {
-      AspellConfig *spell_config = new_aspell_config();
-      aspell_config_replace (spell_config, "encoding", "utf-8");
-      aspell_config_replace(spell_config, "lang", Token);
-      AspellCanHaveError * possible_err = new_aspell_speller(spell_config);
-      if (aspell_error_number(possible_err) == 0)
-      {
-        SpellerList.push_back (to_aspell_speller(possible_err));
-      }
-      Token = strtok_s (NULL, "|", &Context);
-      delete_aspell_config (spell_config);
-    }
-    CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
-    return TRUE;
+    SetString (TBuf, AspellLanguage);
+    AspellSpeller->SetLanguage (TBuf);
   }
-
-  AspellConfig *spell_config = new_aspell_config();
-  aspell_config_replace (spell_config, "encoding", "utf-8");
-  if (!MultiLangMode && Language && *Language)
-    aspell_config_replace(spell_config, "lang", Language);
-  if (Speller)
+  std::vector<TCHAR *> *MultiLangList = new std::vector<TCHAR *>;
+  char *Context = 0;
+  char *Token = 0;
+  char *MultiLanguagesCopy = 0;
+  SetString (MultiLanguagesCopy, AspellMultiLanguages);
+  Token = strtok_s (MultiLanguagesCopy, "|", &Context);
+  while (Token)
   {
-    delete_aspell_speller (Speller);
-    Speller = 0;
+    TBuf = 0;
+    SetString (TBuf, Token);
+    MultiLangList->push_back (TBuf);
+    Token = strtok_s (NULL, "|", &Context);
   }
+  AspellSpeller->SetMultipleLanguages (MultiLangList);
+  CLEAN_AND_ZERO_STRING_VECTOR (MultiLangList);
 
-  AspellCanHaveError * possible_err = new_aspell_speller(spell_config);
-
-  if (aspell_error_number(possible_err) != 0)
-  {
-    delete_aspell_config (spell_config);
-    if (!Language || strcmp (Language, "en") != 0)
-    {
-      SetLanguage ("en", 1);
-      return AspellReinitSettings ();
-    }
-    AspellLoaded = FALSE;
-    return FALSE;
-  }
-  else
-    Speller = to_aspell_speller(possible_err);
-  delete_aspell_config (spell_config);
-  return TRUE;
-}
-
-BOOL SpellChecker::AspellClear ()
-{
-  if (!AspellLoaded)
-    return FALSE;
-
-  for (unsigned int i = 0; i < SpellerList.size (); i++)
-    delete_aspell_speller (SpellerList[i]);
-  delete_aspell_speller (Speller);
+  CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
   return TRUE;
 }
 
@@ -2080,7 +2095,7 @@ static const char PunctuationApostrophe[] = "\xe2\x80\x99";
 BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 {
   BOOL res = FALSE;
-  if (!AspellLoaded)
+  if (!CurrentSpeller->IsWorking ())
     return TRUE;
   // Well Numbers have same codes for ansi and unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
@@ -2194,17 +2209,7 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     }
   }
 
-  if (!MultiLangMode)
-  {
-    res = aspell_speller_check(Speller, Utf8Buf, Len);
-  }
-  else
-  {
-    for (int i = 0; i < (int )SpellerList.size () && !res; i++)
-    {
-      res = res || aspell_speller_check(SpellerList[i], Utf8Buf, Len);
-    }
-  }
+  res = CurrentSpeller->CheckWord (Utf8Buf);
 
 CleanUp:
   if (ConvertingIsNeeded)
@@ -2378,7 +2383,7 @@ void SpellChecker::SwitchAutoCheck ()
 
 void SpellChecker::RecheckModified ()
 {
-  if (!AspellLoaded)
+  if (!CurrentSpeller->IsWorking ())
   {
     ClearAllUnderlines ();
     return;
@@ -2413,7 +2418,7 @@ void SpellChecker::SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuote
 void SpellChecker::RecheckVisible ()
 {
   int CodepageId = 0;
-  if (!AspellLoaded)
+  if (!CurrentSpeller->IsWorking ())
   {
     ClearAllUnderlines ();
     return;

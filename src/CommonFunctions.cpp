@@ -394,3 +394,8 @@ char * Utf8strtok (char *s1, const char *Delimit, char **Context)
 
   return s1;
 }
+
+bool SortCompare(TCHAR *a, TCHAR *b)
+{
+  return _tcscmp(a, b) < 0;
+}

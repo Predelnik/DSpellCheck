@@ -13,6 +13,7 @@
 #define IDR_CLOSETAB_HOVER                      1001
 #define IDC_SUGG_TYPE                           1002
 #define IDR_CLOSETAB_PUSH                       1002
+#define IDC_LIBRARY                             1003
 #define IDR_CLOSETAB                            1003
 #define IDC_DEFAULT_DELIMITERS                  1004
 #define IDR_CLOSETAB_INACT                      1004
@@ -36,7 +37,6 @@
 #define IDC_IGNORE_CSTART                       1020
 #define IDC_IGNORE_CHAVE                        1021
 #define IDC_COUNT_SINGLE_QUOTES_AS_APOSTROPHE   1022
-#define IDC_ASPELL_LINK                         1023
 #define IDC_SYSLINK1                            1023
 #define IDC_UNDERLINE_COLOR                     1024
 #define IDC_UNDERLINE_STYLE                     1025
@@ -48,3 +48,5 @@
 #define IDC_IGNORE_CALL                         1037
 #define IDC_SYSLINK2                            1038
 #define IDC_IGNORE_SE_APOSTROPHE                1039
+#define IDC_LIB_LINK                            1039
+#define IDC_LIB_GROUPBOX                        1040

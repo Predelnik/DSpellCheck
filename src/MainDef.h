@@ -23,6 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define SCE_ERROR_UNDERLINE INDIC_CONTAINER + 1
 #define CLEAN_AND_ZERO(x) do { if (x) {delete x; x = 0; }  } while (0);
 #define CLEAN_AND_ZERO_ARR(x) do { if (x) {delete[] x; x = 0; }  } while (0);
+#define CLEAN_AND_ZERO_STRING_VECTOR(x) do { if (x) {for (unsigned int i = 0; i < x->size (); i++) {delete[] x->at(i);} delete x; x = 0; }  } while (0);
+#define CLEAN_AND_ZERO_POINTER_VECTOR(x) do { if (x) {for (unsigned int i = 0; i < x->size (); i++) {delete x->at(i);} delete x; x = 0; }  } while (0);
+#define CLEAN_AND_ZERO_STRING_STACK(x) do { if (x) {while (x->size () > 0) {delete[] (x->top());x->pop ();} delete x; x = 0; }  } while (0);
 #define countof(A) sizeof(A)/sizeof((A)[0])
 #define DEFAULT_BUF_SIZE 4096
 
@@ -37,9 +40,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MID_IGNOREALL 102
 
 // Custom WMs (Only for our windows and threads)
-#define WM_SHOWANDRECREATEMENU WM_USER + 1000
-#define TM_MODIFIED_ZONE_INFO  WM_USER + 1001
-#define TM_WRITE_SETTING       WM_USER + 1002
-#define TM_MENU_RESULT         WM_USER + 1004
-#define TM_PRECALCULATE_MENU   WM_USER + 1005
+#define WM_SHOWANDRECREATEMENU  WM_USER + 1000
+#define TM_MODIFIED_ZONE_INFO   WM_USER + 1001
+#define TM_WRITE_SETTING        WM_USER + 1002
+#define TM_UPDATE_ON_LIB_CHANGE WM_USER + 1003
+#define TM_MENU_RESULT          WM_USER + 1004
+#define TM_PRECALCULATE_MENU    WM_USER + 1005
 #endif MAINDEF_H

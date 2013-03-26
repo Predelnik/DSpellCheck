@@ -196,7 +196,7 @@ void GetActualAspellPath (TCHAR *&Path, TCHAR *&PathArg)
   }
 }
 
-BOOL LoadAspell(TCHAR *PathArg)
+BOOL LoadAspell (TCHAR *PathArg)
 {
   TCHAR *Path = 0;
   GetActualAspellPath (Path, PathArg);

@@ -112,6 +112,15 @@ return CallNextHookEx(HCmHook, nCode, wParam, lParam);
 }
 */
 
+void GetDefaultHunspellPath_ (TCHAR *&Path)
+{
+  Path = new TCHAR[MAX_PATH];
+  _tcscpy (Path, IniFilePath);
+  TCHAR *Pointer = _tcsrchr (Path, _T ('\\'));
+  *Pointer = 0;
+  _tcscat (Path, _T ("\\Hunspell"));
+}
+
 void pluginInit(HANDLE hModuleArg)
 {
   hModule = hModuleArg;

@@ -17,20 +17,26 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "StaticDialog/StaticDialog.h"
-
-class SpellChecker;
-
-class LangList : public StaticDialog
+#ifndef ABSTRACTSPELLERINTERFACE_H
+#define ABSTRACTSPELLERINTERFACE_H
+class AbstractSpellerInterface
 {
+private:
+protected:
 public:
-  void init (HINSTANCE hInst, HWND Parent, HWND HLibArg);
-  void DoDialog ();
-  HWND GetListBox ();
-  void ApplyChoice (SpellChecker *SpellCheckerInstance);
+  virtual std::vector<TCHAR*> *GetLanguageList () = 0;
+  virtual void SetLanguage (TCHAR *Lang) = 0;
+  virtual void SetMultipleLanguages (std::vector<TCHAR *> *List) = 0; // Languages are from LangList
+  virtual void SetMode (int Multi) { MultiMode = Multi; }                         // Multi - 1, Single - 0
+  virtual BOOL CheckWord (char *Word) = 0;                         // Word in Utf-8 or ANSI (For now only Utf-8)
+  virtual std::vector<char *> *GetSuggestions (char *Word) = 0;
+  virtual void AddToDictionary (char *Word) = 0;
+  virtual void IgnoreAll (char *Word) = 0;
+  virtual BOOL IsWorking () = 0;
+
+private:
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
-protected:
-  HWND HLangList;
-  HWND HLib;
+  int MultiMode;
+public:
 };
+#endif // ABSTRACTSPELLERINTERFACE_H
