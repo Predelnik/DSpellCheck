@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #include <windows.h>
 
+#include <map>
 #include <string>
 #include <string.h>
 #include <algorithm>
@@ -29,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <wchar.h>
 #include <vector>
 #include <tchar.h>
+#include <Shlobj.h>
 
 #define _CRTDBG_MAP_ALLOC
 #ifdef _DEBUG

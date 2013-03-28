@@ -133,6 +133,7 @@ private:
   int GetStyle (int Pos);
   void RefreshUnderlineStyle ();
   void WriteSetting (LPARAM lParam);
+  void ApplyConversions (char *Word);
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);

@@ -1,5 +1,4 @@
-- Probably rewrite hook through subclassing
 - Probably let conversion settings to affect adding words to dictionary as well.
-- Override right-click or create suggestion box (window subclass way)
-- (Now it would be too much fuss, almost denied) Possibly check if ANSI encoding file exist then do no conversion, the real hardship here is to determine correct encoding name for Aspell.
-- Well about Hunspell: Looks like some users on forum want Hunspell dictionaries so I will add it as static perhaps. 
+- Fix Hunspell bug with capital letters.
+- Make Hunspell reloading as less times as possible.
+- Add custom ignore words for Hunspell (sorted vector)

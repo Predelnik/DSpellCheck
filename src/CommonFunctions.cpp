@@ -373,6 +373,8 @@ char * Utf8strtok (char *s1, const char *Delimit, char **Context)
     s1 = *Context;
     if (s1 == NULL)         /* End of story? */
       return NULL;
+    else
+      s1 += Utf8spn (s1, Delimit);
   } else {
     s1 += Utf8spn (s1, Delimit);
   }
@@ -382,11 +384,14 @@ char * Utf8strtok (char *s1, const char *Delimit, char **Context)
   if (tmp) {
     /* Found another delimiter, split string and save state. */
     *tmp = '\0';
-    while (!Utf8IsLead (*(++tmp)))
+    tmp++;
+    while (!Utf8IsLead (*(tmp)))
+    {
       *tmp = '\0';
-    tmp--;
+      tmp++;
+    }
 
-    *Context = tmp + 1;
+    *Context = tmp;
   } else {
     /* Last segment, remember that. */
     *Context = NULL;

@@ -1,4 +1,4 @@
-/*
+#/*
 This file is part of DSpellCheck Plug-in for Notepad++
 Copyright (C)2013 Sergey Semushin <Predelnik@gmail.com>
 
@@ -21,7 +21,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "AbstractSpellerInterface.h"
 
+#ifndef USING_STATIC_LIBICONV
+#define USING_STATIC_LIBICONV
+#endif // !USING_STATIC_LIBICONV
+
+#include "iconv.h"
+#include "MainDef.h"
+
 class Hunspell;
+
+struct DicInfo
+{
+  Hunspell *Speller;
+  iconv_t Converter;
+  iconv_t BackConverter;
+};
 
 class HunspellInterface : public AbstractSpellerInterface
 {
@@ -39,13 +53,19 @@ public:
 
   void SetDirectory (TCHAR *Dir);
 private:
-  Hunspell *CreateHunspell (const TCHAR *Name);
+  DicInfo CreateHunspell (TCHAR *Name);
 public:
 private:
+  BOOL IsHunspellWorking;
+  BOOL SpellerCheckWord (DicInfo Dic, char *Word);
   TCHAR *DicDir;
   std::vector <TCHAR *> *DicList;
-  Hunspell *SingularSpeller;
-  Hunspell *LastSelectedSpeller;
-  std::vector <Hunspell *> *Spellers;
+  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)> *AllHunspells;
+  char *GetConvertedWord (const char *Source, iconv_t Converter);
+  DicInfo SingularSpeller;
+  DicInfo LastSelectedSpeller;
+  DicInfo Empty;
+  std::vector <DicInfo> *Spellers;
+  char *TemporaryBuffer;
 };
 #endif // HUNSPELLINTERFACE_H

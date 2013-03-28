@@ -8,14 +8,20 @@ configure_file ("${SRC_DIR}/config.h.in" "${SRC_DIR}/config.h")
 include_directories (${SRC_DIR}/Controls) 
 include_directories (${SRC_DIR})
 include_directories (${SRC_DIR}/Hunspell)
+include_directories (${SRC_DIR}/libiconv/include)
 
-# TODO: Add Hunspell Library to cmake project
+# TODO: Add Hunspell and iconv Libraries to cmake project
 set(MSBUILD_PATH "" CACHE STRING "Path to MSBuild.exe to be able to build(rebuild) Hunspell Library")
 if (DEFINED MSBUILD_PATH)
-execute_process(COMMAND ${MSBUILD_PATH} ${SRC_DIR}/Hunspell/win_api/Hunspell.sln /p:Configuration=Release /t:libhunspell RESULT_VARIABLE rv)
-execute_process(COMMAND ${MSBUILD_PATH} ${SRC_DIR}/Hunspell/win_api/Hunspell.sln /p:Configuration=Debug /t:libhunspell RESULT_VARIABLE rv)
-file (COPY ${SRC_DIR}/Hunspell/win_api/Release/libhunspell/libhunspell.lib DESTINATION ${BIN_DIR}/lib/Release/)
+execute_process(COMMAND ${MSBUILD_PATH} ${SRC_DIR}/Hunspell/win_api/Hunspell.sln /p:Configuration=Release)
+execute_process(COMMAND ${MSBUILD_PATH} ${SRC_DIR}/Hunspell/win_api/Hunspell.sln /p:Configuration=Debug)
 file (COPY ${SRC_DIR}/Hunspell/win_api/Debug/libhunspell/libhunspell.lib DESTINATION ${BIN_DIR}/lib/Debug/)
+file (COPY ${SRC_DIR}/Hunspell/win_api/Release/libhunspell/libhunspell.lib DESTINATION ${BIN_DIR}/lib/Release/)
+
+execute_process(COMMAND ${MSBUILD_PATH} ${SRC_DIR}/libiconv/LibIconv.sln /p:Configuration=ReleaseStatic)
+execute_process(COMMAND ${MSBUILD_PATH} ${SRC_DIR}/libiconv/LibIconv.sln /p:Configuration=DebugStatic)
+file (COPY ${SRC_DIR}/libiconv/DebugStatic_Win32/libiconvStaticD.lib DESTINATION ${BIN_DIR}/lib/Debug/)
+file (COPY ${SRC_DIR}/libiconv/ReleaseStatic_Win32/libiconvStatic.lib DESTINATION ${BIN_DIR}/lib/Release/)
 endif (DEFINED MSBUILD_PATH)
 
 set (GENERIC_OUTPUT_DIR, ${BIN_DIR})
@@ -92,7 +98,9 @@ SET(LINK_LIBRARY shlwapi comctl32)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
 
 target_link_libraries (DSpellCheck debug ${BIN_DIR}/lib/Debug/libhunspell.lib)
+target_link_libraries (DSpellCheck debug ${BIN_DIR}/lib/Debug/libiconvstaticD.lib)
 target_link_libraries (DSpellCheck optimized ${BIN_DIR}/lib/Release/libhunspell.lib)
+target_link_libraries (DSpellCheck optimized ${BIN_DIR}/lib/Release/libiconvstatic.lib)
 
 include (PrecompiledHeader.cmake)
 add_precompiled_header(DSpellCheck PrecompiledHeader.h FORCEINCLUDE) 

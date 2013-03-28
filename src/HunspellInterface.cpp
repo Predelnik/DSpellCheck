@@ -21,12 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #undef near
 #endif // near
 #define HUNSPELL_STATIC // We're using static build so ...
+#include "CommonFunctions.h"
 #include "hunspell/hunspell.hxx"
 #include "HunspellInterface.h"
-#include "CommonFunctions.h"
-#include "MainDef.h"
 
-static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files)
+#include <locale>
+
+static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCHAR *Filter)
 {
   HANDLE hFind = INVALID_HANDLE_VALUE;
   WIN32_FIND_DATA ffd;
@@ -61,7 +62,10 @@ static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files)
             directories->push(buf);
           }
           else {
-            files.push_back(buf);
+            if (PathMatchSpec (buf, Filter))
+              files.push_back(buf);
+            else
+              CLEAN_AND_ZERO_ARR (buf);
           }
       }
     } while (FindNextFile(hFind, &ffd) != 0);
@@ -85,18 +89,32 @@ static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files)
 HunspellInterface::HunspellInterface ()
 {
   DicList = new std::vector <TCHAR *>;
-  SingularSpeller = 0;
+  memset (&Empty, 0, sizeof (Empty));
+  SingularSpeller = Empty;
   DicDir = 0;
   Spellers = 0;
-  LastSelectedSpeller = 0;
+  LastSelectedSpeller = Empty;
+  AllHunspells = new std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)> (SortCompare);
+  IsHunspellWorking = FALSE;
+  TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
 }
 
 HunspellInterface::~HunspellInterface ()
 {
-  CLEAN_AND_ZERO (SingularSpeller);
-  CLEAN_AND_ZERO_POINTER_VECTOR (Spellers);
+  IsHunspellWorking = FALSE;
+  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->begin ();
+  for (; it != AllHunspells->end (); ++it)
+  {
+    delete ((*it).first);
+    CLEAN_AND_ZERO ((*it).second.Speller);
+    iconv_close ((*it).second.Converter);
+    iconv_close ((*it).second.BackConverter);
+  }
+
+  CLEAN_AND_ZERO (AllHunspells);
   CLEAN_AND_ZERO_STRING_VECTOR (DicList);
   CLEAN_AND_ZERO_ARR (DicDir);
+  CLEAN_AND_ZERO_ARR (TemporaryBuffer);
 }
 
 std::vector<TCHAR*> *HunspellInterface::GetLanguageList ()
@@ -112,8 +130,14 @@ std::vector<TCHAR*> *HunspellInterface::GetLanguageList ()
   return List;
 }
 
-Hunspell *HunspellInterface::CreateHunspell (const TCHAR *Name)
+DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
 {
+  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (Name);
+  if (it != AllHunspells->end ())
+  {
+    return (*it).second;
+  }
+
   int size = _tcslen (DicDir) + 1 + _tcslen (Name) + 1 + 3 + 1; // + . + aff/dic + /0
   TCHAR *AffBuf = new TCHAR [size];
   TCHAR *DicBuf = new TCHAR [size];
@@ -132,16 +156,23 @@ Hunspell *HunspellInterface::CreateHunspell (const TCHAR *Name)
   CLEAN_AND_ZERO_ARR (AffBuf);
   CLEAN_AND_ZERO_ARR (DicBuf);
 
-  return new Hunspell (AffBufAnsi, DicBufAnsi);
+  Hunspell *NewHunspell = new Hunspell (AffBufAnsi, DicBufAnsi);
+  TCHAR *NewName = 0;
+  SetString (NewName, Name);
+  DicInfo NewDic;
+  NewDic.Converter = iconv_open (NewHunspell->get_dic_encoding (), "UTF-8");
+  NewDic.BackConverter = iconv_open ("UTF-8", NewHunspell->get_dic_encoding ());
+  NewDic.Speller = NewHunspell;
+  (*AllHunspells)[NewName] = NewDic;
   CLEAN_AND_ZERO_ARR (DicBufAnsi);
-  CLEAN_AND_ZERO_ARR (DicBufAnsi);
+  return NewDic;
 }
 
 void HunspellInterface::SetLanguage (TCHAR *Lang)
 {
   if (DicList->size () == 0)
   {
-    SingularSpeller = 0;
+    SingularSpeller = Empty;
     return;
   }
 
@@ -149,7 +180,6 @@ void HunspellInterface::SetLanguage (TCHAR *Lang)
   {
     Lang = DicList->at (0);
   }
-  CLEAN_AND_ZERO (SingularSpeller);
   SingularSpeller = CreateHunspell (Lang);
 }
 
@@ -158,15 +188,36 @@ void HunspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
   if (DicList->size () == 0)
     return;
 
-  CLEAN_AND_ZERO_POINTER_VECTOR (Spellers);
-  Spellers = new std::vector<Hunspell *>;
+  Spellers = new std::vector<DicInfo>;
   for (unsigned int i = 0; i < List->size (); i++)
   {
     if (!std::binary_search (DicList->begin (), DicList->end (), List->at (i),  SortCompare))
       continue;
-    Hunspell *Instance = CreateHunspell (List->at (i));
+    DicInfo Instance = CreateHunspell (List->at (i));
     Spellers->push_back (Instance);
   }
+}
+
+char *HunspellInterface::GetConvertedWord (const char *Source, iconv_t Converter)
+{
+  size_t InSize = strlen (Source) + 1;
+  size_t OutSize = DEFAULT_BUF_SIZE;
+  char *OutBuf = TemporaryBuffer;
+  size_t res = iconv (Converter, &Source, &InSize, &OutBuf, &OutSize);
+  if (res == (size_t)(-1))
+  {
+    *TemporaryBuffer = '\0';
+  }
+  return TemporaryBuffer;
+}
+
+BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word)
+{
+  char *WordToCheck = GetConvertedWord (Word, Dic.Converter);
+  if (!*WordToCheck)
+    return FALSE;
+
+  return Dic.Speller->spell (WordToCheck);
 }
 
 BOOL HunspellInterface::CheckWord (char *Word)
@@ -175,8 +226,8 @@ BOOL HunspellInterface::CheckWord (char *Word)
   unsigned int Len = strlen (Word);
   if (!MultiMode)
   {
-    if (SingularSpeller)
-      res = SingularSpeller->spell (Word);
+    if (SingularSpeller.Speller)
+      res = SpellerCheckWord (SingularSpeller, Word);
     else
       res = TRUE;
   }
@@ -187,7 +238,7 @@ BOOL HunspellInterface::CheckWord (char *Word)
 
     for (int i = 0; i < (int )Spellers->size () && !res; i++)
     {
-      res = res || Spellers->at (i)->spell (Word);
+      res = res || SpellerCheckWord (Spellers->at (i), Word);;
     }
   }
   return res;
@@ -195,9 +246,9 @@ BOOL HunspellInterface::CheckWord (char *Word)
 
 void HunspellInterface::AddToDictionary (char *Word)
 {
-  if (!LastSelectedSpeller)
+  if (!LastSelectedSpeller.Speller)
     return;
-  LastSelectedSpeller->add (Word);
+  LastSelectedSpeller.Speller->add (GetConvertedWord (Word, LastSelectedSpeller.Converter));
 }
 
 void HunspellInterface::IgnoreAll (char *Word)
@@ -208,14 +259,15 @@ void HunspellInterface::IgnoreAll (char *Word)
 std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
 {
   std::vector<char *> *SuggList = new std::vector<char *>;
-  int Num;
+  int Num = -1;
   int CurNum;
   char **HunspellList = 0;
   char **CurHunspellList = 0;
   LastSelectedSpeller = SingularSpeller;
+
   if (!MultiMode)
   {
-    Num = SingularSpeller->suggest (&HunspellList, Word);
+    Num = SingularSpeller.Speller->suggest (&HunspellList, GetConvertedWord (Word, SingularSpeller.Converter));
   }
   else
   {
@@ -224,20 +276,20 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
     CurHunspellList = 0;
     for (int i = 0; i < (int) Spellers->size (); i++)
     {
-      CurNum = Spellers->at (i)->suggest (&CurHunspellList, Word);
+      CurNum = Spellers->at (i).Speller->suggest (&CurHunspellList, GetConvertedWord (Word, Spellers->at (i).Converter));
 
       if (CurNum > 0)
       {
-        const char *FirstSug = CurHunspellList [0];
+        const char *FirstSug = GetConvertedWord (CurHunspellList [0], Spellers->at (i).BackConverter);
         if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*Word))
           continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
       }
 
       if (CurNum > MaxSize)
       {
-        for (int j = 0; j < CurNum; j++)
-          CLEAN_AND_ZERO_ARR (CurHunspellList[j]);
-        CLEAN_AND_ZERO_ARR (CurHunspellList);
+        if (Num != -1)
+          Spellers->at (i).Speller->free_list (&HunspellList, Num);
+
         MaxSize = CurNum;
         LastSelectedSpeller = Spellers->at (i);
         HunspellList = CurHunspellList;
@@ -245,9 +297,7 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
       }
       else
       {
-        for (int j = 0; j < CurNum; j++)
-          CLEAN_AND_ZERO_ARR (CurHunspellList[j]);
-        CLEAN_AND_ZERO_ARR (CurHunspellList);
+        Spellers->at (i).Speller->free_list (&CurHunspellList, CurNum);
       }
     }
   }
@@ -258,13 +308,11 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
   for (int i = 0; i < Num; i++)
   {
     char *Buf = 0;
-    SetString (Buf, HunspellList[i]);
+    SetString (Buf, GetConvertedWord (HunspellList[i], LastSelectedSpeller.BackConverter));
     SuggList->push_back (Buf);
   }
 
-  for (int i = 0; i < Num; i++)
-    CLEAN_AND_ZERO_ARR (HunspellList[i]);
-  CLEAN_AND_ZERO_ARR (HunspellList);
+  LastSelectedSpeller.Speller->free_list (&HunspellList, Num);
 
   return SuggList;
 }
@@ -273,7 +321,7 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
 {
   std::vector<TCHAR *> *FileList = new std::vector<TCHAR *>;
   SetString (DicDir, Dir);
-  BOOL Res = ListFiles (Dir, _T ("*.aff"), *FileList);
+  BOOL Res = ListFiles (Dir, _T ("*.*"), *FileList, _T ("*.aff"));
   if (!Res)
   {
     CLEAN_AND_ZERO_STRING_VECTOR (FileList);
@@ -299,11 +347,13 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
     }
   }
 
+  IsHunspellWorking = (DicList->size () > 0);
+
   std::sort (DicList->begin (), DicList->end (), SortCompare);
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
 
 BOOL HunspellInterface::IsWorking ()
 {
-  return TRUE;
+  return IsHunspellWorking;
 }

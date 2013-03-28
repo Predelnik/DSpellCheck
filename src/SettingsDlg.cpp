@@ -143,7 +143,7 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
       SpellCheckerInstance->SetAspellLanguage (Buf);
     else
       SpellCheckerInstance->SetHunspellLanguage (Buf);
-      
+
     CLEAN_AND_ZERO_ARR (Buf);
     CLEAN_AND_ZERO_ARR (Lang);
   }
@@ -239,6 +239,24 @@ void SimpleDlg::SetCheckComments (BOOL Value)
 int SimpleDlg::GetSelectedLib ()
 {
   return ComboBox_GetCurSel (HLibrary);
+}
+
+static int CALLBACK BrowseCallbackProc(HWND hwnd,UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+  // If the BFFM_INITIALIZED message is received
+  // set the path to the start path.
+  switch (uMsg)
+  {
+  case BFFM_INITIALIZED:
+    {
+      if (NULL != lpData)
+      {
+        SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+      }
+    }
+  }
+
+  return 0; // The function should always return 0.
 }
 
 BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
@@ -347,7 +365,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
           ZeroMemory(&ofn, sizeof(ofn));
           ofn.lStructSize = sizeof(ofn);
           ofn.hwndOwner = _hSelf;
-          TCHAR *Buf = new TCHAR [DEFAULT_BUF_SIZE];
+          TCHAR *Buf = new TCHAR [Edit_GetTextLength (HLibPath) + 1];
           Edit_GetText (HLibPath, Buf, DEFAULT_BUF_SIZE);
           ofn.lpstrFile = Buf;
           // Set lpstrFile[0] to '\0' so that GetOpenFileName does not
@@ -365,7 +383,36 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
         }
         else
         {
-          // ... TODO:Use SHBrowseForFolder here
+          // Thanks to http://vcfaq.mvps.org/sdk/20.htm
+          BROWSEINFO bi = { 0 };
+          TCHAR path[MAX_PATH];
+
+          LPITEMIDLIST pidlRoot = NULL;
+          SHGetFolderLocation (_hSelf, 0, NULL, NULL, &pidlRoot);
+
+          bi.pidlRoot = pidlRoot;
+          bi.lpszTitle = _T("Pick a Directory");
+          bi.pszDisplayName = path;
+          bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+          bi.lpfn = BrowseCallbackProc;
+          TCHAR *Buf = new TCHAR [Edit_GetTextLength (HLibPath) + 1];
+          Edit_GetText (HLibPath, Buf, DEFAULT_BUF_SIZE);
+          bi.lParam         = (LPARAM) Buf;
+          LPITEMIDLIST pidl = SHBrowseForFolder ( &bi );
+          if ( pidl != 0 )
+          {
+            if (NULL != pidl)
+            {
+              // get the name of the folder
+              TCHAR *szPath = new TCHAR[MAX_PATH];
+              SHGetPathFromIDList (pidl, szPath);
+              Edit_SetText (HLibPath, szPath);
+              CoTaskMemFree(pidl);
+              // free memory used
+            }
+
+            CoUninitialize();
+          }
         }
         break;
       }

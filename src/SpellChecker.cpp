@@ -1488,14 +1488,18 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
   {
     if (Result == MID_IGNOREALL)
     {
+      ApplyConversions (SelectedWord);
       CurrentSpeller->IgnoreAll (SelectedWord);
+      WUCLength = strlen (SelectedWord);
       if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
-        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength , WUCPosition  + WUCLength );
+        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength, WUCPosition  + WUCLength );
       RecheckVisible ();
     }
     else if (Result == MID_ADDTODICTIONARY)
     {
+      ApplyConversions (SelectedWord);
       CurrentSpeller->AddToDictionary (SelectedWord);
+      WUCLength = strlen (SelectedWord);
       if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
         PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
       RecheckVisible ();
@@ -1939,7 +1943,7 @@ void SpellChecker::LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char 
   CLEAN_AND_ZERO_ARR (BufDefault);
 }
 
-// Here parameter is in ANSI (may as well be utf-8 cause only english I guess)
+// Here parameter is in ANSI (may as well be utf-8 cause only English I guess)
 void SpellChecker::SetAspellLanguage (const TCHAR *Str)
 {
   SetString (AspellLanguage, Str);
@@ -2092,6 +2096,46 @@ static const char yo[] = "\xd1\x91";
 static const char ye[] = "\xd0\xb5";
 static const char PunctuationApostrophe[] = "\xe2\x80\x99";
 
+void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened during conversion
+{
+  if (IgnoreYo)
+  {
+    char *Iter = Word;
+    while (Iter = strstr (Iter, Yo))
+    {
+      Iter[0] = Ye[0];
+      Iter[1] = Ye[1];
+      Iter += 2;
+    }
+    Iter = Word;
+    while (Iter = strstr (Iter, yo))
+    {
+      Iter[0] = ye[0];
+      Iter[1] = ye[1];
+      Iter += 2;
+    }
+  }
+
+  if (ConvertSingleQuotes)
+  {
+    char *Iter = Word;
+    char *NestedIter = 0;
+    while (Iter = strstr (Iter, PunctuationApostrophe))
+    {
+      *Iter = '\'';
+      Iter++;
+      NestedIter = Iter;
+      while (*(NestedIter + 2))
+      {
+        *NestedIter =  *(NestedIter + 2);
+        NestedIter++;
+      }
+      *NestedIter = 0;
+      *(NestedIter + 1) = 0;
+    }
+  }
+}
+
 BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 {
   BOOL res = FALSE;
@@ -2162,43 +2206,8 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     goto CleanUp;
   }
 
-  if (IgnoreYo)
-  {
-    char *Iter = Utf8Buf;
-    while (Iter = strstr (Iter, Yo))
-    {
-      Iter[0] = Ye[0];
-      Iter[1] = Ye[1];
-      Iter += 2;
-    }
-    Iter = Utf8Buf;
-    while (Iter = strstr (Iter, yo))
-    {
-      Iter[0] = ye[0];
-      Iter[1] = ye[1];
-      Iter += 2;
-    }
-  }
-
-  if (ConvertSingleQuotes)
-  {
-    char *Iter = Utf8Buf;
-    char *NestedIter = 0;
-    while (Iter = strstr (Iter, PunctuationApostrophe))
-    {
-      *Iter = '\'';
-      Iter++;
-      NestedIter = Iter;
-      while (*(NestedIter + 2))
-      {
-        *NestedIter =  *(NestedIter + 2);
-        NestedIter++;
-      }
-      *NestedIter = 0;
-      *(NestedIter + 1) = 0;
-    }
-    Len = strlen (Utf8Buf);
-  }
+  ApplyConversions (Utf8Buf);
+  Len = strlen (Utf8Buf);
 
   if (IgnoreSEApostrophe)
   {

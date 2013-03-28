@@ -16,6 +16,8 @@ DSpellCheck.dir/*
 ZERO_CHECK.dir/*
 src/Hunspell/win_api/Release/*
 src/Hunspell/win_api/Debug/*
+src/libiconv/ReleaseStatic_Win32
+src/libiconv/DebugStatic_Win32
 CMakeFiles/*
 Debug/*
 MinSizeRel/*
