@@ -414,5 +414,10 @@ size_t Utf8Length (const char *String)
 
 bool SortCompare(TCHAR *a, TCHAR *b)
 {
-  return _tcscmp(a, b) < 0;
+  return _tcscmp (a, b) < 0;
+}
+
+bool SortCompareChars (char *a, char *b)
+{
+  return strcmp (a, b) < 0;
 }

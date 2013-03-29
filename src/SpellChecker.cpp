@@ -233,25 +233,31 @@ void SpellChecker::ReinitLanguageLists (int SpellerId)
     SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
 }
 
+void SpellChecker::FillDialogs ()
+{
+  ReinitLanguageLists (LibMode);
+  SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
+  SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
+  SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
+  SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
+  SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
+  SettingsDlgInstance->GetSimpleDlg ()->SetSuggType (SuggestionsMode);
+  SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
+  SettingsDlgInstance->GetAdvancedDlg ()->setConversionOpts (IgnoreYo, ConvertSingleQuotes);
+  SettingsDlgInstance->GetAdvancedDlg ()->SetUnderlineSettings (UnderlineColor, UnderlineStyle);
+  SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_, IgnoreSEApostrophe);
+  SettingsDlgInstance->GetAdvancedDlg ()->SetSuggBoxSettings (SBSize, SBTrans);
+  SettingsDlgInstance->GetAdvancedDlg ()->SetBufferSize (BufferSize / 1024);
+}
+
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
 {
   CurrentScintilla = GetScintillaWindow (NppDataInstance); // All operations should be done with current scintilla anyway
   switch (Event)
   {
   case  EID_FILL_DIALOGS:
-    ReinitLanguageLists (LibMode);
-    SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
-    SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
-    SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
-    SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
-    SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
-    SettingsDlgInstance->GetSimpleDlg ()->SetSuggType (SuggestionsMode);
-    SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
-    SettingsDlgInstance->GetAdvancedDlg ()->setConversionOpts (IgnoreYo, ConvertSingleQuotes);
-    SettingsDlgInstance->GetAdvancedDlg ()->SetUnderlineSettings (UnderlineColor, UnderlineStyle);
-    SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_, IgnoreSEApostrophe);
-    SettingsDlgInstance->GetAdvancedDlg ()->SetSuggBoxSettings (SBSize, SBTrans);
-    SettingsDlgInstance->GetAdvancedDlg ()->SetBufferSize (BufferSize / 1024);
+    FillDialogs ();
+    SettingsDlgInstance->display ();
     break;
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
@@ -1747,16 +1753,22 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans, 70);
   SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en-US"));
   SaveToIni (_T ("Aspell_Language"), AspellLanguage, _T ("en"));
-  SaveToIni (_T ("Library"), LibMode, 1);
+  SaveToIni (_T ("Library"), LibMode, !AspellSpeller->IsWorking ());
 }
 
 void SpellChecker::SetLibMode (int i)
 {
   LibMode = i;
   if (i == 0)
+  {
+    AspellReinitSettings ();
     CurrentSpeller = AspellSpeller;
+  }
   else
+  {
     CurrentSpeller = HunspellSpeller;
+    HunspellReinitSettings ();
+  }
 }
 
 void SpellChecker::LoadSettings ()
@@ -1801,7 +1813,10 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (Ignore_, _T ("Ignore_With_"), 1);
   LoadFromIni (IgnoreSEApostrophe, _T ("Ignore_That_Start_or_End_with_'"), 1);
   int i;
-  LoadFromIni (i, _T ("Library"), 1);
+
+  HunspellSpeller->SetDirectory (HunspellPath);
+  AspellSpeller->Init (AspellPath);
+  LoadFromIni (i, _T ("Library"), (!AspellSpeller->IsWorking ()));
   SetLibMode (i);
   int Size, Trans;
   LoadFromIni (Size, _T ("Suggestions_Button_Size"), 15);
@@ -1810,8 +1825,6 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (Size, _T ("Find_Next_Buffer_Size"), 4);
   SetBufferSize (Size, 0);
   RefreshUnderlineStyle ();
-  AspellReinitSettings ();
-  HunspellReinitSettings ();
   CLEAN_AND_ZERO_ARR (BufUtf8);
 }
 

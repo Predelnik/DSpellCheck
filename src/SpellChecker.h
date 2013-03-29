@@ -82,6 +82,7 @@ public:
   void SetBufferSize (int Size, BOOL SaveToIni = 1);
   void SetSuggType (int SuggType);
   void SetLibMode (int i);
+  void FillDialogs ();
 
 private:
   enum CheckTextMode

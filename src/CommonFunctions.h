@@ -53,5 +53,6 @@ char *Utf8Inc (const char *string);
 char *Utf8pbrk(const char *s, const char *set);
 size_t Utf8Length (const char *String);
 
-bool SortCompare(TCHAR *a, TCHAR *b);
+bool SortCompare (TCHAR *a, TCHAR *b);
+bool SortCompareChars (char *a, char *b);
 #endif // COMMON_FUNCTIONS_H;

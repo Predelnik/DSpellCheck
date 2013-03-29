@@ -68,6 +68,7 @@ private:
   DicInfo LastSelectedSpeller;
   DicInfo Empty;
   std::vector <DicInfo> *Spellers;
+  std::set <char *, bool (*)(char *, char *)> *Ignored;
   char *TemporaryBuffer;
 };
 #endif // HUNSPELLINTERFACE_H

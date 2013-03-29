@@ -163,7 +163,7 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   SpellCheckerInstance->SetSuggType (ComboBox_GetCurSel (HSuggType));
   SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
   SpellCheckerInstance->SetLibMode (GetSelectedLib ());
-  SendEvent (EID_FILL_DIALOGS);
+  SpellCheckerInstance->FillDialogs ();
   CLEAN_AND_ZERO_ARR (Buf);
 }
 
@@ -807,8 +807,8 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       case IDOK:
         if (HIWORD (wParam) == BN_CLICKED)
         {
-          ApplySettings ();
           SendEvent (EID_HIDE_DIALOG);
+          ApplySettings ();
           return TRUE;
         }
         break;
@@ -831,8 +831,11 @@ UINT SettingsDlg::DoDialog (void)
   {
     create (IDD_SETTINGS);
     goToCenter ();
+    display (false);
   }
-  display ();
+  else
+    display ();
+
   return TRUE;
   // return (UINT)::DialogBoxParam(_hInst, MAKEINTRESOURCE(IDD_SETTINGS), _hParent, (DLGPROC)dlgProc, (LPARAM)this);
 }

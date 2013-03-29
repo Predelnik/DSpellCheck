@@ -91,6 +91,7 @@ HunspellInterface::HunspellInterface ()
   DicList = new std::vector <TCHAR *>;
   Spellers = new std::vector<DicInfo>;
   memset (&Empty, 0, sizeof (Empty));
+  Ignored = new std::set <char *, bool (*)(char *, char *)> (SortCompareChars);
   SingularSpeller = Empty;
   DicDir = 0;
   LastSelectedSpeller = Empty;
@@ -102,19 +103,29 @@ HunspellInterface::HunspellInterface ()
 HunspellInterface::~HunspellInterface ()
 {
   IsHunspellWorking = FALSE;
-  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->begin ();
-  for (; it != AllHunspells->end (); ++it)
   {
-    delete []((*it).first);
-    CLEAN_AND_ZERO ((*it).second.Speller);
-    iconv_close ((*it).second.Converter);
-    iconv_close ((*it).second.BackConverter);
-    iconv_close ((*it).second.ConverterANSI);
-    iconv_close ((*it).second.BackConverterANSI);
+    std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->begin ();
+    for (; it != AllHunspells->end (); ++it)
+    {
+      delete []((*it).first);
+      CLEAN_AND_ZERO ((*it).second.Speller);
+      iconv_close ((*it).second.Converter);
+      iconv_close ((*it).second.BackConverter);
+      iconv_close ((*it).second.ConverterANSI);
+      iconv_close ((*it).second.BackConverterANSI);
+    }
+    CLEAN_AND_ZERO (AllHunspells);
   }
 
+  {
+    std::set <char *, bool (*)(char *, char *)>::iterator it = Ignored->begin ();
+    for (; it != Ignored->end (); ++it)
+    {
+      delete [] (*it);
+    }
+    CLEAN_AND_ZERO (Ignored);
+  }
   CLEAN_AND_ZERO (Spellers);
-  CLEAN_AND_ZERO (AllHunspells);
   CLEAN_AND_ZERO_STRING_VECTOR (DicList);
   CLEAN_AND_ZERO_ARR (DicDir);
   CLEAN_AND_ZERO_ARR (TemporaryBuffer);
@@ -193,7 +204,7 @@ void HunspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
 {
   if (DicList->size () == 0)
     return;
-    
+
   Spellers->clear ();
   for (unsigned int i = 0; i < List->size (); i++)
   {
@@ -222,6 +233,9 @@ BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word, EncodingType 
   char *WordToCheck = GetConvertedWord (Word, Encoding == (ENCODING_UTF8) ? Dic.Converter : Dic.ConverterANSI);
   if (!*WordToCheck)
     return FALSE;
+
+  if (Ignored->find (WordToCheck) != Ignored->end ())
+    return TRUE;
 
   return Dic.Speller->spell (WordToCheck);
 }
@@ -259,6 +273,11 @@ void HunspellInterface::AddToDictionary (char *Word)
 
 void HunspellInterface::IgnoreAll (char *Word)
 {
+  if (!LastSelectedSpeller.Speller)
+    return;
+  char *Buf = 0;
+  SetString (Buf, GetConvertedWord (Word, (CurrentEncoding == ENCODING_UTF8) ? LastSelectedSpeller.Converter : LastSelectedSpeller.ConverterANSI));
+  Ignored->insert (Buf);
   return; // Dummy, probably should be disabled for Hunspell or written in custom way
 }
 
