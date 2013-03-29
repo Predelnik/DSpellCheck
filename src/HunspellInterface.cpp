@@ -89,10 +89,10 @@ static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCH
 HunspellInterface::HunspellInterface ()
 {
   DicList = new std::vector <TCHAR *>;
+  Spellers = new std::vector<DicInfo>;
   memset (&Empty, 0, sizeof (Empty));
   SingularSpeller = Empty;
   DicDir = 0;
-  Spellers = 0;
   LastSelectedSpeller = Empty;
   AllHunspells = new std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)> (SortCompare);
   IsHunspellWorking = FALSE;
@@ -105,7 +105,7 @@ HunspellInterface::~HunspellInterface ()
   std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->begin ();
   for (; it != AllHunspells->end (); ++it)
   {
-    delete ((*it).first);
+    delete []((*it).first);
     CLEAN_AND_ZERO ((*it).second.Speller);
     iconv_close ((*it).second.Converter);
     iconv_close ((*it).second.BackConverter);
@@ -113,6 +113,7 @@ HunspellInterface::~HunspellInterface ()
     iconv_close ((*it).second.BackConverterANSI);
   }
 
+  CLEAN_AND_ZERO (Spellers);
   CLEAN_AND_ZERO (AllHunspells);
   CLEAN_AND_ZERO_STRING_VECTOR (DicList);
   CLEAN_AND_ZERO_ARR (DicDir);
@@ -168,6 +169,7 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
   NewDic.BackConverterANSI = iconv_open ("", NewHunspell->get_dic_encoding ());
   NewDic.Speller = NewHunspell;
   (*AllHunspells)[NewName] = NewDic;
+  CLEAN_AND_ZERO_ARR (AffBufAnsi);
   CLEAN_AND_ZERO_ARR (DicBufAnsi);
   return NewDic;
 }
@@ -191,8 +193,8 @@ void HunspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
 {
   if (DicList->size () == 0)
     return;
-
-  Spellers = new std::vector<DicInfo>;
+    
+  Spellers->clear ();
   for (unsigned int i = 0; i < List->size (); i++)
   {
     if (!std::binary_search (DicList->begin (), DicList->end (), List->at (i),  SortCompare))
@@ -349,6 +351,7 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
       SetString (TBuf, SlashPointer + 1);
       DicList->push_back (TBuf);
     }
+    CLEAN_AND_ZERO_ARR (Buf);
   }
 
   IsHunspellWorking = (DicList->size () > 0);

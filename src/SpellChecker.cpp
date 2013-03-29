@@ -91,6 +91,7 @@ void SpellChecker::PrepareStringForConversion ()
   char **OutString [] = {&YoANSI, &yoANSI, &YeANSI, &yeANSI, &PunctuationApostropheANSI};
   char *Buf = 0;
   char *OutBuf = 0;
+  const char *InBuf = 0;
   size_t InSize = 0;
   size_t OutSize = 0;
   size_t Res = 0;
@@ -100,10 +101,12 @@ void SpellChecker::PrepareStringForConversion ()
     InSize = strlen (InString[i]) + 1;
     Buf = 0;
     SetString (Buf, InString[i]);
+    InBuf = Buf;
     OutSize = Utf8Length (InString[i]) + 1;
     OutBuf = new char[OutSize];
     *OutString[i] = OutBuf;
-    Res = iconv (Conv, (const_cast <const char **> (&Buf)), &InSize, &OutBuf, &OutSize);
+    Res = iconv (Conv, &InBuf, &InSize, &OutBuf, &OutSize);
+    CLEAN_AND_ZERO_ARR (Buf);
     if (Res == (size_t) -1)
     {
       CLEAN_AND_ZERO_ARR (OutBuf);
@@ -128,6 +131,7 @@ SpellChecker::~SpellChecker ()
   CLEAN_AND_ZERO_ARR (HunspellMultiLanguages);
   CLEAN_AND_ZERO_ARR (IniFilePath);
   CLEAN_AND_ZERO_ARR (AspellPath);
+  CLEAN_AND_ZERO_ARR (HunspellPath);
   CLEAN_AND_ZERO_ARR (VisibleText);
   CLEAN_AND_ZERO_ARR (FileTypes);
 
@@ -1774,8 +1778,10 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (HunspellMultiLanguages, _T ("Hunspell_Multiple_Languages"), _T (""));
   LoadFromIni (TBuf, _T ("Aspell_Language"), _T ("en"));
   SetAspellLanguage (TBuf);
+  CLEAN_AND_ZERO_ARR (TBuf);
   LoadFromIni (TBuf, _T ("Hunspell_Language"), _T ("en.US"));
   SetHunspellLanguage (TBuf);
+  CLEAN_AND_ZERO_ARR (TBuf);
 
   SetStringDUtf8 (BufUtf8, DEFAULT_DELIMITERS);
   LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), BufUtf8, TRUE);
@@ -2008,10 +2014,7 @@ void SpellChecker::SetHunspellLanguage (const TCHAR *Str)
     HunspellSpeller->SetMode (1);
   else
   {
-    TCHAR *TBuf = 0;
-    SetString (TBuf, Str);
-    HunspellSpeller->SetLanguage (TBuf);
-    CLEAN_AND_ZERO_ARR (TBuf);
+    HunspellSpeller->SetLanguage (HunspellLanguage);
     HunspellSpeller->SetMode (0);
   }
 }
@@ -2051,8 +2054,7 @@ BOOL SpellChecker::HunspellReinitSettings ()
   HunspellSpeller->SetDirectory (HunspellPath);
   if (_tcscmp (HunspellLanguage, _T ("<MULTIPLE>")) != 0)
   {
-    SetString (TBuf, HunspellLanguage);
-    HunspellSpeller->SetLanguage (TBuf);
+    HunspellSpeller->SetLanguage (HunspellLanguage);
   }
   std::vector<TCHAR *> *MultiLangList = new std::vector<TCHAR *>;
   char *Context = 0;

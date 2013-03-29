@@ -95,6 +95,7 @@ void AspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
     char *Buf = 0;
     SetString (Buf, List->at (i));
     aspell_config_replace(spell_config, "lang", Buf);
+    CLEAN_AND_ZERO_ARR (Buf);
     AspellCanHaveError * possible_err = new_aspell_speller(spell_config);
     if (aspell_error_number(possible_err) == 0)
     {
