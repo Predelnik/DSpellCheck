@@ -35,6 +35,8 @@ struct DicInfo
   Hunspell *Speller;
   iconv_t Converter;
   iconv_t BackConverter;
+  iconv_t ConverterANSI;
+  iconv_t BackConverterANSI;
 };
 
 class HunspellInterface : public AbstractSpellerInterface
@@ -45,7 +47,7 @@ public:
   __override virtual std::vector<TCHAR*> *GetLanguageList ();
   __override virtual void SetLanguage (TCHAR *Lang);
   __override virtual void SetMultipleLanguages (std::vector<TCHAR *> *List); // Languages are from LangList
-  __override virtual BOOL CheckWord (char *Word); // Word in Utf-8 or ANSI (For now only Utf-8)
+  __override virtual BOOL CheckWord (char *Word); // Word in Utf-8 or ANSI
   __override virtual BOOL IsWorking ();
   __override virtual std::vector<char *> *GetSuggestions (char *Word);
   __override virtual void AddToDictionary (char *Word);
@@ -57,7 +59,7 @@ private:
 public:
 private:
   BOOL IsHunspellWorking;
-  BOOL SpellerCheckWord (DicInfo Dic, char *Word);
+  BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);
   TCHAR *DicDir;
   std::vector <TCHAR *> *DicList;
   std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)> *AllHunspells;

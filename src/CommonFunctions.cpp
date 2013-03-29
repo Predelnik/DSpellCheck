@@ -296,7 +296,7 @@ char *Utf8Inc (const char *string)
 {
   const char *temp;
   temp = string + 1;
-  while (temp && !Utf8IsLead (*temp))
+  while (*temp && !Utf8IsLead (*temp))
     temp++;
 
   return (char *) temp;
@@ -398,6 +398,18 @@ char * Utf8strtok (char *s1, const char *Delimit, char **Context)
   }
 
   return s1;
+}
+
+size_t Utf8Length (const char *String)
+{
+  char *It = const_cast <char *> (String);
+  size_t Size = 0;
+  while (*It)
+  {
+    Size++;
+    It = Utf8Inc (It);
+  }
+  return Size;
 }
 
 bool SortCompare(TCHAR *a, TCHAR *b)

@@ -109,6 +109,8 @@ HunspellInterface::~HunspellInterface ()
     CLEAN_AND_ZERO ((*it).second.Speller);
     iconv_close ((*it).second.Converter);
     iconv_close ((*it).second.BackConverter);
+    iconv_close ((*it).second.ConverterANSI);
+    iconv_close ((*it).second.BackConverterANSI);
   }
 
   CLEAN_AND_ZERO (AllHunspells);
@@ -162,6 +164,8 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
   DicInfo NewDic;
   NewDic.Converter = iconv_open (NewHunspell->get_dic_encoding (), "UTF-8");
   NewDic.BackConverter = iconv_open ("UTF-8", NewHunspell->get_dic_encoding ());
+  NewDic.ConverterANSI = iconv_open (NewHunspell->get_dic_encoding (), "");
+  NewDic.BackConverterANSI = iconv_open ("", NewHunspell->get_dic_encoding ());
   NewDic.Speller = NewHunspell;
   (*AllHunspells)[NewName] = NewDic;
   CLEAN_AND_ZERO_ARR (DicBufAnsi);
@@ -211,9 +215,9 @@ char *HunspellInterface::GetConvertedWord (const char *Source, iconv_t Converter
   return TemporaryBuffer;
 }
 
-BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word)
+BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding)
 {
-  char *WordToCheck = GetConvertedWord (Word, Dic.Converter);
+  char *WordToCheck = GetConvertedWord (Word, Encoding == (ENCODING_UTF8) ? Dic.Converter : Dic.ConverterANSI);
   if (!*WordToCheck)
     return FALSE;
 
@@ -227,7 +231,7 @@ BOOL HunspellInterface::CheckWord (char *Word)
   if (!MultiMode)
   {
     if (SingularSpeller.Speller)
-      res = SpellerCheckWord (SingularSpeller, Word);
+      res = SpellerCheckWord (SingularSpeller, Word, CurrentEncoding);
     else
       res = TRUE;
   }
@@ -238,7 +242,7 @@ BOOL HunspellInterface::CheckWord (char *Word)
 
     for (int i = 0; i < (int )Spellers->size () && !res; i++)
     {
-      res = res || SpellerCheckWord (Spellers->at (i), Word);;
+      res = res || SpellerCheckWord (Spellers->at (i), Word, CurrentEncoding);
     }
   }
   return res;
@@ -248,7 +252,7 @@ void HunspellInterface::AddToDictionary (char *Word)
 {
   if (!LastSelectedSpeller.Speller)
     return;
-  LastSelectedSpeller.Speller->add (GetConvertedWord (Word, LastSelectedSpeller.Converter));
+  LastSelectedSpeller.Speller->add (GetConvertedWord (Word, (CurrentEncoding == ENCODING_UTF8) ? LastSelectedSpeller.Converter : LastSelectedSpeller.ConverterANSI));
 }
 
 void HunspellInterface::IgnoreAll (char *Word)
@@ -267,7 +271,7 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
 
   if (!MultiMode)
   {
-    Num = SingularSpeller.Speller->suggest (&HunspellList, GetConvertedWord (Word, SingularSpeller.Converter));
+    Num = SingularSpeller.Speller->suggest (&HunspellList, GetConvertedWord (Word, (CurrentEncoding == ENCODING_UTF8) ? SingularSpeller.Converter : SingularSpeller.ConverterANSI));
   }
   else
   {
@@ -276,11 +280,11 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
     CurHunspellList = 0;
     for (int i = 0; i < (int) Spellers->size (); i++)
     {
-      CurNum = Spellers->at (i).Speller->suggest (&CurHunspellList, GetConvertedWord (Word, Spellers->at (i).Converter));
+      CurNum = Spellers->at (i).Speller->suggest (&CurHunspellList, GetConvertedWord (Word, (CurrentEncoding == ENCODING_UTF8) ? Spellers->at (i).Converter : Spellers->at (i).ConverterANSI));
 
       if (CurNum > 0)
       {
-        const char *FirstSug = GetConvertedWord (CurHunspellList [0], Spellers->at (i).BackConverter);
+        const char *FirstSug = GetConvertedWord (CurHunspellList [0], (CurrentEncoding == ENCODING_UTF8) ? Spellers->at (i).BackConverter : Spellers->at (i).BackConverterANSI);
         if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*Word))
           continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
       }
@@ -308,7 +312,7 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
   for (int i = 0; i < Num; i++)
   {
     char *Buf = 0;
-    SetString (Buf, GetConvertedWord (HunspellList[i], LastSelectedSpeller.BackConverter));
+    SetString (Buf, GetConvertedWord (HunspellList[i], (CurrentEncoding == ENCODING_UTF8) ? LastSelectedSpeller.BackConverter : LastSelectedSpeller.BackConverterANSI));
     SuggList->push_back (Buf);
   }
 

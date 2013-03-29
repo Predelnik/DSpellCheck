@@ -134,6 +134,7 @@ private:
   void RefreshUnderlineStyle ();
   void WriteSetting (LPARAM lParam);
   void ApplyConversions (char *Word);
+  void PrepareStringForConversion ();
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);
@@ -190,7 +191,7 @@ private:
   long WUCLength;
   long CurrentPosition;
   NppData *NppDataInstance;
-  BOOL ConvertingIsNeeded;
+  EncodingType CurrentEncoding;
   TCHAR *IniFilePath;
   char *SelectedWord;
   SettingsDlg *SettingsDlgInstance;
@@ -203,5 +204,12 @@ private:
   AbstractSpellerInterface *CurrentSpeller;
   AspellInterface *AspellSpeller;
   HunspellInterface *HunspellSpeller;
+
+  // 6 - is arbitrary maximum size, actually almost everywhere it's 1
+  char *YoANSI;
+  char *YeANSI;
+  char *yoANSI;
+  char *yeANSI;
+  char *PunctuationApostropheANSI;
 };
 #endif // SPELLCHECKER_H

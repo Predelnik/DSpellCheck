@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "HunspellInterface.h"
 
 #include "Aspell.h"
+#include "iconv.h"
 #include "CommonFunctions.h"
 #include "LangList.h"
 #include "MainDef.h"
@@ -74,6 +75,42 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   HunspellSpeller = new HunspellInterface ();
   CurrentSpeller = AspellSpeller;
   LastSuggestions = 0;
+  PrepareStringForConversion ();
+}
+
+static const char Yo[] = "\xd0\x81";
+static const char Ye[] = "\xd0\x95";
+static const char yo[] = "\xd1\x91";
+static const char ye[] = "\xd0\xb5";
+static const char PunctuationApostrophe[] = "\xe2\x80\x99";
+
+void SpellChecker::PrepareStringForConversion ()
+{
+  iconv_t Conv = iconv_open ("", "UTF-8");
+  const char *InString [] = {Yo, yo, Ye, ye, PunctuationApostrophe};
+  char **OutString [] = {&YoANSI, &yoANSI, &YeANSI, &yeANSI, &PunctuationApostropheANSI};
+  char *Buf = 0;
+  char *OutBuf = 0;
+  size_t InSize = 0;
+  size_t OutSize = 0;
+  size_t Res = 0;
+
+  for (int i = 0; i < countof (InString); i++)
+  {
+    InSize = strlen (InString[i]) + 1;
+    Buf = 0;
+    SetString (Buf, InString[i]);
+    OutSize = Utf8Length (InString[i]) + 1;
+    OutBuf = new char[OutSize];
+    *OutString[i] = OutBuf;
+    Res = iconv (Conv, (const_cast <const char **> (&Buf)), &InSize, &OutBuf, &OutSize);
+    if (Res == (size_t) -1)
+    {
+      CLEAN_AND_ZERO_ARR (OutBuf);
+      *OutString[i] = 0;
+    }
+  }
+  iconv_close (Conv);
 }
 
 SpellChecker::~SpellChecker ()
@@ -93,6 +130,12 @@ SpellChecker::~SpellChecker ()
   CLEAN_AND_ZERO_ARR (AspellPath);
   CLEAN_AND_ZERO_ARR (VisibleText);
   CLEAN_AND_ZERO_ARR (FileTypes);
+
+  CLEAN_AND_ZERO_ARR (YoANSI);
+  CLEAN_AND_ZERO_ARR (yoANSI);
+  CLEAN_AND_ZERO_ARR (YeANSI);
+  CLEAN_AND_ZERO_ARR (yeANSI)
+    CLEAN_AND_ZERO_ARR (PunctuationApostropheANSI);
 }
 
 void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL Separator)
@@ -1222,7 +1265,7 @@ void SpellChecker::FindNextMistake ()
     char *IteratingChar = IteratingStart;
     if (!IgnoreOffsetting)
     {
-      if (!ConvertingIsNeeded)
+      if (CurrentEncoding == ENCODING_UTF8)
       {
         while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && Range.lpstrText < IteratingChar)
         {
@@ -1292,7 +1335,7 @@ void SpellChecker::FindPrevMistake ()
     char *IteratingChar = IteratingStart;
     if (!IgnoreOffsetting)
     {
-      if (!ConvertingIsNeeded)
+      if (CurrentEncoding == ENCODING_UTF8)
       {
         while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && IteratingChar)
         {
@@ -1389,7 +1432,7 @@ char *SpellChecker::GetWordAt (long CharPos, char *Text, long Offset)
 
   char *Iterator = Text + CharPos - Offset;
 
-  if (!ConvertingIsNeeded)
+  if (CurrentEncoding == ENCODING_UTF8)
   {
     while ((!Utf8chr ( DelimUtf8Converted, Iterator)) && Text < Iterator)
       Iterator = (char *) Utf8Dec (Text, Iterator);
@@ -1402,7 +1445,7 @@ char *SpellChecker::GetWordAt (long CharPos, char *Text, long Offset)
 
   UsedText = Iterator;
 
-  if (!ConvertingIsNeeded)
+  if (CurrentEncoding == ENCODING_UTF8)
   {
     if (Utf8chr ( DelimUtf8Converted, UsedText))
       UsedText = Utf8Inc (UsedText); // Then find first token after this zero
@@ -1417,7 +1460,7 @@ char *SpellChecker::GetWordAt (long CharPos, char *Text, long Offset)
   // We're just taking the first token (basically repeating the same code as an in CheckVisible
 
   char *Res = 0;
-  if (!ConvertingIsNeeded)
+  if (CurrentEncoding == ENCODING_UTF8)
     Res = (char *) Utf8strtok (UsedText, DelimUtf8Converted, &Context);
   else
     Res = strtok_s (UsedText, DelimConverted, &Context);
@@ -1506,7 +1549,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
     }
     else if ((unsigned int)Result <= LastSuggestions->size ())
     {
-      if (ConvertingIsNeeded)
+      if (CurrentEncoding == ENCODING_UTF8)
         SetStringSUtf8 (AnsiBuf, LastSuggestions->at (Result - 1));
       else
         SetString (AnsiBuf, LastSuggestions->at (Result - 1));
@@ -1546,10 +1589,7 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
   char *AnsiBuf = 0;
 
-  if (ConvertingIsNeeded)
-    SetStringDUtf8 (SelectedWord, Range.lpstrText);
-  else
-    SetString (SelectedWord, Range.lpstrText);
+  SetString (SelectedWord, Range.lpstrText);
 
   CLEAN_AND_ZERO_STRING_VECTOR (LastSuggestions);
   LastSuggestions = CurrentSpeller->GetSuggestions (SelectedWord);
@@ -1576,7 +1616,7 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   }
 
   TCHAR *MenuString = new TCHAR [WUCLength + 50 + 1]; // Add "" to dictionary
-  if (!ConvertingIsNeeded)
+  if (CurrentEncoding == ENCODING_UTF8)
     SetStringSUtf8 (Buf, Range.lpstrText);
   else
     SetString (Buf, Range.lpstrText);
@@ -1670,7 +1710,7 @@ void SpellChecker::SaveSettings ()
   fclose (Fp);
   TCHAR *TBuf = 0;
   SaveToIni (_T ("Suggestions_Control"), SuggestionsMode, 0);
-  SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 1);
+  SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 0);
   SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes, 1);
   SaveToIni (_T ("Check_Only_Comments_And_Strings"), CheckComments, 1);
   SaveToIni (_T ("Autocheck"), AutoCheckText, 0);
@@ -1741,7 +1781,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), BufUtf8, TRUE);
   SetDelimiters (BufUtf8);
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
-  LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 1);
+  LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 0);
   LoadFromIni (ConvertSingleQuotes, _T ("Convert_Single_Quotes_To_Apostrophe"), 1);
   LoadFromIni (CheckThose , _T ("Check_Those_\\_Not_Those"), 1);
   LoadFromIni (FileTypes, _T ("File_Types"), _T ("*.*"));
@@ -2090,48 +2130,57 @@ void SpellChecker::SetSuggBoxSettings (int Size, int Transparency, int SaveIni)
   }
 }
 
-static const char Yo[] = "\xd0\x81";
-static const char Ye[] = "\xd0\x95";
-static const char yo[] = "\xd1\x91";
-static const char ye[] = "\xd0\xb5";
-static const char PunctuationApostrophe[] = "\xe2\x80\x99";
-
 void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened during conversion
 {
-  if (IgnoreYo)
+  const char *ConvertFrom [3];
+  const char *ConvertTo [3];
+  int Apply[3] = {IgnoreYo, IgnoreYo, ConvertSingleQuotes};
+  if (CurrentEncoding == ENCODING_ANSI)
   {
-    char *Iter = Word;
-    while (Iter = strstr (Iter, Yo))
-    {
-      Iter[0] = Ye[0];
-      Iter[1] = Ye[1];
-      Iter += 2;
-    }
-    Iter = Word;
-    while (Iter = strstr (Iter, yo))
-    {
-      Iter[0] = ye[0];
-      Iter[1] = ye[1];
-      Iter += 2;
-    }
+    ConvertFrom[0] = YoANSI;
+    ConvertFrom[1] = yoANSI;
+    ConvertFrom[2] = PunctuationApostropheANSI;
+    ConvertTo[0] = YeANSI;
+    ConvertTo[1] = yeANSI;
+    ConvertTo[2] = "\'";
+  }
+  else
+  {
+    ConvertFrom[0] = Yo;
+    ConvertFrom[1] = yo;
+    ConvertFrom[2] = PunctuationApostrophe;
+    ConvertTo[0] = Ye;
+    ConvertTo[1] = ye;
+    ConvertTo[2] = "\'";
   }
 
-  if (ConvertSingleQuotes)
+  // FOR NOW It works only if destination string is shorter than source string.
+
+  for (int i = 0; i < countof (ConvertFrom); i++)
   {
+    if (!Apply[i] || ConvertFrom [i] == 0 || ConvertTo[i] == 0)
+      continue;
+
     char *Iter = Word;
     char *NestedIter = 0;
-    while (Iter = strstr (Iter, PunctuationApostrophe))
+    int Diff = strlen (ConvertFrom[i]) - strlen (ConvertTo[i]);
+    if (Diff < 0)
+      continue; // For now this case isn't needed.
+    while (Iter = strstr (Iter, ConvertFrom[i]))
     {
-      *Iter = '\'';
-      Iter++;
-      NestedIter = Iter;
-      while (*(NestedIter + 2))
+      for (size_t j = 0; j < strlen (ConvertFrom[i]); j++)
       {
-        *NestedIter =  *(NestedIter + 2);
+        *Iter = ConvertTo[i][j];
+        Iter++;
+      }
+      NestedIter = Iter;
+      while (*(NestedIter + Diff))
+      {
+        *NestedIter =  *(NestedIter + Diff);
         NestedIter++;
       }
-      *NestedIter = 0;
-      *(NestedIter + 1) = 0;
+      for (int j = 0; j < Diff; j++)
+        *(NestedIter + j) = 0;
     }
   }
 }
@@ -2146,22 +2195,10 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
   if (CheckComments && !CheckWordInCommentOrString (Start, End))
     return TRUE;
 
-  char *Utf8Buf = 0;
-
-  // Since this moment we need to exit this function by settings res and going to cleanup mark
-  if (ConvertingIsNeeded) // That's really part that sucks
-  {
-    // Well TODO: maybe convert only to unicode and tell aspell that we're using unicode
-    // Cause double conversion kinda sucks
-    SetStringDUtf8 (Utf8Buf, Word);
-  }
-  else
-    Utf8Buf = Word;
-
   TCHAR *Ts = 0;
-  long Len = strlen (Utf8Buf);
+  long Len = strlen (Word);
 
-  if (IgnoreNumbers && Utf8pbrk (Utf8Buf, "0123456789") != 0)
+  if (IgnoreNumbers && (CurrentEncoding == ENCODING_UTF8 ? Utf8pbrk (Word, "0123456789") : strpbrk (Word, "0123456789")) != 0) // Same for utf-8 and not
   {
     res = TRUE;
     goto CleanUp;
@@ -2169,7 +2206,10 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 
   if (IgnoreCStart || IgnoreCHave || IgnoreCAll)
   {
-    SetStringSUtf8 (Ts, Utf8Buf);
+    if (CurrentEncoding == ENCODING_UTF8)
+      SetStringSUtf8 (Ts, Word);
+    else
+      SetString (Ts, Word);
     if (IgnoreCStart && IsCharUpper (Ts[0]))
     {
       res = TRUE;
@@ -2200,29 +2240,27 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     }
   }
 
-  if (Ignore_ && strchr (Utf8Buf, '_') != 0)
+  if (Ignore_ && strchr (Word, '_') != 0) // I guess the same for utf-8 and ANSI
   {
     res = TRUE;
     goto CleanUp;
   }
 
-  ApplyConversions (Utf8Buf);
-  Len = strlen (Utf8Buf);
+  ApplyConversions (Word);
+  Len = strlen (Word);
 
   if (IgnoreSEApostrophe)
   {
-    if (Utf8Buf[0] == '\'' || Utf8Buf[Len - 1] == '\'')
+    if (Word[0] == '\'' || Word[Len - 1] == '\'')
     {
       res = TRUE;
       goto CleanUp;
     }
   }
 
-  res = CurrentSpeller->CheckWord (Utf8Buf);
+  res = CurrentSpeller->CheckWord (Word);
 
 CleanUp:
-  if (ConvertingIsNeeded)
-    CLEAN_AND_ZERO_ARR (Utf8Buf);
   CLEAN_AND_ZERO_ARR (Ts);
 
   return res;
@@ -2247,7 +2285,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode
   if (!DelimUtf8)
     return FALSE;
 
-  if (!ConvertingIsNeeded)
+  if (CurrentEncoding == ENCODING_UTF8)
     token = Utf8strtok (TextToCheck, DelimUtf8Converted, &Context);
   else
     token = strtok_s (TextToCheck, DelimConverted, &Context);
@@ -2294,7 +2332,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode
       }
     }
 
-    if (!ConvertingIsNeeded)
+    if (CurrentEncoding == ENCODING_UTF8)
       token =  Utf8strtok (NULL, DelimUtf8Converted, &Context);
     else
       token = strtok_s (NULL, DelimConverted, &Context);
@@ -2362,12 +2400,12 @@ void SpellChecker::setEncodingById (int EncId)
   switch (EncId)
   {
   case SC_CP_UTF8:
-    ConvertingIsNeeded = FALSE;
+    CurrentEncoding = ENCODING_UTF8;
     // SetEncoding ("utf-8");
     break;
   default:
     {
-      ConvertingIsNeeded = TRUE;
+      CurrentEncoding = ENCODING_ANSI;
       /*
       CCH = GetLocaleInfoA (GetSystemDefaultLCID(),
       LOCALE_IDEFAULTANSICODEPAGE,
@@ -2381,6 +2419,8 @@ void SpellChecker::setEncodingById (int EncId)
       */
     }
   }
+  HunspellSpeller->SetEncoding (CurrentEncoding);
+  AspellSpeller->SetEncoding (CurrentEncoding);
 }
 
 void SpellChecker::SwitchAutoCheck ()

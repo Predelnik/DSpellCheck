@@ -29,6 +29,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define countof(A) sizeof(A)/sizeof((A)[0])
 #define DEFAULT_BUF_SIZE 4096
 
+enum EncodingType
+{
+  ENCODING_UTF8 = 0,
+  ENCODING_ANSI
+};
+
 #define SUGGESTIONS_BOX 0
 #define SUGGESTIONS_CONTEXT_MENU 1
 

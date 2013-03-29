@@ -107,10 +107,18 @@ void AspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
 std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
 {
   const AspellWordList *WordList = 0, *CurWordList = 0;
+
+  char *TargetWord = 0;
+
+  if (CurrentEncoding == ENCODING_UTF8)
+    TargetWord = Word;
+  else
+    SetStringDUtf8 (TargetWord, Word);
+
   std::vector<char *> *SuggList = new std::vector<char *>;
   if (!MultiMode)
   {
-    WordList = aspell_speller_suggest (SingularSpeller, Word, -1);
+    WordList = aspell_speller_suggest (SingularSpeller, TargetWord, -1);
   }
   else
   {
@@ -120,7 +128,7 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
     CurWordList = 0;
     for (int i = 0; i < (int) Spellers->size (); i++)
     {
-      CurWordList = aspell_speller_suggest (Spellers->at (i), Word, -1);
+      CurWordList = aspell_speller_suggest (Spellers->at (i), TargetWord, -1);
 
       AspellStringEnumeration * els = aspell_word_list_elements(CurWordList);
       Size = aspell_word_list_size (CurWordList);
@@ -128,7 +136,7 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
       if (Size > 0)
       {
         const char *FirstSug = aspell_string_enumeration_next(els);
-        if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*Word))
+        if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*TargetWord))
           continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
       }
 
@@ -155,11 +163,21 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
     SuggList->push_back (Buf);
   }
 
+  if (CurrentEncoding == ENCODING_ANSI)
+    CLEAN_AND_ZERO_ARR (TargetWord);
+
   return SuggList;
 }
 
 void AspellInterface::AddToDictionary (char *Word)
 {
+  char *TargetWord = 0;
+
+  if (CurrentEncoding == ENCODING_UTF8)
+    TargetWord = Word;
+  else
+    SetStringDUtf8 (TargetWord, Word);
+
   if (!LastSelectedSpeller)
     return;
   aspell_speller_add_to_personal(LastSelectedSpeller, Word, strlen (Word) + 1);
@@ -169,6 +187,9 @@ void AspellInterface::AddToDictionary (char *Word)
     AspellErrorMsgBox (0, aspell_speller_error_message (LastSelectedSpeller)); // TODO: Get Scintilla window on construction
   }
   LastSelectedSpeller = 0;
+
+  if (CurrentEncoding == ENCODING_ANSI)
+    CLEAN_AND_ZERO_ARR (TargetWord);
 }
 
 void AspellInterface::IgnoreAll (char *Word)
@@ -176,13 +197,22 @@ void AspellInterface::IgnoreAll (char *Word)
   if (!LastSelectedSpeller)
     return;
 
-  aspell_speller_add_to_session (LastSelectedSpeller, Word, strlen (Word) + 1);
+  char *TargetWord = 0;
+
+  if (CurrentEncoding == ENCODING_UTF8)
+    TargetWord = Word;
+  else
+    SetStringDUtf8 (TargetWord, Word);
+
+  aspell_speller_add_to_session (LastSelectedSpeller, TargetWord, strlen (TargetWord) + 1);
   aspell_speller_save_all_word_lists (LastSelectedSpeller);
   if (aspell_speller_error(LastSelectedSpeller) != 0)
   {
     AspellErrorMsgBox (0, aspell_speller_error_message (LastSelectedSpeller));
   }
   LastSelectedSpeller = 0;
+  if (CurrentEncoding == ENCODING_ANSI)
+    CLEAN_AND_ZERO_ARR (TargetWord);
 }
 
 BOOL AspellInterface::CheckWord (char *Word)
@@ -190,11 +220,17 @@ BOOL AspellInterface::CheckWord (char *Word)
   if (!AspellLoaded)
     return TRUE;
 
+  char *DstWord = 0;
   BOOL res = FALSE;
-  unsigned int Len = strlen (Word);
+  if (CurrentEncoding == ENCODING_UTF8)
+    DstWord = Word;
+  else
+    SetStringDUtf8 (DstWord, Word);
+
+  unsigned int Len = strlen (DstWord);
   if (!MultiMode)
   {
-    res = aspell_speller_check(SingularSpeller, Word, Len);
+    res = aspell_speller_check(SingularSpeller, DstWord, Len);
   }
   else
   {
@@ -203,9 +239,12 @@ BOOL AspellInterface::CheckWord (char *Word)
 
     for (int i = 0; i < (int )Spellers->size () && !res; i++)
     {
-      res = res || aspell_speller_check(Spellers->at (i), Word, Len);
+      res = res || aspell_speller_check(Spellers->at (i), DstWord, Len);
     }
   }
+  if (CurrentEncoding != ENCODING_UTF8)
+    CLEAN_AND_ZERO_ARR (DstWord);
+
   return res;
 }
 

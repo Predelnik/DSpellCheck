@@ -51,6 +51,7 @@ int Utf8GetCharSize (char c);
 char * Utf8strtok (char *s1, const char *Delimit, char **Context);
 char *Utf8Inc (const char *string);
 char *Utf8pbrk(const char *s, const char *set);
+size_t Utf8Length (const char *String);
 
 bool SortCompare(TCHAR *a, TCHAR *b);
 #endif // COMMON_FUNCTIONS_H;
