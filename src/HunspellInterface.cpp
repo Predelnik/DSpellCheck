@@ -333,7 +333,7 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
   for (int i = 0; i < Num; i++)
   {
     char *Buf = 0;
-    SetString (Buf, GetConvertedWord (HunspellList[i], (CurrentEncoding == ENCODING_UTF8) ? LastSelectedSpeller.BackConverter : LastSelectedSpeller.BackConverterANSI));
+    SetString (Buf, GetConvertedWord (HunspellList[i], LastSelectedSpeller.BackConverter));
     SuggList->push_back (Buf);
   }
 
