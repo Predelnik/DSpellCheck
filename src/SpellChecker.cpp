@@ -1560,7 +1560,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
     }
     else if ((unsigned int)Result <= LastSuggestions->size ())
     {
-      if (CurrentEncoding == ENCODING_UTF8)
+      if (CurrentEncoding == ENCODING_ANSI)
         SetStringSUtf8 (AnsiBuf, LastSuggestions->at (Result - 1));
       else
         SetString (AnsiBuf, LastSuggestions->at (Result - 1));
@@ -1598,7 +1598,6 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   }
 
   SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
-  char *AnsiBuf = 0;
 
   SetString (SelectedWord, Range.lpstrText);
   ApplyConversions (SelectedWord);
@@ -1646,7 +1645,6 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
     SuggestionMenuItems->push_back (new SuggestionsMenuItem (_T (""), 0, TRUE));
 
-  CLEAN_AND_ZERO_ARR (AnsiBuf);
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
   CLEAN_AND_ZERO_ARR (Buf);
 
