@@ -63,12 +63,13 @@ BOOL CALLBACK AboutDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
       }
       return FALSE;
     }
-	break;
+    break;
   case WM_COMMAND:
     {
       switch (LOWORD (wParam))
       {
       case IDOK:
+      case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
         {
           display (false);
@@ -76,7 +77,7 @@ BOOL CALLBACK AboutDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
         }
       }
     }
-	break;
+    break;
   }
   return FALSE;
 }

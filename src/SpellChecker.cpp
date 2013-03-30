@@ -34,7 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&…¹—")
+#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&…¹—«»–•©")
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)
@@ -1278,6 +1278,9 @@ void SpellChecker::FindNextMistake ()
     {
       if (CurrentEncoding == ENCODING_UTF8)
       {
+        while (Utf8IsCont (*IteratingChar) && Range.lpstrText < IteratingChar)
+          IteratingChar--;
+
         while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && Range.lpstrText < IteratingChar)
         {
           IteratingChar = (char *) Utf8Dec (Range.lpstrText, IteratingChar);
@@ -1348,7 +1351,10 @@ void SpellChecker::FindPrevMistake ()
     {
       if (CurrentEncoding == ENCODING_UTF8)
       {
-        while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && IteratingChar)
+        while (Utf8IsCont (*IteratingChar) && *IteratingChar)
+          IteratingChar++;
+
+        while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && *IteratingChar)
         {
           IteratingChar = (char *) Utf8Inc (IteratingChar);
         }
@@ -2203,7 +2209,7 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
 BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 {
   BOOL res = FALSE;
-  if (!CurrentSpeller->IsWorking ())
+  if (!CurrentSpeller->IsWorking () || !Word || !*Word)
     return TRUE;
   // Well Numbers have same codes for ansi and unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name

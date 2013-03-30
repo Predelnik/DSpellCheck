@@ -341,16 +341,20 @@ char *Utf8pbrk(const char *s, const char *set)
 long Utf8spn (const char *s, const char *set)
 {
   const char *x;
+  const char *it = 0;
   size_t i;
+  it = s;
 
-  for (i = 0; *s; s = Utf8Inc (s), i++) {
+  for (; *it; it = Utf8Inc (it)) {
     for (x = set; *x; x = Utf8Inc (x))
-      if (Utf8FirstCharsAreEqual (s, x))
+    {
+      if (Utf8FirstCharsAreEqual (it, x))
         goto continue_outer;
+    }
     break;
-continue_outer:;
+    continue_outer:;
   }
-  return i;
+  return it - s;
 }
 
 char *Utf8chr (const char *s, const char *sfc) // Char is first from the string sfc (string with first char)
