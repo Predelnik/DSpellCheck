@@ -25,10 +25,6 @@ set (DEBUG_OUTPUT_DIR, ${BIN_DIR}/debug)
 set (RELEASE_OUTPUT_DIR, ${BIN_DIR}/release)
 add_definitions ("-D_CRT_NONSTDC_NO_DEPRECATE -D_UNICODE -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NON_CONFORMING_SWPRINTFS -D_CRT_SECURE_NO_DEPRECATE -D_WIN32_WINNT=0x501 -DWINVER=0x501")
 
-if (MSVC70 OR MSVC60)
-set (STATIC_LIBRARY_FLAGS "/FORCE:MULTIPLE")
-endif (MSVC70 OR MSVC60)
-
 set(DEBUG_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
 
 if ( MSVC )
@@ -96,6 +92,10 @@ set (list_of_files_DSpellCheck
 
 SET(LINK_LIBRARY shlwapi comctl32)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
+
+if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
+SET_TARGET_PROPERTIES(DSpellCheck PROPERTIES LINK_FLAGS "/FORCE:MULTIPLE")
+endif (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
 
 target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/lib/Debug/libhunspell.lib)
 target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/src/libiconv/DebugStatic_Win32/libiconv.lib)
