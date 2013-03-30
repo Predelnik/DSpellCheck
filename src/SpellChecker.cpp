@@ -262,6 +262,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
     SettingsDlgInstance->GetAdvancedDlg ()->ApplySettings (this);
+    FillDialogs ();
     SaveSettings ();
     CheckFileName (); // Cause filters may change
     RefreshUnderlineStyle ();
@@ -1600,6 +1601,7 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   char *AnsiBuf = 0;
 
   SetString (SelectedWord, Range.lpstrText);
+  ApplyConversions (SelectedWord);
 
   CLEAN_AND_ZERO_STRING_VECTOR (LastSuggestions);
   LastSuggestions = CurrentSpeller->GetSuggestions (SelectedWord);

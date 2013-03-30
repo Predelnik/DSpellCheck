@@ -163,7 +163,6 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   SpellCheckerInstance->SetSuggType (ComboBox_GetCurSel (HSuggType));
   SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
   SpellCheckerInstance->SetLibMode (GetSelectedLib ());
-  SpellCheckerInstance->FillDialogs ();
   CLEAN_AND_ZERO_ARR (Buf);
 }
 
@@ -801,6 +800,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
         if (HIWORD (wParam) == BN_CLICKED)
         {
           ApplySettings ();
+
           return TRUE;
         }
         break;
