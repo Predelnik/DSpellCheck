@@ -3,7 +3,7 @@
 // http://www.resedit.net
 
 #include <commctrl.h>
-#include <winres.h>
+#include <windows.h>
 #include "resource.h"
 
 

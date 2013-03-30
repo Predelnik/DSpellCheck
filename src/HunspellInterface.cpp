@@ -305,7 +305,7 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
 
       if (CurNum > 0)
       {
-        const char *FirstSug = GetConvertedWord (CurHunspellList [0], (CurrentEncoding == ENCODING_UTF8) ? Spellers->at (i).BackConverter : Spellers->at (i).BackConverterANSI);
+        const char *FirstSug = GetConvertedWord (CurHunspellList [0], Spellers->at (i).BackConverter);
         if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*Word))
           continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
       }

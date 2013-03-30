@@ -26,6 +26,7 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include "ControlsTab.h"
+#include <string>
 
 void ControlsTab::createTabs(WindowVector & winVector)
 {
