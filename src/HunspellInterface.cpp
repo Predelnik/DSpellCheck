@@ -250,10 +250,10 @@ BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word, EncodingType 
   if (!*WordToCheck)
     return FALSE;
 
-  if (Memorized->find (WordToCheck) != Memorized->end ())
+  if (Memorized->find (Word) != Memorized->end ())
     return TRUE;
 
-  if (Ignored->find (WordToCheck) != Ignored->end ())
+  if (Ignored->find (Word) != Ignored->end ())
     return TRUE;
 
   return Dic.Speller->spell (WordToCheck);
