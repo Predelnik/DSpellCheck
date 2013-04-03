@@ -12,3 +12,6 @@ About choosing suggestions menu for misspellings: The way I made it, may look pe
 v1.1 Changes:
 * Add Hunspell support, which is statically linked into Plug-in so you don't need to download any custom dlls to use it, dictionaries though (.aff and .dic files) should be placed by default into "***Notepad++_Dir***\plugins\Config\Hunspell\" (Location could be changed from settings).
 * Add option to use native Notepad++ context menu for choosing suggestions and adding word to dictionary/ignoring word (Default option is the old way though).
+
+v1.11
+* Fix adding words to user dictionary using Hunspell library.
