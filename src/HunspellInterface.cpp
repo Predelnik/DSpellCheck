@@ -92,12 +92,15 @@ HunspellInterface::HunspellInterface ()
   Spellers = new std::vector<DicInfo>;
   memset (&Empty, 0, sizeof (Empty));
   Ignored = new std::set <char *, bool (*)(char *, char *)> (SortCompareChars);
+  Memorized = new std::set <char *, bool (*)(char *, char *)> (SortCompareChars);
   SingularSpeller = Empty;
   DicDir = 0;
   LastSelectedSpeller = Empty;
   AllHunspells = new std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)> (SortCompare);
   IsHunspellWorking = FALSE;
   TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
+  UserDicPath = 0;
+  InitialReadingBeenDone = FALSE;
 }
 
 HunspellInterface::~HunspellInterface ()
@@ -117,6 +120,8 @@ HunspellInterface::~HunspellInterface ()
     CLEAN_AND_ZERO (AllHunspells);
   }
 
+  WriteUserDic ();
+
   {
     std::set <char *, bool (*)(char *, char *)>::iterator it = Ignored->begin ();
     for (; it != Ignored->end (); ++it)
@@ -125,10 +130,21 @@ HunspellInterface::~HunspellInterface ()
     }
     CLEAN_AND_ZERO (Ignored);
   }
+
+  {
+    std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
+    for (; it != Memorized->end (); ++it)
+    {
+      delete [] (*it);
+    }
+    CLEAN_AND_ZERO (Memorized);
+  }
+
   CLEAN_AND_ZERO (Spellers);
   CLEAN_AND_ZERO_STRING_VECTOR (DicList);
   CLEAN_AND_ZERO_ARR (DicDir);
   CLEAN_AND_ZERO_ARR (TemporaryBuffer);
+  CLEAN_AND_ZERO_ARR (UserDicPath);
 }
 
 std::vector<TCHAR*> *HunspellInterface::GetLanguageList ()
@@ -234,6 +250,9 @@ BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word, EncodingType 
   if (!*WordToCheck)
     return FALSE;
 
+  if (Memorized->find (WordToCheck) != Memorized->end ())
+    return TRUE;
+
   if (Ignored->find (WordToCheck) != Ignored->end ())
     return TRUE;
 
@@ -264,21 +283,77 @@ BOOL HunspellInterface::CheckWord (char *Word)
   return res;
 }
 
+void HunspellInterface::WriteUserDic ()
+{
+  FILE *Fp = 0;
+  if (!InitialReadingBeenDone)
+    return;
+  Fp = _tfopen (UserDicPath, _T ("w"));
+  if (!Fp)
+    return;
+  {
+    std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
+    fprintf (Fp, "%d\n", Memorized->size ());
+    for (; it != Memorized->end (); ++it)
+    {
+      fprintf (Fp, "%s\n", *it);
+    }
+  }
+
+  fclose (Fp);
+}
+
+void HunspellInterface::ReadUserDic ()
+{
+  FILE *Fp = 0;
+  int WordNum = 0;
+  Fp = _tfopen (UserDicPath, _T ("r"));
+  if (!Fp)
+  {
+    InitialReadingBeenDone = TRUE;
+    return;
+  }
+  {
+    char Buf [DEFAULT_BUF_SIZE];
+    if (fscanf (Fp, "%d\n", &WordNum) != 1)
+    {
+      InitialReadingBeenDone = TRUE;
+      return;
+    }
+    for (int i = 0; i < WordNum; i++)
+    {
+      if (fgets (Buf, DEFAULT_BUF_SIZE, Fp))
+      {
+        Buf[strlen (Buf) - 1] = 0;
+        char *Word = 0;
+        SetString (Word, Buf);
+        Memorized->insert (Word);
+      }
+    }
+  }
+
+  fclose (Fp);
+  InitialReadingBeenDone = TRUE;
+}
+
 void HunspellInterface::AddToDictionary (char *Word)
 {
   if (!LastSelectedSpeller.Speller)
     return;
-  LastSelectedSpeller.Speller->add (GetConvertedWord (Word, (CurrentEncoding == ENCODING_UTF8) ? LastSelectedSpeller.Converter : LastSelectedSpeller.ConverterANSI));
+
+  char *Buf = 0;
+  SetString (Buf, Word);
+  Memorized->insert (Buf);
 }
 
 void HunspellInterface::IgnoreAll (char *Word)
 {
   if (!LastSelectedSpeller.Speller)
     return;
+
   char *Buf = 0;
-  SetString (Buf, GetConvertedWord (Word, (CurrentEncoding == ENCODING_UTF8) ? LastSelectedSpeller.Converter : LastSelectedSpeller.ConverterANSI));
+  SetString (Buf, Word);
   Ignored->insert (Buf);
-  return; // Dummy, probably should be disabled for Hunspell or written in custom way
 }
 
 std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
@@ -376,6 +451,13 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
   IsHunspellWorking = (DicList->size () > 0);
 
   std::sort (DicList->begin (), DicList->end (), SortCompare);
+  CLEAN_AND_ZERO_ARR (UserDicPath);
+  UserDicPath = new TCHAR [DEFAULT_BUF_SIZE];
+  _tcscpy (UserDicPath, Dir);
+  if (UserDicPath[_tcslen (UserDicPath) - 1] != _T ('\\'))
+    _tcscat (UserDicPath, _T ("\\"));
+  _tcscat (UserDicPath, _T ("UserDic.dic")); // Should be tunable really
+  ReadUserDic ();
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
 

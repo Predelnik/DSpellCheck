@@ -54,6 +54,8 @@ public:
   __override virtual void IgnoreAll (char *Word);
 
   void SetDirectory (TCHAR *Dir);
+  void WriteUserDic ();
+  void ReadUserDic ();
 private:
   DicInfo CreateHunspell (TCHAR *Name);
 public:
@@ -68,7 +70,10 @@ private:
   DicInfo LastSelectedSpeller;
   DicInfo Empty;
   std::vector <DicInfo> *Spellers;
+  std::set <char *, bool (*)(char *, char *)> *Memorized;
   std::set <char *, bool (*)(char *, char *)> *Ignored;
+  BOOL InitialReadingBeenDone;
   char *TemporaryBuffer;
+  TCHAR *UserDicPath; // For now only default one.
 };
 #endif // HUNSPELLINTERFACE_H
