@@ -93,9 +93,12 @@ set (list_of_files_DSpellCheck
 SET(LINK_LIBRARY shlwapi comctl32)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
 
-if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
+#if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
 SET_TARGET_PROPERTIES(DSpellCheck PROPERTIES LINK_FLAGS "/FORCE:MULTIPLE")
-endif (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
+#endif (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
+
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_DEBUG} /MT")
 
 target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/lib/Debug/libhunspell.lib)
 target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/src/libiconv/DebugStatic_Win32/libiconv.lib)

@@ -1320,7 +1320,6 @@ void SpellChecker::FindNextMistake ()
 
 void SpellChecker::FindPrevMistake ()
 {
-  // TODO: /n, /r should always be present in delimiters
   CurrentPosition = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
   int CurLine = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, CurrentPosition);
   int LineCount = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLINECOUNT);

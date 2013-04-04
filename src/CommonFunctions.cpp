@@ -342,7 +342,6 @@ long Utf8spn (const char *s, const char *set)
 {
   const char *x;
   const char *it = 0;
-  size_t i;
   it = s;
 
   for (; *it; it = Utf8Inc (it)) {
@@ -352,7 +351,7 @@ long Utf8spn (const char *s, const char *set)
         goto continue_outer;
     }
     break;
-    continue_outer:;
+continue_outer:;
   }
   return it - s;
 }

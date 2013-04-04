@@ -25,6 +25,8 @@ set (list_of_files_IConv
 	${SRC_DIR}/relocatable.c
 	${SRC_DIR}/relocatable.h
 	)
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_DEBUG} /MT")
 
 add_library (libiconv STATIC ${list_of_files_IConv})
 
