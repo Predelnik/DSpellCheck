@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <tchar.h>
 #include <Shlobj.h>
 
+#if (_MSC_VER >= 1700)
 #define _CRTDBG_MAP_ALLOC
 #ifdef _DEBUG
 #ifndef DEBUG_NEW
@@ -41,3 +42,4 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #endif
 #include <stdlib.h>
 #include <crtdbg.h>
+#endif //_MSC_VER >= 1700
