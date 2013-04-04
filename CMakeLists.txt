@@ -90,7 +90,7 @@ set (list_of_files_DSpellCheck
 	${SRC_DIR}/Controls/TabBar/TabBar.h	
 	)
 
-SET(LINK_LIBRARY shlwapi comctl32)
+SET(LINK_LIBRARY shlwapi comctl32 version)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
 
 #if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
