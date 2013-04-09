@@ -91,8 +91,8 @@ HunspellInterface::HunspellInterface ()
   DicList = new std::vector <TCHAR *>;
   Spellers = new std::vector<DicInfo>;
   memset (&Empty, 0, sizeof (Empty));
-  Ignored = new std::set <char *, bool (*)(char *, char *)> (SortCompareChars);
-  Memorized = new std::set <char *, bool (*)(char *, char *)> (SortCompareChars);
+  Ignored = new std::set <char *, bool (*) (char *, char *)> (SortCompareChars);
+  Memorized = new std::set <char *, bool (*) (char *, char *)> (SortCompareChars);
   SingularSpeller = Empty;
   DicDir = 0;
   LastSelectedSpeller = Empty;
@@ -162,9 +162,9 @@ std::vector<TCHAR*> *HunspellInterface::GetLanguageList ()
 
 DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
 {
+  {
   std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (Name);
   if (it != AllHunspells->end ())
-  {
     return (*it).second;
   }
 
@@ -195,6 +195,15 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
   NewDic.ConverterANSI = iconv_open (NewHunspell->get_dic_encoding (), "");
   NewDic.BackConverterANSI = iconv_open ("", NewHunspell->get_dic_encoding ());
   NewDic.Speller = NewHunspell;
+  {
+  std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
+  for (; it != Memorized->end (); ++it)
+    {
+      char *ConvWord = GetConvertedWord (*it, NewDic.BackConverter);
+      if (*ConvWord)
+        NewHunspell->add (ConvWord); // Adding all already memorized words to newly loaded Hunspell instance
+    }
+  }
   (*AllHunspells)[NewName] = NewDic;
   CLEAN_AND_ZERO_ARR (AffBufAnsi);
   CLEAN_AND_ZERO_ARR (DicBufAnsi);
@@ -250,8 +259,7 @@ BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word, EncodingType 
   if (!*WordToCheck)
     return FALSE;
 
-  if (Memorized->find (Word) != Memorized->end ())
-    return TRUE;
+  // No additional check for memorized is needed since all words are already in dictionary
 
   if (Ignored->find (Word) != Ignored->end ())
     return TRUE;
@@ -344,6 +352,16 @@ void HunspellInterface::AddToDictionary (char *Word)
   char *Buf = 0;
   SetString (Buf, Word);
   Memorized->insert (Buf);
+  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it;
+  it = AllHunspells->begin ();
+  for (; it != AllHunspells->end (); ++it)
+    {
+      char *ConvWord = GetConvertedWord (Word, (*it).second.BackConverter);
+      if (*ConvWord)
+        (*it).second.Speller->add (ConvWord);
+
+      // Adding word to all currently loaded dictionaries and in memorized list to save it.
+    }
 }
 
 void HunspellInterface::IgnoreAll (char *Word)
@@ -421,6 +439,7 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
 {
   std::vector<TCHAR *> *FileList = new std::vector<TCHAR *>;
   SetString (DicDir, Dir);
+
   BOOL Res = ListFiles (Dir, _T ("*.*"), *FileList, _T ("*.aff"));
   if (!Res)
   {
@@ -457,7 +476,7 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
   if (UserDicPath[_tcslen (UserDicPath) - 1] != _T ('\\'))
     _tcscat (UserDicPath, _T ("\\"));
   _tcscat (UserDicPath, _T ("UserDic.dic")); // Should be tunable really
-  ReadUserDic ();
+  ReadUserDic (); // We should load user dictionary first.
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
 
