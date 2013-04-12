@@ -2187,7 +2187,7 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
       continue; // For now this case isn't needed.
     while (Iter = strstr (Iter, ConvertFrom[i]))
     {
-      for (size_t j = 0; j < strlen (ConvertFrom[i]); j++)
+      for (size_t j = 0; j < strlen (ConvertTo[i]); j++)
       {
         *Iter = ConvertTo[i][j];
         Iter++;
