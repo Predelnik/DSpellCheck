@@ -1250,7 +1250,6 @@ void SpellChecker::HideSuggestionBox ()
 }
 void SpellChecker::FindNextMistake ()
 {
-  // TODO: /n, /r should always be present in delimiters
   CurrentPosition = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
   int CurLine = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, CurrentPosition);
   int LineStartPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, CurLine);
