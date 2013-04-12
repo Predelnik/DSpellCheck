@@ -7,18 +7,11 @@ set (BIN_DIR ${PROJECT_SOURCE_DIR})
 configure_file ("${SRC_DIR}/config.h.in" "${SRC_DIR}/config.h")
 include_directories (${SRC_DIR}/Controls) 
 include_directories (${SRC_DIR})
-include_directories (${SRC_DIR}/Hunspell)
+include_directories (${SRC_DIR}/Hunspell/src)
 include_directories (${SRC_DIR}/libiconv/include)
-add_subdirectory ("./src/libiconv")
 
-# TODO: Add Hunspell and iconv Libraries to cmake project
-set(MSBUILD_PATH "" CACHE STRING "Path to MSBuild.exe to be able to build(rebuild) Hunspell Library")
-if (DEFINED MSBUILD_PATH)
-execute_process(COMMAND ${MSBUILD_PATH} ${SRC_DIR}/Hunspell/win_api/Hunspell.sln /p:Configuration=Release)
-execute_process(COMMAND ${MSBUILD_PATH} ${SRC_DIR}/Hunspell/win_api/Hunspell.sln /p:Configuration=Debug)
-file (COPY ${SRC_DIR}/Hunspell/win_api/Debug/libhunspell/libhunspell.lib DESTINATION ${BIN_DIR}/lib/Debug/)
-file (COPY ${SRC_DIR}/Hunspell/win_api/Release/libhunspell/libhunspell.lib DESTINATION ${BIN_DIR}/lib/Release/)
-endif (DEFINED MSBUILD_PATH)
+add_subdirectory ("./src/Hunspell") #Thanks https://github.com/zdenop/hunspell-mingw
+add_subdirectory ("./src/libiconv")
 
 set (GENERIC_OUTPUT_DIR, ${BIN_DIR})
 set (DEBUG_OUTPUT_DIR, ${BIN_DIR}/debug)
@@ -94,7 +87,7 @@ SET(LINK_LIBRARY shlwapi comctl32 version)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
 
 #if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
-SET_TARGET_PROPERTIES(DSpellCheck PROPERTIES LINK_FLAGS "/FORCE:MULTIPLE")
+# SET_TARGET_PROPERTIES(DSpellCheck PROPERTIES LINK_FLAGS "/FORCE:MULTIPLE")
 #endif (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
 
 if(MSVC)
