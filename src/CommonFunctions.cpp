@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #include "CommonFunctions.h"
+#include "iconv.h"
 #include "MainDef.h"
 #include "PluginInterface.h"
 
@@ -37,91 +38,132 @@ void SetString (TCHAR *&Target, const TCHAR *Str)
 void SetString (char *&Target, const TCHAR *Str)
 {
   CLEAN_AND_ZERO_ARR (Target);
-  int size = _tcslen (Str) + 1;
-  Target = new char[size];
+  size_t OutSize = _tcslen (Str) + 1;
+  Target = new char[OutSize];
+  char *OutBuf = Target;
+
 #ifndef UNICODE
   strcpy (Target, Str);
 #else // if UNICODE
-  WideCharToMultiByte (CP_ACP, 0, Str, size, Target, size, 0, 0);
+  iconv_t Converter = iconv_open ("CHAR", "UCS-2LE");
+
+  size_t InSize = (_tcslen (Str) + 1) * sizeof (TCHAR);
+  size_t res = iconv (Converter, (const char **) &Str, &InSize, &OutBuf, &OutSize);
+  iconv_close (Converter);
+  if (res == (size_t)(-1))
+  {
+    *Target = '\0';
+  }
 #endif // UNICODE
 }
 
 void SetString (TCHAR *&Target, const char *Str)
 {
   CLEAN_AND_ZERO_ARR (Target);
-  int size = strlen (Str) + 1;
-  Target = new TCHAR[size];
+  size_t OutSize = sizeof (TCHAR) * (strlen (Str) + 1);
+  Target = new TCHAR [OutSize];
+  char *OutBuf = (char *) Target;
+
 #ifndef UNICODE
   strcpy (Target, Str);
 #else // if UNICODE
-  MultiByteToWideChar (CP_ACP, 0, Str, size, Target, size);
+  iconv_t Converter = iconv_open ("UCS-2LE", "CHAR");
+
+  size_t InSize = strlen (Str) + 1;
+  size_t res = iconv (Converter, (const char **) &Str, &InSize, &OutBuf, &OutSize);
+  iconv_close (Converter);
+
+  if (res == (size_t)(-1))
+  {
+    *Target = '\0';
+  }
 #endif // UNICODE
 }
 
 // In case source is in utf-8
 void SetStringSUtf8 (TCHAR *&Target, const char *Str)
 {
+  #ifndef UNICODE
+  iconv_t Converter = iconv_open ("CHAR", "UTF-8");
+  #else // !UNICODE
+  iconv_t Converter = iconv_open ("UCS-2LE", "UTF-8");
+  #endif // !UNICODE
   CLEAN_AND_ZERO_ARR (Target);
-  int StrSize = strlen (Str) + 1;
-  WCHAR *WcharBuf = new WCHAR[StrSize];
-  MultiByteToWideChar(CP_UTF8, 0, Str, StrSize, WcharBuf, StrSize);
-#ifdef UNICODE
-  Target = WcharBuf;
-  return;
-#else
-  int TargetSize = WideCharToMultiByte (CP_ACP, 0, WcharBuf, StrSize, 0, 0, 0, 0);
-  Target = new char[TargetSize];
-  WideCharToMultiByte (CP_ACP, 0, WcharBuf, StrSize, Target, TargetSize, 0, 0);
+  size_t InSize = strlen (Str) + 1;
+  size_t OutSize = (Utf8Length (Str) + 1) * sizeof (TCHAR);
+  Target = new TCHAR[OutSize];
+  char *OutBuf = (char *) Target;
+  size_t res = iconv (Converter, &Str, &InSize, &OutBuf, &OutSize);
+  iconv_close (Converter);
 
-  CLEAN_AND_ZERO_ARR (WcharBuf);
-#endif
+  if (res == (size_t)(-1))
+  {
+    *Target = '\0';
+  }
 }
 
 // In case destination is in utf-8
 void SetStringDUtf8 (char *&Target, const TCHAR *Str)
 {
-  CLEAN_AND_ZERO_ARR (Target);
-  int StrSize = _tcslen (Str) + 1;
-#ifdef UNICODE
-  const WCHAR *WcharBuf = Str;
-#else
-  WCHAR *WcharBuf = new WCHAR[StrSize];
-  MultiByteToWideChar(CP_ACP, 0, Str, TargetSize, WcharBuf, StrSize);
-#endif
-  int TargetSize = 0;
-  TargetSize = WideCharToMultiByte (CP_UTF8, 0, WcharBuf, StrSize, 0, 0, 0, 0);
-  Target = new char[TargetSize];
-  WideCharToMultiByte (CP_UTF8, 0, WcharBuf, StrSize, Target, TargetSize, 0, 0);
-#ifndef UNICODE
-  CLEAN_AND_ZERO_ARR (WcharBuf);
-#endif UNICODE
+  #ifndef UNICODE
+  iconv_t Converter = iconv_open ("UTF-8", "CHAR");
+  #else // !UNICODE
+  iconv_t Converter = iconv_open ("UTF-8", "UCS-2LE");
+  #endif // !UNICODE
+  size_t InSize = (_tcslen (Str) + 1) * sizeof (TCHAR);
+  size_t OutSize = 6 * _tcslen (Str) + 1; // Maximum Possible UTF-8 size
+  char *TempBuf = new char[OutSize];
+  char *OutBuf = (char *) TempBuf;
+  size_t res = iconv (Converter, (const char **) &Str, &InSize, &OutBuf, &OutSize);
+  iconv_close (Converter);
+  if (res == (size_t)(-1))
+  {
+    Target = new char[1];
+    *Target = '\0';
+    CLEAN_AND_ZERO_ARR (TempBuf)
+    return;
+  }
+  SetString (Target, TempBuf); // Cutting off unnecessary symbols.
+  CLEAN_AND_ZERO_ARR (TempBuf);
 }
 
 // In case source is in utf-8
 void SetStringSUtf8 (char *&Target, const char *Str)
 {
+  iconv_t Converter = iconv_open ("CHAR", "UTF-8");
   CLEAN_AND_ZERO_ARR (Target);
-  int StrSize = strlen (Str) + 1;
-  WCHAR *WcharBuf = new WCHAR[StrSize];
-  int TargetSize = 0;
-  TargetSize = MultiByteToWideChar(CP_UTF8, 0, Str, StrSize, 0, 0);
-  Target = new char[TargetSize];
-  TargetSize = MultiByteToWideChar(CP_UTF8, 0, Str, StrSize, WcharBuf, TargetSize);
-  WideCharToMultiByte (CP_ACP, 0, WcharBuf, TargetSize, Target, TargetSize, 0, 0);
-  CLEAN_AND_ZERO_ARR (WcharBuf);
+  size_t InSize = strlen (Str) + 1;
+  size_t OutSize = Utf8Length (Str) + 1;
+  Target = new char[OutSize];
+  char *OutBuf = (char *) Target;
+  size_t res = iconv (Converter, &Str, &InSize, &OutBuf, &OutSize);
+  iconv_close (Converter);
+
+  if (res == (size_t)(-1))
+  {
+    *Target = '\0';
+  }
 }
 
 // In case destination is in utf-8
 void SetStringDUtf8 (char *&Target, const char *Str)
 {
-  CLEAN_AND_ZERO_ARR (Target);
-  int StrSize = strlen (Str) + 1;
-  WCHAR *WcharBuf = new WCHAR[StrSize];
-  MultiByteToWideChar(CP_ACP, 0, Str, StrSize, WcharBuf, StrSize);
-  int TargetSize = WideCharToMultiByte (CP_UTF8, 0, WcharBuf, StrSize, 0, 0, 0, 0);
-  Target = new char[TargetSize];
-  WideCharToMultiByte (CP_UTF8, 0, WcharBuf, StrSize, Target, TargetSize, 0, 0);
-  CLEAN_AND_ZERO_ARR (WcharBuf);
+  iconv_t Converter = iconv_open ("UTF-8", "CHAR");
+  size_t InSize = strlen (Str) + 1;
+  size_t OutSize = 6 * strlen (Str) + 1; // Maximum Possible UTF-8 size
+  char *TempBuf = new char[OutSize];
+  char *OutBuf = (char *) TempBuf;
+  size_t res = iconv (Converter, (const char **) &Str, &InSize, &OutBuf, &OutSize);
+  iconv_close (Converter);
+  if (res == (size_t)(-1))
+  {
+    Target = new char[1];
+    *Target = '\0';
+    CLEAN_AND_ZERO_ARR (TempBuf)
+    return;
+  }
+  SetString (Target, TempBuf); // Cutting off unnecessary symbols.
+  CLEAN_AND_ZERO_ARR (TempBuf);
 }
 
 // This function is more or less transferred from gcc source
