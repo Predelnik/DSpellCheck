@@ -32,6 +32,12 @@ AspellInterface::AspellInterface ()
 
 AspellInterface::~AspellInterface ()
 {
+  if (!AspellLoaded)
+  {
+    CLEAN_AND_ZERO (Spellers); // Probably in that case nothing should be created
+    return;
+  }
+
   delete_aspell_speller (SingularSpeller);
   SingularSpeller = 0;
   for (unsigned int i = 0; i < Spellers->size (); i++)
