@@ -199,7 +199,7 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
   std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
   for (; it != Memorized->end (); ++it)
     {
-      char *ConvWord = GetConvertedWord (*it, NewDic.BackConverter);
+      char *ConvWord = GetConvertedWord (*it, NewDic.Converter);
       if (*ConvWord)
         NewHunspell->add (ConvWord); // Adding all already memorized words to newly loaded Hunspell instance
     }
@@ -356,7 +356,7 @@ void HunspellInterface::AddToDictionary (char *Word)
   it = AllHunspells->begin ();
   for (; it != AllHunspells->end (); ++it)
     {
-      char *ConvWord = GetConvertedWord (Word, (*it).second.BackConverter);
+      char *ConvWord = GetConvertedWord (Word, (*it).second.Converter);
       if (*ConvWord)
         (*it).second.Speller->add (ConvWord);
 

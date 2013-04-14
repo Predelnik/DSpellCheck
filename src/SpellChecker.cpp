@@ -2209,7 +2209,7 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
   BOOL res = FALSE;
   if (!CurrentSpeller->IsWorking () || !Word || !*Word)
     return TRUE;
-  // Well Numbers have same codes for ansi and unicode I guess, so
+  // Well Numbers have same codes for ANSI and Unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
   if (CheckComments && !CheckWordInCommentOrString (Start, End))
     return TRUE;
@@ -2259,7 +2259,7 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     }
   }
 
-  if (Ignore_ && strchr (Word, '_') != 0) // I guess the same for utf-8 and ANSI
+  if (Ignore_ && strchr (Word, '_') != 0) // I guess the same for UTF-8 and ANSI
   {
     res = TRUE;
     goto CleanUp;
