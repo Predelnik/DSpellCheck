@@ -350,13 +350,16 @@ void HunspellInterface::AddToDictionary (char *Word)
     return;
 
   char *Buf = 0;
-  SetString (Buf, Word);
+  if (CurrentEncoding == ENCODING_UTF8)
+    SetString (Buf, Word);
+  else
+    SetStringDUtf8 (Buf, Word);
   Memorized->insert (Buf);
   std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it;
   it = AllHunspells->begin ();
   for (; it != AllHunspells->end (); ++it)
     {
-      char *ConvWord = GetConvertedWord (Word, (*it).second.Converter);
+      char *ConvWord = GetConvertedWord (Buf, (*it).second.Converter);
       if (*ConvWord)
         (*it).second.Speller->add (ConvWord);
 
@@ -381,6 +384,7 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
   int CurNum;
   char **HunspellList = 0;
   char **CurHunspellList = 0;
+  char *WordUtf8 = 0;
   LastSelectedSpeller = SingularSpeller;
 
   if (!MultiMode)
@@ -399,7 +403,8 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
       if (CurNum > 0)
       {
         const char *FirstSug = GetConvertedWord (CurHunspellList [0], Spellers->at (i).BackConverter);
-        if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*Word))
+        SetStringDUtf8 (WordUtf8, Word);
+        if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*WordUtf8))
           continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
       }
 
@@ -432,6 +437,8 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
 
   LastSelectedSpeller.Speller->free_list (&HunspellList, Num);
 
+  CLEAN_AND_ZERO_ARR (WordUtf8);
+
   return SuggList;
 }
 
@@ -439,6 +446,7 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
 {
   std::vector<TCHAR *> *FileList = new std::vector<TCHAR *>;
   SetString (DicDir, Dir);
+
 
   BOOL Res = ListFiles (Dir, _T ("*.*"), *FileList, _T ("*.aff"));
   if (!Res)
