@@ -1657,7 +1657,9 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
 
 void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
 {
-  SaveToIni (_T ("Autocheck"), AutoCheckText, 0);
+  if (SaveSetting)
+    SaveSettings ();
+
   CheckMenuItem(GetMenu(NppDataInstance->_nppHandle), get_funcItem ()[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
 }
 
