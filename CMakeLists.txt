@@ -105,9 +105,9 @@ if(MSVC)
     SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}" CACHE STRING "MSVC CXX Release MT flags " FORCE)
 endif()
 
-target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/lib/Debug/libhunspell.lib)
+target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/src/Hunspell/Debug/libhunspell.lib)
 target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/src/libiconv/DebugStatic_Win32/libiconv.lib)
-target_link_libraries (DSpellCheck optimized ${PROJECT_SOURCE_DIR}/lib/Release/libhunspell.lib)
+target_link_libraries (DSpellCheck optimized ${PROJECT_SOURCE_DIR}/src/Hunspell/Release/libhunspell.lib)
 target_link_libraries (DSpellCheck optimized ${PROJECT_SOURCE_DIR}/src/libiconv/ReleaseStatic_Win32/libiconv.lib)
 
 include (PrecompiledHeader.cmake)

@@ -358,7 +358,8 @@ int Utf8GetCharSize (char c)
   else if ((c & 0xF8) > 0 && (c & 0x04) == 0)
     return 5;
   else if ((c & 0xFC) > 0 && (c & 0x02) == 0)
-    return 0;
+    return 6;
+  return 0;
 }
 
 BOOL Utf8FirstCharsAreEqual (const char *Str1, const char *Str2)
