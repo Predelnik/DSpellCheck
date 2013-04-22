@@ -83,11 +83,11 @@ void SetString (TCHAR *&Target, const char *Str)
 // In case source is in utf-8
 void SetStringSUtf8 (TCHAR *&Target, const char *Str)
 {
-  #ifndef UNICODE
+#ifndef UNICODE
   iconv_t Converter = iconv_open ("CHAR", "UTF-8");
-  #else // !UNICODE
+#else // !UNICODE
   iconv_t Converter = iconv_open ("UCS-2LE", "UTF-8");
-  #endif // !UNICODE
+#endif // !UNICODE
   CLEAN_AND_ZERO_ARR (Target);
   size_t InSize = strlen (Str) + 1;
   size_t OutSize = (Utf8Length (Str) + 1) * sizeof (TCHAR);
@@ -105,11 +105,11 @@ void SetStringSUtf8 (TCHAR *&Target, const char *Str)
 // In case destination is in utf-8
 void SetStringDUtf8 (char *&Target, const TCHAR *Str)
 {
-  #ifndef UNICODE
+#ifndef UNICODE
   iconv_t Converter = iconv_open ("UTF-8", "CHAR");
-  #else // !UNICODE
+#else // !UNICODE
   iconv_t Converter = iconv_open ("UTF-8", "UCS-2LE");
-  #endif // !UNICODE
+#endif // !UNICODE
   size_t InSize = (_tcslen (Str) + 1) * sizeof (TCHAR);
   size_t OutSize = 6 * _tcslen (Str) + 1; // Maximum Possible UTF-8 size
   char *TempBuf = new char[OutSize];
@@ -121,7 +121,7 @@ void SetStringDUtf8 (char *&Target, const TCHAR *Str)
     Target = new char[1];
     *Target = '\0';
     CLEAN_AND_ZERO_ARR (TempBuf)
-    return;
+      return;
   }
   SetString (Target, TempBuf); // Cutting off unnecessary symbols.
   CLEAN_AND_ZERO_ARR (TempBuf);
@@ -160,7 +160,7 @@ void SetStringDUtf8 (char *&Target, const char *Str)
     Target = new char[1];
     *Target = '\0';
     CLEAN_AND_ZERO_ARR (TempBuf)
-    return;
+      return;
   }
   SetString (Target, TempBuf); // Cutting off unnecessary symbols.
   CLEAN_AND_ZERO_ARR (TempBuf);
@@ -309,11 +309,12 @@ LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Ms
 
 BOOL Utf8IsLead (char c)
 {
-  return (((c & 0x80) == 0)                 // 0xxxxxxx
+  return (((c & 0x80) == 0)                       // 0xxxxxxx
     || ((c & 0xC0) == 0xC0 && (c & 0x20) == 0)    // 110xxxxx
     || ((c & 0xE0) == 0xE0 && (c & 0x10) == 0)    // 1110xxxx
     || ((c & 0xF0) == 0xF0 && (c & 0x08) == 0)    // 11110xxx
-    || ((c & 0xF8) == 0xF8 && (c & 0x04) == 0));  // 111110xx
+    || ((c & 0xF8) == 0xF8 && (c & 0x04) == 0)   // 111110xx
+    || ((c & 0xFC) == 0xFC && (c & 0x02) == 0));
 }
 
 BOOL Utf8IsCont (char c)
@@ -352,13 +353,12 @@ int Utf8GetCharSize (char c)
     return 2;
   else if ((c & 0xE0) > 0 && (c & 0x10) == 0)
     return 3;
-  else if ((c & 0xE0) > 0 && (c & 0x10) == 0)
-    return 4;
   else if ((c & 0xF0) > 0 && (c & 0x08) == 0)
-    return 5;
+    return 4;
   else if ((c & 0xF8) > 0 && (c & 0x04) == 0)
-    return 6;
-  return 0;
+    return 5;
+  else if ((c & 0xFC) > 0 && (c & 0x02) == 0)
+    return 0;
 }
 
 BOOL Utf8FirstCharsAreEqual (const char *Str1, const char *Str2)
