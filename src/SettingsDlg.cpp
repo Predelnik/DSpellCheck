@@ -400,15 +400,12 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
           LPITEMIDLIST pidl = SHBrowseForFolder ( &bi );
           if ( pidl != 0 )
           {
-            if (NULL != pidl)
-            {
-              // get the name of the folder
-              TCHAR *szPath = new TCHAR[MAX_PATH];
-              SHGetPathFromIDList (pidl, szPath);
-              Edit_SetText (HLibPath, szPath);
-              CoTaskMemFree(pidl);
-              // free memory used
-            }
+            // get the name of the folder
+            TCHAR *szPath = new TCHAR[MAX_PATH];
+            SHGetPathFromIDList (pidl, szPath);
+            Edit_SetText (HLibPath, szPath);
+            CoTaskMemFree(pidl);
+            // free memory used
 
             CoUninitialize();
           }
@@ -839,4 +836,3 @@ UINT SettingsDlg::DoDialog (void)
   return TRUE;
   // return (UINT)::DialogBoxParam(_hInst, MAKEINTRESOURCE(IDD_SETTINGS), _hParent, (DLGPROC)dlgProc, (LPARAM)this);
 }
-

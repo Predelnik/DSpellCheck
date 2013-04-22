@@ -2504,6 +2504,6 @@ void SpellChecker::RecheckVisible ()
 void SpellChecker::ErrorMsgBox (const TCHAR * message)
 {
   TCHAR buf [DEFAULT_BUF_SIZE];
-  _stprintf_s (buf, _T ("%s%s"), "DSpellCheck Error:", message, _tcslen (message));
+  _stprintf_s (buf, _T ("%s"), "DSpellCheck Error:", message, _tcslen (message));
   MessageBox (NppDataInstance->_nppHandle, message, _T("Error Happened!"), MB_OK | MB_ICONSTOP);
 }
