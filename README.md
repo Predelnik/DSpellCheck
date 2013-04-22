@@ -19,4 +19,8 @@ v1.1.1
 v1.1.2
 * Fix crash on exit when aspell isn't presented.
 * Fix some encoding problems.
-* Fix words added to Hunspell to be being able to be suggested .
+* Fix words added to Hunspell to be being able to be suggested.
+
+v1.1.3
+* Fix autospellcheck option not being saved correctly.
+* Fix some minor bugs.
