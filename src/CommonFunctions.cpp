@@ -45,7 +45,7 @@ void SetString (char *&Target, const TCHAR *Str)
 #ifndef UNICODE
   strcpy (Target, Str);
 #else // if UNICODE
-  iconv_t Converter = iconv_open ("CHAR", "UCS-2LE");
+  iconv_t Converter = iconv_open ("CHAR//IGNORE", "UCS-2LE");
 
   size_t InSize = (_tcslen (Str) + 1) * sizeof (TCHAR);
   size_t res = iconv (Converter, (const char **) &Str, &InSize, &OutBuf, &OutSize);
@@ -67,7 +67,7 @@ void SetString (TCHAR *&Target, const char *Str)
 #ifndef UNICODE
   strcpy (Target, Str);
 #else // if UNICODE
-  iconv_t Converter = iconv_open ("UCS-2LE", "CHAR");
+  iconv_t Converter = iconv_open ("UCS-2LE//IGNORE", "CHAR");
 
   size_t InSize = strlen (Str) + 1;
   size_t res = iconv (Converter, (const char **) &Str, &InSize, &OutBuf, &OutSize);
@@ -86,7 +86,7 @@ void SetStringSUtf8 (TCHAR *&Target, const char *Str)
 #ifndef UNICODE
   iconv_t Converter = iconv_open ("CHAR", "UTF-8");
 #else // !UNICODE
-  iconv_t Converter = iconv_open ("UCS-2LE", "UTF-8");
+  iconv_t Converter = iconv_open ("UCS-2LE//IGNORE", "UTF-8");
 #endif // !UNICODE
   CLEAN_AND_ZERO_ARR (Target);
   size_t InSize = strlen (Str) + 1;
@@ -108,7 +108,7 @@ void SetStringDUtf8 (char *&Target, const TCHAR *Str)
 #ifndef UNICODE
   iconv_t Converter = iconv_open ("UTF-8", "CHAR");
 #else // !UNICODE
-  iconv_t Converter = iconv_open ("UTF-8", "UCS-2LE");
+  iconv_t Converter = iconv_open ("UTF-8//IGNORE", "UCS-2LE");
 #endif // !UNICODE
   size_t InSize = (_tcslen (Str) + 1) * sizeof (TCHAR);
   size_t OutSize = 6 * _tcslen (Str) + 1; // Maximum Possible UTF-8 size
@@ -130,7 +130,7 @@ void SetStringDUtf8 (char *&Target, const TCHAR *Str)
 // In case source is in utf-8
 void SetStringSUtf8 (char *&Target, const char *Str)
 {
-  iconv_t Converter = iconv_open ("CHAR", "UTF-8");
+  iconv_t Converter = iconv_open ("CHAR//IGNORE", "UTF-8");
   CLEAN_AND_ZERO_ARR (Target);
   size_t InSize = strlen (Str) + 1;
   size_t OutSize = Utf8Length (Str) + 1;
@@ -148,7 +148,7 @@ void SetStringSUtf8 (char *&Target, const char *Str)
 // In case destination is in utf-8
 void SetStringDUtf8 (char *&Target, const char *Str)
 {
-  iconv_t Converter = iconv_open ("UTF-8", "CHAR");
+  iconv_t Converter = iconv_open ("UTF-8//IGNORE", "CHAR");
   size_t InSize = strlen (Str) + 1;
   size_t OutSize = 6 * strlen (Str) + 1; // Maximum Possible UTF-8 size
   char *TempBuf = new char[OutSize];

@@ -163,9 +163,9 @@ std::vector<TCHAR*> *HunspellInterface::GetLanguageList ()
 DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
 {
   {
-  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (Name);
-  if (it != AllHunspells->end ())
-    return (*it).second;
+    std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (Name);
+    if (it != AllHunspells->end ())
+      return (*it).second;
   }
 
   int size = _tcslen (DicDir) + 1 + _tcslen (Name) + 1 + 3 + 1; // + . + aff/dic + /0
@@ -196,8 +196,8 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
   NewDic.BackConverterANSI = iconv_open ("", NewHunspell->get_dic_encoding ());
   NewDic.Speller = NewHunspell;
   {
-  std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
-  for (; it != Memorized->end (); ++it)
+    std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
+    for (; it != Memorized->end (); ++it)
     {
       char *ConvWord = GetConvertedWord (*it, NewDic.Converter);
       if (*ConvWord)
@@ -358,13 +358,13 @@ void HunspellInterface::AddToDictionary (char *Word)
   std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it;
   it = AllHunspells->begin ();
   for (; it != AllHunspells->end (); ++it)
-    {
-      char *ConvWord = GetConvertedWord (Buf, (*it).second.Converter);
-      if (*ConvWord)
-        (*it).second.Speller->add (ConvWord);
+  {
+    char *ConvWord = GetConvertedWord (Buf, (*it).second.Converter);
+    if (*ConvWord)
+      (*it).second.Speller->add (ConvWord);
 
-      // Adding word to all currently loaded dictionaries and in memorized list to save it.
-    }
+    // Adding word to all currently loaded dictionaries and in memorized list to save it.
+  }
 }
 
 void HunspellInterface::IgnoreAll (char *Word)
@@ -446,7 +446,6 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
 {
   std::vector<TCHAR *> *FileList = new std::vector<TCHAR *>;
   SetString (DicDir, Dir);
-
 
   BOOL Res = ListFiles (Dir, _T ("*.*"), *FileList, _T ("*.aff"));
   if (!Res)
