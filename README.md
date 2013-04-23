@@ -24,3 +24,6 @@ v1.1.2
 v1.1.3
 * Fix autospellcheck option not being saved correctly.
 * Fix some minor bugs.
+
+v1.1.4
+* Fix some encoding conversion problems, which were leading to very dramatic results on some systems.
