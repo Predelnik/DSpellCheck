@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define SPELLCHECKER_H
 // Class that will do most of the job with spellchecker
 
+#include "MainDef.h"
+
 struct AspellSpeller;
 struct AspellWordList;
 class SettingsDlg;
@@ -83,6 +85,7 @@ public:
   void SetSuggType (int SuggType);
   void SetLibMode (int i);
   void FillDialogs ();
+  TCHAR *GetHunspellPath () {return HunspellPath; };
 
 private:
   enum CheckTextMode

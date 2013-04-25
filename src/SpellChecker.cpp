@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "HunspellInterface.h"
 
 #include "Aspell.h"
+#include "DownloadDicsDlg.h"
 #include "iconv.h"
 #include "CommonFunctions.h"
 #include "LangList.h"
@@ -138,8 +139,8 @@ SpellChecker::~SpellChecker ()
   CLEAN_AND_ZERO_ARR (YoANSI);
   CLEAN_AND_ZERO_ARR (yoANSI);
   CLEAN_AND_ZERO_ARR (YeANSI);
-  CLEAN_AND_ZERO_ARR (yeANSI)
-    CLEAN_AND_ZERO_ARR (PunctuationApostropheANSI);
+  CLEAN_AND_ZERO_ARR (yeANSI);
+  CLEAN_AND_ZERO_ARR (PunctuationApostropheANSI);
 }
 
 void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL Separator)
@@ -304,6 +305,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     break;
   case EID_SET_SUGGESTIONS_BOX_TRANSPARENCY:
     SetSuggestionsBoxTransparency ();
+    break;
+  case EID_DOWNLOAD_SELECTED:
+    GetDownloadDics ()->DownloadSelected ();
     break;
   case EID_DEFAULT_DELIMITERS:
     SetDefaultDelimiters ();

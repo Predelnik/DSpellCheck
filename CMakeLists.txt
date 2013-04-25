@@ -8,10 +8,12 @@ configure_file ("${SRC_DIR}/config.h.in" "${SRC_DIR}/config.h")
 include_directories (${SRC_DIR}/Controls) 
 include_directories (${SRC_DIR})
 include_directories (${SRC_DIR}/Hunspell/src)
+include_directories (${SRC_DIR}/minizip/)
 include_directories (${SRC_DIR}/libiconv/include)
 
 add_subdirectory ("./src/Hunspell") #Thanks https://github.com/zdenop/hunspell-mingw
 add_subdirectory ("./src/libiconv")
+add_subdirectory ("./src/minizip")
 
 set (GENERIC_OUTPUT_DIR, ${BIN_DIR})
 set (DEBUG_OUTPUT_DIR, ${BIN_DIR}/debug)
@@ -39,51 +41,53 @@ else ( MSVC )
 endif ( MSVC )
 
 set (list_of_files_DSpellCheck 
-	${SRC_DIR}/Plugin.cpp 
-	${SRC_DIR}/Plugin.h
-	${SRC_DIR}/SpellChecker.cpp 
-	${SRC_DIR}/SpellChecker.h
-	${SRC_DIR}/DllMain.cpp 
-	${SRC_DIR}/menuCmdID.h
-	${SRC_DIR}/scintilla.h 
-	${SRC_DIR}/SciLexer.h
-	${SRC_DIR}/PluginInterface.h
-	${SRC_DIR}/Notepad_plus_msgs.h
-	${SRC_DIR}/LangList.cpp
-	${SRC_DIR}/LangList.h
-	${SRC_DIR}/aspell.h
-	${SRC_DIR}/aspell.cpp
-	${SRC_DIR}/MainDef.h
-	${SRC_DIR}/SettingsDlg.cpp
-	${SRC_DIR}/SettingsDlg.h
-	${SRC_DIR}/CommonFunctions.cpp
-	${SRC_DIR}/CommonFunctions.h
-	${SRC_DIR}/Suggestions.cpp
-	${SRC_DIR}/Suggestions.h
-	${SRC_DIR}/PrecompiledHeader.cpp
-	${SRC_DIR}/PrecompiledHeader.h
-	${SRC_DIR}/AboutDlg.cpp
-	${SRC_DIR}/AboutDlg.h
-	${SRC_DIR}/DSpellCheck.rc
-	${SRC_DIR}/AbstractSpellerInterface.cpp
-	${SRC_DIR}/AbstractSpellerInterface.h
-	${SRC_DIR}/AspellInterface.cpp
-	${SRC_DIR}/AspellInterface.h
-	${SRC_DIR}/HunspellInterface.cpp
-	${SRC_DIR}/HunspellInterface.h
-	${SRC_DIR}/Controls/CheckedList/CheckedList.h
-	${SRC_DIR}/Controls/CheckedList/CheckedList.cpp
-	${SRC_DIR}/Controls/StaticDialog/StaticDialog.cpp
-	${SRC_DIR}/Controls/StaticDialog/StaticDialog.h
-	${SRC_DIR}/Controls/Window.h
-	${SRC_DIR}/Controls/StaticDialog/StaticDialog.h
-	${SRC_DIR}/Controls/TabBar/ControlsTab.cpp
-	${SRC_DIR}/Controls/TabBar/ControlsTab.h
-	${SRC_DIR}/Controls/TabBar/TabBar.cpp
-	${SRC_DIR}/Controls/TabBar/TabBar.h	
-	)
+  ${SRC_DIR}/Plugin.cpp 
+  ${SRC_DIR}/Plugin.h
+  ${SRC_DIR}/SpellChecker.cpp 
+  ${SRC_DIR}/SpellChecker.h
+  ${SRC_DIR}/DllMain.cpp 
+  ${SRC_DIR}/menuCmdID.h
+  ${SRC_DIR}/scintilla.h 
+  ${SRC_DIR}/SciLexer.h
+  ${SRC_DIR}/PluginInterface.h
+  ${SRC_DIR}/Notepad_plus_msgs.h
+  ${SRC_DIR}/LangList.cpp
+  ${SRC_DIR}/LangList.h
+  ${SRC_DIR}/aspell.h
+  ${SRC_DIR}/aspell.cpp
+  ${SRC_DIR}/MainDef.h
+  ${SRC_DIR}/SettingsDlg.cpp
+  ${SRC_DIR}/SettingsDlg.h
+  ${SRC_DIR}/CommonFunctions.cpp
+  ${SRC_DIR}/CommonFunctions.h
+  ${SRC_DIR}/Suggestions.cpp
+  ${SRC_DIR}/Suggestions.h
+  ${SRC_DIR}/PrecompiledHeader.cpp
+  ${SRC_DIR}/PrecompiledHeader.h
+  ${SRC_DIR}/AboutDlg.cpp
+  ${SRC_DIR}/AboutDlg.h
+  ${SRC_DIR}/DownloadDicsDlg.cpp
+  ${SRC_DIR}/DownloadDicsDlg.h
+  ${SRC_DIR}/DSpellCheck.rc
+  ${SRC_DIR}/AbstractSpellerInterface.cpp
+  ${SRC_DIR}/AbstractSpellerInterface.h
+  ${SRC_DIR}/AspellInterface.cpp
+  ${SRC_DIR}/AspellInterface.h
+  ${SRC_DIR}/HunspellInterface.cpp
+  ${SRC_DIR}/HunspellInterface.h
+  ${SRC_DIR}/Controls/CheckedList/CheckedList.h
+  ${SRC_DIR}/Controls/CheckedList/CheckedList.cpp
+  ${SRC_DIR}/Controls/StaticDialog/StaticDialog.cpp
+  ${SRC_DIR}/Controls/StaticDialog/StaticDialog.h
+  ${SRC_DIR}/Controls/Window.h
+  ${SRC_DIR}/Controls/StaticDialog/StaticDialog.h
+  ${SRC_DIR}/Controls/TabBar/ControlsTab.cpp
+  ${SRC_DIR}/Controls/TabBar/ControlsTab.h
+  ${SRC_DIR}/Controls/TabBar/TabBar.cpp
+  ${SRC_DIR}/Controls/TabBar/TabBar.h
+)
 
-SET(LINK_LIBRARY shlwapi comctl32 version)
+SET(LINK_LIBRARY shlwapi comctl32 version wininet)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
 
 #if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
@@ -107,8 +111,10 @@ endif()
 
 target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/src/Hunspell/Debug/libhunspell.lib)
 target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/src/libiconv/DebugStatic_Win32/libiconv.lib)
+target_link_libraries (DSpellCheck debug ${PROJECT_SOURCE_DIR}/src/minizip/Debug/minizip.lib)
 target_link_libraries (DSpellCheck optimized ${PROJECT_SOURCE_DIR}/src/Hunspell/Release/libhunspell.lib)
 target_link_libraries (DSpellCheck optimized ${PROJECT_SOURCE_DIR}/src/libiconv/ReleaseStatic_Win32/libiconv.lib)
+target_link_libraries (DSpellCheck optimized ${PROJECT_SOURCE_DIR}/src/minizip/Release/minizip.lib)
 
 include (PrecompiledHeader.cmake)
 add_precompiled_header(DSpellCheck PrecompiledHeader.h FORCEINCLUDE) 

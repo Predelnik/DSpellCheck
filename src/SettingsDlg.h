@@ -63,6 +63,7 @@ private:
   HWND HSuggType;
   HWND HLibrary;
   HWND HLibGroupBox;
+  HWND HDownloadDics;
 };
 
 class AdvancedDlg : public StaticDialog

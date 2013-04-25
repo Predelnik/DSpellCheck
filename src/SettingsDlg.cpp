@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Controls/CheckedList/CheckedList.h"
 #include "CommonFunctions.h"
 #include "LangList.h"
+#include "DownloadDicsDlg.h"
 #include "MainDef.h"
 #include "Plugin.h"
 #include "SpellChecker.h"
@@ -176,6 +177,7 @@ void SimpleDlg::FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR * HunspellPat
   if (GetSelectedLib () == 0)
   {
     ShowWindow (HAspellStatus, 1);
+    ShowWindow (HDownloadDics, 0);
     if (Status)
     {
       AspellStatusColor = RGB (0, 144, 0);
@@ -196,6 +198,7 @@ void SimpleDlg::FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR * HunspellPat
   else
   {
     ShowWindow (HAspellStatus, 0);
+    ShowWindow (HDownloadDics, 1);
     SetWindowText (HLibLink, _T ("<A HREF=\"http://wiki.openoffice.org/wiki/Dictionaries\">Hunspell Dictionaries</A>"));
     Static_SetText (HLibGroupBox, _T ("Hunspell Dictionaries Location"));
     Edit_SetText (HLibPath, HunspellPath);
@@ -283,6 +286,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HSuggType = ::GetDlgItem (_hSelf, IDC_SUGG_TYPE);
       HLibrary = ::GetDlgItem (_hSelf, IDC_LIBRARY);
       HLibGroupBox = ::GetDlgItem (_hSelf, IDC_LIB_GROUPBOX);
+      HDownloadDics = ::GetDlgItem (_hSelf, IDC_DOWNLOADDICS);
 
       ComboBox_AddString (HLibrary, _T ("Aspell"));
       ComboBox_AddString (HLibrary, _T ("Hunspell"));
@@ -354,6 +358,14 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
             Edit_SetText (HLibPath, Path);
             CLEAN_AND_ZERO_ARR (Path);
             return TRUE;
+          }
+        }
+        break;
+      case IDC_DOWNLOADDICS:
+        {
+          if (HIWORD (wParam) == BN_CLICKED)
+          {
+            GetDownloadDics ()->DoDialog ();
           }
         }
         break;
@@ -761,6 +773,8 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
 
       SimpleDlgInstance.reSizeTo(rc);
       AdvancedDlgInstance.reSizeTo(rc);
+
+      GetDownloadDics ()->init (_hInst, _hSelf, GetSpellChecker ());
 
       GetLangList ()->init (_hInst, _hSelf, GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
       GetLangList ()->DoDialog ();

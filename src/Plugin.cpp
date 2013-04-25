@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "controls/CheckedList/CheckedList.h"
 #include "MainDef.h"
 #include "AboutDlg.h"
+#include "DownloadDicsDlg.h"
 #include "LangList.h"
 #include "SpellChecker.h"
 #include "Suggestions.h"
@@ -61,6 +62,7 @@ SpellChecker *SpellCheckerInstance = 0;
 SettingsDlg *SettingsDlgInstance = 0;
 Suggestions *SuggestionsInstance = 0;
 LangList *LangListInstance = 0;
+DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
 HANDLE hThread = NULL;
 DWORD  ThreadId = 0;
@@ -84,6 +86,11 @@ LRESULT CALLBACK MouseProc (int nCode,
     break;
   }
   return CallNextHookEx(HMouseHook, nCode, wParam, lParam);;
+}
+
+SpellChecker *GetSpellChecker ()
+{
+  return SpellCheckerInstance;
 }
 
 /*
@@ -130,6 +137,11 @@ void pluginInit(HANDLE hModuleArg)
 LangList *GetLangList ()
 {
   return LangListInstance;
+}
+
+DownloadDicsDlg *GetDownloadDics ()
+{
+  return DownloadDicsDlgInstance;
 }
 
 HANDLE getHModule ()
@@ -220,6 +232,7 @@ void pluginCleanUp ()
   CLEAN_AND_ZERO (AboutDlgInstance);
   CLEAN_AND_ZERO (SuggestionsInstance);
   CLEAN_AND_ZERO (LangListInstance);
+  CLEAN_AND_ZERO (DownloadDicsDlgInstance);
 }
 
 void inline SendEvent (EventId Event)
@@ -373,6 +386,7 @@ void InitClasses ()
   AboutDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle);
 
   LangListInstance = new LangList;
+  DownloadDicsDlgInstance = new DownloadDicsDlg;
   // Init would be called from Settings
 
   SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance, LangListInstance);

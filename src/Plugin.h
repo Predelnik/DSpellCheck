@@ -31,6 +31,8 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 const int nbFunc = 6;
 
 class LangList;
+class DownloadDicsDlg;
+class SpellChecker;
 
 //
 // Initialization of your plugin data
@@ -73,6 +75,7 @@ typedef enum {
   EID_RECHECK_VISIBLE,
   EID_KILLTHREAD,
   EID_THREADKILLED,
+  EID_DOWNLOAD_SELECTED,
   EID_INIT_SUGGESTIONS_BOX,
   EID_HIDE_SUGGESTIONS_BOX,
   EID_SHOW_SUGGESTION_MENU,
@@ -101,15 +104,16 @@ void InitClasses ();
 void CreateHooks ();
 HANDLE getHModule ();
 LangList *GetLangList ();
+DownloadDicsDlg *GetDownloadDics ();
 FuncItem *get_funcItem ();
 void SetModifiedZoneShared (long Start, long End);
 void GetModifiedZoneShared (long &Start, long &End);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam);
 void GetDefaultHunspellPath_ (TCHAR *&Path);
+SpellChecker *GetSpellChecker ();
 
 // From DllMain, possibly move to DllMain.h
 void SetRecheckDelay (int Value, int WriteToIni = 1);
 int GetRecheckDelay ();
 
 #endif //PLUGINDEFINITION_H
-
