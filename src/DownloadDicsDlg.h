@@ -2,6 +2,8 @@
 #define DOWNLOAD_DICS_DLG_H
 
 #include "staticdialog\staticdialog.h"
+#include <Wininet.h>
+
 enum FTP_OPERATION_TYPE
 {
   FILL_FILE_LIST = 0,
@@ -14,14 +16,16 @@ class DownloadDicsDlg : public StaticDialog
 public:
   void DoDialog ();
   // Maybe hunspell interface should be passed here
-  void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg);
+  void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg);
   BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
   void DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName = 0, TCHAR *Location = 0);
   void DownloadSelected ();
+  void FillFileList ();
 private:
   void OnDisplayAction ();
 private:
   SpellChecker *SpellCheckerInstance;
+  HWND LibCombo;
   HWND HFileList;
   HWND HAddress;
   HWND HStatus;

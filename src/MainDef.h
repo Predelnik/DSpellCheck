@@ -52,4 +52,5 @@ enum EncodingType
 #define TM_UPDATE_ON_LIB_CHANGE WM_USER + 1003
 #define TM_MENU_RESULT          WM_USER + 1004
 #define TM_PRECALCULATE_MENU    WM_USER + 1005
+#define TM_CHANGE_DIR           WM_USER + 1006
 #endif MAINDEF_H

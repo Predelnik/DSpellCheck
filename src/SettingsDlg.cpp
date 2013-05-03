@@ -32,6 +32,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <uxtheme.h>
 
+SimpleDlg::SimpleDlg () : StaticDialog ()
+{
+  CurrentLangs = 0;
+}
+
 void SimpleDlg::init (HINSTANCE hInst, HWND Parent, NppData nppData)
 {
   NppDataInstance = nppData;
@@ -59,6 +64,8 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <TCHAR *> *LangsAvailable, co
     ComboBox_AddString (HComboLanguage, LangsAvailable->at (i));
     ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i));
   }
+  CLEAN_AND_ZERO_STRING_VECTOR (CurrentLangs);
+  CurrentLangs = LangsAvailable;
 
   if (_tcscmp (CurrentLanguage, _T ("<MULTIPLE>")) == 0)
     SelectedIndex = i;
@@ -81,7 +88,6 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <TCHAR *> *LangsAvailable, co
     Token = _tcstok_s (NULL, _T ("|"), &Context);
   }
   CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
-  CLEAN_AND_ZERO_STRING_VECTOR (LangsAvailable);
   return TRUE;
 }
 
@@ -119,6 +125,11 @@ static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText)
   return hwndTip;
 }
 
+SimpleDlg::~SimpleDlg ()
+{
+  CLEAN_AND_ZERO_STRING_VECTOR (CurrentLangs);
+}
+
 // Called from main thread, beware!
 void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
@@ -137,16 +148,10 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   }
   else
   {
-    TextLen = ComboBox_GetTextLength (HComboLanguage);
-    Buf = new TCHAR [TextLen + 1];
-    ComboBox_GetText (HComboLanguage, Buf, TextLen + 1);
     if (GetSelectedLib () == 0)
-      SpellCheckerInstance->SetAspellLanguage (Buf);
+      SpellCheckerInstance->SetAspellLanguage (CurrentLangs->at (CurSel));
     else
-      SpellCheckerInstance->SetHunspellLanguage (Buf);
-
-    CLEAN_AND_ZERO_ARR (Buf);
-    CLEAN_AND_ZERO_ARR (Lang);
+      SpellCheckerInstance->SetHunspellLanguage (CurrentLangs->at (CurSel));
   }
   SpellCheckerInstance->RecheckVisible ();
   Buf = new TCHAR[DEFAULT_BUF_SIZE];
@@ -774,7 +779,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       SimpleDlgInstance.reSizeTo(rc);
       AdvancedDlgInstance.reSizeTo(rc);
 
-      GetDownloadDics ()->init (_hInst, _hSelf, GetSpellChecker ());
+      GetDownloadDics ()->init (_hInst, _hSelf, GetSpellChecker (), GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
 
       GetLangList ()->init (_hInst, _hSelf, GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
       GetLangList ()->DoDialog ();

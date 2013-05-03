@@ -309,6 +309,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_DOWNLOAD_SELECTED:
     GetDownloadDics ()->DownloadSelected ();
     break;
+  case EID_FILL_FILE_LIST:
+    GetDownloadDics ()->FillFileList ();
+    break;
   case EID_DEFAULT_DELIMITERS:
     SetDefaultDelimiters ();
     break;

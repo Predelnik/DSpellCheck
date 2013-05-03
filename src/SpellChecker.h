@@ -85,7 +85,9 @@ public:
   void SetSuggType (int SuggType);
   void SetLibMode (int i);
   void FillDialogs ();
+  void ReinitLanguageLists (int SpellerId);
   TCHAR *GetHunspellPath () {return HunspellPath; };
+  HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
 
 private:
   enum CheckTextMode
@@ -95,7 +97,6 @@ private:
     FIND_LAST = 2
   };
 
-  void ReinitLanguageLists (int SpellerId);
   HWND GetCurrentScintilla ();
   void CreateWordUnderline (HWND ScintillaWindow, int start, int end);
   void RemoveUnderline (HWND ScintillaWindow, int start, int end);

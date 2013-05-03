@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "AboutDlg.h"
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
+#include "Progress.h"
 #include "SpellChecker.h"
 #include "Suggestions.h"
 
@@ -62,6 +63,7 @@ SpellChecker *SpellCheckerInstance = 0;
 SettingsDlg *SettingsDlgInstance = 0;
 Suggestions *SuggestionsInstance = 0;
 LangList *LangListInstance = 0;
+Progress *ProgressInstance = 0;
 DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
 HANDLE hThread = NULL;
@@ -139,6 +141,11 @@ LangList *GetLangList ()
   return LangListInstance;
 }
 
+Progress *GetProgress ()
+{
+  return ProgressInstance;
+}
+
 DownloadDicsDlg *GetDownloadDics ()
 {
   return DownloadDicsDlgInstance;
@@ -147,6 +154,11 @@ DownloadDicsDlg *GetDownloadDics ()
 HANDLE getHModule ()
 {
   return hModule;
+}
+
+HANDLE *GethEvent ()
+{
+  return hEvent;
 }
 
 DWORD WINAPI ThreadMain (LPVOID lpParam)
@@ -197,7 +209,7 @@ void CreateThreadResources ()
 
   /* create events */
   for (int i = 0; i < EID_MAX; i++)
-    hEvent[i] = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    hEvent[i] = ::CreateEvent (NULL, FALSE, FALSE, NULL);
 
   /* create thread */
   hThread = CreateThread (NULL, 0, ThreadMain, SpellCheckerInstance, 0, &dwThreadId);
@@ -253,6 +265,14 @@ void WaitForEvent (EventId Event, DWORD WaitTime)
 {
   if (ResourcesInited)
     WaitForSingleObject (hEvent[Event], WaitTime);
+}
+
+DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime)
+{
+  if (ResourcesInited)
+    return WaitForMultipleObjects (EventLast - EventFirst + 1, hEvent + EventFirst, FALSE, WaitTime);
+  else
+    return WAIT_FAILED;
 }
 
 void SwitchAutoCheckText ()
@@ -384,6 +404,9 @@ void InitClasses ()
 
   AboutDlgInstance = new AboutDlg;
   AboutDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle);
+
+  ProgressInstance = new Progress;
+  ProgressInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
   LangListInstance = new LangList;
   DownloadDicsDlgInstance = new DownloadDicsDlg;

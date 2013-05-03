@@ -85,7 +85,6 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 
   return TRUE;
 }
-
 WPARAM LastHwnd  = NULL;
 LPARAM LastCoords = 0;
 std::vector <SuggestionsMenuItem*> *MenuList = NULL;

@@ -56,6 +56,8 @@ set (list_of_files_DSpellCheck
   ${SRC_DIR}/aspell.h
   ${SRC_DIR}/aspell.cpp
   ${SRC_DIR}/MainDef.h
+  ${SRC_DIR}/Progress.cpp
+  ${SRC_DIR}/Progress.h
   ${SRC_DIR}/SettingsDlg.cpp
   ${SRC_DIR}/SettingsDlg.h
   ${SRC_DIR}/CommonFunctions.cpp

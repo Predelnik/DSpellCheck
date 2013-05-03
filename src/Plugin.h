@@ -33,6 +33,7 @@ const int nbFunc = 6;
 class LangList;
 class DownloadDicsDlg;
 class SpellChecker;
+class Progress;
 
 //
 // Initialization of your plugin data
@@ -76,6 +77,7 @@ typedef enum {
   EID_KILLTHREAD,
   EID_THREADKILLED,
   EID_DOWNLOAD_SELECTED,
+  EID_FILL_FILE_LIST,
   EID_INIT_SUGGESTIONS_BOX,
   EID_HIDE_SUGGESTIONS_BOX,
   EID_SHOW_SUGGESTION_MENU,
@@ -91,6 +93,7 @@ typedef enum {
 void SendEvent (EventId Event);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam = 0, LPARAM LParam = 0);
 void WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
+DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime = INFINITE);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
 void SetLanguage (const char *Str);
@@ -104,12 +107,14 @@ void InitClasses ();
 void CreateHooks ();
 HANDLE getHModule ();
 LangList *GetLangList ();
+Progress *GetProgress ();
 DownloadDicsDlg *GetDownloadDics ();
 FuncItem *get_funcItem ();
 void SetModifiedZoneShared (long Start, long End);
 void GetModifiedZoneShared (long &Start, long &End);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam);
 void GetDefaultHunspellPath_ (TCHAR *&Path);
+HANDLE *GethEvent ();
 SpellChecker *GetSpellChecker ();
 
 // From DllMain, possibly move to DllMain.h

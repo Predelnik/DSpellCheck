@@ -28,6 +28,8 @@ class SpellChecker;
 class SimpleDlg : public StaticDialog
 {
 public:
+  SimpleDlg ();
+  ~SimpleDlg ();
   __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   BOOL AddAvailableLanguages (std::vector<TCHAR *> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages);
@@ -64,6 +66,8 @@ private:
   HWND HLibrary;
   HWND HLibGroupBox;
   HWND HDownloadDics;
+
+  std::vector <TCHAR *> *CurrentLangs; // To be able to create language aliases
 };
 
 class AdvancedDlg : public StaticDialog

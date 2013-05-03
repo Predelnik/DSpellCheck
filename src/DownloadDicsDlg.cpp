@@ -1,12 +1,13 @@
 #include <io.h>
 #include <fcntl.h>
 #include <LzExpand.h>
-#include <Wininet.h>
 
 #include "Controls/CheckedList/CheckedList.h"
 #include "CommonFunctions.h"
 #include "DownloadDicsDlg.h"
+#include "HunspellInterface.h"
 #include "Plugin.h"
+#include "Progress.h"
 #include "resource.h"
 #include "SpellChecker.h"
 #include "MainDef.h"
@@ -26,20 +27,34 @@ void DownloadDicsDlg::DoDialog ()
   }
 }
 
-void DownloadDicsDlg::OnDisplayAction ()
+void DownloadDicsDlg::FillFileList ()
 {
   TCHAR Buf[DEFAULT_BUF_SIZE];
   ComboBox_GetText (HAddress, Buf, DEFAULT_BUF_SIZE);
-  DoFtpOperation (FILL_FILE_LIST, Buf);
+  GetDownloadDics ()->DoFtpOperation (FILL_FILE_LIST, Buf);
 }
 
-void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg)
+void DownloadDicsDlg::OnDisplayAction ()
+{
+  SendEvent (EID_FILL_FILE_LIST);
+}
+
+void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg)
 {
   SpellCheckerInstance = SpellCheckerInstanceArg;
   return Window::init (hInst, Parent);
+  LibCombo = LibComboArg;
 }
 
-#define BUF_SIZE_FOR_COPY 16384
+/*
+void CreateThreadResources ()
+{
+for (int i = 0; i < EID_MAX; i++)
+hFtpEvent[i] = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+}
+*/
+
+#define BUF_SIZE_FOR_COPY 10240
 void DownloadDicsDlg::DownloadSelected ()
 {
   int Count = ListBox_GetCount (HFileList);
@@ -52,15 +67,20 @@ void DownloadDicsDlg::DownloadSelected ()
   TCHAR *DicFileName = 0;
   TCHAR DicFileLocalPath[MAX_PATH];
   TCHAR HunspellDicPath[MAX_PATH];
+  TCHAR Message[DEFAULT_BUF_SIZE];
   TCHAR *FileName = 0;
   BOOL IsAffFile = FALSE;
   BOOL IsDicFile = FALSE;
-  unz_file_info Dummy;
-  char FileCopyBuf[BUF_SIZE_FOR_COPY];
-  TCHAR Message[DEFAULT_BUF_SIZE];
+  unz_file_info FInfo;
+  char FileCopyBuf[(BUF_SIZE_FOR_COPY)];
+  TCHAR ProgMessage[DEFAULT_BUF_SIZE];
   GetTempPath (MAX_PATH, TempPath);
   _tcscpy (Message, _T ("Dictionaries copied:\n"));
   std::map<char *, int, bool (*)(char *, char *)> FilesFound (SortCompareChars); //0x01 - .aff found, 0x02 - .dic found
+  Progress *p = GetProgress ();
+  p->SetProgress (0);
+  p->SetBottomMessage (_T (""));
+  p->SetTopMessage (_T (""));
   for (int i = 0; i < Count; i++)
   {
     if (CheckedListBox_GetCheckState (HFileList, i) == BST_CHECKED)
@@ -68,6 +88,8 @@ void DownloadDicsDlg::DownloadSelected ()
       FileName = new TCHAR [ListBox_GetTextLen (HFileList, i) + 4 + 1];
       ListBox_GetText (HFileList, i, FileName);
       _tcscat (FileName, _T (".zip"));
+      _stprintf (ProgMessage, _T ("Downloading %s..."), FileName);
+      p->SetTopMessage (ProgMessage);
       _tcscpy (LocalPath, TempPath);
       _tcscat (LocalPath, FileName);
       ComboBox_GetText (HAddress, Buf, DEFAULT_BUF_SIZE);
@@ -79,7 +101,7 @@ void DownloadDicsDlg::DownloadSelected ()
       do
       {
         DicFileNameANSI = new char [DEFAULT_BUF_SIZE];
-        unzGetCurrentFileInfo (fp, &Dummy, DicFileNameANSI, DEFAULT_BUF_SIZE, 0, 0, 0 ,0);
+        unzGetCurrentFileInfo (fp, &FInfo, DicFileNameANSI, DEFAULT_BUF_SIZE, 0, 0, 0 ,0);
         IsAffFile = (strcmp (DicFileNameANSI + strlen (DicFileNameANSI) - 4, ".aff") == 0);
         IsDicFile = (strcmp (DicFileNameANSI + strlen (DicFileNameANSI) - 4, ".dic") == 0);
 
@@ -109,9 +131,17 @@ void DownloadDicsDlg::DownloadSelected ()
           if (LocalDicFileHandle == -1)
             continue;
 
-          while ((BytesCopied = unzReadCurrentFile (fp, FileCopyBuf, BUF_SIZE_FOR_COPY)) != 0)
+          _stprintf (ProgMessage, _T ("Extracting %s..."), DicFileName);
+          p->SetTopMessage (ProgMessage);
+          DWORD BytesTotal = 0;
+          while ((BytesCopied = unzReadCurrentFile (fp, FileCopyBuf, (BUF_SIZE_FOR_COPY))) != 0)
           {
             _write (LocalDicFileHandle, FileCopyBuf, BytesCopied);
+            BytesTotal += BytesCopied;
+            FInfo.uncompressed_size, BytesTotal * 100 / FInfo.uncompressed_size;
+            p->SetProgress (BytesTotal * 100 / FInfo.uncompressed_size);
+            _stprintf (ProgMessage, _T ("%d / %d bytes extracted (%d %%)"), BytesTotal, FInfo.uncompressed_size, BytesTotal * 100 / FInfo.uncompressed_size);
+            p->SetBottomMessage (ProgMessage);
           }
           unzCloseCurrentFile (fp);
           _close (LocalDicFileHandle);
@@ -157,7 +187,7 @@ void DownloadDicsDlg::DownloadSelected ()
           if (PathFileExists (HunspellDicPath))
             DeleteFile (DicFileLocalPath);
           else
-          MoveFile (DicFileLocalPath, HunspellDicPath);
+            MoveFile (DicFileLocalPath, HunspellDicPath);
           _tcscat (Message, DicFileName);
           _tcscat (Message, _T ("\n"));
         }
@@ -168,15 +198,63 @@ clean_and_continue:
       CLEAN_AND_ZERO_ARR (FileName);
     }
   }
+  GetProgress ()->display (false);
   MessageBox (_hSelf, Message, _T ("Dictionaries Downloaded"), MB_OK | MB_ICONINFORMATION);
+  SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
+  if (ComboBox_GetCurSel (LibCombo) == 1)
+    SpellCheckerInstance->ReinitLanguageLists (1);
   CLEAN_AND_ZERO_ARR (LocalPathANSI);
   CLEAN_AND_ZERO_ARR (DicFileName);
 }
 
+DWORD LatestHandle = 0;
+DWORD BytesRead = 0;
+HANDLE MayContinue;
+DWORD LatestResult = 0;
+int ActiveContext = 0;
+int WaitingFor = 0;
+int Test = 0;
+
+#define CONTEXT_CONNECT 1
+#define CONTEXT_FIND_FIRST_FILE 2
+#define CONTEXT_OPEN_FILE 3
+
+VOID CALLBACK
+  CallBack(
+  __in HINTERNET hInternet,
+  __in DWORD_PTR dwContext,
+  __in DWORD dwInternetStatus,
+  __in_bcount(dwStatusInformationLength) LPVOID lpvStatusInformation,
+  __in DWORD dwStatusInformationLength
+  )
+{
+  /*
+  if (dwContext != ActiveContext)
+  return;
+  */
+
+  /*
+  if (dwInternetStatus == INTERNET_STATUS_HANDLE_CREATED)
+  LatestHandle = ((LPINTERNET_ASYNC_RESULT)lpvStatusInformation)->dwResult;
+  */
+  if (dwContext == CONTEXT_OPEN_FILE && dwInternetStatus == INTERNET_STATUS_RESPONSE_RECEIVED)
+  {
+    BytesRead = ((LPINTERNET_ASYNC_RESULT)lpvStatusInformation)->dwResult;
+  }
+
+  if (dwInternetStatus == INTERNET_STATUS_REQUEST_COMPLETE)
+  {
+    LatestResult = ((LPINTERNET_ASYNC_RESULT)lpvStatusInformation)->dwResult;
+    SetEvent (MayContinue);
+  }
+}
+
 void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
 {
+  Static_SetText (HStatus, _T ("Status: Loading..."));
   StrTrim (Address, _T (" "));
   TCHAR *Folders;
+
   for (unsigned int i = 0; i < _tcslen (Address); i++) // Exchanging slashes
   {
     if (Address[i] == _T ('\\'))
@@ -193,52 +271,161 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   }
 
   Folders = _tcschr (Address, _T ('/'));
-  *Folders = _T ('\0');
-  Folders++;
+  if (Folders != 0)
+  {
+    *Folders = _T ('\0');
+    Folders++;
+  }
 
-  HINTERNET Session = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+  HINTERNET Session = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, INTERNET_FLAG_ASYNC);
   if (!Session)
   {
-    Static_SetText (HStatus, _T ("Connection Error"));
-    return;
-  }
-  HINTERNET Internet = InternetConnect (Session, Address, INTERNET_INVALID_PORT_NUMBER, NULL, NULL, INTERNET_SERVICE_FTP, 0, NULL);
-  ListBox_ResetContent (HFileList);
-  if (!Internet)
-  {
-    Static_SetText (HStatus, _T ("Connection Error"));
+    Static_SetText (HStatus, _T ("Status: Connection Error"));
     return;
   }
 
-  if (!FtpSetCurrentDirectory (Internet, Folders))
-  {
-    Static_SetText (HStatus, _T ("Directory wasn't found"));
+  INTERNET_STATUS_CALLBACK CallbackPointer = InternetSetStatusCallback (Session, (INTERNET_STATUS_CALLBACK) CallBack);
+  if (CallbackPointer == INTERNET_INVALID_STATUS_CALLBACK)
     goto cleanup;
+
+  MayContinue = ::CreateEvent (NULL, FALSE, FALSE, NULL);
+  WaitingFor = INTERNET_STATUS_REQUEST_COMPLETE;
+  ActiveContext = CONTEXT_CONNECT;
+  InternetConnect (Session, Address, INTERNET_INVALID_PORT_NUMBER, NULL, NULL, INTERNET_SERVICE_FTP, 0, CONTEXT_CONNECT);
+
+  WaitForSingleObject (MayContinue, INFINITE);
+  HINTERNET Internet = (HINTERNET) LatestResult;
+
+  // HANDLE hFtpThread;
+  // DWORD ftpThreadId;
+
+  // hFtpThread = CreateThread (NULL, 0, FtpThread, Internet, 0, &ftpThreadId);
+
+  if (Type == FILL_FILE_LIST)
+    ListBox_ResetContent (HFileList);
+
+  if (!Internet)
+  {
+    Static_SetText (HStatus, _T ("Status: Connection Error"));
+    return;
+  }
+
+  // PostThreadMessage (ftpThreadId, TM_CHANGE_DIR, (WPARAM) Folders, 0);
+
+  // if (WaitForMultipleEvents (EID_FTP_OK, EID_FTP_FAIL) != WAIT_OBJECT_0)
+  if (Folders != 0) // Otherwise it's a root dir
+  {
+    DWORD Res = 0;
+    FtpSetCurrentDirectory (Internet, Folders);
+    WaitForSingleObject (MayContinue, INFINITE);
+    if (!LatestResult)
+    {
+      Static_SetText (HStatus, _T ("Status: Directory wasn't found"));
+      goto cleanup;
+    }
   }
 
   if (Type == FILL_FILE_LIST)
   {
-    WIN32_FIND_DATA FindData;
-    HINTERNET FindHandle = FtpFindFirstFile (Internet, _T("*.zip"), &FindData, 0, 0);
+    WIN32_FIND_DATAA FindData;
+    TCHAR *Buf = 0;
+    WaitingFor = INTERNET_STATUS_REQUEST_COMPLETE; // INTERNET_STATUS_RESPONSE_RECEIVED;// INTERNET_STATUS_RESPONSE_RECEIVED;
+    ActiveContext = CONTEXT_FIND_FIRST_FILE;
+    FtpFindFirstFileA (Internet, "*.zip", &FindData, 0, CONTEXT_FIND_FIRST_FILE);
+    WaitForSingleObject (MayContinue, INFINITE);
+    HINTERNET FindHandle = (HINTERNET) LatestResult;
     if (!FindHandle)
     {
-      Static_SetText (HStatus, _T ("Directory doesn't contain any zipped files"));
+      Static_SetText (HStatus, _T ("Status: Directory doesn't contain any zipped files"));
       goto cleanup;
     }
-    FindData.cFileName[_tcslen (FindData.cFileName) - 4] = 0;
-    ListBox_AddString (HFileList, FindData.cFileName);
-    while (InternetFindNextFile (FindHandle, &FindData))
+    SetString (Buf, FindData.cFileName);
+    Buf[_tcslen (Buf) - 4] = 0;
+    ListBox_AddString (HFileList, Buf);
+    while (1)
     {
-      FindData.cFileName[_tcslen (FindData.cFileName) - 4] = 0;
-      ListBox_AddString (HFileList, FindData.cFileName);
+      InternetFindNextFileA (FindHandle, &FindData);
+      WaitForSingleObject (MayContinue, INFINITE);
+      if (!LatestResult)
+        break;
+
+      SetString (Buf, FindData.cFileName);
+      Buf[_tcslen (Buf) - 4] = 0;
+      ListBox_AddString (HFileList, Buf);
     }
+    CLEAN_AND_ZERO_ARR (Buf);
+    Static_SetText (HStatus, _T ("Status: List of available files was successfully loaded"));
   }
   else if (Type == DOWNLOAD_FILE)
   {
-    FtpGetFile (Internet, FileName, Location, FALSE, FILE_ATTRIBUTE_NORMAL, FTP_TRANSFER_TYPE_BINARY, 0);
+    DWORD LSize, HSize, Size;
+    DWORD BytesSum = 0;
+    char DataBuf[BUF_SIZE_FOR_COPY];
+
+    if (PathFileExists (Location))
+    {
+      SetFileAttributes (Location, FILE_ATTRIBUTE_NORMAL);
+      DeleteFile (Location);
+    }
+    int FileHandle = _topen (Location, _O_CREAT | _O_BINARY | _O_WRONLY);
+    if (FileHandle == -1)
+      return; // Then file couldn't be download
+    DWORD *BytesCopied = new DWORD;
+    TCHAR Message[DEFAULT_BUF_SIZE];
+    INTERNET_BUFFERS InetBuf;
+    memset (&InetBuf, 0, sizeof (INTERNET_BUFFERS));
+    InetBuf.dwStructSize = sizeof (INTERNET_BUFFERS);
+    FtpOpenFile (Internet, FileName, GENERIC_READ , FTP_TRANSFER_TYPE_BINARY, CONTEXT_OPEN_FILE);
+    WaitForSingleObject (MayContinue, INFINITE);
+    HINTERNET File = (HINTERNET) LatestResult;
+    LSize = FtpGetFileSize (File, &HSize);
+    Size = LSize;
+    while (1)
+    {
+      BOOL Res = InternetReadFile (File, DataBuf, BUF_SIZE_FOR_COPY, BytesCopied);
+      if (!Res)
+      {
+        DWORD Err = GetLastError ();
+        if (Err == ERROR_IO_PENDING)
+          WaitForSingleObject (MayContinue, INFINITE);
+        else
+          return;
+      }
+
+      // InternetReadFileEx (File, &InetBuf, IRF_ASYNC, CONTEXT_DL);
+      /*
+      DWORD LastError = GetLastError ();
+      while (GetLastError () == ERROR_IO_PENDING)
+      {
+      }
+      */
+
+      /*
+      if (GetLastError () != 0)
+      goto cleanup;
+      */
+
+      // BytesCopied = InetBuf.dwBufferLength;
+
+      if (!*BytesCopied || !LatestResult)
+        break;
+
+      BytesSum += BytesRead;
+      GetProgress ()->SetProgress (BytesSum * 100 / Size);
+
+      _stprintf (Message, _T ("%d / %d bytes downloaded (%d %%)"), BytesSum, Size, BytesSum * 100 / Size);
+      GetProgress ()->SetBottomMessage (Message);
+      _write (FileHandle, DataBuf, *BytesCopied);
+    }
+    CLEAN_AND_ZERO (BytesCopied);
+    _close (FileHandle);
+    InternetCloseHandle (File);
+    // FtpGetFile (Internet, FileName, Location, FALSE, FILE_ATTRIBUTE_NORMAL, FTP_TRANSFER_TYPE_BINARY, 0);
   }
 
 cleanup:
+  CloseHandle (MayContinue);
+  // WaitForSingleObject (FtpThread, INFINITE);
   InternetCloseHandle (Internet);
 }
 
@@ -251,6 +438,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       HFileList = ::GetDlgItem (_hSelf, IDC_FILE_LIST);
       HAddress = ::GetDlgItem (_hSelf, IDC_ADDRESS);
       HStatus = ::GetDlgItem (_hSelf, IDC_SERVER_STATUS);
+      //ComboBox_SetText(HAddress, _T ("ftp://127.0.0.1"));
       ComboBox_SetText(HAddress, _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries"));
       OnDisplayAction ();
       return TRUE;
@@ -262,8 +450,11 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       {
       case IDOK:
         if (HIWORD (wParam) == BN_CLICKED)
+        {
           SendEvent (EID_DOWNLOAD_SELECTED);
-        display (false);
+          GetProgress ()->DoDialog ();
+          display (false);
+        }
         break;
       case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
