@@ -204,39 +204,16 @@ clean_and_continue:
   CLEAN_AND_ZERO_ARR (DicFileName);
 }
 
-DWORD LatestHandle = 0;
 DWORD BytesRead = 0;
-HANDLE MayContinue;
-DWORD LatestResult = 0;
-int ActiveContext = 0;
-int WaitingFor = 0;
-int Test = 0;
 
 #define CONTEXT_CONNECT 1
 #define CONTEXT_FIND_FIRST_FILE 2
 #define CONTEXT_OPEN_FILE 3
 
-VOID CALLBACK
-  CallBack(
-  __in HINTERNET hInternet,
-  __in DWORD_PTR dwContext,
-  __in DWORD dwInternetStatus,
-  __in_bcount(dwStatusInformationLength) LPVOID lpvStatusInformation,
-  __in DWORD dwStatusInformationLength
-  )
-{
-  if (dwInternetStatus == INTERNET_STATUS_REQUEST_COMPLETE)
-  {
-    LatestResult = ((LPINTERNET_ASYNC_RESULT)lpvStatusInformation)->dwResult;
-    SetEvent (MayContinue);
-  }
-}
-
 void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
 {
   StrTrim (Address, _T (" "));
   TCHAR *Folders = 0;
-  HINTERNET Internet = 0;
   const TCHAR FtpPrefix[] = _T ("ftp://");
   int FtpPrefixLen = _tcslen (FtpPrefix);
   for (unsigned int i = 0; i < _tcslen (Address); i++) // Exchanging slashes
@@ -265,24 +242,14 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     }
   }
 
-  HINTERNET Session = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, INTERNET_FLAG_ASYNC);
+  HINTERNET Session = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
   if (!Session)
   {
     Static_SetText (HStatus, _T ("Status: Connection Error"));
     return;
   }
 
-  INTERNET_STATUS_CALLBACK CallbackPointer = InternetSetStatusCallback (Session, (INTERNET_STATUS_CALLBACK) CallBack);
-  if (CallbackPointer == INTERNET_INVALID_STATUS_CALLBACK)
-    goto cleanup;
-
-  MayContinue = ::CreateEvent (NULL, FALSE, FALSE, NULL);
-  WaitingFor = INTERNET_STATUS_REQUEST_COMPLETE;
-  ActiveContext = CONTEXT_CONNECT;
-  InternetConnect (Session, Address, INTERNET_INVALID_PORT_NUMBER, NULL, NULL, INTERNET_SERVICE_FTP, 0, CONTEXT_CONNECT);
-
-  WaitForSingleObject (MayContinue, INFINITE);
-  HINTERNET Internet = (HINTERNET) LatestResult;
+  HINTERNET Internet = InternetConnect (Session, Address, INTERNET_INVALID_PORT_NUMBER, NULL, NULL, INTERNET_SERVICE_FTP, 0, CONTEXT_CONNECT);
 
   // HANDLE hFtpThread;
   // DWORD ftpThreadId;
@@ -304,9 +271,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   if (Folders != 0) // Otherwise it's a root dir
   {
     DWORD Res = 0;
-    FtpSetCurrentDirectory (Internet, Folders);
-    WaitForSingleObject (MayContinue, INFINITE);
-    if (!LatestResult)
+    if (!FtpSetCurrentDirectory (Internet, Folders))
     {
       Static_SetText (HStatus, _T ("Status: Directory wasn't found"));
       goto cleanup;
@@ -317,11 +282,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   {
     WIN32_FIND_DATAA FindData;
     TCHAR *Buf = 0;
-    WaitingFor = INTERNET_STATUS_REQUEST_COMPLETE; // INTERNET_STATUS_RESPONSE_RECEIVED;// INTERNET_STATUS_RESPONSE_RECEIVED;
-    ActiveContext = CONTEXT_FIND_FIRST_FILE;
-    FtpFindFirstFileA (Internet, "*.zip", &FindData, 0, CONTEXT_FIND_FIRST_FILE);
-    WaitForSingleObject (MayContinue, INFINITE);
-    HINTERNET FindHandle = (HINTERNET) LatestResult;
+    HINTERNET FindHandle = FtpFindFirstFileA (Internet, "*.zip", &FindData, 0, CONTEXT_FIND_FIRST_FILE);
     if (!FindHandle)
     {
       Static_SetText (HStatus, _T ("Status: Directory doesn't contain any zipped files"));
@@ -330,13 +291,8 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     SetString (Buf, FindData.cFileName);
     Buf[_tcslen (Buf) - 4] = 0;
     ListBox_AddString (HFileList, Buf);
-    while (1)
+    while (InternetFindNextFileA (FindHandle, &FindData))
     {
-      InternetFindNextFileA (FindHandle, &FindData);
-      WaitForSingleObject (MayContinue, INFINITE);
-      if (!LatestResult)
-        break;
-
       SetString (Buf, FindData.cFileName);
       Buf[_tcslen (Buf) - 4] = 0;
       ListBox_AddString (HFileList, Buf);
@@ -363,39 +319,12 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     INTERNET_BUFFERS InetBuf;
     memset (&InetBuf, 0, sizeof (INTERNET_BUFFERS));
     InetBuf.dwStructSize = sizeof (INTERNET_BUFFERS);
-    FtpOpenFile (Internet, FileName, GENERIC_READ , FTP_TRANSFER_TYPE_BINARY, CONTEXT_OPEN_FILE);
-    WaitForSingleObject (MayContinue, INFINITE);
-    HINTERNET File = (HINTERNET) LatestResult;
+    HINTERNET File = FtpOpenFile (Internet, FileName, GENERIC_READ , FTP_TRANSFER_TYPE_BINARY, CONTEXT_OPEN_FILE);
     LSize = FtpGetFileSize (File, &HSize);
     Size = LSize;
-    while (1)
+    while (InternetReadFile (File, DataBuf, BUF_SIZE_FOR_COPY, BytesCopied))
     {
-      BOOL Res = InternetReadFile (File, DataBuf, BUF_SIZE_FOR_COPY, BytesCopied);
-      if (!Res)
-      {
-        DWORD Err = GetLastError ();
-        if (Err == ERROR_IO_PENDING)
-          WaitForSingleObject (MayContinue, INFINITE);
-        else
-          return;
-      }
-
-      // InternetReadFileEx (File, &InetBuf, IRF_ASYNC, CONTEXT_DL);
-      /*
-      DWORD LastError = GetLastError ();
-      while (GetLastError () == ERROR_IO_PENDING)
-      {
-      }
-      */
-
-      /*
-      if (GetLastError () != 0)
-      goto cleanup;
-      */
-
-      // BytesCopied = InetBuf.dwBufferLength;
-
-      if (!*BytesCopied || !LatestResult)
+      if (!*BytesCopied)
         break;
 
       BytesSum += BytesRead;
@@ -408,12 +337,9 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     CLEAN_AND_ZERO (BytesCopied);
     _close (FileHandle);
     InternetCloseHandle (File);
-    // FtpGetFile (Internet, FileName, Location, FALSE, FILE_ATTRIBUTE_NORMAL, FTP_TRANSFER_TYPE_BINARY, 0);
   }
 
 cleanup:
-  CloseHandle (MayContinue);
-  // WaitForSingleObject (FtpThread, INFINITE);
   InternetCloseHandle (Internet);
 }
 
