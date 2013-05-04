@@ -30,13 +30,15 @@ void SetString (char *&Target, const TCHAR *Str);
 
 void SetString (TCHAR *&Target, const char *Str);
 
-// In case source is in utf-8
+// In case source is in UTF-8
 void SetStringSUtf8 (char *&Target, const char *Str);
 void SetStringSUtf8 (TCHAR *&Target, const char *Str);
 
-// In case destination is in utf-8
+// In case destination is in UTF-8
 void SetStringDUtf8 (char *&Target, const char *Str);
 void SetStringDUtf8 (char *&Target, const TCHAR *Str);
+
+BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName);
 
 void SetParsedString (TCHAR *&Dest, TCHAR *Source);
 HWND GetScintillaWindow(const NppData *NppDataArg);
@@ -56,4 +58,5 @@ BOOL Utf8IsCont (char c);
 
 bool SortCompare (TCHAR *a, TCHAR *b);
 bool SortCompareChars (char *a, char *b);
+
 #endif // COMMON_FUNCTIONS_H;

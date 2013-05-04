@@ -57,7 +57,6 @@ void LangList::ApplyChoice (SpellChecker *SpellCheckerInstance)
   int count = ListBox_GetCount (HLangList);
   TCHAR Buf[DEFAULT_BUF_SIZE];
   TCHAR *ItemBuf = 0;
-  int ItemBufLen = 0;
   char *ConvertedBuf = 0;
   BOOL FirstOne = TRUE;
   Buf[0] = _T ('\0');
@@ -65,15 +64,12 @@ void LangList::ApplyChoice (SpellChecker *SpellCheckerInstance)
   {
     if (CheckedListBox_GetCheckState (HLangList, i))
     {
-      ItemBufLen = ListBox_GetTextLen (HLangList, i);
-      ItemBuf = new TCHAR[ItemBufLen + 1];
-      ListBox_GetText (HLangList, i, ItemBuf);
+      SetString (ItemBuf, SpellCheckerInstance->GetLangByIndex (i));
       if (!FirstOne)
         _tcscat (Buf, _T ("|"));
 
       _tcscat_s (Buf, ItemBuf);
       FirstOne = FALSE;
-      CLEAN_AND_ZERO_ARR (ItemBuf);
     }
   }
   SetStringDUtf8 (ConvertedBuf, Buf);
@@ -82,6 +78,7 @@ void LangList::ApplyChoice (SpellChecker *SpellCheckerInstance)
   else
     SpellCheckerInstance->SetAspellMultipleLanguages (ConvertedBuf);
   CLEAN_AND_ZERO_ARR (ConvertedBuf);
+  CLEAN_AND_ZERO_ARR (ItemBuf);
 }
 
 BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)

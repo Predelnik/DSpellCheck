@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "DownloadDicsDlg.h"
 #include "iconv.h"
 #include "CommonFunctions.h"
+#include "LanguageName.h"
 #include "LangList.h"
 #include "MainDef.h"
 #include "PluginInterface.h"
@@ -83,6 +84,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SetString (DefaultServers[0], _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/"));
   SetString (DefaultServers[1], _T ("ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/"));
   SetString (DefaultServers[2], _T ("ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/"));
+  CurrentLangs = 0;
 }
 
 static const char Yo[] = "\xd0\x81";
@@ -151,6 +153,8 @@ SpellChecker::~SpellChecker ()
     CLEAN_AND_ZERO_ARR (ServerNames[i]);
   for (int i = 0; i < countof (DefaultServers); i++)
     CLEAN_AND_ZERO_ARR (DefaultServers[i]);
+
+  CLEAN_AND_ZERO (CurrentLangs);
 }
 
 void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL Separator)
@@ -244,12 +248,12 @@ BOOL WINAPI SpellChecker::NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam)
       }
       ServerNames[0] = 0;
       SetString (ServerNames[0], Name);
-      SaveSettings ();
 add_user_server_cleanup:
       CLEAN_AND_ZERO_ARR (Buf);
       CLEAN_AND_ZERO_ARR (Name);
       CLEAN_AND_ZERO_ARR (TrimmedName);
       ResetDownloadCombobox ();
+      SaveSettings ();
     }
     break;
   default:
@@ -264,6 +268,11 @@ void SpellChecker::SetSuggType (int SuggType)
   HideSuggestionBox ();
 }
 
+TCHAR *SpellChecker::GetLangByIndex (int i)
+{
+  return CurrentLangs->at(i).OrigName;
+}
+
 void SpellChecker::ReinitLanguageLists (int SpellerId)
 {
   AbstractSpellerInterface *SpellerToUse = (SpellerId == 1 ?
@@ -273,7 +282,16 @@ void SpellChecker::ReinitLanguageLists (int SpellerId)
   if (SpellerToUse->IsWorking ())
   {
     SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (FALSE);
-    SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (SpellerToUse->GetLanguageList (),
+    std::vector <TCHAR *> *LangsFromSpeller =  SpellerToUse->GetLanguageList ();
+    CLEAN_AND_ZERO (CurrentLangs);
+    CurrentLangs = new std::vector<LanguageName> ();
+    for (unsigned int i = 0; i < LangsFromSpeller->size (); i++)
+    {
+      LanguageName Lang (LangsFromSpeller->at (i), SpellerId == 1); // Using them only for Hunspell
+      CurrentLangs->push_back (Lang);                               // TODO: Add option - use or not use aliases.
+    }
+    std::sort (CurrentLangs->begin (), CurrentLangs->end ());
+    SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
       SpellerId == 1 ? HunspellLanguage : AspellLanguage,
       SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages);
   }

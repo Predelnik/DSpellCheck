@@ -4,6 +4,8 @@
 #include "staticdialog\staticdialog.h"
 #include <Wininet.h>
 
+struct LanguageName;
+
 void FtpTrim (TCHAR *FtpAddress);
 
 enum FTP_OPERATION_TYPE
@@ -29,6 +31,7 @@ public:
   void IndicateThatSavingMightBeNeeded ();
 private:
 private:
+  std::vector<LanguageName> *CurrentLangs;
   HBRUSH DefaultBrush;
   COLORREF StatusColor;
   SpellChecker *SpellCheckerInstance;

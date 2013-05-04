@@ -6,6 +6,7 @@
 #include "CommonFunctions.h"
 #include "DownloadDicsDlg.h"
 #include "HunspellInterface.h"
+#include "LanguageName.h"
 #include "Plugin.h"
 #include "Progress.h"
 #include "resource.h"
@@ -44,12 +45,14 @@ void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellChe
   Timer = 0;
   CheckIfSavingIsNeeded = 0;
   LibCombo = LibComboArg;
+  CurrentLangs = 0;
   return Window::init (hInst, Parent);
 }
 
 DownloadDicsDlg::~DownloadDicsDlg ()
 {
   DeleteTimerQueueTimer (0, Timer, 0);
+  CLEAN_AND_ZERO (CurrentLangs);
 }
 
 void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
@@ -63,6 +66,7 @@ void DownloadDicsDlg::DownloadSelected ()
   int Count = ListBox_GetCount (HFileList);
   TCHAR TempPath [MAX_PATH];
   TCHAR LocalPath [MAX_PATH];
+  TCHAR *ConvertedDicName = 0;
   char *LocalPathANSI = 0;
   TCHAR Buf[DEFAULT_BUF_SIZE];
   char *DicFileNameANSI = 0;
@@ -88,8 +92,9 @@ void DownloadDicsDlg::DownloadSelected ()
   {
     if (CheckedListBox_GetCheckState (HFileList, i) == BST_CHECKED)
     {
-      FileName = new TCHAR [ListBox_GetTextLen (HFileList, i) + 4 + 1];
-      ListBox_GetText (HFileList, i, FileName);
+      FileName = new TCHAR [_tcslen (CurrentLangs->at (i).OrigName) + 4 + 1];
+      FileName[0] = _T ('\0');
+      _tcscat (FileName, CurrentLangs->at (i).OrigName);
       _tcscat (FileName, _T (".zip"));
       _stprintf (ProgMessage, _T ("Downloading %s..."), FileName);
       p->SetTopMessage (ProgMessage);
@@ -191,11 +196,17 @@ void DownloadDicsDlg::DownloadSelected ()
             DeleteFile (DicFileLocalPath);
           else
             MoveFile (DicFileLocalPath, HunspellDicPath);
-          _tcscat (Message, DicFileName);
+          SetStringWithAliasApplied (ConvertedDicName, DicFileName);
+          _tcscat (Message, ConvertedDicName);
           _tcscat (Message, _T ("\n"));
         }
       }
 clean_and_continue:
+      std::map<char *, int, bool (*)(char *, char *)>::iterator It = FilesFound.begin ();
+      for (;it != FilesFound.end (); it++)
+        delete[] ((*it).first);
+
+      FilesFound.clear ();
       unzClose (fp);
       DeleteFile (LocalPath); // Removing downloaded .zip file
       CLEAN_AND_ZERO_ARR (FileName);
@@ -208,6 +219,7 @@ clean_and_continue:
     SpellCheckerInstance->ReinitLanguageLists (1);
   CLEAN_AND_ZERO_ARR (LocalPathANSI);
   CLEAN_AND_ZERO_ARR (DicFileName);
+  CLEAN_AND_ZERO_ARR (ConvertedDicName);
 }
 
 #define CONTEXT_CONNECT 1
@@ -301,21 +313,31 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
       Static_SetText (HStatus, _T ("Status: Directory doesn't contain any zipped files"));
       goto cleanup;
     }
-    SetString (Buf, FindData.cFileName);
-    Buf[_tcslen (Buf) - 4] = 0;
-    ListBox_AddString (HFileList, Buf);
-    while (InternetFindNextFileA (FindHandle, &FindData))
+    CLEAN_AND_ZERO (CurrentLangs);
+    CurrentLangs = new std::vector<LanguageName> ();
+    do
     {
       SetString (Buf, FindData.cFileName);
       Buf[_tcslen (Buf) - 4] = 0;
-      ListBox_AddString (HFileList, Buf);
+      LanguageName Lang (Buf); // Probably should add options for using/not using aliases
+      if (!Lang.AliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
+        continue;
+      CurrentLangs->push_back (Lang);
+    }
+    while (InternetFindNextFileA (FindHandle, &FindData));
+
+    std::sort (CurrentLangs->begin (), CurrentLangs->end ());
+    for (unsigned int i = 0; i < CurrentLangs->size (); i++)
+    {
+      ListBox_AddString (HFileList, CurrentLangs->at (i).AliasName);
     }
     CLEAN_AND_ZERO_ARR (Buf);
     // If it is success when we perhaps should add this address to our list.
     int Len = ComboBox_GetTextLength (HAddress) + 1;
     TCHAR *NewServer = new TCHAR [Len];
     ComboBox_GetText (HAddress, NewServer, Len);
-    PostMessageToMainThread (TM_ADD_USER_SERVER, (WPARAM) NewServer, 0);
+    if (CheckIfSavingIsNeeded)
+      PostMessageToMainThread (TM_ADD_USER_SERVER, (WPARAM) NewServer, 0);
     StatusColor = COLOR_OK;
     Static_SetText (HStatus, _T ("Status: List of available files was successfully loaded"));
   }

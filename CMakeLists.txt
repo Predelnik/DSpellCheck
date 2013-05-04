@@ -70,6 +70,7 @@ set (list_of_files_DSpellCheck
   ${SRC_DIR}/AboutDlg.h
   ${SRC_DIR}/DownloadDicsDlg.cpp
   ${SRC_DIR}/DownloadDicsDlg.h
+  ${SRC_DIR}/LanguageName.h
   ${SRC_DIR}/DSpellCheck.rc
   ${SRC_DIR}/AbstractSpellerInterface.cpp
   ${SRC_DIR}/AbstractSpellerInterface.h

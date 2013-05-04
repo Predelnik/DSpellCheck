@@ -24,17 +24,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "LangList.h"
 #include "DownloadDicsDlg.h"
-#include "MainDef.h"
 #include "Plugin.h"
 #include "SpellChecker.h"
 
 #include "resource.h"
+#include "LanguageName.h"
 
 #include <uxtheme.h>
 
 SimpleDlg::SimpleDlg () : StaticDialog ()
 {
-  CurrentLangs = 0;
 }
 
 void SimpleDlg::init (HINSTANCE hInst, HWND Parent, NppData nppData)
@@ -49,23 +48,23 @@ void SimpleDlg::DisableLanguageCombo (BOOL Disable)
 }
 
 // Called from main thread, beware!
-BOOL SimpleDlg::AddAvailableLanguages (std::vector <TCHAR *> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages)
+BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages)
 {
   ComboBox_ResetContent (HComboLanguage);
   ListBox_ResetContent (GetLangList ()->GetListBox ());
 
   int SelectedIndex = 0;
   unsigned int i = 0;
+  TCHAR *ConvertedBuf = 0;
+
   for (i = 0; i < LangsAvailable->size (); i++)
   {
-    if (_tcscmp (CurrentLanguage, LangsAvailable->at (i)) == 0)
+    if (_tcscmp (CurrentLanguage, LangsAvailable->at (i).OrigName) == 0)
       SelectedIndex = i;
 
-    ComboBox_AddString (HComboLanguage, LangsAvailable->at (i));
-    ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i));
+    ComboBox_AddString (HComboLanguage, LangsAvailable->at (i).AliasName);
+    ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i).AliasName);
   }
-  CLEAN_AND_ZERO_STRING_VECTOR (CurrentLangs);
-  CurrentLangs = LangsAvailable;
 
   if (_tcscmp (CurrentLanguage, _T ("<MULTIPLE>")) == 0)
     SelectedIndex = i;
@@ -82,7 +81,15 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <TCHAR *> *LangsAvailable, co
   Token = _tcstok_s (MultiLanguagesCopy, _T ("|"), &Context);
   while (Token)
   {
-    Index = ListBox_FindString (GetLangList ()->GetListBox (), -1, Token);
+    Index = -1;
+    for (unsigned int i = 0; i < LangsAvailable->size (); i++)
+    {
+      if (_tcscmp (LangsAvailable->at (i).OrigName, Token) == 0)
+      {
+        Index = i;
+        break;
+      }
+    }
     if (Index != -1)
       CheckedListBox_SetCheckState (GetLangList ()->GetListBox (), Index, BST_CHECKED);
     Token = _tcstok_s (NULL, _T ("|"), &Context);
@@ -127,7 +134,6 @@ static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText)
 
 SimpleDlg::~SimpleDlg ()
 {
-  CLEAN_AND_ZERO_STRING_VECTOR (CurrentLangs);
 }
 
 // Called from main thread, beware!
@@ -149,9 +155,9 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   else
   {
     if (GetSelectedLib () == 0)
-      SpellCheckerInstance->SetAspellLanguage (CurrentLangs->at (CurSel));
+      SpellCheckerInstance->SetAspellLanguage (SpellCheckerInstance->GetLangByIndex (CurSel));
     else
-      SpellCheckerInstance->SetHunspellLanguage (CurrentLangs->at (CurSel));
+      SpellCheckerInstance->SetHunspellLanguage (SpellCheckerInstance->GetLangByIndex (CurSel));
   }
   SpellCheckerInstance->RecheckVisible ();
   Buf = new TCHAR[DEFAULT_BUF_SIZE];

@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "MainDef.h"
 
 struct AspellSpeller;
+struct LanguageName;
 struct AspellWordList;
 class SettingsDlg;
 class LangList;
@@ -87,6 +88,7 @@ public:
   void FillDialogs ();
   void ReinitLanguageLists (int SpellerId);
   TCHAR *GetHunspellPath () {return HunspellPath; };
+  TCHAR *GetLangByIndex (int i);
   HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
 
 private:
@@ -153,6 +155,7 @@ private:
 
 private:
 
+  std::vector <LanguageName> *CurrentLangs;
   BOOL AutoCheckText;
   BOOL CheckTextEnabled;
   BOOL WUCisRight;
