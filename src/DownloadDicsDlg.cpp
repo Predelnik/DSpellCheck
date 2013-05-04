@@ -245,7 +245,10 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
 {
   TCHAR *Folders = 0;
   if (Type == FILL_FILE_LIST)
+  {
+    StatusColor = COLOR_NEUTRAL;
     Static_SetText (HStatus, _T ("Status: Loading..."));
+  }
 
   FtpTrim (Address);
 
@@ -259,6 +262,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   HINTERNET Session = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
   if (!Session)
   {
+    StatusColor = COLOR_FAIL;
     Static_SetText (HStatus, _T ("Status: Connection Error"));
     return;
   }
@@ -270,6 +274,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
 
   if (!Internet)
   {
+    StatusColor = COLOR_FAIL;
     Static_SetText (HStatus, _T ("Status: Connection Error"));
     return;
   }
@@ -279,6 +284,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     DWORD Res = 0;
     if (!FtpSetCurrentDirectory (Internet, Folders))
     {
+      StatusColor = COLOR_WARN;
       Static_SetText (HStatus, _T ("Status: Directory wasn't found"));
       goto cleanup;
     }
@@ -291,6 +297,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     HINTERNET FindHandle = FtpFindFirstFileA (Internet, "*.zip", &FindData, 0, CONTEXT_FIND_FIRST_FILE);
     if (!FindHandle)
     {
+      StatusColor = COLOR_WARN;
       Static_SetText (HStatus, _T ("Status: Directory doesn't contain any zipped files"));
       goto cleanup;
     }
@@ -309,6 +316,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     TCHAR *NewServer = new TCHAR [Len];
     ComboBox_GetText (HAddress, NewServer, Len);
     PostMessageToMainThread (TM_ADD_USER_SERVER, (WPARAM) NewServer, 0);
+    StatusColor = COLOR_OK;
     Static_SetText (HStatus, _T ("Status: List of available files was successfully loaded"));
   }
   else if (Type == DOWNLOAD_FILE)
@@ -384,6 +392,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       SendEvent (EID_INIT_DOWNLOAD_COMBOBOX);
       //ComboBox_SetText(HAddress, _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries"));
       OnDisplayAction ();
+      DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
       return TRUE;
     }
     break;
@@ -420,6 +429,19 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         break;
       }
     }
+    break;
+  case WM_CTLCOLORSTATIC:
+    if (HStatus == (HWND)lParam)
+    {
+      HDC hDC = (HDC)wParam;
+      SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
+      // SetBkMode(hDC, TRANSPARENT);
+      SetTextColor(hDC, StatusColor);
+      return (INT_PTR) DefaultBrush;
+    }
+    break;
+  case WM_CLOSE:
+    DeleteObject (DefaultBrush);
     break;
   };
   return FALSE;

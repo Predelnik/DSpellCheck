@@ -47,6 +47,11 @@ enum EncodingType
 
 #define USER_SERVER_CONST 100
 
+#define COLOR_OK (RGB (0, 144, 0))
+#define COLOR_FAIL (RGB (225, 0, 0))
+#define COLOR_WARN (RGB (144, 144, 0))
+#define COLOR_NEUTRAL (RGB (0, 0, 0))
+
 // Custom WMs (Only for our windows and threads)
 #define WM_SHOWANDRECREATEMENU  WM_USER + 1000
 #define TM_MODIFIED_ZONE_INFO   WM_USER + 1001

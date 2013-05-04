@@ -185,12 +185,12 @@ void SimpleDlg::FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR * HunspellPat
     ShowWindow (HDownloadDics, 0);
     if (Status)
     {
-      AspellStatusColor = RGB (0, 144, 0);
+      AspellStatusColor = COLOR_OK;
       Static_SetText (HAspellStatus, _T ("Aspell Status: OK"));
     }
     else
     {
-      AspellStatusColor = RGB (225, 0, 0);
+      AspellStatusColor = COLOR_FAIL;
       Static_SetText (HAspellStatus, _T ("Aspell Status: Fail"));
     }
     TCHAR *Path = 0;

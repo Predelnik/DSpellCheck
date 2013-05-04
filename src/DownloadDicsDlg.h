@@ -29,6 +29,8 @@ public:
   void IndicateThatSavingMightBeNeeded ();
 private:
 private:
+  HBRUSH DefaultBrush;
+  COLORREF StatusColor;
   SpellChecker *SpellCheckerInstance;
   HWND LibCombo;
   HWND HFileList;
