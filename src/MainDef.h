@@ -45,6 +45,8 @@ enum EncodingType
 #define MID_ADDTODICTIONARY 101
 #define MID_IGNOREALL 102
 
+#define USER_SERVER_CONST 100
+
 // Custom WMs (Only for our windows and threads)
 #define WM_SHOWANDRECREATEMENU  WM_USER + 1000
 #define TM_MODIFIED_ZONE_INFO   WM_USER + 1001
@@ -53,4 +55,5 @@ enum EncodingType
 #define TM_MENU_RESULT          WM_USER + 1004
 #define TM_PRECALCULATE_MENU    WM_USER + 1005
 #define TM_CHANGE_DIR           WM_USER + 1006
+#define TM_ADD_USER_SERVER      WM_USER + 1007
 #endif MAINDEF_H

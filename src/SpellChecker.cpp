@@ -77,6 +77,12 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   CurrentSpeller = AspellSpeller;
   LastSuggestions = 0;
   PrepareStringForConversion ();
+  memset (ServerNames, 0, sizeof (ServerNames));
+  memset (DefaultServers, 0, sizeof (DefaultServers));
+  AddressIsSet = 0;
+  SetString (DefaultServers[0], _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/"));
+  SetString (DefaultServers[1], _T ("ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/"));
+  SetString (DefaultServers[2], _T ("ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/"));
 }
 
 static const char Yo[] = "\xd0\x81";
@@ -141,6 +147,10 @@ SpellChecker::~SpellChecker ()
   CLEAN_AND_ZERO_ARR (YeANSI);
   CLEAN_AND_ZERO_ARR (yeANSI);
   CLEAN_AND_ZERO_ARR (PunctuationApostropheANSI);
+  for (int i = 0; i < countof (ServerNames); i++)
+    CLEAN_AND_ZERO_ARR (ServerNames[i]);
+  for (int i = 0; i < countof (DefaultServers); i++)
+    CLEAN_AND_ZERO_ARR (DefaultServers[i]);
 }
 
 void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL Separator)
@@ -203,6 +213,43 @@ BOOL WINAPI SpellChecker::NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam)
     {
       ReinitLanguageLists ((int) wParam);
       SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
+    }
+    break;
+  case TM_ADD_USER_SERVER:
+    {
+      TCHAR *Name = (TCHAR *) wParam;
+      TCHAR *TrimmedName = 0;
+      SetString (TrimmedName, Name);
+      FtpTrim (TrimmedName);
+      TCHAR *Buf = 0;
+      for (int i = 0; i < countof (DefaultServers); i++)
+      {
+        SetString (Buf, DefaultServers[i]);
+        FtpTrim (Buf);
+        if (_tcscmp (Buf, TrimmedName) == 0)
+          goto add_user_server_cleanup; // Nothing is done in this case
+      }
+      for (int i = 0; i < countof (ServerNames); i++)
+      {
+        SetString (Buf, ServerNames[i]);
+        FtpTrim (Buf);
+        if (_tcscmp (Buf, TrimmedName) == 0)
+          goto add_user_server_cleanup; // Nothing is done in this case
+      }
+      // Then we're adding finally
+      CLEAN_AND_ZERO_ARR (ServerNames[countof (ServerNames) - 1]);
+      for (int i = countof (ServerNames) - 1; i > 0; i--)
+      {
+        ServerNames[i] = ServerNames[i - 1];
+      }
+      ServerNames[0] = 0;
+      SetString (ServerNames[0], Name);
+      SaveSettings ();
+add_user_server_cleanup:
+      CLEAN_AND_ZERO_ARR (Buf);
+      CLEAN_AND_ZERO_ARR (Name);
+      CLEAN_AND_ZERO_ARR (TrimmedName);
+      ResetDownloadCombobox ();
     }
     break;
   default:
@@ -327,6 +374,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_CHECK_FILE_NAME:
     CheckFileName ();
     break;
+  case EID_INIT_DOWNLOAD_COMBOBOX:
+    ResetDownloadCombobox ();
+    break;
     /*
     case EID_APPLYMENUACTION:
     ApplyMenuActions ();
@@ -334,6 +384,63 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     */
   }
   return TRUE;
+}
+
+void SpellChecker::ResetDownloadCombobox ()
+{
+  HWND TargetCombobox = GetDlgItem (GetDownloadDics ()->getHSelf (), IDC_ADDRESS);
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  ComboBox_GetText (TargetCombobox, Buf, DEFAULT_BUF_SIZE);
+  if (AddressIsSet)
+  {
+    PreserveCurrentAddressIndex ();
+  }
+  ComboBox_ResetContent (TargetCombobox);
+  for (int i = 0; i < countof (DefaultServers); i++)
+  {
+    ComboBox_AddString (TargetCombobox, DefaultServers[i]);
+  }
+  for (int i = 0; i < countof (ServerNames); i++)
+  {
+    if (*ServerNames[i])
+      ComboBox_AddString (TargetCombobox, ServerNames[i]);
+  }
+  if (LastUsedAddress < USER_SERVER_CONST)
+    ComboBox_SetCurSel (TargetCombobox, LastUsedAddress);
+  else
+    ComboBox_SetCurSel (TargetCombobox, LastUsedAddress - USER_SERVER_CONST + countof (DefaultServers));
+  AddressIsSet = 1;
+}
+
+void SpellChecker::PreserveCurrentAddressIndex ()
+{
+  HWND TargetCombobox = GetDlgItem (GetDownloadDics ()->getHSelf (), IDC_ADDRESS);
+  TCHAR CurText [DEFAULT_BUF_SIZE];
+  TCHAR *Buf = 0;
+  ComboBox_GetText (TargetCombobox, CurText, DEFAULT_BUF_SIZE);
+  FtpTrim (CurText);
+  for (int i = 0; i < countof (ServerNames); i++)
+  {
+    SetString (Buf, DefaultServers[i]);
+    FtpTrim (Buf);
+    if (_tcscmp (Buf, CurText) == 0)
+    {
+      LastUsedAddress = i;
+      goto cleanup;
+    }
+  };
+  for (int i = 0; i < countof (ServerNames); i++)
+  {
+    SetString (Buf, ServerNames[i]);
+    FtpTrim (Buf);
+    if (_tcscmp (Buf, CurText) == 0)
+    {
+      LastUsedAddress = USER_SERVER_CONST + i;
+      goto cleanup;
+    }
+  }
+cleanup:
+  CLEAN_AND_ZERO_ARR (Buf);
 }
 
 /*
@@ -1767,6 +1874,16 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en-US"));
   SaveToIni (_T ("Aspell_Language"), AspellLanguage, _T ("en"));
   SaveToIni (_T ("Library"), LibMode, !AspellSpeller->IsWorking ());
+  PreserveCurrentAddressIndex ();
+  SaveToIni (_T ("Last_Used_Address_Index"), LastUsedAddress, 0);
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  for (int i = 0; i < countof (ServerNames); i++)
+  {
+    if (!*ServerNames[i])
+      continue;
+    _stprintf (Buf, _T ("Server_Address[%d]"), i);
+    SaveToIni (Buf, ServerNames[i], _T (""));
+  }
 }
 
 void SpellChecker::SetLibMode (int i)
@@ -1839,6 +1956,13 @@ void SpellChecker::LoadSettings ()
   SetBufferSize (Size, 0);
   RefreshUnderlineStyle ();
   CLEAN_AND_ZERO_ARR (BufUtf8);
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  for (int i = 0; i < countof (ServerNames); i++)
+  {
+    _stprintf (Buf, _T ("Server_Address[%d]"), i);
+    LoadFromIni (ServerNames[i], Buf, _T (""));
+  }
+  LoadFromIni (LastUsedAddress, _T ("Last_Used_Address_Index"), 0);
 }
 
 void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)

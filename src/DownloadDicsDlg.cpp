@@ -42,6 +42,7 @@ void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellChe
 {
   SpellCheckerInstance = SpellCheckerInstanceArg;
   Timer = 0;
+  CheckIfSavingIsNeeded = 0;
   LibCombo = LibComboArg;
   return Window::init (hInst, Parent);
 }
@@ -49,6 +50,11 @@ void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellChe
 DownloadDicsDlg::~DownloadDicsDlg ()
 {
   DeleteTimerQueueTimer (0, Timer, 0);
+}
+
+void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
+{
+  CheckIfSavingIsNeeded = 1;
 }
 
 #define BUF_SIZE_FOR_COPY 10240
@@ -204,42 +210,50 @@ clean_and_continue:
   CLEAN_AND_ZERO_ARR (DicFileName);
 }
 
-DWORD BytesRead = 0;
-
 #define CONTEXT_CONNECT 1
 #define CONTEXT_FIND_FIRST_FILE 2
 #define CONTEXT_OPEN_FILE 3
 
-void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
+void FtpTrim (TCHAR *FtpAddress)
 {
-  StrTrim (Address, _T (" "));
-  TCHAR *Folders = 0;
+  StrTrim (FtpAddress, _T (" "));
   const TCHAR FtpPrefix[] = _T ("ftp://");
   int FtpPrefixLen = _tcslen (FtpPrefix);
-  for (unsigned int i = 0; i < _tcslen (Address); i++) // Exchanging slashes
+  for (unsigned int i = 0; i < _tcslen (FtpAddress); i++) // Exchanging slashes
   {
-    if (Address[i] == _T ('\\'))
-      Address[i] = _T ('/');
+    if (FtpAddress[i] == _T ('\\'))
+      FtpAddress[i] = _T ('/');
   }
 
-  if (Type == FILL_FILE_LIST)
+  if (_tcsncmp (FtpPrefix, FtpAddress, FtpPrefixLen) == 0) // Cutting out stuff like ftp://
   {
+    for (unsigned int i = 0; i <= _tcslen (FtpAddress) - FtpPrefixLen; i++)
+    {
+      FtpAddress[i] = FtpAddress [i + FtpPrefixLen];
+    }
+  }
+
+  for (unsigned int i = 0; i < _tcslen (FtpAddress); i++)
+  {
+    FtpAddress[i] = _totlower (FtpAddress[i]);
+    if (FtpAddress[i] == '/')
+      break; // In dir names upper/lower case could matter
+  }
+}
+
+void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
+{
+  TCHAR *Folders = 0;
+  if (Type == FILL_FILE_LIST)
     Static_SetText (HStatus, _T ("Status: Loading..."));
 
-    if (_tcsncmp (FtpPrefix, Address, FtpPrefixLen) == 0) // Cutting out stuff like ftp://
-    {
-      for (unsigned int i = 0; i <= _tcslen (Address) - FtpPrefixLen; i++)
-      {
-        Address[i] = Address [i + FtpPrefixLen];
-      }
-    }
+  FtpTrim (Address);
 
-    Folders = _tcschr (Address, _T ('/'));
-    if (Folders != 0)
-    {
-      *Folders = _T ('\0');
-      Folders++;
-    }
+  Folders = _tcschr (Address, _T ('/'));
+  if (Folders != 0)
+  {
+    *Folders = _T ('\0');
+    Folders++;
   }
 
   HINTERNET Session = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -251,11 +265,6 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
 
   HINTERNET Internet = InternetConnect (Session, Address, INTERNET_INVALID_PORT_NUMBER, NULL, NULL, INTERNET_SERVICE_FTP, 0, CONTEXT_CONNECT);
 
-  // HANDLE hFtpThread;
-  // DWORD ftpThreadId;
-
-  // hFtpThread = CreateThread (NULL, 0, FtpThread, Internet, 0, &ftpThreadId);
-
   if (Type == FILL_FILE_LIST)
     ListBox_ResetContent (HFileList);
 
@@ -265,9 +274,6 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     return;
   }
 
-  // PostThreadMessage (ftpThreadId, TM_CHANGE_DIR, (WPARAM) Folders, 0);
-
-  // if (WaitForMultipleEvents (EID_FTP_OK, EID_FTP_FAIL) != WAIT_OBJECT_0)
   if (Folders != 0) // Otherwise it's a root dir
   {
     DWORD Res = 0;
@@ -298,6 +304,11 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
       ListBox_AddString (HFileList, Buf);
     }
     CLEAN_AND_ZERO_ARR (Buf);
+    // If it is success when we perhaps should add this address to our list.
+    int Len = ComboBox_GetTextLength (HAddress) + 1;
+    TCHAR *NewServer = new TCHAR [Len];
+    ComboBox_GetText (HAddress, NewServer, Len);
+    PostMessageToMainThread (TM_ADD_USER_SERVER, (WPARAM) NewServer, 0);
     Static_SetText (HStatus, _T ("Status: List of available files was successfully loaded"));
   }
   else if (Type == DOWNLOAD_FILE)
@@ -327,7 +338,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
       if (!*BytesCopied)
         break;
 
-      BytesSum += BytesRead;
+      BytesSum += *BytesCopied;
       GetProgress ()->SetProgress (BytesSum * 100 / Size);
 
       _stprintf (Message, _T ("%d / %d bytes downloaded (%d %%)"), BytesSum, Size, BytesSum * 100 / Size);
@@ -348,8 +359,10 @@ VOID CALLBACK ReinitServer (
   BOOLEAN TimerOrWaitFired
   )
 {
-  ((DownloadDicsDlg *) lpParameter)->OnDisplayAction ();
-  ((DownloadDicsDlg *) lpParameter)->RemoveTimer ();
+  DownloadDicsDlg *DlgInstance = ((DownloadDicsDlg *) lpParameter);
+  DlgInstance->IndicateThatSavingMightBeNeeded ();
+  DlgInstance->OnDisplayAction ();
+  DlgInstance->RemoveTimer ();
 }
 
 void DownloadDicsDlg::RemoveTimer ()
@@ -368,7 +381,8 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       HAddress = ::GetDlgItem (_hSelf, IDC_ADDRESS);
       HStatus = ::GetDlgItem (_hSelf, IDC_SERVER_STATUS);
       //ComboBox_SetText(HAddress, _T ("ftp://127.0.0.1"));
-      ComboBox_SetText(HAddress, _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries"));
+      SendEvent (EID_INIT_DOWNLOAD_COMBOBOX);
+      //ComboBox_SetText(HAddress, _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries"));
       OnDisplayAction ();
       return TRUE;
     }
@@ -397,6 +411,11 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
             ChangeTimerQueueTimer (0, Timer, 1000, 0);
           else
             CreateTimerQueueTimer (&Timer, 0, ReinitServer, this, 1000, 0 , 0);
+        }
+        else if (HIWORD (wParam) == CBN_SELCHANGE)
+        {
+          ReinitServer (this, FALSE);
+          CheckIfSavingIsNeeded = 0;
         }
         break;
       }

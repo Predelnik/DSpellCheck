@@ -4,6 +4,8 @@
 #include "staticdialog\staticdialog.h"
 #include <Wininet.h>
 
+void FtpTrim (TCHAR *FtpAddress);
+
 enum FTP_OPERATION_TYPE
 {
   FILL_FILE_LIST = 0,
@@ -24,6 +26,7 @@ public:
   void FillFileList ();
   void RemoveTimer ();
   void OnDisplayAction ();
+  void IndicateThatSavingMightBeNeeded ();
 private:
 private:
   SpellChecker *SpellCheckerInstance;
@@ -32,5 +35,6 @@ private:
   HWND HAddress;
   HWND HStatus;
   HANDLE Timer;
+  int CheckIfSavingIsNeeded;
 };
 #endif // DOWNLOAD_DICS_DLG_H

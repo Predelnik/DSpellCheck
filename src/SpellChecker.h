@@ -140,6 +140,8 @@ private:
   void WriteSetting (LPARAM lParam);
   void ApplyConversions (char *Word);
   void PrepareStringForConversion ();
+  void ResetDownloadCombobox ();
+  void PreserveCurrentAddressIndex ();
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);
@@ -165,6 +167,10 @@ private:
   char *DelimUtf8; // String without special characters but maybe with escape characters (like '\n' and stuff)
   char *DelimUtf8Converted; // String where escape characters are properly converted to corresponding symbols
   char *DelimConverted; // Same but in ANSI encoding
+  TCHAR *ServerNames[3]; // Only user ones, there'll also be bunch of predetermined ones
+  TCHAR *DefaultServers[3];
+  int LastUsedAddress; // equals USER_SERVER_CONST + num if user address is used, otherwise equals number of default server
+  int AddressIsSet;
   TCHAR *FileTypes;
   TCHAR *AspellPath;
   TCHAR *HunspellPath;
