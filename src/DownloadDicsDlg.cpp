@@ -21,7 +21,6 @@ void DownloadDicsDlg::DoDialog ()
   }
   else
   {
-    OnDisplayAction ();
     goToCenter ();
     display ();
   }
@@ -42,17 +41,15 @@ void DownloadDicsDlg::OnDisplayAction ()
 void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg)
 {
   SpellCheckerInstance = SpellCheckerInstanceArg;
-  return Window::init (hInst, Parent);
+  Timer = 0;
   LibCombo = LibComboArg;
+  return Window::init (hInst, Parent);
 }
 
-/*
-void CreateThreadResources ()
+DownloadDicsDlg::~DownloadDicsDlg ()
 {
-for (int i = 0; i < EID_MAX; i++)
-hFtpEvent[i] = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+  DeleteTimerQueueTimer (0, Timer, 0);
 }
-*/
 
 #define BUF_SIZE_FOR_COPY 10240
 void DownloadDicsDlg::DownloadSelected ()
@@ -228,20 +225,6 @@ VOID CALLBACK
   __in DWORD dwStatusInformationLength
   )
 {
-  /*
-  if (dwContext != ActiveContext)
-  return;
-  */
-
-  /*
-  if (dwInternetStatus == INTERNET_STATUS_HANDLE_CREATED)
-  LatestHandle = ((LPINTERNET_ASYNC_RESULT)lpvStatusInformation)->dwResult;
-  */
-  if (dwContext == CONTEXT_OPEN_FILE && dwInternetStatus == INTERNET_STATUS_RESPONSE_RECEIVED)
-  {
-    BytesRead = ((LPINTERNET_ASYNC_RESULT)lpvStatusInformation)->dwResult;
-  }
-
   if (dwInternetStatus == INTERNET_STATUS_REQUEST_COMPLETE)
   {
     LatestResult = ((LPINTERNET_ASYNC_RESULT)lpvStatusInformation)->dwResult;
@@ -251,30 +234,35 @@ VOID CALLBACK
 
 void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
 {
-  Static_SetText (HStatus, _T ("Status: Loading..."));
   StrTrim (Address, _T (" "));
-  TCHAR *Folders;
-
+  TCHAR *Folders = 0;
+  HINTERNET Internet = 0;
+  const TCHAR FtpPrefix[] = _T ("ftp://");
+  int FtpPrefixLen = _tcslen (FtpPrefix);
   for (unsigned int i = 0; i < _tcslen (Address); i++) // Exchanging slashes
   {
     if (Address[i] == _T ('\\'))
       Address[i] = _T ('/');
   }
-  const TCHAR FtpPrefix[] = _T ("ftp://");
-  int FtpPrefixLen = _tcslen (FtpPrefix);
-  if (_tcsncmp (FtpPrefix, Address, _tcslen (FtpPrefix)) == 0) // Cutting out stuff like ftp://
-  {
-    for (unsigned int i = 0; i <= _tcslen (Address) - FtpPrefixLen; i++)
-    {
-      Address[i] = Address [i + FtpPrefixLen];
-    }
-  }
 
-  Folders = _tcschr (Address, _T ('/'));
-  if (Folders != 0)
+  if (Type == FILL_FILE_LIST)
   {
-    *Folders = _T ('\0');
-    Folders++;
+    Static_SetText (HStatus, _T ("Status: Loading..."));
+
+    if (_tcsncmp (FtpPrefix, Address, FtpPrefixLen) == 0) // Cutting out stuff like ftp://
+    {
+      for (unsigned int i = 0; i <= _tcslen (Address) - FtpPrefixLen; i++)
+      {
+        Address[i] = Address [i + FtpPrefixLen];
+      }
+    }
+
+    Folders = _tcschr (Address, _T ('/'));
+    if (Folders != 0)
+    {
+      *Folders = _T ('\0');
+      Folders++;
+    }
   }
 
   HINTERNET Session = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, INTERNET_FLAG_ASYNC);
@@ -429,6 +417,21 @@ cleanup:
   InternetCloseHandle (Internet);
 }
 
+VOID CALLBACK ReinitServer (
+  PVOID lpParameter,
+  BOOLEAN TimerOrWaitFired
+  )
+{
+  ((DownloadDicsDlg *) lpParameter)->OnDisplayAction ();
+  ((DownloadDicsDlg *) lpParameter)->RemoveTimer ();
+}
+
+void DownloadDicsDlg::RemoveTimer ()
+{
+  DeleteTimerQueueTimer (0, Timer, 0);
+  Timer = 0;
+}
+
 BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
@@ -460,6 +463,15 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         if (HIWORD (wParam) == BN_CLICKED)
           display (false);
 
+        break;
+      case IDC_ADDRESS:
+        if (HIWORD (wParam) == CBN_EDITCHANGE)
+        {
+          if (Timer)
+            ChangeTimerQueueTimer (0, Timer, 1000, 0);
+          else
+            CreateTimerQueueTimer (&Timer, 0, ReinitServer, this, 1000, 0 , 0);
+        }
         break;
       }
     }

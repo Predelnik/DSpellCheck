@@ -14,6 +14,7 @@ class SpellChecker;
 class DownloadDicsDlg : public StaticDialog
 {
 public:
+  ~DownloadDicsDlg ();
   void DoDialog ();
   // Maybe hunspell interface should be passed here
   void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg);
@@ -21,13 +22,15 @@ public:
   void DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName = 0, TCHAR *Location = 0);
   void DownloadSelected ();
   void FillFileList ();
-private:
+  void RemoveTimer ();
   void OnDisplayAction ();
+private:
 private:
   SpellChecker *SpellCheckerInstance;
   HWND LibCombo;
   HWND HFileList;
   HWND HAddress;
   HWND HStatus;
+  HANDLE Timer;
 };
 #endif // DOWNLOAD_DICS_DLG_H
