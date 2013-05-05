@@ -27,3 +27,6 @@ v1.1.3
 
 v1.1.4
 * Fix some encoding conversion problems, which were leading to very dramatic results on some systems.
+
+v1.1.5
+* Fix segfault when Aspell is presented on system but have no dictionaries.
