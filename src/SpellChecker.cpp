@@ -1759,7 +1759,7 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans, 70);
   SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en-US"));
   SaveToIni (_T ("Aspell_Language"), AspellLanguage, _T ("en"));
-  SaveToIni (_T ("Library"), LibMode, !AspellSpeller->IsWorking ());
+  SaveToIni (_T ("Library"), LibMode, 1);
 }
 
 void SpellChecker::SetLibMode (int i)
@@ -1822,7 +1822,7 @@ void SpellChecker::LoadSettings ()
 
   HunspellSpeller->SetDirectory (HunspellPath);
   AspellSpeller->Init (AspellPath);
-  LoadFromIni (i, _T ("Library"), (!AspellSpeller->IsWorking ()));
+  LoadFromIni (i, _T ("Library"), 1);
   SetLibMode (i);
   int Size, Trans;
   LoadFromIni (Size, _T ("Suggestions_Button_Size"), 15);

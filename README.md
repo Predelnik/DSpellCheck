@@ -30,3 +30,4 @@ v1.1.4
 
 v1.1.5
 * Fix segfault when Aspell is presented on system but have no dictionaries.
+* Make Hunspell used by default even if Aspell library is installed.
