@@ -290,6 +290,7 @@ void AspellInterface::SetLanguage (TCHAR *Lang)
     {
       SingularSpeller = 0;
       AspellLoaded = FALSE;
+      return;
     }
   }
   else
