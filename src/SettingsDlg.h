@@ -43,6 +43,7 @@ public:
   void SetCheckComments (BOOL Value);
   int GetSelectedLib ();
   void SetLibMode (int LibMode);
+  void SetDecodeNames (BOOL Value);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
@@ -68,6 +69,8 @@ private:
   HWND HLibrary;
   HWND HLibGroupBox;
   HWND HDownloadDics;
+  HWND HRemoveDics;
+  HWND HDecodeNames;
 };
 
 class AdvancedDlg : public StaticDialog

@@ -479,7 +479,7 @@ const TCHAR *const AliasesFrom[] = {_T ("af_Za"), _T ("ak_GH"), _T ("bg_BG"), _T
 };
 const TCHAR *const AliasesTo[] = {_T ("Afrikaans"), _T ("Akan"), _T ("Bulgarian"), _T ("Catalan (Spain)"), _T ("Catalan (Any)"), _T ("Coptic (Bohairic dialect)"), _T ("Czech"), _T ("Welsh"),
   _T ("Danish"), _T ("German (Austria)"), _T ("German (Switzerland)"), _T ("German (Germany)"), _T ("German (Old and New Spelling)"), _T ("German (New Spelling)"),
-  _T ("German (Additional)"), _T ("Greek"), _T ("English (Australia)"), _T ("English (Canada)"), _T ("English (Great Britain)"), _T ("English (Great Britain) [OED])"), _T ("English (New Zealand)"),
+  _T ("German (Additional)"), _T ("Greek"), _T ("English (Australia)"), _T ("English (Canada)"), _T ("English (Great Britain)"), _T ("English (Great Britain) [OED]"), _T ("English (New Zealand)"),
   _T ("English (United States)"), _T ("English (South Africa)"), _T ("Esperanto"), _T ("Spanish (Argentina)"), _T ("Spanish (Bolivia)"), _T ("Spanish (Chile)"), _T ("Spanish (Colombia)"), _T ("Spanish (Costa Rica)"),
   _T ("Spanish (Cuba)"), _T ("Spanish (Dominican Republic)"), _T ("Spanish (Ecuador)"), _T ("Spanish (Spain)"), _T ("Spanish (Guatemala)"), _T ("Spanish (Honduras)"), _T ("Spanish (Mexico)"),
   _T ("Spanish (New)"), _T ("Spanish (Nicaragua)"), _T ("Spanish (Panama)"), _T ("Spanish (Peru)"), _T ("Spanish (Puerto Rico)"), _T ("Spanish (Paraguay)"), _T ("Spanish (El Salvador)"), _T ("Spanish (Uruguay)"),

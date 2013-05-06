@@ -71,6 +71,8 @@ set (list_of_files_DSpellCheck
   ${SRC_DIR}/DownloadDicsDlg.cpp
   ${SRC_DIR}/DownloadDicsDlg.h
   ${SRC_DIR}/LanguageName.h
+  ${SRC_DIR}/RemoveDics.cpp
+  ${SRC_DIR}/RemoveDics.h
   ${SRC_DIR}/DSpellCheck.rc
   ${SRC_DIR}/AbstractSpellerInterface.cpp
   ${SRC_DIR}/AbstractSpellerInterface.h

@@ -46,6 +46,7 @@ void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellChe
   CheckIfSavingIsNeeded = 0;
   LibCombo = LibComboArg;
   CurrentLangs = 0;
+  CurrentLangsFiltered = 0;
   return Window::init (hInst, Parent);
 }
 
@@ -53,6 +54,7 @@ DownloadDicsDlg::~DownloadDicsDlg ()
 {
   DeleteTimerQueueTimer (0, Timer, 0);
   CLEAN_AND_ZERO (CurrentLangs);
+  CLEAN_AND_ZERO (CurrentLangsFiltered);
 }
 
 void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
@@ -92,9 +94,9 @@ void DownloadDicsDlg::DownloadSelected ()
   {
     if (CheckedListBox_GetCheckState (HFileList, i) == BST_CHECKED)
     {
-      FileName = new TCHAR [_tcslen (CurrentLangs->at (i).OrigName) + 4 + 1];
+      FileName = new TCHAR [_tcslen (CurrentLangsFiltered->at (i).OrigName) + 4 + 1];
       FileName[0] = _T ('\0');
-      _tcscat (FileName, CurrentLangs->at (i).OrigName);
+      _tcscat (FileName, CurrentLangsFiltered->at (i).OrigName);
       _tcscat (FileName, _T (".zip"));
       _stprintf (ProgMessage, _T ("Downloading %s..."), FileName);
       p->SetTopMessage (ProgMessage);
@@ -213,7 +215,8 @@ clean_and_continue:
     }
   }
   GetProgress ()->display (false);
-  MessageBox (_hSelf, Message, _T ("Dictionaries Downloaded"), MB_OK | MB_ICONINFORMATION);
+
+  MessageBox (0, Message, _T ("Dictionaries Downloaded Successfully"), MB_OK | MB_ICONINFORMATION);
   SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
   if (ComboBox_GetCurSel (LibCombo) == 1)
     SpellCheckerInstance->ReinitLanguageLists (1);
@@ -253,6 +256,24 @@ void FtpTrim (TCHAR *FtpAddress)
   }
 }
 
+void DownloadDicsDlg::UpdateListBox ()
+{
+  CLEAN_AND_ZERO (CurrentLangsFiltered);
+  CurrentLangsFiltered = new std::vector<LanguageName> ();
+  for (unsigned int i = 0; i < CurrentLangs->size (); i++)
+  {
+    LanguageName Lang (CurrentLangs->at (i));
+    if (SpellCheckerInstance->GetDecodeNames () && SpellCheckerInstance->GetShowOnlyKnow () && !Lang.AliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
+      continue;
+    CurrentLangsFiltered->push_back (Lang);
+  }
+  ListBox_ResetContent (HFileList);
+  for (unsigned int i = 0; i < CurrentLangsFiltered->size (); i++)
+  {
+    ListBox_AddString (HFileList, CurrentLangsFiltered->at (i).AliasName);
+  }
+}
+
 void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
 {
   TCHAR *Folders = 0;
@@ -280,9 +301,6 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   }
 
   HINTERNET Internet = InternetConnect (Session, Address, INTERNET_INVALID_PORT_NUMBER, NULL, NULL, INTERNET_SERVICE_FTP, 0, CONTEXT_CONNECT);
-
-  if (Type == FILL_FILE_LIST)
-    ListBox_ResetContent (HFileList);
 
   if (!Internet)
   {
@@ -320,17 +338,13 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
       SetString (Buf, FindData.cFileName);
       Buf[_tcslen (Buf) - 4] = 0;
       LanguageName Lang (Buf); // Probably should add options for using/not using aliases
-      if (!Lang.AliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
-        continue;
       CurrentLangs->push_back (Lang);
     }
     while (InternetFindNextFileA (FindHandle, &FindData));
 
     std::sort (CurrentLangs->begin (), CurrentLangs->end ());
-    for (unsigned int i = 0; i < CurrentLangs->size (); i++)
-    {
-      ListBox_AddString (HFileList, CurrentLangs->at (i).AliasName);
-    }
+
+    UpdateListBox (); // Used only here and on filter change
     CLEAN_AND_ZERO_ARR (Buf);
     // If it is success when we perhaps should add this address to our list.
     int Len = ComboBox_GetTextLength (HAddress) + 1;
@@ -401,6 +415,11 @@ void DownloadDicsDlg::RemoveTimer ()
   Timer = 0;
 }
 
+void DownloadDicsDlg::SetShowOnlyKnown (BOOL Value)
+{
+  Button_SetCheck (HShowOnlyKnown, Value ? BST_CHECKED : BST_UNCHECKED);
+}
+
 BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
@@ -410,6 +429,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       HFileList = ::GetDlgItem (_hSelf, IDC_FILE_LIST);
       HAddress = ::GetDlgItem (_hSelf, IDC_ADDRESS);
       HStatus = ::GetDlgItem (_hSelf, IDC_SERVER_STATUS);
+      HShowOnlyKnown = ::GetDlgItem (_hSelf, IDC_SHOWONLYKNOWN);
       //ComboBox_SetText(HAddress, _T ("ftp://127.0.0.1"));
       SendEvent (EID_INIT_DOWNLOAD_COMBOBOX);
       //ComboBox_SetText(HAddress, _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries"));
@@ -447,6 +467,13 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         {
           ReinitServer (this, FALSE);
           CheckIfSavingIsNeeded = 0;
+        }
+        break;
+      case IDC_SHOWONLYKNOWN:
+        if (HIWORD (wParam) == BN_CLICKED)
+        {
+          SpellCheckerInstance->SetShowOnlyKnow (Button_GetCheck (HShowOnlyKnown) == BST_CHECKED);
+          UpdateListBox ();
         }
         break;
       }

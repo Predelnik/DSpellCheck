@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
 #include "Progress.h"
+#include "RemoveDics.h"
 #include "SpellChecker.h"
 #include "Suggestions.h"
 
@@ -63,6 +64,7 @@ SpellChecker *SpellCheckerInstance = 0;
 SettingsDlg *SettingsDlgInstance = 0;
 Suggestions *SuggestionsInstance = 0;
 LangList *LangListInstance = 0;
+RemoveDics *RemoveDicsInstance = 0;
 Progress *ProgressInstance = 0;
 DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
@@ -139,6 +141,11 @@ void pluginInit(HANDLE hModuleArg)
 LangList *GetLangList ()
 {
   return LangListInstance;
+}
+
+RemoveDics *GetRemoveDics ()
+{
+  return RemoveDicsInstance;
 }
 
 Progress *GetProgress ()
@@ -244,6 +251,7 @@ void pluginCleanUp ()
   CLEAN_AND_ZERO (AboutDlgInstance);
   CLEAN_AND_ZERO (SuggestionsInstance);
   CLEAN_AND_ZERO (LangListInstance);
+  CLEAN_AND_ZERO (RemoveDicsInstance);
   CLEAN_AND_ZERO (DownloadDicsDlgInstance);
 }
 
@@ -411,6 +419,8 @@ void InitClasses ()
   LangListInstance = new LangList;
   DownloadDicsDlgInstance = new DownloadDicsDlg;
   // Init would be called from Settings
+
+  RemoveDicsInstance = new RemoveDics;
 
   SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance, LangListInstance);
 }

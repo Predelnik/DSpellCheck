@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "LangList.h"
 #include "DownloadDicsDlg.h"
 #include "Plugin.h"
+#include "RemoveDics.h"
 #include "SpellChecker.h"
 
 #include "resource.h"
@@ -52,6 +53,7 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailabl
 {
   ComboBox_ResetContent (HComboLanguage);
   ListBox_ResetContent (GetLangList ()->GetListBox ());
+  ListBox_ResetContent (GetRemoveDics ()->GetListBox ());
 
   int SelectedIndex = 0;
   unsigned int i = 0;
@@ -64,6 +66,7 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailabl
 
     ComboBox_AddString (HComboLanguage, LangsAvailable->at (i).AliasName);
     ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i).AliasName);
+    ListBox_AddString (GetRemoveDics ()->GetListBox (), LangsAvailable->at (i).AliasName);
   }
 
   if (_tcscmp (CurrentLanguage, _T ("<MULTIPLE>")) == 0)
@@ -175,6 +178,7 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   SpellCheckerInstance->SetSuggType (ComboBox_GetCurSel (HSuggType));
   SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
   SpellCheckerInstance->SetLibMode (GetSelectedLib ());
+  SpellCheckerInstance->SetDecodeNames (Button_GetCheck (HDecodeNames) == BST_CHECKED);
   CLEAN_AND_ZERO_ARR (Buf);
 }
 
@@ -203,14 +207,20 @@ void SimpleDlg::FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR * HunspellPat
     GetActualAspellPath (Path, AspellPath);
     Edit_SetText (HLibPath, Path);
     Static_SetText (HLibGroupBox, _T ("Aspell Location"));
-    SetWindowText (HLibLink, _T ("<A HREF=\"http://aspell.net/win32/\">Aspell Library and Dictionaries for Win32</A>"));
+    ShowWindow (HLibLink, 1);
+    ShowWindow (HRemoveDics, 0);
+    ShowWindow (HDecodeNames, 0);
+    // SetWindowText (HLibLink, _T ("<A HREF=\"http://aspell.net/win32/\">Aspell Library and Dictionaries for Win32</A>"));
     CLEAN_AND_ZERO_ARR (Path);
   }
   else
   {
     ShowWindow (HAspellStatus, 0);
     ShowWindow (HDownloadDics, 1);
-    SetWindowText (HLibLink, _T ("<A HREF=\"http://wiki.openoffice.org/wiki/Dictionaries\">Hunspell Dictionaries</A>"));
+    ShowWindow (HLibLink, 0); // Link to dictionaries doesn't seem to be working anyway
+    ShowWindow (HRemoveDics, 1);
+    ShowWindow (HDecodeNames, 1);
+    // SetWindowText (HLibLink, _T ("<A HREF=\"http://wiki.openoffice.org/wiki/Dictionaries\">Hunspell Dictionaries</A>"));
     Static_SetText (HLibGroupBox, _T ("Hunspell Dictionaries Location"));
     Edit_SetText (HLibPath, HunspellPath);
   }
@@ -247,6 +257,11 @@ void SimpleDlg::SetSuggType (int SuggType)
 void SimpleDlg::SetCheckComments (BOOL Value)
 {
   Button_SetCheck (HCheckComments, Value ? BST_CHECKED : BST_UNCHECKED);
+}
+
+void SimpleDlg::SetDecodeNames (BOOL Value)
+{
+  Button_SetCheck (HDecodeNames, Value ? BST_CHECKED : BST_UNCHECKED);
 }
 
 int SimpleDlg::GetSelectedLib ()
@@ -298,6 +313,8 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HLibrary = ::GetDlgItem (_hSelf, IDC_LIBRARY);
       HLibGroupBox = ::GetDlgItem (_hSelf, IDC_LIB_GROUPBOX);
       HDownloadDics = ::GetDlgItem (_hSelf, IDC_DOWNLOADDICS);
+      HRemoveDics = ::GetDlgItem (_hSelf, IDC_REMOVE_DICS);
+      HDecodeNames = ::GetDlgItem (_hSelf, IDC_DECODE_NAMES);
 
       ComboBox_AddString (HLibrary, _T ("Aspell"));
       ComboBox_AddString (HLibrary, _T ("Hunspell"));
@@ -354,6 +371,12 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
 
             return TRUE;
           }
+        }
+        break;
+      case IDC_REMOVE_DICS:
+        if (HIWORD (wParam) == BN_CLICKED)
+        {
+          GetRemoveDics ()->DoDialog ();
         }
         break;
       case IDC_RESETASPELLPATH:
@@ -789,6 +812,9 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
 
       GetLangList ()->init (_hInst, _hSelf, GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
       GetLangList ()->DoDialog ();
+
+      GetRemoveDics ()->init (_hInst, _hSelf, GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
+      GetRemoveDics ()->DoDialog ();
 
       // This stuff is copied from npp source to make tabbed window looked totally nice and white
       ETDTProc enableDlgTheme = (ETDTProc)::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0);

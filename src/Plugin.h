@@ -34,6 +34,7 @@ class LangList;
 class DownloadDicsDlg;
 class SpellChecker;
 class Progress;
+class RemoveDics;
 
 //
 // Initialization of your plugin data
@@ -87,7 +88,9 @@ typedef enum {
   EID_DEFAULT_DELIMITERS,
   EID_FIND_NEXT_MISTAKE,
   EID_FIND_PREV_MISTAKE,
+  EID_FILL_DOWNLOAD_DICS_DIALOG,
   EID_INIT_DOWNLOAD_COMBOBOX,
+  EID_REMOVE_SELECTED_DICS,
   EID_MAX,
 } EventId;
 
@@ -108,6 +111,7 @@ void InitClasses ();
 void CreateHooks ();
 HANDLE getHModule ();
 LangList *GetLangList ();
+RemoveDics *GetRemoveDics ();
 Progress *GetProgress ();
 DownloadDicsDlg *GetDownloadDics ();
 FuncItem *get_funcItem ();

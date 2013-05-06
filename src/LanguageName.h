@@ -16,7 +16,7 @@ struct LanguageName
     if (UseAlias)
       AliasApplied = SetStringWithAliasApplied (AliasName, Name);
     else
-      SetString (OrigName, Name);
+      SetString (AliasName, Name);
   }
 
   LanguageName (const LanguageName &rhs)

@@ -85,10 +85,14 @@ public:
   void SetBufferSize (int Size, BOOL SaveToIni = 1);
   void SetSuggType (int SuggType);
   void SetLibMode (int i);
+  void SetDecodeNames (BOOL Value);
+  void SetShowOnlyKnow (BOOL Value);
   void FillDialogs ();
   void ReinitLanguageLists (int SpellerId);
   TCHAR *GetHunspellPath () {return HunspellPath; };
   TCHAR *GetLangByIndex (int i);
+  BOOL GetShowOnlyKnow ();
+  BOOL GetDecodeNames ();
   HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
 
 private:
@@ -144,6 +148,7 @@ private:
   void PrepareStringForConversion ();
   void ResetDownloadCombobox ();
   void PreserveCurrentAddressIndex ();
+  void FillDownloadDics ();
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);
@@ -189,6 +194,8 @@ private:
   BOOL IgnoreCAll;
   BOOL Ignore_;
   BOOL IgnoreSEApostrophe;
+  BOOL DecodeNames;
+  BOOL ShowOnlyKnown;
   int SBSize;
   int SBTrans;
   int BufferSize;

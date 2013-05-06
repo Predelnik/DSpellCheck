@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "MainDef.h"
 #include "PluginInterface.h"
 #include "Plugin.h"
+#include "RemoveDics.h"
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "SciLexer.h"
@@ -85,6 +86,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SetString (DefaultServers[1], _T ("ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/"));
   SetString (DefaultServers[2], _T ("ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/"));
   CurrentLangs = 0;
+  DecodeNames = FALSE;
 }
 
 static const char Yo[] = "\xd0\x81";
@@ -268,6 +270,21 @@ void SpellChecker::SetSuggType (int SuggType)
   HideSuggestionBox ();
 }
 
+void SpellChecker::SetShowOnlyKnow (BOOL Value)
+{
+  ShowOnlyKnown = Value;
+}
+
+BOOL SpellChecker::GetShowOnlyKnow ()
+{
+  return ShowOnlyKnown;
+}
+
+BOOL SpellChecker::GetDecodeNames ()
+{
+  return DecodeNames;
+}
+
 TCHAR *SpellChecker::GetLangByIndex (int i)
 {
   return CurrentLangs->at(i).OrigName;
@@ -287,7 +304,7 @@ void SpellChecker::ReinitLanguageLists (int SpellerId)
     CurrentLangs = new std::vector<LanguageName> ();
     for (unsigned int i = 0; i < LangsFromSpeller->size (); i++)
     {
-      LanguageName Lang (LangsFromSpeller->at (i), SpellerId == 1); // Using them only for Hunspell
+      LanguageName Lang (LangsFromSpeller->at (i), (SpellerId == 1 && DecodeNames)); // Using them only for Hunspell
       CurrentLangs->push_back (Lang);                               // TODO: Add option - use or not use aliases.
     }
     std::sort (CurrentLangs->begin (), CurrentLangs->end ());
@@ -307,6 +324,7 @@ void SpellChecker::FillDialogs ()
   SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
   SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
   SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
+  SettingsDlgInstance->GetSimpleDlg ()->SetDecodeNames (DecodeNames);
   SettingsDlgInstance->GetSimpleDlg ()->SetSuggType (SuggestionsMode);
   SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
   SettingsDlgInstance->GetAdvancedDlg ()->setConversionOpts (IgnoreYo, ConvertSingleQuotes);
@@ -392,8 +410,14 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_CHECK_FILE_NAME:
     CheckFileName ();
     break;
+  case EID_FILL_DOWNLOAD_DICS_DIALOG:
+    FillDownloadDics ();
+    break;
   case EID_INIT_DOWNLOAD_COMBOBOX:
     ResetDownloadCombobox ();
+    break;
+  case EID_REMOVE_SELECTED_DICS:
+    GetRemoveDics ()->RemoveSelected (this);
     break;
     /*
     case EID_APPLYMENUACTION:
@@ -402,6 +426,11 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     */
   }
   return TRUE;
+}
+
+void SpellChecker::FillDownloadDics ()
+{
+  GetDownloadDics ()->SetShowOnlyKnown (ShowOnlyKnown);
 }
 
 void SpellChecker::ResetDownloadCombobox ()
@@ -433,6 +462,8 @@ void SpellChecker::ResetDownloadCombobox ()
 void SpellChecker::PreserveCurrentAddressIndex ()
 {
   HWND TargetCombobox = GetDlgItem (GetDownloadDics ()->getHSelf (), IDC_ADDRESS);
+  if (!TargetCombobox)
+    return;
   TCHAR CurText [DEFAULT_BUF_SIZE];
   TCHAR *Buf = 0;
   ComboBox_GetText (TargetCombobox, CurText, DEFAULT_BUF_SIZE);
@@ -457,6 +488,7 @@ void SpellChecker::PreserveCurrentAddressIndex ()
       goto cleanup;
     }
   }
+  LastUsedAddress = 0;
 cleanup:
   CLEAN_AND_ZERO_ARR (Buf);
 }
@@ -1891,9 +1923,11 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans, 70);
   SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en-US"));
   SaveToIni (_T ("Aspell_Language"), AspellLanguage, _T ("en"));
-  SaveToIni (_T ("Library"), LibMode, !AspellSpeller->IsWorking ());
+  SaveToIni (_T ("Library"), LibMode, 1);
   PreserveCurrentAddressIndex ();
   SaveToIni (_T ("Last_Used_Address_Index"), LastUsedAddress, 0);
+  SaveToIni (_T ("Decode_Language_Names"), DecodeNames, TRUE);
+  SaveToIni (_T ("Show_Only_Known"), ShowOnlyKnown, TRUE);
   TCHAR Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < countof (ServerNames); i++)
   {
@@ -1902,6 +1936,11 @@ void SpellChecker::SaveSettings ()
     _stprintf (Buf, _T ("Server_Address[%d]"), i);
     SaveToIni (Buf, ServerNames[i], _T (""));
   }
+}
+
+void SpellChecker::SetDecodeNames (BOOL Value)
+{
+  DecodeNames = Value;
 }
 
 void SpellChecker::SetLibMode (int i)
@@ -1964,7 +2003,7 @@ void SpellChecker::LoadSettings ()
 
   HunspellSpeller->SetDirectory (HunspellPath);
   AspellSpeller->Init (AspellPath);
-  LoadFromIni (i, _T ("Library"), (!AspellSpeller->IsWorking ()));
+  LoadFromIni (i, _T ("Library"), 1);
   SetLibMode (i);
   int Size, Trans;
   LoadFromIni (Size, _T ("Suggestions_Button_Size"), 15);
@@ -1974,6 +2013,7 @@ void SpellChecker::LoadSettings ()
   SetBufferSize (Size, 0);
   RefreshUnderlineStyle ();
   CLEAN_AND_ZERO_ARR (BufUtf8);
+  LoadFromIni (ShowOnlyKnown, _T ("Show_Only_Known"), TRUE);
   TCHAR Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < countof (ServerNames); i++)
   {
@@ -1981,6 +2021,7 @@ void SpellChecker::LoadSettings ()
     LoadFromIni (ServerNames[i], Buf, _T (""));
   }
   LoadFromIni (LastUsedAddress, _T ("Last_Used_Address_Index"), 0);
+  LoadFromIni (DecodeNames, _T ("Decode_Language_Names"), TRUE);
 }
 
 void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)

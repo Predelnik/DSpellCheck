@@ -23,15 +23,18 @@ public:
   // Maybe hunspell interface should be passed here
   void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg);
   BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  void UpdateListBox ();
   void DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName = 0, TCHAR *Location = 0);
   void DownloadSelected ();
   void FillFileList ();
   void RemoveTimer ();
   void OnDisplayAction ();
   void IndicateThatSavingMightBeNeeded ();
+  void SetShowOnlyKnown (BOOL Value);
 private:
 private:
   std::vector<LanguageName> *CurrentLangs;
+  std::vector<LanguageName> *CurrentLangsFiltered;
   HBRUSH DefaultBrush;
   COLORREF StatusColor;
   SpellChecker *SpellCheckerInstance;
@@ -39,6 +42,7 @@ private:
   HWND HFileList;
   HWND HAddress;
   HWND HStatus;
+  HWND HShowOnlyKnown;
   HANDLE Timer;
   int CheckIfSavingIsNeeded;
 };
