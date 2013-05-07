@@ -38,6 +38,7 @@ class DownloadDicsDlg : public StaticDialog
 {
 public:
   ~DownloadDicsDlg ();
+  DownloadDicsDlg ();
   void DoDialog ();
   // Maybe hunspell interface should be passed here
   void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg);

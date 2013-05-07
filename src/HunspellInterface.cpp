@@ -261,14 +261,14 @@ BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word, EncodingType 
 
   // No additional check for memorized is needed since all words are already in dictionary
 
-  if (Ignored->find (Word) != Ignored->end ())
-    return TRUE;
-
   return Dic.Speller->spell (WordToCheck);
 }
 
 BOOL HunspellInterface::CheckWord (char *Word)
 {
+  if (Ignored->find (Word) != Ignored->end ())
+    return TRUE;
+
   BOOL res = FALSE;
   unsigned int Len = strlen (Word);
   if (!MultiMode)
@@ -333,9 +333,12 @@ void HunspellInterface::ReadUserDic ()
       if (fgets (Buf, DEFAULT_BUF_SIZE, Fp))
       {
         Buf[strlen (Buf) - 1] = 0;
-        char *Word = 0;
-        SetString (Word, Buf);
-        Memorized->insert (Word);
+        if (Memorized->find (Buf) == Memorized->end ())
+        {
+          char *Word = 0;
+          SetString (Word, Buf);
+          Memorized->insert (Word);
+        }
       }
     }
   }

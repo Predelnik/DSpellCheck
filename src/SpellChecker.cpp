@@ -300,6 +300,11 @@ void SpellChecker::ReinitLanguageLists (int SpellerId)
   {
     SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (FALSE);
     std::vector <TCHAR *> *LangsFromSpeller =  SpellerToUse->GetLanguageList ();
+    if (!LangsFromSpeller)
+    {
+      SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
+      return;
+    }
     CLEAN_AND_ZERO (CurrentLangs);
     CurrentLangs = new std::vector<LanguageName> ();
     for (unsigned int i = 0; i < LangsFromSpeller->size (); i++)
@@ -307,13 +312,16 @@ void SpellChecker::ReinitLanguageLists (int SpellerId)
       LanguageName Lang (LangsFromSpeller->at (i), (SpellerId == 1 && DecodeNames)); // Using them only for Hunspell
       CurrentLangs->push_back (Lang);                               // TODO: Add option - use or not use aliases.
     }
+    CLEAN_AND_ZERO_STRING_VECTOR (LangsFromSpeller);
     std::sort (CurrentLangs->begin (), CurrentLangs->end ());
     SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
       SpellerId == 1 ? HunspellLanguage : AspellLanguage,
       SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages);
   }
   else
+  {
     SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
+  }
 }
 
 void SpellChecker::FillDialogs ()
@@ -1954,7 +1962,7 @@ void SpellChecker::SetLibMode (int i)
   else
   {
     CurrentSpeller = HunspellSpeller;
-    HunspellReinitSettings ();
+    HunspellReinitSettings (0);
   }
 }
 
@@ -2110,7 +2118,7 @@ void SpellChecker::SetAspellPath (const TCHAR *Path)
 void SpellChecker::SetHunspellPath (const TCHAR *Path)
 {
   SetString (HunspellPath, Path);
-  HunspellReinitSettings ();
+  HunspellReinitSettings (1);
 }
 
 void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR *DefaultValue, BOOL InQuotes)
@@ -2257,10 +2265,11 @@ void SpellChecker::SetDelimiters (const char *Str)
   CLEAN_AND_ZERO_ARR (TargetBuf);
 }
 
-BOOL SpellChecker::HunspellReinitSettings ()
+BOOL SpellChecker::HunspellReinitSettings (BOOL ResetDirectory)
 {
   TCHAR *TBuf = 0;
-  HunspellSpeller->SetDirectory (HunspellPath);
+  if (ResetDirectory)
+    HunspellSpeller->SetDirectory (HunspellPath);
   if (_tcscmp (HunspellLanguage, _T ("<MULTIPLE>")) != 0)
   {
     HunspellSpeller->SetLanguage (HunspellLanguage);

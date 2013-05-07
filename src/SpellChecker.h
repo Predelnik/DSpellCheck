@@ -116,7 +116,7 @@ private:
   const char *GetDelimiters ();
   const TCHAR *GetLanguage ();
   BOOL AspellReinitSettings ();
-  BOOL HunspellReinitSettings ();
+  BOOL HunspellReinitSettings (BOOL ResetDirectory);
   void GetDefaultHunspellPath (TCHAR *&Path);
   BOOL CheckWord (char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);

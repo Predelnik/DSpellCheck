@@ -83,7 +83,9 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
     if (ComboBox_GetCurSel (LibCombo) == 1)
       SpellCheckerInstance->ReinitLanguageLists (1);
     TCHAR Buf[DEFAULT_BUF_SIZE];
-    _stprintf (Buf, _T ("%d dictionary(ies) have been successfully removed"), Count);
+    _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
+    for (int i = 0; i < ListBox_GetCount (HLangList); i++)
+            CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
     MessageBox (0, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
   }
 }
@@ -103,10 +105,19 @@ BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPara
       switch (LOWORD (wParam))
       {
       case IDOK:
-        SendEvent (EID_REMOVE_SELECTED_DICS);
+        if (HIWORD (wParam) == BN_CLICKED) 
+        {
+          SendEvent (EID_REMOVE_SELECTED_DICS);
+          display (false);
+        }
+        break;
       case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
+        {
+          for (int i = 0; i < ListBox_GetCount (HLangList); i++)
+            CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
           display (false);
+        }
 
         break;
       }

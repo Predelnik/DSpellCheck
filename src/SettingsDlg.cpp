@@ -45,6 +45,7 @@ void SimpleDlg::init (HINSTANCE hInst, HWND Parent, NppData nppData)
 
 void SimpleDlg::DisableLanguageCombo (BOOL Disable)
 {
+  ComboBox_ResetContent (HComboLanguage);
   EnableWindow (HComboLanguage, !Disable);
 }
 

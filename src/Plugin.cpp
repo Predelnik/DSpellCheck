@@ -253,6 +253,7 @@ void pluginCleanUp ()
   CLEAN_AND_ZERO (LangListInstance);
   CLEAN_AND_ZERO (RemoveDicsInstance);
   CLEAN_AND_ZERO (DownloadDicsDlgInstance);
+  CLEAN_AND_ZERO (ProgressInstance);
 }
 
 void inline SendEvent (EventId Event)

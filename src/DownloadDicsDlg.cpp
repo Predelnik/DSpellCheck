@@ -58,20 +58,25 @@ void DownloadDicsDlg::OnDisplayAction ()
   SendEvent (EID_FILL_FILE_LIST);
 }
 
+DownloadDicsDlg::DownloadDicsDlg ()
+{
+  Timer = 0;
+  CheckIfSavingIsNeeded = 0;
+  CurrentLangs = 0;
+  CurrentLangsFiltered = 0;
+}
+
 void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg)
 {
   SpellCheckerInstance = SpellCheckerInstanceArg;
-  Timer = 0;
-  CheckIfSavingIsNeeded = 0;
   LibCombo = LibComboArg;
-  CurrentLangs = 0;
-  CurrentLangsFiltered = 0;
   return Window::init (hInst, Parent);
 }
 
 DownloadDicsDlg::~DownloadDicsDlg ()
 {
-  DeleteTimerQueueTimer (0, Timer, 0);
+  if (Timer)
+    DeleteTimerQueueTimer (0, Timer, 0);
   CLEAN_AND_ZERO (CurrentLangs);
   CLEAN_AND_ZERO (CurrentLangsFiltered);
 }
@@ -79,6 +84,41 @@ DownloadDicsDlg::~DownloadDicsDlg ()
 void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
 {
   CheckIfSavingIsNeeded = 1;
+}
+
+static BOOL TryToCreateDir (TCHAR *Path)
+{
+  if (!CreateDirectory (Path, NULL))
+  {
+    TCHAR Message[DEFAULT_BUF_SIZE];
+    _stprintf (Message, _T ("Can't create directory %s"), Path);
+    MessageBox (0, Message, _T ("Error in directory creation"), MB_OK | MB_ICONERROR);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static BOOL CheckForDirectoryExistence (TCHAR *Path)
+{
+  for (unsigned int i = 0; i < _tcslen (Path); i++)
+  {
+    if (Path[i] == _T ('\\'))
+    {
+      Path[i] = _T ('\0');
+      if (!PathFileExists (Path))
+      {
+        if (!TryToCreateDir (Path))
+          return FALSE;
+      }
+      Path[i] = _T ('\\');
+    }
+  }
+  if (!PathFileExists (Path))
+  {
+    if (!TryToCreateDir (Path))
+      return FALSE;
+  }
+  return TRUE;
 }
 
 #define BUF_SIZE_FOR_COPY 10240
@@ -133,17 +173,19 @@ void DownloadDicsDlg::DownloadSelected ()
         unzGetCurrentFileInfo (fp, &FInfo, DicFileNameANSI, DEFAULT_BUF_SIZE, 0, 0, 0 ,0);
         IsAffFile = (strcmp (DicFileNameANSI + strlen (DicFileNameANSI) - 4, ".aff") == 0);
         IsDicFile = (strcmp (DicFileNameANSI + strlen (DicFileNameANSI) - 4, ".dic") == 0);
-
+        BOOL CleanArr = TRUE;
         if (IsAffFile || IsDicFile)
         {
           DicFileNameANSI [strlen (DicFileNameANSI) - 4] = '\0';
-          BOOL CleanArr = TRUE;
+
           if (FilesFound.find (DicFileNameANSI) == FilesFound.end ())
           {
             FilesFound [DicFileNameANSI] = 0;
             CleanArr = FALSE;
           }
-          std::map<char *, int, bool (*)(char *, char *)>::iterator it = FilesFound.find (DicFileNameANSI);
+
+          it = FilesFound.find (DicFileNameANSI);
+
           (*it).second |= (IsAffFile ? 0x01 : 0x02);
           unzOpenCurrentFile (fp);
           int BytesCopied = 0;
@@ -175,9 +217,13 @@ void DownloadDicsDlg::DownloadSelected ()
           unzCloseCurrentFile (fp);
           _close (LocalDicFileHandle);
         }
+        if (CleanArr)
+          CLEAN_AND_ZERO_ARR (DicFileNameANSI);
       } while (unzGoToNextFile (fp) == UNZ_OK);
       // Now we're gonna check what's exactly we extracted with using FilesFound map
       it = FilesFound.begin ();
+      if (!CheckForDirectoryExistence (SpellCheckerInstance->GetHunspellPath ())) // If path isn't exist we're gonna try to create it else it's finish
+        return;
       for (; it != FilesFound.end (); ++it)
       {
         if ((*it).second != 3) // Some of .aff/.dic is missing
@@ -223,7 +269,7 @@ void DownloadDicsDlg::DownloadSelected ()
         }
       }
 clean_and_continue:
-      std::map<char *, int, bool (*)(char *, char *)>::iterator It = FilesFound.begin ();
+      it = FilesFound.begin ();
       for (;it != FilesFound.end (); it++)
         delete[] ((*it).first);
 
@@ -236,6 +282,8 @@ clean_and_continue:
   GetProgress ()->display (false);
 
   MessageBox (0, Message, _T ("Dictionaries Downloaded Successfully"), MB_OK | MB_ICONINFORMATION);
+  for (int i = 0; i < ListBox_GetCount (HFileList); i++)
+    CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
   SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
   if (ComboBox_GetCurSel (LibCombo) == 1)
     SpellCheckerInstance->ReinitLanguageLists (1);
@@ -367,10 +415,12 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     CLEAN_AND_ZERO_ARR (Buf);
     // If it is success when we perhaps should add this address to our list.
     int Len = ComboBox_GetTextLength (HAddress) + 1;
-    TCHAR *NewServer = new TCHAR [Len];
-    ComboBox_GetText (HAddress, NewServer, Len);
     if (CheckIfSavingIsNeeded)
+    {
+      TCHAR *NewServer = new TCHAR [Len];
+      ComboBox_GetText (HAddress, NewServer, Len);
       PostMessageToMainThread (TM_ADD_USER_SERVER, (WPARAM) NewServer, 0);
+    }
     StatusColor = COLOR_OK;
     Static_SetText (HStatus, _T ("Status: List of available files was successfully loaded"));
   }
@@ -452,6 +502,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       //ComboBox_SetText(HAddress, _T ("ftp://127.0.0.1"));
       SendEvent (EID_INIT_DOWNLOAD_COMBOBOX);
       //ComboBox_SetText(HAddress, _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries"));
+      SendEvent (EID_FILL_DOWNLOAD_DICS_DIALOG);
       OnDisplayAction ();
       DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
       return TRUE;
@@ -471,7 +522,11 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         break;
       case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
+        {
+          for (int i = 0; i < ListBox_GetCount (HFileList); i++)
+            CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
           display (false);
+        }
 
         break;
       case IDC_ADDRESS:
