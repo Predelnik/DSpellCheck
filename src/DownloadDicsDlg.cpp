@@ -149,6 +149,7 @@ void DownloadDicsDlg::DownloadSelected ()
   p->SetProgress (0);
   p->SetBottomMessage (_T (""));
   p->SetTopMessage (_T (""));
+  int DownloadedCount = 0;
   for (int i = 0; i < Count; i++)
   {
     if (CheckedListBox_GetCheckState (HFileList, i) == BST_CHECKED)
@@ -266,6 +267,7 @@ void DownloadDicsDlg::DownloadSelected ()
           SetStringWithAliasApplied (ConvertedDicName, DicFileName);
           _tcscat (Message, ConvertedDicName);
           _tcscat (Message, _T ("\n"));
+          DownloadedCount++;
         }
       }
 clean_and_continue:
@@ -281,7 +283,10 @@ clean_and_continue:
   }
   GetProgress ()->display (false);
 
-  MessageBox (0, Message, _T ("Dictionaries Downloaded Successfully"), MB_OK | MB_ICONINFORMATION);
+  if (DownloadedCount)
+    MessageBox (0, Message, _T ("Dictionaries Downloaded Successfully"), MB_OK | MB_ICONINFORMATION);
+  else
+    MessageBox (0, _T ("Sadly, no dictionaries were copied, please try again"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
   for (int i = 0; i < ListBox_GetCount (HFileList); i++)
     CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
   SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
