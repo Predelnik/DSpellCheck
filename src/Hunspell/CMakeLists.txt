@@ -8,7 +8,7 @@ project ( hunspell )
 SET(HUNSPELL_VERSION 1.3.2)
 
 if(WIN32)
-    add_definitions( -DWIN32 -DHUNSPELL_STATIC)
+    add_definitions( -DWIN32 -DHUNSPELL_STATIC -D_CRT_SECURE_NO_WARNINGS)
 endif(WIN32)
 
 INCLUDE_DIRECTORIES (./ src/hunspell src/parsers src/tools src/win_api)

@@ -266,6 +266,9 @@ BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word, EncodingType 
 
 BOOL HunspellInterface::CheckWord (char *Word)
 {
+  if (Memorized->find (Word) != Memorized->end ()) // This check is for dictionaries which are in other than utf-8 encoding
+    return TRUE;                                   // Though it slows down stuff a little, I hope it will do
+
   if (Ignored->find (Word) != Ignored->end ())
     return TRUE;
 

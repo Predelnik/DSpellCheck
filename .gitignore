@@ -14,6 +14,7 @@ cmake_install.cmake
 *.ncb
 DSpellCheck.dir/*
 ZERO_CHECK.dir/*
+src/Hunspell/CMakeFiles/*
 src/Hunspell/Debug/*
 src/Hunspell/hunspell-static.dir/*
 src/Hunspell/Release/*
@@ -22,9 +23,9 @@ src/minizip/Debug/*
 src/minizip/Release/*
 src/libiconv/ReleaseStatic_Win32/*
 src/libiconv/DebugStatic_Win32/*
-src/libiconv/Win32/*
 src/libiconv/libiconv.dir/*
 CMakeFiles/*
+UnusedFiles/*
 src/libiconv/CMakeFiles/*
 src/minizip/minizip.dir/Debug/*
 src/minizip/minizip.dir/Release/*

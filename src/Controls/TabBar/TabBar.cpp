@@ -692,32 +692,10 @@ void TabBarPlus::drawItem(DRAWITEMSTRUCT *pDrawItemStruct)
         closeButtonRect.left += 2;
     }
 
-    // 3 status for each inactive tab and selected tab close item :
-    // normal / hover / pushed
-    int idCloseImg;
-
-    if (_isCloseHover && (_currentHoverTabItem == nTab) && (_whichCloseClickDown == -1)) // hover
-      idCloseImg = IDR_CLOSETAB_HOVER;
-    else if (_isCloseHover && (_currentHoverTabItem == nTab) && (_whichCloseClickDown == _currentHoverTabItem)) // pushed
-      idCloseImg = IDR_CLOSETAB_PUSH;
-    else
-      idCloseImg = isSelected?IDR_CLOSETAB:IDR_CLOSETAB_INACT;
-
     HDC hdcMemory;
     hdcMemory = ::CreateCompatibleDC(hDC);
-    HBITMAP hBmp = ::LoadBitmap(_hInst, MAKEINTRESOURCE(idCloseImg));
-    BITMAP bmp;
-    ::GetObject(hBmp, sizeof(bmp), &bmp);
 
-    if (_isVertical)
-      rect.top = closeButtonRect.top + bmp.bmHeight;
-    else
-      rect.right = closeButtonRect.left;
-
-    ::SelectObject(hdcMemory, hBmp);
-    ::BitBlt(hDC, closeButtonRect.left, closeButtonRect.top, bmp.bmWidth, bmp.bmHeight, hdcMemory, 0, 0, SRCCOPY);
     ::DeleteDC(hdcMemory);
-    ::DeleteObject(hBmp);
   }
 
   // Draw image

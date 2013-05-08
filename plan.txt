@@ -1,3 +1,2 @@
 - Add checking whole file with marks on scrollbar (Scintilla could do that)
 - Optimize Text rechecking in the common case, so only changed line would be targeted for recheck. There's well known problem about this though, it's hard to figure out which symbols are actually changed after several operations of adding and removing parts of text. Actually we should just make function which compresses it to the list of intervals where text may have changed (Not trivial task)
-- Possible add of auto-downloading and unpacking dictionaries for Hunspell.
