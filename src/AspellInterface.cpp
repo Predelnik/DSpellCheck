@@ -125,6 +125,7 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
   std::vector<char *> *SuggList = new std::vector<char *>;
   if (!MultiMode)
   {
+    LastSelectedSpeller = SingularSpeller;
     WordList = aspell_speller_suggest (SingularSpeller, TargetWord, -1);
   }
   else
