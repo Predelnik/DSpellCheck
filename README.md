@@ -27,3 +27,10 @@ v1.1.3
 
 v1.1.4
 * Fix some encoding conversion problems, which were leading to very dramatic results on some systems.
+
+v1.1.5
+* Fix segfault when Aspell is presented on system but have no dictionaries.
+* Make Hunspell used by default even if Aspell library is installed.
+
+v1.1.6
+* Fix working of "Add to dictionary" and "Ignore" for Aspell which were accidentally broken.
