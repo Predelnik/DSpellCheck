@@ -1,13 +1,13 @@
 cmake_minimum_required (VERSION 2.6) 
-project (LibIConv)
-set (SRC_DIR ${PROJECT_SOURCE_DIR}/libiconv)
-include_directories (${PROJECT_SOURCE_DIR}/include) 
+project (MiniZip)
+set (SRC_DIR ${PROJECT_SOURCE_DIR})
+include_directories (${PROJECT_SOURCE_DIR}) 
 
 # For now let's make it only static
-set (GENERIC_OUTPUT_DIR ${PROJECT_SOURCE_DIR})
-set (DEBUG_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/DebugStatic_Win32)
-set (RELEASE_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/ReleaseStatic_Win32)
-add_definitions ("-D_CRT_NONSTDC_NO_DEPRECATE -D_UNICODE -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NON_CONFORMING_SWPRINTFS -D_CRT_SECURE_NO_DEPRECATE -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_LIB -DUSING_STATIC_LIBICONV")
+set (GENERIC_OUTPUT_DIR ${PROJECT_BINARY_DIR})
+set (DEBUG_OUTPUT_DIR ${PROJECT_BINARY_DIR}/Debug)
+set (RELEASE_OUTPUT_DIR ${PROJECT_BINARY_DIR}/Release)
+add_definitions ("-D_CRT_NONSTDC_NO_DEPRECATE -D_UNICODE -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NON_CONFORMING_SWPRINTFS -D_CRT_SECURE_NO_DEPRECATE -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_LIB")
 
 #set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${GENERIC_OUTPUT_DIR} )
 set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${DEBUG_OUTPUT_DIR}" )
@@ -17,16 +17,44 @@ set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${RELEASE_OUTPUT_DIR}" )
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE}" )
 set ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE}" )
 
-set (list_of_files_IConv
-	${SRC_DIR}/libiconv.rc 
-	${SRC_DIR}/localcharset.h
-	${SRC_DIR}/iconv.c
-	${SRC_DIR}/localcharset.c
-	${SRC_DIR}/relocatable.c
-	${SRC_DIR}/relocatable.h
+set (list_of_files_MiniZip
+  ${SRC_DIR}/adler32.c
+  ${SRC_DIR}/compress.c
+  ${SRC_DIR}/crc32.c
+  ${SRC_DIR}/crc32.h
+  ${SRC_DIR}/deflate.c
+  ${SRC_DIR}/deflate.h
+  ${SRC_DIR}/example.c
+  ${SRC_DIR}/gzclose.c
+  ${SRC_DIR}/gzguts.h
+  ${SRC_DIR}/gzlib.c
+  ${SRC_DIR}/gzread.c
+  ${SRC_DIR}/gzwrite.c
+  ${SRC_DIR}/infback.c
+  ${SRC_DIR}/inffast.c
+  ${SRC_DIR}/inffast.h
+  ${SRC_DIR}/inffixed.h
+  ${SRC_DIR}/inflate.c
+  ${SRC_DIR}/inflate.h
+  ${SRC_DIR}/inftrees.c
+  ${SRC_DIR}/inftrees.h
+  ${SRC_DIR}/ioapi.c
+  ${SRC_DIR}/ioapi.h
+  ${SRC_DIR}/iowin32.c
+  ${SRC_DIR}/iowin32.h
+  ${SRC_DIR}/minigzip.c
+  ${SRC_DIR}/trees.c
+  ${SRC_DIR}/trees.h
+  ${SRC_DIR}/uncompr.c
+  ${SRC_DIR}/unzip.c
+  ${SRC_DIR}/unzip.h
+  ${SRC_DIR}/zconf.h
+  ${SRC_DIR}/zlib.h
+  ${SRC_DIR}/zutil.c
+  ${SRC_DIR}/zutil.h
 	)	
 
-add_library (libiconv STATIC ${list_of_files_IConv})
+add_library (minizip STATIC ${list_of_files_MiniZip})
 
 if(MSVC)
     foreach(flag_var CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO) 
