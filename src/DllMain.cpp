@@ -110,9 +110,8 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
   case WM_COMMAND:
     if (HIWORD (wParam) == 0)
     {
-      OutputDebugString (_T ("TM_MENU_RESULT sent\n"));
-      if (HIBYTE (wParam) == DSPELLCHECK_MENU_ID ||
-        HIBYTE (wParam) == LANGUAGE_MENU_ID)
+      // OutputDebugString (_T ("TM_MENU_RESULT sent\n"));
+      if (!GetUseAllocatedIds ())
         PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
     }
     break;
@@ -295,6 +294,11 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
   case WM_MOVE:
     SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     return FALSE;
+  case WM_COMMAND:
+    {
+      if (HIWORD (wParam) == 0 && GetUseAllocatedIds ())
+        PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
+    }
   }
   return FALSE;
 }

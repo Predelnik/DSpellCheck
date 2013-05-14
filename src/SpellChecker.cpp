@@ -87,6 +87,14 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SetString (DefaultServers[2], _T ("ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/"));
   CurrentLangs = 0;
   DecodeNames = FALSE;
+  if (SendMsgToNpp (NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0))
+  {
+    SetUseAllocatedIds (TRUE);
+    int Id;
+    SendMsgToNpp (NppDataInstance, NPPM_ALLOCATECMDID, 350, (LPARAM) &Id);
+    SetContextMenuIdStart (Id);
+    SetLangsMenuIdStart (Id + 103);
+  }
 }
 
 static const char Yo[] = "\xd0\x81";
@@ -172,7 +180,11 @@ void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL S
   {
     mi.fType = MFT_STRING;
     mi.fMask = MIIM_ID | MIIM_TYPE;
-    mi.wID = MAKEWORD (Id, DSPELLCHECK_MENU_ID);
+    if (!GetUseAllocatedIds ())
+      mi.wID = MAKEWORD (Id, DSPELLCHECK_MENU_ID);
+    else
+      mi.wID = GetContextMenuIdStart () + Id;
+
     mi.dwTypeData = Text;
     mi.cch = _tcslen (Text) + 1;
   }
@@ -457,12 +469,12 @@ void SpellChecker::DoPluginMenuInclusion ()
     for (unsigned int i = 0; i < CurrentLangs->size (); i++)
     {
       int Checked = (_tcscmp (CurLang, CurrentLangs->at(i).OrigName) == 0) ? MF_CHECKED : MF_UNCHECKED;
-      Res = AppendMenu (NewMenu, MF_STRING | Checked, MAKEWORD (i, LANGUAGE_MENU_ID), DecodeNames ? CurrentLangs->at(i).AliasName : CurrentLangs->at(i).OrigName);
+      Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), DecodeNames ? CurrentLangs->at(i).AliasName : CurrentLangs->at(i).OrigName);
       if (!Res)
         return;
     }
     int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? MF_CHECKED : MF_UNCHECKED;
-    Res = AppendMenu (NewMenu, MF_STRING | Checked, MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages (Selected from Settings)"));
+    Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages (Selected from Settings)"));
   }
 
   Mif.fMask = MIIM_SUBMENU | MIIM_STATE;
@@ -1744,13 +1756,31 @@ void SpellChecker::InitSuggestionsBox ()
 
 void SpellChecker::ProcessMenuResult (UINT MenuId)
 {
+  if ((!GetUseAllocatedIds () && HIBYTE (MenuId) != DSPELLCHECK_MENU_ID &&
+    HIBYTE (MenuId) != LANGUAGE_MENU_ID)
+    || (GetUseAllocatedIds () && ((int) MenuId < GetContextMenuIdStart () || (int) MenuId > GetContextMenuIdStart () + 350)))
+    return;
   OutputDebugString (_T ("Processing Menu Result\n"));
-  switch (HIBYTE (MenuId))
+  int UsedMenuId = 0;
+  if (GetUseAllocatedIds ())
+  {
+    UsedMenuId = ((int) MenuId < GetLangsMenuIdStart () ? DSPELLCHECK_MENU_ID : LANGUAGE_MENU_ID);
+  }
+  else
+  {
+    UsedMenuId = HIBYTE (MenuId);
+  }
+
+  switch (UsedMenuId)
   {
   case  DSPELLCHECK_MENU_ID:
     {
       char *AnsiBuf = 0;
-      int Result = LOBYTE (MenuId);
+      int Result = 0;
+      if (!GetUseAllocatedIds ())
+        Result = LOBYTE (MenuId);
+      else
+        Result = MenuId - GetContextMenuIdStart ();
       AspellStringEnumeration *els = 0;
 
       if (Result != 0)
@@ -1802,7 +1832,12 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
     break;
   case LANGUAGE_MENU_ID:
     {
-      int Result = LOBYTE (MenuId);
+      int Result = 0;
+      if (!GetUseAllocatedIds ())
+        Result = LOBYTE (MenuId);
+      else
+        Result = MenuId - GetLangsMenuIdStart ();
+
       TCHAR *LangString = 0;
       if (Result == MULTIPLE_LANGS)
         LangString = _T ("<MULTIPLE>");

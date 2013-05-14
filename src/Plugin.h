@@ -125,6 +125,12 @@ void GetModifiedZoneShared (long &Start, long &End);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam);
 void GetDefaultHunspellPath_ (TCHAR *&Path);
 HANDLE *GethEvent ();
+void SetContextMenuIdStart (int Id);
+void SetLangsMenuIdStart (int Id);
+void SetUseAllocatedIds (BOOL Id);
+int GetContextMenuIdStart ();
+int GetLangsMenuIdStart ();
+BOOL GetUseAllocatedIds ();
 SpellChecker *GetSpellChecker ();
 
 // From DllMain, possibly move to DllMain.h

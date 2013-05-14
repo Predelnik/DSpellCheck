@@ -71,6 +71,9 @@ AboutDlg *AboutDlgInstance = 0;
 HANDLE hThread = NULL;
 HMENU LangsMenu;
 DWORD  ThreadId = 0;
+int ContextMenuIdStart;
+int LangsMenuIdStart = FALSE;
+BOOL UseAllocatedIds;
 
 HANDLE hEvent[EID_MAX]  = {NULL};
 HANDLE hModule = NULL;
@@ -91,6 +94,36 @@ LRESULT CALLBACK MouseProc (int nCode,
     break;
   }
   return CallNextHookEx(HMouseHook, nCode, wParam, lParam);;
+}
+
+void SetContextMenuIdStart (int Id)
+{
+  ContextMenuIdStart = Id;
+}
+
+void SetLangsMenuIdStart (int Id)
+{
+  LangsMenuIdStart = Id;
+}
+
+void SetUseAllocatedIds (BOOL Value)
+{
+  UseAllocatedIds = Value;
+}
+
+int GetContextMenuIdStart ()
+{
+  return ContextMenuIdStart;
+}
+
+int GetLangsMenuIdStart ()
+{
+  return LangsMenuIdStart;
+}
+
+BOOL GetUseAllocatedIds ()
+{
+  return UseAllocatedIds;
 }
 
 SpellChecker *GetSpellChecker ()
