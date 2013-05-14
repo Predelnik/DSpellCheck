@@ -111,7 +111,9 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
     if (HIWORD (wParam) == 0)
     {
       OutputDebugString (_T ("TM_MENU_RESULT sent\n"));
-      PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
+      if (HIBYTE (wParam) == DSPELLCHECK_MENU_ID ||
+        HIBYTE (wParam) == LANGUAGE_MENU_ID)
+        PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
     }
     break;
   case WM_CONTEXTMENU:
@@ -200,9 +202,11 @@ VOID CALLBACK ExecuteQueue (
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
+  /*
   // DEBUG_CODE:
   long CurPos = SendMsgToEditor(&nppData, SCI_GETCURRENTPOS);
   int Style = SendMsgToEditor(&nppData, SCI_GETSTYLEAT, CurPos);
+  */
   switch (notifyCode->nmhdr.code)
   {
   case NPPN_SHUTDOWN:
@@ -224,6 +228,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
       RecheckVisible ();
       SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
+      SendEvent (EID_UPDATE_LANG_LISTS); // To update quick lang change menu
+      UpdateLangsMenu ();
     }
     break;
 

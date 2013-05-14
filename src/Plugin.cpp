@@ -69,6 +69,7 @@ Progress *ProgressInstance = 0;
 DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
 HANDLE hThread = NULL;
+HMENU LangsMenu;
 DWORD  ThreadId = 0;
 
 HANDLE hEvent[EID_MAX]  = {NULL};
@@ -177,8 +178,6 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
 
   MSG Msg;
 
-  ThreadId = GetCurrentThreadId ();
-
   // Creating thread message queue
   PeekMessage (&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 
@@ -212,14 +211,12 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
 
 void CreateThreadResources ()
 {
-  DWORD dwThreadId = 0;
-
   /* create events */
   for (int i = 0; i < EID_MAX; i++)
     hEvent[i] = ::CreateEvent (NULL, FALSE, FALSE, NULL);
 
   /* create thread */
-  hThread = CreateThread (NULL, 0, ThreadMain, SpellCheckerInstance, 0, &dwThreadId);
+  hThread = CreateThread (NULL, 0, ThreadMain, SpellCheckerInstance, 0, &ThreadId);
   SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
 
   ResourcesInited = TRUE;
@@ -329,6 +326,13 @@ void FindPrevMistake ()
   SendEvent (EID_FIND_PREV_MISTAKE);
 }
 
+void QuickLangChangeContext ()
+{
+  POINT Pos;
+  GetCursorPos (&Pos);
+  TrackPopupMenu (GetLangsSubMenu (), 0, Pos.x, Pos.y, 0, nppData._nppHandle, 0);
+}
+
 //
 // Initialization of your plug-in commands
 // You should fill your plug-ins commands here
@@ -388,10 +392,69 @@ void commandMenuInit()
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'b' - 'a';
   setCommand(2, TEXT("Find Previous Misspelling"), FindPrevMistake, shKey, false);
-  setCommand(3, TEXT("---"), NULL, NULL, false);
 
-  setCommand(4, TEXT("Settings..."), StartSettings, NULL, false);
-  setCommand(5, TEXT("About..."), StartAboutDlg, NULL, false);
+  shKey = new ShortcutKey;
+  shKey->_isAlt = true;
+  shKey->_isCtrl = false;
+  shKey->_isShift = false;
+  shKey->_key = 0x41 + 'd' - 'a';
+  setCommand(3, TEXT("Change Current Language"), QuickLangChangeContext, shKey, false);
+  setCommand(4, TEXT("---"), NULL, NULL, false);
+
+  setCommand(5, TEXT("Settings..."), StartSettings, NULL, false);
+  setCommand(6, TEXT("About..."), StartAboutDlg, NULL, false);
+}
+
+void UpdateLangsMenu ()
+{
+  SendEvent (EID_UPDATE_LANGS_MENU);
+}
+
+HMENU GetDSpellCheckMenu ()
+{
+  HMENU PluginsMenu = (HMENU) SendMsgToNpp (&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
+  HMENU DSpellCheckMenu = 0;
+  int Count = GetMenuItemCount (PluginsMenu);
+  int StrLen = 0;
+  TCHAR *Buf = 0;
+  for (int i = 0; i < Count; i++)
+  {
+    StrLen = GetMenuString (PluginsMenu, i, 0, 0, MF_BYPOSITION);
+    Buf = new TCHAR[StrLen + 1];
+    GetMenuString (PluginsMenu, i, Buf, StrLen + 1, MF_BYPOSITION);
+    if (_tcscmp (Buf, NPP_PLUGIN_NAME) == 0)
+    {
+      MENUITEMINFO Mif;
+      Mif.fMask = MIIM_ID;
+      Mif.cbSize = sizeof (MENUITEMINFO);
+      BOOL Res = GetMenuItemInfo (PluginsMenu, i, TRUE, &Mif);
+
+      DSpellCheckMenu = (HMENU) Mif.wID;
+      CLEAN_AND_ZERO_ARR (Buf);
+      break;
+    }
+    CLEAN_AND_ZERO_ARR (Buf);
+  }
+  return DSpellCheckMenu;
+}
+
+HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg)
+{
+  HMENU DSpellCheckMenu;
+  if (!DSpellCheckMenuArg)
+    DSpellCheckMenu = GetDSpellCheckMenu ();
+  else
+    DSpellCheckMenu = DSpellCheckMenuArg;
+  if (!DSpellCheckMenu)
+    return 0;
+
+  MENUITEMINFO Mif;
+
+  Mif.fMask = MIIM_SUBMENU;
+  Mif.cbSize = sizeof (MENUITEMINFO);
+
+  BOOL Res = GetMenuItemInfo (DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, TRUE, &Mif);
+  return Mif.hSubMenu;
 }
 
 void InitClasses ()
@@ -431,6 +494,7 @@ void commandMenuCleanUp()
   CLEAN_AND_ZERO (funcItem[0]._pShKey);
   CLEAN_AND_ZERO (funcItem[1]._pShKey);
   CLEAN_AND_ZERO (funcItem[2]._pShKey);
+  CLEAN_AND_ZERO (funcItem[3]._pShKey);
   // We should deallocate shortcuts here
 }
 

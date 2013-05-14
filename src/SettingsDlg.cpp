@@ -180,6 +180,7 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
   SpellCheckerInstance->SetLibMode (GetSelectedLib ());
   SpellCheckerInstance->SetDecodeNames (Button_GetCheck (HDecodeNames) == BST_CHECKED);
+  UpdateLangsMenu ();
   CLEAN_AND_ZERO_ARR (Buf);
 }
 

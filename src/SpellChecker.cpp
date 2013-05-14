@@ -427,6 +427,12 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_REMOVE_SELECTED_DICS:
     GetRemoveDics ()->RemoveSelected (this);
     break;
+  case EID_UPDATE_LANG_LISTS:
+    ReinitLanguageLists (LibMode);
+    break;
+  case EID_UPDATE_LANGS_MENU:
+    DoPluginMenuInclusion ();
+    break;
     /*
     case EID_APPLYMENUACTION:
     ApplyMenuActions ();
@@ -434,6 +440,37 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     */
   }
   return TRUE;
+}
+
+void SpellChecker::DoPluginMenuInclusion ()
+{
+  BOOL Res;
+  MENUITEMINFO Mif;
+  HMENU DSpellCheckMenu = GetDSpellCheckMenu ();
+  HMENU LangsSubMenu = GetLangsSubMenu (DSpellCheckMenu);
+  if (LangsSubMenu)
+    DestroyMenu (LangsSubMenu);
+  TCHAR *CurLang = (LibMode == 1) ? HunspellLanguage : AspellLanguage;
+  HMENU NewMenu = CreatePopupMenu ();
+  if (CurrentLangs && CurrentLangs->size () > 0)
+  {
+    for (unsigned int i = 0; i < CurrentLangs->size (); i++)
+    {
+      int Checked = (_tcscmp (CurLang, CurrentLangs->at(i).OrigName) == 0) ? MF_CHECKED : MF_UNCHECKED;
+      Res = AppendMenu (NewMenu, MF_STRING | Checked, MAKEWORD (i, LANGUAGE_MENU_ID), DecodeNames ? CurrentLangs->at(i).AliasName : CurrentLangs->at(i).OrigName);
+      if (!Res)
+        return;
+    }
+    int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? MF_CHECKED : MF_UNCHECKED;
+    Res = AppendMenu (NewMenu, MF_STRING | Checked, MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages (Selected from Settings)"));
+  }
+
+  Mif.fMask = MIIM_SUBMENU | MIIM_STATE;
+  Mif.cbSize = sizeof (MENUITEMINFO);
+  Mif.hSubMenu = (CurrentLangs ? NewMenu : 0);
+  Mif.fState = (!CurrentLangs ? MFS_GRAYED : MFS_ENABLED);
+
+  SetMenuItemInfo (DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, TRUE, &Mif);
 }
 
 void SpellChecker::FillDownloadDics ()
@@ -1708,50 +1745,75 @@ void SpellChecker::InitSuggestionsBox ()
 void SpellChecker::ProcessMenuResult (UINT MenuId)
 {
   OutputDebugString (_T ("Processing Menu Result\n"));
-  if (HIBYTE (MenuId) != DSPELLCHECK_MENU_ID)
-    return;
-  char *AnsiBuf = 0;
-  int Result = LOBYTE (MenuId);
-  AspellStringEnumeration *els = 0;
-
-  if (Result != 0)
+  switch (HIBYTE (MenuId))
   {
-    if (Result == MID_IGNOREALL)
+  case  DSPELLCHECK_MENU_ID:
     {
-      ApplyConversions (SelectedWord);
-      CurrentSpeller->IgnoreAll (SelectedWord);
-      WUCLength = strlen (SelectedWord);
-      if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
-        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength, WUCPosition  + WUCLength );
-      RecheckVisible ();
-    }
-    else if (Result == MID_ADDTODICTIONARY)
-    {
-      ApplyConversions (SelectedWord);
-      CurrentSpeller->AddToDictionary (SelectedWord);
-      WUCLength = strlen (SelectedWord);
-      if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
-        PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
-      RecheckVisible ();
-    }
-    else if ((unsigned int)Result <= LastSuggestions->size ())
-    {
-      if (CurrentEncoding == ENCODING_ANSI)
-        SetStringSUtf8 (AnsiBuf, LastSuggestions->at (Result - 1));
-      else
-        SetString (AnsiBuf, LastSuggestions->at (Result - 1));
-      if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
-      {
-        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
-        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETEND, WUCPosition  + WUCLength );
-        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACETARGET, -1, (LPARAM)AnsiBuf);
-        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + strlen (AnsiBuf), WUCPosition  + strlen (AnsiBuf));
-      }
-      else
-        SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
+      char *AnsiBuf = 0;
+      int Result = LOBYTE (MenuId);
+      AspellStringEnumeration *els = 0;
 
-      CLEAN_AND_ZERO_ARR (AnsiBuf);
+      if (Result != 0)
+      {
+        if (Result == MID_IGNOREALL)
+        {
+          ApplyConversions (SelectedWord);
+          CurrentSpeller->IgnoreAll (SelectedWord);
+          WUCLength = strlen (SelectedWord);
+          if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
+            PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength, WUCPosition  + WUCLength );
+          RecheckVisible ();
+        }
+        else if (Result == MID_ADDTODICTIONARY)
+        {
+          ApplyConversions (SelectedWord);
+          CurrentSpeller->AddToDictionary (SelectedWord);
+          WUCLength = strlen (SelectedWord);
+          if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
+            PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
+          RecheckVisible ();
+        }
+        else if ((unsigned int)Result <= LastSuggestions->size ())
+        {
+          if (CurrentEncoding == ENCODING_ANSI)
+            SetStringSUtf8 (AnsiBuf, LastSuggestions->at (Result - 1));
+          else
+            SetString (AnsiBuf, LastSuggestions->at (Result - 1));
+          if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
+          {
+            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
+            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETEND, WUCPosition  + WUCLength );
+            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACETARGET, -1, (LPARAM)AnsiBuf);
+            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + strlen (AnsiBuf), WUCPosition  + strlen (AnsiBuf));
+          }
+          else
+            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
+
+          CLEAN_AND_ZERO_ARR (AnsiBuf);
+        }
+      }
     }
+  case LANGUAGE_MENU_ID:
+    int Result = LOBYTE (MenuId);
+    TCHAR *LangString = 0;
+    if (Result == MULTIPLE_LANGS)
+      LangString = _T ("<MULTIPLE>");
+    else
+      LangString = CurrentLangs->at (Result).OrigName;
+    // What if current langs have changed?
+
+    if (LibMode == 0)
+    {
+      SetAspellLanguage (LangString);
+      ReinitLanguageLists (0);
+    }
+    else
+    {
+      SetHunspellLanguage (LangString);
+      ReinitLanguageLists (1);
+    }
+    UpdateLangsMenu ();
+    RecheckVisible ();
   }
 }
 

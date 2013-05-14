@@ -47,6 +47,8 @@ LRESULT SendMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Ms
 LRESULT PostMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
 LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
 
+LRESULT SendMsgToNpp (const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+
 char *Utf8Dec(const char *string, const char *current);
 char *Utf8chr (const char *s, const char *sfc);
 int Utf8GetCharSize (char c);

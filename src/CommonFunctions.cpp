@@ -292,6 +292,11 @@ LRESULT SendMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Ms
   return SendMessage(ScintillaWindow, Msg, wParam, lParam);
 }
 
+LRESULT SendMsgToNpp (const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  return SendMessage(NppDataArg->_nppHandle, Msg, wParam, lParam);
+}
+
 // Remember: it's better to use PostMsg wherever possible, to avoid gui update on each message send etc etc
 // Also it's better to avoid get current scintilla window too much times, since it's obviously uses 1 SendMsg call
 LRESULT PostMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)

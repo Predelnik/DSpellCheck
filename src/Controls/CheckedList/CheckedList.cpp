@@ -576,7 +576,6 @@ static LRESULT CALLBACK Control_Proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         dwUserData |= FLATCHECKS;
       else
         dwUserData &= ~FLATCHECKS;
-
       return SetWindowLongPtr(GetDlgItem(hwnd, ID_LISTBOX), GWLP_USERDATA,
         (LONG_PTR)dwUserData);
     }

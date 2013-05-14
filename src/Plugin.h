@@ -28,7 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 
-const int nbFunc = 6;
+const int nbFunc = 7;
+#define QUICK_LANG_CHANGE_ITEM 3
 
 class LangList;
 class DownloadDicsDlg;
@@ -91,6 +92,8 @@ typedef enum {
   EID_INIT_DOWNLOAD_COMBOBOX,
   EID_FILL_FILE_LIST,
   EID_REMOVE_SELECTED_DICS,
+  EID_UPDATE_LANG_LISTS,
+  EID_UPDATE_LANGS_MENU,
   EID_MAX,
 } EventId;
 
@@ -100,7 +103,6 @@ void WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
 DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime = INFINITE);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
-void SetLanguage (const char *Str);
 void setEncodingById (int EncId);
 BOOL GetAutoCheckText ();
 void updateAutocheckStatus ();
@@ -109,6 +111,9 @@ void RecheckVisible ();
 void CreateThreadResources ();
 void InitClasses ();
 void CreateHooks ();
+void UpdateLangsMenu ();
+HMENU GetDSpellCheckMenu ();
+HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = 0);
 HANDLE getHModule ();
 LangList *GetLangList ();
 RemoveDics *GetRemoveDics ();

@@ -39,11 +39,14 @@ enum EncodingType
 #define SUGGESTIONS_CONTEXT_MENU 1
 
 // Global Menu ID
+// TODO: change it all to call for n++ message which gives you free menu IDs
 #define DSPELLCHECK_MENU_ID 193
+#define LANGUAGE_MENU_ID 197
 
 // Menu item IDs
 #define MID_ADDTODICTIONARY 101
 #define MID_IGNOREALL 102
+#define MULTIPLE_LANGS 201
 
 #define USER_SERVER_CONST 100
 
@@ -61,4 +64,5 @@ enum EncodingType
 #define TM_PRECALCULATE_MENU    WM_USER + 1005
 #define TM_CHANGE_DIR           WM_USER + 1006
 #define TM_ADD_USER_SERVER      WM_USER + 1007
+#define TM_UPDATE_LANGS_MENU    WM_USER + 1008
 #endif MAINDEF_H

@@ -104,6 +104,7 @@ private:
   };
 
   HWND GetCurrentScintilla ();
+  void DoPluginMenuInclusion ();
   void CreateWordUnderline (HWND ScintillaWindow, int start, int end);
   void RemoveUnderline (HWND ScintillaWindow, int start, int end);
   void ClearAllUnderlines ();
@@ -116,6 +117,7 @@ private:
   const char *GetDelimiters ();
   const TCHAR *GetLanguage ();
   BOOL AspellReinitSettings ();
+  void CallLangContextMenu ();
   BOOL HunspellReinitSettings (BOOL ResetDirectory);
   void GetDefaultHunspellPath (TCHAR *&Path);
   BOOL CheckWord (char *Word, long Start, long End);
