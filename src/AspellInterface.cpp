@@ -271,6 +271,7 @@ void AspellInterface::SetLanguage (TCHAR *Lang)
   char *Buf = 0;
   SetString (Buf, Lang);
   aspell_config_replace(spell_config, "lang", Buf);
+  CLEAN_AND_ZERO_ARR (Buf);
   if (SingularSpeller)
   {
     delete_aspell_speller (SingularSpeller);
