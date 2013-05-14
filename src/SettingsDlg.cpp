@@ -748,6 +748,7 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   TCHAR *EndPtr;
   int x = _tcstol (TBuf, &EndPtr, 10);
   SpellCheckerInstance->SetBufferSize (x);
+  GetDownloadDics ()->UpdateListBox ();
 
   CLEAN_AND_ZERO_ARR (BufUtf8);
   CLEAN_AND_ZERO_ARR (TBuf);

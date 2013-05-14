@@ -91,7 +91,7 @@ public:
   void ReinitLanguageLists (int SpellerId);
   TCHAR *GetHunspellPath () {return HunspellPath; };
   TCHAR *GetLangByIndex (int i);
-  BOOL GetShowOnlyKnow ();
+  BOOL GetShowOnlyKnown ();
   BOOL GetDecodeNames ();
   HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
 

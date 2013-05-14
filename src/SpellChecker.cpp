@@ -275,7 +275,7 @@ void SpellChecker::SetShowOnlyKnow (BOOL Value)
   ShowOnlyKnown = Value;
 }
 
-BOOL SpellChecker::GetShowOnlyKnow ()
+BOOL SpellChecker::GetShowOnlyKnown ()
 {
   return ShowOnlyKnown;
 }

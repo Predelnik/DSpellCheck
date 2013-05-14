@@ -64,6 +64,7 @@ DownloadDicsDlg::DownloadDicsDlg ()
   CheckIfSavingIsNeeded = 0;
   CurrentLangs = 0;
   CurrentLangsFiltered = 0;
+  HFileList = 0;
 }
 
 void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg)
@@ -330,19 +331,22 @@ void FtpTrim (TCHAR *FtpAddress)
 
 void DownloadDicsDlg::UpdateListBox ()
 {
+  if (!HFileList)
+    return;
+
   CLEAN_AND_ZERO (CurrentLangsFiltered);
   CurrentLangsFiltered = new std::vector<LanguageName> ();
   for (unsigned int i = 0; i < CurrentLangs->size (); i++)
   {
     LanguageName Lang (CurrentLangs->at (i));
-    if (SpellCheckerInstance->GetDecodeNames () && SpellCheckerInstance->GetShowOnlyKnow () && !Lang.AliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
+    if (SpellCheckerInstance->GetShowOnlyKnown () && !Lang.AliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
       continue;
     CurrentLangsFiltered->push_back (Lang);
   }
   ListBox_ResetContent (HFileList);
   for (unsigned int i = 0; i < CurrentLangsFiltered->size (); i++)
   {
-    ListBox_AddString (HFileList, CurrentLangsFiltered->at (i).AliasName);
+    ListBox_AddString (HFileList, SpellCheckerInstance->GetDecodeNames () ? CurrentLangsFiltered->at (i).AliasName : CurrentLangsFiltered->at (i).OrigName);
   }
 }
 
