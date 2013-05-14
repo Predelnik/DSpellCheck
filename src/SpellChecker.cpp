@@ -1760,8 +1760,10 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
           ApplyConversions (SelectedWord);
           CurrentSpeller->IgnoreAll (SelectedWord);
           WUCLength = strlen (SelectedWord);
+          /*
           if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
-            PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength, WUCPosition  + WUCLength );
+          PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength, WUCPosition  + WUCLength );
+          */
           RecheckVisible ();
         }
         else if (Result == MID_ADDTODICTIONARY)
@@ -1769,8 +1771,10 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
           ApplyConversions (SelectedWord);
           CurrentSpeller->AddToDictionary (SelectedWord);
           WUCLength = strlen (SelectedWord);
+          /*
           if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
-            PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
+          PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
+          */
           RecheckVisible ();
         }
         else if ((unsigned int)Result <= LastSuggestions->size ())
@@ -1779,41 +1783,46 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
             SetStringSUtf8 (AnsiBuf, LastSuggestions->at (Result - 1));
           else
             SetString (AnsiBuf, LastSuggestions->at (Result - 1));
+          /*
           if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
           {
-            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
-            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETEND, WUCPosition  + WUCLength );
-            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACETARGET, -1, (LPARAM)AnsiBuf);
-            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + strlen (AnsiBuf), WUCPosition  + strlen (AnsiBuf));
+          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
+          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETEND, WUCPosition  + WUCLength );
+          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACETARGET, -1, (LPARAM)AnsiBuf);
+          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + strlen (AnsiBuf), WUCPosition  + strlen (AnsiBuf));
           }
           else
-            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
+          */
+          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
 
           CLEAN_AND_ZERO_ARR (AnsiBuf);
         }
       }
     }
+    break;
   case LANGUAGE_MENU_ID:
-    int Result = LOBYTE (MenuId);
-    TCHAR *LangString = 0;
-    if (Result == MULTIPLE_LANGS)
-      LangString = _T ("<MULTIPLE>");
-    else
-      LangString = CurrentLangs->at (Result).OrigName;
-    // What if current langs have changed?
+    {
+      int Result = LOBYTE (MenuId);
+      TCHAR *LangString = 0;
+      if (Result == MULTIPLE_LANGS)
+        LangString = _T ("<MULTIPLE>");
+      else
+        LangString = CurrentLangs->at (Result).OrigName;
 
-    if (LibMode == 0)
-    {
-      SetAspellLanguage (LangString);
-      ReinitLanguageLists (0);
+      if (LibMode == 0)
+      {
+        SetAspellLanguage (LangString);
+        ReinitLanguageLists (0);
+      }
+      else
+      {
+        SetHunspellLanguage (LangString);
+        ReinitLanguageLists (1);
+      }
+      UpdateLangsMenu ();
+      RecheckVisible ();
+      break;
     }
-    else
-    {
-      SetHunspellLanguage (LangString);
-      ReinitLanguageLists (1);
-    }
-    UpdateLangsMenu ();
-    RecheckVisible ();
   }
 }
 
@@ -1828,8 +1837,11 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   Range.chrg.cpMin = WUCPosition;
   Range.chrg.cpMax = WUCPosition + WUCLength;
   Range.lpstrText = new char [WUCLength + 1];
+  PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
   if (SuggestionsMode == SUGGESTIONS_BOX)
-    PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
+  {
+    // PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
+  }
   else
   {
     SuggestionMenuItems = new std::vector <SuggestionsMenuItem*>;
