@@ -3,11 +3,17 @@ DSpellCheck
 
 Yet Another Notepad++ Spell-checking Plug-In
 
-Well, the story is that I wasn't very happy with current Notepad++ Spell-Checking Plug-ins, so I've decided to write another one. Not very original, but at least I've done some features I desired for a long time in other Spell-Checkers (such as Multi-Language Spell-Checking for example) and also of course did a little bit of a coding training and expanding of my current knowledge base, so it's not totally useless try, I guess.
-
-Well it still uses old Aspell as a Spell-Checking library. Though I guess I'll add Hunspell support in the near future, the one thing I'm not so sure about Hunspell is because it's never used in shared version so there is no common place for Hunspell dictionaries for example and each program uses it's own and so own. Also if it's static linked it updates only when wrapping program updates.
-
-About choosing suggestions menu for misspellings: The way I made it, may look peculiar at the first glance, but honestly I just reproduced the style which I saw in Microsoft Visual Studio Spell-Checking extension. It used some kind of thing called smart-tag, which are only available in some Microsoft programs, but I just kinda emulated this kind of behaviour. Doing it in normal context-menu way would require a little bit of hard-stuff on my side, because Plug-ins in N++ for now couldn't do it any normal way, but still I guess I'll add an option to see suggestions also in context-menu way, with current way still available as another option.
+Following main features:
+- Underlining spelling mistakes
+- Iterating through all mistakes in document
+- Finding mistakes only in comments and strings (For files with standard programming language syntax e.g. C++, Basic, Tex and so on)
+- Possible usage of multiple languages (dictionaries) simultaneously to do spell-checking.
+- Getting suggestions for words by either using default Notepad++ menu or separate context menu called by special button appearing under word.
+- Able to add words to user dictionary or ignore them for current session of Notepad++
+- Using either Aspell library (needs to be installed), either Hunspell library (Dictionaries by default should be placed to %Plugin Config Dir%\Hunspell)
+- A lot of customizing available from Plugin settings (Ignoring/Allowing only specific files, Choosing delimiters for words, Maximum number of suggestions etc)
+- Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
+- Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
 v1.1 Changes:
 * Add Hunspell support, which is statically linked into Plug-in so you don't need to download any custom dlls to use it, dictionaries though (.aff and .dic files) should be placed by default into "***Notepad++_Dir***\plugins\Config\Hunspell\" (Location could be changed from settings).
@@ -34,3 +40,9 @@ v1.1.5
 
 v1.1.6
 * Fix working of "Add to dictionary" and "Ignore" for Aspell which were accidentally broken.
+
+v1.2.0
+* Add possibility to download Hunspell dictionaries from common OpenOffice mirrors through GUI.
+* Add possibility to remove Hunspell dictionaries through GUI.
+* Add possibility to quickly change current language through Plugins->DSpellCheck->Change_Current_Language or corresponding hot key.
+* Add resolving common Hunspell dictionaries names to more user friendly language names.
