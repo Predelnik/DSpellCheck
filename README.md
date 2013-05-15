@@ -34,3 +34,6 @@ v1.1.5
 
 v1.1.6
 * Fix working of "Add to dictionary" and "Ignore" for Aspell which were accidentally broken.
+
+v1.1.7
+* Fix plugin's crash in some system default encodings.

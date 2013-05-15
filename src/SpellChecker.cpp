@@ -86,7 +86,7 @@ static const char PunctuationApostrophe[] = "\xe2\x80\x99";
 
 void SpellChecker::PrepareStringForConversion ()
 {
-  iconv_t Conv = iconv_open ("", "UTF-8");
+  iconv_t Conv = iconv_open ("CHAR", "UTF-8");
   const char *InString [] = {Yo, yo, Ye, ye, PunctuationApostrophe};
   char **OutString [] = {&YoANSI, &yoANSI, &YeANSI, &yeANSI, &PunctuationApostropheANSI};
   char *Buf = 0;
@@ -109,8 +109,7 @@ void SpellChecker::PrepareStringForConversion ()
     CLEAN_AND_ZERO_ARR (Buf);
     if (Res == (size_t) -1)
     {
-      CLEAN_AND_ZERO_ARR (OutBuf);
-      *OutString[i] = 0;
+      CLEAN_AND_ZERO_ARR (*OutString[i]);
     }
   }
   iconv_close (Conv);
@@ -2179,7 +2178,7 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
 
   for (int i = 0; i < countof (ConvertFrom); i++)
   {
-    if (!Apply[i] || ConvertFrom [i] == 0 || ConvertTo[i] == 0)
+    if (!Apply[i] || ConvertFrom [i] == 0 || ConvertTo[i] == 0 || *ConvertFrom [i] == 0 || *ConvertTo [i] == 0)
       continue;
 
     char *Iter = Word;
