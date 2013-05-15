@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Progress.h"
 
+#include "Plugin.h"
 #include "resource.h"
 
 void Progress::DoDialog ()
@@ -51,6 +52,17 @@ BOOL CALLBACK Progress::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
       SendMessage (HProgressBar, PBM_SETRANGE, 0, (LPARAM)MAKELONG(0,100));
       return TRUE;
     }
+    break;
+  case WM_COMMAND:
+    switch (LOWORD (wParam))
+    {
+    case IDC_STOP:
+      if (HIWORD (wParam) == BN_CLICKED)
+      {
+        SendEvent (EID_CANCEL_DOWNLOAD);
+      }
+      break;
+    };
     break;
   };
   return FALSE;

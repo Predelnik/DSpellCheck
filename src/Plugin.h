@@ -94,12 +94,13 @@ typedef enum {
   EID_REMOVE_SELECTED_DICS,
   EID_UPDATE_LANG_LISTS,
   EID_UPDATE_LANGS_MENU,
+  EID_CANCEL_DOWNLOAD,
   EID_MAX,
 } EventId;
 
 void SendEvent (EventId Event);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam = 0, LPARAM LParam = 0);
-void WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
+DWORD WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
 DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime = INFINITE);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();

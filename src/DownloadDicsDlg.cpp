@@ -144,6 +144,7 @@ void DownloadDicsDlg::DownloadSelected ()
   char FileCopyBuf[(BUF_SIZE_FOR_COPY)];
   TCHAR ProgMessage[DEFAULT_BUF_SIZE];
   GetTempPath (MAX_PATH, TempPath);
+  CancelPressed = FALSE;
   _tcscpy (Message, _T ("Dictionaries copied:\n"));
   std::map<char *, int, bool (*)(char *, char *)> FilesFound (SortCompareChars); //0x01 - .aff found, 0x02 - .dic found
   Progress *p = GetProgress ();
@@ -165,6 +166,8 @@ void DownloadDicsDlg::DownloadSelected ()
       _tcscat (LocalPath, FileName);
       ComboBox_GetText (HAddress, Buf, DEFAULT_BUF_SIZE);
       DoFtpOperation (DOWNLOAD_FILE, Buf, FileName, LocalPath);
+      if (CancelPressed)
+        break;
       SetString (LocalPathANSI, LocalPath);
       unzFile fp = unzOpen (LocalPathANSI);
       if (unzGoToFirstFile (fp) != UNZ_OK)
@@ -298,10 +301,6 @@ clean_and_continue:
   CLEAN_AND_ZERO_ARR (ConvertedDicName);
 }
 
-#define CONTEXT_CONNECT 1
-#define CONTEXT_FIND_FIRST_FILE 2
-#define CONTEXT_OPEN_FILE 3
-
 void FtpTrim (TCHAR *FtpAddress)
 {
   StrTrim (FtpAddress, _T (" "));
@@ -398,9 +397,9 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
 
   if (Type == FILL_FILE_LIST)
   {
-    WIN32_FIND_DATAA FindData;
+    WIN32_FIND_DATA FindData;
     TCHAR *Buf = 0;
-    HINTERNET FindHandle = FtpFindFirstFileA (Internet, "*.zip", &FindData, 0, CONTEXT_FIND_FIRST_FILE);
+    HINTERNET FindHandle = FtpFindFirstFile (Internet, _T ("*.zip"), &FindData, 0, 0);
     if (!FindHandle)
     {
       StatusColor = COLOR_WARN;
@@ -416,7 +415,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
       LanguageName Lang (Buf); // Probably should add options for using/not using aliases
       CurrentLangs->push_back (Lang);
     }
-    while (InternetFindNextFileA (FindHandle, &FindData));
+    while (InternetFindNextFile (FindHandle, &FindData));
 
     std::sort (CurrentLangs->begin (), CurrentLangs->end ());
 
@@ -446,13 +445,13 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     }
     int FileHandle = _topen (Location, _O_CREAT | _O_BINARY | _O_WRONLY);
     if (FileHandle == -1)
-      return; // Then file couldn't be download
+      return; // Then file couldn't be downloaded
     DWORD *BytesCopied = new DWORD;
     TCHAR Message[DEFAULT_BUF_SIZE];
     INTERNET_BUFFERS InetBuf;
     memset (&InetBuf, 0, sizeof (INTERNET_BUFFERS));
     InetBuf.dwStructSize = sizeof (INTERNET_BUFFERS);
-    HINTERNET File = FtpOpenFile (Internet, FileName, GENERIC_READ , FTP_TRANSFER_TYPE_BINARY, CONTEXT_OPEN_FILE);
+    HINTERNET File = FtpOpenFile (Internet, FileName, GENERIC_READ , FTP_TRANSFER_TYPE_BINARY, 0);
     LSize = FtpGetFileSize (File, &HSize);
     Size = LSize;
     while (InternetReadFile (File, DataBuf, BUF_SIZE_FOR_COPY, BytesCopied))
@@ -466,6 +465,13 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
       _stprintf (Message, _T ("%d / %d bytes downloaded (%d %%)"), BytesSum, Size, BytesSum * 100 / Size);
       GetProgress ()->SetBottomMessage (Message);
       _write (FileHandle, DataBuf, *BytesCopied);
+      if (WaitForEvent (EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0)
+      {
+        CancelPressed = TRUE;
+        _close (FileHandle);
+        DeleteFile (Location);
+        return;
+      }
     }
     CLEAN_AND_ZERO (BytesCopied);
     _close (FileHandle);

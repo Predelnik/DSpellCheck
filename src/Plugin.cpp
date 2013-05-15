@@ -300,10 +300,10 @@ void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam)
   }
 }
 
-void WaitForEvent (EventId Event, DWORD WaitTime)
+DWORD WaitForEvent (EventId Event, DWORD WaitTime)
 {
   if (ResourcesInited)
-    WaitForSingleObject (hEvent[Event], WaitTime);
+    return WaitForSingleObject (hEvent[Event], WaitTime);
 }
 
 DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime)

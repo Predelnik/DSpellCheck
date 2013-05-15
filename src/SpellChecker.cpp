@@ -444,6 +444,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_UPDATE_LANGS_MENU:
     DoPluginMenuInclusion ();
     break;
+  case EID_CANCEL_DOWNLOAD:
+    // Do nothing, just unflag event
+    break;
     /*
     case EID_APPLYMENUACTION:
     ApplyMenuActions ();

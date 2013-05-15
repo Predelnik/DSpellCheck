@@ -64,6 +64,7 @@ private:
   HWND HStatus;
   HWND HShowOnlyKnown;
   HANDLE Timer;
+  BOOL CancelPressed;
   int CheckIfSavingIsNeeded;
 };
 #endif // DOWNLOAD_DICS_DLG_H
