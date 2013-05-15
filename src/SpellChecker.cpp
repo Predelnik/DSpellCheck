@@ -82,9 +82,9 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   memset (ServerNames, 0, sizeof (ServerNames));
   memset (DefaultServers, 0, sizeof (DefaultServers));
   AddressIsSet = 0;
-  SetString (DefaultServers[0], _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/"));
-  SetString (DefaultServers[1], _T ("ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/"));
-  SetString (DefaultServers[2], _T ("ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/"));
+  SetString (DefaultServers[0], _T ("ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/"));
+  SetString (DefaultServers[1], _T ("ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/"));
+  SetString (DefaultServers[2], _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/"));
   CurrentLangs = 0;
   DecodeNames = FALSE;
   if (SendMsgToNpp (NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0))
