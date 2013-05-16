@@ -304,6 +304,8 @@ DWORD WaitForEvent (EventId Event, DWORD WaitTime)
 {
   if (ResourcesInited)
     return WaitForSingleObject (hEvent[Event], WaitTime);
+  else
+    return WAIT_FAILED;
 }
 
 DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime)

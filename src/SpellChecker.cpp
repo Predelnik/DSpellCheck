@@ -87,6 +87,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SetString (DefaultServers[2], _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/"));
   CurrentLangs = 0;
   DecodeNames = FALSE;
+  ResetHotSpotCache ();
   if (SendMsgToNpp (NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0))
   {
     SetUseAllocatedIds (TRUE);
@@ -609,7 +610,7 @@ int SpellChecker::GetStyle (int Pos)
 }
 // Actually for all languages which operate mostly in strings it's better to check only comments
 // TODO: Fix it
-int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
+int SpellChecker::CheckWordInCommentOrString (int Style)
 {
   switch (Lexer)
   {
@@ -617,7 +618,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_NULL:
     return TRUE;
   case SCLEX_PYTHON:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_P_COMMENTLINE:
     case SCE_P_STRING:
@@ -628,7 +629,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_CPP:
   case SCLEX_OBJC:
   case SCLEX_BULLANT:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_C_COMMENT:
     case SCE_C_COMMENTLINE:
@@ -640,7 +641,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     };
   case SCLEX_HTML:
   case SCLEX_XML:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_H_COMMENT:
     case SCE_H_DEFAULT:
@@ -675,7 +676,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PERL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_PL_COMMENTLINE:
     case SCE_PL_STRING_Q:
@@ -688,7 +689,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     };
   case SCLEX_SQL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_SQL_COMMENT:
     case SCE_SQL_COMMENTLINE:
@@ -700,7 +701,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PROPERTIES:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_PROPS_COMMENT:
       return TRUE;
@@ -710,7 +711,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_ERRORLIST:
     return FALSE;
   case SCLEX_MAKEFILE:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_MAKE_COMMENT:
       return TRUE;
@@ -718,7 +719,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_BATCH:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_BAT_COMMENT:
       return TRUE;
@@ -728,7 +729,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_XCODE:
     return FALSE;
   case SCLEX_LATEX:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_L_DEFAULT:
     case SCE_L_COMMENT:
@@ -737,7 +738,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_LUA:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_LUA_COMMENT:
     case SCE_LUA_COMMENTLINE:
@@ -748,7 +749,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_DIFF:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_DIFF_COMMENT:
       return TRUE;
@@ -756,7 +757,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CONF:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_CONF_COMMENT:
     case SCE_CONF_STRING:
@@ -765,7 +766,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PASCAL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_PAS_COMMENT:
     case SCE_PAS_COMMENT2:
@@ -776,7 +777,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_AVE:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_AVE_COMMENT:
     case SCE_AVE_STRING:
@@ -785,7 +786,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ADA:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_ADA_STRING:
     case SCE_ADA_COMMENTLINE:
@@ -794,7 +795,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_LISP:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_LISP_COMMENT:
     case SCE_LISP_STRING:
@@ -803,7 +804,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_RUBY:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_RB_COMMENTLINE:
     case SCE_RB_STRING:
@@ -818,7 +819,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     }
   case SCLEX_EIFFEL:
   case SCLEX_EIFFELKW:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_EIFFEL_COMMENTLINE:
     case SCE_EIFFEL_STRING:
@@ -827,7 +828,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     };
   case SCLEX_TCL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_TCL_COMMENT:
     case SCE_TCL_COMMENTLINE:
@@ -838,7 +839,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_NNCRONTAB:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_NNCRONTAB_COMMENT:
     case SCE_NNCRONTAB_STRING:
@@ -847,7 +848,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_BAAN:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_BAAN_COMMENT:
     case SCE_BAAN_COMMENTDOC:
@@ -857,7 +858,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MATLAB:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_MATLAB_COMMENT:
     case SCE_MATLAB_STRING:
@@ -866,7 +867,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_SCRIPTOL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_SCRIPTOL_COMMENTLINE:
     case SCE_SCRIPTOL_COMMENTBLOCK:
@@ -876,7 +877,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ASM:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_ASM_COMMENT:
     case SCE_ASM_COMMENTBLOCK:
@@ -887,7 +888,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_CPPNOCASE:
   case SCLEX_FORTRAN:
   case SCLEX_F77:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_F_COMMENT:
     case SCE_F_STRING1:
@@ -897,7 +898,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CSS:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_CSS_COMMENT:
     case SCE_CSS_DOUBLESTRING:
@@ -907,7 +908,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_POV:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_POV_COMMENT:
     case SCE_POV_COMMENTLINE:
@@ -917,7 +918,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_LOUT:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_LOUT_COMMENT:
     case SCE_LOUT_STRING:
@@ -926,7 +927,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ESCRIPT:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_ESCRIPT_COMMENT:
     case SCE_ESCRIPT_COMMENTLINE:
@@ -937,7 +938,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PS:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_PS_COMMENT:
     case SCE_PS_DSC_COMMENT:
@@ -947,7 +948,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_NSIS:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_NSIS_COMMENT:
     case SCE_NSIS_STRINGDQ:
@@ -958,7 +959,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MMIXAL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_MMIXAL_COMMENT:
     case SCE_MMIXAL_STRING:
@@ -967,7 +968,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CLW:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_CLW_COMMENT:
     case SCE_CLW_STRING:
@@ -979,7 +980,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_LOT:
     return FALSE;
   case SCLEX_YAML:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_YAML_COMMENT:
     case SCE_YAML_TEXT:
@@ -988,7 +989,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_TEX:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_TEX_TEXT:
       return TRUE;
@@ -996,7 +997,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_METAPOST:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_METAPOST_TEXT:
     case SCE_METAPOST_DEFAULT:
@@ -1005,7 +1006,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_FORTH:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_FORTH_COMMENT:
     case SCE_FORTH_COMMENT_ML:
@@ -1015,7 +1016,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ERLANG:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_ERLANG_COMMENT:
     case SCE_ERLANG_STRING:
@@ -1029,7 +1030,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     }
   case SCLEX_OCTAVE:
   case SCLEX_MSSQL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_MSSQL_COMMENT:
     case SCE_MSSQL_LINE_COMMENT:
@@ -1039,7 +1040,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_VERILOG:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_V_COMMENT:
     case SCE_V_COMMENTLINE:
@@ -1050,7 +1051,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_KIX:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_KIX_COMMENT:
     case SCE_KIX_STRING1:
@@ -1060,7 +1061,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_GUI4CLI:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_GC_COMMENTLINE:
     case SCE_GC_COMMENTBLOCK:
@@ -1070,7 +1071,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_SPECMAN:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_SN_COMMENTLINE:
     case SCE_SN_COMMENTLINEBANG:
@@ -1080,7 +1081,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_AU3:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_AU3_COMMENT:
     case SCE_AU3_COMMENTBLOCK:
@@ -1090,7 +1091,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_APDL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_APDL_COMMENT:
     case SCE_APDL_COMMENTBLOCK:
@@ -1100,7 +1101,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_BASH:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_SH_COMMENTLINE:
     case SCE_SH_STRING:
@@ -1109,7 +1110,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ASN1:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_ASN1_COMMENT:
     case SCE_ASN1_STRING:
@@ -1118,7 +1119,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_VHDL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_VHDL_COMMENT:
     case SCE_VHDL_COMMENTLINEBANG:
@@ -1128,7 +1129,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CAML:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_CAML_STRING:
     case SCE_CAML_COMMENT:
@@ -1145,7 +1146,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_PUREBASIC:
   case SCLEX_FREEBASIC:
   case SCLEX_POWERBASIC:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_B_COMMENT:
     case SCE_B_STRING:
@@ -1154,7 +1155,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_HASKELL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_HA_STRING:
     case SCE_HA_COMMENTLINE:
@@ -1167,7 +1168,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     }
   case SCLEX_PHPSCRIPT:
   case SCLEX_TADS3:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_T3_BLOCK_COMMENT:
     case SCE_T3_LINE_COMMENT:
@@ -1179,7 +1180,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_REBOL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_REBOL_COMMENTLINE:
     case SCE_REBOL_COMMENTBLOCK:
@@ -1190,7 +1191,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_SMALLTALK:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_ST_STRING:
     case SCE_ST_COMMENT:
@@ -1199,7 +1200,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_FLAGSHIP:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_FS_COMMENT:
     case SCE_FS_COMMENTLINE:
@@ -1216,7 +1217,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CSOUND:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_CSOUND_COMMENT:
     case SCE_CSOUND_COMMENTBLOCK:
@@ -1225,7 +1226,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_INNOSETUP:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_INNO_COMMENT:
     case SCE_INNO_COMMENT_PASCAL:
@@ -1236,7 +1237,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_OPAL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_OPAL_COMMENT_BLOCK:
     case SCE_OPAL_COMMENT_LINE:
@@ -1246,7 +1247,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_SPICE:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_SPICE_COMMENTLINE:
       return TRUE;
@@ -1254,7 +1255,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_D:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_D_COMMENT:
     case SCE_D_COMMENTLINE:
@@ -1266,7 +1267,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_CMAKE:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_CMAKE_COMMENT:
       return TRUE;
@@ -1274,7 +1275,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_GAP:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_GAP_COMMENT:
     case SCE_GAP_STRING:
@@ -1283,7 +1284,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PLM:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_PLM_COMMENT:
     case SCE_PLM_STRING:
@@ -1292,7 +1293,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PROGRESS:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_4GL_STRING:
     case SCE_4GL_COMMENT1:
@@ -1313,7 +1314,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ABAQUS:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_ABAQUS_COMMENT:
     case SCE_ABAQUS_COMMENTBLOCK:
@@ -1323,7 +1324,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_ASYMPTOTE:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_ASY_COMMENT:
     case SCE_ASY_COMMENTLINE:
@@ -1333,7 +1334,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_R:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_R_COMMENT:
     case SCE_R_STRING:
@@ -1343,7 +1344,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MAGIK:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_MAGIK_COMMENT:
     case SCE_MAGIK_HYPER_COMMENT:
@@ -1353,7 +1354,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_POWERSHELL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_POWERSHELL_COMMENT:
     case SCE_POWERSHELL_STRING:
@@ -1362,7 +1363,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MYSQL:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_MYSQL_COMMENT:
     case SCE_MYSQL_COMMENTLINE:
@@ -1374,7 +1375,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_PO:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_PO_COMMENT:
       return TRUE;
@@ -1385,7 +1386,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_COBOL:
   case SCLEX_TACL:
   case SCLEX_SORCUS:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_SORCUS_STRING:
       return TRUE;
@@ -1393,7 +1394,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_POWERPRO:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_POWERPRO_COMMENTBLOCK:
     case SCE_POWERPRO_COMMENTLINE:
@@ -1405,7 +1406,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
     }
   case SCLEX_NIMROD:
   case SCLEX_SML:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_SML_STRING:
     case SCE_SML_COMMENT:
@@ -1419,7 +1420,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
   case SCLEX_MARKDOWN:
     return FALSE;
   case SCLEX_TXT2TAGS:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_TXT2TAGS_COMMENT:
       return TRUE;
@@ -1427,7 +1428,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_A68K:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_A68K_COMMENT:
     case SCE_A68K_STRING1:
@@ -1437,7 +1438,7 @@ int SpellChecker::CheckWordInCommentOrString (int WordStart, int WordEnd)
       return FALSE;
     }
   case SCLEX_MODULA:
-    switch (GetStyle (WordStart))
+    switch (Style)
     {
     case SCE_MODULA_COMMENT:
     case SCE_MODULA_STRING:
@@ -2516,6 +2517,11 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
   }
 }
 
+void SpellChecker::ResetHotSpotCache ()
+{
+  memset (HotSpotCache, -1, sizeof (HotSpotCache));
+}
+
 BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 {
   BOOL res = FALSE;
@@ -2523,13 +2529,20 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     return TRUE;
   // Well Numbers have same codes for ANSI and Unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
-  if (CheckComments && !CheckWordInCommentOrString (Start, End))
+  int Style = GetStyle (Start);
+  if (CheckComments && !CheckWordInCommentOrString (Style))
+    return TRUE;
+
+  if (HotSpotCache[Style] == -1)
+    HotSpotCache[Style] = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_STYLEGETHOTSPOT, Style);
+
+  if (HotSpotCache[Style] == 1)
     return TRUE;
 
   TCHAR *Ts = 0;
   long Len = strlen (Word);
 
-  if (IgnoreNumbers && (CurrentEncoding == ENCODING_UTF8 ? Utf8pbrk (Word, "0123456789") : strpbrk (Word, "0123456789")) != 0) // Same for utf-8 and not
+  if (IgnoreNumbers && (CurrentEncoding == ENCODING_UTF8 ? Utf8pbrk (Word, "0123456789") : strpbrk (Word, "0123456789")) != 0) // Same for UTF-8 and not
   {
     res = TRUE;
     goto CleanUp;

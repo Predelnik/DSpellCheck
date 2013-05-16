@@ -141,7 +141,7 @@ private:
   void HideSuggestionBox ();
   void GetLimitsAndRecheckModified ();
   BOOL CheckTextNeeded ();
-  int CheckWordInCommentOrString (int WordStart, int WordEnd);
+  int CheckWordInCommentOrString (int Style);
   void WriteSetting ();
   int GetStyle (int Pos);
   void RefreshUnderlineStyle ();
@@ -151,6 +151,7 @@ private:
   void ResetDownloadCombobox ();
   void PreserveCurrentAddressIndex ();
   void FillDownloadDics ();
+  void ResetHotSpotCache ();
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);
@@ -203,6 +204,7 @@ private:
   int BufferSize;
   const AspellWordList *CurWordList;
   HWND CurrentScintilla;
+  int HotSpotCache[256]; // STYLE_MAX = 255
 
   int Lexer;
   std::vector <SuggestionsMenuItem *> *SuggestionMenuItems;
