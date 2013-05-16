@@ -145,6 +145,7 @@ void DownloadDicsDlg::DownloadSelected ()
   TCHAR ProgMessage[DEFAULT_BUF_SIZE];
   GetTempPath (MAX_PATH, TempPath);
   CancelPressed = FALSE;
+  int Failure = 0;
   _tcscpy (Message, _T ("Dictionaries copied:\n"));
   std::map<char *, int, bool (*)(char *, char *)> FilesFound (SortCompareChars); //0x01 - .aff found, 0x02 - .dic found
   Progress *p = GetProgress ();
@@ -152,6 +153,11 @@ void DownloadDicsDlg::DownloadSelected ()
   p->SetBottomMessage (_T (""));
   p->SetTopMessage (_T (""));
   int DownloadedCount = 0;
+  if (!CheckForDirectoryExistence (SpellCheckerInstance->GetHunspellPath ())) // If path isn't exist we're gonna try to create it else it's finish
+  {
+    MessageBox (0, _T ("Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+    return;
+  }
   for (int i = 0; i < Count; i++)
   {
     if (CheckedListBox_GetCheckState (HFileList, i) == BST_CHECKED)
@@ -227,8 +233,6 @@ void DownloadDicsDlg::DownloadSelected ()
       } while (unzGoToNextFile (fp) == UNZ_OK);
       // Now we're gonna check what's exactly we extracted with using FilesFound map
       it = FilesFound.begin ();
-      if (!CheckForDirectoryExistence (SpellCheckerInstance->GetHunspellPath ())) // If path isn't exist we're gonna try to create it else it's finish
-        return;
       for (; it != FilesFound.end (); ++it)
       {
         if ((*it).second != 3) // Some of .aff/.dic is missing
@@ -259,16 +263,39 @@ void DownloadDicsDlg::DownloadSelected ()
           _tcscat (HunspellDicPath, DicFileName);
           _tcscat (HunspellDicPath, _T (".aff"));
           if (PathFileExists (HunspellDicPath))
+          {
+            SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
             DeleteFile (DicFileLocalPath); // Probably there should be message box about replacing.
+          }
           else
-            MoveFile (DicFileLocalPath, HunspellDicPath);
+          {
+            if (!MoveFile (DicFileLocalPath, HunspellDicPath))
+            {
+              SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
+              DeleteFile (DicFileLocalPath);
+              Failure = 1;
+            }
+          }
           _tcscpy (DicFileLocalPath + _tcslen (DicFileLocalPath) - 4, _T (".dic"));
           _tcscpy (HunspellDicPath + _tcslen (HunspellDicPath) - 4, _T (".dic"));
           if (PathFileExists (HunspellDicPath))
+          {
+            SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
             DeleteFile (DicFileLocalPath);
+          }
           else
-            MoveFile (DicFileLocalPath, HunspellDicPath);
+          {
+            if (!MoveFile (DicFileLocalPath, HunspellDicPath))
+            {
+              SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
+              DeleteFile (DicFileLocalPath);
+              Failure = 1;
+            }
+          }
           SetStringWithAliasApplied (ConvertedDicName, DicFileName);
+          if (Failure)
+            goto clean_and_continue;
+
           _tcscat (Message, ConvertedDicName);
           _tcscat (Message, _T ("\n"));
           DownloadedCount++;
@@ -281,13 +308,17 @@ clean_and_continue:
 
       FilesFound.clear ();
       unzClose (fp);
+      SetFileAttributes (LocalPath, FILE_ATTRIBUTE_NORMAL);
       DeleteFile (LocalPath); // Removing downloaded .zip file
       CLEAN_AND_ZERO_ARR (FileName);
+      if (Failure)
+        break;
     }
   }
   GetProgress ()->display (false);
-
-  if (DownloadedCount)
+  if (Failure == 1)
+    MessageBox (0, _T ("Access denied to dictionaries directory, either try to run Notepad++ as administrator or open or select accessible dictionary path"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+  else if (DownloadedCount)
     MessageBox (0, Message, _T ("Dictionaries Downloaded Successfully"), MB_OK | MB_ICONINFORMATION);
   else
     MessageBox (0, _T ("Sadly, no dictionaries were copied, please try again"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
