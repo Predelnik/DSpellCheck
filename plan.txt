@@ -6,6 +6,7 @@ Short Term:
 - If separate user dictionaries then add checkbox on dictionaries remove window to delete corresponding user dictionaries.
 - Add message about replacing dictionary with date (if possible) or at least file size.
 - Fix typo in message about inaccessibility of dictionaries directory.
+- Probably change sets to hash sets.
 Long Term:
 - Add checking whole file with marks on scrollbar
 - Optimize Text rechecking in the common case, so only changed line would be targeted for recheck. There's well known problem about this though, it's hard to figure out which symbols are actually changed after several operations of adding and removing parts of text. Actually we should just make function which compresses it to the list of intervals where text may have changed (Not trivial task)
