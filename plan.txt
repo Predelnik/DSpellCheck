@@ -1,11 +1,8 @@
 Short Term:
 - Separate user dictionary for hunspell, that makes sense
 - Searching for dictionaries locally in well known program and ability to copy/make a hard link
-- Check for correct sorting in aliases, otherwise some kind of debug pause.
-- Add item about download dictionary and selecting multiple to quick lang change menu
 - If separate user dictionaries then add checkbox on dictionaries remove window to delete corresponding user dictionaries.
 - Add message about replacing dictionary with date (if possible) or at least file size.
-- Fix typo in message about inaccessibility of dictionaries directory.
 - Probably change sets to hash sets.
 Long Term:
 - Add checking whole file with marks on scrollbar

@@ -316,7 +316,7 @@ clean_and_continue:
   }
   GetProgress ()->display (false);
   if (Failure == 1)
-    MessageBox (0, _T ("Access denied to dictionaries directory, either try to run Notepad++ as administrator or open or select accessible dictionary path"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+    MessageBox (0, _T ("Access denied to dictionaries directory, either try to run Notepad++ as administrator or select some different accessible dictionary path"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
   else if (DownloadedCount)
     MessageBox (0, Message, _T ("Dictionaries Downloaded Successfully"), MB_OK | MB_ICONINFORMATION);
   else
