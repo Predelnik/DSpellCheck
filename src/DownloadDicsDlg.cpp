@@ -152,6 +152,7 @@ void DownloadDicsDlg::DownloadSelected ()
   p->SetBottomMessage (_T (""));
   p->SetTopMessage (_T (""));
   int DownloadedCount = 0;
+  int SupposedDownloadedCount = 0;
   if (!CheckForDirectoryExistence (SpellCheckerInstance->GetHunspellPath ())) // If path isn't exist we're gonna try to create it else it's finish
   {
     MessageBox (0, _T ("Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
@@ -161,6 +162,7 @@ void DownloadDicsDlg::DownloadSelected ()
   {
     if (CheckedListBox_GetCheckState (HFileList, i) == BST_CHECKED)
     {
+      SupposedDownloadedCount++;
       FileName = new TCHAR [_tcslen (CurrentLangsFiltered->at (i).OrigName) + 4 + 1];
       FileName[0] = _T ('\0');
       _tcscat (FileName, CurrentLangsFiltered->at (i).OrigName);
@@ -261,43 +263,81 @@ void DownloadDicsDlg::DownloadSelected ()
           _tcscat (HunspellDicPath, _T ("\\"));
           _tcscat (HunspellDicPath, DicFileName);
           _tcscat (HunspellDicPath, _T (".aff"));
+          BOOL Confirmation = TRUE;
+          BOOL ReplaceQuestionWasAsked = FALSE;
           if (PathFileExists (HunspellDicPath))
           {
-            SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
-            DeleteFile (DicFileLocalPath); // Probably there should be message box about replacing.
-          }
-          else
-          {
-            if (!MoveFile (DicFileLocalPath, HunspellDicPath))
+            TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
+            _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), DicFileName);
+            ReplaceQuestionWasAsked = TRUE;
+            if (MessageBox (0, ReplaceMessage, _T ("Dictionary already exists"), MB_YESNO) == IDNO)
             {
+              Confirmation = FALSE;
               SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
               DeleteFile (DicFileLocalPath);
-              Failure = 1;
             }
+            else
+            {
+              SetFileAttributes (HunspellDicPath, FILE_ATTRIBUTE_NORMAL);
+              DeleteFile (HunspellDicPath);
+            }
+          }
+
+          if (Confirmation && !MoveFile (DicFileLocalPath, HunspellDicPath))
+          {
+            SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
+            DeleteFile (DicFileLocalPath);
+            Failure = 1;
           }
           _tcscpy (DicFileLocalPath + _tcslen (DicFileLocalPath) - 4, _T (".dic"));
           _tcscpy (HunspellDicPath + _tcslen (HunspellDicPath) - 4, _T (".dic"));
-          if (PathFileExists (HunspellDicPath))
+          if (!Confirmation)
           {
             SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
             DeleteFile (DicFileLocalPath);
           }
-          else
+          else if (PathFileExists (HunspellDicPath))
           {
-            if (!MoveFile (DicFileLocalPath, HunspellDicPath))
+            int Res = 0;
+            if (ReplaceQuestionWasAsked)
+              Res = !Confirmation;
+            else
+            {
+              TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
+              _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), DicFileName);
+              Res = (MessageBox (0, ReplaceMessage, _T ("Dictionary already exists"), MB_YESNO) == IDNO);
+            }
+            if (Res)
             {
               SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
               DeleteFile (DicFileLocalPath);
-              Failure = 1;
+              Confirmation = FALSE;
             }
+            else
+            {
+              SetFileAttributes (HunspellDicPath, FILE_ATTRIBUTE_NORMAL);
+              DeleteFile (HunspellDicPath);
+            }
+          }
+
+          if (Confirmation && !MoveFile (DicFileLocalPath, HunspellDicPath))
+          {
+            SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
+            DeleteFile (DicFileLocalPath);
+            Failure = 1;
           }
           SetStringWithAliasApplied (ConvertedDicName, DicFileName);
           if (Failure)
             goto clean_and_continue;
 
-          _tcscat (Message, ConvertedDicName);
-          _tcscat (Message, _T ("\n"));
-          DownloadedCount++;
+          if (Confirmation)
+          {
+            _tcscat (Message, ConvertedDicName);
+            _tcscat (Message, _T ("\n"));
+            DownloadedCount++;
+          }
+          if (!Confirmation)
+            SupposedDownloadedCount--;
         }
       }
 clean_and_continue:
@@ -319,7 +359,7 @@ clean_and_continue:
     MessageBox (0, _T ("Access denied to dictionaries directory, either try to run Notepad++ as administrator or select some different accessible dictionary path"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
   else if (DownloadedCount)
     MessageBox (0, Message, _T ("Dictionaries Downloaded Successfully"), MB_OK | MB_ICONINFORMATION);
-  else
+  else if (SupposedDownloadedCount) // Otherwise - silent
     MessageBox (0, _T ("Sadly, no dictionaries were copied, please try again"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
   for (int i = 0; i < ListBox_GetCount (HFileList); i++)
     CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
