@@ -140,6 +140,11 @@ SimpleDlg::~SimpleDlg ()
 {
 }
 
+void SimpleDlg::ApplyLibChange (SpellChecker *SpellCheckerInstance)
+{
+  SpellCheckerInstance->SetLibMode (GetSelectedLib ());
+  SpellCheckerInstance->ReinitLanguageLists ();
+}
 // Called from main thread, beware!
 void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
@@ -178,7 +183,6 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   SpellCheckerInstance->SetFileTypes (Buf);
   SpellCheckerInstance->SetSuggType (ComboBox_GetCurSel (HSuggType));
   SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
-  SpellCheckerInstance->SetLibMode (GetSelectedLib ());
   SpellCheckerInstance->SetDecodeNames (Button_GetCheck (HDecodeNames) == BST_CHECKED);
   UpdateLangsMenu ();
   CLEAN_AND_ZERO_ARR (Buf);
@@ -352,7 +356,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       case IDC_LIBRARY:
         if (HIWORD (wParam) == CBN_SELCHANGE)
         {
-          PostMessageToMainThread (TM_UPDATE_ON_LIB_CHANGE, GetSelectedLib ());
+          SendEvent (EID_LIB_CHANGE);
         }
         break;
       case IDC_SUGGESTIONS_NUM:
@@ -810,14 +814,6 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
 
       SimpleDlgInstance.reSizeTo(rc);
       AdvancedDlgInstance.reSizeTo(rc);
-
-      GetDownloadDics ()->init (_hInst, _hSelf, GetSpellChecker (), GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
-
-      GetLangList ()->init (_hInst, _hSelf, GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
-      GetLangList ()->DoDialog ();
-
-      GetRemoveDics ()->init (_hInst, _hSelf, GetDlgItem (SimpleDlgInstance.getHSelf (), IDC_LIBRARY));
-      GetRemoveDics ()->DoDialog ();
 
       // This stuff is copied from npp source to make tabbed window looked totally nice and white
       ETDTProc enableDlgTheme = (ETDTProc)::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0);

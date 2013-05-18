@@ -227,12 +227,6 @@ BOOL WINAPI SpellChecker::NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam)
       WriteSetting (lParam);
     }
     break;
-  case TM_UPDATE_ON_LIB_CHANGE:
-    {
-      ReinitLanguageLists ((int) wParam);
-      SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
-    }
-    break;
   case TM_ADD_USER_SERVER:
     {
       TCHAR *Name = (TCHAR *) wParam;
@@ -302,11 +296,20 @@ TCHAR *SpellChecker::GetLangByIndex (int i)
   return CurrentLangs->at(i).OrigName;
 }
 
-void SpellChecker::ReinitLanguageLists (int SpellerId)
+void SpellChecker::ReinitLanguageLists ()
 {
+  int SpellerId = LibMode;
+  BOOL CurrentLangExists = FALSE;
+  TCHAR *CurrentLang;
+
   AbstractSpellerInterface *SpellerToUse = (SpellerId == 1 ?
     (AbstractSpellerInterface *)HunspellSpeller :
   (AbstractSpellerInterface *)AspellSpeller);
+
+  if (SpellerId == 1)
+    CurrentLang = HunspellLanguage;
+  else
+    CurrentLang = AspellLanguage;
 
   if (SpellerToUse->IsWorking ())
   {
@@ -323,9 +326,22 @@ void SpellChecker::ReinitLanguageLists (int SpellerId)
     {
       LanguageName Lang (LangsFromSpeller->at (i), (SpellerId == 1 && DecodeNames)); // Using them only for Hunspell
       CurrentLangs->push_back (Lang);                               // TODO: Add option - use or not use aliases.
+      if (_tcscmp (Lang.OrigName, CurrentLang) == 0)
+        CurrentLangExists = TRUE;
     }
+    if (_tcscmp (CurrentLang, _T ("<MULTIPLE>")) == 0)
+      CurrentLangExists = TRUE;
+
     CLEAN_AND_ZERO_STRING_VECTOR (LangsFromSpeller);
     std::sort (CurrentLangs->begin (), CurrentLangs->end ());
+    if (!CurrentLangExists && CurrentLangs->size () > 0)
+    {
+      if (SpellerId == 1)
+        SetHunspellLanguage (CurrentLangs->at (0).OrigName);
+      else
+        SetAspellLanguage (CurrentLangs->at (0).OrigName);
+      RecheckVisible ();
+    }
     SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
       SpellerId == 1 ? HunspellLanguage : AspellLanguage,
       SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages);
@@ -336,9 +352,14 @@ void SpellChecker::ReinitLanguageLists (int SpellerId)
   }
 }
 
+int SpellChecker::GetLibMode ()
+{
+  return LibMode;
+}
+
 void SpellChecker::FillDialogs ()
 {
-  ReinitLanguageLists (LibMode);
+  ReinitLanguageLists ();
   SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
   SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
   SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
@@ -440,13 +461,18 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     GetRemoveDics ()->RemoveSelected (this);
     break;
   case EID_UPDATE_LANG_LISTS:
-    ReinitLanguageLists (LibMode);
+    ReinitLanguageLists ();
     break;
   case EID_UPDATE_LANGS_MENU:
     DoPluginMenuInclusion ();
     break;
   case EID_CANCEL_DOWNLOAD:
     // Do nothing, just unflag event
+    break;
+
+  case EID_LIB_CHANGE:
+    SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
+    SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
     break;
     /*
     case EID_APPLYMENUACTION:
@@ -477,7 +503,14 @@ void SpellChecker::DoPluginMenuInclusion ()
         return;
     }
     int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? MF_CHECKED : MF_UNCHECKED;
-    Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages (Selected from Settings)"));
+    Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
+    Res = AppendMenu (NewMenu, MF_SEPARATOR, -1, 0);
+    Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () :MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Customize Multiple Languages..."));
+    if (LibMode == 1) // Only Hunspell supported
+    {
+      Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () :MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download More Languages..."));
+      Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? REMOVE_DICS + GetLangsMenuIdStart () :MAKEWORD (REMOVE_DICS, LANGUAGE_MENU_ID), _T ("Remove Unneeded Languages..."));
+    }
   }
 
   Mif.fMask = MIIM_SUBMENU | MIIM_STATE;
@@ -1844,19 +1877,22 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
       TCHAR *LangString = 0;
       if (Result == MULTIPLE_LANGS)
         LangString = _T ("<MULTIPLE>");
+      else if (Result == CUSTOMIZE_MULTIPLE_DICS ||
+        Result == DOWNLOAD_DICS ||
+        Result == REMOVE_DICS)
+      {
+        // All actions are done in GUI thread in that case
+        return;
+      }
       else
         LangString = CurrentLangs->at (Result).OrigName;
 
       if (LibMode == 0)
-      {
         SetAspellLanguage (LangString);
-        ReinitLanguageLists (0);
-      }
       else
-      {
         SetHunspellLanguage (LangString);
-        ReinitLanguageLists (1);
-      }
+
+      ReinitLanguageLists ();
       UpdateLangsMenu ();
       RecheckVisible ();
       break;

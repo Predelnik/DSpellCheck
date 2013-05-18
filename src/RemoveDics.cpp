@@ -43,9 +43,8 @@ void RemoveDics::DoDialog ()
   }
 }
 
-void RemoveDics::init (HINSTANCE hInst, HWND Parent, HWND LibComboArg)
+void RemoveDics::init (HINSTANCE hInst, HWND Parent)
 {
-  LibCombo = LibComboArg;
   return Window::init (hInst, Parent);
 }
 
@@ -80,12 +79,12 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
   if (Count > 0)
   {
     SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
-    if (ComboBox_GetCurSel (LibCombo) == 1)
-      SpellCheckerInstance->ReinitLanguageLists (1);
+    SpellCheckerInstance->ReinitLanguageLists ();
+    SpellCheckerInstance->DoPluginMenuInclusion ();
     TCHAR Buf[DEFAULT_BUF_SIZE];
     _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
     for (int i = 0; i < ListBox_GetCount (HLangList); i++)
-            CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
+      CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
     MessageBox (0, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
   }
 }
@@ -97,6 +96,7 @@ BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPara
   case WM_INITDIALOG:
     {
       HLangList = ::GetDlgItem (_hSelf, IDC_REMOVE_LANGLIST);
+      SendEvent (EID_UPDATE_LANG_LISTS);
       return TRUE;
     }
     break;
@@ -105,7 +105,7 @@ BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPara
       switch (LOWORD (wParam))
       {
       case IDOK:
-        if (HIWORD (wParam) == BN_CLICKED) 
+        if (HIWORD (wParam) == BN_CLICKED)
         {
           SendEvent (EID_REMOVE_SELECTED_DICS);
           display (false);

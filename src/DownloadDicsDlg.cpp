@@ -67,10 +67,9 @@ DownloadDicsDlg::DownloadDicsDlg ()
   HFileList = 0;
 }
 
-void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg)
+void DownloadDicsDlg::init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg)
 {
   SpellCheckerInstance = SpellCheckerInstanceArg;
-  LibCombo = LibComboArg;
   return Window::init (hInst, Parent);
 }
 
@@ -325,8 +324,8 @@ clean_and_continue:
   for (int i = 0; i < ListBox_GetCount (HFileList); i++)
     CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
   SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
-  if (ComboBox_GetCurSel (LibCombo) == 1)
-    SpellCheckerInstance->ReinitLanguageLists (1);
+  SpellCheckerInstance->ReinitLanguageLists ();
+  SpellCheckerInstance->DoPluginMenuInclusion ();
   CLEAN_AND_ZERO_ARR (LocalPathANSI);
   CLEAN_AND_ZERO_ARR (DicFileName);
   CLEAN_AND_ZERO_ARR (ConvertedDicName);

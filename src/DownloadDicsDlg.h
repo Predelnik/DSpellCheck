@@ -41,7 +41,7 @@ public:
   DownloadDicsDlg ();
   void DoDialog ();
   // Maybe hunspell interface should be passed here
-  void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg, HWND LibComboArg);
+  void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg);
   BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
   void UpdateListBox ();
   void DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName = 0, TCHAR *Location = 0);

@@ -88,12 +88,15 @@ public:
   void SetDecodeNames (BOOL Value);
   void SetShowOnlyKnow (BOOL Value);
   void FillDialogs ();
-  void ReinitLanguageLists (int SpellerId);
+  void ReinitLanguageLists ();
   TCHAR *GetHunspellPath () {return HunspellPath; };
   TCHAR *GetLangByIndex (int i);
   BOOL GetShowOnlyKnown ();
   BOOL GetDecodeNames ();
+  void DoPluginMenuInclusion ();
   HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
+  int GetLibMode ();
+  BOOL HunspellReinitSettings (BOOL ResetDirectory);
 
 private:
   enum CheckTextMode
@@ -104,7 +107,6 @@ private:
   };
 
   HWND GetCurrentScintilla ();
-  void DoPluginMenuInclusion ();
   void CreateWordUnderline (HWND ScintillaWindow, int start, int end);
   void RemoveUnderline (HWND ScintillaWindow, int start, int end);
   void ClearAllUnderlines ();
@@ -118,7 +120,6 @@ private:
   const TCHAR *GetLanguage ();
   BOOL AspellReinitSettings ();
   void CallLangContextMenu ();
-  BOOL HunspellReinitSettings (BOOL ResetDirectory);
   void GetDefaultHunspellPath (TCHAR *&Path);
   BOOL CheckWord (char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);

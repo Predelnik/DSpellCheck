@@ -516,12 +516,15 @@ void InitClasses ()
   ProgressInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
   LangListInstance = new LangList;
-  DownloadDicsDlgInstance = new DownloadDicsDlg;
-  // Init would be called from Settings
+  LangListInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
   RemoveDicsInstance = new RemoveDics;
+  RemoveDicsInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
   SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance, LangListInstance);
+
+  DownloadDicsDlgInstance = new DownloadDicsDlg;
+  DownloadDicsDlgInstance->init ((HINSTANCE) hModule, nppData._nppHandle, SpellCheckerInstance);
 }
 
 void commandMenuCleanUp()

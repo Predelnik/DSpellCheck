@@ -20,7 +20,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <shlwapi.h>
 
 #include "CommonFunctions.h"
+#include "DownloadDicsDlg.h"
+#include "LangList.h"
 #include "Plugin.h"
+#include "RemoveDics.h"
 #include "MainDef.h"
 #include "SpellChecker.h"
 
@@ -287,6 +290,41 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 // I will make the messages accessible little by little, according to the need of plugin development.
 // Please let me know if you need to access to some messages :
 
+void InitNeededDialogs (int wParam)
+{
+  // A little bit of code duplication here :(
+  int MenuId = wParam;
+  if ((!GetUseAllocatedIds () && HIBYTE (MenuId) != DSPELLCHECK_MENU_ID &&
+    HIBYTE (MenuId) != LANGUAGE_MENU_ID)
+    || (GetUseAllocatedIds () && ((int) MenuId < GetContextMenuIdStart () || (int) MenuId > GetContextMenuIdStart () + 350)))
+    return;
+  int UsedMenuId = 0;
+  if (GetUseAllocatedIds ())
+  {
+    UsedMenuId = ((int) MenuId < GetLangsMenuIdStart () ? DSPELLCHECK_MENU_ID : LANGUAGE_MENU_ID);
+  }
+  else
+  {
+    UsedMenuId = HIBYTE (MenuId);
+  }
+  switch (UsedMenuId)
+  {
+  case  LANGUAGE_MENU_ID:
+    int Result = 0;
+    if (!GetUseAllocatedIds ())
+      Result = LOBYTE (MenuId);
+    else
+      Result = MenuId - GetLangsMenuIdStart ();
+    if (Result == DOWNLOAD_DICS)
+      GetDownloadDics ()->DoDialog ();
+    else if (Result == CUSTOMIZE_MULTIPLE_DICS)
+      GetLangList ()->DoDialog ();
+    else if (Result == REMOVE_DICS)
+      GetRemoveDics ()->DoDialog ();
+    break;
+  }
+}
+
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
   switch (Message)
@@ -297,7 +335,10 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
   case WM_COMMAND:
     {
       if (HIWORD (wParam) == 0 && GetUseAllocatedIds ())
+      {
+        InitNeededDialogs (wParam);
         PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
+      }
     }
   }
   return FALSE;

@@ -34,16 +34,12 @@ void LangList::DoDialog ()
   {
     create (IDD_CHOOSE_MULTIPLE_LANGUAGES);
   }
-  else
-  {
-    goToCenter ();
-    display ();
-  }
+  goToCenter ();
+  display ();
 }
 
-void LangList::init (HINSTANCE hInst, HWND Parent, HWND HLibArg)
+void LangList::init (HINSTANCE hInst, HWND Parent)
 {
-  HLib = HLibArg;
   return Window::init (hInst, Parent);
 }
 
@@ -73,10 +69,12 @@ void LangList::ApplyChoice (SpellChecker *SpellCheckerInstance)
     }
   }
   SetStringDUtf8 (ConvertedBuf, Buf);
-  if (ComboBox_GetCurSel (HLib))
+  if (SpellCheckerInstance->GetLibMode () == 1)
     SpellCheckerInstance->SetHunspellMultipleLanguages (ConvertedBuf);
   else
     SpellCheckerInstance->SetAspellMultipleLanguages (ConvertedBuf);
+  SpellCheckerInstance->HunspellReinitSettings (FALSE);
+  SpellCheckerInstance->RecheckVisible ();
   CLEAN_AND_ZERO_ARR (ConvertedBuf);
   CLEAN_AND_ZERO_ARR (ItemBuf);
 }
@@ -88,6 +86,7 @@ BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
   case WM_INITDIALOG:
     {
       HLangList = ::GetDlgItem (_hSelf, IDC_LANGLIST);
+      SendEvent (EID_UPDATE_LANG_LISTS);
       return TRUE;
     }
     break;

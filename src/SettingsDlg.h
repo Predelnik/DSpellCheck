@@ -44,6 +44,7 @@ public:
   int GetSelectedLib ();
   void SetLibMode (int LibMode);
   void SetDecodeNames (BOOL Value);
+  void ApplyLibChange (SpellChecker *SpellCheckerInstance);
 
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
