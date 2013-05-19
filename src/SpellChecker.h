@@ -89,7 +89,7 @@ public:
   void SetOneUserDic (BOOL Value);
   BOOL GetOneUserDic ();
   void SetShowOnlyKnow (BOOL Value);
-  void FillDialogs ();
+  void FillDialogs (BOOL NoDisplayCall = FALSE);
   void ReinitLanguageLists ();
   TCHAR *GetHunspellPath () {return HunspellPath; };
   TCHAR *GetLangByIndex (int i);

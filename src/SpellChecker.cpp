@@ -357,7 +357,7 @@ int SpellChecker::GetLibMode ()
   return LibMode;
 }
 
-void SpellChecker::FillDialogs ()
+void SpellChecker::FillDialogs (BOOL NoDisplayCall)
 {
   ReinitLanguageLists ();
   SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
@@ -373,7 +373,8 @@ void SpellChecker::FillDialogs ()
   SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_, IgnoreSEApostrophe);
   SettingsDlgInstance->GetAdvancedDlg ()->SetSuggBoxSettings (SBSize, SBTrans);
   SettingsDlgInstance->GetAdvancedDlg ()->SetBufferSize (BufferSize / 1024);
-  SettingsDlgInstance->display ();
+  if (!NoDisplayCall)
+    SettingsDlgInstance->display ();
 }
 
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
@@ -388,7 +389,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
     SettingsDlgInstance->GetAdvancedDlg ()->ApplySettings (this);
-    FillDialogs ();
+    FillDialogs (TRUE);
     SaveSettings ();
     CheckFileName (); // Cause filters may change
     RefreshUnderlineStyle ();
