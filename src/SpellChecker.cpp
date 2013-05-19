@@ -373,6 +373,7 @@ void SpellChecker::FillDialogs ()
   SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_, IgnoreSEApostrophe);
   SettingsDlgInstance->GetAdvancedDlg ()->SetSuggBoxSettings (SBSize, SBTrans);
   SettingsDlgInstance->GetAdvancedDlg ()->SetBufferSize (BufferSize / 1024);
+  SettingsDlgInstance->display ();
 }
 
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)

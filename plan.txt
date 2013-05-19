@@ -1,3 +1,5 @@
+Mid Term:
+- Change message box creation to GUI thread.
 Long Term:
 - Optimized Spell Checking while scrolling at least.
 - Searching for dictionaries locally in well known program and ability to copy/make a hard link

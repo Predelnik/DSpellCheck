@@ -882,10 +882,11 @@ UINT SettingsDlg::DoDialog (void)
   {
     create (IDD_SETTINGS);
     goToCenter ();
-    display (false);
   }
   else
-    display ();
+  {
+    SendEvent (EID_FILL_DIALOGS);
+  }
 
   return TRUE;
   // return (UINT)::DialogBoxParam(_hInst, MAKEINTRESOURCE(IDD_SETTINGS), _hParent, (DLGPROC)dlgProc, (LPARAM)this);
