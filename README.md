@@ -45,7 +45,9 @@ v1.1.7
 * Fix plugin's crash in some system default encodings.
 
 v1.2.0
-* Add possibility to download Hunspell dictionaries from common OpenOffice mirrors through GUI.
-* Add possibility to remove Hunspell dictionaries through GUI.
-* Add possibility to quickly change current language through Plugins->DSpellCheck->Change_Current_Language or corresponding hot key.
+* Add possibility to download Hunspell dictionaries from common OpenOffice mirrors using plugin interface.
+* Add possibility to remove Hunspell dictionaries using plugin interface.
+* Add possibility to quickly change current language through Plugins->DSpellCheck->Change_Current_Language or corresponding hot key (initially Alt + D), also such items as "Download More Dictionaries", "Customize Multiple Dictionaries" and "Remove Unneeded Dictionaries" are also presented there.
 * Add resolving common Hunspell dictionaries names to more user friendly language names.
+* Now by Default Hunspell Dictionaries are stored separately, this could be turned to the way it was.
+* No more checking of words contained in hotlinks
