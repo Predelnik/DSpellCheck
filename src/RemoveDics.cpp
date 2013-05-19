@@ -66,12 +66,19 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
       _tcscat (FileName, SpellCheckerInstance->GetHunspellPath ());
       _tcscat (FileName, _T ("\\"));
       _tcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
+      SpellCheckerInstance->GetHunspellSpeller ()->UpdateOnDicRemoval (FileName);
       _tcscat (FileName, _T (".aff"));
       SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
       Success = DeleteFile (FileName);
       _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".dic"), 4);
       SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
       Success = Success && DeleteFile (FileName);
+      if (SpellCheckerInstance->GetRemoveUserDics ())
+      {
+        _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".usr"), 4);
+        SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
+        DeleteFile (FileName); // Success doesn't matter in that case, 'cause dictionary might not exist.
+      }
       if (Success)
         Count++;
     }
@@ -89,6 +96,16 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
   }
 }
 
+void RemoveDics::UpdateOptions (SpellChecker *SpellCheckerInstance)
+{
+  SpellCheckerInstance->SetRemoveUserDics (Button_GetCheck (HRemoveUserDics) == BST_CHECKED);
+}
+
+void RemoveDics::SetCheckBoxes (BOOL RemoveUserDics)
+{
+  Button_SetCheck (HRemoveUserDics, RemoveUserDics ? BST_CHECKED : BST_UNCHECKED);
+}
+
 BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
@@ -96,7 +113,9 @@ BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPara
   case WM_INITDIALOG:
     {
       HLangList = ::GetDlgItem (_hSelf, IDC_REMOVE_LANGLIST);
+      HRemoveUserDics = ::GetDlgItem (_hSelf, IDC_REMOVE_USER_DICS);
       SendEvent (EID_UPDATE_LANG_LISTS);
+      SendEvent (EID_UPDATE_REMOVE_DICS_OPTIONS);
       return TRUE;
     }
     break;
@@ -104,6 +123,14 @@ BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPara
     {
       switch (LOWORD (wParam))
       {
+      case IDC_REMOVE_USER_DICS:
+        {
+          if (HIWORD (wParam) == BN_CLICKED)
+          {
+            SendEvent (EID_UPDATE_FROM_REMOVE_DICS_OPTIONS);
+          }
+        }
+        break;
       case IDOK:
         if (HIWORD (wParam) == BN_CLICKED)
         {

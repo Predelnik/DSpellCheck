@@ -468,6 +468,21 @@ bool SortCompare(TCHAR *a, TCHAR *b)
   return _tcscmp (a, b) < 0;
 }
 
+bool EquivCharStrings (char *a, char *b)
+{
+  return (strcmp (a, b) == 0);
+}
+
+size_t HashCharString (char *a)
+{
+  size_t Hash = 7;
+  for(unsigned int i = 0; i < strlen (a); i++)
+  {
+    Hash = Hash * 31 + a[i];
+  }
+  return Hash;
+}
+
 bool SortCompareChars (char *a, char *b)
 {
   return strcmp (a, b) < 0;

@@ -1,7 +1,5 @@
-Short Term:
-- If separate user dictionaries then add checkbox on dictionaries remove window to delete corresponding user dictionaries.
-- Probably change sets to hash sets.
 Long Term:
+- Optimized Spell Checking while scrolling at least.
 - Searching for dictionaries locally in well known program and ability to copy/make a hard link
 - Add checking whole file with marks on scrollbar
 - Optimize Text rechecking in the common case, so only changed line would be targeted for recheck. There's well known problem about this though, it's hard to figure out which symbols are actually changed after several operations of adding and removing parts of text. Actually we should just make function which compresses it to the list of intervals where text may have changed (Not trivial task)

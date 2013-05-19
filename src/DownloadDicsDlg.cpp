@@ -574,6 +574,11 @@ void DownloadDicsDlg::SetShowOnlyKnown (BOOL Value)
   Button_SetCheck (HShowOnlyKnown, Value ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void DownloadDicsDlg::UpdateOptions (SpellChecker *SpellCheckerInstance)
+{
+  SpellCheckerInstance->SetShowOnlyKnow (Button_GetCheck (HShowOnlyKnown) == BST_CHECKED);
+}
+
 BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
@@ -631,8 +636,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       case IDC_SHOWONLYKNOWN:
         if (HIWORD (wParam) == BN_CLICKED)
         {
-          SpellCheckerInstance->SetShowOnlyKnow (Button_GetCheck (HShowOnlyKnown) == BST_CHECKED);
-          UpdateListBox ();
+          SendEvent (EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS);
         }
         break;
       }

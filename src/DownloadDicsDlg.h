@@ -51,6 +51,7 @@ public:
   void OnDisplayAction ();
   void IndicateThatSavingMightBeNeeded ();
   void SetShowOnlyKnown (BOOL Value);
+  void UpdateOptions (SpellChecker *SpellCheckerInstance);
 private:
 private:
   std::vector<LanguageName> *CurrentLangs;

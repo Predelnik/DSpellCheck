@@ -470,6 +470,21 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     // Do nothing, just unflag event
     break;
 
+  case EID_UPDATE_FROM_REMOVE_DICS_OPTIONS:
+    GetRemoveDics ()->UpdateOptions (this);
+    SaveSettings ();
+    break;
+
+  case EID_UPDATE_REMOVE_DICS_OPTIONS:
+    GetRemoveDics ()->SetCheckBoxes (RemoveUserDics);
+    break;
+
+  case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS:
+    GetDownloadDics ()->UpdateOptions (this);
+    GetDownloadDics ()->UpdateListBox ();
+    SaveSettings ();
+    break;
+
   case EID_LIB_CHANGE:
     SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
@@ -481,6 +496,16 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     */
   }
   return TRUE;
+}
+
+void SpellChecker::SetRemoveUserDics (BOOL Value)
+{
+  RemoveUserDics = Value;
+}
+
+BOOL SpellChecker::GetRemoveUserDics ()
+{
+  return RemoveUserDics;
 }
 
 void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
@@ -2054,15 +2079,27 @@ void SpellChecker::SaveSettings ()
   _tfopen_s (&Fp, IniFilePath, _T ("w")); // Cleaning settings file (or creating it)
   fclose (Fp);
   TCHAR *TBuf = 0;
+  SaveToIni (_T ("Autocheck"), AutoCheckText, 0);
+  SaveToIni (_T ("Hunspell_Multiple_Languages"), HunspellMultiLanguages, _T (""));
+  SaveToIni (_T ("Aspell_Multiple_Languages"), AspellMultiLanguages, _T (""));
+  SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en_GB"));
+  SaveToIni (_T ("Aspell_Language"), AspellLanguage, _T ("en"));
+  SaveToIni (_T ("Remove_User_Dics_On_Dic_Remove"), RemoveUserDics, 0);
+  SaveToIni (_T ("Show_Only_Known"), ShowOnlyKnown, TRUE);
+  TCHAR Buf[DEFAULT_BUF_SIZE];
+  for (int i = 0; i < countof (ServerNames); i++)
+  {
+    if (!*ServerNames[i])
+      continue;
+    _stprintf (Buf, _T ("Server_Address[%d]"), i);
+    SaveToIni (Buf, ServerNames[i], _T (""));
+  }
   SaveToIni (_T ("Suggestions_Control"), SuggestionsMode, 0);
   SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 0);
   SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes, 1);
   SaveToIni (_T ("Check_Only_Comments_And_Strings"), CheckComments, 1);
-  SaveToIni (_T ("Autocheck"), AutoCheckText, 0);
   SaveToIni (_T ("Check_Those_\\_Not_Those"), CheckThose, 1);
   SaveToIni (_T ("File_Types"), FileTypes, _T ("*.*"));
-  SaveToIni (_T ("Hunspell_Multiple_Languages"), HunspellMultiLanguages, _T (""));
-  SaveToIni (_T ("Aspell_Multiple_Languages"), AspellMultiLanguages, _T (""));
   SaveToIni (_T ("Ignore_Having_Number"), IgnoreNumbers, 1);
   SaveToIni (_T ("Ignore_Start_Capital"), IgnoreCStart, 0);
   SaveToIni (_T ("Ignore_Have_Capital"), IgnoreCHave, 1);
@@ -2086,22 +2123,11 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Find_Next_Buffer_Size"), BufferSize / 1024, 4);
   SaveToIni (_T ("Suggestions_Button_Size"), SBSize, 15);
   SaveToIni (_T ("Suggestions_Button_Opacity"), SBTrans, 70);
-  SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en-US"));
-  SaveToIni (_T ("Aspell_Language"), AspellLanguage, _T ("en"));
   SaveToIni (_T ("Library"), LibMode, 1);
   PreserveCurrentAddressIndex ();
   SaveToIni (_T ("Last_Used_Address_Index"), LastUsedAddress, 0);
   SaveToIni (_T ("Decode_Language_Names"), DecodeNames, TRUE);
-  SaveToIni (_T ("Show_Only_Known"), ShowOnlyKnown, TRUE);
   SaveToIni (_T ("United_User_Dictionary(Hunspell)"), OneUserDic, FALSE);
-  TCHAR Buf[DEFAULT_BUF_SIZE];
-  for (int i = 0; i < countof (ServerNames); i++)
-  {
-    if (!*ServerNames[i])
-      continue;
-    _stprintf (Buf, _T ("Server_Address[%d]"), i);
-    SaveToIni (Buf, ServerNames[i], _T (""));
-  }
 }
 
 void SpellChecker::SetDecodeNames (BOOL Value)
@@ -2155,7 +2181,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (TBuf, _T ("Aspell_Language"), _T ("en"));
   SetAspellLanguage (TBuf);
   CLEAN_AND_ZERO_ARR (TBuf);
-  LoadFromIni (TBuf, _T ("Hunspell_Language"), _T ("en.US"));
+  LoadFromIni (TBuf, _T ("Hunspell_Language"), _T ("en_GB"));
   SetHunspellLanguage (TBuf);
   CLEAN_AND_ZERO_ARR (TBuf);
 
@@ -2201,6 +2227,7 @@ void SpellChecker::LoadSettings ()
     LoadFromIni (ServerNames[i], Buf, _T (""));
   }
   LoadFromIni (LastUsedAddress, _T ("Last_Used_Address_Index"), 0);
+  LoadFromIni (RemoveUserDics, _T ("Remove_User_Dics_On_Dic_Remove"), 0);
   LoadFromIni (DecodeNames, _T ("Decode_Language_Names"), TRUE);
 }
 

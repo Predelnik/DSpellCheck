@@ -28,8 +28,11 @@ public:
   void DoDialog ();
   void RemoveSelected (SpellChecker *SpellCheckerInstance);
   HWND GetListBox ();
+  void UpdateOptions (SpellChecker *SpellCheckerInstance);
+  void SetCheckBoxes (BOOL RemoveUserDics);
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
 protected:
   HWND HLangList;
+  HWND HRemoveUserDics;
 };

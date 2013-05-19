@@ -99,6 +99,8 @@ public:
   HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
   int GetLibMode ();
   BOOL HunspellReinitSettings (BOOL ResetDirectory);
+  void SetRemoveUserDics (BOOL Value);
+  BOOL GetRemoveUserDics ();
 
 private:
   enum CheckTextMode
@@ -229,6 +231,7 @@ private:
   char *VisibleText;
   int VisibleTextLength;
   long VisibleTextOffset;
+  BOOL RemoveUserDics;
 
   AbstractSpellerInterface *CurrentSpeller;
   AspellInterface *AspellSpeller;

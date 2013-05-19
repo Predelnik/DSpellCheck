@@ -26,11 +26,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #endif // !USING_STATIC_LIBICONV
 
 #include "iconv.h"
+#include "CommonFunctions.h"
 #include "MainDef.h"
 
 class Hunspell;
 
-typedef std::set <char *, bool (*)(char *, char *)> WordSet;
+typedef std::unordered_set <char *, size_t (*)(char *), bool (*)(char *, char *)> WordSet;
 
 struct DicInfo
 {
@@ -61,6 +62,7 @@ public:
   void WriteUserDic (WordSet *Target, TCHAR *Path);
   void ReadUserDic (WordSet *Target, TCHAR *Path);
   void SetUseOneDic (BOOL Value);
+  void UpdateOnDicRemoval (TCHAR *Path);
 private:
   DicInfo CreateHunspell (TCHAR *Name);
   BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);

@@ -92,8 +92,8 @@ HunspellInterface::HunspellInterface ()
   DicList = new std::vector <TCHAR *>;
   Spellers = new std::vector<DicInfo>;
   memset (&Empty, 0, sizeof (Empty));
-  Ignored = new WordSet (SortCompareChars);
-  Memorized = new WordSet (SortCompareChars);
+  Ignored = new WordSet (0, HashCharString, EquivCharStrings);
+  Memorized = new WordSet (0, HashCharString, EquivCharStrings);
   SingularSpeller = Empty;
   DicDir = 0;
   LastSelectedSpeller = Empty;
@@ -102,6 +102,23 @@ HunspellInterface::HunspellInterface ()
   TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
   UserDicPath = 0;
   InitialReadingBeenDone = FALSE;
+}
+
+void HunspellInterface::UpdateOnDicRemoval (TCHAR *Path)
+{
+  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (Path);
+  if (it != AllHunspells->end ())
+  {
+    delete []((*it).first);
+    CLEAN_AND_ZERO ((*it).second.Speller);
+    WriteUserDic ((*it).second.LocalDic, (*it).second.LocalDicPath);
+    CLEAN_AND_ZERO ((*it).second.LocalDicPath)
+      iconv_close ((*it).second.Converter);
+    iconv_close ((*it).second.BackConverter);
+    iconv_close ((*it).second.ConverterANSI);
+    iconv_close ((*it).second.BackConverterANSI);
+    AllHunspells->erase (it);
+  }
 }
 
 static void CleanAndZeroWordList (WordSet *&WordListInstance)
@@ -199,7 +216,7 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
   NewDic.BackConverter = iconv_open ("UTF-8", NewHunspell->get_dic_encoding ());
   NewDic.ConverterANSI = iconv_open (NewHunspell->get_dic_encoding (), "");
   NewDic.BackConverterANSI = iconv_open ("", NewHunspell->get_dic_encoding ());
-  NewDic.LocalDic = new WordSet (SortCompareChars);
+  NewDic.LocalDic = new WordSet (0, HashCharString, EquivCharStrings);
   _tcscat (AffBuf, _T (".usr"));
   NewDic.LocalDicPath = 0;
   SetString (NewDic.LocalDicPath, AffBuf);
