@@ -333,7 +333,7 @@ void SpellChecker::ReinitLanguageLists ()
       CurrentLangExists = TRUE;
 
     CLEAN_AND_ZERO_STRING_VECTOR (LangsFromSpeller);
-    std::sort (CurrentLangs->begin (), CurrentLangs->end ());
+    std::sort (CurrentLangs->begin (), CurrentLangs->end (), DecodeNames ? CompareAliases : CompareOriginal);
     if (!CurrentLangExists && CurrentLangs->size () > 0)
     {
       if (SpellerId == 1)

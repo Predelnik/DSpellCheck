@@ -487,7 +487,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     }
     while (InternetFindNextFile (FindHandle, &FindData));
 
-    std::sort (CurrentLangs->begin (), CurrentLangs->end ());
+    std::sort (CurrentLangs->begin (), CurrentLangs->end (), SpellCheckerInstance->GetDecodeNames () ? CompareAliases : CompareOriginal);
 
     UpdateListBox (); // Used only here and on filter change
     CLEAN_AND_ZERO_ARR (Buf);

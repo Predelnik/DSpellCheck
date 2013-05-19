@@ -68,8 +68,13 @@ struct LanguageName
   }
 };
 
-inline bool operator <(LanguageName &a, LanguageName &b)
+inline bool CompareAliases (LanguageName &a, LanguageName &b)
 {
   return (a.AliasApplied && b.AliasApplied) ? _tcscmp (a.AliasName, b.AliasName) < 0 : _tcscmp (a.OrigName, b.OrigName) < 0 ;
+}
+
+inline bool CompareOriginal (LanguageName &a, LanguageName &b)
+{
+  return _tcscmp (a.OrigName, b.OrigName) < 0;
 }
 #endif // LANGUAGE_NAME_H
