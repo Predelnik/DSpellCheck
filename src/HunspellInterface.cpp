@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "HunspellInterface.h"
 
 #include <locale>
+#include <unordered_set>
 
 static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCHAR *Filter)
 {
@@ -91,8 +92,8 @@ HunspellInterface::HunspellInterface ()
   DicList = new std::vector <TCHAR *>;
   Spellers = new std::vector<DicInfo>;
   memset (&Empty, 0, sizeof (Empty));
-  Ignored = new std::set <char *, bool (*) (char *, char *)> (SortCompareChars);
-  Memorized = new std::set <char *, bool (*) (char *, char *)> (SortCompareChars);
+  Ignored = new WordSet (SortCompareChars);
+  Memorized = new WordSet (SortCompareChars);
   SingularSpeller = Empty;
   DicDir = 0;
   LastSelectedSpeller = Empty;
@@ -101,6 +102,21 @@ HunspellInterface::HunspellInterface ()
   TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
   UserDicPath = 0;
   InitialReadingBeenDone = FALSE;
+}
+
+static void CleanAndZeroWordList (WordSet *&WordListInstance)
+{
+  WordSet::iterator it = WordListInstance->begin ();
+  for (; it != WordListInstance->end (); ++it)
+  {
+    delete [] (*it);
+  }
+  CLEAN_AND_ZERO (WordListInstance);
+}
+
+void HunspellInterface::SetUseOneDic (BOOL Value)
+{
+  UseOneDic = Value;
 }
 
 HunspellInterface::~HunspellInterface ()
@@ -112,7 +128,9 @@ HunspellInterface::~HunspellInterface ()
     {
       delete []((*it).first);
       CLEAN_AND_ZERO ((*it).second.Speller);
-      iconv_close ((*it).second.Converter);
+      WriteUserDic ((*it).second.LocalDic, (*it).second.LocalDicPath);
+      CLEAN_AND_ZERO ((*it).second.LocalDicPath)
+        iconv_close ((*it).second.Converter);
       iconv_close ((*it).second.BackConverter);
       iconv_close ((*it).second.ConverterANSI);
       iconv_close ((*it).second.BackConverterANSI);
@@ -120,25 +138,11 @@ HunspellInterface::~HunspellInterface ()
     CLEAN_AND_ZERO (AllHunspells);
   }
 
-  WriteUserDic ();
+  if (InitialReadingBeenDone)
+    WriteUserDic (Memorized, UserDicPath);
 
-  {
-    std::set <char *, bool (*)(char *, char *)>::iterator it = Ignored->begin ();
-    for (; it != Ignored->end (); ++it)
-    {
-      delete [] (*it);
-    }
-    CLEAN_AND_ZERO (Ignored);
-  }
-
-  {
-    std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
-    for (; it != Memorized->end (); ++it)
-    {
-      delete [] (*it);
-    }
-    CLEAN_AND_ZERO (Memorized);
-  }
+  CleanAndZeroWordList (Memorized);
+  CleanAndZeroWordList (Ignored);
 
   CLEAN_AND_ZERO (Spellers);
   CLEAN_AND_ZERO_STRING_VECTOR (DicList);
@@ -162,20 +166,22 @@ std::vector<TCHAR*> *HunspellInterface::GetLanguageList ()
 
 DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
 {
-  {
-    std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (Name);
-    if (it != AllHunspells->end ())
-      return (*it).second;
-  }
-
   int size = _tcslen (DicDir) + 1 + _tcslen (Name) + 1 + 3 + 1; // + . + aff/dic + /0
   TCHAR *AffBuf = new TCHAR [size];
-  TCHAR *DicBuf = new TCHAR [size];
   char *AffBufAnsi = 0;
   char *DicBufAnsi = 0;
   _tcscpy (AffBuf, DicDir);
   _tcscat (AffBuf, _T ("\\"));
   _tcscat (AffBuf, Name);
+  {
+    std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (AffBuf);
+    if (it != AllHunspells->end ())
+    {
+      CLEAN_AND_ZERO_ARR (AffBuf);
+      return (*it).second;
+    }
+  }
+  TCHAR *DicBuf = new TCHAR [size];
   _tcscat (AffBuf, _T (".aff"));
   _tcscpy (DicBuf, DicDir);
   _tcscat (DicBuf, _T ("\\"));
@@ -183,20 +189,24 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
   _tcscat (DicBuf, _T (".dic"));
   SetString (AffBufAnsi, AffBuf);
   SetString (DicBufAnsi, DicBuf);
-  CLEAN_AND_ZERO_ARR (AffBuf);
-  CLEAN_AND_ZERO_ARR (DicBuf);
 
   Hunspell *NewHunspell = new Hunspell (AffBufAnsi, DicBufAnsi);
   TCHAR *NewName = 0;
-  SetString (NewName, Name);
+  AffBuf[_tcslen (AffBuf) - 4] = _T ('\0');
+  SetString (NewName, AffBuf); // Without aff and dic
   DicInfo NewDic;
   NewDic.Converter = iconv_open (NewHunspell->get_dic_encoding (), "UTF-8");
   NewDic.BackConverter = iconv_open ("UTF-8", NewHunspell->get_dic_encoding ());
   NewDic.ConverterANSI = iconv_open (NewHunspell->get_dic_encoding (), "");
   NewDic.BackConverterANSI = iconv_open ("", NewHunspell->get_dic_encoding ());
+  NewDic.LocalDic = new WordSet (SortCompareChars);
+  _tcscat (AffBuf, _T (".usr"));
+  NewDic.LocalDicPath = 0;
+  SetString (NewDic.LocalDicPath, AffBuf);
+  ReadUserDic (NewDic.LocalDic, NewDic.LocalDicPath);
   NewDic.Speller = NewHunspell;
   {
-    std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
+    WordSet::iterator it = Memorized->begin ();
     for (; it != Memorized->end (); ++it)
     {
       char *ConvWord = GetConvertedWord (*it, NewDic.Converter);
@@ -204,7 +214,16 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name)
         NewHunspell->add (ConvWord); // Adding all already memorized words to newly loaded Hunspell instance
     }
   }
+  {
+    WordSet::iterator it = NewDic.LocalDic->begin ();
+    for (; it != NewDic.LocalDic->end (); ++it)
+    {
+      NewHunspell->add (*it); // Adding all already memorized words from local dictionary to Hunspell instance, local dictionaries are in dictionary encoding
+    }
+  }
   (*AllHunspells)[NewName] = NewDic;
+  CLEAN_AND_ZERO_ARR (AffBuf);
+  CLEAN_AND_ZERO_ARR (DicBuf);
   CLEAN_AND_ZERO_ARR (AffBufAnsi);
   CLEAN_AND_ZERO_ARR (DicBufAnsi);
   return NewDic;
@@ -266,8 +285,10 @@ BOOL HunspellInterface::SpellerCheckWord (DicInfo Dic, char *Word, EncodingType 
 
 BOOL HunspellInterface::CheckWord (char *Word)
 {
+  /*
   if (Memorized->find (Word) != Memorized->end ()) // This check is for dictionaries which are in other than utf-8 encoding
-    return TRUE;                                   // Though it slows down stuff a little, I hope it will do
+  return TRUE;                                   // Though it slows down stuff a little, I hope it will do
+  */
 
   if (Ignored->find (Word) != Ignored->end ())
     return TRUE;
@@ -294,18 +315,23 @@ BOOL HunspellInterface::CheckWord (char *Word)
   return res;
 }
 
-void HunspellInterface::WriteUserDic ()
+void HunspellInterface::WriteUserDic (WordSet *Target, TCHAR *Path)
 {
   FILE *Fp = 0;
-  if (!InitialReadingBeenDone)
+
+  if (Target->size () == 0)
+  {
+    DeleteFile (Path);
     return;
-  Fp = _tfopen (UserDicPath, _T ("w"));
+  }
+
+  Fp = _tfopen (Path, _T ("w"));
   if (!Fp)
     return;
   {
-    std::set <char *, bool (*)(char *, char *)>::iterator it = Memorized->begin ();
-    fprintf (Fp, "%d\n", Memorized->size ());
-    for (; it != Memorized->end (); ++it)
+    WordSet::iterator it = Target->begin ();
+    fprintf (Fp, "%d\n", Target->size ());
+    for (; it != Target->end (); ++it)
     {
       fprintf (Fp, "%s\n", *it);
     }
@@ -314,21 +340,19 @@ void HunspellInterface::WriteUserDic ()
   fclose (Fp);
 }
 
-void HunspellInterface::ReadUserDic ()
+void HunspellInterface::ReadUserDic (WordSet *Target, TCHAR *Path)
 {
   FILE *Fp = 0;
   int WordNum = 0;
-  Fp = _tfopen (UserDicPath, _T ("r"));
+  Fp = _tfopen (Path, _T ("r"));
   if (!Fp)
   {
-    InitialReadingBeenDone = TRUE;
     return;
   }
   {
     char Buf [DEFAULT_BUF_SIZE];
     if (fscanf (Fp, "%d\n", &WordNum) != 1)
     {
-      InitialReadingBeenDone = TRUE;
       return;
     }
     for (int i = 0; i < WordNum; i++)
@@ -336,18 +360,24 @@ void HunspellInterface::ReadUserDic ()
       if (fgets (Buf, DEFAULT_BUF_SIZE, Fp))
       {
         Buf[strlen (Buf) - 1] = 0;
-        if (Memorized->find (Buf) == Memorized->end ())
+        if (Target->find (Buf) == Target->end ())
         {
           char *Word = 0;
           SetString (Word, Buf);
-          Memorized->insert (Word);
+          Target->insert (Word);
         }
       }
+      else
+        break;
     }
   }
 
   fclose (Fp);
-  InitialReadingBeenDone = TRUE;
+}
+
+static void MessageBoxWordCannotBeAdded ()
+{
+  MessageBox (0, _T ("Sadly, this word contains symbols out of current dictionary encoding, thus it cannot be added to user dictionary. You can convert this dictionary to UTF-8 or choose the different one with appropriate encoding."), _T ("Word cannot be added"), MB_OK | MB_ICONWARNING);
 }
 
 void HunspellInterface::AddToDictionary (char *Word)
@@ -360,16 +390,32 @@ void HunspellInterface::AddToDictionary (char *Word)
     SetString (Buf, Word);
   else
     SetStringDUtf8 (Buf, Word);
-  Memorized->insert (Buf);
-  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it;
-  it = AllHunspells->begin ();
-  for (; it != AllHunspells->end (); ++it)
-  {
-    char *ConvWord = GetConvertedWord (Buf, (*it).second.Converter);
-    if (*ConvWord)
-      (*it).second.Speller->add (ConvWord);
 
-    // Adding word to all currently loaded dictionaries and in memorized list to save it.
+  if (UseOneDic)
+  {
+    std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it;
+    Memorized->insert (Buf);
+    it = AllHunspells->begin ();
+    for (; it != AllHunspells->end (); ++it)
+    {
+      char *ConvWord = GetConvertedWord (Buf, (*it).second.Converter);
+      if (*ConvWord)
+        (*it).second.Speller->add (ConvWord);
+      else if ((*it).second.Speller == LastSelectedSpeller.Speller)
+        MessageBoxWordCannotBeAdded ();
+      // Adding word to all currently loaded dictionaries and in memorized list to save it.
+    }
+  }
+  else
+  {
+    char *ConvWord = GetConvertedWord (Buf, LastSelectedSpeller.Converter);
+    char *WordCopy = 0;
+    SetString (WordCopy, ConvWord);
+    LastSelectedSpeller.LocalDic->insert (WordCopy);
+    if (*ConvWord)
+      LastSelectedSpeller.Speller->add (ConvWord);
+    else
+      MessageBoxWordCannotBeAdded ();
   }
 }
 
@@ -489,7 +535,8 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
   if (UserDicPath[_tcslen (UserDicPath) - 1] != _T ('\\'))
     _tcscat (UserDicPath, _T ("\\"));
   _tcscat (UserDicPath, _T ("UserDic.dic")); // Should be tunable really
-  ReadUserDic (); // We should load user dictionary first.
+  ReadUserDic (Memorized, UserDicPath); // We should load user dictionary first.
+  InitialReadingBeenDone = TRUE;
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
 

@@ -72,6 +72,7 @@ private:
   HWND HDownloadDics;
   HWND HRemoveDics;
   HWND HDecodeNames;
+  HWND HOneUserDic;
 };
 
 class AdvancedDlg : public StaticDialog

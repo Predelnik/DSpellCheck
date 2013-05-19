@@ -184,6 +184,7 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   SpellCheckerInstance->SetSuggType (ComboBox_GetCurSel (HSuggType));
   SpellCheckerInstance->SetCheckComments (Button_GetCheck (HCheckComments) == BST_CHECKED);
   SpellCheckerInstance->SetDecodeNames (Button_GetCheck (HDecodeNames) == BST_CHECKED);
+  SpellCheckerInstance->SetOneUserDic (Button_GetCheck (HOneUserDic) == BST_CHECKED);
   UpdateLangsMenu ();
   CLEAN_AND_ZERO_ARR (Buf);
 }
@@ -216,6 +217,7 @@ void SimpleDlg::FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR * HunspellPat
     ShowWindow (HLibLink, 1);
     ShowWindow (HRemoveDics, 0);
     ShowWindow (HDecodeNames, 0);
+    ShowWindow (HOneUserDic, 0);
     // SetWindowText (HLibLink, _T ("<A HREF=\"http://aspell.net/win32/\">Aspell Library and Dictionaries for Win32</A>"));
     CLEAN_AND_ZERO_ARR (Path);
   }
@@ -226,6 +228,7 @@ void SimpleDlg::FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR * HunspellPat
     ShowWindow (HLibLink, 0); // Link to dictionaries doesn't seem to be working anyway
     ShowWindow (HRemoveDics, 1);
     ShowWindow (HDecodeNames, 1);
+    ShowWindow (HOneUserDic, 1);
     // SetWindowText (HLibLink, _T ("<A HREF=\"http://wiki.openoffice.org/wiki/Dictionaries\">Hunspell Dictionaries</A>"));
     Static_SetText (HLibGroupBox, _T ("Hunspell Dictionaries Location"));
     Edit_SetText (HLibPath, HunspellPath);
@@ -321,6 +324,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HDownloadDics = ::GetDlgItem (_hSelf, IDC_DOWNLOADDICS);
       HRemoveDics = ::GetDlgItem (_hSelf, IDC_REMOVE_DICS);
       HDecodeNames = ::GetDlgItem (_hSelf, IDC_DECODE_NAMES);
+      HOneUserDic = ::GetDlgItem (_hSelf, IDC_ONE_USER_DIC);
 
       ComboBox_AddString (HLibrary, _T ("Aspell"));
       ComboBox_AddString (HLibrary, _T ("Hunspell"));

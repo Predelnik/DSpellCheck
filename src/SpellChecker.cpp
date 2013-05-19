@@ -483,7 +483,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   return TRUE;
 }
 
-void SpellChecker::DoPluginMenuInclusion ()
+void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
 {
   BOOL Res;
   MENUITEMINFO Mif;
@@ -493,25 +493,30 @@ void SpellChecker::DoPluginMenuInclusion ()
     DestroyMenu (LangsSubMenu);
   TCHAR *CurLang = (LibMode == 1) ? HunspellLanguage : AspellLanguage;
   HMENU NewMenu = CreatePopupMenu ();
-  if (CurrentLangs && CurrentLangs->size () > 0)
+  if (!Invalidate)
   {
-    for (unsigned int i = 0; i < CurrentLangs->size (); i++)
+    if (CurrentLangs && CurrentLangs->size () > 0)
     {
-      int Checked = (_tcscmp (CurLang, CurrentLangs->at(i).OrigName) == 0) ? MF_CHECKED : MF_UNCHECKED;
-      Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), DecodeNames ? CurrentLangs->at(i).AliasName : CurrentLangs->at(i).OrigName);
-      if (!Res)
-        return;
-    }
-    int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? MF_CHECKED : MF_UNCHECKED;
-    Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
-    Res = AppendMenu (NewMenu, MF_SEPARATOR, -1, 0);
-    Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () :MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Customize Multiple Languages..."));
-    if (LibMode == 1) // Only Hunspell supported
-    {
-      Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () :MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download More Languages..."));
-      Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? REMOVE_DICS + GetLangsMenuIdStart () :MAKEWORD (REMOVE_DICS, LANGUAGE_MENU_ID), _T ("Remove Unneeded Languages..."));
+      for (unsigned int i = 0; i < CurrentLangs->size (); i++)
+      {
+        int Checked = (_tcscmp (CurLang, CurrentLangs->at(i).OrigName) == 0) ? (MFT_RADIOCHECK | MF_CHECKED) : MF_UNCHECKED;
+        Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), DecodeNames ? CurrentLangs->at(i).AliasName : CurrentLangs->at(i).OrigName);
+        if (!Res)
+          return;
+      }
+      int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? (MFT_RADIOCHECK | MF_CHECKED)  : MF_UNCHECKED;
+      Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
+      Res = AppendMenu (NewMenu, MF_SEPARATOR, -1, 0);
+      Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () :MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Customize Multiple Languages..."));
+      if (LibMode == 1) // Only Hunspell supported
+      {
+        Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () :MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download More Languages..."));
+        Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? REMOVE_DICS + GetLangsMenuIdStart () :MAKEWORD (REMOVE_DICS, LANGUAGE_MENU_ID), _T ("Remove Unneeded Languages..."));
+      }
     }
   }
+  else
+    Res = AppendMenu (NewMenu, MF_STRING | MF_DISABLED, -1, _T ("Loading..."));
 
   Mif.fMask = MIIM_SUBMENU | MIIM_STATE;
   Mif.cbSize = sizeof (MENUITEMINFO);
@@ -1876,7 +1881,9 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
 
       TCHAR *LangString = 0;
       if (Result == MULTIPLE_LANGS)
+      {
         LangString = _T ("<MULTIPLE>");
+      }
       else if (Result == CUSTOMIZE_MULTIPLE_DICS ||
         Result == DOWNLOAD_DICS ||
         Result == REMOVE_DICS)
@@ -1886,6 +1893,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
       }
       else
         LangString = CurrentLangs->at (Result).OrigName;
+      DoPluginMenuInclusion (TRUE);
 
       if (LibMode == 0)
         SetAspellLanguage (LangString);
@@ -1895,6 +1903,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
       ReinitLanguageLists ();
       UpdateLangsMenu ();
       RecheckVisible ();
+      SaveSettings ();
       break;
     }
   }
@@ -2084,6 +2093,7 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Last_Used_Address_Index"), LastUsedAddress, 0);
   SaveToIni (_T ("Decode_Language_Names"), DecodeNames, TRUE);
   SaveToIni (_T ("Show_Only_Known"), ShowOnlyKnown, TRUE);
+  SaveToIni (_T ("United_User_Dictionary(Hunspell)"), OneUserDic, FALSE);
   TCHAR Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < countof (ServerNames); i++)
   {
@@ -2097,6 +2107,17 @@ void SpellChecker::SaveSettings ()
 void SpellChecker::SetDecodeNames (BOOL Value)
 {
   DecodeNames = Value;
+}
+
+void SpellChecker::SetOneUserDic (BOOL Value)
+{
+  OneUserDic = Value;
+  HunspellSpeller->SetUseOneDic (Value);
+}
+
+BOOL SpellChecker::GetOneUserDic ()
+{
+  return OneUserDic;
 }
 
 void SpellChecker::SetLibMode (int i)
@@ -2154,6 +2175,9 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (IgnoreCHave, _T ("Ignore_Have_Capital"), 1);
   LoadFromIni (IgnoreCAll, _T ("Ignore_All_Capital"), 1);
   LoadFromIni (Ignore_, _T ("Ignore_With_"), 1);
+  int Value;
+  LoadFromIni (Value, _T ("United_User_Dictionary(Hunspell)"), FALSE);
+  SetOneUserDic (Value);
   LoadFromIni (IgnoreSEApostrophe, _T ("Ignore_That_Start_or_End_with_'"), 1);
   int i;
 

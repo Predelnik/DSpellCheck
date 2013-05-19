@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Hunspell;
 
+typedef std::set <char *, bool (*)(char *, char *)> WordSet;
+
 struct DicInfo
 {
   Hunspell *Speller;
@@ -37,6 +39,8 @@ struct DicInfo
   iconv_t BackConverter;
   iconv_t ConverterANSI;
   iconv_t BackConverterANSI;
+  TCHAR *LocalDicPath;
+  WordSet *LocalDic; // Stored in Dictionary encoding
 };
 
 class HunspellInterface : public AbstractSpellerInterface
@@ -54,14 +58,16 @@ public:
   __override virtual void IgnoreAll (char *Word);
 
   void SetDirectory (TCHAR *Dir);
-  void WriteUserDic ();
-  void ReadUserDic ();
+  void WriteUserDic (WordSet *Target, TCHAR *Path);
+  void ReadUserDic (WordSet *Target, TCHAR *Path);
+  void SetUseOneDic (BOOL Value);
 private:
   DicInfo CreateHunspell (TCHAR *Name);
+  BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);
 public:
 private:
   BOOL IsHunspellWorking;
-  BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);
+  BOOL UseOneDic;
   TCHAR *DicDir;
   std::vector <TCHAR *> *DicList;
   std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)> *AllHunspells;
@@ -70,8 +76,8 @@ private:
   DicInfo LastSelectedSpeller;
   DicInfo Empty;
   std::vector <DicInfo> *Spellers;
-  std::set <char *, bool (*)(char *, char *)> *Memorized;
-  std::set <char *, bool (*)(char *, char *)> *Ignored;
+  WordSet *Memorized;
+  WordSet *Ignored;
   BOOL InitialReadingBeenDone;
   char *TemporaryBuffer;
   TCHAR *UserDicPath; // For now only default one.

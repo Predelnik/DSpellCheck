@@ -86,6 +86,8 @@ public:
   void SetSuggType (int SuggType);
   void SetLibMode (int i);
   void SetDecodeNames (BOOL Value);
+  void SetOneUserDic (BOOL Value);
+  BOOL GetOneUserDic ();
   void SetShowOnlyKnow (BOOL Value);
   void FillDialogs ();
   void ReinitLanguageLists ();
@@ -93,7 +95,7 @@ public:
   TCHAR *GetLangByIndex (int i);
   BOOL GetShowOnlyKnown ();
   BOOL GetDecodeNames ();
-  void DoPluginMenuInclusion ();
+  void DoPluginMenuInclusion (BOOL Invalidate = FALSE);
   HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
   int GetLibMode ();
   BOOL HunspellReinitSettings (BOOL ResetDirectory);
@@ -165,6 +167,7 @@ private:
 private:
 
   std::vector <LanguageName> *CurrentLangs;
+  BOOL OneUserDic;
   BOOL AutoCheckText;
   BOOL CheckTextEnabled;
   BOOL WUCisRight;
