@@ -61,7 +61,7 @@ public:
   ~SpellChecker ();
   BOOL WINAPI NotifyEvent (DWORD Event);
   BOOL WINAPI NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam);
-  void RecheckVisible ();
+  void RecheckVisible (BOOL NotIntersectionOnly = FALSE);
   void RecheckModified ();
   void ErrorMsgBox (const TCHAR * message);
 
@@ -101,6 +101,7 @@ public:
   BOOL HunspellReinitSettings (BOOL ResetDirectory);
   void SetRemoveUserDics (BOOL Value);
   BOOL GetRemoveUserDics ();
+  long PreviousA, PreviousB;
 
 private:
   enum CheckTextMode
@@ -127,10 +128,10 @@ private:
   void GetDefaultHunspellPath (TCHAR *&Path);
   BOOL CheckWord (char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
-  char *GetVisibleText(long *offset);
+  char *GetVisibleText(long *offset, BOOL NotIntersectionOnly = FALSE);
   char *GetDocumentText ();
   BOOL CheckText (char *TextToCheck, long offset, CheckTextMode Mode);
-  void CheckVisible ();
+  void CheckVisible (BOOL NotIntersectionOnly = FALSE);
   void setEncodingById (int EncId);
   void SaveSettings ();
   void LoadSettings ();
@@ -211,6 +212,7 @@ private:
   const AspellWordList *CurWordList;
   HWND CurrentScintilla;
   int HotSpotCache[256]; // STYLE_MAX = 255
+  std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)> *SettingsToSave;
 
   int Lexer;
   std::vector <SuggestionsMenuItem *> *SuggestionMenuItems;

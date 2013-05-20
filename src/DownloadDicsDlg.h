@@ -63,6 +63,7 @@ private:
   HWND HFileList;
   HWND HAddress;
   HWND HStatus;
+  HWND HInstallSelected;
   HWND HShowOnlyKnown;
   HANDLE Timer;
   BOOL CancelPressed;

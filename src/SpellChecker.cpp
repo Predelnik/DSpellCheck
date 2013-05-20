@@ -88,6 +88,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   CurrentLangs = 0;
   DecodeNames = FALSE;
   ResetHotSpotCache ();
+  SettingsToSave = new std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)> (SortCompare);
   if (SendMsgToNpp (NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0))
   {
     SetUseAllocatedIds (TRUE);
@@ -163,6 +164,13 @@ SpellChecker::~SpellChecker ()
     CLEAN_AND_ZERO_ARR (ServerNames[i]);
   for (int i = 0; i < countof (DefaultServers); i++)
     CLEAN_AND_ZERO_ARR (DefaultServers[i]);
+
+  std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)>::iterator it = SettingsToSave->begin ();
+  for (; it != SettingsToSave->end (); ++it)
+  {
+    delete ((*it).first);
+  }
+  CLEAN_AND_ZERO (SettingsToSave);
 
   CLEAN_AND_ZERO (CurrentLangs);
 }
@@ -361,12 +369,13 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
 {
   ReinitLanguageLists ();
   SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
-  SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath);
+  SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath);
   SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
   SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
   SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
   SettingsDlgInstance->GetSimpleDlg ()->SetDecodeNames (DecodeNames);
   SettingsDlgInstance->GetSimpleDlg ()->SetSuggType (SuggestionsMode);
+  SettingsDlgInstance->GetSimpleDlg ()->SetOneUserDic (OneUserDic);
   SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
   SettingsDlgInstance->GetAdvancedDlg ()->setConversionOpts (IgnoreYo, ConvertSingleQuotes);
   SettingsDlgInstance->GetAdvancedDlg ()->SetUnderlineSettings (UnderlineColor, UnderlineStyle);
@@ -407,6 +416,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_RECHECK_VISIBLE:
     RefreshUnderlineStyle ();
     RecheckVisible ();
+    break;
+  case EID_RECHECK_INTERSECTION:
+    RecheckVisible (TRUE);
     break;
   case EID_SWITCH_AUTOCHECK:
     SwitchAutoCheck ();
@@ -489,6 +501,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_LIB_CHANGE:
     SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
+    RecheckVisible ();
     break;
     /*
     case EID_APPLYMENUACTION:
@@ -533,7 +546,7 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
       int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? (MFT_RADIOCHECK | MF_CHECKED)  : MF_UNCHECKED;
       Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
       Res = AppendMenu (NewMenu, MF_SEPARATOR, -1, 0);
-      Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () :MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Customize Multiple Languages..."));
+      Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () :MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Set Multiple Languages..."));
       if (LibMode == 1) // Only Hunspell supported
       {
         Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () :MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download More Languages..."));
@@ -627,8 +640,12 @@ void SpellChecker::ApplyMenuActions ()
 void SpellChecker::WriteSetting (LPARAM lParam)
 {
   std::pair<TCHAR *, DWORD> *x = (std::pair<TCHAR *, DWORD> *) lParam;
-  SaveToIni (x->first, LOWORD (x->second), HIWORD (x->second));
-  CLEAN_AND_ZERO_ARR (x->first);
+  if (SettingsToSave->find (x->first) == SettingsToSave->end ())
+    (*SettingsToSave)[x->first] = x->second;
+  else
+  {
+    CLEAN_AND_ZERO_ARR (x->first);
+  }
   CLEAN_AND_ZERO (x);
 }
 
@@ -2129,6 +2146,11 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Last_Used_Address_Index"), LastUsedAddress, 0);
   SaveToIni (_T ("Decode_Language_Names"), DecodeNames, TRUE);
   SaveToIni (_T ("United_User_Dictionary(Hunspell)"), OneUserDic, FALSE);
+  std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)>::iterator it = SettingsToSave->begin ();
+  for (; it != SettingsToSave->end (); ++it)
+  {
+    SaveToIni ((*it).first, LOWORD ((*it).second), HIWORD ((*it).second));
+  }
 }
 
 void SpellChecker::SetDecodeNames (BOOL Value)
@@ -2271,13 +2293,24 @@ void SpellChecker::GetVisibleLimits(long &Start, long &Finish)
     Finish = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTLENGTH);
 }
 
-char *SpellChecker::GetVisibleText(long *offset)
+char *SpellChecker::GetVisibleText(long *offset, BOOL NotIntersectionOnly)
 {
   Sci_TextRange range;
   GetVisibleLimits (range.chrg.cpMin, range.chrg.cpMax);
 
   if (range.chrg.cpMax < 0 || range.chrg.cpMin > range.chrg.cpMax)
     return 0;
+
+  PreviousA = range.chrg.cpMin;
+  PreviousB = range.chrg.cpMax;
+
+  if (NotIntersectionOnly)
+  {
+    if (range.chrg.cpMin < PreviousA && range.chrg.cpMax >= PreviousA)
+      range.chrg.cpMax = PreviousA - 1;
+    else if (range.chrg.cpMax > PreviousB && range.chrg.cpMin <= PreviousB)
+      range.chrg.cpMin = PreviousB + 1;
+  }
 
   char *Buf = new char [range.chrg.cpMax - range.chrg.cpMin + 1]; // + one byte for terminating zero
   range.lpstrText = Buf;
@@ -2812,10 +2845,10 @@ void SpellChecker::ClearVisibleUnderlines ()
   }
 }
 
-void SpellChecker::CheckVisible ()
+void SpellChecker::CheckVisible (BOOL NotIntersectionOnly)
 {
   CLEAN_AND_ZERO_ARR (VisibleText);
-  VisibleText = GetVisibleText (&VisibleTextOffset);
+  VisibleText = GetVisibleText (&VisibleTextOffset, NotIntersectionOnly);
   if (!VisibleText)
     return;
   VisibleTextLength = strlen (VisibleText);
@@ -2896,7 +2929,7 @@ void SpellChecker::SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuote
   ConvertSingleQuotes = ConvertSingleQuotesArg;
 }
 
-void SpellChecker::RecheckVisible ()
+void SpellChecker::RecheckVisible (BOOL NotIntersectionOnly)
 {
   int CodepageId = 0;
   if (!CurrentSpeller->IsWorking ())
@@ -2907,7 +2940,7 @@ void SpellChecker::RecheckVisible ()
   CodepageId = (int) SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCODEPAGE, 0, 0);
   setEncodingById (CodepageId); // For now it just changes should we convert it to utf-8 or no
   if (CheckTextNeeded ())
-    CheckVisible ();
+    CheckVisible (NotIntersectionOnly);
   else
     ClearAllUnderlines ();
 }

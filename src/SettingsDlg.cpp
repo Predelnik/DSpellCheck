@@ -279,6 +279,11 @@ void SimpleDlg::SetDecodeNames (BOOL Value)
   Button_SetCheck (HDecodeNames, Value ? BST_CHECKED : BST_UNCHECKED);
 }
 
+void SimpleDlg::SetOneUserDic (BOOL Value)
+{
+  Button_SetCheck (HOneUserDic, Value ? BST_CHECKED : BST_UNCHECKED);
+}
+
 int SimpleDlg::GetSelectedLib ()
 {
   return ComboBox_GetCurSel (HLibrary);
@@ -887,6 +892,7 @@ UINT SettingsDlg::DoDialog (void)
   if (!isCreated())
   {
     create (IDD_SETTINGS);
+    goToCenter ();
   }
   else
   {

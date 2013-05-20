@@ -424,6 +424,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   TCHAR *Folders = 0;
   if (Type == FILL_FILE_LIST)
   {
+    EnableWindow (HInstallSelected, FALSE);
     StatusColor = COLOR_NEUTRAL;
     Static_SetText (HStatus, _T ("Status: Loading..."));
   }
@@ -501,6 +502,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     }
     StatusColor = COLOR_OK;
     Static_SetText (HStatus, _T ("Status: List of available files was successfully loaded"));
+    EnableWindow (HInstallSelected, TRUE);
   }
   else if (Type == DOWNLOAD_FILE)
   {
@@ -588,6 +590,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       HFileList = ::GetDlgItem (_hSelf, IDC_FILE_LIST);
       HAddress = ::GetDlgItem (_hSelf, IDC_ADDRESS);
       HStatus = ::GetDlgItem (_hSelf, IDC_SERVER_STATUS);
+      HInstallSelected = ::GetDlgItem (_hSelf, IDOK);
       HShowOnlyKnown = ::GetDlgItem (_hSelf, IDC_SHOWONLYKNOWN);
       //ComboBox_SetText(HAddress, _T ("ftp://127.0.0.1"));
       SendEvent (EID_INIT_DOWNLOAD_COMBOBOX);

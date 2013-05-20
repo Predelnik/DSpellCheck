@@ -246,7 +246,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
   case SCN_UPDATEUI:
     if(notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
     {
-      RecheckVisible ();
+      SendEvent (EID_RECHECK_INTERSECTION);
     }
     SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     break;
