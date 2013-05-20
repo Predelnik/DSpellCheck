@@ -310,6 +310,7 @@ void SpellChecker::ReinitLanguageLists ()
     CurrentLang = HunspellLanguage;
   else
     CurrentLang = AspellLanguage;
+  CLEAN_AND_ZERO (CurrentLangs);
 
   if (SpellerToUse->IsWorking ())
   {
@@ -320,7 +321,6 @@ void SpellChecker::ReinitLanguageLists ()
       SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
       return;
     }
-    CLEAN_AND_ZERO (CurrentLangs);
     CurrentLangs = new std::vector<LanguageName> ();
     for (unsigned int i = 0; i < LangsFromSpeller->size (); i++)
     {
@@ -361,7 +361,7 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
 {
   ReinitLanguageLists ();
   SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
-  SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
+  SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath);
   SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
   SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
   SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
@@ -384,7 +384,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   {
   case  EID_FILL_DIALOGS:
     FillDialogs ();
-    SettingsDlgInstance->display ();
     break;
   case EID_APPLY_SETTINGS:
     SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);

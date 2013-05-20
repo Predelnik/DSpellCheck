@@ -144,6 +144,7 @@ void SimpleDlg::ApplyLibChange (SpellChecker *SpellCheckerInstance)
 {
   SpellCheckerInstance->SetLibMode (GetSelectedLib ());
   SpellCheckerInstance->ReinitLanguageLists ();
+  SpellCheckerInstance->DoPluginMenuInclusion ();
 }
 // Called from main thread, beware!
 void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
@@ -194,16 +195,21 @@ void SimpleDlg::SetLibMode (int LibMode)
   ComboBox_SetCurSel (HLibrary, LibMode);
 }
 
-void SimpleDlg::FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR * HunspellPath)
+void SimpleDlg::FillLibInfo (int Status, TCHAR *AspellPath, TCHAR * HunspellPath)
 {
   if (GetSelectedLib () == 0)
   {
     ShowWindow (HAspellStatus, 1);
     ShowWindow (HDownloadDics, 0);
-    if (Status)
+    if (Status == 2)
     {
       AspellStatusColor = COLOR_OK;
       Static_SetText (HAspellStatus, _T ("Aspell Status: OK"));
+    }
+    else if (Status == 1)
+    {
+      AspellStatusColor = COLOR_FAIL;
+      Static_SetText (HAspellStatus, _T ("Aspell Status: No Dictionaries"));
     }
     else
     {
@@ -881,10 +887,10 @@ UINT SettingsDlg::DoDialog (void)
   if (!isCreated())
   {
     create (IDD_SETTINGS);
-    goToCenter ();
   }
   else
   {
+    goToCenter ();
     SendEvent (EID_FILL_DIALOGS);
   }
 

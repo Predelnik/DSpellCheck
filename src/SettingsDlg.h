@@ -36,7 +36,7 @@ public:
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   BOOL AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages);
   void FillSugestionsNum (int SuggestionsNum);
-  void FillLibInfo (BOOL Status, TCHAR *AspellPath, TCHAR *HunspellPath);
+  void FillLibInfo (int Status, TCHAR *AspellPath, TCHAR *HunspellPath);
   void DisableLanguageCombo (BOOL Disable);
   void SetFileTypes (BOOL CheckThose, const TCHAR *FileTypes);
   void SetSuggType (int SuggType);
