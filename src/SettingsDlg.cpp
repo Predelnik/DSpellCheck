@@ -459,11 +459,15 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
           bi.pidlRoot = pidlRoot;
           bi.lpszTitle = _T("Pick a Directory");
           bi.pszDisplayName = path;
-          bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+          bi.ulFlags = BIF_RETURNONLYFSDIRS;
           bi.lpfn = BrowseCallbackProc;
           TCHAR *Buf = new TCHAR [Edit_GetTextLength (HLibPath) + 1];
           Edit_GetText (HLibPath, Buf, DEFAULT_BUF_SIZE);
-          bi.lParam         = (LPARAM) Buf;
+          TCHAR NppPath[MAX_PATH];
+          TCHAR FinalPath[MAX_PATH];
+          SendMsgToNpp (&NppDataInstance, NPPM_GETNPPDIRECTORY, MAX_PATH, (LPARAM) NppPath);
+          PathCombine (FinalPath, NppPath, Buf);
+          bi.lParam         = (LPARAM) FinalPath;
           LPITEMIDLIST pidl = SHBrowseForFolder ( &bi );
           if ( pidl != 0 )
           {
