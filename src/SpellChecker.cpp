@@ -503,6 +503,11 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
     RecheckVisible ();
     break;
+
+  case EID_LANG_CHANGE:
+    Lexer = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLEXER);
+    RecheckVisible ();
+    break;
     /*
     case EID_APPLYMENUACTION:
     ApplyMenuActions ();

@@ -277,7 +277,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 
   case NPPN_LANGCHANGED:
     {
-      SendEvent (EID_RECHECK_VISIBLE);
+      SendEvent (EID_LANG_CHANGE);
     }
     break;
 
