@@ -539,12 +539,13 @@ void AdvancedDlg::setConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg
 }
 
 void AdvancedDlg::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
-                             BOOL Ignore_Arg, BOOL Ignore_SA_Apostrophe_Arg)
+                             BOOL Ignore_Arg, BOOL Ignore_SA_Apostrophe_Arg, BOOL IgnoreOneLetter)
 {
   Button_SetCheck (HIgnoreNumbers, IgnoreNumbersArg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnoreCStart, IgnoreCStartArg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnoreCHave, IgnoreCHaveArg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnoreCAll, IgnoreCAllArg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HIgnoreOneLetter, IgnoreOneLetter ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnore_, Ignore_Arg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HIgnoreSEApostrophe, Ignore_SA_Apostrophe_Arg ? BST_CHECKED : BST_UNCHECKED);
 }
@@ -587,6 +588,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       HIgnoreCStart = ::GetDlgItem (_hSelf, IDC_IGNORE_CSTART);
       HIgnoreCHave = ::GetDlgItem (_hSelf,IDC_IGNORE_CHAVE);
       HIgnoreCAll = ::GetDlgItem (_hSelf, IDC_IGNORE_CALL);
+      HIgnoreOneLetter = ::GetDlgItem (_hSelf, IDC_IGNORE_ONE_LETTER);
       HIgnore_ = ::GetDlgItem (_hSelf, IDC_IGNORE_);
       HIgnoreSEApostrophe = ::GetDlgItem (_hSelf, IDC_IGNORE_SE_APOSTROPHE);
       HSliderSize = ::GetDlgItem (_hSelf, IDC_SLIDER_SIZE);
@@ -761,7 +763,8 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
     Button_GetCheck (HIgnoreCHave) == BST_CHECKED,
     Button_GetCheck (HIgnoreCAll) == BST_CHECKED,
     Button_GetCheck (HIgnore_) == BST_CHECKED,
-    Button_GetCheck (HIgnoreSEApostrophe) == BST_CHECKED
+    Button_GetCheck (HIgnoreSEApostrophe) == BST_CHECKED,
+    Button_GetCheck (HIgnoreOneLetter) == BST_CHECKED
     );
   SpellCheckerInstance->SetSuggBoxSettings (SendMessage (HSliderSize, TBM_GETPOS, 0, 0),
     SendMessage (HSliderTransparency, TBM_GETPOS, 0, 0));

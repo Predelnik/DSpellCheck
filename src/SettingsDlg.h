@@ -88,7 +88,7 @@ public:
   void SetSuggBoxSettings (int Size, int Trans);
   void SetUnderlineSettings (int Color, int Style);
   void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
-    BOOL Ignore_SA_Apostrophe_Arg);
+    BOOL Ignore_SA_Apostrophe_Arg, BOOL IgnoreOneLetter);
   void SetBufferSize (int Size);
 
 protected:
@@ -106,6 +106,7 @@ private:
   HWND HIgnoreCStart;
   HWND HIgnoreCHave;
   HWND HIgnoreCAll;
+  HWND HIgnoreOneLetter;
   HWND HIgnore_;
   HWND HIgnoreSEApostrophe;
   HWND HSliderSize;

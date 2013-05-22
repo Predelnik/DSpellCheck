@@ -379,7 +379,7 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
   SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
   SettingsDlgInstance->GetAdvancedDlg ()->setConversionOpts (IgnoreYo, ConvertSingleQuotes);
   SettingsDlgInstance->GetAdvancedDlg ()->SetUnderlineSettings (UnderlineColor, UnderlineStyle);
-  SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_, IgnoreSEApostrophe);
+  SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_, IgnoreSEApostrophe, IgnoreOneLetter);
   SettingsDlgInstance->GetAdvancedDlg ()->SetSuggBoxSettings (SBSize, SBTrans);
   SettingsDlgInstance->GetAdvancedDlg ()->SetBufferSize (BufferSize / 1024);
   if (!NoDisplayCall)
@@ -2072,7 +2072,7 @@ void SpellChecker::SetUnderlineStyle (int Value)
 }
 
 void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg,
-                              BOOL IgnoreCAllArg, BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg)
+                              BOOL IgnoreCAllArg, BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg)
 {
   IgnoreNumbers = IgnoreNumbersArg;
   IgnoreCStart = IgnoreCStartArg;
@@ -2080,6 +2080,7 @@ void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL 
   IgnoreCAll = IgnoreCAllArg;
   Ignore_ = Ignore_Arg;
   IgnoreSEApostrophe = IgnoreSEApostropheArg;
+  IgnoreOneLetter = IgnoreOneLetterArg;
 }
 
 void SpellChecker::GetDefaultHunspellPath (TCHAR *&Path)
@@ -2124,6 +2125,7 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Ignore_All_Capital"), IgnoreCAll, 1);
   SaveToIni (_T ("Ignore_With_"), Ignore_, 1);
   SaveToIni (_T ("Ignore_That_Start_or_End_with_'"), IgnoreSEApostrophe, 1);
+  SaveToIni (_T ("Ignore_One_Letter"), IgnoreOneLetter, 0);
   SaveToIni (_T ("Underline_Color"), UnderlineColor, 0x0000ff);
   SaveToIni (_T ("Underline_Style"), UnderlineStyle, INDIC_SQUIGGLE);
   TCHAR *Path = 0;
@@ -2223,6 +2225,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (IgnoreCStart, _T ("Ignore_Start_Capital"), 0);
   LoadFromIni (IgnoreCHave, _T ("Ignore_Have_Capital"), 1);
   LoadFromIni (IgnoreCAll, _T ("Ignore_All_Capital"), 1);
+  LoadFromIni (IgnoreOneLetter, _T ("Ignore_One_Letter"), 0);
   LoadFromIni (Ignore_, _T ("Ignore_With_"), 1);
   int Value;
   LoadFromIni (Value, _T ("United_User_Dictionary(Hunspell)"), FALSE);
@@ -2662,6 +2665,12 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
 
   TCHAR *Ts = 0;
   long Len = strlen (Word);
+
+  if (IgnoreOneLetter && Len == 1)
+  {
+    res = TRUE;
+    goto CleanUp;
+  }
 
   if (IgnoreNumbers && (CurrentEncoding == ENCODING_UTF8 ? Utf8pbrk (Word, "0123456789") : strpbrk (Word, "0123456789")) != 0) // Same for UTF-8 and not
   {

@@ -80,7 +80,7 @@ public:
   void SetUnderlineColor (int Value);
   void SetUnderlineStyle (int Value);
   void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
-    BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg);
+    BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg);
   void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
   void SetBufferSize (int Size, BOOL SaveToIni = 1);
   void SetSuggType (int SuggType);
@@ -204,6 +204,7 @@ private:
   BOOL IgnoreCAll;
   BOOL Ignore_;
   BOOL IgnoreSEApostrophe;
+  BOOL IgnoreOneLetter;
   BOOL DecodeNames;
   BOOL ShowOnlyKnown;
   int SBSize;
