@@ -324,12 +324,13 @@ void SpellChecker::ReinitLanguageLists ()
   {
     SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (FALSE);
     std::vector <TCHAR *> *LangsFromSpeller =  SpellerToUse->GetLanguageList ();
-    if (!LangsFromSpeller)
+    CurrentLangs = new std::vector<LanguageName> ();
+
+    if (!LangsFromSpeller || LangsFromSpeller->size () == 0)
     {
       SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
       return;
     }
-    CurrentLangs = new std::vector<LanguageName> ();
     for (unsigned int i = 0; i < LangsFromSpeller->size (); i++)
     {
       LanguageName Lang (LangsFromSpeller->at (i), (SpellerId == 1 && DecodeNames)); // Using them only for Hunspell
@@ -388,12 +389,13 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
 
 void SpellChecker::RecheckVisibleBothViews ()
 {
-  CurrentScintilla = NppDataInstance->_scintillaMainHandle;
   int OldLexer = Lexer;
+  Lexer = SendMsgToEditor (NppDataInstance->_scintillaMainHandle, NppDataInstance, SCI_GETLEXER);
+  CurrentScintilla = NppDataInstance->_scintillaMainHandle;
   RecheckVisible ();
 
   CurrentScintilla = NppDataInstance->_scintillaSecondHandle;
-  Lexer = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLEXER);
+  Lexer = SendMsgToEditor (NppDataInstance->_scintillaSecondHandle, NppDataInstance, SCI_GETLEXER);
   RecheckVisible ();
   Lexer = OldLexer;
 }
@@ -524,6 +526,10 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     Lexer = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLEXER);
     RecheckVisible ();
     break;
+
+  case EID_HIDE_DOWNLOAD_DICS: // TODO: Make it async, though it's really hard
+    GetDownloadDics ()->display (false);
+    break;
     /*
     case EID_APPLYMENUACTION:
     ApplyMenuActions ();
@@ -555,24 +561,29 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
   HMENU NewMenu = CreatePopupMenu ();
   if (!Invalidate)
   {
-    if (CurrentLangs && CurrentLangs->size () > 0)
+    if (CurrentLangs)
     {
-      for (unsigned int i = 0; i < CurrentLangs->size (); i++)
+      if (CurrentLangs->size () > 0)
       {
-        int Checked = (_tcscmp (CurLang, CurrentLangs->at(i).OrigName) == 0) ? (MFT_RADIOCHECK | MF_CHECKED) : MF_UNCHECKED;
-        Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), DecodeNames ? CurrentLangs->at(i).AliasName : CurrentLangs->at(i).OrigName);
-        if (!Res)
-          return;
-      }
-      int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? (MFT_RADIOCHECK | MF_CHECKED)  : MF_UNCHECKED;
-      Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
-      Res = AppendMenu (NewMenu, MF_SEPARATOR, -1, 0);
-      Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () :MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Set Multiple Languages..."));
+        for (unsigned int i = 0; i < CurrentLangs->size (); i++)
+        {
+          int Checked = (_tcscmp (CurLang, CurrentLangs->at(i).OrigName) == 0) ? (MFT_RADIOCHECK | MF_CHECKED) : MF_UNCHECKED;
+          Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), DecodeNames ? CurrentLangs->at(i).AliasName : CurrentLangs->at(i).OrigName);
+          if (!Res)
+            return;
+        }
+        int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? (MFT_RADIOCHECK | MF_CHECKED)  : MF_UNCHECKED;
+        Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
+        Res = AppendMenu (NewMenu, MF_SEPARATOR, -1, 0);
+        Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () :MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Set Multiple Languages..."));
       if (LibMode == 1) // Only Hunspell supported
       {
         Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () :MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download More Languages..."));
         Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? REMOVE_DICS + GetLangsMenuIdStart () :MAKEWORD (REMOVE_DICS, LANGUAGE_MENU_ID), _T ("Remove Unneeded Languages..."));
       }
+      }
+      else if (LibMode == 1)
+        Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () :MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download Languages..."));
     }
   }
   else

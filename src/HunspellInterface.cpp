@@ -101,7 +101,6 @@ HunspellInterface::HunspellInterface ()
   IsHunspellWorking = FALSE;
   TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
   UserDicPath = 0;
-  InitialReadingBeenDone = FALSE;
 }
 
 void HunspellInterface::UpdateOnDicRemoval (TCHAR *Path)
@@ -263,10 +262,11 @@ void HunspellInterface::SetLanguage (TCHAR *Lang)
 
 void HunspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
 {
+  Spellers->clear ();
+
   if (DicList->size () == 0)
     return;
 
-  Spellers->clear ();
   for (unsigned int i = 0; i < List->size (); i++)
   {
     if (!std::binary_search (DicList->begin (), DicList->end (), List->at (i),  SortCompare))
@@ -513,8 +513,13 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
 
 void HunspellInterface::SetDirectory (TCHAR *Dir)
 {
+  InitialReadingBeenDone = FALSE;
   std::vector<TCHAR *> *FileList = new std::vector<TCHAR *>;
   SetString (DicDir, Dir);
+
+  CLEAN_AND_ZERO_STRING_VECTOR (DicList);
+  DicList = new std::vector <TCHAR *>;
+  IsHunspellWorking = TRUE;
 
   BOOL Res = ListFiles (Dir, _T ("*.*"), *FileList, _T ("*.aff"));
   if (!Res)
@@ -523,8 +528,6 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
     return;
   }
 
-  CLEAN_AND_ZERO_STRING_VECTOR (DicList);
-  DicList = new std::vector <TCHAR *>;
 
   for (unsigned int i = 0; i < FileList->size (); i++)
   {
@@ -542,8 +545,6 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
     }
     CLEAN_AND_ZERO_ARR (Buf);
   }
-
-  IsHunspellWorking = (DicList->size () > 0);
 
   std::sort (DicList->begin (), DicList->end (), SortCompare);
   CLEAN_AND_ZERO_ARR (UserDicPath);

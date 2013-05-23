@@ -618,7 +618,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         {
           for (int i = 0; i < ListBox_GetCount (HFileList); i++)
             CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
-          display (false);
+          SendEvent (EID_HIDE_DOWNLOAD_DICS);
         }
 
         break;

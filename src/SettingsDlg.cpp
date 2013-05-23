@@ -72,7 +72,8 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailabl
 
   if (_tcscmp (CurrentLanguage, _T ("<MULTIPLE>")) == 0)
     SelectedIndex = i;
-  ComboBox_AddString (HComboLanguage, _T ("Multiple Languages..."));
+  if (LangsAvailable->size () != 0)
+    ComboBox_AddString (HComboLanguage, _T ("Multiple Languages..."));
 
   ComboBox_SetCurSel (HComboLanguage, SelectedIndex);
 
@@ -155,19 +156,22 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   int LangCount = ComboBox_GetCount (HComboLanguage);
   int CurSel = ComboBox_GetCurSel (HComboLanguage);
 
-  if (CurSel == LangCount - 1)
+  if (IsWindowEnabled (HComboLanguage))
   {
-    if (GetSelectedLib ())
-      SpellCheckerInstance->SetHunspellLanguage (_T ("<MULTIPLE>"));
+    if (CurSel == LangCount - 1)
+    {
+      if (GetSelectedLib ())
+        SpellCheckerInstance->SetHunspellLanguage (_T ("<MULTIPLE>"));
+      else
+        SpellCheckerInstance->SetAspellLanguage (_T ("<MULTIPLE>"));
+    }
     else
-      SpellCheckerInstance->SetAspellLanguage (_T ("<MULTIPLE>"));
-  }
-  else
-  {
-    if (GetSelectedLib () == 0)
-      SpellCheckerInstance->SetAspellLanguage (SpellCheckerInstance->GetLangByIndex (CurSel));
-    else
-      SpellCheckerInstance->SetHunspellLanguage (SpellCheckerInstance->GetLangByIndex (CurSel));
+    {
+      if (GetSelectedLib () == 0)
+        SpellCheckerInstance->SetAspellLanguage (SpellCheckerInstance->GetLangByIndex (CurSel));
+      else
+        SpellCheckerInstance->SetHunspellLanguage (SpellCheckerInstance->GetLangByIndex (CurSel));
+    }
   }
   SpellCheckerInstance->RecheckVisible ();
   Buf = new TCHAR[DEFAULT_BUF_SIZE];
@@ -884,6 +888,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
         {
+          EnableWindow (GetDlgItem (_hSelf, IDCANCEL), FALSE);
           SendEvent (EID_HIDE_DIALOG);
           return TRUE;
         }

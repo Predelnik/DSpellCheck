@@ -95,11 +95,18 @@ BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
       switch (LOWORD (wParam))
       {
       case IDOK:
-        SendEvent (EID_APPLY_MULTI_LANG_SETTINGS);
+        if (HIWORD (wParam) == BN_CLICKED)
+        {
+          SendEvent (EID_APPLY_MULTI_LANG_SETTINGS);
+          display (false);
+        }
+        break;                  
       case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
+        {
+          SendEvent (EID_UPDATE_LANG_LISTS); // Reset all settings
           display (false);
-
+        }
         break;
       }
     }
