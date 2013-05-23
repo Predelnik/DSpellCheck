@@ -33,7 +33,7 @@ extern bool doCloseTag;
 HANDLE HModule;
 int RecheckDelay;
 std::vector<std::pair <long, long> > CheckQueue;
-HANDLE Timer;
+HANDLE Timer = 0;
 WNDPROC wndProcNotepad = NULL;
 
 int GetRecheckDelay ()
@@ -197,7 +197,9 @@ VOID CALLBACK ExecuteQueue (
   }
   CheckQueue.clear ();
   */
-  DeleteTimerQueueTimer (0, Timer, 0);
+  if (Timer)
+    DeleteTimerQueueTimer (0, Timer, 0);
+
   Timer = 0;
   SendEvent (EID_RECHECK_VISIBLE);
 }
