@@ -230,7 +230,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       SendEvent (EID_CHECK_FILE_NAME);
       CreateHooks ();
       CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
-      RecheckVisible ();
+      SendEvent (EID_RECHECK_VISIBLE_BOTH_VIEWS);
       SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
       SendEvent (EID_UPDATE_LANG_LISTS); // To update quick lang change menu
       UpdateLangsMenu ();

@@ -281,20 +281,26 @@ HWND GetScintillaWindow(const NppData *NppDataArg)
   return (which == 0) ? NppDataArg->_scintillaMainHandle : NppDataArg->_scintillaSecondHandle;
 }
 
+void SendMsgToBothEditors (const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  SendMessage (NppDataArg->_scintillaMainHandle, Msg, wParam, lParam);
+  SendMessage (NppDataArg->_scintillaSecondHandle, Msg, wParam, lParam);
+}
+
 LRESULT SendMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   HWND wEditor = GetScintillaWindow(NppDataArg);
-  return SendMessage(wEditor, Msg, wParam, lParam);
+  return SendMessage (wEditor, Msg, wParam, lParam);
 }
 
 LRESULT SendMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  return SendMessage(ScintillaWindow, Msg, wParam, lParam);
+  return SendMessage (ScintillaWindow, Msg, wParam, lParam);
 }
 
 LRESULT SendMsgToNpp (const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  return SendMessage(NppDataArg->_nppHandle, Msg, wParam, lParam);
+  return SendMessage (NppDataArg->_nppHandle, Msg, wParam, lParam);
 }
 
 // Remember: it's better to use PostMsg wherever possible, to avoid gui update on each message send etc etc

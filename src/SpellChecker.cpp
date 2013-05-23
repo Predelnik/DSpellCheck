@@ -348,7 +348,7 @@ void SpellChecker::ReinitLanguageLists ()
         SetHunspellLanguage (CurrentLangs->at (0).OrigName);
       else
         SetAspellLanguage (CurrentLangs->at (0).OrigName);
-      RecheckVisible ();
+      RecheckVisibleBothViews ();
     }
     SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
       SpellerId == 1 ? HunspellLanguage : AspellLanguage,
@@ -386,6 +386,18 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
     SettingsDlgInstance->display ();
 }
 
+void SpellChecker::RecheckVisibleBothViews ()
+{
+  CurrentScintilla = NppDataInstance->_scintillaMainHandle;
+  int OldLexer = Lexer;
+  RecheckVisible ();
+
+  CurrentScintilla = NppDataInstance->_scintillaSecondHandle;
+  Lexer = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLEXER);
+  RecheckVisible ();
+  Lexer = OldLexer;
+}
+
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
 {
   CurrentScintilla = GetScintillaWindow (NppDataInstance); // All operations should be done with current scintilla anyway
@@ -401,7 +413,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SaveSettings ();
     CheckFileName (); // Cause filters may change
     RefreshUnderlineStyle ();
-    RecheckVisible ();
+    RecheckVisibleBothViews ();
     break;
   case EID_APPLY_MULTI_LANG_SETTINGS:
     LangListInstance->ApplyChoice (this);
@@ -414,8 +426,12 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     LoadSettings ();
     break;
   case EID_RECHECK_VISIBLE:
-    RefreshUnderlineStyle ();
     RecheckVisible ();
+    break;
+  case EID_RECHECK_VISIBLE_BOTH_VIEWS:
+    {
+      RecheckVisibleBothViews ();
+    }
     break;
   case EID_RECHECK_INTERSECTION:
     RecheckVisible (TRUE);
@@ -501,7 +517,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_LIB_CHANGE:
     SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking (), AspellPath, HunspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
-    RecheckVisible ();
+    RecheckVisibleBothViews ();
     break;
 
   case EID_LANG_CHANGE:
@@ -1891,7 +1907,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
           if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
           PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength, WUCPosition  + WUCLength );
           */
-          RecheckVisible ();
+          RecheckVisibleBothViews ();
         }
         else if (Result == MID_ADDTODICTIONARY)
         {
@@ -1902,7 +1918,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
           if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
           PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
           */
-          RecheckVisible ();
+          RecheckVisibleBothViews ();
         }
         else if ((unsigned int)Result <= LastSuggestions->size ())
         {
@@ -1958,7 +1974,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
 
       ReinitLanguageLists ();
       UpdateLangsMenu ();
-      RecheckVisible ();
+      RecheckVisibleBothViews ();
       SaveSettings ();
       break;
     }
@@ -2070,8 +2086,8 @@ void SpellChecker::SetAspellMultipleLanguages (const char *MultiLanguagesArg)
 
 void SpellChecker::RefreshUnderlineStyle ()
 {
-  SendMsgToEditor(NppDataInstance, SCI_INDICSETSTYLE, SCE_ERROR_UNDERLINE, UnderlineStyle);
-  SendMsgToEditor(NppDataInstance, SCI_INDICSETFORE, SCE_ERROR_UNDERLINE, UnderlineColor);
+  SendMsgToBothEditors(NppDataInstance, SCI_INDICSETSTYLE, SCE_ERROR_UNDERLINE, UnderlineStyle);
+  SendMsgToBothEditors(NppDataInstance, SCI_INDICSETFORE, SCE_ERROR_UNDERLINE, UnderlineColor);
 }
 
 void SpellChecker::SetUnderlineColor (int Value)
@@ -2914,7 +2930,7 @@ void SpellChecker::SwitchAutoCheck ()
 {
   AutoCheckText = !AutoCheckText;
   UpdateAutocheckStatus ();
-  RecheckVisible ();
+  RecheckVisibleBothViews ();
 }
 
 void SpellChecker::RecheckModified ()
