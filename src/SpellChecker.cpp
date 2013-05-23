@@ -1604,6 +1604,9 @@ void SpellChecker::FindNextMistake ()
       *IteratingChar = '\0';
     }
     SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_COLOURISE, Range.chrg.cpMin, Range.chrg.cpMax);
+    SCNotification scn;
+    scn.nmhdr.code = SCN_SCROLLED;
+    SendMsgToNpp (NppDataInstance, WM_NOTIFY, 0, (LPARAM )&scn); // To fix bug with hotspots being removed
     Result = CheckText (Range.lpstrText, IteratorPos, FIND_FIRST);
     CLEAN_AND_ZERO_ARR (Range.lpstrText);
     if (Result)
@@ -1676,6 +1679,9 @@ void SpellChecker::FindPrevMistake ()
     }
     int offset = IteratingChar - IteratingStart;
     SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_COLOURISE, Range.chrg.cpMin + offset, Range.chrg.cpMax);
+    SCNotification scn;
+    scn.nmhdr.code = SCN_SCROLLED;
+    SendMsgToNpp (NppDataInstance, WM_NOTIFY, 0, (LPARAM) &scn);
     Result = CheckText (Range.lpstrText + offset, Range.chrg.cpMin + offset, FIND_LAST);
     CLEAN_AND_ZERO_ARR (Range.lpstrText);
     if (Result)
