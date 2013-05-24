@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "LanguageName.h"
 
 #include <uxtheme.h>
+#include <Vsstyle.h>
 
 SimpleDlg::SimpleDlg () : StaticDialog ()
 {
@@ -348,7 +349,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
 
       ComboBox_AddString (HSuggType, _T ("Special Suggestion Button"));
       ComboBox_AddString (HSuggType, _T ("Use N++ Context Menu"));
-      DefaultBrush = CreateSolidBrush(GetBkColor (GetDC (_hSelf)));
+      DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
       AspellStatusColor = RGB (0, 0, 0);
       return TRUE;
@@ -514,10 +515,15 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
     if (GetDlgItem (_hSelf, IDC_ASPELL_STATUS) == (HWND)lParam)
     {
       HDC hDC = (HDC)wParam;
+
+      HTHEME hTheme = OpenThemeData(_hSelf, _T ("TAB"));
       SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
       SetBkMode(hDC, TRANSPARENT);
       SetTextColor(hDC, AspellStatusColor);
-      return (INT_PTR) DefaultBrush;
+      if (hTheme)
+        return 0;
+      else
+        return (INT_PTR) DefaultBrush;
     }
     break;
   }
@@ -824,10 +830,10 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       ControlsTabInstance.init (_hInst, _hSelf, false, true, false);
       ControlsTabInstance.setFont(TEXT("Tahoma"), 13);
 
-      SimpleDlgInstance.init(_hInst, _hSelf, NppDataInstance);
+      SimpleDlgInstance.init (_hInst, _hSelf, NppDataInstance);
       SimpleDlgInstance.create (IDD_SIMPLE, false, false);
       SimpleDlgInstance.display ();
-      AdvancedDlgInstance.init(_hInst, _hSelf);
+      AdvancedDlgInstance.init (_hInst, _hSelf);
       AdvancedDlgInstance.create (IDD_ADVANCED, false, false);
       AdvancedDlgInstance.SetRecheckDelay (GetRecheckDelay ());
 
