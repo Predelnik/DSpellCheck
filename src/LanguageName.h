@@ -70,7 +70,7 @@ struct LanguageName
 
 inline bool CompareAliases (LanguageName &a, LanguageName &b)
 {
-  return (a.AliasApplied && b.AliasApplied) ? _tcscmp (a.AliasName, b.AliasName) < 0 : _tcscmp (a.OrigName, b.OrigName) < 0 ;
+  return _tcscmp (a.AliasApplied ? a.AliasName : a.OrigName, b.AliasApplied ? b.AliasName : b.OrigName) < 0;
 }
 
 inline bool CompareOriginal (LanguageName &a, LanguageName &b)
