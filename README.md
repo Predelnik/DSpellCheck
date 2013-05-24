@@ -49,6 +49,6 @@ v1.2.0
 * Add possibility to remove Hunspell dictionaries using plugin interface.
 * Add possibility to quickly change current language through Plugins->DSpellCheck->Change_Current_Language or corresponding hot key (initially Alt + D), also such items as "Download More Dictionaries", "Customize Multiple Dictionaries" and "Remove Unneeded Dictionaries" are also presented there.
 * Add resolving common Hunspell dictionaries names to more user friendly language names.
-* Now by Default Hunspell Dictionaries are stored separately, this could be turned to the way it was.
+* Now by Default Hunspell user dictionaries are stored separately, this could be turned to the way it was.
 * No more checking of words contained in hotlinks
 * Some minor bugs were fixed.
