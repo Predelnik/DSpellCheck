@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class Hunspell;
 
 typedef std::unordered_set <char *, size_t (*)(char *), bool (*)(char *, char *)> WordSet;
+typedef std::set <char *, bool (*)(char *, char *)> SortedWordSet;
 
 struct DicInfo
 {

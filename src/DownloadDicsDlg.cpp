@@ -146,6 +146,11 @@ void DownloadDicsDlg::DownloadSelected ()
   char FileCopyBuf[(BUF_SIZE_FOR_COPY)];
   TCHAR ProgMessage[DEFAULT_BUF_SIZE];
   GetTempPath (MAX_PATH, TempPath);
+  if (!CheckForDirectoryExistence (TempPath)) // If path isn't exist we're gonna try to create it else it's finish
+  {
+    MessageBox (0, _T ("Path defined as temporary dir doesn't exist and couldn't be created, probably one of subdirectories have limited access, please make temporary path valid."), _T ("Temporary Path is Broken"), MB_OK | MB_ICONEXCLAMATION);
+    return;
+  }
   CancelPressed = FALSE;
   int Failure = 0;
   _tcscpy (Message, _T ("Dictionaries copied:\n"));

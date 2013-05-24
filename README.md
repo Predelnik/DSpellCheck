@@ -51,3 +51,4 @@ v1.2.0
 * Add resolving common Hunspell dictionaries names to more user friendly language names.
 * Now by Default Hunspell Dictionaries are stored separately, this could be turned to the way it was.
 * No more checking of words contained in hotlinks
+* Some minor bugs were fixed.

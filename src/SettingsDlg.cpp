@@ -890,7 +890,6 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
         {
-          EnableWindow (GetDlgItem (_hSelf, IDCANCEL), FALSE);
           SendEvent (EID_HIDE_DIALOG);
           return TRUE;
         }

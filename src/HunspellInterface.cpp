@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "HunspellInterface.h"
 
 #include <locale>
+#include <io.h>
+#include <fcntl.h>
 #include <unordered_set>
 
 static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCHAR *Filter)
@@ -342,6 +344,8 @@ void HunspellInterface::WriteUserDic (WordSet *Target, TCHAR *Path)
     return;
   }
 
+  SortedWordSet TemporarySortedWordSet (SortCompareChars); // Wordset itself being removed here as local variable, all strings are not copied
+
   Fp = _tfopen (Path, _T ("w"));
   if (!Fp)
     return;
@@ -350,8 +354,13 @@ void HunspellInterface::WriteUserDic (WordSet *Target, TCHAR *Path)
     fprintf (Fp, "%d\n", Target->size ());
     for (; it != Target->end (); ++it)
     {
-      fprintf (Fp, "%s\n", *it);
+      TemporarySortedWordSet.insert (*it);
     }
+  }
+  SortedWordSet::iterator it = TemporarySortedWordSet.begin ();
+  for (; it != TemporarySortedWordSet.end (); ++it)
+  {
+    fprintf (Fp, "%s\n", *it);
   }
 
   fclose (Fp);
@@ -401,6 +410,30 @@ void HunspellInterface::AddToDictionary (char *Word)
 {
   if (!LastSelectedSpeller.Speller)
     return;
+
+  TCHAR *DicPath = 0;
+  if (UseOneDic)
+    DicPath = UserDicPath;
+  else
+    DicPath = LastSelectedSpeller.LocalDicPath;
+
+  if (!PathFileExists (DicPath))
+  {
+    // If there's no life then we're checking if we can create it, there's no harm in it
+    int LocalDicFileHandle = _topen (DicPath, _O_CREAT | _O_BINARY | _O_WRONLY);
+    if (LocalDicFileHandle == -1)
+    {
+      MessageBox (0, _T ("User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."), _T ("User dictionary cannot be saved"), MB_OK | MB_ICONWARNING);
+    }
+    else
+      _close (LocalDicFileHandle);
+  }
+  else
+  {
+    // Otherwise we're using _taccess to check for permission to write there.
+    if (_taccess (LastSelectedSpeller.LocalDicPath, 2) != 0)
+      MessageBox (0, _T ("User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."), _T ("User dictionary cannot be saved"), MB_OK | MB_ICONWARNING);
+  }
 
   char *Buf = 0;
   if (CurrentEncoding == ENCODING_UTF8)
