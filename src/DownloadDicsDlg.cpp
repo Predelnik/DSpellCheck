@@ -61,6 +61,7 @@ void DownloadDicsDlg::OnDisplayAction ()
 DownloadDicsDlg::DownloadDicsDlg ()
 {
   Timer = 0;
+  RefreshIcon = 0;
   CheckIfSavingIsNeeded = 0;
   CurrentLangs = 0;
   CurrentLangsFiltered = 0;
@@ -79,6 +80,8 @@ DownloadDicsDlg::~DownloadDicsDlg ()
     DeleteTimerQueueTimer (0, Timer, 0);
   CLEAN_AND_ZERO (CurrentLangs);
   CLEAN_AND_ZERO (CurrentLangsFiltered);
+  if (RefreshIcon)
+    DestroyIcon (RefreshIcon);
 }
 
 void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
@@ -446,6 +449,9 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     return;
   }
 
+  DWORD TimeOut = 1000;
+  InternetSetOption (Session, INTERNET_OPTION_CONNECT_TIMEOUT, &TimeOut, sizeof (DWORD));
+
   HINTERNET Internet = InternetConnect (Session, Address, INTERNET_INVALID_PORT_NUMBER, NULL, NULL, INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
 
   if (!Internet)
@@ -592,6 +598,10 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       HStatus = ::GetDlgItem (_hSelf, IDC_SERVER_STATUS);
       HInstallSelected = ::GetDlgItem (_hSelf, IDOK);
       HShowOnlyKnown = ::GetDlgItem (_hSelf, IDC_SHOWONLYKNOWN);
+      HRefresh = ::GetDlgItem (_hSelf, IDC_REFRESH);
+      // RefreshIcon = LoadIcon (_hInst, MAKEINTRESOURCE (IDI_ICON1));
+      RefreshIcon = (HICON) LoadImage (_hInst, MAKEINTRESOURCE (IDI_ICON1), IMAGE_ICON, 16, 16, 0);
+      SendMessage (HRefresh, BM_SETIMAGE, (WPARAM) IMAGE_ICON, (LPARAM) RefreshIcon);
       //ComboBox_SetText(HAddress, _T ("ftp://127.0.0.1"));
       SendEvent (EID_INIT_DOWNLOAD_COMBOBOX);
       //ComboBox_SetText(HAddress, _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries"));
@@ -634,6 +644,11 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         {
           ReinitServer (this, FALSE);
           CheckIfSavingIsNeeded = 0;
+        }
+        break;
+      case IDC_REFRESH:
+        {
+          ReinitServer (this, FALSE);
         }
         break;
       case IDC_SHOWONLYKNOWN:

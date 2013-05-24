@@ -528,7 +528,6 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
     return;
   }
 
-
   for (unsigned int i = 0; i < FileList->size (); i++)
   {
     TCHAR *Buf = 0;

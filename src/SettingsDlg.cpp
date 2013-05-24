@@ -47,6 +47,8 @@ void SimpleDlg::DisableLanguageCombo (BOOL Disable)
 {
   ComboBox_ResetContent (HComboLanguage);
   EnableWindow (HComboLanguage, !Disable);
+  ListBox_ResetContent (GetRemoveDics ()->GetListBox ());
+  EnableWindow (HRemoveDics, !Disable);
 }
 
 // Called from main thread, beware!

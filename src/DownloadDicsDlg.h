@@ -65,6 +65,8 @@ private:
   HWND HStatus;
   HWND HInstallSelected;
   HWND HShowOnlyKnown;
+  HWND HRefresh;
+  HICON RefreshIcon;
   HANDLE Timer;
   BOOL CancelPressed;
   int CheckIfSavingIsNeeded;
