@@ -2045,10 +2045,13 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   }
 
   TCHAR *MenuString = new TCHAR [WUCLength + 50 + 1]; // Add "" to dictionary
+  char *BufUtf8 = 0;
   if (CurrentEncoding == ENCODING_UTF8)
-    SetStringSUtf8 (Buf, Range.lpstrText);
+    SetString (BufUtf8, Range.lpstrText);
   else
-    SetString (Buf, Range.lpstrText);
+    SetStringDUtf8 (BufUtf8, Range.lpstrText);
+  ApplyConversions (BufUtf8);
+  SetStringSUtf8 (Buf, BufUtf8);
   _stprintf (MenuString, _T ("Ignore \"%s\" for Current Session"), Buf);
   if (SuggestionsMode == SUGGESTIONS_BOX)
     InsertSuggMenuItem (Menu, MenuString, MID_IGNOREALL, -1);
@@ -2065,6 +2068,7 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
 
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
   CLEAN_AND_ZERO_ARR (Buf);
+  CLEAN_AND_ZERO_ARR (BufUtf8);
 
   CLEAN_AND_ZERO_ARR (MenuString);
 }
