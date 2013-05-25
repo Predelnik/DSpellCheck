@@ -403,6 +403,8 @@ void SpellChecker::RecheckVisibleBothViews ()
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
 {
   CurrentScintilla = GetScintillaWindow (NppDataInstance); // All operations should be done with current scintilla anyway
+  if (!CurrentScintilla)
+    return FALSE; // If scintilla is dead there's nothing else to do
   switch (Event)
   {
   case  EID_FILL_DIALOGS:
