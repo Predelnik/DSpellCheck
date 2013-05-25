@@ -431,8 +431,14 @@ void HunspellInterface::AddToDictionary (char *Word)
   else
   {
     // Otherwise we're using _taccess to check for permission to write there.
-    if (_taccess (LastSelectedSpeller.LocalDicPath, 2) != 0)
+    SetFileAttributes (DicPath, FILE_ATTRIBUTE_NORMAL);
+    int LocalDicFileHandle = _topen (DicPath, _O_APPEND | _O_BINARY | _O_WRONLY);
+    if (LocalDicFileHandle == -1)
+    {
       MessageBox (0, _T ("User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."), _T ("User dictionary cannot be saved"), MB_OK | MB_ICONWARNING);
+    }
+    else
+      _close (LocalDicFileHandle);
   }
 
   char *Buf = 0;
