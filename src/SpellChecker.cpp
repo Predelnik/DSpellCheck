@@ -400,6 +400,8 @@ void SpellChecker::RecheckVisibleBothViews ()
   RecheckVisible ();
   Lexer = OldLexer;
   CurrentEncoding = OldEncoding;
+  AspellSpeller->SetEncoding (CurrentEncoding);
+  HunspellSpeller->SetEncoding (CurrentEncoding);
 }
 
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
