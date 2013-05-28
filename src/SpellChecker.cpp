@@ -390,6 +390,7 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
 void SpellChecker::RecheckVisibleBothViews ()
 {
   int OldLexer = Lexer;
+  EncodingType OldEncoding = CurrentEncoding;
   Lexer = SendMsgToEditor (NppDataInstance->_scintillaMainHandle, NppDataInstance, SCI_GETLEXER);
   CurrentScintilla = NppDataInstance->_scintillaMainHandle;
   RecheckVisible ();
@@ -398,6 +399,7 @@ void SpellChecker::RecheckVisibleBothViews ()
   Lexer = SendMsgToEditor (NppDataInstance->_scintillaSecondHandle, NppDataInstance, SCI_GETLEXER);
   RecheckVisible ();
   Lexer = OldLexer;
+  CurrentEncoding = OldEncoding;
 }
 
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
