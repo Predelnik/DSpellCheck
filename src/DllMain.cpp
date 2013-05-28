@@ -246,7 +246,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
     break;
 
   case SCN_UPDATEUI:
-    if(notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
+    if(notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) && !Timer) // If scroll wasn't caused by user input...
     {
       SendEvent (EID_RECHECK_INTERSECTION);
     }
