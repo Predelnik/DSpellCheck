@@ -2184,6 +2184,7 @@ void SpellChecker::SaveSettings ()
   CLEAN_AND_ZERO_ARR (Path);
   GetDefaultHunspellPath (Path);
   SaveToIni (_T ("Hunspell_Path"), HunspellPath, Path);
+  SaveToIni (_T ("System_Hunspell_Path"), AdditionalHunspellPath, _T (".\\plugins\\config\\Hunspell"));
   CLEAN_AND_ZERO_ARR (Path);
   SaveToIni (_T ("Suggestions_Number"), SuggestionsNum, 5);
   char *DefaultDelimUtf8 = 0;
@@ -2248,6 +2249,9 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (HunspellPath, _T ("Hunspell_Path"), Path);
   CLEAN_AND_ZERO_ARR (Path);
 
+  AdditionalHunspellPath = 0;
+  LoadFromIni (AdditionalHunspellPath, _T ("System_Hunspell_Path"), _T (".\\plugins\\config\\Hunspell"));
+
   LoadFromIni (SuggestionsMode, _T ("Suggestions_Control"), 0);
   LoadFromIni (AutoCheckText, _T ("Autocheck"), 0);
   UpdateAutocheckStatus (0);
@@ -2284,6 +2288,7 @@ void SpellChecker::LoadSettings ()
   int i;
 
   HunspellSpeller->SetDirectory (HunspellPath);
+  HunspellSpeller->SetAdditionalDirectory (AdditionalHunspellPath);
   AspellSpeller->Init (AspellPath);
   LoadFromIni (i, _T ("Library"), 1);
   SetLibMode (i);
@@ -2555,7 +2560,10 @@ BOOL SpellChecker::HunspellReinitSettings (BOOL ResetDirectory)
 {
   TCHAR *TBuf = 0;
   if (ResetDirectory)
+  {
     HunspellSpeller->SetDirectory (HunspellPath);
+    HunspellSpeller->SetAdditionalDirectory (AdditionalHunspellPath);
+  }
   if (_tcscmp (HunspellLanguage, _T ("<MULTIPLE>")) != 0)
   {
     HunspellSpeller->SetLanguage (HunspellLanguage);

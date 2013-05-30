@@ -45,6 +45,17 @@ struct DicInfo
   WordSet *LocalDic; // Stored in Dictionary encoding
 };
 
+struct AvailableLangInfo
+{
+  TCHAR *Name;
+  int Type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
+
+  bool operator < (const AvailableLangInfo &rhs ) const
+  {
+    return (_tcscmp (Name, rhs.Name) < 0);
+  }
+};
+
 class HunspellInterface : public AbstractSpellerInterface
 {
 public:
@@ -60,19 +71,21 @@ public:
   __override virtual void IgnoreAll (char *Word);
 
   void SetDirectory (TCHAR *Dir);
+  void SetAdditionalDirectory (TCHAR *Dir);
   void WriteUserDic (WordSet *Target, TCHAR *Path);
   void ReadUserDic (WordSet *Target, TCHAR *Path);
   void SetUseOneDic (BOOL Value);
   void UpdateOnDicRemoval (TCHAR *Path);
 private:
-  DicInfo CreateHunspell (TCHAR *Name);
+  DicInfo CreateHunspell (TCHAR *Name, int Type);
   BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);
 public:
 private:
   BOOL IsHunspellWorking;
   BOOL UseOneDic;
   TCHAR *DicDir;
-  std::vector <TCHAR *> *DicList;
+  TCHAR *SysDicDir;
+  std::set <AvailableLangInfo> *DicList;
   std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)> *AllHunspells;
   char *GetConvertedWord (const char *Source, iconv_t Converter);
   DicInfo SingularSpeller;

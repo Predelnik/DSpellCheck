@@ -193,6 +193,7 @@ private:
   TCHAR *FileTypes;
   TCHAR *AspellPath;
   TCHAR *HunspellPath;
+  TCHAR *AdditionalHunspellPath;
   BOOL IgnoreYo;
   BOOL ConvertSingleQuotes;
   BOOL CheckThose;
