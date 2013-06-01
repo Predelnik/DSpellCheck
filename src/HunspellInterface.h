@@ -76,6 +76,7 @@ public:
   void ReadUserDic (WordSet *Target, TCHAR *Path);
   void SetUseOneDic (BOOL Value);
   void UpdateOnDicRemoval (TCHAR *Path);
+  BOOL GetLangOnlySystem (TCHAR *Lang);
 private:
   DicInfo CreateHunspell (TCHAR *Name, int Type);
   BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);

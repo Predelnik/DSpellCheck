@@ -267,7 +267,7 @@ void DownloadDicsDlg::DownloadSelected ()
           SetString (DicFileName, (*it).first);
           _tcscat (DicFileLocalPath, DicFileName);
           _tcscat (DicFileLocalPath, _T (".aff"));
-          _tcscpy (HunspellDicPath, SpellCheckerInstance->GetHunspellPath ());
+          _tcscpy (HunspellDicPath, SpellCheckerInstance->GetInstallSystem () ? SpellCheckerInstance->GetHunspellAdditionalPath () : SpellCheckerInstance->GetHunspellPath ());
           _tcscat (HunspellDicPath, _T ("\\"));
           _tcscat (HunspellDicPath, DicFileName);
           _tcscat (HunspellDicPath, _T (".aff"));
@@ -372,6 +372,7 @@ clean_and_continue:
   for (int i = 0; i < ListBox_GetCount (HFileList); i++)
     CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
   SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
+  SpellCheckerInstance->GetHunspellSpeller ()->SetAdditionalDirectory (SpellCheckerInstance->GetHunspellAdditionalPath ());
   SpellCheckerInstance->ReinitLanguageLists ();
   SpellCheckerInstance->DoPluginMenuInclusion ();
   CLEAN_AND_ZERO_ARR (LocalPathANSI);
@@ -582,14 +583,16 @@ void DownloadDicsDlg::RemoveTimer ()
   Timer = 0;
 }
 
-void DownloadDicsDlg::SetShowOnlyKnown (BOOL Value)
+void DownloadDicsDlg::SetOptions (BOOL ShowOnlyKnown, BOOL InstallSystem)
 {
-  Button_SetCheck (HShowOnlyKnown, Value ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HShowOnlyKnown, ShowOnlyKnown ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HInstallSystem, InstallSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void DownloadDicsDlg::UpdateOptions (SpellChecker *SpellCheckerInstance)
 {
   SpellCheckerInstance->SetShowOnlyKnow (Button_GetCheck (HShowOnlyKnown) == BST_CHECKED);
+  SpellCheckerInstance->SetInstallSystem (Button_GetCheck (HInstallSystem) == BST_CHECKED);
 }
 
 BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
@@ -604,6 +607,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       HInstallSelected = ::GetDlgItem (_hSelf, IDOK);
       HShowOnlyKnown = ::GetDlgItem (_hSelf, IDC_SHOWONLYKNOWN);
       HRefresh = ::GetDlgItem (_hSelf, IDC_REFRESH);
+      HInstallSystem = ::GetDlgItem (_hSelf, IDC_INSTALL_SYSTEM);
       // RefreshIcon = LoadIcon (_hInst, MAKEINTRESOURCE (IDI_ICON1));
       RefreshIcon = (HICON) LoadImage (_hInst, MAKEINTRESOURCE (IDI_ICON1), IMAGE_ICON, 16, 16, 0);
       SendMessage (HRefresh, BM_SETIMAGE, (WPARAM) IMAGE_ICON, (LPARAM) RefreshIcon);
@@ -654,6 +658,12 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       case IDC_REFRESH:
         {
           ReinitServer (this, FALSE);
+        }
+        break;
+      case IDC_INSTALL_SYSTEM:
+        if (HIWORD (wParam) == BN_CLICKED)
+        {
+          SendEvent (EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE);
         }
         break;
       case IDC_SHOWONLYKNOWN:

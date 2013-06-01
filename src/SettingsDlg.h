@@ -19,11 +19,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #ifndef SETTINGS_DLG_H
 #define SETTINGS_DLG_H
+
 #include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
 #include "TabBar/ControlsTab.h"
 #include "MainDef.h"
 
+class HunspellInterface;
 class SpellChecker;
 struct LanguageName;
 
@@ -34,7 +36,7 @@ public:
   ~SimpleDlg ();
   __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings (SpellChecker *SpellCheckerInstance);
-  BOOL AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages);
+  BOOL AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages, HunspellInterface *HunspellSpeller);
   void FillSugestionsNum (int SuggestionsNum);
   void FillLibInfo (int Status, TCHAR *AspellPath, TCHAR *HunspellPath);
   void DisableLanguageCombo (BOOL Disable);

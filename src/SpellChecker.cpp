@@ -289,9 +289,19 @@ void SpellChecker::SetShowOnlyKnow (BOOL Value)
   ShowOnlyKnown = Value;
 }
 
+void SpellChecker::SetInstallSystem (BOOL Value)
+{
+  InstallSystem = Value;
+}
+
 BOOL SpellChecker::GetShowOnlyKnown ()
 {
   return ShowOnlyKnown;
+}
+
+BOOL SpellChecker::GetInstallSystem ()
+{
+  return InstallSystem;
 }
 
 BOOL SpellChecker::GetDecodeNames ()
@@ -313,6 +323,12 @@ void SpellChecker::ReinitLanguageLists ()
   AbstractSpellerInterface *SpellerToUse = (SpellerId == 1 ?
     (AbstractSpellerInterface *)HunspellSpeller :
   (AbstractSpellerInterface *)AspellSpeller);
+
+  if (SpellerId == 0)
+  {
+    GetDownloadDics ()->display (false);
+    GetRemoveDics ()->display (false);
+  }
 
   if (SpellerId == 1)
     CurrentLang = HunspellLanguage;
@@ -353,7 +369,8 @@ void SpellChecker::ReinitLanguageLists ()
     }
     SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
       SpellerId == 1 ? HunspellLanguage : AspellLanguage,
-      SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages);
+      SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
+      SpellerId == 1 ? HunspellSpeller : 0);
   }
   else
   {
@@ -513,12 +530,17 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     break;
 
   case EID_UPDATE_REMOVE_DICS_OPTIONS:
-    GetRemoveDics ()->SetCheckBoxes (RemoveUserDics);
+    GetRemoveDics ()->SetCheckBoxes (RemoveUserDics, RemoveSystem);
     break;
 
   case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS:
     GetDownloadDics ()->UpdateOptions (this);
     GetDownloadDics ()->UpdateListBox ();
+    SaveSettings ();
+    break;
+
+  case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE:
+    GetDownloadDics ()->UpdateOptions (this);
     SaveSettings ();
     break;
 
@@ -550,9 +572,19 @@ void SpellChecker::SetRemoveUserDics (BOOL Value)
   RemoveUserDics = Value;
 }
 
+void SpellChecker::SetRemoveSystem (BOOL Value)
+{
+  RemoveSystem = Value;
+}
+
 BOOL SpellChecker::GetRemoveUserDics ()
 {
   return RemoveUserDics;
+}
+
+BOOL SpellChecker::GetRemoveSystem ()
+{
+  return RemoveSystem;
 }
 
 void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
@@ -605,7 +637,7 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
 
 void SpellChecker::FillDownloadDics ()
 {
-  GetDownloadDics ()->SetShowOnlyKnown (ShowOnlyKnown);
+  GetDownloadDics ()->SetOptions (ShowOnlyKnown, InstallSystem);
 }
 
 void SpellChecker::ResetDownloadCombobox ()
@@ -2154,7 +2186,9 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en_GB"));
   SaveToIni (_T ("Aspell_Language"), AspellLanguage, _T ("en"));
   SaveToIni (_T ("Remove_User_Dics_On_Dic_Remove"), RemoveUserDics, 0);
+  SaveToIni (_T ("Remove_Dics_For_All_Users"), RemoveSystem, 0);
   SaveToIni (_T ("Show_Only_Known"), ShowOnlyKnown, TRUE);
+  SaveToIni (_T ("Install_Dictionaries_For_All_Users"), InstallSystem, FALSE);
   TCHAR Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < countof (ServerNames); i++)
   {
@@ -2301,6 +2335,7 @@ void SpellChecker::LoadSettings ()
   RefreshUnderlineStyle ();
   CLEAN_AND_ZERO_ARR (BufUtf8);
   LoadFromIni (ShowOnlyKnown, _T ("Show_Only_Known"), TRUE);
+  LoadFromIni (InstallSystem, _T ("Install_Dictionaries_For_All_Users"), FALSE);
   TCHAR Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < countof (ServerNames); i++)
   {
@@ -2309,6 +2344,7 @@ void SpellChecker::LoadSettings ()
   }
   LoadFromIni (LastUsedAddress, _T ("Last_Used_Address_Index"), 0);
   LoadFromIni (RemoveUserDics, _T ("Remove_User_Dics_On_Dic_Remove"), 0);
+  LoadFromIni (RemoveSystem, _T ("Remove_Dics_For_All_Users"), 0);
   LoadFromIni (DecodeNames, _T ("Decode_Language_Names"), TRUE);
 }
 

@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "resource.h"
 #include "LanguageName.h"
+#include "HunspellInterface.h"
 
 #include <uxtheme.h>
 #include <Vsstyle.h>
@@ -53,7 +54,7 @@ void SimpleDlg::DisableLanguageCombo (BOOL Disable)
 }
 
 // Called from main thread, beware!
-BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages)
+BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages, HunspellInterface *HunspellSpeller)
 {
   ComboBox_ResetContent (HComboLanguage);
   ListBox_ResetContent (GetLangList ()->GetListBox ());
@@ -69,8 +70,17 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailabl
       SelectedIndex = i;
 
     ComboBox_AddString (HComboLanguage, LangsAvailable->at (i).AliasName);
-    ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i).AliasName);
-    ListBox_AddString (GetRemoveDics ()->GetListBox (), LangsAvailable->at (i).AliasName);
+    if (HunspellSpeller)
+    {
+      ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i).AliasName);
+
+      TCHAR Buf[DEFAULT_BUF_SIZE];
+      _tcscpy (Buf, LangsAvailable->at (i).AliasName);
+      if (HunspellSpeller->GetLangOnlySystem (LangsAvailable->at (i).OrigName))
+        _tcscat (Buf, _T (" [!For All Users]"));
+
+      ListBox_AddString (GetRemoveDics ()->GetListBox (), Buf);
+    }
   }
 
   if (_tcscmp (CurrentLanguage, _T ("<MULTIPLE>")) == 0)

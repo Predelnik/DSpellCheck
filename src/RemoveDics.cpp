@@ -57,41 +57,46 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
 {
   int Count = 0;
   BOOL Success = FALSE;
+  BOOL Res = FALSE;
   for (int i = 0; i < ListBox_GetCount (HLangList); i++)
   {
     if (CheckedListBox_GetCheckState (HLangList, i) == BST_CHECKED)
     {
       TCHAR FileName[MAX_PATH];
-      *FileName = _T ('\0');
-      _tcscat (FileName, SpellCheckerInstance->GetHunspellPath ());
-      _tcscat (FileName, _T ("\\"));
-      _tcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
-      SpellCheckerInstance->GetHunspellSpeller ()->UpdateOnDicRemoval (FileName);
-      _tcscat (FileName, _T (".aff"));
-      SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-      Success = DeleteFile (FileName);
-      _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".dic"), 4);
-      SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-      Success = Success && DeleteFile (FileName);
-      if (SpellCheckerInstance->GetRemoveUserDics ())
+      for (int j = 0; j < 1 + SpellCheckerInstance->GetRemoveSystem () ? 1 : 0; j++)
       {
-        _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".usr"), 4);
+        *FileName = _T ('\0');
+        _tcscat (FileName, (j == 0) ? SpellCheckerInstance->GetHunspellPath () : SpellCheckerInstance->GetHunspellAdditionalPath ());
+        _tcscat (FileName, _T ("\\"));
+        _tcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
+        SpellCheckerInstance->GetHunspellSpeller ()->UpdateOnDicRemoval (FileName);
+        _tcscat (FileName, _T (".aff"));
         SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-        DeleteFile (FileName); // Success doesn't matter in that case, 'cause dictionary might not exist.
+        Success = DeleteFile (FileName);
+        _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".dic"), 4);
+        SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
+        Success = Success && DeleteFile (FileName);
+        if (SpellCheckerInstance->GetRemoveUserDics ())
+        {
+          _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".usr"), 4);
+          SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
+          DeleteFile (FileName); // Success doesn't matter in that case, 'cause dictionary might not exist.
+        }
+        if (Success)
+          Count++;
       }
-      if (Success)
-        Count++;
     }
   }
+  for (int i = 0; i < ListBox_GetCount (HLangList); i++)
+    CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
   if (Count > 0)
   {
     SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
+    SpellCheckerInstance->GetHunspellSpeller ()->SetAdditionalDirectory (SpellCheckerInstance->GetHunspellAdditionalPath ()); // Calling the update for Hunspell dictionary list
     SpellCheckerInstance->ReinitLanguageLists ();
     SpellCheckerInstance->DoPluginMenuInclusion ();
     TCHAR Buf[DEFAULT_BUF_SIZE];
     _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
-    for (int i = 0; i < ListBox_GetCount (HLangList); i++)
-      CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
     MessageBox (0, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
   }
 }
@@ -99,11 +104,13 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
 void RemoveDics::UpdateOptions (SpellChecker *SpellCheckerInstance)
 {
   SpellCheckerInstance->SetRemoveUserDics (Button_GetCheck (HRemoveUserDics) == BST_CHECKED);
+  SpellCheckerInstance->SetRemoveSystem (Button_GetCheck (HRemoveSystem) == BST_CHECKED);
 }
 
-void RemoveDics::SetCheckBoxes (BOOL RemoveUserDics)
+void RemoveDics::SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem)
 {
   Button_SetCheck (HRemoveUserDics, RemoveUserDics ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
 BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
@@ -114,6 +121,7 @@ BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPara
     {
       HLangList = ::GetDlgItem (_hSelf, IDC_REMOVE_LANGLIST);
       HRemoveUserDics = ::GetDlgItem (_hSelf, IDC_REMOVE_USER_DICS);
+      HRemoveSystem = ::GetDlgItem (_hSelf, IDC_REMOVE_SYSTEM);
       SendEvent (EID_UPDATE_LANG_LISTS);
       SendEvent (EID_UPDATE_REMOVE_DICS_OPTIONS);
       return TRUE;
@@ -124,6 +132,7 @@ BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPara
       switch (LOWORD (wParam))
       {
       case IDC_REMOVE_USER_DICS:
+      case IDC_REMOVE_SYSTEM:
         {
           if (HIWORD (wParam) == BN_CLICKED)
           {

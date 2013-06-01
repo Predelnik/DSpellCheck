@@ -671,6 +671,18 @@ void HunspellInterface::SetAdditionalDirectory (TCHAR *Dir)
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
 
+BOOL HunspellInterface::GetLangOnlySystem (TCHAR *Lang)
+{
+  AvailableLangInfo Needle;
+  Needle.Name = Lang;
+  Needle.Type = 1;
+  std::set <AvailableLangInfo>::iterator It = DicList->find (Needle);
+  if (It != DicList->end () && (*It).Type == 1)
+    return TRUE;
+  else
+    return FALSE;
+}
+
 BOOL HunspellInterface::IsWorking ()
 {
   return IsHunspellWorking;

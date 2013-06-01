@@ -50,7 +50,7 @@ public:
   void RemoveTimer ();
   void OnDisplayAction ();
   void IndicateThatSavingMightBeNeeded ();
-  void SetShowOnlyKnown (BOOL Value);
+  void SetOptions (BOOL ShowOnlyKnown, BOOL InstallSystem);
   void UpdateOptions (SpellChecker *SpellCheckerInstance);
 private:
 private:
@@ -66,6 +66,7 @@ private:
   HWND HInstallSelected;
   HWND HShowOnlyKnown;
   HWND HRefresh;
+  HWND HInstallSystem;
   HICON RefreshIcon;
   HANDLE Timer;
   BOOL CancelPressed;

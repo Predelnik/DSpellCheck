@@ -90,18 +90,23 @@ public:
   void SetOneUserDic (BOOL Value);
   BOOL GetOneUserDic ();
   void SetShowOnlyKnow (BOOL Value);
+  void SetInstallSystem (BOOL Value);
   void FillDialogs (BOOL NoDisplayCall = FALSE);
   void ReinitLanguageLists ();
   TCHAR *GetHunspellPath () {return HunspellPath; };
+  TCHAR *GetHunspellAdditionalPath () {return AdditionalHunspellPath; };
   TCHAR *GetLangByIndex (int i);
   BOOL GetShowOnlyKnown ();
+  BOOL GetInstallSystem ();
   BOOL GetDecodeNames ();
   void DoPluginMenuInclusion (BOOL Invalidate = FALSE);
   HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
   int GetLibMode ();
   BOOL HunspellReinitSettings (BOOL ResetDirectory);
   void SetRemoveUserDics (BOOL Value);
+  void SetRemoveSystem (BOOL Value);
   BOOL GetRemoveUserDics ();
+  BOOL GetRemoveSystem ();
   long PreviousA, PreviousB;
 
 private:
@@ -209,6 +214,7 @@ private:
   BOOL IgnoreOneLetter;
   BOOL DecodeNames;
   BOOL ShowOnlyKnown;
+  BOOL InstallSystem;
   int SBSize;
   int SBTrans;
   int BufferSize;
@@ -237,6 +243,7 @@ private:
   int VisibleTextLength;
   long VisibleTextOffset;
   BOOL RemoveUserDics;
+  BOOL RemoveSystem;
 
   AbstractSpellerInterface *CurrentSpeller;
   AspellInterface *AspellSpeller;
