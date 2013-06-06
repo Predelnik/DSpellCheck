@@ -52,3 +52,9 @@ v1.2.0
 * Now by Default Hunspell user dictionaries are stored separately, this could be turned to the way it was.
 * No more checking of words contained in hotlinks
 * Some minor bugs were fixed.
+
+v1.2.1
+* Fix 1.2.0 specific bug that non-default encoding were causing some troubles (missing recheck) sometimes
+* Make that if scrollbar was moved because of user input, immediate recheck isn't being done.
+* Add support for using two dictionary Hunspell directories (by default one for all users, one for current only) and thus ability to remove and install dictionaries to/from these directories.
+* Optimize plugin performance on scrolling a little.
