@@ -387,7 +387,7 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
 {
   ReinitLanguageLists ();
   SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
-  SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath);
+  SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath, AdditionalHunspellPath);
   SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
   SettingsDlgInstance->GetSimpleDlg ()->SetFileTypes (CheckThose, FileTypes);
   SettingsDlgInstance->GetSimpleDlg ()->SetCheckComments (CheckComments);
@@ -545,7 +545,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     break;
 
   case EID_LIB_CHANGE:
-    SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath);
+    SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath, AdditionalHunspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
     RecheckVisibleBothViews ();
     break;
@@ -2445,6 +2445,12 @@ void SpellChecker::SetAspellPath (const TCHAR *Path)
 void SpellChecker::SetHunspellPath (const TCHAR *Path)
 {
   SetString (HunspellPath, Path);
+  HunspellReinitSettings (1);
+}
+
+void SpellChecker::SetHunspellAdditionalPath (const TCHAR *Path)
+{
+  SetString (AdditionalHunspellPath, Path);
   HunspellReinitSettings (1);
 }
 

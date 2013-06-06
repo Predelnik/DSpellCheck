@@ -196,6 +196,9 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   else
     SpellCheckerInstance->SetHunspellPath (Buf);
 
+  Edit_GetText (HSystemPath, Buf, DEFAULT_BUF_SIZE);
+  SpellCheckerInstance->SetHunspellAdditionalPath (Buf);
+
   SpellCheckerInstance->SetCheckThose (Button_GetCheck (HCheckOnlyThose) == BST_CHECKED ? 1 : 0);
   Edit_GetText (HFileTypes, Buf, DEFAULT_BUF_SIZE);
   SpellCheckerInstance->SetFileTypes (Buf);
@@ -212,7 +215,7 @@ void SimpleDlg::SetLibMode (int LibMode)
   ComboBox_SetCurSel (HLibrary, LibMode);
 }
 
-void SimpleDlg::FillLibInfo (int Status, TCHAR *AspellPath, TCHAR * HunspellPath)
+void SimpleDlg::FillLibInfo (int Status, TCHAR *AspellPath, TCHAR *HunspellPath, TCHAR *HunspellAdditionalPath)
 {
   if (GetSelectedLib () == 0)
   {
@@ -236,11 +239,18 @@ void SimpleDlg::FillLibInfo (int Status, TCHAR *AspellPath, TCHAR * HunspellPath
     TCHAR *Path = 0;
     GetActualAspellPath (Path, AspellPath);
     Edit_SetText (HLibPath, Path);
+
     Static_SetText (HLibGroupBox, _T ("Aspell Location"));
     ShowWindow (HLibLink, 1);
     ShowWindow (HRemoveDics, 0);
     ShowWindow (HDecodeNames, 0);
     ShowWindow (HOneUserDic, 0);
+    ShowWindow (HAspellResetPath, 1);
+    ShowWindow (HHunspellResetPath, 0);
+    ShowWindow (HHunspellPathGroupBox, 0);
+    ShowWindow (HHunspellPathType, 0);
+    ShowWindow (HLibPath, 1);
+    ShowWindow (HSystemPath, 0);
     // SetWindowText (HLibLink, _T ("<A HREF=\"http://aspell.net/win32/\">Aspell Library and Dictionaries for Win32</A>"));
     CLEAN_AND_ZERO_ARR (Path);
   }
@@ -252,9 +262,24 @@ void SimpleDlg::FillLibInfo (int Status, TCHAR *AspellPath, TCHAR * HunspellPath
     ShowWindow (HRemoveDics, 1);
     ShowWindow (HDecodeNames, 1);
     ShowWindow (HOneUserDic, 1);
+    ShowWindow (HAspellResetPath, 0);
+    ShowWindow (HHunspellResetPath, 1);
+    ShowWindow (HHunspellPathGroupBox, 1);
+    ShowWindow (HHunspellPathType, 1);
+    if (ComboBox_GetCurSel (HHunspellPathType) == 0)
+    {
+      ShowWindow (HLibPath, 1);
+      ShowWindow (HSystemPath, 0);
+    }
+    else
+    {
+      ShowWindow (HLibPath, 0);
+      ShowWindow (HSystemPath, 1);
+    }
     // SetWindowText (HLibLink, _T ("<A HREF=\"http://wiki.openoffice.org/wiki/Dictionaries\">Hunspell Dictionaries</A>"));
-    Static_SetText (HLibGroupBox, _T ("Hunspell Dictionaries Location"));
+    Static_SetText (HLibGroupBox, _T ("Hunspell Settings"));
     Edit_SetText (HLibPath, HunspellPath);
+    Edit_SetText (HSystemPath, HunspellAdditionalPath);
   }
 }
 
@@ -353,9 +378,18 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
       HRemoveDics = ::GetDlgItem (_hSelf, IDC_REMOVE_DICS);
       HDecodeNames = ::GetDlgItem (_hSelf, IDC_DECODE_NAMES);
       HOneUserDic = ::GetDlgItem (_hSelf, IDC_ONE_USER_DIC);
-
+      HHunspellPathGroupBox = ::GetDlgItem (_hSelf, IDC_HUNSPELL_PATH_GROUPBOX);
+      HHunspellPathType = ::GetDlgItem (_hSelf, IDC_HUNSPELL_PATH_TYPE);
+      HAspellResetPath = ::GetDlgItem (_hSelf, IDC_RESETASPELLPATH);
+      HHunspellResetPath = ::GetDlgItem (_hSelf, IDC_RESETHUNSPELLPATH);
+      HSystemPath = ::GetDlgItem (_hSelf, IDC_SYSTEMPATH);
       ComboBox_AddString (HLibrary, _T ("Aspell"));
       ComboBox_AddString (HLibrary, _T ("Hunspell"));
+      ComboBox_AddString (HHunspellPathType, _T ("For Current User"));
+      ComboBox_AddString (HHunspellPathType, _T ("For All Users"));
+      ComboBox_SetCurSel (HHunspellPathType, 0);
+      ShowWindow (HLibPath, 1);
+      ShowWindow (HSystemPath, 0);
 
       ComboBox_AddString (HSuggType, _T ("Special Suggestion Button"));
       ComboBox_AddString (HSuggType, _T ("Use N++ Context Menu"));
@@ -391,6 +425,21 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
           SendEvent (EID_LIB_CHANGE);
         }
         break;
+      case IDC_HUNSPELL_PATH_TYPE:
+        if (HIWORD (wParam) == CBN_SELCHANGE)
+        {
+          if (ComboBox_GetCurSel (HHunspellPathType) == 0 || GetSelectedLib () == 0)
+          {
+            ShowWindow (HLibPath, 1);
+            ShowWindow (HSystemPath, 0);
+          }
+          else
+          {
+            ShowWindow (HLibPath, 0);
+            ShowWindow (HSystemPath, 1);
+          }
+        }
+        break;
       case IDC_SUGGESTIONS_NUM:
         {
           if (HIWORD (wParam) == EN_CHANGE)
@@ -418,6 +467,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
         }
         break;
       case IDC_RESETASPELLPATH:
+      case IDC_RESETHUNSPELLPATH:
         {
           if (HIWORD (wParam) == BN_CLICKED)
           {
@@ -427,7 +477,11 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
             else
               GetDefaultHunspellPath_ (Path);
 
-            Edit_SetText (HLibPath, Path);
+            if (GetSelectedLib () == 0 || ComboBox_GetCurSel (HHunspellPathType) == 0)
+              Edit_SetText (HLibPath, Path);
+            else
+              Edit_SetText (HSystemPath, _T (".\\plugins\\config\\Hunspell"));
+
             CLEAN_AND_ZERO_ARR (Path);
             return TRUE;
           }

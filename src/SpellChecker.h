@@ -72,6 +72,7 @@ public:
   void SetSuggestionsNum (int Num);
   void SetAspellPath (const TCHAR *Path);
   void SetHunspellPath (const TCHAR *Path);
+  void SetHunspellAdditionalPath (const TCHAR *Path);
   void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg);
   void SetCheckThose (int CheckThoseArg);
   void SetFileTypes (TCHAR *FileTypesArg);
