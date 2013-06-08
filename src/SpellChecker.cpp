@@ -2217,7 +2217,7 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Aspell_Path"), AspellPath, Path);
   CLEAN_AND_ZERO_ARR (Path);
   GetDefaultHunspellPath (Path);
-  SaveToIni (_T ("Hunspell_Path"), HunspellPath, Path);
+  SaveToIni (_T ("User_Hunspell_Path"), HunspellPath, Path);
   SaveToIni (_T ("System_Hunspell_Path"), AdditionalHunspellPath, _T (".\\plugins\\config\\Hunspell"));
   CLEAN_AND_ZERO_ARR (Path);
   SaveToIni (_T ("Suggestions_Number"), SuggestionsNum, 5);
@@ -2280,7 +2280,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (AspellPath, _T ("Aspell_Path"), Path);
   CLEAN_AND_ZERO_ARR (Path);
   GetDefaultHunspellPath (Path);
-  LoadFromIni (HunspellPath, _T ("Hunspell_Path"), Path);
+  LoadFromIni (HunspellPath, _T ("User_Hunspell_Path"), Path);
   CLEAN_AND_ZERO_ARR (Path);
 
   AdditionalHunspellPath = 0;

@@ -58,3 +58,6 @@ v1.2.1
 * Make that if scrollbar was moved because of user input, immediate recheck isn't being done.
 * Add support for using two dictionary Hunspell directories (by default one for all users, one for current only) and thus ability to remove and install dictionaries to/from these directories.
 * Optimize plugin performance on scrolling a little.
+
+v1.2.2
+* Rename Hunspell_Path setting in DSpellCheck.ini to User_Hunspell_Path to avoid some troubles.
