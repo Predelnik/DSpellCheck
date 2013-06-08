@@ -2180,7 +2180,7 @@ void SpellChecker::SaveSettings ()
   _tfopen_s (&Fp, IniFilePath, _T ("w")); // Cleaning settings file (or creating it)
   fclose (Fp);
   TCHAR *TBuf = 0;
-  SaveToIni (_T ("Autocheck"), AutoCheckText, 0);
+  SaveToIni (_T ("Autocheck"), AutoCheckText, 1);
   SaveToIni (_T ("Hunspell_Multiple_Languages"), HunspellMultiLanguages, _T (""));
   SaveToIni (_T ("Aspell_Multiple_Languages"), AspellMultiLanguages, _T (""));
   SaveToIni (_T ("Hunspell_Language"), HunspellLanguage, _T ("en_GB"));
@@ -2287,7 +2287,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (AdditionalHunspellPath, _T ("System_Hunspell_Path"), _T (".\\plugins\\config\\Hunspell"));
 
   LoadFromIni (SuggestionsMode, _T ("Suggestions_Control"), 0);
-  LoadFromIni (AutoCheckText, _T ("Autocheck"), 0);
+  LoadFromIni (AutoCheckText, _T ("Autocheck"), 1);
   UpdateAutocheckStatus (0);
   LoadFromIni (AspellMultiLanguages, _T ("Aspell_Multiple_Languages"), _T (""));
   LoadFromIni (HunspellMultiLanguages, _T ("Hunspell_Multiple_Languages"), _T (""));

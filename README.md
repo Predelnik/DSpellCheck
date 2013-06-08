@@ -61,3 +61,4 @@ v1.2.1
 
 v1.2.2
 * Rename Hunspell_Path setting in DSpellCheck.ini to User_Hunspell_Path to avoid some troubles.
+* Make AutoCheck turned on by default.
