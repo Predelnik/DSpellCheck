@@ -442,6 +442,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     break;
   case EID_APPLY_MULTI_LANG_SETTINGS:
     LangListInstance->ApplyChoice (this);
+    SaveSettings ();
     break;
 
   case EID_HIDE_DIALOG:
