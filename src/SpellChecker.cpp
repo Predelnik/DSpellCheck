@@ -37,7 +37,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Scintilla.h"
 #include "Suggestions.h"
 
-#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&…¹—«»–•©›“”·")
+#ifdef UNICODE
+#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D\u00B7")
+#else // All non-ASCII symbols removed
+#define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&")
+#endif
 
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)

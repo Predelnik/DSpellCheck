@@ -39,16 +39,38 @@ void SetString (char *&Target, const TCHAR *Str)
 {
   CLEAN_AND_ZERO_ARR (Target);
   size_t OutSize = _tcslen (Str) + 1;
+  size_t PrevOutSize = 0;
   Target = new char[OutSize];
   char *OutBuf = Target;
+  size_t res = (size_t) -1;
 
 #ifndef UNICODE
   strcpy (Target, Str);
 #else // if UNICODE
   iconv_t Converter = iconv_open ("CHAR//IGNORE", "UCS-2LE");
-
   size_t InSize = (_tcslen (Str) + 1) * sizeof (TCHAR);
-  size_t res = iconv (Converter, (const char **) &Str, &InSize, &OutBuf, &OutSize);
+
+  while (*Str)
+  {
+#ifndef UNICODE
+    InSize = 1;
+#else
+    InSize = 2;
+#endif
+    if (!InSize)
+      break;
+    PrevOutSize = OutSize;
+    res = iconv (Converter, (const char **) &Str, &InSize, &OutBuf, &OutSize);
+    if (PrevOutSize - OutSize > 1)
+    {
+      // If char is multichar then we count it as not converted
+      OutBuf -= (PrevOutSize - OutSize);
+      *(OutBuf) = 0;
+      OutSize = PrevOutSize;
+    }
+  }
+
+  *(OutBuf) = 0;
   iconv_close (Converter);
   if (res == (size_t)(-1))
   {
@@ -132,11 +154,28 @@ void SetStringSUtf8 (char *&Target, const char *Str)
 {
   iconv_t Converter = iconv_open ("CHAR//IGNORE", "UTF-8");
   CLEAN_AND_ZERO_ARR (Target);
-  size_t InSize = strlen (Str) + 1;
+  size_t InSize = 0;
   size_t OutSize = Utf8Length (Str) + 1;
+  size_t PrevOutSize = 0;
   Target = new char[OutSize];
+  size_t res = (size_t) -1;
   char *OutBuf = (char *) Target;
-  size_t res = iconv (Converter, &Str, &InSize, &OutBuf, &OutSize);
+  while (*Str)
+  {
+    InSize = Utf8GetCharSize (*Str);
+    if (!InSize)
+      break;
+    PrevOutSize = OutSize;
+    res = iconv (Converter, &Str, &InSize, &OutBuf, &OutSize);
+    if (PrevOutSize - OutSize > 1)
+    {
+      // If char is multichar then we count it as not converted
+      OutBuf -= (PrevOutSize - OutSize);
+      *(OutBuf) = 0;
+      OutSize = PrevOutSize;
+    }
+  }
+  *(OutBuf) = 0;
   iconv_close (Converter);
 
   if (res == (size_t)(-1))
