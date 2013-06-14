@@ -568,7 +568,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
 
         if ((((LPNMHDR)lParam)->hwndFrom == HLibLink) && (item.iLink == 0))
         {
-          ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
+          ShellExecute (NULL, _T ("open"), item.szUrl, NULL, NULL, SW_SHOW);
         }
 
         break;

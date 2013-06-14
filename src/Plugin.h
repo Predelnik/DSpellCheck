@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 
-const int nbFunc = 7;
+const int nbFunc = 8;
 #define QUICK_LANG_CHANGE_ITEM 3
 
 class LangList;

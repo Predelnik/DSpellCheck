@@ -331,6 +331,11 @@ void StartSettings ()
   SettingsDlgInstance->DoDialog ();
 }
 
+void StartManual ()
+{
+  ShellExecute (NULL, _T ("open"), _T ("https://github.com/Predelnik/DSpellCheck/wiki/Manual"), NULL, NULL, SW_SHOW);
+}
+
 void StartAboutDlg ()
 {
   AboutDlgInstance->DoDialog ();
@@ -437,7 +442,8 @@ void commandMenuInit()
   setCommand(4, TEXT("---"), NULL, NULL, false);
 
   setCommand(5, TEXT("Settings..."), StartSettings, NULL, false);
-  setCommand(6, TEXT("About..."), StartAboutDlg, NULL, false);
+  setCommand(6, TEXT("Online Manual..."), StartManual, NULL, false);
+  setCommand(7, TEXT("About..."), StartAboutDlg, NULL, false);
 }
 
 void UpdateLangsMenu ()
