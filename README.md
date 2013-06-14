@@ -62,3 +62,8 @@ v1.2.1
 v1.2.2
 * Rename Hunspell_Path setting in DSpellCheck.ini to User_Hunspell_Path to avoid some troubles.
 * Make AutoCheck turned on by default.
+
+v1.2.3
+* Fix bug with Multiple Languages settings not being saved when chosen from "Change Current Language" menu.
+* Fix bug with incorrect delimiters while checking ANSI files if system default encoding is Japanese.
+* Add link to short online manual to plugin menu.
