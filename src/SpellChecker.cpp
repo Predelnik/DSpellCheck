@@ -2213,7 +2213,7 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Ignore_Have_Capital"), IgnoreCHave, 1);
   SaveToIni (_T ("Ignore_All_Capital"), IgnoreCAll, 1);
   SaveToIni (_T ("Ignore_With_"), Ignore_, 1);
-  SaveToIni (_T ("Ignore_That_Start_or_End_with_'"), IgnoreSEApostrophe, 1);
+  SaveToIni (_T ("Ignore_That_Start_or_End_with_'"), IgnoreSEApostrophe, 0);
   SaveToIni (_T ("Ignore_One_Letter"), IgnoreOneLetter, 0);
   SaveToIni (_T ("Underline_Color"), UnderlineColor, 0x0000ff);
   SaveToIni (_T ("Underline_Style"), UnderlineStyle, INDIC_SQUIGGLE);
@@ -2323,7 +2323,7 @@ void SpellChecker::LoadSettings ()
   int Value;
   LoadFromIni (Value, _T ("United_User_Dictionary(Hunspell)"), FALSE);
   SetOneUserDic (Value);
-  LoadFromIni (IgnoreSEApostrophe, _T ("Ignore_That_Start_or_End_with_'"), 1);
+  LoadFromIni (IgnoreSEApostrophe, _T ("Ignore_That_Start_or_End_with_'"), 0);
   int i;
 
   HunspellSpeller->SetDirectory (HunspellPath);
