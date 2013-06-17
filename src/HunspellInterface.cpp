@@ -623,6 +623,7 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
     _tcscat (UserDicPath, _T ("\\"));
   _tcscat (UserDicPath, _T ("UserDic.dic")); // Should be tunable really
   ReadUserDic (Memorized, UserDicPath); // We should load user dictionary first.
+
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
 
@@ -668,6 +669,14 @@ void HunspellInterface::SetAdditionalDirectory (TCHAR *Dir)
   // Now we have 2 dictionaries on our hands
 
   InitialReadingBeenDone = TRUE;
+
+  TCHAR TemporaryDicPath[DEFAULT_BUF_SIZE]; // Reading system path unified dic too
+  _tcscpy (TemporaryDicPath, Dir);
+  if (TemporaryDicPath[_tcslen (TemporaryDicPath) - 1] != _T ('\\'))
+    _tcscat (TemporaryDicPath, _T ("\\"));
+  _tcscat (TemporaryDicPath, _T ("UserDic.dic")); // Should be tunable really
+  ReadUserDic (Memorized, TemporaryDicPath); // We should load user dictionary first.
+
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
 
