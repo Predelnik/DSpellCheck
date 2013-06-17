@@ -2550,7 +2550,10 @@ void SpellChecker::SetAspellLanguage (const TCHAR *Str)
   SetString (AspellLanguage, Str);
 
   if (_tcscmp (Str, _T ("<MULTIPLE>")) == 0)
+  {
+    SetMultipleLanguages (AspellMultiLanguages, AspellSpeller);
     AspellSpeller->SetMode (1);
+  }
   else
   {
     TCHAR *TBuf = 0;
@@ -2566,7 +2569,10 @@ void SpellChecker::SetHunspellLanguage (const TCHAR *Str)
   SetString (HunspellLanguage, Str);
 
   if (_tcscmp (Str, _T ("<MULTIPLE>")) == 0)
+  {
+    SetMultipleLanguages (HunspellMultiLanguages, HunspellSpeller);
     HunspellSpeller->SetMode (1);
+  }
   else
   {
     HunspellSpeller->SetLanguage (HunspellLanguage);
@@ -2603,6 +2609,28 @@ void SpellChecker::SetDelimiters (const char *Str)
   CLEAN_AND_ZERO_ARR (TargetBuf);
 }
 
+void SpellChecker::SetMultipleLanguages (const TCHAR *MultiString, AbstractSpellerInterface *Speller)
+{
+  TCHAR *Context = 0;
+  std::vector<TCHAR *> *MultiLangList = new std::vector<TCHAR *>;
+  TCHAR *MultiStringCopy = 0;
+  TCHAR *Token = 0;
+  TCHAR *TBuf = 0;
+
+  SetString (MultiStringCopy, MultiString);
+  Token = _tcstok_s (MultiStringCopy, _T ("|"), &Context);
+  while (Token)
+  {
+    TBuf = 0;
+    SetString (TBuf, Token);
+    MultiLangList->push_back (TBuf);
+    Token = _tcstok_s (NULL, _T ("|"), &Context);
+  }
+
+  Speller->SetMultipleLanguages (MultiLangList);
+  CLEAN_AND_ZERO_STRING_VECTOR (MultiLangList);
+}
+
 BOOL SpellChecker::HunspellReinitSettings (BOOL ResetDirectory)
 {
   TCHAR *TBuf = 0;
@@ -2611,25 +2639,11 @@ BOOL SpellChecker::HunspellReinitSettings (BOOL ResetDirectory)
     HunspellSpeller->SetDirectory (HunspellPath);
     HunspellSpeller->SetAdditionalDirectory (AdditionalHunspellPath);
   }
-  if (_tcscmp (HunspellLanguage, _T ("<MULTIPLE>")) != 0)
-  {
-    HunspellSpeller->SetLanguage (HunspellLanguage);
-  }
-  std::vector<TCHAR *> *MultiLangList = new std::vector<TCHAR *>;
-  char *Context = 0;
-  char *Token = 0;
   char *MultiLanguagesCopy = 0;
-  SetString (MultiLanguagesCopy, HunspellMultiLanguages);
-  Token = strtok_s (MultiLanguagesCopy, "|", &Context);
-  while (Token)
-  {
-    TBuf = 0;
-    SetString (TBuf, Token);
-    MultiLangList->push_back (TBuf);
-    Token = strtok_s (NULL, "|", &Context);
-  }
-  HunspellSpeller->SetMultipleLanguages (MultiLangList);
-  CLEAN_AND_ZERO_STRING_VECTOR (MultiLangList);
+  if (_tcscmp (HunspellLanguage, _T ("<MULTIPLE>")) != 0)
+    HunspellSpeller->SetLanguage (HunspellLanguage);
+  else
+    SetMultipleLanguages (HunspellMultiLanguages, HunspellSpeller);
 
   CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
   return TRUE;
@@ -2639,28 +2653,14 @@ BOOL SpellChecker::AspellReinitSettings ()
 {
   TCHAR *TBuf = 0;
   AspellSpeller->Init (AspellPath);
+
   if (_tcscmp (AspellLanguage, _T ("<MULTIPLE>")) != 0)
   {
     SetString (TBuf, AspellLanguage);
     AspellSpeller->SetLanguage (TBuf);
   }
-  std::vector<TCHAR *> *MultiLangList = new std::vector<TCHAR *>;
-  char *Context = 0;
-  char *Token = 0;
-  char *MultiLanguagesCopy = 0;
-  SetString (MultiLanguagesCopy, AspellMultiLanguages);
-  Token = strtok_s (MultiLanguagesCopy, "|", &Context);
-  while (Token)
-  {
-    TBuf = 0;
-    SetString (TBuf, Token);
-    MultiLangList->push_back (TBuf);
-    Token = strtok_s (NULL, "|", &Context);
-  }
-  AspellSpeller->SetMultipleLanguages (MultiLangList);
-  CLEAN_AND_ZERO_STRING_VECTOR (MultiLangList);
-
-  CLEAN_AND_ZERO_ARR (MultiLanguagesCopy);
+  else
+    SetMultipleLanguages (AspellMultiLanguages, AspellSpeller);
   return TRUE;
 }
 

@@ -71,6 +71,7 @@ public:
   void SetDelimiters (const char *Str);
   void SetSuggestionsNum (int Num);
   void SetAspellPath (const TCHAR *Path);
+  void SetMultipleLanguages (const TCHAR *MultiString, AbstractSpellerInterface *Speller);
   void SetHunspellPath (const TCHAR *Path);
   void SetHunspellAdditionalPath (const TCHAR *Path);
   void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg);

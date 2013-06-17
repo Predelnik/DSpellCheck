@@ -70,10 +70,9 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailabl
       SelectedIndex = i;
 
     ComboBox_AddString (HComboLanguage, LangsAvailable->at (i).AliasName);
+    ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i).AliasName);
     if (HunspellSpeller)
     {
-      ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i).AliasName);
-
       TCHAR Buf[DEFAULT_BUF_SIZE];
       _tcscpy (Buf, LangsAvailable->at (i).AliasName);
       if (HunspellSpeller->GetLangOnlySystem (LangsAvailable->at (i).OrigName))
