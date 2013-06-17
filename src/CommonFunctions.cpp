@@ -591,3 +591,46 @@ BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName)
   SetString (Target, OrigName);
   return FALSE;
 }
+
+static BOOL TryToCreateDir (TCHAR *Path, BOOL Silent)
+{
+  if (!CreateDirectory (Path, NULL))
+  {
+    if (!Silent)
+    {
+      TCHAR Message[DEFAULT_BUF_SIZE];
+      _stprintf (Message, _T ("Can't create directory %s"), Path);
+      MessageBox (0, Message, _T ("Error in directory creation"), MB_OK | MB_ICONERROR);
+    }
+    return FALSE;
+  }
+  return TRUE;
+}
+
+BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent)
+{
+  for (unsigned int i = 0; i < _tcslen (Path); i++)
+  {
+    if (Path[i] == _T ('\\'))
+    {
+      Path[i] = _T ('\0');
+      if (!PathFileExists (Path))
+      {
+        if (!TryToCreateDir (Path, Silent))
+          return FALSE;
+      }
+      Path[i] = _T ('\\');
+    }
+  }
+  if (!PathFileExists (Path))
+  {
+    if (!TryToCreateDir (Path, Silent))
+      return FALSE;
+  }
+  return TRUE;
+}
+
+TCHAR *GetLastSlashPosition (TCHAR *Path)
+{
+  return _tcsrchr (Path, _T ('\\'));
+}

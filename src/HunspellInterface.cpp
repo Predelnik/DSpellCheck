@@ -114,8 +114,8 @@ void HunspellInterface::UpdateOnDicRemoval (TCHAR *Path)
     delete []((*it).first);
     CLEAN_AND_ZERO ((*it).second.Speller);
     WriteUserDic ((*it).second.LocalDic, (*it).second.LocalDicPath);
-    CLEAN_AND_ZERO ((*it).second.LocalDicPath)
-      iconv_close ((*it).second.Converter);
+    CLEAN_AND_ZERO ((*it).second.LocalDicPath);
+    iconv_close ((*it).second.Converter);
     iconv_close ((*it).second.BackConverter);
     iconv_close ((*it).second.ConverterANSI);
     iconv_close ((*it).second.BackConverterANSI);
@@ -368,6 +368,13 @@ void HunspellInterface::WriteUserDic (WordSet *Target, TCHAR *Path)
 
   SortedWordSet TemporarySortedWordSet (SortCompareChars); // Wordset itself being removed here as local variable, all strings are not copied
 
+  TCHAR *LastSlashPos = GetLastSlashPosition (Path);
+  *LastSlashPos = _T ('\0');
+  CheckForDirectoryExistence (Path, TRUE);
+  *LastSlashPos = _T ('\\');
+
+  SetFileAttributes (Path, FILE_ATTRIBUTE_NORMAL);
+
   Fp = _tfopen (Path, _T ("w"));
   if (!Fp)
     return;
@@ -439,20 +446,28 @@ void HunspellInterface::AddToDictionary (char *Word)
   else
     DicPath = LastSelectedSpeller.LocalDicPath;
 
+  int res = 0;
+
   if (!PathFileExists (DicPath))
   {
-    // If there's no life then we're checking if we can create it, there's no harm in it
+    TCHAR *LastSlashPos = GetLastSlashPosition (DicPath);
+    *LastSlashPos = _T ('\0');
+    CheckForDirectoryExistence (DicPath, TRUE);
+    *LastSlashPos = _T ('\\');
+    // If there's no file then we're checking if we can create it, there's no harm in it
     int LocalDicFileHandle = _topen (DicPath, _O_CREAT | _O_BINARY | _O_WRONLY);
     if (LocalDicFileHandle == -1)
     {
       MessageBox (0, _T ("User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."), _T ("User dictionary cannot be saved"), MB_OK | MB_ICONWARNING);
     }
     else
+    {
       _close (LocalDicFileHandle);
+    }
+    SetFileAttributes (DicPath, FILE_ATTRIBUTE_NORMAL);
   }
   else
   {
-    // Otherwise we're using _taccess to check for permission to write there.
     SetFileAttributes (DicPath, FILE_ATTRIBUTE_NORMAL);
     int LocalDicFileHandle = _topen (DicPath, _O_APPEND | _O_BINARY | _O_WRONLY);
     if (LocalDicFileHandle == -1)

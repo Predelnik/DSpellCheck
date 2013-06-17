@@ -64,4 +64,7 @@ bool EquivCharStrings (char *a, char *b);
 size_t HashCharString (char *a);
 bool SortCompareChars (char *a, char *b);
 
+BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent = FALSE);
+TCHAR *GetLastSlashPosition (TCHAR *Path);
+
 #endif // COMMON_FUNCTIONS_H;

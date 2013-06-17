@@ -89,41 +89,6 @@ void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
   CheckIfSavingIsNeeded = 1;
 }
 
-static BOOL TryToCreateDir (TCHAR *Path)
-{
-  if (!CreateDirectory (Path, NULL))
-  {
-    TCHAR Message[DEFAULT_BUF_SIZE];
-    _stprintf (Message, _T ("Can't create directory %s"), Path);
-    MessageBox (0, Message, _T ("Error in directory creation"), MB_OK | MB_ICONERROR);
-    return FALSE;
-  }
-  return TRUE;
-}
-
-static BOOL CheckForDirectoryExistence (TCHAR *Path)
-{
-  for (unsigned int i = 0; i < _tcslen (Path); i++)
-  {
-    if (Path[i] == _T ('\\'))
-    {
-      Path[i] = _T ('\0');
-      if (!PathFileExists (Path))
-      {
-        if (!TryToCreateDir (Path))
-          return FALSE;
-      }
-      Path[i] = _T ('\\');
-    }
-  }
-  if (!PathFileExists (Path))
-  {
-    if (!TryToCreateDir (Path))
-      return FALSE;
-  }
-  return TRUE;
-}
-
 #define BUF_SIZE_FOR_COPY 10240
 void DownloadDicsDlg::DownloadSelected ()
 {
@@ -161,7 +126,7 @@ void DownloadDicsDlg::DownloadSelected ()
   p->SetTopMessage (_T (""));
   int DownloadedCount = 0;
   int SupposedDownloadedCount = 0;
-  if (!CheckForDirectoryExistence (SpellCheckerInstance->GetHunspellPath ())) // If path isn't exist we're gonna try to create it else it's finish
+  if (!CheckForDirectoryExistence (SpellCheckerInstance->GetHunspellPath ())) // If path doesn't exist we're gonna try to create it else it's finish
   {
     MessageBox (0, _T ("Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
     return;
