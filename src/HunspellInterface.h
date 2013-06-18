@@ -98,5 +98,6 @@ private:
   BOOL InitialReadingBeenDone;
   char *TemporaryBuffer;
   TCHAR *UserDicPath; // For now only default one.
+  TCHAR *SystemWrongDicPath; // Only for reading and then removing
 };
 #endif // HUNSPELLINTERFACE_H

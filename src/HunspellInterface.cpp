@@ -104,6 +104,7 @@ HunspellInterface::HunspellInterface ()
   IsHunspellWorking = FALSE;
   TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
   UserDicPath = 0;
+  SystemWrongDicPath = 0;
 }
 
 void HunspellInterface::UpdateOnDicRemoval (TCHAR *Path)
@@ -159,6 +160,9 @@ HunspellInterface::~HunspellInterface ()
 
   if (InitialReadingBeenDone)
     WriteUserDic (Memorized, UserDicPath);
+
+  SetFileAttributes (SystemWrongDicPath, FILE_ATTRIBUTE_NORMAL);
+  DeleteFile (SystemWrongDicPath);
 
   CleanAndZeroWordList (Memorized);
   CleanAndZeroWordList (Ignored);
@@ -685,12 +689,13 @@ void HunspellInterface::SetAdditionalDirectory (TCHAR *Dir)
 
   InitialReadingBeenDone = TRUE;
 
-  TCHAR TemporaryDicPath[DEFAULT_BUF_SIZE]; // Reading system path unified dic too
-  _tcscpy (TemporaryDicPath, Dir);
-  if (TemporaryDicPath[_tcslen (TemporaryDicPath) - 1] != _T ('\\'))
-    _tcscat (TemporaryDicPath, _T ("\\"));
-  _tcscat (TemporaryDicPath, _T ("UserDic.dic")); // Should be tunable really
-  ReadUserDic (Memorized, TemporaryDicPath); // We should load user dictionary first.
+  CLEAN_AND_ZERO_ARR (SystemWrongDicPath);
+  SystemWrongDicPath = new TCHAR[DEFAULT_BUF_SIZE]; // Reading system path unified dic too
+  _tcscpy (SystemWrongDicPath, Dir);
+  if (SystemWrongDicPath[_tcslen (SystemWrongDicPath) - 1] != _T ('\\'))
+    _tcscat (SystemWrongDicPath, _T ("\\"));
+  _tcscat (SystemWrongDicPath, _T ("UserDic.dic")); // Should be tunable really
+  ReadUserDic (Memorized, SystemWrongDicPath); // We should load user dictionary first.
 
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
