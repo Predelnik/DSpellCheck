@@ -89,7 +89,7 @@ public:
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   void FillDelimiters (const char *Delimiters);
   void SetDelimetersEdit (TCHAR *Delimiters);
-  void setConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg);
+  void SetConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveSingleApostrophe);
   void SetRecheckDelay (int Delay);
   int GetRecheckDelay ();
   void SetSuggBoxSettings (int Size, int Trans);
@@ -119,6 +119,7 @@ private:
   HWND HSliderSize;
   HWND HSliderTransparency;
   HWND HBufferSize;
+  HWND HRemoveEndingApostrophe;
 
   HBRUSH Brush;
   NppData NppDataInstance;

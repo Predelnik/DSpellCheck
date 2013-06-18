@@ -607,10 +607,11 @@ void AdvancedDlg::FillDelimiters (const char *Delimiters)
   CLEAN_AND_ZERO_ARR (TBuf);
 }
 
-void AdvancedDlg::setConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg)
+void AdvancedDlg::SetConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveEndingApostrophe)
 {
   Button_SetCheck (HIgnoreYo, ConvertYo ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HConvertSingleQuotes, ConvertSingleQuotesArg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HRemoveEndingApostrophe, RemoveEndingApostrophe ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void AdvancedDlg::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
@@ -656,6 +657,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       HDefaultDelimiters = ::GetDlgItem (_hSelf, IDC_DEFAULT_DELIMITERS);
       HIgnoreYo = ::GetDlgItem (_hSelf, IDC_COUNT_YO_AS_YE);
       HConvertSingleQuotes = ::GetDlgItem (_hSelf, IDC_COUNT_SINGLE_QUOTES_AS_APOSTROPHE);
+      HRemoveEndingApostrophe = ::GetDlgItem (_hSelf, IDC_REMOVE_ENDING_APOSTROPHE);
       HRecheckDelay = ::GetDlgItem (_hSelf, IDC_RECHECK_DELAY);
       HUnderlineColor = ::GetDlgItem (_hSelf, IDC_UNDERLINE_COLOR);
       HUnderlineStyle = ::GetDlgItem (_hSelf, IDC_UNDERLINE_STYLE);
@@ -678,6 +680,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       CreateToolTip (IDC_RECHECK_DELAY, _hSelf, _T ("Delay between the end of typing and rechecking the the text after it"));
       CreateToolTip (IDC_IGNORE_CSTART, _hSelf, _T ("Remember that words at the beginning of sentences would also be ignored that way."));
       CreateToolTip (IDC_IGNORE_SE_APOSTROPHE, _hSelf, _T ("Words like this sadly cannot be added to Aspell user dictionary"));
+      CreateToolTip (IDC_REMOVE_ENDING_APOSTROPHE, _hSelf, _T ("Words like this are mostly mean plural possessive form in English, if you want to add such forms of words to dictionary manually, please uncheck"));
 
       ComboBox_ResetContent (HUnderlineStyle);
       for (int i = 0; i < countof (IndicNames); i++)
@@ -830,7 +833,9 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   CLEAN_AND_ZERO_ARR (TBuf);
   SpellCheckerInstance->SetDelimiters (BufUtf8);
   SpellCheckerInstance->SetConversionOptions (Button_GetCheck (HIgnoreYo) == BST_CHECKED ? TRUE : FALSE,
-    Button_GetCheck (HConvertSingleQuotes) == BST_CHECKED ? TRUE : FALSE);
+    Button_GetCheck (HConvertSingleQuotes) == BST_CHECKED ? TRUE : FALSE,
+    Button_GetCheck (HRemoveEndingApostrophe) == BST_CHECKED ? TRUE : FALSE
+    );
   SpellCheckerInstance->SetUnderlineColor (UnderlineColorBtn);
   SpellCheckerInstance->SetUnderlineStyle (ComboBox_GetCurSel (HUnderlineStyle));
   SpellCheckerInstance->SetIgnore (Button_GetCheck (HIgnoreNumbers) == BST_CHECKED,

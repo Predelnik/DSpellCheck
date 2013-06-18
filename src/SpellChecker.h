@@ -74,7 +74,7 @@ public:
   void SetMultipleLanguages (const TCHAR *MultiString, AbstractSpellerInterface *Speller);
   void SetHunspellPath (const TCHAR *Path);
   void SetHunspellAdditionalPath (const TCHAR *Path);
-  void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg);
+  void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveEndingApostropheArg);
   void SetCheckThose (int CheckThoseArg);
   void SetFileTypes (TCHAR *FileTypesArg);
   void SetCheckComments (BOOL Value);
@@ -203,6 +203,7 @@ private:
   TCHAR *AdditionalHunspellPath;
   BOOL IgnoreYo;
   BOOL ConvertSingleQuotes;
+  BOOL RemoveEndingApostrophe;
   BOOL CheckThose;
   BOOL CheckComments;
   int UnderlineColor;
