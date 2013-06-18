@@ -67,3 +67,10 @@ v1.2.3
 * Fix bug with Multiple Languages settings not being saved when chosen from "Change Current Language" menu.
 * Fix bug with incorrect delimiters while checking ANSI files if system default encoding is Japanese.
 * Add link to short online manual to plugin menu.
+
+v1.2.4
+* Make option - ignore words starting or ending with apostrophe to be turned off by default (still it's recommend for Aspell users)
+* Add option to ignore apostrophe at the end of the words (turned on by default)
+* Fix wrong message and behaviour when Hunspell directory for dictionaries doesn't exist.
+* Restore work of multiple languages list for Aspell.
+* Fixed bug: if usage of multiple languages was not chosen, all the dictionaries for it were still loading at plugin start.
