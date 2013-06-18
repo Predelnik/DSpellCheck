@@ -158,6 +158,7 @@ SpellChecker::~SpellChecker ()
   CLEAN_AND_ZERO_ARR (HunspellPath);
   CLEAN_AND_ZERO_ARR (VisibleText);
   CLEAN_AND_ZERO_ARR (FileTypes);
+  CLEAN_AND_ZERO_ARR (AdditionalHunspellPath);
 
   CLEAN_AND_ZERO_ARR (YoANSI);
   CLEAN_AND_ZERO_ARR (yoANSI);
@@ -2658,8 +2659,7 @@ BOOL SpellChecker::AspellReinitSettings ()
 
   if (_tcscmp (AspellLanguage, _T ("<MULTIPLE>")) != 0)
   {
-    SetString (TBuf, AspellLanguage);
-    AspellSpeller->SetLanguage (TBuf);
+    AspellSpeller->SetLanguage (AspellLanguage);
   }
   else
     SetMultipleLanguages (AspellMultiLanguages, AspellSpeller);

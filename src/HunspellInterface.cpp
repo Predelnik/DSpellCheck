@@ -149,8 +149,13 @@ HunspellInterface::~HunspellInterface ()
       delete []((*it).first);
       CLEAN_AND_ZERO ((*it).second.Speller);
       WriteUserDic ((*it).second.LocalDic, (*it).second.LocalDicPath);
-      CLEAN_AND_ZERO ((*it).second.LocalDicPath)
-        iconv_close ((*it).second.Converter);
+      WordSet::iterator NestedIt;
+      for (NestedIt = (*it).second.LocalDic->begin (); NestedIt != (*it).second.LocalDic->end (); ++NestedIt)
+        delete[] (*NestedIt);
+
+      CLEAN_AND_ZERO ((*it).second.LocalDic);
+      CLEAN_AND_ZERO ((*it).second.LocalDicPath);
+      iconv_close ((*it).second.Converter);
       iconv_close ((*it).second.BackConverter);
       iconv_close ((*it).second.ConverterANSI);
       iconv_close ((*it).second.BackConverterANSI);
@@ -172,6 +177,7 @@ HunspellInterface::~HunspellInterface ()
   CLEAN_AND_ZERO_ARR (SysDicDir);
   CLEAN_AND_ZERO_ARR (TemporaryBuffer);
   CLEAN_AND_ZERO_ARR (UserDicPath);
+  CLEAN_AND_ZERO_ARR (SystemWrongDicPath);
 
   std::set <AvailableLangInfo>::iterator it;
   it = DicList->begin ();
