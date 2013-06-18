@@ -126,7 +126,7 @@ void DownloadDicsDlg::DownloadSelected ()
   p->SetTopMessage (_T (""));
   int DownloadedCount = 0;
   int SupposedDownloadedCount = 0;
-  if (!CheckForDirectoryExistence (SpellCheckerInstance->GetHunspellPath ())) // If path doesn't exist we're gonna try to create it else it's finish
+  if (!CheckForDirectoryExistence (SpellCheckerInstance->GetInstallSystem () ? SpellCheckerInstance->GetHunspellAdditionalPath () : SpellCheckerInstance->GetHunspellPath ())) // If path doesn't exist we're gonna try to create it else it's finish
   {
     MessageBox (0, _T ("Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
     return;
