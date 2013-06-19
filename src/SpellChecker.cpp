@@ -554,6 +554,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath, AdditionalHunspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
     RecheckVisibleBothViews ();
+    SaveSettings ();
     break;
 
   case EID_LANG_CHANGE:
