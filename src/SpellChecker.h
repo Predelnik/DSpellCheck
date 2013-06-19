@@ -148,7 +148,7 @@ private:
   void FillSuggestionsMenu (HMENU Menu);
   void ProcessMenuResult (UINT MenuId);
   void InitSuggestionsBox ();
-  BOOL GetWordUnderMouseIsRight (long &Pos, long &Length);
+  BOOL GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseTextCursor = FALSE);
   void SetSuggestionsBoxTransparency ();
   char *GetWordAt (long CharPos, char *Text, long Offset);
   void SetDefaultDelimiters ();

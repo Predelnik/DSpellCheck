@@ -222,7 +222,7 @@ BOOL WINAPI SpellChecker::NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam)
       if (CheckTextNeeded () && SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
       {
         long Pos, Length;
-        WUCisRight = GetWordUnderMouseIsRight (Pos, Length);
+        WUCisRight = GetWordUnderCursorIsRight (Pos, Length, TRUE);
         if (!WUCisRight)
         {
           WUCPosition = Pos;
@@ -1788,43 +1788,51 @@ HWND SpellChecker::GetCurrentScintilla ()
   return CurrentScintilla;
 }
 
-BOOL SpellChecker::GetWordUnderMouseIsRight (long &Pos, long &Length)
+BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseTextCursor)
 {
   BOOL Ret = TRUE;
   POINT p;
-  if(GetCursorPos(&p) != 0){
+  int initCharPos = -1;
+
+  if (!UseTextCursor)
+  {
+    if(GetCursorPos(&p) == 0)
+      return TRUE;
+
     ScreenToClient(GetScintillaWindow (NppDataInstance), &p);
 
-    int initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+    initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+  }
+  else
+    initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
 
-    if(initCharPos != -1){
-      int Line = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, initCharPos);
-      long LineLength = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINELENGTH, Line);
-      char *Buf = new char[LineLength + 1];
-      SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLINE, Line, (LPARAM) Buf);
-      Buf [LineLength] = 0;
-      long Offset = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, Line);
-      char *Word = GetWordAt (initCharPos, Buf, Offset);
-      if (!Word || !*Word)
+  if(initCharPos != -1){
+    int Line = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, initCharPos);
+    long LineLength = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINELENGTH, Line);
+    char *Buf = new char[LineLength + 1];
+    SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLINE, Line, (LPARAM) Buf);
+    Buf [LineLength] = 0;
+    long Offset = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, Line);
+    char *Word = GetWordAt (initCharPos, Buf, Offset);
+    if (!Word || !*Word)
+    {
+      Ret = TRUE;
+    }
+    else
+    {
+      Pos = Word - Buf + Offset;
+      long WordLen = strlen (Word);
+      if (CheckWord (Word, Pos, Pos + WordLen - 1))
       {
         Ret = TRUE;
       }
       else
       {
-        Pos = Word - Buf + Offset;
-        long WordLen = strlen (Word);
-        if (CheckWord (Word, Pos, Pos + WordLen - 1))
-        {
-          Ret = TRUE;
-        }
-        else
-        {
-          Ret = FALSE;
-          Length = WordLen;
-        }
+        Ret = FALSE;
+        Length = WordLen;
       }
-      CLEAN_AND_ZERO_ARR (Buf);
     }
+    CLEAN_AND_ZERO_ARR (Buf);
   }
   return Ret;
 }
@@ -1903,7 +1911,7 @@ void SpellChecker::InitSuggestionsBox ()
   }
 
   long Pos, Length;
-  if (GetWordUnderMouseIsRight (Pos, Length))
+  if (GetWordUnderCursorIsRight (Pos, Length))
   {
     return;
   }
