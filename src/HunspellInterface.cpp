@@ -139,6 +139,28 @@ void HunspellInterface::SetUseOneDic (BOOL Value)
   UseOneDic = Value;
 }
 
+BOOL ArePathsEqual (TCHAR *path1, TCHAR *path2)
+{
+  BY_HANDLE_FILE_INFORMATION bhfi1,bhfi2;
+  HANDLE h1, h2 = NULL;
+  DWORD access = 0;
+  DWORD share = FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE;
+
+  h1 = CreateFile(path1,access,share,NULL,OPEN_EXISTING,(GetFileAttributes(path1)&FILE_ATTRIBUTE_DIRECTORY)?FILE_FLAG_BACKUP_SEMANTICS:0,NULL);
+  if (INVALID_HANDLE_VALUE != h1)
+  {
+    if (!GetFileInformationByHandle(h1,&bhfi1)) bhfi1.dwVolumeSerialNumber = 0;
+    h2 = CreateFile(path2,access,share,NULL,OPEN_EXISTING,(GetFileAttributes(path2)&FILE_ATTRIBUTE_DIRECTORY)?FILE_FLAG_BACKUP_SEMANTICS:0,NULL);
+    if (!GetFileInformationByHandle(h2,&bhfi2)) bhfi2.dwVolumeSerialNumber = bhfi1.dwVolumeSerialNumber + 1;
+  }
+  CloseHandle(h1);
+  CloseHandle(h2);
+  return INVALID_HANDLE_VALUE != h1 && INVALID_HANDLE_VALUE != h2
+    && bhfi1.dwVolumeSerialNumber==bhfi2.dwVolumeSerialNumber
+    && bhfi1.nFileIndexHigh==bhfi2.nFileIndexHigh
+    && bhfi1.nFileIndexLow==bhfi2.nFileIndexLow ;
+}
+
 HunspellInterface::~HunspellInterface ()
 {
   IsHunspellWorking = FALSE;
@@ -163,11 +185,14 @@ HunspellInterface::~HunspellInterface ()
     CLEAN_AND_ZERO (AllHunspells);
   }
 
+  if (SystemWrongDicPath && UserDicPath && !ArePathsEqual (SystemWrongDicPath, UserDicPath))
+  {
+    SetFileAttributes (SystemWrongDicPath, FILE_ATTRIBUTE_NORMAL);
+    DeleteFile (SystemWrongDicPath);
+  }
+
   if (InitialReadingBeenDone)
     WriteUserDic (Memorized, UserDicPath);
-
-  SetFileAttributes (SystemWrongDicPath, FILE_ATTRIBUTE_NORMAL);
-  DeleteFile (SystemWrongDicPath);
 
   CleanAndZeroWordList (Memorized);
   CleanAndZeroWordList (Ignored);
@@ -379,6 +404,8 @@ void HunspellInterface::WriteUserDic (WordSet *Target, TCHAR *Path)
   SortedWordSet TemporarySortedWordSet (SortCompareChars); // Wordset itself being removed here as local variable, all strings are not copied
 
   TCHAR *LastSlashPos = GetLastSlashPosition (Path);
+  if (!LastSlashPos)
+    return;
   *LastSlashPos = _T ('\0');
   CheckForDirectoryExistence (Path, TRUE);
   *LastSlashPos = _T ('\\');
@@ -461,6 +488,8 @@ void HunspellInterface::AddToDictionary (char *Word)
   if (!PathFileExists (DicPath))
   {
     TCHAR *LastSlashPos = GetLastSlashPosition (DicPath);
+    if (!LastSlashPos)
+      return;
     *LastSlashPos = _T ('\0');
     CheckForDirectoryExistence (DicPath, TRUE);
     *LastSlashPos = _T ('\\');
