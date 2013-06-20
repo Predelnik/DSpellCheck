@@ -116,10 +116,18 @@ void HunspellInterface::UpdateOnDicRemoval (TCHAR *Path)
     CLEAN_AND_ZERO ((*it).second.Speller);
     WriteUserDic ((*it).second.LocalDic, (*it).second.LocalDicPath);
     CLEAN_AND_ZERO ((*it).second.LocalDicPath);
-    iconv_close ((*it).second.Converter);
-    iconv_close ((*it).second.BackConverter);
-    iconv_close ((*it).second.ConverterANSI);
-    iconv_close ((*it).second.BackConverterANSI);
+    if ((*it).second.Converter != (iconv_t) -1)
+      iconv_close ((*it).second.Converter);
+
+    if ((*it).second.BackConverter != (iconv_t) -1)
+      iconv_close ((*it).second.BackConverter);
+
+    if ((*it).second.ConverterANSI != (iconv_t) -1)
+      iconv_close ((*it).second.ConverterANSI);
+
+    if ((*it).second.BackConverterANSI != (iconv_t) -1)
+      iconv_close ((*it).second.BackConverterANSI);
+
     AllHunspells->erase (it);
   }
 }
@@ -177,10 +185,17 @@ HunspellInterface::~HunspellInterface ()
 
       CLEAN_AND_ZERO ((*it).second.LocalDic);
       CLEAN_AND_ZERO ((*it).second.LocalDicPath);
-      iconv_close ((*it).second.Converter);
-      iconv_close ((*it).second.BackConverter);
-      iconv_close ((*it).second.ConverterANSI);
-      iconv_close ((*it).second.BackConverterANSI);
+      if ((*it).second.Converter != (iconv_t) -1)
+        iconv_close ((*it).second.Converter);
+
+      if ((*it).second.BackConverter != (iconv_t) -1)
+        iconv_close ((*it).second.BackConverter);
+
+      if ((*it).second.ConverterANSI != (iconv_t) -1)
+        iconv_close ((*it).second.ConverterANSI);
+
+      if ((*it).second.BackConverterANSI != (iconv_t) -1)
+        iconv_close ((*it).second.BackConverterANSI);
     }
     CLEAN_AND_ZERO (AllHunspells);
   }
@@ -336,6 +351,11 @@ void HunspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
 
 char *HunspellInterface::GetConvertedWord (const char *Source, iconv_t Converter)
 {
+  if (Converter == iconv_t (-1))
+  {
+    *TemporaryBuffer = '\0';
+    return TemporaryBuffer;
+  }
   size_t InSize = strlen (Source) + 1;
   size_t OutSize = DEFAULT_BUF_SIZE;
   char *OutBuf = TemporaryBuffer;
