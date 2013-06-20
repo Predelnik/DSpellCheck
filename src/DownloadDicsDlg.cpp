@@ -573,8 +573,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       HShowOnlyKnown = ::GetDlgItem (_hSelf, IDC_SHOWONLYKNOWN);
       HRefresh = ::GetDlgItem (_hSelf, IDC_REFRESH);
       HInstallSystem = ::GetDlgItem (_hSelf, IDC_INSTALL_SYSTEM);
-      // RefreshIcon = LoadIcon (_hInst, MAKEINTRESOURCE (IDI_ICON1));
-      RefreshIcon = (HICON) LoadImage (_hInst, MAKEINTRESOURCE (IDI_ICON1), IMAGE_ICON, 16, 16, 0);
+      RefreshIcon = (HICON) LoadImage (_hInst, MAKEINTRESOURCE (IDI_REFRESH), IMAGE_ICON, 16, 16, 0);
       SendMessage (HRefresh, BM_SETIMAGE, (WPARAM) IMAGE_ICON, (LPARAM) RefreshIcon);
       //ComboBox_SetText(HAddress, _T ("ftp://127.0.0.1"));
       SendEvent (EID_INIT_DOWNLOAD_COMBOBOX);

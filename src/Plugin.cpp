@@ -450,7 +450,7 @@ void commandMenuInit()
 void AddIcons ()
 {
   AutoCheckIcon = new toolbarIcons;
-  AutoCheckIcon->hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)hModule, MAKEINTRESOURCE(IDB_AUTOCHECK), IMAGE_BITMAP, 0, 0, (LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS));
+  AutoCheckIcon->hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)hModule, MAKEINTRESOURCE(IDB_AUTOCHECK), IMAGE_BITMAP, 16, 16, LR_LOADMAP3DCOLORS);
   ::SendMessage(nppData._nppHandle, NPPM_ADDTOOLBARICON, (WPARAM)funcItem[0]._cmdID, (LPARAM) AutoCheckIcon);
 }
 
@@ -548,7 +548,7 @@ void commandMenuCleanUp()
   CLEAN_AND_ZERO (funcItem[2]._pShKey);
   CLEAN_AND_ZERO (funcItem[3]._pShKey);
   if (AutoCheckIcon)
-    DeleteObject (AutoCheckIcon->hToolbarBmp);
+    DeleteObject (AutoCheckIcon->hToolbarIcon);
   // We should deallocate shortcuts here
 }
 
