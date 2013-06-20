@@ -273,10 +273,13 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name, int Type)
   AffBuf[_tcslen (AffBuf) - 4] = _T ('\0');
   SetString (NewName, AffBuf); // Without aff and dic
   DicInfo NewDic;
-  NewDic.Converter = iconv_open (NewHunspell->get_dic_encoding (), "UTF-8");
-  NewDic.BackConverter = iconv_open ("UTF-8", NewHunspell->get_dic_encoding ());
-  NewDic.ConverterANSI = iconv_open (NewHunspell->get_dic_encoding (), "");
-  NewDic.BackConverterANSI = iconv_open ("", NewHunspell->get_dic_encoding ());
+  char *DicEnconding = NewHunspell->get_dic_encoding ();
+  if (stricmp (DicEnconding, "Microsoft-cp1251") == 0)
+    DicEnconding = "cp1251"; // Queer fix for encoding which isn't being guessed correctly by libiconv TODO: Find other possible such failures
+  NewDic.Converter = iconv_open (DicEnconding, "UTF-8");
+  NewDic.BackConverter = iconv_open ("UTF-8", DicEnconding);
+  NewDic.ConverterANSI = iconv_open (DicEnconding, "");
+  NewDic.BackConverterANSI = iconv_open ("", DicEnconding);
   NewDic.LocalDic = new WordSet (0, HashCharString, EquivCharStrings);
   NewDic.LocalDicPath = new TCHAR [_tcslen (DicDir) + 1 + _tcslen (Name) + 1 + 3 + 1]; // Local Dic path always points to non-system directory
   NewDic.LocalDicPath[0] = '\0';
