@@ -1915,7 +1915,6 @@ void SpellChecker::InitSuggestionsBox ()
   {
     return;
   }
-
   WUCLength = Length;
   WUCPosition = Pos;
   int Line = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, WUCPosition);
@@ -2129,7 +2128,7 @@ void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
   if (SaveSetting)
     SaveSettings ();
 
-  CheckMenuItem(GetMenu(NppDataInstance->_nppHandle), get_funcItem ()[0]._cmdID, MF_BYCOMMAND | (AutoCheckText ? MF_CHECKED : MF_UNCHECKED));
+  SendMsgToNpp (NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem ()[0]._cmdID, AutoCheckText);
 }
 
 void SpellChecker::SetCheckThose (int CheckThoseArg)

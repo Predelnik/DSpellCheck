@@ -122,6 +122,7 @@ void CreateThreadResources ();
 void InitClasses ();
 void CreateHooks ();
 void UpdateLangsMenu ();
+void AddIcons ();
 HMENU GetDSpellCheckMenu ();
 HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = 0);
 HANDLE getHModule ();

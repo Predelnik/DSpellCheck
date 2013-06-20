@@ -74,6 +74,7 @@ DWORD  ThreadId = 0;
 int ContextMenuIdStart;
 int LangsMenuIdStart = FALSE;
 BOOL UseAllocatedIds;
+toolbarIcons *AutoCheckIcon = 0;
 
 HANDLE hEvent[EID_MAX]  = {NULL};
 HANDLE hModule = NULL;
@@ -446,6 +447,13 @@ void commandMenuInit()
   setCommand(7, TEXT("About..."), StartAboutDlg, NULL, false);
 }
 
+void AddIcons ()
+{
+  AutoCheckIcon = new toolbarIcons;
+  AutoCheckIcon->hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)hModule, MAKEINTRESOURCE(IDB_AUTOCHECK), IMAGE_BITMAP, 0, 0, (LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS));
+  ::SendMessage(nppData._nppHandle, NPPM_ADDTOOLBARICON, (WPARAM)funcItem[0]._cmdID, (LPARAM) AutoCheckIcon);
+}
+
 void UpdateLangsMenu ()
 {
   SendEvent (EID_UPDATE_LANGS_MENU);
@@ -539,6 +547,8 @@ void commandMenuCleanUp()
   CLEAN_AND_ZERO (funcItem[1]._pShKey);
   CLEAN_AND_ZERO (funcItem[2]._pShKey);
   CLEAN_AND_ZERO (funcItem[3]._pShKey);
+  if (AutoCheckIcon)
+    DeleteObject (AutoCheckIcon->hToolbarBmp);
   // We should deallocate shortcuts here
 }
 
