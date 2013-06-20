@@ -119,7 +119,7 @@ private:
   HWND HSliderSize;
   HWND HSliderTransparency;
   HWND HBufferSize;
-  HWND HRemoveEndingApostrophe;
+  HWND HRemoveBoundaryApostrophes;
 
   HBRUSH Brush;
   NppData NppDataInstance;

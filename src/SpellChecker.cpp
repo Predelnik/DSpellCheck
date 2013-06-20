@@ -400,7 +400,7 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
   SettingsDlgInstance->GetSimpleDlg ()->SetSuggType (SuggestionsMode);
   SettingsDlgInstance->GetSimpleDlg ()->SetOneUserDic (OneUserDic);
   SettingsDlgInstance->GetAdvancedDlg ()->FillDelimiters (DelimUtf8);
-  SettingsDlgInstance->GetAdvancedDlg ()->SetConversionOpts (IgnoreYo, ConvertSingleQuotes, RemoveEndingApostrophe);
+  SettingsDlgInstance->GetAdvancedDlg ()->SetConversionOpts (IgnoreYo, ConvertSingleQuotes, RemoveBoundaryApostrophes);
   SettingsDlgInstance->GetAdvancedDlg ()->SetUnderlineSettings (UnderlineColor, UnderlineStyle);
   SettingsDlgInstance->GetAdvancedDlg ()->SetIgnore (IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_, IgnoreSEApostrophe, IgnoreOneLetter);
   SettingsDlgInstance->GetAdvancedDlg ()->SetSuggBoxSettings (SBSize, SBTrans);
@@ -2214,7 +2214,7 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Suggestions_Control"), SuggestionsMode, 0);
   SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 0);
   SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes, 1);
-  SaveToIni (_T ("Remove_Ending_Apostrophe"), RemoveEndingApostrophe, 1);
+  SaveToIni (_T ("Remove_Ending_Apostrophe"), RemoveBoundaryApostrophes, 1);
   SaveToIni (_T ("Check_Only_Comments_And_Strings"), CheckComments, 1);
   SaveToIni (_T ("Check_Those_\\_Not_Those"), CheckThose, 1);
   SaveToIni (_T ("File_Types"), FileTypes, _T ("*.*"));
@@ -2319,7 +2319,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
   LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 0);
   LoadFromIni (ConvertSingleQuotes, _T ("Convert_Single_Quotes_To_Apostrophe"), 1);
-  LoadFromIni (RemoveEndingApostrophe, _T ("Remove_Ending_Apostrophe"), 1);
+  LoadFromIni (RemoveBoundaryApostrophes, _T ("Remove_Ending_Apostrophe"), 1);
   LoadFromIni (CheckThose , _T ("Check_Those_\\_Not_Those"), 1);
   LoadFromIni (FileTypes, _T ("File_Types"), _T ("*.*"));
   LoadFromIni (CheckComments, _T ("Check_Only_Comments_And_Strings"), 1);
@@ -2707,8 +2707,22 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
   const char *ConvertTo [3];
   int Apply[3] = {IgnoreYo, IgnoreYo, ConvertSingleQuotes};
   unsigned int LastChar = strlen (Word) - 1; // It's ASCII char so it's leading anyway
-  if (RemoveEndingApostrophe && Word[LastChar] == '\'')
-    Word[LastChar] = '\0';
+
+  if (RemoveBoundaryApostrophes)
+  {
+    if (Word[LastChar] == '\'')
+    {
+      Word[LastChar] = '\0';
+      LastChar--;
+    }
+    if (Word[0] == '\'')
+    {
+      for (int i = 0; Word[i]; i++)
+        Word[i] = Word[i + 1];
+
+      LastChar--;
+    }
+  }
 
   if (CurrentEncoding == ENCODING_ANSI)
   {
@@ -3051,11 +3065,11 @@ void SpellChecker::RecheckModified ()
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
 }
 
-void SpellChecker::SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveEndingApostropheArg)
+void SpellChecker::SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveBoundaryApostrophesArg)
 {
   IgnoreYo = ConvertYo;
   ConvertSingleQuotes = ConvertSingleQuotesArg;
-  RemoveEndingApostrophe = RemoveEndingApostropheArg;
+  RemoveBoundaryApostrophes = RemoveBoundaryApostrophesArg;
 }
 
 void SpellChecker::RecheckVisible (BOOL NotIntersectionOnly)
