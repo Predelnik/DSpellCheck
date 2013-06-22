@@ -2303,7 +2303,7 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Suggestions_Control"), SuggestionsMode, 0);
   SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 0);
   SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes, 1);
-  SaveToIni (_T ("Remove_Ending_Apostrophe"), RemoveBoundaryApostrophes, 1);
+  SaveToIni (_T ("Remove_Ending_And_Beginning_Apostrophe"), RemoveBoundaryApostrophes, 1);
   SaveToIni (_T ("Check_Only_Comments_And_Strings"), CheckComments, 1);
   SaveToIni (_T ("Check_Those_\\_Not_Those"), CheckThose, 1);
   SaveToIni (_T ("File_Types"), FileTypes, _T ("*.*"));
@@ -2416,7 +2416,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
   LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 0);
   LoadFromIni (ConvertSingleQuotes, _T ("Convert_Single_Quotes_To_Apostrophe"), 1);
-  LoadFromIni (RemoveBoundaryApostrophes, _T ("Remove_Ending_Apostrophe"), 1);
+  LoadFromIni (RemoveBoundaryApostrophes, _T ("Remove_Ending_And_Beginning_Apostrophe"), 1);
   LoadFromIni (CheckThose , _T ("Check_Those_\\_Not_Those"), 1);
   LoadFromIni (FileTypes, _T ("File_Types"), _T ("*.*"));
   LoadFromIni (CheckComments, _T ("Check_Only_Comments_And_Strings"), 1);
