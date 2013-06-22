@@ -62,6 +62,7 @@ public:
   ~SpellChecker ();
   void RecheckVisibleBothViews ();
   BOOL WINAPI NotifyEvent (DWORD Event);
+  BOOL WINAPI NotifyNetworkEvent (DWORD Event);
   BOOL WINAPI NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam);
   void RecheckVisible (BOOL NotIntersectionOnly = FALSE);
   void RecheckModified ();

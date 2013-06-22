@@ -216,6 +216,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
   case NPPN_SHUTDOWN:
     {
       SendEvent (EID_KILLTHREAD);
+      SendNetworkEvent (EID_KILLNETWORKTHREAD);
       commandMenuCleanUp();
       DeleteTimerQueueTimer (0, Timer, 0);
     }

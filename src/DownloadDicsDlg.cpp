@@ -60,7 +60,7 @@ void DownloadDicsDlg::FillFileList ()
 
 void DownloadDicsDlg::OnDisplayAction ()
 {
-  SendEvent (EID_FILL_FILE_LIST);
+  SendNetworkEvent (EID_FILL_FILE_LIST);
 }
 
 DownloadDicsDlg::DownloadDicsDlg ()
@@ -449,8 +449,10 @@ void DownloadDicsDlg::SetCancelPressed (BOOL Value)
 void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
 {
   TCHAR *ProxyFinalString = new TCHAR [_tcslen (SpellCheckerInstance->GetProxyHostName ()) + 10];
+  char *FileBuffer = 0;
   _stprintf (ProxyFinalString, _T ("%s:%d"), SpellCheckerInstance->GetProxyHostName (), SpellCheckerInstance->GetProxyPort ());
   HINTERNET WinInetHandle = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PROXY, ProxyFinalString, _T (""), 0);
+  CLEAN_AND_ZERO_ARR (ProxyFinalString);
   if (!WinInetHandle)
   {
     if (Type == FILL_FILE_LIST)
@@ -498,9 +500,9 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       (LPVOID) SpellCheckerInstance->GetProxyPassword (), _tcslen (SpellCheckerInstance->GetProxyPassword ()) + 1);
     InternetSetOption (OpenedURL, INTERNET_OPTION_PROXY_SETTINGS_CHANGED,
       0, 0);
-      HttpSendRequest (OpenedURL, 0, 0, 0, 0);
-  } 
-  
+    HttpSendRequest (OpenedURL, 0, 0, 0, 0);
+  }
+
   DWORD Code = 0;
   DWORD Dummy = 0;
   DWORD Size = sizeof (DWORD);
@@ -542,8 +544,8 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
 
   if (Type == FILL_FILE_LIST)
   {
-    char *Buf = new char [INITIAL_BUFFER_SIZE];
-    char *CurPos = Buf;
+    FileBuffer = new char [INITIAL_BUFFER_SIZE];
+    char *CurPos = FileBuffer;
     char *TempBuf = 0;
     DWORD BytesRead = 0;
     DWORD BytesReadTotal = 0;
@@ -557,10 +559,10 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       if (BytesReadTotal + BytesToRead > CurBufSize)
       {
         TempBuf = new char[CurBufSize * 2];
-        memcpy (TempBuf, Buf, CurBufSize);
-        CurPos = CurPos - Buf + TempBuf;
-        CLEAN_AND_ZERO_ARR (Buf);
-        Buf = TempBuf;
+        memcpy (TempBuf, FileBuffer, CurBufSize);
+        CurPos = CurPos - FileBuffer + TempBuf;
+        CLEAN_AND_ZERO_ARR (FileBuffer);
+        FileBuffer = TempBuf;
         CurBufSize *= 2;
       }
 
@@ -570,7 +572,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       BytesReadTotal += BytesRead;
       CurPos += BytesRead;
     }
-    CurPos = Buf;
+    CurPos = FileBuffer;
     TCHAR *FileName = 0;
     TCHAR *FileNameCopy = 0;
     int count = 0;
@@ -581,7 +583,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       Static_SetText (HStatus, _T ("Status: Proxy HTTP Output cannot be parsed"));
       goto cleanup;
     }
-    while ((size_t) (CurPos - Buf) < BytesReadTotal)
+    while ((size_t) (CurPos - FileBuffer) < BytesReadTotal)
     {
       char *TempCurPos = CurPos;
       CurPos = strstr (CurPos, "</A>");
@@ -591,7 +593,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       if (CurPos == 0)
         break;
       TempCurPos = CurPos;
-      while (*TempCurPos != '>' && TempCurPos > Buf)
+      while (*TempCurPos != '>' && TempCurPos > FileBuffer)
         TempCurPos--;
 
       if (TempCurPos == 0)
@@ -626,6 +628,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       LanguageName Lang (FileName); // Probably should add options for using/not using aliases
       CurrentLangs->push_back (Lang);
       CLEAN_AND_ZERO_ARR (TempBuf);
+      CLEAN_AND_ZERO_ARR (FileName);
     }
 
     if (count == 0)
@@ -652,7 +655,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
   }
   else if (Type == DOWNLOAD_FILE)
   {
-    char *Buf = new char [INITIAL_SMALL_BUFFER_SIZE];
+    FileBuffer = new char [INITIAL_SMALL_BUFFER_SIZE];
     DWORD CurBufSize = INITIAL_SMALL_BUFFER_SIZE;
     DWORD BytesToRead = 0;
     DWORD BytesRead;
@@ -683,16 +686,16 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
         break;
       if (BytesToRead > CurBufSize)
       {
-        CLEAN_AND_ZERO_ARR (Buf);
-        Buf = new char[BytesToRead];
+        CLEAN_AND_ZERO_ARR (FileBuffer);
+        FileBuffer = new char[BytesToRead];
         CurBufSize = BytesToRead;
       }
 
-      InternetReadFile (OpenedURL, Buf, BytesToRead, &BytesRead);
+      InternetReadFile (OpenedURL, FileBuffer, BytesToRead, &BytesRead);
       if (BytesRead == 0)
         break;
 
-      write (FileHandle, Buf, BytesRead);
+      write (FileHandle, FileBuffer, BytesRead);
       BytesReadTotal += BytesRead;
 
       _stprintf (Message, _T ("%d / ???   bytes downloaded"), BytesReadTotal);
@@ -707,11 +710,11 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       }
     }
     _close (FileHandle);
-    CLEAN_AND_ZERO_ARR (Buf);
   }
 cleanup:
   if (WinInetHandle)
     InternetCloseHandle (WinInetHandle);
+  CLEAN_AND_ZERO_ARR (FileBuffer);
   CLEAN_AND_ZERO_ARR (Url);
 }
 
@@ -917,7 +920,6 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       SendEvent (EID_INIT_DOWNLOAD_COMBOBOX);
       //ComboBox_SetText(HAddress, _T ("ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries"));
       SendEvent (EID_FILL_DOWNLOAD_DICS_DIALOG);
-      OnDisplayAction ();
       DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
       return TRUE;
     }
@@ -929,7 +931,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
       case IDOK:
         if (HIWORD (wParam) == BN_CLICKED)
         {
-          SendEvent (EID_DOWNLOAD_SELECTED);
+          SendNetworkEvent (EID_DOWNLOAD_SELECTED);
           GetProgress ()->DoDialog ();
           display (false);
         }

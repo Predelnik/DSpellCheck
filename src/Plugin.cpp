@@ -71,6 +71,7 @@ Progress *ProgressInstance = 0;
 DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
 HANDLE hThread = NULL;
+HANDLE hNetworkThread = NULL;
 HMENU LangsMenu;
 DWORD  ThreadId = 0;
 int ContextMenuIdStart;
@@ -79,6 +80,7 @@ BOOL UseAllocatedIds;
 toolbarIcons *AutoCheckIcon = 0;
 
 HANDLE hEvent[EID_MAX]  = {NULL};
+HANDLE hNetworkEvent[EID_NETWORK_MAX]  = {NULL};
 HANDLE hModule = NULL;
 HHOOK HMouseHook = NULL;
 // HHOOK HCmHook = NULL;
@@ -250,14 +252,60 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
   return 0;
 }
 
+DWORD WINAPI ThreadNetwork (LPVOID lpParam)
+{
+  DWORD dwWaitResult    = EID_MAX;
+  SpellChecker *SpellCheckerInstance = (SpellChecker*)lpParam;
+
+  BOOL bRun = SpellCheckerInstance->NotifyEvent(EID_MAX);
+
+  MSG Msg;
+
+  // Creating thread message queue
+  PeekMessage (&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+
+  while (bRun)
+  {
+    dwWaitResult = MsgWaitForMultipleObjectsEx (EID_NETWORK_MAX, hNetworkEvent, INFINITE, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+    if (dwWaitResult == (unsigned int) - 1)
+    {
+      SpellCheckerInstance->ErrorMsgBox (_T ("Thread has died"));
+      break;
+    }
+
+    if (dwWaitResult == EID_NETWORK_MAX)
+    {
+      MSG Msg;
+      while (PeekMessage (&Msg, 0, 0, 0, PM_REMOVE) && bRun)
+      {
+        OutputDebugString (_T ("Message is being processed\n"));
+        bRun = SpellCheckerInstance->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
+      }
+    }
+    else
+      bRun = SpellCheckerInstance->NotifyNetworkEvent(dwWaitResult);
+  }
+
+  SendNetworkEvent (EID_NETWORKTHREADKILLED);
+  OutputDebugString (_T ("Death\n"));
+  ExitThread (0);
+  return 0;
+}
+
 void CreateThreadResources ()
 {
   /* create events */
   for (int i = 0; i < EID_MAX; i++)
     hEvent[i] = ::CreateEvent (NULL, FALSE, FALSE, NULL);
 
+  for (int i = 0; i < EID_NETWORK_MAX; i++)
+    hNetworkEvent[i] = ::CreateEvent (NULL, FALSE, FALSE, NULL);
+
   /* create thread */
   hThread = CreateThread (NULL, 0, ThreadMain, SpellCheckerInstance, 0, &ThreadId);
+  SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
+
+  hNetworkThread = CreateThread (NULL, 0, ThreadNetwork, SpellCheckerInstance, 0, &ThreadId);
   SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
 
   ResourcesInited = TRUE;
@@ -273,10 +321,15 @@ void KillThreadResources ()
 {
   OutputDebugString (_T ("Waiting for death\n"));
   WaitForEvent (EID_THREADKILLED);
+  WaitForNetworkEvent (EID_NETWORKTHREADKILLED);
   CloseHandle (hThread);
+  CloseHandle (hNetworkThread);
   /* kill events */
   for (int i = 0; i < EID_MAX; i++)
     CloseHandle(hEvent[i]);
+
+  for (int i = 0; i < EID_NETWORK_MAX; i++)
+    CloseHandle(hNetworkEvent[i]);
 }
 
 void pluginCleanUp ()
@@ -301,6 +354,12 @@ void inline SendEvent (EventId Event)
     SetEvent(hEvent[Event]);
 }
 
+void inline SendNetworkEvent (NetworkEventId Event)
+{
+  if (ResourcesInited)
+    SetEvent(hNetworkEvent[Event]);
+}
+
 void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam)
 {
   if (ResourcesInited && ThreadId != 0)
@@ -313,6 +372,14 @@ DWORD WaitForEvent (EventId Event, DWORD WaitTime)
 {
   if (ResourcesInited)
     return WaitForSingleObject (hEvent[Event], WaitTime);
+  else
+    return WAIT_FAILED;
+}
+
+DWORD WaitForNetworkEvent (NetworkEventId Event, DWORD WaitTime)
+{
+  if (ResourcesInited)
+    return WaitForSingleObject (hNetworkEvent[Event], WaitTime);
   else
     return WAIT_FAILED;
 }
@@ -559,7 +626,8 @@ void commandMenuCleanUp()
   CLEAN_AND_ZERO (funcItem[2]._pShKey);
   CLEAN_AND_ZERO (funcItem[3]._pShKey);
   if (AutoCheckIcon)
-    DeleteObject (AutoCheckIcon->hToolbarIcon);
+    DeleteObject (AutoCheckIcon->hToolbarBmp);
+  CLEAN_AND_ZERO (AutoCheckIcon);
   // We should deallocate shortcuts here
 }
 

@@ -437,6 +437,24 @@ void SpellChecker::RecheckVisibleBothViews ()
   HunspellSpeller->SetEncoding (CurrentEncoding);
 }
 
+BOOL WINAPI SpellChecker::NotifyNetworkEvent (DWORD Event)
+{
+  if (!CurrentScintilla)
+    return FALSE; // If scintilla is dead there's nothing else to do
+  switch (Event)
+  {
+  case EID_DOWNLOAD_SELECTED:
+    GetDownloadDics ()->DownloadSelected ();
+    break;
+  case EID_FILL_FILE_LIST:
+    GetDownloadDics ()->FillFileList ();
+    break;
+  case EID_KILLNETWORKTHREAD:
+    return FALSE;
+  }
+  return TRUE;
+}
+
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
 {
   CurrentScintilla = GetScintillaWindow (NppDataInstance); // All operations should be done with current scintilla anyway
@@ -506,12 +524,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_SET_SUGGESTIONS_BOX_TRANSPARENCY:
     SetSuggestionsBoxTransparency ();
     break;
-  case EID_DOWNLOAD_SELECTED:
-    GetDownloadDics ()->DownloadSelected ();
-    break;
-  case EID_FILL_FILE_LIST:
-    GetDownloadDics ()->FillFileList ();
-    break;
   case EID_DEFAULT_DELIMITERS:
     SetDefaultDelimiters ();
     break;
@@ -529,6 +541,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     break;
   case EID_FILL_DOWNLOAD_DICS_DIALOG:
     FillDownloadDics ();
+    SendNetworkEvent (EID_FILL_FILE_LIST);
     break;
   case EID_INIT_DOWNLOAD_COMBOBOX:
     ResetDownloadCombobox ();

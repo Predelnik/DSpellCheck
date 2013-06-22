@@ -81,7 +81,6 @@ typedef enum {
   EID_RECHECK_INTERSECTION,
   EID_KILLTHREAD,
   EID_THREADKILLED,
-  EID_DOWNLOAD_SELECTED,
   EID_INIT_SUGGESTIONS_BOX,
   EID_HIDE_SUGGESTIONS_BOX,
   EID_SHOW_SUGGESTION_MENU,
@@ -92,9 +91,8 @@ typedef enum {
   EID_DEFAULT_DELIMITERS,
   EID_FIND_NEXT_MISTAKE,
   EID_FIND_PREV_MISTAKE,
-  EID_FILL_DOWNLOAD_DICS_DIALOG,
   EID_INIT_DOWNLOAD_COMBOBOX,
-  EID_FILL_FILE_LIST,
+  EID_FILL_DOWNLOAD_DICS_DIALOG,
   EID_REMOVE_SELECTED_DICS,
   EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS,
   EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE,
@@ -111,9 +109,19 @@ typedef enum {
   EID_MAX,
 } EventId;
 
+typedef enum {
+  EID_KILLNETWORKTHREAD,
+  EID_NETWORKTHREADKILLED,
+  EID_DOWNLOAD_SELECTED,
+  EID_FILL_FILE_LIST,
+  EID_NETWORK_MAX
+} NetworkEventId;
+
 void SendEvent (EventId Event);
+void SendNetworkEvent (NetworkEventId Event);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam = 0, LPARAM LParam = 0);
 DWORD WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
+DWORD WaitForNetworkEvent (NetworkEventId Event, DWORD WaitTime = INFINITE);
 DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime = INFINITE);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
