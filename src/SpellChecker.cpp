@@ -2902,9 +2902,9 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     return TRUE;
 
   TCHAR *Ts = 0;
-  long Len = strlen (Word);
+  long SymbolsNum = (CurrentEncoding == ENCODING_UTF8) ? Utf8Length (Word) : strlen (Word);
 
-  if (IgnoreOneLetter && Len == 1)
+  if (IgnoreOneLetter && SymbolsNum == 1)
   {
     res = TRUE;
     goto CleanUp;
@@ -2959,7 +2959,7 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
   }
 
   ApplyConversions (Word);
-  Len = strlen (Word);
+  unsigned int Len = strlen (Word);
 
   if (IgnoreSEApostrophe)
   {
