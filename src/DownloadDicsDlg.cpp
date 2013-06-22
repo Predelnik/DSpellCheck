@@ -472,6 +472,8 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
 
   DWORD TimeOut = 1000;
   InternetSetOption (WinInetHandle, INTERNET_OPTION_CONNECT_TIMEOUT, &TimeOut, sizeof (DWORD));
+  InternetSetOption (WinInetHandle, INTERNET_OPTION_SEND_TIMEOUT, &TimeOut, sizeof (DWORD));
+  InternetSetOption (WinInetHandle, INTERNET_OPTION_RECEIVE_TIMEOUT, &TimeOut, sizeof (DWORD));
 
   HINTERNET OpenedURL = 0;
   OpenedURL = InternetOpenUrl (WinInetHandle, Url, 0, 0, 0, 0);
@@ -763,8 +765,12 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   {
     nsFTP::TFTPFileStatusShPtrVec List;
 
-    if (!ftpClient.List(Folders, List))
+    if (!ftpClient.List (Folders, List, true))
+    {
+      StatusColor = COLOR_FAIL;
+      Static_SetText (HStatus, _T ("Status: Can't list directory files"));
       goto cleanup;
+    }
 
     CLEAN_AND_ZERO (CurrentLangs);
     CurrentLangs = new std::vector<LanguageName> ();
@@ -830,7 +836,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     ProgressUpdater = new Observer (GetProgress (), FileSize, &ftpClient, this);
     ftpClient.AttachObserver (ProgressUpdater);
 
-    if (!ftpClient.DownloadFile (FileName, Location))
+    if (!ftpClient.DownloadFile (FileName, Location, nsFTP::CRepresentation(nsFTP::CType::Image()), true))
     {
       if (PathFileExists (Location))
       {
