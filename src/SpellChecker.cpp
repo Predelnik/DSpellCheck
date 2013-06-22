@@ -35,6 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "SciLexer.h"
 #include "Scintilla.h"
+#include "SelectProxy.h"
 #include "Suggestions.h"
 
 #ifdef UNICODE
@@ -92,6 +93,13 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   CurrentLangs = 0;
   DecodeNames = FALSE;
   ResetHotSpotCache ();
+  ProxyUserName = 0;
+  ProxyHostName = 0;
+  ProxyPassword = 0;
+  ProxyAnonymous = TRUE;
+  ProxyType = 0;
+  ProxyPort = 0;
+  UseProxy = FALSE;
   SettingsToSave = new std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)> (SortCompare);
   if (SendMsgToNpp (NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0))
   {
@@ -165,6 +173,9 @@ SpellChecker::~SpellChecker ()
   CLEAN_AND_ZERO_ARR (YeANSI);
   CLEAN_AND_ZERO_ARR (yeANSI);
   CLEAN_AND_ZERO_ARR (PunctuationApostropheANSI);
+  CLEAN_AND_ZERO_ARR (ProxyHostName);
+  CLEAN_AND_ZERO_ARR (ProxyUserName);
+  CLEAN_AND_ZERO_ARR (ProxyPassword);
   for (int i = 0; i < countof (ServerNames); i++)
     CLEAN_AND_ZERO_ARR (ServerNames[i]);
   for (int i = 0; i < countof (DefaultServers); i++)
@@ -450,6 +461,11 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SaveSettings ();
     break;
 
+  case EID_APPLY_PROXY_SETTINGS:
+    GetSelectProxy ()->ApplyChoice (this);
+    SaveSettings ();
+    break;
+
   case EID_HIDE_DIALOG:
     SettingsDlgInstance->display (false);
     break;
@@ -519,6 +535,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     break;
   case EID_REMOVE_SELECTED_DICS:
     GetRemoveDics ()->RemoveSelected (this);
+    break;
+  case EID_UPDATE_SELECT_PROXY:
+    GetSelectProxy ()->SetOptions (UseProxy, ProxyHostName, ProxyUserName, ProxyPassword, ProxyPort, ProxyAnonymous, ProxyType);
     break;
   case EID_UPDATE_LANG_LISTS:
     ReinitLanguageLists ();
@@ -2167,6 +2186,76 @@ void SpellChecker::SetUnderlineStyle (int Value)
   UnderlineStyle = Value;
 }
 
+void SpellChecker::SetProxyUserName (TCHAR *Str)
+{
+  SetString (ProxyUserName, Str);
+}
+
+void SpellChecker::SetProxyHostName (TCHAR *Str)
+{
+  SetString (ProxyHostName, Str);
+}
+
+void SpellChecker::SetProxyPassword (TCHAR *Str)
+{
+  SetString (ProxyPassword, Str);
+}
+
+void SpellChecker::SetProxyPort (int Value)
+{
+  ProxyPort = Value;
+}
+
+void SpellChecker::SetUseProxy (BOOL Value)
+{
+  UseProxy = Value;
+}
+
+void SpellChecker::SetProxyAnonymous (BOOL Value)
+{
+  ProxyAnonymous = Value;
+}
+
+void SpellChecker::SetProxyType (int Value)
+{
+  ProxyType = Value;
+}
+
+TCHAR *SpellChecker::GetProxyUserName ()
+{
+  return ProxyUserName;
+}
+
+TCHAR *SpellChecker::GetProxyHostName ()
+{
+  return ProxyHostName;
+}
+
+TCHAR *SpellChecker::GetProxyPassword ()
+{
+  return ProxyPassword;
+}
+
+int SpellChecker::GetProxyPort ()
+{
+  return ProxyPort;
+}
+
+BOOL SpellChecker::GetUseProxy ()
+{
+  return UseProxy;
+}
+
+BOOL SpellChecker::GetProxyAnonymous ()
+{
+  return ProxyAnonymous;
+}
+
+int SpellChecker::GetProxyType ()
+{
+  return ProxyType;
+}
+
 void SpellChecker::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg,
                               BOOL IgnoreCAllArg, BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg)
 {
@@ -2248,6 +2337,14 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Last_Used_Address_Index"), LastUsedAddress, 0);
   SaveToIni (_T ("Decode_Language_Names"), DecodeNames, TRUE);
   SaveToIni (_T ("United_User_Dictionary(Hunspell)"), OneUserDic, FALSE);
+
+  SaveToIni (_T ("Use_Proxy"), UseProxy, FALSE);
+  SaveToIni (_T ("Proxy_User_Name"), ProxyUserName, _T("anonymous"));
+  SaveToIni (_T ("Proxy_Host_Name"), ProxyHostName, _T(""));
+  SaveToIni (_T ("Proxy_Password"), ProxyPassword, _T(""));
+  SaveToIni (_T ("Proxy_Port"), ProxyPort, 808);
+  SaveToIni (_T ("Proxy_Is_Anonymous"), ProxyAnonymous, TRUE);
+  SaveToIni (_T ("Proxy_Type"), ProxyType, 0);
   std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)>::iterator it = SettingsToSave->begin ();
   for (; it != SettingsToSave->end (); ++it)
   {
@@ -2362,6 +2459,14 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (RemoveUserDics, _T ("Remove_User_Dics_On_Dic_Remove"), 0);
   LoadFromIni (RemoveSystem, _T ("Remove_Dics_For_All_Users"), 0);
   LoadFromIni (DecodeNames, _T ("Decode_Language_Names"), TRUE);
+
+  LoadFromIni (UseProxy, _T ("Use_Proxy"), FALSE);
+  LoadFromIni (ProxyUserName, _T ("Proxy_User_Name"), _T("anonymous"));
+  LoadFromIni (ProxyHostName, _T ("Proxy_Host_Name"), _T(""));
+  LoadFromIni (ProxyPassword, _T ("Proxy_Password"), _T(""));
+  LoadFromIni (ProxyPort, _T ("Proxy_Port"), 808);
+  LoadFromIni (ProxyAnonymous, _T ("Proxy_Is_Anonymous"), TRUE);
+  LoadFromIni (ProxyType, _T ("Proxy_Type"), 0);
 }
 
 void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)

@@ -52,7 +52,9 @@ public:
   void IndicateThatSavingMightBeNeeded ();
   void SetOptions (BOOL ShowOnlyKnown, BOOL InstallSystem);
   void UpdateOptions (SpellChecker *SpellCheckerInstance);
+  void SetCancelPressed (BOOL Value);
 private:
+  void DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location);
 private:
   std::vector<LanguageName> *CurrentLangs;
   std::vector<LanguageName> *CurrentLangsFiltered;

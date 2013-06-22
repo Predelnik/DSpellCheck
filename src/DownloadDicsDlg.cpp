@@ -23,12 +23,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Controls/CheckedList/CheckedList.h"
 #include "CommonFunctions.h"
+#include "Definements.h"
 #include "DownloadDicsDlg.h"
+
+#include "FTPClient.h"
+#include "FTPDataTypes.h"
 #include "HunspellInterface.h"
 #include "LanguageName.h"
 #include "Plugin.h"
 #include "Progress.h"
 #include "resource.h"
+#include "SelectProxy.h"
 #include "SpellChecker.h"
 #include "MainDef.h"
 #include "unzip.h"
@@ -393,18 +398,337 @@ void DownloadDicsDlg::UpdateListBox ()
   }
 }
 
+// Copy of CFile with ability to kick progress bar
+class Observer : public nsFTP::CFTPClient::CNotification
+{
+  FILE* m_pFile;
+  tstring m_strFileName;
+  Progress *ProgressInstance;
+  DownloadDicsDlg *DownloadDicsInstance;
+  long BytesReceived;
+  long TargetSize;
+  nsFTP::CFTPClient *FtpSession;
+public:
+  enum TOriginEnum { orBegin=SEEK_SET, orEnd=SEEK_END, orCurrent=SEEK_CUR };
+
+  Observer (Progress *ProgressArg, long TargetSizeArg, nsFTP::CFTPClient *FtpSessionArg, DownloadDicsDlg *DownloadDicsArg) : m_pFile(NULL)
+  {
+    ProgressInstance = ProgressArg;
+    TargetSize = TargetSizeArg;
+    FtpSession = FtpSessionArg;
+    DownloadDicsInstance = DownloadDicsArg;
+    BytesReceived = 0;
+  }
+
+  virtual void OnBytesReceived(const nsFTP::TByteVector& vBuffer, long lReceivedBytes) override
+  {
+    BytesReceived += lReceivedBytes;
+    ProgressInstance->SetProgress (BytesReceived * 100 / TargetSize);
+    TCHAR Message[DEFAULT_BUF_SIZE];
+
+    _stprintf (Message, _T ("%d / %d bytes downloaded (%d %%)"), BytesReceived, TargetSize, BytesReceived * 100 / TargetSize);
+    ProgressInstance->SetBottomMessage (Message);
+
+    if (WaitForEvent (EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0)
+    {
+      ProgressInstance->SetBottomMessage (_T ("Aborting Download..."));
+      DownloadDicsInstance->SetCancelPressed (TRUE);
+      FtpSession->Abort ();
+      return;
+    }
+  }
+};
+
+void DownloadDicsDlg::SetCancelPressed (BOOL Value)
+{
+  CancelPressed = Value;
+}
+
+#define INITIAL_BUFFER_SIZE 50 * 1024
+#define INITIAL_SMALL_BUFFER_SIZE 10 * 1024
+void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
+{
+  TCHAR *ProxyFinalString = new TCHAR [_tcslen (SpellCheckerInstance->GetProxyHostName ()) + 10];
+  _stprintf (ProxyFinalString, _T ("%s:%d"), SpellCheckerInstance->GetProxyHostName (), SpellCheckerInstance->GetProxyPort ());
+  HINTERNET WinInetHandle = InternetOpen (_T ("DSpellCHeck"), INTERNET_OPEN_TYPE_PROXY, ProxyFinalString, _T (""), 0);
+  if (!WinInetHandle)
+  {
+    if (Type == FILL_FILE_LIST)
+    {
+      StatusColor = COLOR_FAIL;
+      Static_SetText (HStatus, _T ("Status: Connection cannot be established"));
+    }
+    goto cleanup;
+  }
+
+  int Error = 0;
+
+  FtpTrim (Address);
+  TCHAR *Url = new TCHAR [_tcslen (Address) + (Type == DOWNLOAD_FILE ? _tcslen (FileName) : 0) + 6 + 1];
+  _tcscpy (Url, _T ("ftp://"));
+  _tcscat (Url, Address);
+  if (Type == DOWNLOAD_FILE)
+    _tcscat (Url, FileName);
+
+  DWORD TimeOut = 1000;
+  InternetSetOption (WinInetHandle, INTERNET_OPTION_CONNECT_TIMEOUT, &TimeOut, sizeof (DWORD));
+
+  HINTERNET OpenedURL = 0;
+  OpenedURL = InternetOpenUrl (WinInetHandle, Url, 0, 0, 0, 0);
+  if (!OpenedURL)
+  {
+    if (Type == FILL_FILE_LIST)
+    {
+      StatusColor = COLOR_FAIL;
+      if (Type == FILL_FILE_LIST)
+      {
+        StatusColor = COLOR_FAIL;
+        TCHAR Buf[256];
+
+        _stprintf (Buf, _T ("Status: URL cannot be opened (Error code: %d)"), GetLastError ());
+        Static_SetText (HStatus, Buf);
+      }
+      goto cleanup;
+    }
+  }
+
+  if (!SpellCheckerInstance->GetProxyAnonymous ())
+  {
+    InternetSetOption (OpenedURL, INTERNET_OPTION_PROXY_USERNAME,
+      (LPVOID) SpellCheckerInstance->GetProxyUserName (), _tcslen (SpellCheckerInstance->GetProxyUserName ()) + 1);
+    InternetSetOption (OpenedURL, INTERNET_OPTION_PROXY_PASSWORD,
+      (LPVOID) SpellCheckerInstance->GetProxyPassword (), _tcslen (SpellCheckerInstance->GetProxyPassword ()) + 1);
+    InternetSetOption (OpenedURL, INTERNET_OPTION_PROXY_SETTINGS_CHANGED,
+      0, 0);
+    HttpSendRequest (OpenedURL, 0, 0, 0, 0);
+  }
+
+  DWORD Code = 0;
+  DWORD Dummy = 0;
+  DWORD Size = sizeof (DWORD);
+  if (!HttpQueryInfo (OpenedURL, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &Code, &Size, &Dummy))
+  {
+    if (Type == FILL_FILE_LIST)
+    {
+      StatusColor = COLOR_FAIL;
+      Static_SetText (HStatus, _T ("Status: Query status code failed"));
+    }
+    goto cleanup;
+  }
+  if (Code != 200)
+  {
+    if (Type == FILL_FILE_LIST)
+    {
+      StatusColor = COLOR_FAIL;
+      if (Code == HTTP_STATUS_PROXY_AUTH_REQ )
+        Static_SetText (HStatus, _T ("Status: Proxy Authorization Required"));
+      else
+      {
+        TCHAR Buf[256];
+
+        _stprintf (Buf, _T ("Status: Bad status code (%d)"), Code);
+        Static_SetText (HStatus, Buf);
+      }
+    }
+    goto cleanup;
+  }
+  if (Type == FILL_FILE_LIST)
+  {
+    char *Buf = new char [INITIAL_BUFFER_SIZE];
+    char *CurPos = Buf;
+    char *TempBuf = 0;
+    DWORD BytesRead = 0;
+    DWORD BytesReadTotal = 0;
+    DWORD BytesToRead = 0;
+    unsigned int CurBufSize = INITIAL_BUFFER_SIZE;
+    while (1)
+    {
+      InternetQueryDataAvailable (OpenedURL, &BytesToRead, 0, 0);
+      if (BytesToRead == 0)
+        break;
+      if (BytesReadTotal + BytesToRead > CurBufSize)
+      {
+        TempBuf = new char[CurBufSize * 2];
+        memcpy (TempBuf, Buf, CurBufSize);
+        CurPos = CurPos - Buf + TempBuf;
+        CLEAN_AND_ZERO_ARR (Buf);
+        Buf = TempBuf;
+        CurBufSize *= 2;
+      }
+
+      InternetReadFile (OpenedURL, CurPos, BytesToRead, &BytesRead);
+      if (BytesRead == 0)
+        break;
+      BytesReadTotal += BytesRead;
+      CurPos += BytesRead;
+    }
+    CurPos = Buf;
+    TCHAR *FileName = 0;
+    TCHAR *FileNameCopy = 0;
+    int count = 0;
+    CLEAN_AND_ZERO (CurrentLangs);
+    CurrentLangs = new std::vector<LanguageName> ();
+    // Bad Parsing. Really, really bad. I'm sorry :(
+    CurPos = strstr (CurPos, "<PRE>");
+    if (CurPos == 0)
+    {
+      StatusColor = COLOR_FAIL;
+      Static_SetText (HStatus, _T ("Status: Proxy HTTP Output cannot be parsed"));
+      goto cleanup;
+    }
+    while ((size_t) (CurPos - Buf) < BytesReadTotal)
+    {
+      char *TempCurPos = 0;
+      CurPos = strstr (CurPos, "</A>");
+      if (CurPos == 0)
+        break;
+      TempCurPos = CurPos;
+      while (*TempCurPos != '>' && TempCurPos > Buf)
+        TempCurPos--;
+
+      if (TempCurPos == 0)
+      {
+        StatusColor = COLOR_FAIL;
+        Static_SetText (HStatus, _T ("Status: Proxy HTTP Output cannot be parsed"));
+        goto cleanup;
+      }
+      TempCurPos++;
+      CurPos--;
+      if (CurPos <= TempCurPos)
+      {
+        CurPos += 2;
+        continue;
+      }
+      TempBuf = new char [CurPos - TempCurPos + 1 + 1];
+      strncpy (TempBuf, TempCurPos, CurPos - TempCurPos + 1);
+      TempBuf[CurPos - TempCurPos + 1] = '\0';
+      CurPos += 2;
+      if (!PathMatchSpecA (TempBuf, "*.zip"))
+      {
+        CLEAN_AND_ZERO_ARR (TempBuf);
+        continue;
+      }
+
+      TempBuf[strlen (TempBuf) - 4] = '\0';
+      count++;
+
+      FileName = 0;
+      SetString (FileName, TempBuf);
+
+      LanguageName Lang (FileName); // Probably should add options for using/not using aliases
+      CurrentLangs->push_back (Lang);
+      CLEAN_AND_ZERO_ARR (TempBuf);
+    }
+
+    if (count == 0)
+    {
+      StatusColor = COLOR_WARN;
+      Static_SetText (HStatus, _T ("Status: Directory doesn't contain any zipped files"));
+      goto cleanup;
+    }
+
+    std::sort (CurrentLangs->begin (), CurrentLangs->end (), SpellCheckerInstance->GetDecodeNames () ? CompareAliases : CompareOriginal);
+
+    UpdateListBox (); // Used only here and on filter change
+    // If it is success when we perhaps should add this address to our list.
+    int Len = ComboBox_GetTextLength (HAddress) + 1;
+    if (CheckIfSavingIsNeeded)
+    {
+      TCHAR *NewServer = new TCHAR [Len];
+      ComboBox_GetText (HAddress, NewServer, Len);
+      PostMessageToMainThread (TM_ADD_USER_SERVER, (WPARAM) NewServer, 0);
+    }
+    StatusColor = COLOR_OK;
+    Static_SetText (HStatus, _T ("Status: List of available files was successfully loaded"));
+    EnableWindow (HInstallSelected, TRUE);
+  }
+  else if (Type == DOWNLOAD_FILE)
+  {
+    char *Buf = new char [INITIAL_SMALL_BUFFER_SIZE];
+    DWORD CurBufSize = INITIAL_SMALL_BUFFER_SIZE;
+    DWORD BytesToRead = 0;
+    DWORD BytesRead;
+    DWORD BytesReadTotal = 0;
+    DWORD FinalSize = 0;
+    FileName[_tcslen (FileName) - 4] = _T ('\0');
+    TCHAR Message[DEFAULT_BUF_SIZE];
+
+    if (PathFileExists (Location))
+    {
+      SetFileAttributes (Location, FILE_ATTRIBUTE_NORMAL);
+      DeleteFile (Location);
+    }
+    if (PathFileExists (Location))
+    {
+      SetFileAttributes (Location, FILE_ATTRIBUTE_NORMAL);
+      DeleteFile (Location);
+    }
+    int FileHandle = _topen (Location, _O_CREAT | _O_BINARY | _O_WRONLY);
+    if (!FileHandle)
+      goto cleanup;
+
+    GetProgress ()->SetProgress (100);
+    while (1)
+    {
+      InternetQueryDataAvailable (OpenedURL, &BytesToRead, 0, 0);
+      if (BytesToRead == 0)
+        break;
+      if (BytesToRead > CurBufSize)
+      {
+        CLEAN_AND_ZERO_ARR (Buf);
+        Buf = new char[BytesToRead];
+        CurBufSize = BytesToRead;
+      }
+
+      InternetReadFile (OpenedURL, Buf, BytesToRead, &BytesRead);
+      if (BytesRead == 0)
+        break;
+
+      write (FileHandle, Buf, BytesRead);
+      BytesReadTotal += BytesRead;
+
+      _stprintf (Message, _T ("%d / ???   bytes downloaded"), BytesReadTotal);
+
+      GetProgress ()->SetBottomMessage (Message);
+
+      if (WaitForEvent (EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0)
+      {
+        GetProgress ()->SetBottomMessage (_T ("Aborting Download..."));
+        SetCancelPressed (TRUE);
+        break;
+      }
+    }
+    _close (FileHandle);
+    CLEAN_AND_ZERO_ARR (Buf);
+  }
+cleanup:
+  if (WinInetHandle)
+    InternetCloseHandle (WinInetHandle);
+  CLEAN_AND_ZERO_ARR (Url);
+}
+
 void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
 {
   TCHAR *Folders = 0;
+  Observer *ProgressUpdater = 0;
   if (Type == FILL_FILE_LIST)
   {
     EnableWindow (HInstallSelected, FALSE);
     StatusColor = COLOR_NEUTRAL;
     Static_SetText (HStatus, _T ("Status: Loading..."));
+    ListBox_ResetContent (HFileList);
+  }
+
+  if (SpellCheckerInstance->GetUseProxy () && SpellCheckerInstance->GetProxyType () == 0)
+  {
+    DoFtpOperationThroughHttpProxy (Type, Address, FileName, Location);
+    return;
   }
 
   FtpTrim (Address);
-
+  TCHAR *Url = new TCHAR[_tcslen (Address) + 6 + 1];
+  _tcscpy (Url, _T ("ftp://"));
+  _tcsncat (Url, Address, _tcslen (Address) - 1);
   Folders = _tcschr (Address, _T ('/'));
   if (Folders != 0)
   {
@@ -412,58 +736,59 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     Folders++;
   }
 
-  HINTERNET Session = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-  if (!Session)
+  nsFTP::CLogonInfo *logonInfo = 0;
+  nsFTP::CFTPClient ftpClient (nsSocket::CreateDefaultBlockingSocketInstance (), 1);
+  if (!SpellCheckerInstance->GetUseProxy ())
+    logonInfo = new nsFTP::CLogonInfo (Address, 21, _T ("anonymous"), _T (""), _T (""));
+  else
+    logonInfo = new nsFTP::CLogonInfo (
+    Address, 21, _T ("anonymous"), _T (""), _T (""),
+    SpellCheckerInstance->GetProxyHostName (),
+    _T (""), _T (""),
+    SpellCheckerInstance->GetProxyPort (),
+    nsFTP::CFirewallType::UserWithNoLogon ()
+    );
+
+  if (!ftpClient.Login(*logonInfo))
   {
-    StatusColor = COLOR_FAIL;
-    Static_SetText (HStatus, _T ("Status: Connection Error"));
-    return;
-  }
-
-  DWORD TimeOut = 1000;
-  InternetSetOption (Session, INTERNET_OPTION_CONNECT_TIMEOUT, &TimeOut, sizeof (DWORD));
-
-  HINTERNET Internet = InternetConnect (Session, Address, INTERNET_INVALID_PORT_NUMBER, NULL, NULL, INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
-
-  if (!Internet)
-  {
-    StatusColor = COLOR_FAIL;
-    Static_SetText (HStatus, _T ("Status: Connection Error"));
-    return;
-  }
-
-  if (Folders != 0) // Otherwise it's a root dir
-  {
-    DWORD Res = 0;
-    if (!FtpSetCurrentDirectory (Internet, Folders))
+    if (Type == FILL_FILE_LIST)
     {
-      StatusColor = COLOR_WARN;
-      Static_SetText (HStatus, _T ("Status: Directory wasn't found"));
-      goto cleanup;
+      StatusColor = COLOR_FAIL;
+      Static_SetText (HStatus, _T ("Status: Connection Error"));
     }
+    goto cleanup;
   }
 
   if (Type == FILL_FILE_LIST)
   {
-    WIN32_FIND_DATA FindData;
+    nsFTP::TFTPFileStatusShPtrVec List;
+
+    if (!ftpClient.List(Folders, List))
+      goto cleanup;
+
+    CLEAN_AND_ZERO (CurrentLangs);
+    CurrentLangs = new std::vector<LanguageName> ();
     TCHAR *Buf = 0;
-    HINTERNET FindHandle = FtpFindFirstFile (Internet, _T ("*.zip"), &FindData, 0, 0);
-    if (!FindHandle)
+    int count = 0;
+
+    for (unsigned int i = 0; i < List.size (); i++)
+    {
+      if (!PathMatchSpec (List.at (i)->Name ().c_str (), _T ("*.zip")))
+        continue;
+
+      count++;
+      SetString (Buf, List.at (i)->Name ().c_str ());
+      Buf[_tcslen (Buf) - 4] = 0;
+      LanguageName Lang (Buf); // Probably should add options for using/not using aliases
+      CurrentLangs->push_back (Lang);
+    }
+
+    if (count == 0)
     {
       StatusColor = COLOR_WARN;
       Static_SetText (HStatus, _T ("Status: Directory doesn't contain any zipped files"));
       goto cleanup;
     }
-    CLEAN_AND_ZERO (CurrentLangs);
-    CurrentLangs = new std::vector<LanguageName> ();
-    do
-    {
-      SetString (Buf, FindData.cFileName);
-      Buf[_tcslen (Buf) - 4] = 0;
-      LanguageName Lang (Buf); // Probably should add options for using/not using aliases
-      CurrentLangs->push_back (Lang);
-    }
-    while (InternetFindNextFile (FindHandle, &FindData));
 
     std::sort (CurrentLangs->begin (), CurrentLangs->end (), SpellCheckerInstance->GetDecodeNames () ? CompareAliases : CompareOriginal);
 
@@ -483,52 +808,48 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   }
   else if (Type == DOWNLOAD_FILE)
   {
-    DWORD LSize, HSize, Size;
-    DWORD BytesSum = 0;
-    char DataBuf[BUF_SIZE_FOR_COPY];
-
     if (PathFileExists (Location))
     {
       SetFileAttributes (Location, FILE_ATTRIBUTE_NORMAL);
       DeleteFile (Location);
     }
+    /*
     int FileHandle = _topen (Location, _O_CREAT | _O_BINARY | _O_WRONLY);
     if (FileHandle == -1)
-      return; // Then file couldn't be downloaded
-    DWORD *BytesCopied = new DWORD;
-    TCHAR Message[DEFAULT_BUF_SIZE];
-    INTERNET_BUFFERS InetBuf;
-    memset (&InetBuf, 0, sizeof (INTERNET_BUFFERS));
-    InetBuf.dwStructSize = sizeof (INTERNET_BUFFERS);
-    HINTERNET File = FtpOpenFile (Internet, FileName, GENERIC_READ , FTP_TRANSFER_TYPE_BINARY, 0);
-    LSize = FtpGetFileSize (File, &HSize);
-    Size = LSize;
-    while (InternetReadFile (File, DataBuf, BUF_SIZE_FOR_COPY, BytesCopied))
+    goto cleanup; // Then file couldn't be downloaded
+    close (FileHandle);
+    */
+
+    if (ftpClient.ChangeWorkingDirectory (Folders) != nsFTP::FTP_OK)
+      goto cleanup;
+
+    long FileSize = 0;
+    if (ftpClient.FileSize (FileName, FileSize) != nsFTP::FTP_OK)
+      goto cleanup;
+
+    ProgressUpdater = new Observer (GetProgress (), FileSize, &ftpClient, this);
+    ftpClient.AttachObserver (ProgressUpdater);
+
+    if (!ftpClient.DownloadFile (FileName, Location))
     {
-      if (!*BytesCopied)
-        break;
-
-      BytesSum += *BytesCopied;
-      GetProgress ()->SetProgress (BytesSum * 100 / Size);
-
-      _stprintf (Message, _T ("%d / %d bytes downloaded (%d %%)"), BytesSum, Size, BytesSum * 100 / Size);
-      GetProgress ()->SetBottomMessage (Message);
-      _write (FileHandle, DataBuf, *BytesCopied);
-      if (WaitForEvent (EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0)
+      if (PathFileExists (Location))
       {
-        CancelPressed = TRUE;
-        _close (FileHandle);
+        SetFileAttributes (Location, FILE_ATTRIBUTE_NORMAL);
         DeleteFile (Location);
-        return;
       }
+      goto cleanup;
     }
-    CLEAN_AND_ZERO (BytesCopied);
-    _close (FileHandle);
-    InternetCloseHandle (File);
-  }
 
+    ftpClient.DetachObserver (ProgressUpdater);
+  }
 cleanup:
-  InternetCloseHandle (Internet);
+  if (ProgressUpdater)
+    ftpClient.DetachObserver (ProgressUpdater);
+  CLEAN_AND_ZERO (ProgressUpdater);
+  CLEAN_AND_ZERO (logonInfo);
+  if (ftpClient.IsConnected ())
+    ftpClient.Logout ();
+  return;
 }
 
 VOID CALLBACK ReinitServer (
@@ -615,6 +936,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         }
         else if (HIWORD (wParam) == CBN_SELCHANGE)
         {
+          SendEvent (EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE);
           ReinitServer (this, FALSE);
           CheckIfSavingIsNeeded = 0;
         }
@@ -636,6 +958,11 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
           SendEvent (EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS);
         }
         break;
+      case IDC_SELECTPROXY:
+        if (HIWORD (wParam) == BN_CLICKED)
+        {
+          GetSelectProxy ()->DoDialog ();
+        }
       }
     }
     break;

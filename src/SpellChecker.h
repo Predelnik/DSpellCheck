@@ -32,6 +32,7 @@ class Suggestions;
 class AbstractSpellerInterface;
 class AspellInterface;
 class HunspellInterface;
+class SelectProxy;
 
 struct SuggestionsMenuItem
 {
@@ -82,6 +83,13 @@ public:
   void SetAspellMultipleLanguages (const char *MultiLanguagesArg);
   void SetUnderlineColor (int Value);
   void SetUnderlineStyle (int Value);
+  void SetProxyUserName (TCHAR *Str);
+  void SetProxyHostName (TCHAR *Str);
+  void SetProxyPassword (TCHAR *Str);
+  void SetProxyPort (int Value);
+  void SetUseProxy (BOOL Value);
+  void SetProxyAnonymous (BOOL Value);
+  void SetProxyType (int Value);
   void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
     BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg);
   void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
@@ -109,6 +117,13 @@ public:
   void SetRemoveSystem (BOOL Value);
   BOOL GetRemoveUserDics ();
   BOOL GetRemoveSystem ();
+  TCHAR *GetProxyUserName ();
+  TCHAR *GetProxyHostName ();
+  TCHAR *GetProxyPassword ();
+  int GetProxyPort ();
+  BOOL GetUseProxy ();
+  BOOL GetProxyAnonymous ();
+  int GetProxyType ();
   long PreviousA, PreviousB;
 
 private:
@@ -225,6 +240,13 @@ private:
   HWND CurrentScintilla;
   int HotSpotCache[256]; // STYLE_MAX = 255
   std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)> *SettingsToSave;
+  BOOL UseProxy;
+  BOOL ProxyAnonymous;
+  int ProxyType;
+  TCHAR *ProxyHostName;
+  TCHAR *ProxyUserName;
+  int ProxyPort;
+  TCHAR *ProxyPassword;
 
   int Lexer;
   std::vector <SuggestionsMenuItem *> *SuggestionMenuItems;

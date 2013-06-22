@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "LangList.h"
 #include "Progress.h"
 #include "RemoveDics.h"
+#include "SelectProxy.h"
 #include "SpellChecker.h"
 #include "Suggestions.h"
 
@@ -65,6 +66,7 @@ SettingsDlg *SettingsDlgInstance = 0;
 Suggestions *SuggestionsInstance = 0;
 LangList *LangListInstance = 0;
 RemoveDics *RemoveDicsInstance = 0;
+SelectProxy *SelectProxyInstance = 0;
 Progress *ProgressInstance = 0;
 DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
@@ -183,6 +185,11 @@ RemoveDics *GetRemoveDics ()
   return RemoveDicsInstance;
 }
 
+SelectProxy *GetSelectProxy ()
+{
+  return SelectProxyInstance;
+}
+
 Progress *GetProgress ()
 {
   return ProgressInstance;
@@ -282,6 +289,7 @@ void pluginCleanUp ()
   CLEAN_AND_ZERO (AboutDlgInstance);
   CLEAN_AND_ZERO (SuggestionsInstance);
   CLEAN_AND_ZERO (LangListInstance);
+  CLEAN_AND_ZERO (SelectProxyInstance);
   CLEAN_AND_ZERO (RemoveDicsInstance);
   CLEAN_AND_ZERO (DownloadDicsDlgInstance);
   CLEAN_AND_ZERO (ProgressInstance);
@@ -531,6 +539,9 @@ void InitClasses ()
 
   LangListInstance = new LangList;
   LangListInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
+
+  SelectProxyInstance = new SelectProxy;
+  SelectProxyInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
   RemoveDicsInstance = new RemoveDics;
   RemoveDicsInstance->init ((HINSTANCE) hModule, nppData._nppHandle);

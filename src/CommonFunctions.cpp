@@ -528,6 +528,21 @@ size_t HashCharString (char *a)
   return Hash;
 }
 
+bool EquivTCHARStrings (TCHAR *a, TCHAR *b)
+{
+  return (_tcscmp (a, b) == 0);
+}
+
+size_t HashTCHARString (TCHAR *a)
+{
+  size_t Hash = 7;
+  for(unsigned int i = 0; i < _tcslen (a); i++)
+  {
+    Hash = Hash * 31 + a[i];
+  }
+  return Hash;
+}
+
 bool SortCompareChars (char *a, char *b)
 {
   return strcmp (a, b) < 0;

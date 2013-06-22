@@ -9,11 +9,13 @@ include_directories (${SRC_DIR}/Controls)
 include_directories (${SRC_DIR})
 include_directories (Hunspell/src)
 include_directories (minizip/)
+include_directories (FtpClient/)
 include_directories (libiconv/include)
 
 add_subdirectory ("Hunspell") #Thanks https://github.com/zdenop/hunspell-mingw
 add_subdirectory ("libiconv")
 add_subdirectory ("minizip")
+add_subdirectory ("FtpClient")
 
 set (GENERIC_OUTPUT_DIR, ${BIN_DIR})
 set (DEBUG_OUTPUT_DIR, ${BIN_DIR}/debug)
@@ -73,6 +75,8 @@ set (list_of_files_DSpellCheck
   ${SRC_DIR}/LanguageName.h
   ${SRC_DIR}/RemoveDics.cpp
   ${SRC_DIR}/RemoveDics.h
+  ${SRC_DIR}/SelectProxy.cpp
+  ${SRC_DIR}/SelectProxy.h
   ${SRC_DIR}/DSpellCheck.rc
   ${SRC_DIR}/AbstractSpellerInterface.cpp
   ${SRC_DIR}/AbstractSpellerInterface.h
@@ -92,7 +96,7 @@ set (list_of_files_DSpellCheck
   ${SRC_DIR}/Controls/TabBar/TabBar.h
 )
 
-SET(LINK_LIBRARY shlwapi comctl32 version wininet UxTheme)
+SET(LINK_LIBRARY shlwapi comctl32 version wininet UxTheme Ws2_32)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
 
 #if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
@@ -100,7 +104,7 @@ add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
 #endif (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
 
 if(MSVC)
-    foreach(flag_var CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO) 
+    foreach(flag_var CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO)
         string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
         string(REGEX REPLACE "/MDd" "/MTd" ${flag_var} "${${flag_var}}")
     endforeach(flag_var)
@@ -117,9 +121,12 @@ endif()
 target_link_libraries (DSpellCheck debug ${PROJECT_BINARY_DIR}/Hunspell/Debug/libhunspell.lib)
 target_link_libraries (DSpellCheck debug ${PROJECT_BINARY_DIR}/libiconv/DebugStatic_Win32/libiconv.lib)
 target_link_libraries (DSpellCheck debug ${PROJECT_BINARY_DIR}/minizip/Debug/minizip.lib)
+target_link_libraries (DSpellCheck debug ${PROJECT_BINARY_DIR}/ftpclient/Debug/ftpclient.lib)
 target_link_libraries (DSpellCheck optimized ${PROJECT_BINARY_DIR}/Hunspell/Release/libhunspell.lib)
 target_link_libraries (DSpellCheck optimized ${PROJECT_BINARY_DIR}/libiconv/ReleaseStatic_Win32/libiconv.lib)
 target_link_libraries (DSpellCheck optimized ${PROJECT_BINARY_DIR}/minizip/Release/minizip.lib)
+target_link_libraries (DSpellCheck optimized ${PROJECT_BINARY_DIR}/ftpclient/Release/ftpclient.lib)
+
 
 include (PrecompiledHeader.cmake)
 add_precompiled_header(DSpellCheck PrecompiledHeader.h FORCEINCLUDE) 

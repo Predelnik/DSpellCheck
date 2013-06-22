@@ -33,6 +33,7 @@ const int nbFunc = 8;
 
 class LangList;
 class DownloadDicsDlg;
+class SelectProxy;
 class SpellChecker;
 class Progress;
 class RemoveDics;
@@ -84,6 +85,7 @@ typedef enum {
   EID_INIT_SUGGESTIONS_BOX,
   EID_HIDE_SUGGESTIONS_BOX,
   EID_SHOW_SUGGESTION_MENU,
+  EID_UPDATE_SELECT_PROXY,
   EID_RECHECK_MODIFIED_ZONE,
   EID_INIT_CONTEXT_MENU,
   EID_APPLYMENUACTION,
@@ -104,6 +106,7 @@ typedef enum {
   EID_CANCEL_DOWNLOAD,
   EID_LANG_CHANGE,
   EID_LIB_CHANGE,
+  EID_APPLY_PROXY_SETTINGS,
   EID_MAX,
 } EventId;
 
@@ -128,6 +131,7 @@ HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = 0);
 HANDLE getHModule ();
 LangList *GetLangList ();
 RemoveDics *GetRemoveDics ();
+SelectProxy *GetSelectProxy ();
 Progress *GetProgress ();
 DownloadDicsDlg *GetDownloadDics ();
 FuncItem *get_funcItem ();

@@ -60,6 +60,8 @@ size_t Utf8Length (const char *String);
 BOOL Utf8IsCont (char c);
 
 bool SortCompare (TCHAR *a, TCHAR *b);
+bool EquivTCHARStrings (TCHAR *a, TCHAR *b);
+size_t HashTCHARString (TCHAR *a);
 bool EquivCharStrings (char *a, char *b);
 size_t HashCharString (char *a);
 bool SortCompareChars (char *a, char *b);
