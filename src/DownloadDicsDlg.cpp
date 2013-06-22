@@ -379,7 +379,7 @@ void FtpTrim (TCHAR *FtpAddress)
 
 void DownloadDicsDlg::UpdateListBox ()
 {
-  if (!HFileList)
+  if (!HFileList || !CurrentLangs)
     return;
 
   CLEAN_AND_ZERO (CurrentLangsFiltered);
@@ -482,10 +482,10 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     if (Type == FILL_FILE_LIST)
     {
       StatusColor = COLOR_FAIL;
-        TCHAR Buf[256];
+      TCHAR Buf[256];
 
-        _stprintf (Buf, _T ("Status: URL cannot be opened (Error code: %d)"), GetLastError ());
-        Static_SetText (HStatus, Buf);
+      _stprintf (Buf, _T ("Status: URL cannot be opened (Error code: %d)"), GetLastError ());
+      Static_SetText (HStatus, Buf);
       goto cleanup;
     }
   }
@@ -564,8 +564,6 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     TCHAR *FileName = 0;
     TCHAR *FileNameCopy = 0;
     int count = 0;
-    CLEAN_AND_ZERO (CurrentLangs);
-    CurrentLangs = new std::vector<LanguageName> ();
     // Bad Parsing. Really, really bad. I'm sorry :(
     if (CurPos == 0)
     {
@@ -717,6 +715,8 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     StatusColor = COLOR_NEUTRAL;
     Static_SetText (HStatus, _T ("Status: Loading..."));
     ListBox_ResetContent (HFileList);
+    CLEAN_AND_ZERO (CurrentLangs);
+    CurrentLangs = new std::vector<LanguageName> ();
   }
 
   if (SpellCheckerInstance->GetUseProxy () && SpellCheckerInstance->GetProxyType () == 0)
@@ -770,8 +770,6 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
       goto cleanup;
     }
 
-    CLEAN_AND_ZERO (CurrentLangs);
-    CurrentLangs = new std::vector<LanguageName> ();
     TCHAR *Buf = 0;
     int count = 0;
 
