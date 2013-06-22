@@ -450,7 +450,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
 {
   TCHAR *ProxyFinalString = new TCHAR [_tcslen (SpellCheckerInstance->GetProxyHostName ()) + 10];
   _stprintf (ProxyFinalString, _T ("%s:%d"), SpellCheckerInstance->GetProxyHostName (), SpellCheckerInstance->GetProxyPort ());
-  HINTERNET WinInetHandle = InternetOpen (_T ("DSpellCHeck"), INTERNET_OPEN_TYPE_PROXY, ProxyFinalString, _T (""), 0);
+  HINTERNET WinInetHandle = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PROXY, ProxyFinalString, _T (""), 0);
   if (!WinInetHandle)
   {
     if (Type == FILL_FILE_LIST)
@@ -498,18 +498,27 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       (LPVOID) SpellCheckerInstance->GetProxyPassword (), _tcslen (SpellCheckerInstance->GetProxyPassword ()) + 1);
     InternetSetOption (OpenedURL, INTERNET_OPTION_PROXY_SETTINGS_CHANGED,
       0, 0);
-    HttpSendRequest (OpenedURL, 0, 0, 0, 0);
-  }
-
+      HttpSendRequest (OpenedURL, 0, 0, 0, 0);
+  } 
+  
   DWORD Code = 0;
   DWORD Dummy = 0;
   DWORD Size = sizeof (DWORD);
+
+  /*
+  char Buffer[10000];
+  DWORD Length = 10000;
+  HttpQueryInfo (OpenedURL, HTTP_QUERY_RAW_HEADERS_CRLF, Buffer, &Length, &Dummy);
+  */
+
   if (!HttpQueryInfo (OpenedURL, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &Code, &Size, &Dummy))
   {
     if (Type == FILL_FILE_LIST)
     {
       StatusColor = COLOR_FAIL;
-      Static_SetText (HStatus, _T ("Status: Query status code failed"));
+      TCHAR Buf[256];
+      _stprintf (Buf, _T ("Status: Query status code failed (Error: %d)"), GetLastError ());
+      Static_SetText (HStatus, Buf);
     }
     goto cleanup;
   }
@@ -530,6 +539,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     }
     goto cleanup;
   }
+
   if (Type == FILL_FILE_LIST)
   {
     char *Buf = new char [INITIAL_BUFFER_SIZE];
