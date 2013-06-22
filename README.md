@@ -74,3 +74,9 @@ v1.2.4
 * Fix wrong message and behaviour when Hunspell directory for dictionaries doesn't exist.
 * Restore work of multiple languages list for Aspell.
 * Fixed bug: if usage of multiple languages was not chosen, all the dictionaries for it were still loading at plugin start.
+
+v1.2.5
+* 
+* Make determination of current word for context menu suggestion mode be based on caret position rather than mouse position
+* Fix bug: focus wasn't being restored after using menu from suggestions button
+* Fix bug: in multiple language selection dialog - some languages could be corresponding to other languages actually.
