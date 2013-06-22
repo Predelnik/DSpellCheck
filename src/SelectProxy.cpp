@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "SelectProxy.h"
 
+#include "DownloadDicsDlg.h"
 #include "Controls/CheckedList/CheckedList.h"
 #include "MainDef.h"
 #include "CommonFunctions.h"
@@ -36,7 +37,6 @@ void SelectProxy::DoDialog ()
     create (IDD_DIALOG_SELECT_PROXY);
   }
   goToCenter ();
-  display ();
 }
 
 void SelectProxy::init (HINSTANCE hInst, HWND Parent)
@@ -72,6 +72,7 @@ void SelectProxy::ApplyChoice (SpellChecker *SpellCheckerInstance)
   int x = _tcstol (TBuf, &EndPtr, 10);
   SpellCheckerInstance->SetProxyPort (x);
   CLEAN_AND_ZERO_ARR (TBuf);
+  GetDownloadDics ()->Refresh ();
 }
 
 void SelectProxy::DisableControls ()

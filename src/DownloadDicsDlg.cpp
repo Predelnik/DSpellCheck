@@ -470,26 +470,22 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
   if (Type == DOWNLOAD_FILE)
     _tcscat (Url, FileName);
 
-  DWORD TimeOut = 1000;
+  DWORD TimeOut = 15000;
   InternetSetOption (WinInetHandle, INTERNET_OPTION_CONNECT_TIMEOUT, &TimeOut, sizeof (DWORD));
   InternetSetOption (WinInetHandle, INTERNET_OPTION_SEND_TIMEOUT, &TimeOut, sizeof (DWORD));
   InternetSetOption (WinInetHandle, INTERNET_OPTION_RECEIVE_TIMEOUT, &TimeOut, sizeof (DWORD));
 
   HINTERNET OpenedURL = 0;
-  OpenedURL = InternetOpenUrl (WinInetHandle, Url, 0, 0, 0, 0);
+  OpenedURL = InternetOpenUrl (WinInetHandle, Url, 0, 0, INTERNET_FLAG_PASSIVE | INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE, 0);
   if (!OpenedURL)
   {
     if (Type == FILL_FILE_LIST)
     {
       StatusColor = COLOR_FAIL;
-      if (Type == FILL_FILE_LIST)
-      {
-        StatusColor = COLOR_FAIL;
         TCHAR Buf[256];
 
         _stprintf (Buf, _T ("Status: URL cannot be opened (Error code: %d)"), GetLastError ());
         Static_SetText (HStatus, Buf);
-      }
       goto cleanup;
     }
   }
@@ -571,7 +567,6 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     CLEAN_AND_ZERO (CurrentLangs);
     CurrentLangs = new std::vector<LanguageName> ();
     // Bad Parsing. Really, really bad. I'm sorry :(
-    CurPos = strstr (CurPos, "<PRE>");
     if (CurPos == 0)
     {
       StatusColor = COLOR_FAIL;
@@ -580,8 +575,11 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     }
     while ((size_t) (CurPos - Buf) < BytesReadTotal)
     {
-      char *TempCurPos = 0;
+      char *TempCurPos = CurPos;
       CurPos = strstr (CurPos, "</A>");
+      if (CurPos == 0)
+        CurPos = strstr (TempCurPos, "</a>");
+
       if (CurPos == 0)
         break;
       TempCurPos = CurPos;
@@ -887,6 +885,11 @@ void DownloadDicsDlg::UpdateOptions (SpellChecker *SpellCheckerInstance)
   SpellCheckerInstance->SetInstallSystem (Button_GetCheck (HInstallSystem) == BST_CHECKED);
 }
 
+void DownloadDicsDlg::Refresh ()
+{
+  ReinitServer (this, FALSE);
+}
+
 BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
@@ -949,7 +952,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         break;
       case IDC_REFRESH:
         {
-          ReinitServer (this, FALSE);
+          Refresh ();
         }
         break;
       case IDC_INSTALL_SYSTEM:
@@ -968,6 +971,7 @@ BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM 
         if (HIWORD (wParam) == BN_CLICKED)
         {
           GetSelectProxy ()->DoDialog ();
+          SendEvent (EID_SHOW_SELECT_PROXY);
         }
       }
     }

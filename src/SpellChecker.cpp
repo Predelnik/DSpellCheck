@@ -584,6 +584,10 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   case EID_HIDE_DOWNLOAD_DICS: // TODO: Make it async, though it's really hard
     GetDownloadDics ()->display (false);
     break;
+
+  case EID_SHOW_SELECT_PROXY:
+    GetSelectProxy ()->display ();
+    break;
     /*
     case EID_APPLYMENUACTION:
     ApplyMenuActions ();
