@@ -612,14 +612,6 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
     {
       CurNum = Spellers->at (i).Speller->suggest (&CurHunspellList, GetConvertedWord (Word, (CurrentEncoding == ENCODING_UTF8) ? Spellers->at (i).Converter : Spellers->at (i).ConverterANSI));
 
-      if (CurNum > 0)
-      {
-        const char *FirstSug = GetConvertedWord (CurHunspellList [0], Spellers->at (i).BackConverter);
-        SetStringDUtf8 (WordUtf8, Word);
-        if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*WordUtf8))
-          continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
-      }
-
       if (CurNum > MaxSize)
       {
         if (Num != -1)

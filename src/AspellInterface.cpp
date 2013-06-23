@@ -143,13 +143,6 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
       AspellStringEnumeration * els = aspell_word_list_elements(CurWordList);
       Size = aspell_word_list_size (CurWordList);
 
-      if (Size > 0)
-      {
-        const char *FirstSug = aspell_string_enumeration_next(els);
-        if (Utf8GetCharSize (*FirstSug) != Utf8GetCharSize (*TargetWord))
-          continue; // Special Hack to distinguish Cyrillic words from ones written Latin letters
-      }
-
       if (Size > MaxSize)
       {
         MaxSize = Size;
