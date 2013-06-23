@@ -2828,23 +2828,6 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
   const char *ConvertFrom [3];
   const char *ConvertTo [3];
   int Apply[3] = {IgnoreYo, IgnoreYo, ConvertSingleQuotes};
-  unsigned int LastChar = strlen (Word) - 1; // It's ASCII char so it's leading anyway
-
-  if (RemoveBoundaryApostrophes)
-  {
-    if (Word[LastChar] == '\'')
-    {
-      Word[LastChar] = '\0';
-      LastChar--;
-    }
-    if (Word[0] == '\'')
-    {
-      for (int i = 0; Word[i]; i++)
-        Word[i] = Word[i + 1];
-
-      LastChar--;
-    }
-  }
 
   if (CurrentEncoding == ENCODING_ANSI)
   {
@@ -2892,6 +2875,25 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
       }
       for (int j = 0; j < Diff; j++)
         *(NestedIter + j) = 0;
+    }
+  }
+
+  unsigned int LastChar = strlen (Word) - 1; // Apostrophe is ASCII char so it's leading anyway
+
+  // Since there's option to transform something to apostrophe, I guess this one better stay at the end.
+  if (RemoveBoundaryApostrophes)
+  {
+    if (Word[LastChar] == '\'')
+    {
+      Word[LastChar] = '\0';
+      LastChar--;
+    }
+    if (Word[0] == '\'')
+    {
+      for (int i = 0; Word[i]; i++)
+        Word[i] = Word[i + 1];
+
+      LastChar--;
     }
   }
 }
