@@ -66,7 +66,7 @@ bool EquivCharStrings (char *a, char *b);
 size_t HashCharString (char *a);
 bool SortCompareChars (char *a, char *b);
 
-BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent = FALSE);
+BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent = TRUE, HWND NppWindow = 0);
 TCHAR *GetLastSlashPosition (TCHAR *Path);
 
 #endif // COMMON_FUNCTIONS_H;

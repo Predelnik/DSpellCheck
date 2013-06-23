@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "iconv.h"
 #include "MainDef.h"
+#include "Plugin.h"
 #include "PluginInterface.h"
 
 void SetString (char *&Target, const char *Str)
@@ -607,22 +608,26 @@ BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName)
   return FALSE;
 }
 
-static BOOL TryToCreateDir (TCHAR *Path, BOOL Silent)
+static BOOL TryToCreateDir (TCHAR *Path, BOOL Silent, HWND NppWindow)
 {
   if (!CreateDirectory (Path, NULL))
   {
     if (!Silent)
     {
+      if (!NppWindow)
+        return FALSE;
+
       TCHAR Message[DEFAULT_BUF_SIZE];
       _stprintf (Message, _T ("Can't create directory %s"), Path);
-      MessageBox (0, Message, _T ("Error in directory creation"), MB_OK | MB_ICONERROR);
+      MessageBoxInfo MsgBox (NppWindow, Message, _T ("Error in directory creation"), MB_OK | MB_ICONERROR);
+      SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     }
     return FALSE;
   }
   return TRUE;
 }
 
-BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent)
+BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent, HWND NppWindow)
 {
   for (unsigned int i = 0; i < _tcslen (Path); i++)
   {
@@ -631,7 +636,7 @@ BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent)
       Path[i] = _T ('\0');
       if (!PathFileExists (Path))
       {
-        if (!TryToCreateDir (Path, Silent))
+        if (!TryToCreateDir (Path, Silent, NppWindow))
           return FALSE;
       }
       Path[i] = _T ('\\');
@@ -639,7 +644,7 @@ BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent)
   }
   if (!PathFileExists (Path))
   {
-    if (!TryToCreateDir (Path, Silent))
+    if (!TryToCreateDir (Path, Silent, NppWindow))
       return FALSE;
   }
   return TRUE;

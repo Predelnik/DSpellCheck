@@ -104,6 +104,17 @@ static BOOL IsNetworkThreadBeingKilled ()
   return FALSE;
 }
 
+DWORD DownloadDicsDlg::AskReplacementMessage (TCHAR *DicName)
+{
+  TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
+  TCHAR *TBuf = 0;
+  SetStringWithAliasApplied (TBuf, DicName);
+  _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), TBuf);
+  CLEAN_AND_ZERO_ARR (TBuf);
+  MessageBoxInfo MsgBox (_hParent, ReplaceMessage, _T ("Dictionary already exists"), MB_YESNO);
+  return SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX), (WPARAM) &MsgBox, 0);
+}
+
 #define BUF_SIZE_FOR_COPY 10240
 void DownloadDicsDlg::DownloadSelected ()
 {
@@ -126,9 +137,10 @@ void DownloadDicsDlg::DownloadSelected ()
   char FileCopyBuf[(BUF_SIZE_FOR_COPY)];
   TCHAR ProgMessage[DEFAULT_BUF_SIZE];
   GetTempPath (MAX_PATH, TempPath);
-  if (!CheckForDirectoryExistence (TempPath)) // If path isn't exist we're gonna try to create it else it's finish
+  if (!CheckForDirectoryExistence (TempPath, FALSE, _hParent)) // If path isn't exist we're gonna try to create it else it's finish
   {
-    MessageBox (0, _T ("Path defined as temporary dir doesn't exist and couldn't be created, probably one of subdirectories have limited access, please make temporary path valid."), _T ("Temporary Path is Broken"), MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxInfo MsgBox (_hParent, _T ("Path defined as temporary dir doesn't exist and couldn't be created, probably one of subdirectories have limited access, please make temporary path valid."), _T ("Temporary Path is Broken"), MB_OK | MB_ICONEXCLAMATION);
+    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     return;
   }
   CancelPressed = FALSE;
@@ -141,9 +153,10 @@ void DownloadDicsDlg::DownloadSelected ()
   p->SetTopMessage (_T (""));
   int DownloadedCount = 0;
   int SupposedDownloadedCount = 0;
-  if (!CheckForDirectoryExistence (SpellCheckerInstance->GetInstallSystem () ? SpellCheckerInstance->GetHunspellAdditionalPath () : SpellCheckerInstance->GetHunspellPath ())) // If path doesn't exist we're gonna try to create it else it's finish
+  if (!CheckForDirectoryExistence (SpellCheckerInstance->GetInstallSystem () ? SpellCheckerInstance->GetHunspellAdditionalPath () : SpellCheckerInstance->GetHunspellPath (), 0, _hParent)) // If path doesn't exist we're gonna try to create it else it's finish
   {
-    MessageBox (0, _T ("Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxInfo MsgBox (_hParent, _T ("Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     return;
   }
   for (int i = 0; i < Count; i++)
@@ -161,8 +174,6 @@ void DownloadDicsDlg::DownloadSelected ()
       _tcscat (LocalPath, FileName);
       ComboBox_GetText (HAddress, Buf, DEFAULT_BUF_SIZE);
       DoFtpOperation (DOWNLOAD_FILE, Buf, FileName, LocalPath);
-      if (IsNetworkThreadBeingKilled ()) // That's because we could stuck at check box.
-        return;
       if (CancelPressed)
         break;
       SetString (LocalPathANSI, LocalPath);
@@ -257,13 +268,9 @@ void DownloadDicsDlg::DownloadSelected ()
           BOOL ReplaceQuestionWasAsked = FALSE;
           if (PathFileExists (HunspellDicPath))
           {
-            TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
-            TCHAR *TBuf = 0;
-            SetStringWithAliasApplied (TBuf, DicFileName);
-            _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), TBuf);
-            CLEAN_AND_ZERO_ARR (TBuf);
+            DWORD Answer = AskReplacementMessage (DicFileName);
             ReplaceQuestionWasAsked = TRUE;
-            if (MessageBox (0, ReplaceMessage, _T ("Dictionary already exists"), MB_YESNO) == IDNO)
+            if (Answer == IDNO)
             {
               Confirmation = FALSE;
               SetFileAttributes (DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
@@ -296,9 +303,7 @@ void DownloadDicsDlg::DownloadSelected ()
               Res = !Confirmation;
             else
             {
-              TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
-              _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), DicFileName);
-              Res = (MessageBox (0, ReplaceMessage, _T ("Dictionary already exists"), MB_YESNO) == IDNO);
+              Res = (AskReplacementMessage (DicFileName) == IDNO);
             }
             if (Res)
             {
@@ -349,11 +354,20 @@ clean_and_continue:
   }
   GetProgress ()->display (false);
   if (Failure == 1)
-    MessageBox (0, _T ("Access denied to dictionaries directory, either try to run Notepad++ as administrator or select some different, accessible dictionary path"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+  {
+    MessageBoxInfo MsgBox (_hParent, _T ("Access denied to dictionaries directory, either try to run Notepad++ as administrator or select some different, accessible dictionary path"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+  }
   else if (DownloadedCount)
-    MessageBox (0, Message, _T ("Dictionaries Downloaded Successfully"), MB_OK | MB_ICONINFORMATION);
+  {
+    MessageBoxInfo MsgBox (_hParent, Message, _T ("Dictionaries Downloaded"), MB_OK | MB_ICONINFORMATION);
+    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+  }
   else if (SupposedDownloadedCount) // Otherwise - silent
-    MessageBox (0, _T ("Sadly, no dictionaries were copied, please try again"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+  {
+    MessageBoxInfo MsgBox (_hParent, _T ("Sadly, no dictionaries were copied, please try again"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
+    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+  }
   for (int i = 0; i < ListBox_GetCount (HFileList); i++)
     CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
   SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list

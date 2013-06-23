@@ -59,7 +59,7 @@ struct AvailableLangInfo
 class HunspellInterface : public AbstractSpellerInterface
 {
 public:
-  HunspellInterface ();
+  HunspellInterface (HWND NppWindowArg);
   ~HunspellInterface ();
   __override virtual std::vector<TCHAR*> *GetLanguageList ();
   __override virtual void SetLanguage (TCHAR *Lang);
@@ -80,6 +80,7 @@ public:
 private:
   DicInfo CreateHunspell (TCHAR *Name, int Type);
   BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);
+  void MessageBoxWordCannotBeAdded ();
 public:
 private:
   BOOL IsHunspellWorking;
@@ -99,5 +100,6 @@ private:
   char *TemporaryBuffer;
   TCHAR *UserDicPath; // For now only default one.
   TCHAR *SystemWrongDicPath; // Only for reading and then removing
+  HWND NppWindow;
 };
 #endif // HUNSPELLINTERFACE_H

@@ -97,7 +97,8 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
     SpellCheckerInstance->DoPluginMenuInclusion ();
     TCHAR Buf[DEFAULT_BUF_SIZE];
     _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
-    MessageBox (0, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
+    MessageBoxInfo MsgBox (_hParent, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
+    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   }
 }
 

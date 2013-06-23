@@ -54,6 +54,7 @@ public:
   void UpdateOptions (SpellChecker *SpellCheckerInstance);
   void SetCancelPressed (BOOL Value);
   void Refresh ();
+  DWORD AskReplacementMessage (TCHAR *DicName);
 private:
   void DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location);
 private:

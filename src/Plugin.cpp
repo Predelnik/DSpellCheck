@@ -59,6 +59,7 @@ FuncItem *get_funcItem ()
 //
 NppData nppData;
 TCHAR IniFilePath[MAX_PATH];
+DWORD CustomGUIMessageIds [CustomGUIMessage::MAX] = {0};
 bool doCloseTag = false;
 BOOL AutoCheckText = false;
 SpellChecker *SpellCheckerInstance = 0;
@@ -391,6 +392,19 @@ DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTi
     return WaitForMultipleObjects (EventLast - EventFirst + 1, hEvent + EventFirst, FALSE, WaitTime);
   else
     return WAIT_FAILED;
+}
+
+void RegisterCustomMessages ()
+{
+  for (int i = 0; i < CustomGUIMessage::MAX; i++)
+  {
+    CustomGUIMessageIds[i] = RegisterWindowMessage (CustomGUIMesssagesNames[i]);
+  }
+}
+
+DWORD GetCustomGUIMessageId (CustomGUIMessage::e MessageId)
+{
+  return CustomGUIMessageIds[MessageId];
 }
 
 void SwitchAutoCheckText ()

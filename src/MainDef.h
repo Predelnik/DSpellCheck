@@ -35,6 +35,36 @@ enum EncodingType
   ENCODING_ANSI
 };
 
+namespace CustomGUIMessage
+{
+  enum e
+  {
+    DO_MESSAGE_BOX = 0,   // Use MessageBoxInfo as wParam.
+    MAX,
+  };
+}
+
+const TCHAR *const CustomGUIMesssagesNames[] = {
+  _T ("DSpellCheck_MessageBox"),
+};
+
+struct MessageBoxInfo
+{
+  HWND hWnd;
+  TCHAR *Title;
+  TCHAR *Message;
+  DWORD Flags;
+  DWORD Answer;
+  MessageBoxInfo (HWND hWndArg, TCHAR *MessageArg, TCHAR *TitleArg, DWORD FlagsArg)
+  {
+    hWnd = hWndArg;
+    Title = TitleArg;
+    Message = MessageArg;
+    Flags = FlagsArg;
+    Answer = 0;
+  }
+};
+
 #define SUGGESTIONS_BOX 0
 #define SUGGESTIONS_CONTEXT_MENU 1
 

@@ -26,7 +26,7 @@ struct AspellSpeller;
 class AspellInterface : public AbstractSpellerInterface
 {
 public:
-  AspellInterface ();
+  AspellInterface (HWND NppWindowArg); // Window for error reporting
   ~AspellInterface ();
   __override virtual std::vector<TCHAR*> *GetLanguageList ();
   __override virtual void SetLanguage (TCHAR *Lang);
@@ -45,5 +45,6 @@ private:
   AspellSpeller *SingularSpeller;
   std::vector<AspellSpeller *> *Spellers;
   BOOL AspellLoaded;
+  HWND NppWindow; // For message boxes
 };
 #endif // ASPELLINTERFACE_H

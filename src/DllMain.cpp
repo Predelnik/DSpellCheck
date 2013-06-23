@@ -145,6 +145,14 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
     }
     break;
   }
+
+  if (Message!= 0 && Message == GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX))
+  {
+    MessageBoxInfo *MsgBox = (MessageBoxInfo *) wParam;
+    DWORD Result = MessageBox (MsgBox->hWnd, MsgBox->Message, MsgBox->Title, MsgBox->Flags);
+    return Result;
+  }
+
   /*
   TCHAR Buf[DEFAULT_BUF_SIZE];
   _itot (Message, Buf, 16);
@@ -224,6 +232,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 
   case NPPN_READY:
     {
+      RegisterCustomMessages ();
       InitClasses ();
       CheckQueue.clear ();
       CreateThreadResources ();
@@ -349,6 +358,7 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
       }
     }
   }
+
   return FALSE;
 }
 

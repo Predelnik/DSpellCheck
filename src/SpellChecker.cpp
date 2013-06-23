@@ -79,8 +79,8 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   WUCisRight = TRUE;
   CurrentScintilla = GetScintillaWindow (NppDataInstance);
   SuggestionMenuItems = 0;
-  AspellSpeller = new AspellInterface ();
-  HunspellSpeller = new HunspellInterface ();
+  AspellSpeller = new AspellInterface (NppDataInstance->_nppHandle);
+  HunspellSpeller = new HunspellInterface (NppDataInstance->_nppHandle);
   CurrentSpeller = AspellSpeller;
   LastSuggestions = 0;
   PrepareStringForConversion ();

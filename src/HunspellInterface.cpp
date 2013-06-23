@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "hunspell/hunspell.hxx"
 #include "HunspellInterface.h"
+#include "plugin.h"
 
 #include <locale>
 #include <io.h>
@@ -89,8 +90,9 @@ static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCH
   return TRUE;
 }
 
-HunspellInterface::HunspellInterface ()
+HunspellInterface::HunspellInterface (HWND NppWindowArg)
 {
+  NppWindow = NppWindowArg;
   DicList = new std::set <AvailableLangInfo>;
   Spellers = new std::vector<DicInfo>;
   memset (&Empty, 0, sizeof (Empty));
@@ -430,7 +432,7 @@ void HunspellInterface::WriteUserDic (WordSet *Target, TCHAR *Path)
   if (!LastSlashPos)
     return;
   *LastSlashPos = _T ('\0');
-  CheckForDirectoryExistence (Path, TRUE);
+  CheckForDirectoryExistence (Path);
   *LastSlashPos = _T ('\\');
 
   SetFileAttributes (Path, FILE_ATTRIBUTE_NORMAL);
@@ -490,9 +492,10 @@ void HunspellInterface::ReadUserDic (WordSet *Target, TCHAR *Path)
   fclose (Fp);
 }
 
-static void MessageBoxWordCannotBeAdded ()
+void HunspellInterface::MessageBoxWordCannotBeAdded ()
 {
-  MessageBox (0, _T ("Sadly, this word contains symbols out of current dictionary encoding, thus it cannot be added to user dictionary. You can convert this dictionary to UTF-8 or choose the different one with appropriate encoding."), _T ("Word cannot be added"), MB_OK | MB_ICONWARNING);
+  MessageBoxInfo MsgBox (NppWindow, _T ("Sadly, this word contains symbols out of current dictionary encoding, thus it cannot be added to user dictionary. You can convert this dictionary to UTF-8 or choose the different one with appropriate encoding."), _T ("Word cannot be added"), MB_OK | MB_ICONWARNING);
+  SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
 }
 
 void HunspellInterface::AddToDictionary (char *Word)
@@ -514,13 +517,14 @@ void HunspellInterface::AddToDictionary (char *Word)
     if (!LastSlashPos)
       return;
     *LastSlashPos = _T ('\0');
-    CheckForDirectoryExistence (DicPath, TRUE);
+    CheckForDirectoryExistence (DicPath);
     *LastSlashPos = _T ('\\');
     // If there's no file then we're checking if we can create it, there's no harm in it
     int LocalDicFileHandle = _topen (DicPath, _O_CREAT | _O_BINARY | _O_WRONLY);
     if (LocalDicFileHandle == -1)
     {
-      MessageBox (0, _T ("User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."), _T ("User dictionary cannot be saved"), MB_OK | MB_ICONWARNING);
+      MessageBoxInfo MsgBox (NppWindow, _T ("User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."), _T ("User dictionary cannot be saved"), MB_OK | MB_ICONWARNING);
+      SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     }
     else
     {
@@ -534,7 +538,8 @@ void HunspellInterface::AddToDictionary (char *Word)
     int LocalDicFileHandle = _topen (DicPath, _O_APPEND | _O_BINARY | _O_WRONLY);
     if (LocalDicFileHandle == -1)
     {
-      MessageBox (0, _T ("User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."), _T ("User dictionary cannot be saved"), MB_OK | MB_ICONWARNING);
+      MessageBoxInfo MsgBox (NppWindow, _T ("User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."), _T ("User dictionary cannot be saved"), MB_OK | MB_ICONWARNING);
+      SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     }
     else
       _close (LocalDicFileHandle);

@@ -156,6 +156,8 @@ int GetContextMenuIdStart ();
 int GetLangsMenuIdStart ();
 BOOL GetUseAllocatedIds ();
 SpellChecker *GetSpellChecker ();
+DWORD GetCustomGUIMessageId (CustomGUIMessage::e MessageId);
+void RegisterCustomMessages ();
 
 // From DllMain, possibly move to DllMain.h
 void SetRecheckDelay (int Value, int WriteToIni = 1);

@@ -21,9 +21,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Aspell.h"
 #include "CommonFunctions.h"
 #include "MainDef.h"
+#include "plugin.h"
 
-AspellInterface::AspellInterface ()
+AspellInterface::AspellInterface (HWND NppWindowArg)
 {
+  NppWindow = NppWindowArg;
   SingularSpeller = 0;
   LastSelectedSpeller = 0;
   Spellers = new std::vector<AspellSpeller *>;
@@ -192,7 +194,10 @@ void AspellInterface::AddToDictionary (char *Word)
   aspell_speller_save_all_word_lists (LastSelectedSpeller);
   if (aspell_speller_error(LastSelectedSpeller) != 0)
   {
-    AspellErrorMsgBox (0, aspell_speller_error_message (LastSelectedSpeller)); // TODO: Get Scintilla window on construction
+    TCHAR *ErrorMsg = 0;
+    SetString (ErrorMsg, aspell_speller_error_message (LastSelectedSpeller));
+    MessageBoxInfo MsgBox (NppWindow, ErrorMsg, _T ("Aspell Error"), MB_OK | MB_ICONEXCLAMATION);
+    SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   }
   LastSelectedSpeller = 0;
 
