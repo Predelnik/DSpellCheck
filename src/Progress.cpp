@@ -59,7 +59,7 @@ BOOL CALLBACK Progress::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
     case IDC_STOP:
       if (HIWORD (wParam) == BN_CLICKED)
       {
-        SendEvent (EID_CANCEL_DOWNLOAD);
+        SendNetworkEvent (EID_CANCEL_DOWNLOAD);
       }
       break;
     };

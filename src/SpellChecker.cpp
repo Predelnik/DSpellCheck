@@ -449,6 +449,9 @@ BOOL WINAPI SpellChecker::NotifyNetworkEvent (DWORD Event)
   case EID_FILL_FILE_LIST:
     GetDownloadDics ()->FillFileList ();
     break;
+  case EID_CANCEL_DOWNLOAD:
+    // Do nothing, just unflag event
+    break;
   case EID_KILLNETWORKTHREAD:
     return FALSE;
   }
@@ -557,9 +560,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     break;
   case EID_UPDATE_LANGS_MENU:
     DoPluginMenuInclusion ();
-    break;
-  case EID_CANCEL_DOWNLOAD:
-    // Do nothing, just unflag event
     break;
 
   case EID_UPDATE_FROM_REMOVE_DICS_OPTIONS:

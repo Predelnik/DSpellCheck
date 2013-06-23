@@ -74,6 +74,7 @@ HANDLE hThread = NULL;
 HANDLE hNetworkThread = NULL;
 HMENU LangsMenu;
 DWORD  ThreadId = 0;
+DWORD  NetworkThreadId = 0;
 int ContextMenuIdStart;
 int LangsMenuIdStart = FALSE;
 BOOL UseAllocatedIds;
@@ -305,7 +306,7 @@ void CreateThreadResources ()
   hThread = CreateThread (NULL, 0, ThreadMain, SpellCheckerInstance, 0, &ThreadId);
   SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
 
-  hNetworkThread = CreateThread (NULL, 0, ThreadNetwork, SpellCheckerInstance, 0, &ThreadId);
+  hNetworkThread = CreateThread (NULL, 0, ThreadNetwork, SpellCheckerInstance, 0, &NetworkThreadId);
   SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
 
   ResourcesInited = TRUE;

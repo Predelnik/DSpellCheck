@@ -94,6 +94,16 @@ void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
   CheckIfSavingIsNeeded = 1;
 }
 
+static BOOL IsNetworkThreadBeingKilled ()
+{
+  if (WaitForNetworkEvent (EID_KILLNETWORKTHREAD, 0))
+  {
+    SendNetworkEvent (EID_KILLNETWORKTHREAD);
+    return TRUE;
+  }
+  return FALSE;
+}
+
 #define BUF_SIZE_FOR_COPY 10240
 void DownloadDicsDlg::DownloadSelected ()
 {
@@ -151,6 +161,8 @@ void DownloadDicsDlg::DownloadSelected ()
       _tcscat (LocalPath, FileName);
       ComboBox_GetText (HAddress, Buf, DEFAULT_BUF_SIZE);
       DoFtpOperation (DOWNLOAD_FILE, Buf, FileName, LocalPath);
+      if (IsNetworkThreadBeingKilled ()) // That's because we could stuck at check box.
+        return;
       if (CancelPressed)
         break;
       SetString (LocalPathANSI, LocalPath);
@@ -246,7 +258,10 @@ void DownloadDicsDlg::DownloadSelected ()
           if (PathFileExists (HunspellDicPath))
           {
             TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
-            _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), DicFileName);
+            TCHAR *TBuf = 0;
+            SetStringWithAliasApplied (TBuf, DicFileName);
+            _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), TBuf);
+            CLEAN_AND_ZERO_ARR (TBuf);
             ReplaceQuestionWasAsked = TRUE;
             if (MessageBox (0, ReplaceMessage, _T ("Dictionary already exists"), MB_YESNO) == IDNO)
             {
@@ -429,7 +444,7 @@ public:
     _stprintf (Message, _T ("%d / %d bytes downloaded (%d %%)"), BytesReceived, TargetSize, BytesReceived * 100 / TargetSize);
     ProgressInstance->SetBottomMessage (Message);
 
-    if (WaitForEvent (EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0)
+    if (WaitForNetworkEvent (EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0)
     {
       ProgressInstance->SetBottomMessage (_T ("Aborting Download..."));
       DownloadDicsInstance->SetCancelPressed (TRUE);
@@ -702,7 +717,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
 
       GetProgress ()->SetBottomMessage (Message);
 
-      if (WaitForEvent (EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0)
+      if (WaitForNetworkEvent (EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0)
       {
         GetProgress ()->SetBottomMessage (_T ("Aborting Download..."));
         SetCancelPressed (TRUE);
@@ -750,7 +765,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   }
 
   nsFTP::CLogonInfo *logonInfo = 0;
-  nsFTP::CFTPClient ftpClient (nsSocket::CreateDefaultBlockingSocketInstance (), 1);
+  nsFTP::CFTPClient ftpClient (nsSocket::CreateDefaultBlockingSocketInstance (), 3);
   if (!SpellCheckerInstance->GetUseProxy ())
     logonInfo = new nsFTP::CLogonInfo (Address, 21, _T ("anonymous"), _T (""), _T (""));
   else
