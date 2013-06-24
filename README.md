@@ -77,7 +77,7 @@ v1.2.4
 
 v1.2.5
 * Fix some important issues connected with removing and downloading new dictionaries.
-* Fix missing suggestions missing in multiple languages in some cases.
+* Fix suggestions missing in multiple languages in some cases.
 * Fix hotspot not being detected in some cases.
 * Tool bar icon for Auto-check document menu item was added.
 * Crash with usage of some dictionaries was fixed (i.e. Bulgarian)
