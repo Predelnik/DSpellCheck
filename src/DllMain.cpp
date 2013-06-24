@@ -256,7 +256,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
     break;
 
   case SCN_UPDATEUI:
-    if(notifyCode->updated & (SC_UPDATE_CONTENT))
+    if(notifyCode->updated & (SC_UPDATE_CONTENT)  && !Timer) // If restyling wasn't caused by user input...
     {
       SendEvent (EID_RECHECK_VISIBLE);
     }
