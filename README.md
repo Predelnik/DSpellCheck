@@ -76,12 +76,15 @@ v1.2.4
 * Fixed bug: if usage of multiple languages was not chosen, all the dictionaries for it were still loading at plugin start.
 
 v1.2.5
+* Fix some important issues connected with removing and downloading new dictionaries.
+* Fix missing suggestions missing in multiple languages in some cases.
+* Fix hotspot not being detected in some cases.
 * Tool bar icon for Auto-check document menu item was added.
 * Crash with usage of some dictionaries was fixed (i.e. Bulgarian)
 * Separate network operations to different thread so timeouts will not interfere with plugin work.
 * Fix one letter words ignoring for UTF-8 encoding in some cases.
 * Initial ability to use proxy for ftp downloading.
-* Option for ignoring apostrophe at the end of the word now is ignoring apostrophes at the begginning also. (thus renamed)
+* Option for ignoring apostrophe at the end of the word now is ignoring apostrophes at the beginning also. (thus renamed)
 * Determination of current word for context menu suggestion mode is now based on caret position rather than mouse position
 * Defaults delimiters updated a little.
 * Fixed bug: focus wasn't being restored after using menu from suggestions button
