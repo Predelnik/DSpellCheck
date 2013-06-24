@@ -200,7 +200,15 @@ BOOL LoadAspell (TCHAR *PathArg)
 {
   TCHAR *Path = 0;
   GetActualAspellPath (Path, PathArg);
-  hInstLib = LoadLibrary(Path);
+  /*
+  if (hInstLib)
+  {
+    FreeLibrary (hInstLib);
+    hInstLib = 0;
+  }
+  */
+
+  hInstLib = LoadLibrary (Path);
   CLEAN_AND_ZERO_ARR (Path);
   BOOL bRet = FALSE;
 
@@ -354,4 +362,3 @@ void AspellErrorMsgBox(HWND hWnd, LPCSTR szErrorMsg)
 #endif
   ::MessageBox(hWnd, szMsg, _T("GNU Aspell"), MB_OK);
 }
-

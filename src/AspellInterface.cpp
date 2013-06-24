@@ -236,6 +236,9 @@ BOOL AspellInterface::CheckWord (char *Word)
   unsigned int Len = strlen (DstWord);
   if (!MultiMode)
   {
+    if (!SingularSpeller)
+      return TRUE;
+
     res = aspell_speller_check(SingularSpeller, DstWord, Len);
   }
   else
@@ -276,7 +279,7 @@ void AspellInterface::SetLanguage (TCHAR *Lang)
     SingularSpeller = 0;
   }
 
-  AspellCanHaveError * possible_err = new_aspell_speller(spell_config);
+  AspellCanHaveError * possible_err = new_aspell_speller (spell_config);
 
   if (aspell_error_number(possible_err) != 0)
   {
@@ -289,7 +292,6 @@ void AspellInterface::SetLanguage (TCHAR *Lang)
     else
     {
       SingularSpeller = 0;
-      AspellLoaded = FALSE;
       return;
     }
   }

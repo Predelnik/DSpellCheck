@@ -583,8 +583,8 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     break;
 
   case EID_LIB_CHANGE:
-    SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath, AdditionalHunspellPath);
     SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
+    SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath, AdditionalHunspellPath);
     RecheckVisibleBothViews ();
     SaveSettings ();
     break;
