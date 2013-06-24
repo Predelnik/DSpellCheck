@@ -58,6 +58,9 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
   int Count = 0;
   BOOL Success = FALSE;
   BOOL Res = FALSE;
+  BOOL NeedSingleReset = FALSE;
+  BOOL NeedMultiReset = FALSE;
+  BOOL SingleTemp, MultiTemp;
   for (int i = 0; i < ListBox_GetCount (HLangList); i++)
   {
     if (CheckedListBox_GetCheckState (HLangList, i) == BST_CHECKED)
@@ -69,7 +72,6 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
         _tcscat (FileName, (j == 0) ? SpellCheckerInstance->GetHunspellPath () : SpellCheckerInstance->GetHunspellAdditionalPath ());
         _tcscat (FileName, _T ("\\"));
         _tcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
-        SpellCheckerInstance->GetHunspellSpeller ()->UpdateOnDicRemoval (FileName);
         _tcscat (FileName, _T (".aff"));
         SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
         Success = DeleteFile (FileName);
@@ -83,7 +85,13 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
           DeleteFile (FileName); // Success doesn't matter in that case, 'cause dictionary might not exist.
         }
         if (Success)
+        {
+          FileName[_tcslen (FileName) - 4] = _T ('\0');
+          SpellCheckerInstance->GetHunspellSpeller ()->UpdateOnDicRemoval (FileName, SingleTemp, MultiTemp);
+          NeedSingleReset |= SingleTemp;
+          NeedMultiReset |= MultiTemp;
           Count++;
+        }
       }
     }
   }
@@ -91,10 +99,14 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
     CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
   if (Count > 0)
   {
-    SpellCheckerInstance->GetHunspellSpeller ()->SetDirectory (SpellCheckerInstance->GetHunspellPath ()); // Calling the update for Hunspell dictionary list
-    SpellCheckerInstance->GetHunspellSpeller ()->SetAdditionalDirectory (SpellCheckerInstance->GetHunspellAdditionalPath ()); // Calling the update for Hunspell dictionary list
+    SpellCheckerInstance->HunspellReinitSettings (TRUE);
     SpellCheckerInstance->ReinitLanguageLists ();
     SpellCheckerInstance->DoPluginMenuInclusion ();
+    SpellCheckerInstance->RecheckVisibleBothViews ();
+    /*
+    if (NeedSingleReset)
+    SpellCheckerInstance->
+    */
     TCHAR Buf[DEFAULT_BUF_SIZE];
     _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
     MessageBoxInfo MsgBox (_hParent, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);

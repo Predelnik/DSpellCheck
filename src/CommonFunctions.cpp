@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 void SetString (char *&Target, const char *Str)
 {
+  if (Target == Str)
+    return;
   CLEAN_AND_ZERO_ARR (Target);
   Target = new char[strlen (Str) + 1];
   strcpy (Target, Str);
@@ -31,6 +33,8 @@ void SetString (char *&Target, const char *Str)
 
 void SetString (TCHAR *&Target, const TCHAR *Str)
 {
+  if (Target == Str)
+    return;
   CLEAN_AND_ZERO_ARR (Target);
   Target = new TCHAR[_tcslen (Str) + 1];
   _tcscpy (Target, Str);
@@ -38,6 +42,10 @@ void SetString (TCHAR *&Target, const TCHAR *Str)
 
 void SetString (char *&Target, const TCHAR *Str)
 {
+#ifndef UNICODE
+  if (Target == Str)
+    return;
+#endif // !UNICODE
   CLEAN_AND_ZERO_ARR (Target);
   size_t OutSize = _tcslen (Str) + 1;
   size_t PrevOutSize = 0;
@@ -82,6 +90,10 @@ void SetString (char *&Target, const TCHAR *Str)
 
 void SetString (TCHAR *&Target, const char *Str)
 {
+#ifndef UNICODE
+  if (Target == Str)
+    return;
+#endif // !UNICODE
   CLEAN_AND_ZERO_ARR (Target);
   size_t OutSize = sizeof (TCHAR) * (strlen (Str) + 1);
   Target = new TCHAR [OutSize];
@@ -107,6 +119,10 @@ void SetString (TCHAR *&Target, const char *Str)
 void SetStringSUtf8 (TCHAR *&Target, const char *Str)
 {
 #ifndef UNICODE
+  if (Target == Str)
+    return;
+  if (Target == Str)
+    return;
   iconv_t Converter = iconv_open ("CHAR", "UTF-8");
 #else // !UNICODE
   iconv_t Converter = iconv_open ("UCS-2LE//IGNORE", "UTF-8");
@@ -129,6 +145,8 @@ void SetStringSUtf8 (TCHAR *&Target, const char *Str)
 void SetStringDUtf8 (char *&Target, const TCHAR *Str)
 {
 #ifndef UNICODE
+  if (Target == Str)
+    return;
   iconv_t Converter = iconv_open ("UTF-8", "CHAR");
 #else // !UNICODE
   iconv_t Converter = iconv_open ("UTF-8//IGNORE", "UCS-2LE");
@@ -153,6 +171,8 @@ void SetStringDUtf8 (char *&Target, const TCHAR *Str)
 // In case source is in utf-8
 void SetStringSUtf8 (char *&Target, const char *Str)
 {
+  if (Target == Str)
+    return;
   iconv_t Converter = iconv_open ("CHAR//IGNORE", "UTF-8");
   CLEAN_AND_ZERO_ARR (Target);
   size_t InSize = 0;
@@ -188,6 +208,8 @@ void SetStringSUtf8 (char *&Target, const char *Str)
 // In case destination is in utf-8
 void SetStringDUtf8 (char *&Target, const char *Str)
 {
+  if (Target == Str)
+    return;
   iconv_t Converter = iconv_open ("UTF-8//IGNORE", "CHAR");
   size_t InSize = strlen (Str) + 1;
   size_t OutSize = 6 * strlen (Str) + 1; // Maximum Possible UTF-8 size
@@ -552,7 +574,7 @@ bool SortCompareChars (char *a, char *b)
 const TCHAR *const AliasesFrom[] = {_T ("af_Za"), _T ("ak_GH"), _T ("bg_BG"), _T ("ca_ANY"), _T ("ca_ES"), _T ("cop_EG"), _T ("cs_CZ"), _T ("cy_GB"), _T ("da_DK"), _T ("de_AT"), _T ("de_CH"), _T ("de_DE"),
   _T ("de_DE_comb"), _T ("de_DE_frami"), _T ("de_DE_neu"), _T ("el_GR"), _T ("en_AU"), _T ("en_CA"), _T ("en_GB"), _T ("en_GB-oed"), _T ("en_NZ"), _T ("en_US"), _T ("en_ZA"), _T ("eo_EO"), _T ("es_AR"),
   _T ("es_BO"), _T ("es_CL"), _T ("es_CO"), _T ("es_CR"), _T ("es_CU"), _T ("es_DO"), _T ("es_EC"), _T ("es_ES"), _T ("es_GT"), _T ("es_HN"), _T ("es_MX"), _T ("es_NEW"), _T ("es_NI"), _T ("es_PA"), _T ("es_PE"),
-  _T ("es_PR"), _T ("es_PY"), _T ("es_SV"), _T ("es_UY"), _T ("es_VE"), _T ("et_EE"),  _T ("fo_FO"), _T ("fr_FR"), _T ("fr_FR-1990"), _T ("fr_FR-1990_1-3-2"), _T ("fr_FR-classique_1-3-2"), _T ("fr_FR_1-3-2"), _T ("fy_NL"),
+  _T ("es_PR"), _T ("es_PY"), _T ("es_SV"), _T ("es_UY"), _T ("es_VE"), _T ("et_EE"),  _T ("fo_FO"), _T ("fr_FR"), _T ("fr_FR-1990"), _T ("fr_FR-1990_1-3-2"), _T ("fr_FR-classique"), _T ("fr_FR-classique_1-3-2"), _T ("fr_FR_1-3-2"), _T ("fy_NL"),
   _T ("ga_IE"), _T ("gd_GB"), _T ("gl_ES"), _T ("gu_IN"), _T ("he_IL"), _T ("hi_IN"), _T ("hil_PH"), _T ("hr_HR"), _T ("hu_HU"), _T ("ia"), _T ("id_ID"), _T ("is_IS"), _T ("it_IT"), _T ("ku_TR"),
   _T ("la"), _T ("lt_LT"), _T ("lv_LV"), _T ("mg_MG"), _T ("mi_NZ"), _T ("mk_MK"), _T ("mos_BF"), _T ("mr_IN"), _T ("ms_MY"), _T ("nb_NO"), _T ("ne_NP"), _T ("nl_NL"), _T ("nn_NO"), _T ("nr_ZA"),
   _T ("ns_ZA"), _T ("ny_MW"), _T ("oc_FR"), _T ("pl_PL"), _T ("pt_BR"), _T ("pt_PT"), _T ("ro_RO"), _T ("ru_RU"), _T ("ru_RU_ie"), _T ("ru_RU_ye"), _T ("ru_RU_yo"), _T ("rw_RW"), _T ("si_SI"), _T ("sk_SK"), _T ("sq_AL"),
@@ -564,7 +586,7 @@ const TCHAR *const AliasesTo[] = {_T ("Afrikaans"), _T ("Akan"), _T ("Bulgarian"
   _T ("English (United States)"), _T ("English (South Africa)"), _T ("Esperanto"), _T ("Spanish (Argentina)"), _T ("Spanish (Bolivia)"), _T ("Spanish (Chile)"), _T ("Spanish (Colombia)"), _T ("Spanish (Costa Rica)"),
   _T ("Spanish (Cuba)"), _T ("Spanish (Dominican Republic)"), _T ("Spanish (Ecuador)"), _T ("Spanish (Spain)"), _T ("Spanish (Guatemala)"), _T ("Spanish (Honduras)"), _T ("Spanish (Mexico)"),
   _T ("Spanish (New)"), _T ("Spanish (Nicaragua)"), _T ("Spanish (Panama)"), _T ("Spanish (Peru)"), _T ("Spanish (Puerto Rico)"), _T ("Spanish (Paraguay)"), _T ("Spanish (El Salvador)"), _T ("Spanish (Uruguay)"),
-  _T ("Spanish (Bolivarian Republic of Venezuela)"), _T ("Estonian"), _T ("Faroese"), _T ("French"), _T ("French (1990)"), _T ("French (1990)"), _T ("French (Classique)"), _T ("French"), _T ("Frisian"), _T ("Irish"), _T ("Scottish Gaelic"),
+  _T ("Spanish (Bolivarian Republic of Venezuela)"), _T ("Estonian"), _T ("Faroese"), _T ("French"), _T ("French (1990)"), _T ("French (1990)"), _T ("French (Classique)"), _T ("French (Classique)"), _T ("French"), _T ("Frisian"), _T ("Irish"), _T ("Scottish Gaelic"),
   _T ("Galician"), _T ("Gujarati"), _T ("Hebrew"), _T ("Hindi"), _T ("Filipino"), _T ("Croatian"), _T ("Hungarian"), _T ("Interlingua"), _T ("Indonesian"), _T ("Icelandic"), _T ("Italian"), _T ("Kurdish"),
   _T ("Latin"), _T ("Lithuanian"), _T ("Latvian"), _T ("Malagasy"), _T ("Maori"), _T ("Macedonian (FYROM)"), _T ("Mossi"), _T ("Marathi"), _T ("Malay"), _T ("Norwegian (Bokmal)"), _T ("Nepali"), _T ("Dutch"),
   _T ("Norwegian (Nynorsk)"), _T ("Ndebele"), _T ("Northern Sotho"), _T ("Chichewa"), _T ("Occitan"), _T ("Polish"), _T ("Portuguese (Brazil)"), _T ("Portuguese (Portugal)"), _T ("Romanian"), _T ("Russian"),

@@ -75,7 +75,7 @@ public:
   void WriteUserDic (WordSet *Target, TCHAR *Path);
   void ReadUserDic (WordSet *Target, TCHAR *Path);
   void SetUseOneDic (BOOL Value);
-  void UpdateOnDicRemoval (TCHAR *Path);
+  void UpdateOnDicRemoval (TCHAR *Path, BOOL &NeedSingleLangReset, BOOL &NeedMultiLangReset);
   BOOL GetLangOnlySystem (TCHAR *Lang);
 private:
   DicInfo CreateHunspell (TCHAR *Name, int Type);
