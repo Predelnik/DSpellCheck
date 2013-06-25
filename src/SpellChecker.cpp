@@ -828,6 +828,7 @@ int SpellChecker::CheckWordInCommentOrString (int Style)
     case SCE_C_COMMENT:
     case SCE_C_COMMENTLINE:
     case SCE_C_COMMENTDOC:
+    case SCE_C_COMMENTLINEDOC:
     case SCE_C_STRING:
       return TRUE;
     default:
