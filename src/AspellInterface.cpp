@@ -284,9 +284,11 @@ void AspellInterface::SetLanguage (TCHAR *Lang)
   if (aspell_error_number(possible_err) != 0)
   {
     delete_aspell_config (spell_config);
-    if (!Lang || _tcscmp (Lang, _T ("en")) != 0)
+    std::vector<TCHAR*> *LangList = GetLanguageList ();
+    if (LangList && (!Lang || _tcscmp (Lang, LangList->at (0)) != 0))
     {
-      SetLanguage (_T ("en"));
+      SetLanguage (LangList->at (0));
+      CLEAN_AND_ZERO_STRING_VECTOR (LangList);
       return;
     }
     else
