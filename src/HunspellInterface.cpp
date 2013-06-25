@@ -37,6 +37,7 @@ static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCH
   WIN32_FIND_DATA ffd;
   TCHAR *spec = 0;
   std::stack<TCHAR *> *directories = new std::stack<TCHAR *>;
+  BOOL Result = TRUE;
 
   directories->push(path);
   files.clear();
@@ -52,7 +53,8 @@ static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCH
 
     hFind = FindFirstFile(spec, &ffd);
     if (hFind == INVALID_HANDLE_VALUE)  {
-      return FALSE;
+      Result = FALSE;
+      goto cleanup;
     }
 
     do {
@@ -75,19 +77,20 @@ static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCH
     } while (FindNextFile(hFind, &ffd) != 0);
 
     if (GetLastError() != ERROR_NO_MORE_FILES) {
-      CLEAN_AND_ZERO_STRING_STACK (directories);
       FindClose(hFind);
-      return FALSE;
+      goto cleanup;
+      Result = FALSE;
     }
 
     FindClose(hFind);
     hFind = INVALID_HANDLE_VALUE;
   }
 
+cleanup:
   CLEAN_AND_ZERO_ARR (spec);
   CLEAN_AND_ZERO_STRING_STACK (directories);
 
-  return TRUE;
+  return Result;
 }
 
 HunspellInterface::HunspellInterface (HWND NppWindowArg)
