@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <locale>
 #include <io.h>
 #include <fcntl.h>
-#include <unordered_set>
 
 static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCHAR *Filter)
 {
@@ -99,8 +98,8 @@ HunspellInterface::HunspellInterface (HWND NppWindowArg)
   DicList = new std::set <AvailableLangInfo>;
   Spellers = new std::vector<DicInfo>;
   memset (&Empty, 0, sizeof (Empty));
-  Ignored = new WordSet (0, HashCharString, EquivCharStrings);
-  Memorized = new WordSet (0, HashCharString, EquivCharStrings);
+  Ignored = new WordSet;
+  Memorized = new WordSet;
   SingularSpeller = Empty;
   DicDir = 0;
   SysDicDir = 0;
@@ -301,7 +300,7 @@ DicInfo HunspellInterface::CreateHunspell (TCHAR *Name, int Type)
   NewDic.BackConverter = iconv_open ("UTF-8", DicEnconding);
   NewDic.ConverterANSI = iconv_open (DicEnconding, "");
   NewDic.BackConverterANSI = iconv_open ("", DicEnconding);
-  NewDic.LocalDic = new WordSet (0, HashCharString, EquivCharStrings);
+  NewDic.LocalDic = new WordSet ();
   NewDic.LocalDicPath = new TCHAR [_tcslen (DicDir) + 1 + _tcslen (Name) + 1 + 3 + 1]; // Local Dic path always points to non-system directory
   NewDic.LocalDicPath[0] = '\0';
   _tcscat (NewDic.LocalDicPath, DicDir);

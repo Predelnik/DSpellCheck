@@ -65,6 +65,29 @@ struct MessageBoxInfo
   }
 };
 
+class hash_compare_strings
+{
+public:
+  enum
+  {
+    bucket_size = 1
+  };
+  size_t operator() (const char * a) const
+  {
+    size_t Hash = 7;
+    for(unsigned int i = 0; i < strlen (a); i++)
+    {
+      Hash = Hash * 31 + a[i];
+    }
+    return Hash;
+  }
+
+  bool operator()(const char *a, const char *b) const
+  {
+    return strcmp (a, b) < 0;
+  }
+};
+
 #define SUGGESTIONS_BOX 0
 #define SUGGESTIONS_CONTEXT_MENU 1
 
