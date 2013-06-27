@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class HunspellInterface;
 class SpellChecker;
 struct LanguageName;
+typedef HTHEME (WINAPI * OTDProc) (HWND, LPCWSTR);
 
 class SimpleDlg : public StaticDialog
 {
@@ -81,6 +82,9 @@ private:
   HWND HAspellResetPath;
   HWND HHunspellResetPath;
   HWND HSystemPath;
+
+  HMODULE _hUxTheme;
+  OTDProc _OpenThemeData;
 };
 
 class AdvancedDlg : public StaticDialog

@@ -37,6 +37,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 SimpleDlg::SimpleDlg () : StaticDialog ()
 {
+  _hUxTheme = 0;
+  _hUxTheme = ::LoadLibrary(TEXT("uxtheme.dll"));
+  if (_hUxTheme)
+    _OpenThemeData = (OTDProc)::GetProcAddress(_hUxTheme, "OpenThemeData");
 }
 
 void SimpleDlg::init (HINSTANCE hInst, HWND Parent, NppData nppData)
@@ -151,6 +155,8 @@ static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText)
 
 SimpleDlg::~SimpleDlg ()
 {
+  if (_hUxTheme)
+    FreeLibrary(_hUxTheme);
 }
 
 void SimpleDlg::ApplyLibChange (SpellChecker *SpellCheckerInstance)
@@ -578,8 +584,13 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
     if (GetDlgItem (_hSelf, IDC_ASPELL_STATUS) == (HWND)lParam)
     {
       HDC hDC = (HDC)wParam;
+      HTHEME hTheme;
 
-      HTHEME hTheme = OpenThemeData(_hSelf, _T ("TAB"));
+      if (_OpenThemeData)
+        hTheme = _OpenThemeData (_hSelf, _T ("TAB"));
+      else
+        hTheme = 0;
+
       SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
       SetBkMode(hDC, TRANSPARENT);
       SetTextColor(hDC, AspellStatusColor);
