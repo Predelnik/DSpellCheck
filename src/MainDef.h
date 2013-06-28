@@ -70,8 +70,10 @@ class hash_compare_strings
 public:
   enum
   {
-    bucket_size = 1
+	  min_buckets = 1,
+	  bucket_size = 1,
   };
+
   size_t operator() (const char * a) const
   {
     size_t Hash = 7;

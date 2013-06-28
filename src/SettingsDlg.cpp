@@ -32,8 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "LanguageName.h"
 #include "HunspellInterface.h"
 
-#include <uxtheme.h>
-#include <Vsstyle.h>
 
 SimpleDlg::SimpleDlg () : StaticDialog ()
 {
