@@ -99,6 +99,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   ProxyAnonymous = TRUE;
   ProxyType = 0;
   ProxyPort = 0;
+  SettingsLoaded = FALSE;
   UseProxy = FALSE;
   SettingsToSave = new std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)> (SortCompare);
   if (SendMsgToNpp (NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0))
@@ -505,6 +506,9 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     RecheckVisible (TRUE);
     break;
   case EID_SWITCH_AUTOCHECK:
+    if (!SettingsLoaded)
+      return FALSE;
+
     SwitchAutoCheck ();
     break;
   case EID_KILLTHREAD:
@@ -2301,6 +2305,8 @@ void SpellChecker::SaveSettings ()
   _tfopen_s (&Fp, IniFilePath, _T ("w")); // Cleaning settings file (or creating it)
   fclose (Fp);
   TCHAR *TBuf = 0;
+  if (!SettingsLoaded)
+    return;
   SaveToIni (_T ("Autocheck"), AutoCheckText, 1);
   SaveToIni (_T ("Hunspell_Multiple_Languages"), HunspellMultiLanguages, _T (""));
   SaveToIni (_T ("Aspell_Multiple_Languages"), AspellMultiLanguages, _T (""));
@@ -2406,6 +2412,7 @@ void SpellChecker::LoadSettings ()
   char *BufUtf8 = 0;
   TCHAR *Path = 0;
   TCHAR *TBuf = 0;
+  SettingsLoaded = TRUE;
   GetDefaultAspellPath (Path);
   LoadFromIni (AspellPath, _T ("Aspell_Path"), Path);
   CLEAN_AND_ZERO_ARR (Path);
@@ -2595,6 +2602,9 @@ void SpellChecker::SetHunspellAdditionalPath (const TCHAR *Path)
 
 void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR *DefaultValue, BOOL InQuotes)
 {
+  if (!Name || !Value || !DefaultValue)
+    return;
+
   if (DefaultValue && _tcscmp (Value, DefaultValue) == 0)
     return;
 
@@ -2614,6 +2624,9 @@ void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR
 
 void SpellChecker::SaveToIni (const TCHAR *Name, int Value, int DefaultValue)
 {
+  if (!Name)
+    return;
+
   if (Value == DefaultValue)
     return;
 
@@ -2624,6 +2637,9 @@ void SpellChecker::SaveToIni (const TCHAR *Name, int Value, int DefaultValue)
 
 void SpellChecker::SaveToIniUtf8 (const TCHAR *Name, const char *Value,  const char *DefaultValue, BOOL InQuotes)
 {
+  if (!Name || !Value || !DefaultValue)
+    return;
+
   if (DefaultValue && strcmp (Value, DefaultValue) == 0)
     return;
 
@@ -2635,6 +2651,9 @@ void SpellChecker::SaveToIniUtf8 (const TCHAR *Name, const char *Value,  const c
 
 void SpellChecker::LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *DefaultValue, BOOL InQuotes)
 {
+  if (!Name|| !DefaultValue)
+    return;
+
   CLEAN_AND_ZERO_ARR (Value);
   Value = new TCHAR [DEFAULT_BUF_SIZE];
 
@@ -2659,6 +2678,9 @@ void SpellChecker::LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *D
 
 void SpellChecker::LoadFromIni (int &Value, const TCHAR *Name, int DefaultValue)
 {
+  if (!Name)
+    return;
+
   TCHAR BufDefault[DEFAULT_BUF_SIZE];
   TCHAR *Buf = 0;
   _itot_s (DefaultValue, BufDefault, 10);
@@ -2669,6 +2691,9 @@ void SpellChecker::LoadFromIni (int &Value, const TCHAR *Name, int DefaultValue)
 
 void SpellChecker::LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char *DefaultValue, BOOL InQuotes)
 {
+  if (!Name || !DefaultValue)
+    return;
+
   TCHAR *BufDefault = 0;
   TCHAR *Buf = 0;
   SetStringSUtf8 (BufDefault, DefaultValue);

@@ -194,6 +194,7 @@ private:
 private:
 
   std::vector <LanguageName> *CurrentLangs;
+  BOOL SettingsLoaded;
   BOOL OneUserDic;
   BOOL AutoCheckText;
   BOOL CheckTextEnabled;
