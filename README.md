@@ -89,3 +89,11 @@ v1.2.5
 * Defaults delimiters updated a little.
 * Fixed bug: focus wasn't being restored after using menu from suggestions button
 * Fixed bug: in multiple language selection dialog - some languages could be corresponding to other languages actually.
+
+v1.2.6
+* Fix doxygen line comments being not checked in c++/c files
+* Fix Aspell working without English installed.
+* Fix Aspell not updaiting it's status correctly sometimes.
+* Restore plugin's work on old (prior to sp2) windows XP systems.
+
+
