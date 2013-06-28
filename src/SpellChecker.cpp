@@ -2921,8 +2921,15 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
   if (HotSpotCache[Style] == 1)
     return TRUE;
 
+  ApplyConversions (Word);
+
   TCHAR *Ts = 0;
   long SymbolsNum = (CurrentEncoding == ENCODING_UTF8) ? Utf8Length (Word) : strlen (Word);
+  if (SymbolsNum == 0)
+  {
+    res = TRUE;
+    goto CleanUp;
+  }
 
   if (IgnoreOneLetter && SymbolsNum == 1)
   {
@@ -2978,7 +2985,6 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     goto CleanUp;
   }
 
-  ApplyConversions (Word);
   unsigned int Len = strlen (Word);
 
   if (IgnoreSEApostrophe)
