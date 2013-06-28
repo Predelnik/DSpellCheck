@@ -2602,7 +2602,7 @@ void SpellChecker::SetHunspellAdditionalPath (const TCHAR *Path)
 
 void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR *DefaultValue, BOOL InQuotes)
 {
-  if (!Name || !Value || !DefaultValue)
+  if (!Name || !Value)
     return;
 
   if (DefaultValue && _tcscmp (Value, DefaultValue) == 0)
@@ -2637,7 +2637,7 @@ void SpellChecker::SaveToIni (const TCHAR *Name, int Value, int DefaultValue)
 
 void SpellChecker::SaveToIniUtf8 (const TCHAR *Name, const char *Value,  const char *DefaultValue, BOOL InQuotes)
 {
-  if (!Name || !Value || !DefaultValue)
+  if (!Name || !Value)
     return;
 
   if (DefaultValue && strcmp (Value, DefaultValue) == 0)
