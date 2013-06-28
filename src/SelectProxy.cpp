@@ -172,7 +172,7 @@ BOOL CALLBACK SelectProxy::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPar
           TCHAR Buf[DEFAULT_BUF_SIZE];
           Edit_GetText (HPort, Buf, DEFAULT_BUF_SIZE);
           if (!*Buf)
-            return TRUE;
+            return FALSE;
 
           x = _tcstol (Buf, &EndPtr, 10);
           if (*EndPtr)
@@ -182,7 +182,7 @@ BOOL CALLBACK SelectProxy::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPar
           else if (x < 0)
             Edit_SetText (HPort, _T ("0"));
 
-          return TRUE;
+          return FALSE;
         }
       }
     }

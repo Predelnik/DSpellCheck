@@ -96,31 +96,31 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     display (false);
     PopupMenu = CreatePopupMenu ();
 
-    return TRUE;
+    return FALSE;
 
   case WM_MOUSEMOVE:
     StateHovered = TRUE;
     RegMsg(_hSelf, MOUSELEAVE);
     RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
-    return TRUE;
+    return FALSE;
 
   case WM_MOUSEHOVER:
-    return TRUE;
+    return FALSE;
 
   case WM_LBUTTONDOWN:
     StatePressed = TRUE;
     RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
-    return TRUE;
+    return FALSE;
 
   case WM_LBUTTONUP:
     if (!StatePressed)
-      return TRUE;
+      return FALSE;
     SendEvent (EID_SHOW_SUGGESTION_MENU);
-    return TRUE;
+    return FALSE;
 
   case WM_PAINT:
     if (!isVisible ())
-      return TRUE;
+      return FALSE;
 
     idImg = IDR_DOWNARROW;
     if (StatePressed || StateMenu)
@@ -145,7 +145,7 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     RECT Rect;
     GetWindowRect (_hSelf, &Rect);
     ValidateRect (_hSelf, &Rect);
-    return TRUE;
+    return FALSE;
 
   case WM_SHOWANDRECREATEMENU:
     tagTPMPARAMS TPMParams;
@@ -160,18 +160,19 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     StateMenu = FALSE;
     DestroyMenu (PopupMenu);
     PopupMenu = CreatePopupMenu ();
-    return TRUE;
+    return FALSE;
 
   case WM_COMMAND:
     if (HIWORD (wParam) == 0)
       PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
-    return TRUE;
+
+    return FALSE;
 
   case WM_MOUSELEAVE:
     StateHovered = FALSE;
     StatePressed = FALSE;
     RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
-    return TRUE;
+    return FALSE;
   }
   return FALSE;
 }

@@ -32,7 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "LanguageName.h"
 #include "HunspellInterface.h"
 
-
 SimpleDlg::SimpleDlg () : StaticDialog ()
 {
   _hUxTheme = 0;
@@ -406,7 +405,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
     {
       EndDialog(_hSelf, 0);
       DeleteObject (DefaultBrush);
-      return TRUE;
+      return FALSE;
     }
     break;
   case WM_COMMAND:
@@ -702,7 +701,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       if (Brush)
         DeleteObject (Brush);
       EndDialog(_hSelf, 0);
-      return TRUE;
+      return FALSE;
     }
     break;
   case WM_DRAWITEM:
@@ -944,7 +943,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
         if (nmhdr->hwndFrom == ControlsTabInstance.getHSelf())
         {
           ControlsTabInstance.clickedUpdate();
-          return TRUE;
+          return FALSE;
         }
       }
       break;
@@ -959,7 +958,7 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
         {
           ApplySettings ();
 
-          return TRUE;
+          return FALSE;
         }
         break;
       case IDOK:
@@ -967,14 +966,14 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
         {
           SendEvent (EID_HIDE_DIALOG);
           ApplySettings ();
-          return TRUE;
+          return FALSE;
         }
         break;
       case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
         {
           SendEvent (EID_HIDE_DIALOG);
-          return TRUE;
+          return FALSE;
         }
         break;
       }

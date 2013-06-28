@@ -100,7 +100,7 @@ BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
           SendEvent (EID_APPLY_MULTI_LANG_SETTINGS);
           display (false);
         }
-        break;                  
+        break;
       case IDCANCEL:
         if (HIWORD (wParam) == BN_CLICKED)
         {
