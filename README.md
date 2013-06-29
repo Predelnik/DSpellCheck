@@ -91,9 +91,10 @@ v1.2.5
 * Fixed bug: in multiple language selection dialog - some languages could be corresponding to other languages actually.
 
 v1.2.6
-* Fix doxygen line comments being not checked in c++/c files
+* Fix Doxygen line comments being not checked in c++/c files
 * Fix Aspell working without English installed.
-* Fix Aspell not updaiting it's status correctly sometimes.
+* Fix Aspell not updating it's status correctly sometimes.
 * Restore plugin's work on old (prior to sp2) windows XP systems.
-
+* Fix long lag of suggestion box on windows xp systems (at least it certainly appeared on virtual machines).
+* Rise stability a little bit.
 
