@@ -68,6 +68,7 @@ public:
   void RecheckModified ();
   void ErrorMsgBox (const TCHAR * message);
 
+  BOOL AspellReinitSettings ();
   void SetHunspellLanguage (const TCHAR *Str);
   void SetAspellLanguage (const TCHAR *Str);
   void SetDelimiters (const char *Str);
@@ -147,7 +148,6 @@ private:
   void UpdateOverridenSuggestionsBox ();
   const char *GetDelimiters ();
   const TCHAR *GetLanguage ();
-  BOOL AspellReinitSettings ();
   void CallLangContextMenu ();
   void GetDefaultHunspellPath (TCHAR *&Path);
   BOOL CheckWord (char *Word, long Start, long End);

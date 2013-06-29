@@ -70,10 +70,15 @@ void LangList::ApplyChoice (SpellChecker *SpellCheckerInstance)
   }
   SetStringDUtf8 (ConvertedBuf, Buf);
   if (SpellCheckerInstance->GetLibMode () == 1)
+  {
     SpellCheckerInstance->SetHunspellMultipleLanguages (ConvertedBuf);
+    SpellCheckerInstance->HunspellReinitSettings (FALSE);
+  }
   else
+  {
     SpellCheckerInstance->SetAspellMultipleLanguages (ConvertedBuf);
-  SpellCheckerInstance->HunspellReinitSettings (FALSE);
+    SpellCheckerInstance->AspellReinitSettings ();
+  }
   SpellCheckerInstance->RecheckVisible ();
   CLEAN_AND_ZERO_ARR (ConvertedBuf);
   CLEAN_AND_ZERO_ARR (ItemBuf);
