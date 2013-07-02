@@ -98,3 +98,6 @@ v1.2.6
 * Fix long lag of suggestion box on windows xp systems (at least it certainly appeared on virtual machines).
 * Rise stability a little bit.
 
+v1.2.6.1
+* Fix crash on Notepad++ exit in some cases.
+* Fix Aspell multiple languages not being correctly updated
