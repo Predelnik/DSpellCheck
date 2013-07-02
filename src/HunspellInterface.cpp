@@ -226,7 +226,7 @@ HunspellInterface::~HunspellInterface ()
     DeleteFile (SystemWrongDicPath);
   }
 
-  if (InitialReadingBeenDone)
+  if (InitialReadingBeenDone && UserDicPath)
     WriteUserDic (Memorized, UserDicPath);
 
   CleanAndZeroWordList (Memorized);
@@ -666,6 +666,14 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
 
 void HunspellInterface::SetDirectory (TCHAR *Dir)
 {
+  CLEAN_AND_ZERO_ARR (UserDicPath);
+  UserDicPath = new TCHAR [DEFAULT_BUF_SIZE];
+  _tcscpy (UserDicPath, Dir);
+  if (UserDicPath[_tcslen (UserDicPath) - 1] != _T ('\\'))
+    _tcscat (UserDicPath, _T ("\\"));
+  _tcscat (UserDicPath, _T ("UserDic.dic")); // Should be tunable really
+  ReadUserDic (Memorized, UserDicPath); // We should load user dictionary first.
+
   InitialReadingBeenDone = FALSE;
   std::vector<TCHAR *> *FileList = new std::vector<TCHAR *>;
   SetString (DicDir, Dir);
@@ -707,14 +715,6 @@ void HunspellInterface::SetDirectory (TCHAR *Dir)
     }
     CLEAN_AND_ZERO_ARR (Buf);
   }
-
-  CLEAN_AND_ZERO_ARR (UserDicPath);
-  UserDicPath = new TCHAR [DEFAULT_BUF_SIZE];
-  _tcscpy (UserDicPath, Dir);
-  if (UserDicPath[_tcslen (UserDicPath) - 1] != _T ('\\'))
-    _tcscat (UserDicPath, _T ("\\"));
-  _tcscat (UserDicPath, _T ("UserDic.dic")); // Should be tunable really
-  ReadUserDic (Memorized, UserDicPath); // We should load user dictionary first.
 
   CLEAN_AND_ZERO_STRING_VECTOR (FileList);
 }
