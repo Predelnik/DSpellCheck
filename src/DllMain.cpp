@@ -35,6 +35,7 @@ int RecheckDelay;
 std::vector<std::pair <long, long> > CheckQueue;
 HANDLE Timer = 0;
 WNDPROC wndProcNotepad = NULL;
+BOOL RestylingCausedRecheckWasDone = FALSE; // Hack to avoid eternal cycle in case of scintilla bug
 
 int GetRecheckDelay ()
 {
@@ -210,6 +211,7 @@ VOID CALLBACK ExecuteQueue (
 
   Timer = 0;
   SendEvent (EID_RECHECK_VISIBLE);
+  RestylingCausedRecheckWasDone = FALSE;
 }
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
@@ -241,6 +243,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       CreateHooks ();
       CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
       SendEvent (EID_RECHECK_VISIBLE_BOTH_VIEWS);
+      RestylingCausedRecheckWasDone = FALSE;
       SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
       SendEvent (EID_UPDATE_LANG_LISTS); // To update quick lang change menu
       UpdateLangsMenu ();
@@ -252,17 +255,20 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       SendEvent (EID_CHECK_FILE_NAME);
       //SendEvent (EID_HIDE_SUGGESTIONS_BOX);
       RecheckVisible ();
+      RestylingCausedRecheckWasDone = TRUE;
     }
     break;
 
   case SCN_UPDATEUI:
-    if(notifyCode->updated & (SC_UPDATE_CONTENT)  && !Timer) // If restyling wasn't caused by user input...
+    if(notifyCode->updated & (SC_UPDATE_CONTENT)  && !Timer && !RestylingCausedRecheckWasDone) // If restyling wasn't caused by user input...
     {
       SendEvent (EID_RECHECK_VISIBLE);
+      RestylingCausedRecheckWasDone = TRUE;
     }
     else if(notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) && !Timer) // If scroll wasn't caused by user input...
     {
       SendEvent (EID_RECHECK_INTERSECTION);
+      RestylingCausedRecheckWasDone = FALSE;
     }
     SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     break;
