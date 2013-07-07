@@ -2908,23 +2908,6 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
   }
 
   unsigned int LastChar = strlen (Word) - 1; // Apostrophe is ASCII char so it's leading anyway
-
-  // Since there's option to transform something to apostrophe, I guess this one better stay at the end.
-  if (RemoveBoundaryApostrophes)
-  {
-    if (Word[LastChar] == '\'')
-    {
-      Word[LastChar] = '\0';
-      LastChar--;
-    }
-    if (Word[0] == '\'')
-    {
-      for (int i = 0; Word[i]; i++)
-        Word[i] = Word[i + 1];
-
-      LastChar--;
-    }
-  }
 }
 
 void SpellChecker::ResetHotSpotCache ()
@@ -3062,6 +3045,25 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode
     {
       WordStart = Offset + token - TextToCheck;
       WordEnd = Offset + token - TextToCheck + strlen (token);
+      if (RemoveBoundaryApostrophes)
+      {
+        while (*token == '\'' && *token != '\0')
+        {
+          *token = '\0';
+          token++;
+          WordStart++;
+        }
+
+        char *it = token + strlen (token) - 1;
+        while (*it == '\'' && *it != '\0' && it > TextToCheck)
+        {
+          *it = '\0';
+          WordEnd--;
+          it--;
+        }
+      if (WordEnd < WordStart)
+        goto newtoken;
+      }
 
       if (!CheckWord (token, WordStart, WordEnd))
       {
@@ -3098,6 +3100,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode
       }
     }
 
+newtoken:
     if (CurrentEncoding == ENCODING_UTF8)
       token =  Utf8strtok (NULL, DelimUtf8Converted, &Context);
     else
