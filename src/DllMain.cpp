@@ -211,7 +211,7 @@ VOID CALLBACK ExecuteQueue (
 
   Timer = 0;
   SendEvent (EID_RECHECK_VISIBLE);
-  RestylingCausedRecheckWasDone = FALSE;
+  RestylingCausedRecheckWasDone = TRUE;
 }
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
@@ -255,7 +255,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
       SendEvent (EID_CHECK_FILE_NAME);
       //SendEvent (EID_HIDE_SUGGESTIONS_BOX);
       RecheckVisible ();
-      RestylingCausedRecheckWasDone = TRUE;
+      RestylingCausedRecheckWasDone = FALSE;
     }
     break;
 
