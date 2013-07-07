@@ -819,7 +819,10 @@ int SpellChecker::CheckWordInCommentOrString (int Style)
     switch (Style)
     {
     case SCE_P_COMMENTLINE:
+    case SCE_P_COMMENTBLOCK:
     case SCE_P_STRING:
+    case SCE_P_TRIPLE:
+    case SCE_P_TRIPLEDOUBLE:
       return TRUE;
     default:
       return FALSE;
