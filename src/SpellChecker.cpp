@@ -1968,8 +1968,10 @@ void SpellChecker::InitSuggestionsBox ()
 
   p.x = XPos; p.y = YPos;
   RECT R;
-  GetWindowRect (SuggestionsInstance->getHSelf (), &R);
+  GetWindowRect (GetCurrentScintilla (), &R);
   ClientToScreen (GetScintillaWindow (NppDataInstance), &p);
+  if (R.top > p.y + TextHeight - 3 || R.left > p.x || R.bottom < p.y + TextHeight - 3 + SBSize ||  R.right < p.x + SBSize)
+    return;
   MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight - 3, SBSize, SBSize, TRUE);
   SuggestionsInstance->display ();
 }
