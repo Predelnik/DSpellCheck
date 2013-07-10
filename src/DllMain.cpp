@@ -367,6 +367,12 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
         PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
       }
     }
+    break;
+  case WM_DISPLAYCHANGE:
+    {
+      SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+    }
+    break;
   }
 
   return FALSE;
