@@ -101,3 +101,12 @@ v1.2.6
 v1.2.6.1
 * Fix crash on Notepad++ exit in some cases.
 * Fix Aspell multiple languages not being correctly updated
+
+v1.2.7
+* Fix cpu consuming bug when file doesn't have any line ends.
+* Update default delimiters
+* Make suggestion button never being drawn outside of editor window
+* Make apostrophes at the beginning or in the end of words (if corresponding option is turned on) not being underlined and not being affected by replacing word through suggestions
+* Make multi-line strings in python being checked.
+
+
