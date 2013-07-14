@@ -145,6 +145,11 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
       }
     }
     break;
+  case WM_DISPLAYCHANGE:
+    {
+      SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+    }
+    break;
   }
 
   if (Message!= 0 && Message == GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX))
@@ -366,11 +371,6 @@ extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam
         InitNeededDialogs (wParam);
         PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
       }
-    }
-    break;
-  case WM_DISPLAYCHANGE:
-    {
-      SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     }
     break;
   }
