@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "plugin.h"
 #include "resource.h"
 
+#include "CommonFunctions.h"
+
 #define MOUSELEAVE      0x0001
 #define MOUSEHOVER      0x0002
 
@@ -77,6 +79,12 @@ Suggestions::Suggestions ()
   StatePressed = FALSE;
   StateHovered = FALSE;
   StateMenu = FALSE;
+}
+
+void Suggestions::init (HINSTANCE hInst, HWND Parent, NppData nppData)
+{
+  NppDataInstance = nppData;
+  return Window::init (hInst, Parent);
 }
 
 BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
@@ -155,8 +163,8 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     ClientToScreen (_hSelf, &p);
     StateMenu = TRUE;
     MenuResult = TrackPopupMenuEx (PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x, p.y, _hSelf, &TPMParams);
-    SetFocus (_hParent);
     SendEvent (EID_APPLYMENUACTION);
+    SetFocus (GetScintillaWindow (&NppDataInstance));
     StateMenu = FALSE;
     DestroyMenu (PopupMenu);
     PopupMenu = CreatePopupMenu ();

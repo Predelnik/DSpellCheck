@@ -2012,10 +2012,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
           ApplyConversions (SelectedWord);
           CurrentSpeller->IgnoreAll (SelectedWord);
           WUCLength = strlen (SelectedWord);
-          /*
-          if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
-          PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength, WUCPosition  + WUCLength );
-          */
+          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength , WUCPosition + WUCLength );
           RecheckVisibleBothViews ();
         }
         else if (Result == MID_ADDTODICTIONARY)
@@ -2023,10 +2020,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
           ApplyConversions (SelectedWord);
           CurrentSpeller->AddToDictionary (SelectedWord);
           WUCLength = strlen (SelectedWord);
-          /*
-          if (SuggestionsMode != SUGGESTIONS_CONTEXT_MENU)
-          PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + WUCLength , WUCPosition  + WUCLength );
-          */
+          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength , WUCPosition + WUCLength );
           RecheckVisibleBothViews ();
         }
         else if ((unsigned int)Result <= LastSuggestions->size ())

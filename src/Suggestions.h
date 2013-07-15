@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define SUGGESTIONS_H
 
 #include "StaticDialog/StaticDialog.h"
+#include "PluginInterface.h"
 
 class Suggestions : public StaticDialog
 {
@@ -29,6 +30,7 @@ public:
   void DoDialog ();
   HMENU GetPopupMenu ();
   int GetResult ();
+  void init (HINSTANCE hInst, HWND Parent, NppData nppData);
 protected:
   __override BOOL CALLBACK run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam);
 private:
@@ -38,5 +40,6 @@ private:
   BOOL StateHovered;
   BOOL StateMenu;
   HMENU PopupMenu;
+  NppData NppDataInstance;
 };
 #endif // SUGGESTIONS_H

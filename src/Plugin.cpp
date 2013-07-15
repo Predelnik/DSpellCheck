@@ -607,7 +607,7 @@ void InitClasses ()
   InitCheckedListBox ((HINSTANCE) hModule);
 
   SuggestionsInstance = new Suggestions;
-  SuggestionsInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
+  SuggestionsInstance->init ((HINSTANCE) hModule, nppData._nppHandle, nppData);
   SuggestionsInstance->DoDialog ();
 
   SettingsDlgInstance = new SettingsDlg;
