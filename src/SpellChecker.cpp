@@ -2788,6 +2788,7 @@ void SpellChecker::SetMultipleLanguages (const TCHAR *MultiString, AbstractSpell
   }
 
   Speller->SetMultipleLanguages (MultiLangList);
+  CLEAN_AND_ZERO_ARR (MultiStringCopy);
   CLEAN_AND_ZERO_STRING_VECTOR (MultiLangList);
 }
 
