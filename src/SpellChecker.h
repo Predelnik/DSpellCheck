@@ -182,6 +182,7 @@ private:
   void PreserveCurrentAddressIndex ();
   void FillDownloadDics ();
   void ResetHotSpotCache ();
+  void CheckSpecialDelimeters (char *&Word, const char *TextStart, long &WordStart, long &WordEnd);
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);

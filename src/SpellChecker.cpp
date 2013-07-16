@@ -1865,7 +1865,9 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
     else
     {
       Pos = Word - Buf + Offset;
-      long WordLen = strlen (Word);
+      long PosEnd = Pos + strlen (Word);
+      CheckSpecialDelimeters (Word, Buf, Pos, PosEnd);
+      long WordLen = PosEnd - Pos;
       if (CheckWord (Word, Pos, Pos + WordLen - 1))
       {
         Ret = TRUE;
@@ -3011,6 +3013,27 @@ CleanUp:
   return res;
 }
 
+void SpellChecker::CheckSpecialDelimeters (char *&Word, const char *TextStart, long &WordStart, long &WordEnd)
+{
+  if (RemoveBoundaryApostrophes)
+      {
+        while (*Word == '\'' && *Word != '\0')
+        {
+          *Word = '\0';
+          Word++;
+          WordStart++;
+        }
+
+        char *it = Word + strlen (Word) - 1;
+        while (*it == '\'' && *it != '\0' && it > TextStart)
+        {
+          *it = '\0';
+          WordEnd--;
+          it--;
+        }
+      }
+}
+
 BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
 {
   if (!TextToCheck || !*TextToCheck)
@@ -3041,25 +3064,10 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode
     {
       WordStart = Offset + token - TextToCheck;
       WordEnd = Offset + token - TextToCheck + strlen (token);
-      if (RemoveBoundaryApostrophes)
-      {
-        while (*token == '\'' && *token != '\0')
-        {
-          *token = '\0';
-          token++;
-          WordStart++;
-        }
-
-        char *it = token + strlen (token) - 1;
-        while (*it == '\'' && *it != '\0' && it > TextToCheck)
-        {
-          *it = '\0';
-          WordEnd--;
-          it--;
-        }
+      CheckSpecialDelimeters (token, TextToCheck, WordStart, WordEnd);
       if (WordEnd < WordStart)
         goto newtoken;
-      }
+      
 
       if (!CheckWord (token, WordStart, WordEnd))
       {
