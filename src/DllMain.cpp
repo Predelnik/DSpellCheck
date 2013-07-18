@@ -108,6 +108,11 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
         {
           InsertSuggMenuItem (Menu, (*MenuList)[i]->Text, (*MenuList)[i]->Id, i, (*MenuList)[i]->Separator);
         }
+
+        for (unsigned int i = 0; i < MenuList->size (); i++)
+          CLEAN_AND_ZERO ((*MenuList)[i]);
+
+        CLEAN_AND_ZERO (MenuList);
       }
     }
     break;
@@ -132,17 +137,6 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
       MenuList = (std::vector <SuggestionsMenuItem*> *) lParam;
       wParam = LastHwnd;
       lParam = LastCoords;
-    }
-    break;
-  case WM_EXITMENULOOP:
-    {
-      if (MenuList)
-      {
-        for (unsigned int i = 0; i < MenuList->size (); i++)
-          CLEAN_AND_ZERO ((*MenuList)[i]);
-
-        CLEAN_AND_ZERO (MenuList);
-      }
     }
     break;
   case WM_DISPLAYCHANGE:
