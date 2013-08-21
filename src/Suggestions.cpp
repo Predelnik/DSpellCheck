@@ -126,6 +126,11 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     SendEvent (EID_SHOW_SUGGESTION_MENU);
     return FALSE;
 
+  case WM_MOUSEWHEEL:
+    SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+
+    return FALSE;
+
   case WM_PAINT:
     if (!isVisible ())
       return FALSE;
