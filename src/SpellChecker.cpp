@@ -2326,7 +2326,7 @@ void SpellChecker::SaveSettings ()
     _stprintf (Buf, _T ("Server_Address[%d]"), i);
     SaveToIni (Buf, ServerNames[i], _T (""));
   }
-  SaveToIni (_T ("Suggestions_Control"), SuggestionsMode, 0);
+  SaveToIni (_T ("Suggestions_Control"), SuggestionsMode, 1);
   SaveToIni (_T ("Ignore_Yo"), IgnoreYo, 0);
   SaveToIni (_T ("Convert_Single_Quotes_To_Apostrophe"), ConvertSingleQuotes, 1);
   SaveToIni (_T ("Remove_Ending_And_Beginning_Apostrophe"), RemoveBoundaryApostrophes, 1);
@@ -2425,7 +2425,7 @@ void SpellChecker::LoadSettings ()
   AdditionalHunspellPath = 0;
   LoadFromIni (AdditionalHunspellPath, _T ("System_Hunspell_Path"), _T (".\\plugins\\config\\Hunspell"));
 
-  LoadFromIni (SuggestionsMode, _T ("Suggestions_Control"), 0);
+  LoadFromIni (SuggestionsMode, _T ("Suggestions_Control"), 1);
   LoadFromIni (AutoCheckText, _T ("Autocheck"), 1);
   UpdateAutocheckStatus (0);
   LoadFromIni (AspellMultiLanguages, _T ("Aspell_Multiple_Languages"), _T (""));
