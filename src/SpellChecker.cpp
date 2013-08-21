@@ -847,6 +847,7 @@ int SpellChecker::CheckWordInCommentOrString (int Style)
     {
     case SCE_H_COMMENT:
     case SCE_H_DEFAULT:
+    case SCE_H_TAGUNKNOWN:
     case SCE_H_DOUBLESTRING:
     case SCE_H_SINGLESTRING:
     case SCE_H_XCCOMMENT:
@@ -3068,7 +3069,7 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode
       CheckSpecialDelimeters (token, TextToCheck, WordStart, WordEnd);
       if (WordEnd < WordStart)
         goto newtoken;
-      
+
 
       if (!CheckWord (token, WordStart, WordEnd))
       {
