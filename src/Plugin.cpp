@@ -37,6 +37,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "Suggestions.h"
 
+#include "StackWalker/StackWalker.h"
+
 const TCHAR configFileName[] = _T ("DSpellCheck.ini");
 
 #ifdef UNICODE
@@ -214,6 +216,28 @@ HANDLE *GethEvent ()
   return hEvent;
 }
 
+class MyStackWalker : public StackWalker
+{
+public:
+  MyStackWalker() : StackWalker() {}
+protected:
+  virtual void OnOutput(LPCSTR szText)
+    {
+      FILE *fp = _tfopen (_T ("DSpellCheck_Debug.log"), _T ("a"));
+      fprintf (fp, szText);
+      fclose (fp);
+      StackWalker::OnOutput(szText);
+    }
+};
+
+int filter(unsigned int code, struct _EXCEPTION_POINTERS *ep)
+{
+  MyStackWalker sw;
+  sw.ShowCallstack(GetCurrentThread(), ep->ContextRecord);
+  return EXCEPTION_CONTINUE_SEARCH;
+}
+
+
 DWORD WINAPI ThreadMain (LPVOID lpParam)
 {
   DWORD dwWaitResult    = EID_MAX;
@@ -225,6 +249,10 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
 
   // Creating thread message queue
   PeekMessage (&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+  #ifdef _DEBUG
+    __try
+    {
+#endif
 
   while (bRun)
   {
@@ -247,6 +275,14 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
     else
       bRun = SpellCheckerInstance->NotifyEvent(dwWaitResult);
   }
+
+  #ifdef _DEBUG
+    }
+  __except (filter(GetExceptionCode(), GetExceptionInformation()))
+    {
+      int i = 123;
+    }
+#endif
 
   SendEvent (EID_THREADKILLED);
   OutputDebugString (_T ("Death\n"));

@@ -94,6 +94,8 @@ set (list_of_files_DSpellCheck
   ${SRC_DIR}/Controls/TabBar/ControlsTab.h
   ${SRC_DIR}/Controls/TabBar/TabBar.cpp
   ${SRC_DIR}/Controls/TabBar/TabBar.h
+  ${SRC_DIR}/StackWalker/StackWalker.h
+  ${SRC_DIR}/StackWalker/StackWalker.cpp
 )
 
 SET(LINK_LIBRARY shlwapi comctl32 version wininet Ws2_32)
