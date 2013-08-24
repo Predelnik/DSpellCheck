@@ -47,6 +47,7 @@ namespace CustomGUIMessage
 
 const TCHAR *const CustomGUIMesssagesNames[] = {
   _T ("DSpellCheck_MessageBox"),
+  _T ("DSpellCheck_ShowCalculatedMenu"),
 };
 
 struct MessageBoxInfo
