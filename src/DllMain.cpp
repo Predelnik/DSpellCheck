@@ -125,20 +125,10 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
     }
     break;
   case WM_CONTEXTMENU:
-    if (wParam)
-    {
-      LastHwnd = wParam;
-      LastCoords = lParam;
-      PostMessageToMainThread (TM_PRECALCULATE_MENU, wParam, lParam);
-      return TRUE;
-    }
-    else
-    {
-      MenuList = (std::vector <SuggestionsMenuItem*> *) lParam;
-      wParam = LastHwnd;
-      lParam = LastCoords;
-    }
-    break;
+    LastHwnd = wParam;
+    LastCoords = lParam;
+    PostMessageToMainThread (TM_PRECALCULATE_MENU, wParam, lParam);
+    return TRUE;
   case WM_DISPLAYCHANGE:
     {
       SendEvent (EID_HIDE_SUGGESTIONS_BOX);
@@ -146,12 +136,20 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
     break;
   }
 
-  if (Message!= 0 && Message == GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX))
-  {
-    MessageBoxInfo *MsgBox = (MessageBoxInfo *) wParam;
-    DWORD Result = MessageBox (MsgBox->hWnd, MsgBox->Message, MsgBox->Title, MsgBox->Flags);
-    return Result;
-  }
+  if (Message!= 0)
+    {
+      if (Message == GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX))
+        {
+          MessageBoxInfo *MsgBox = (MessageBoxInfo *) wParam;
+          DWORD Result = MessageBox (MsgBox->hWnd, MsgBox->Message, MsgBox->Title, MsgBox->Flags);
+          return Result;
+        }
+      else if (Message == GetCustomGUIMessageId (CustomGUIMessage::SHOW_CALCULATED_MENU))
+        {
+          MenuList = (std::vector <SuggestionsMenuItem*> *) lParam;
+          return ::CallWindowProc(wndProcNotepad, hWnd, WM_CONTEXTMENU, LastHwnd, LastCoords);
+        }
+    }
 
   /*
   TCHAR Buf[DEFAULT_BUF_SIZE];

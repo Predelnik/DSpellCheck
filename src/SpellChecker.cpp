@@ -243,7 +243,7 @@ BOOL WINAPI SpellChecker::NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam)
         }
       }
 
-      PostMessage (NppDataInstance->_nppHandle, WM_CONTEXTMENU, 0, (LPARAM)SuggestionMenuItems);
+      PostMessage (NppDataInstance->_nppHandle, GetCustomGUIMessageId (CustomGUIMessage::SHOW_CALCULATED_MENU), 0, (LPARAM)SuggestionMenuItems);
       SuggestionMenuItems = 0;
     }
     break;
