@@ -41,6 +41,7 @@ void RemoveDics::DoDialog ()
     goToCenter ();
     display ();
   }
+  SetFocus (HLangList);
 }
 
 void RemoveDics::init (HINSTANCE hInst, HWND Parent)

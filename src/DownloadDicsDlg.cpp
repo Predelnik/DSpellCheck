@@ -49,6 +49,7 @@ void DownloadDicsDlg::DoDialog ()
     goToCenter ();
     display ();
   }
+  SetFocus (HFileList);
 }
 
 void DownloadDicsDlg::FillFileList ()

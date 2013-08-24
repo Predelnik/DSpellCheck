@@ -36,6 +36,7 @@ void LangList::DoDialog ()
   }
   goToCenter ();
   display ();
+  SetFocus (HLangList);
 }
 
 void LangList::init (HINSTANCE hInst, HWND Parent)
