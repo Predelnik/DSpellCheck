@@ -127,8 +127,8 @@ BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     return FALSE;
 
   case WM_MOUSEWHEEL:
-    SendEvent (EID_HIDE_SUGGESTIONS_BOX);
-
+    ShowWindow (_hSelf, SW_HIDE);
+    PostMessage (GetScintillaWindow (&NppDataInstance), Message, wParam, lParam);
     return FALSE;
 
   case WM_PAINT:
