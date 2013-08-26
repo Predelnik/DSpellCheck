@@ -111,5 +111,9 @@ v1.2.7
 * Make selection disappear after word is being added to dictionary or ignored.
 * Fix that focus is now restored correctly to editor window after usage of suggestion button.
 
-
-
+v1.2.8
+* Make context menu way of suggestion selection to be default one.
+* Update tool bar icon to be more commonly recognizable as spell-check icon.
+* Rename name of tool bar button / check box to more understandable "Spell Check Document Automatically"
+* Fix a bug of context menu showing additional items in it's sub-menu also.
+* Fix a bug of scrolling being blocked while mouse cursor on suggestion button.
