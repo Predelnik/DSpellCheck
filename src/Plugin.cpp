@@ -546,7 +546,7 @@ void commandMenuInit()
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'a' - 'a';
-  setCommand(0, TEXT("Auto-check Document"), SwitchAutoCheckText, shKey, false);
+  setCommand(0, TEXT("Spell Check Document Automatically"), SwitchAutoCheckText, shKey, false);
   shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
