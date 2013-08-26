@@ -257,11 +257,32 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1 VERSIONINFO
     FILEVERSION     1,2,8,0
     PRODUCTVERSION  1,2,8,0
-    FILEOS          VOS_UNKNOWN
-    FILETYPE        VFT_UNKNOWN
+    FILEOS          VOS__WINDOWS32
+    FILETYPE        VFT_DLL
     FILESUBTYPE     VFT2_UNKNOWN
     FILEFLAGSMASK   0x00000000
     FILEFLAGS       0x00000000
 {
-    
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "04090025"
+        {
+            VALUE "Comments", "Source - https://github.com/Predelnik/DSpellCheck"
+            VALUE "CompanyName", "Sergey Semushin <predelnik@gmail.com>"
+            VALUE "FileDescription", "DSpellCheck - Spell Checker Plugin for Notepad++"
+            VALUE "FileVersion", "1.2.8.0"
+            VALUE "InternalName", "DSpellCheck"
+            VALUE "LegalCopyright", "Copyright (C) 2013 Sergey Semushin"
+            VALUE "LegalTrademarks", ""
+            VALUE "OriginalFilename", "DSpellCheck.dll"
+            VALUE "PrivateBuild", ""
+            VALUE "ProductName", "DSpellCheck"
+            VALUE "ProductVersion", "1,2,8,0"
+            VALUE "SpecialBuild", "UNICODE"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0409, 0x0025
+    }
 }
