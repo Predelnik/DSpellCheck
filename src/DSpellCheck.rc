@@ -68,7 +68,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
     LTEXT           "Delimiters:", IDC_STATIC, 5, 7, 37, 8, SS_LEFT
     EDITTEXT        IDC_DELIMETERS, 45, 5, 116, 13, ES_AUTOHSCROLL
     PUSHBUTTON      "Reset", IDC_DEFAULT_DELIMITERS, 165, 4, 28, 14
-    AUTOCHECKBOX    "Cyrillic: Count io (¸) as e", IDC_COUNT_YO_AS_YE, 12, 165, 91, 8
+    AUTOCHECKBOX    "Cyrillic: Count io (\u0451) as e", IDC_COUNT_YO_AS_YE, 12, 165, 91, 8
     LTEXT           "Typing Recheck Delay (ms):", IDC_STATIC, 5, 39, 90, 8, SS_LEFT
     EDITTEXT        IDC_RECHECK_DELAY, 153, 37, 40, 12, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Buffer Size for Find Next/Prev. Mistake (Kb):", IDC_STATIC, 5, 55, 156, 8, SS_LEFT
@@ -273,9 +273,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
             VALUE "FileVersion", "1.2.8.0"
             VALUE "InternalName", "DSpellCheck"
             VALUE "LegalCopyright", "Copyright (C) 2013 Sergey Semushin"
-            VALUE "LegalTrademarks", ""
             VALUE "OriginalFilename", "DSpellCheck.dll"
-            VALUE "PrivateBuild", ""
             VALUE "ProductName", "DSpellCheck"
             VALUE "ProductVersion", "1,2,8,0"
             VALUE "SpecialBuild", "UNICODE"
