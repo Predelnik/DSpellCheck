@@ -1894,11 +1894,15 @@ char *SpellChecker::GetWordAt (long CharPos, char *Text, long Offset)
 
   if (CurrentEncoding == ENCODING_UTF8)
   {
+    if (Utf8chr ( DelimUtf8Converted, Iterator))
+      Iterator--;
     while ((!Utf8chr ( DelimUtf8Converted, Iterator)) && Text < Iterator)
       Iterator = (char *) Utf8Dec (Text, Iterator);
   }
   else
   {
+    if (strchr ( DelimConverted, *Iterator))
+      Iterator--;
     while (!strchr (DelimConverted, *Iterator) && Text < Iterator)
       Iterator--;
   }
