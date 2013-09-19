@@ -871,6 +871,7 @@ int SpellChecker::CheckWordInCommentOrString (int Style)
     case SCE_HP_STRING:
     case SCE_HPA_COMMENTLINE:
     case SCE_HPA_STRING:
+    case SCE_HPHP_HSTRING:
     case SCE_HPHP_SIMPLESTRING:
     case SCE_HPHP_COMMENT:
     case SCE_HPHP_COMMENTLINE:
