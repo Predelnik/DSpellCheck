@@ -117,3 +117,8 @@ v1.2.8
 * Rename name of tool bar button / check box to more understandable "Spell Check Document Automatically"
 * Fix a bug of context menu showing additional items in it's sub-menu also.
 * Fix a bug of scrolling being blocked while mouse cursor on suggestion button.
+
+v1.2.9
+* Fix bug which stopped suggestions from appearing on context menu call if the word was already selected .
+* Make double quoted lines in php being checked.
+* Make plugin less conflicting with Quick Color Picker plugin.
