@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef MAINDEF_H
 #define MAINDEF_H
 
-#define SCE_ERROR_UNDERLINE INDIC_CONTAINER + 1
+#define SCE_ERROR_UNDERLINE (19) // Only index from 8 to 21 are free
 #define CLEAN_AND_ZERO(x) do { if (x) {delete x; x = 0; }  } while (0);
 #define CLEAN_AND_ZERO_ARR(x) do { if (x) {delete[] x; x = 0; }  } while (0);
 #define CLEAN_AND_ZERO_STRING_VECTOR(x) do { if (x) {for (unsigned int i = 0; i < x->size (); i++) {delete[] x->at(i);} delete x; x = 0; }  } while (0);
