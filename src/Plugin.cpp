@@ -268,7 +268,6 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
       MSG Msg;
       while (PeekMessage (&Msg, 0, 0, 0, PM_REMOVE) && bRun)
       {
-        OutputDebugString (_T ("Message is being processed\n"));
         bRun = SpellCheckerInstance->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
       }
     }
@@ -280,12 +279,10 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
     }
   __except (filter(GetExceptionCode(), GetExceptionInformation()))
     {
-      int i = 123;
     }
 #endif
 
   SendEvent (EID_THREADKILLED);
-  OutputDebugString (_T ("Death\n"));
   ExitThread (0);
   return 0;
 }
@@ -316,7 +313,6 @@ DWORD WINAPI ThreadNetwork (LPVOID lpParam)
       MSG Msg;
       while (PeekMessage (&Msg, 0, 0, 0, PM_REMOVE) && bRun)
       {
-        OutputDebugString (_T ("Message is being processed\n"));
         bRun = SpellCheckerInstance->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
       }
     }
@@ -325,7 +321,6 @@ DWORD WINAPI ThreadNetwork (LPVOID lpParam)
   }
 
   SendNetworkEvent (EID_NETWORKTHREADKILLED);
-  OutputDebugString (_T ("Death\n"));
   ExitThread (0);
   return 0;
 }
@@ -357,7 +352,6 @@ void CreateHooks ()
 
 void KillThreadResources ()
 {
-  OutputDebugString (_T ("Waiting for death\n"));
   WaitForEvent (EID_THREADKILLED);
   WaitForNetworkEvent (EID_NETWORKTHREADKILLED);
   CloseHandle (hThread);

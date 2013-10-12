@@ -1990,7 +1990,6 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
     HIBYTE (MenuId) != LANGUAGE_MENU_ID)
     || (GetUseAllocatedIds () && ((int) MenuId < GetContextMenuIdStart () || (int) MenuId > GetContextMenuIdStart () + 350)))
     return;
-  OutputDebugString (_T ("Processing Menu Result\n"));
   int UsedMenuId = 0;
   if (GetUseAllocatedIds ())
   {

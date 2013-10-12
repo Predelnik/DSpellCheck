@@ -1,5 +1,5 @@
 /**********************************************************************
- * 
+ *
  * StackWalker.cpp
  *
  *
@@ -8,14 +8,14 @@
  *                       http://www.codeproject.com/threads/StackWalker.asp
  *  2005-07-28   v2    - Changed the params of the constructor and ShowCallstack
  *                       (to simplify the usage)
- *  2005-08-01   v3    - Changed to use 'CONTEXT_FULL' instead of CONTEXT_ALL 
+ *  2005-08-01   v3    - Changed to use 'CONTEXT_FULL' instead of CONTEXT_ALL
  *                       (should also be enough)
  *                     - Changed to compile correctly with the PSDK of VC7.0
  *                       (GetFileVersionInfoSizeA and GetFileVersionInfoA is wrongly defined:
  *                        it uses LPSTR instead of LPCSTR as first paremeter)
  *                     - Added declarations to support VC5/6 without using 'dbghelp.h'
- *                     - Added a 'pUserData' member to the ShowCallstack function and the 
- *                       PReadProcessMemoryRoutine declaration (to pass some user-defined data, 
+ *                     - Added a 'pUserData' member to the ShowCallstack function and the
+ *                       PReadProcessMemoryRoutine declaration (to pass some user-defined data,
  *                       which can be used in the readMemoryFunction-callback)
  *  2005-08-02   v4    - OnSymInit now also outputs the OS-Version by default
  *                     - Added example for doing an exception-callstack-walking in main.cpp
@@ -165,7 +165,7 @@ DWORD64
 // Some missing defines (for VC5/6):
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
-#endif  
+#endif
 
 
 // secure-CRT_functions are only available starting with VC8
@@ -285,7 +285,7 @@ public:
       m_szSymPath = _strdup(szSymPath);
     if (this->pSI(m_hProcess, m_szSymPath, FALSE) == FALSE)
       this->m_parent->OnDbgHelpErr("SymInitialize", GetLastError(), 0);
-      
+
     DWORD symOptions = this->pSGO();  // SymGetOptions
     symOptions |= SYMOPT_LOAD_LINES;
     symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS;
@@ -403,11 +403,11 @@ typedef struct IMAGEHLP_MODULE64_V2 {
   tSSO pSSO;
 
   // StackWalk64()
-  typedef BOOL (__stdcall *tSW)( 
-    DWORD MachineType, 
+  typedef BOOL (__stdcall *tSW)(
+    DWORD MachineType,
     HANDLE hProcess,
-    HANDLE hThread, 
-    LPSTACKFRAME64 StackFrame, 
+    HANDLE hThread,
+    LPSTACKFRAME64 StackFrame,
     PVOID ContextRecord,
     PREAD_PROCESS_MEMORY_ROUTINE64 ReadMemoryRoutine,
     PFUNCTION_TABLE_ACCESS_ROUTINE64 FunctionTableAccessRoutine,
@@ -886,7 +886,7 @@ BOOL StackWalker::LoadModules()
 
 // The following is used to pass the "userData"-Pointer to the user-provided readMemoryFunction
 // This has to be done due to a problem with the "hProcess"-parameter in x64...
-// Because this class is in no case multi-threading-enabled (because of the limitations 
+// Because this class is in no case multi-threading-enabled (because of the limitations
 // of dbghelp.dll) it is "safe" to use a static-variable
 static StackWalker::PReadProcessMemoryRoutine s_readMemoryFunction = NULL;
 static LPVOID s_readMemoryFunction_UserData = NULL;
@@ -1096,7 +1096,7 @@ BOOL StackWalker::ShowCallstack(HANDLE hThread, const CONTEXT *context, PReadPro
     if (frameNum == 0)
       et = firstEntry;
     this->OnCallstackEntry(et, csEntry);
-    
+
     if (s.AddrReturn.Offset == 0)
     {
       this->OnCallstackEntry(lastEntry, csEntry);
@@ -1195,7 +1195,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
   ver.dwOSVersionInfoSize = sizeof(ver);
   if (GetVersionExA(&ver) != FALSE)
   {
-    _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "OS-Version: %d.%d.%d (%s)\n", 
+    _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "OS-Version: %d.%d.%d (%s)\n",
       ver.dwMajorVersion, ver.dwMinorVersion, ver.dwBuildNumber,
       ver.szCSDVersion);
     OnOutput(buffer);
@@ -1206,7 +1206,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
   ver.dwOSVersionInfoSize = sizeof(ver);
   if (GetVersionExA( (OSVERSIONINFOA*) &ver) != FALSE)
   {
-    _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "OS-Version: %d.%d.%d (%s) 0x%x-0x%x\n", 
+    _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "OS-Version: %d.%d.%d (%s) 0x%x-0x%x\n",
       ver.dwMajorVersion, ver.dwMinorVersion, ver.dwBuildNumber,
       ver.szCSDVersion, ver.wSuiteMask, ver.wProductType);
     OnOutput(buffer);

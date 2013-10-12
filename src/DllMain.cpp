@@ -100,7 +100,6 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
   {
   case WM_INITMENUPOPUP:
     {
-      OutputDebugString (_T ("TM_CONTEXT_MENU sent\n"));
       if (MenuList)
       {
         HMENU Menu = (HMENU) wParam;
@@ -119,7 +118,6 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
   case WM_COMMAND:
     if (HIWORD (wParam) == 0)
     {
-      // OutputDebugString (_T ("TM_MENU_RESULT sent\n"));
       if (!GetUseAllocatedIds ())
         PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
     }
