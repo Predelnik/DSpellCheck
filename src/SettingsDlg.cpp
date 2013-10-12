@@ -127,11 +127,11 @@ static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText)
 
   // Create the tooltip. g_hInst is the global instance handle.
   HWND hwndTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
-    WS_POPUP |TTS_ALWAYSTIP,
-    CW_USEDEFAULT, CW_USEDEFAULT,
-    CW_USEDEFAULT, CW_USEDEFAULT,
-    hDlg, NULL,
-    (HINSTANCE) getHModule (), NULL);
+                                WS_POPUP | TTS_ALWAYSTIP,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                hDlg, NULL,
+                                (HINSTANCE) getHModule (), NULL);
 
   if (!hwndTool || !hwndTip)
   {
@@ -196,10 +196,11 @@ void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   if (GetSelectedLib () == 0)
     SpellCheckerInstance->SetAspellPath (Buf);
   else
+  {
     SpellCheckerInstance->SetHunspellPath (Buf);
-
-  Edit_GetText (HSystemPath, Buf, DEFAULT_BUF_SIZE);
-  SpellCheckerInstance->SetHunspellAdditionalPath (Buf);
+    Edit_GetText (HSystemPath, Buf, DEFAULT_BUF_SIZE);
+    SpellCheckerInstance->SetHunspellAdditionalPath (Buf);
+  }
 
   SpellCheckerInstance->SetCheckThose (Button_GetCheck (HCheckOnlyThose) == BST_CHECKED ? 1 : 0);
   Edit_GetText (HFileTypes, Buf, DEFAULT_BUF_SIZE);
@@ -281,8 +282,8 @@ void SimpleDlg::FillLibInfo (int Status, TCHAR *AspellPath, TCHAR *HunspellPath,
     // SetWindowText (HLibLink, _T ("<A HREF=\"http://wiki.openoffice.org/wiki/Dictionaries\">Hunspell Dictionaries</A>"));
     Static_SetText (HLibGroupBox, _T ("Hunspell Settings"));
     Edit_SetText (HLibPath, HunspellPath);
-    Edit_SetText (HSystemPath, HunspellAdditionalPath);
   }
+  Edit_SetText (HSystemPath, HunspellAdditionalPath);
 }
 
 void SimpleDlg::FillSugestionsNum (int SuggestionsNum)
@@ -333,7 +334,7 @@ int SimpleDlg::GetSelectedLib ()
   return ComboBox_GetCurSel (HLibrary);
 }
 
-static int CALLBACK BrowseCallbackProc(HWND hwnd,UINT uMsg, LPARAM lParam, LPARAM lpData)
+static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
   // If the BFFM_INITIALIZED message is received
   // set the path to the start path.
@@ -517,7 +518,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
           ofn.nMaxFileTitle = 0;
           ofn.lpstrInitialDir = NULL;
           ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-          if (GetOpenFileName(&ofn)==TRUE)
+          if (GetOpenFileName(&ofn) == TRUE)
             Edit_SetText (HLibPath, ofn.lpstrFile);
         }
         else
@@ -648,8 +649,9 @@ void AdvancedDlg::SetBufferSize (int Size)
 }
 
 const TCHAR *const IndicNames[] = {_T ("Plain"), _T ("Squiggle"), _T ("TT"), _T ("Diagonal"), _T ("Strike"), _T ("Hidden"),
-  _T ("Box"), _T ("Round Box"), _T ("Straight Box"), _T ("Dash"),
-  _T ("Dots"), _T ("Squiggle Low")};
+                                   _T ("Box"), _T ("Round Box"), _T ("Straight Box"), _T ("Dash"),
+                                   _T ("Dots"), _T ("Squiggle Low")
+                                  };
 
 BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -671,7 +673,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       HUnderlineStyle = ::GetDlgItem (_hSelf, IDC_UNDERLINE_STYLE);
       HIgnoreNumbers = ::GetDlgItem (_hSelf, IDC_IGNORE_NUMBERS);
       HIgnoreCStart = ::GetDlgItem (_hSelf, IDC_IGNORE_CSTART);
-      HIgnoreCHave = ::GetDlgItem (_hSelf,IDC_IGNORE_CHAVE);
+      HIgnoreCHave = ::GetDlgItem (_hSelf, IDC_IGNORE_CHAVE);
       HIgnoreCAll = ::GetDlgItem (_hSelf, IDC_IGNORE_CALL);
       HIgnoreOneLetter = ::GetDlgItem (_hSelf, IDC_IGNORE_ONE_LETTER);
       HIgnore_ = ::GetDlgItem (_hSelf, IDC_IGNORE_);
@@ -723,7 +725,7 @@ BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPara
       }
       else
       {
-        DrawEdge (Dc, &Ds->rcItem,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT);
+        DrawEdge (Dc, &Ds->rcItem, BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT);
       }
       //DeleteObject (Pen);
       EndPaint (HUnderlineColor, &Ps);
@@ -842,21 +844,21 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
   CLEAN_AND_ZERO_ARR (TBuf);
   SpellCheckerInstance->SetDelimiters (BufUtf8);
   SpellCheckerInstance->SetConversionOptions (Button_GetCheck (HIgnoreYo) == BST_CHECKED ? TRUE : FALSE,
-    Button_GetCheck (HConvertSingleQuotes) == BST_CHECKED ? TRUE : FALSE,
-    Button_GetCheck (HRemoveBoundaryApostrophes) == BST_CHECKED ? TRUE : FALSE
-    );
+                                              Button_GetCheck (HConvertSingleQuotes) == BST_CHECKED ? TRUE : FALSE,
+                                              Button_GetCheck (HRemoveBoundaryApostrophes) == BST_CHECKED ? TRUE : FALSE
+                                             );
   SpellCheckerInstance->SetUnderlineColor (UnderlineColorBtn);
   SpellCheckerInstance->SetUnderlineStyle (ComboBox_GetCurSel (HUnderlineStyle));
   SpellCheckerInstance->SetIgnore (Button_GetCheck (HIgnoreNumbers) == BST_CHECKED,
-    Button_GetCheck (HIgnoreCStart) == BST_CHECKED,
-    Button_GetCheck (HIgnoreCHave) == BST_CHECKED,
-    Button_GetCheck (HIgnoreCAll) == BST_CHECKED,
-    Button_GetCheck (HIgnore_) == BST_CHECKED,
-    Button_GetCheck (HIgnoreSEApostrophe) == BST_CHECKED,
-    Button_GetCheck (HIgnoreOneLetter) == BST_CHECKED
-    );
+                                   Button_GetCheck (HIgnoreCStart) == BST_CHECKED,
+                                   Button_GetCheck (HIgnoreCHave) == BST_CHECKED,
+                                   Button_GetCheck (HIgnoreCAll) == BST_CHECKED,
+                                   Button_GetCheck (HIgnore_) == BST_CHECKED,
+                                   Button_GetCheck (HIgnoreSEApostrophe) == BST_CHECKED,
+                                   Button_GetCheck (HIgnoreOneLetter) == BST_CHECKED
+                                  );
   SpellCheckerInstance->SetSuggBoxSettings (SendMessage (HSliderSize, TBM_GETPOS, 0, 0),
-    SendMessage (HSliderTransparency, TBM_GETPOS, 0, 0));
+                                            SendMessage (HSliderTransparency, TBM_GETPOS, 0, 0));
   int Len = Edit_GetTextLength (HBufferSize) + 1;
   TBuf = new TCHAR [Len];
   Edit_GetText (HBufferSize, TBuf, Len);

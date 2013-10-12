@@ -2603,6 +2603,8 @@ void SpellChecker::SetHunspellPath (const TCHAR *Path)
 
 void SpellChecker::SetHunspellAdditionalPath (const TCHAR *Path)
 {
+  if (!*Path)
+    return;
   SetString (AdditionalHunspellPath, Path);
   HunspellReinitSettings (1);
 }
