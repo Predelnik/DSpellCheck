@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef ASPELLINTERFACE_H
 #define ASPELLINTERFACE_H
 
+struct AspellCanHaveError;
 struct AspellSpeller;
 
 #include "AbstractSpellerInterface.h"
@@ -39,6 +40,7 @@ public:
 
   BOOL Init (TCHAR *PathArg);
 private:
+  void SendAspellErorr (AspellCanHaveError *Error);
 public:
 private:
   AspellSpeller *LastSelectedSpeller;
