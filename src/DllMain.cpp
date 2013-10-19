@@ -100,21 +100,32 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
   {
   case WM_INITMENUPOPUP:
     {
-      if (MenuList)
+      // Checking that it isn't system menu and nor any main menu except 0th
+      if (MenuList && LOWORD (lParam) == 0 && HIWORD (lParam) == 0)
       {
+        // Special check for 0th main menu item
+        MENUBARINFO info;
+        info.cbSize = sizeof (MENUBARINFO);
+        GetMenuBarInfo (nppData._nppHandle, OBJID_MENU, 0, &info);
+        HMENU MainMenu = info.hMenu;
+        MENUITEMINFO FileMenuItem;
+        FileMenuItem.cbSize = sizeof (MENUITEMINFO);
+        FileMenuItem.fMask = MIIM_SUBMENU;
+        GetMenuItemInfo (MainMenu, 0, TRUE, &FileMenuItem);
+
         HMENU Menu = (HMENU) wParam;
-        for (unsigned int i = 0; i < MenuList->size (); i++)
+        if (FileMenuItem.hSubMenu != Menu)
         {
-          InsertSuggMenuItem (Menu, (*MenuList)[i]->Text, (*MenuList)[i]->Id, i, (*MenuList)[i]->Separator);
+          for (unsigned int i = 0; i < MenuList->size (); i++)
+          {
+            InsertSuggMenuItem (Menu, (*MenuList)[i]->Text, (*MenuList)[i]->Id, i, (*MenuList)[i]->Separator);
+          }
         }
-
-        for (unsigned int i = 0; i < MenuList->size (); i++)
-          CLEAN_AND_ZERO ((*MenuList)[i]);
-
-        CLEAN_AND_ZERO (MenuList);
       }
+      CLEAN_AND_ZERO_POINTER_VECTOR (MenuList);
     }
     break;
+
   case WM_COMMAND:
     if (HIWORD (wParam) == 0)
     {
@@ -123,16 +134,10 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
     }
     break;
   case WM_NOTIFY:
+    // Removing possibility of adding items to tab bar menu.
     if (((LPNMHDR)lParam)->code == NM_RCLICK)
     {
-
-      if (MenuList)
-      {
-        for (unsigned int i = 0; i < MenuList->size (); i++)
-          CLEAN_AND_ZERO ((*MenuList)[i]);
-
-        CLEAN_AND_ZERO (MenuList);
-      }
+      CLEAN_AND_ZERO_POINTER_VECTOR (MenuList);
     }
     break;
   case WM_CONTEXTMENU:
