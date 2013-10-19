@@ -122,3 +122,7 @@ v1.2.9
 * Fix bug which stopped suggestions from appearing on context menu call if the word was already selected .
 * Make double quoted lines in php being checked.
 * Make plugin less conflicting with Quick Color Picker plugin.
+
+v1.2.10
+* Prevent suggestions from appearing in totally wrong places.
+* Make verbose Aspell reporting if error happened.
