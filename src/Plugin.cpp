@@ -563,8 +563,8 @@ void commandMenuInit()
   setCommand(4, TEXT("---"), NULL, NULL, false);
 
   setCommand(5, TEXT("Settings..."), StartSettings, NULL, false);
-  setCommand(6, TEXT("Online Manual..."), StartManual, NULL, false);
-  setCommand(7, TEXT("About..."), StartAboutDlg, NULL, false);
+  setCommand(6, TEXT("Online Manual"), StartManual, NULL, false);
+  setCommand(7, TEXT("About"), StartAboutDlg, NULL, false);
 }
 
 void AddIcons ()
