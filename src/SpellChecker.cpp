@@ -3128,7 +3128,7 @@ newtoken:
       CreateWordUnderline (ScintillaWindow, UnderlineBuffer[i], UnderlineBuffer[i + 1] - 1);
       PrevPos = UnderlineBuffer[i + 1];
     }
-    RemoveUnderline (ScintillaWindow, PrevPos, Offset + TextLen);
+    RemoveUnderline (ScintillaWindow, PrevPos, Offset + TextLen - 1);
   }
 
   // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
