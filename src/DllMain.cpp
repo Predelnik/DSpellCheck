@@ -114,7 +114,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
         GetMenuItemInfo (MainMenu, 0, TRUE, &FileMenuItem);
 
         HMENU Menu = (HMENU) wParam;
-        if (FileMenuItem.hSubMenu != Menu)
+        if (FileMenuItem.hSubMenu != Menu && GetLangsSubMenu () != Menu)
         {
           for (unsigned int i = 0; i < MenuList->size (); i++)
           {
