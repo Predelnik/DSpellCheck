@@ -51,7 +51,7 @@ void SetString (char *&Target, const TCHAR *Str)
   size_t PrevOutSize = 0;
   Target = new char[OutSize];
   char *OutBuf = Target;
-  size_t res = (size_t) -1;
+  size_t res = (size_t) - 1;
 
 #ifndef UNICODE
   strcpy (Target, Str);
@@ -162,7 +162,7 @@ void SetStringDUtf8 (char *&Target, const TCHAR *Str)
     Target = new char[1];
     *Target = '\0';
     CLEAN_AND_ZERO_ARR (TempBuf)
-      return;
+    return;
   }
   SetString (Target, TempBuf); // Cutting off unnecessary symbols.
   CLEAN_AND_ZERO_ARR (TempBuf);
@@ -179,7 +179,7 @@ void SetStringSUtf8 (char *&Target, const char *Str)
   size_t OutSize = Utf8Length (Str) + 1;
   size_t PrevOutSize = 0;
   Target = new char[OutSize];
-  size_t res = (size_t) -1;
+  size_t res = (size_t) - 1;
   char *OutBuf = (char *) Target;
   while (*Str)
   {
@@ -222,7 +222,7 @@ void SetStringDUtf8 (char *&Target, const char *Str)
     Target = new char[1];
     *Target = '\0';
     CLEAN_AND_ZERO_ARR (TempBuf)
-      return;
+    return;
   }
   SetString (Target, TempBuf); // Cutting off unnecessary symbols.
   CLEAN_AND_ZERO_ARR (TempBuf);
@@ -282,7 +282,7 @@ BOOL MatchSpecialChar (TCHAR *Dest, TCHAR *&Source)
 
       c = *(Source++);
       if (c > UCHAR_MAX
-        || !(('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F')))
+          || !(('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F')))
         return FALSE;
 
       buf[0] = (unsigned char) c;
@@ -383,11 +383,11 @@ LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Ms
 BOOL Utf8IsLead (char c)
 {
   return (((c & 0x80) == 0)                       // 0xxxxxxx
-    || ((c & 0xC0) == 0xC0 && (c & 0x20) == 0)    // 110xxxxx
-    || ((c & 0xE0) == 0xE0 && (c & 0x10) == 0)    // 1110xxxx
-    || ((c & 0xF0) == 0xF0 && (c & 0x08) == 0)    // 11110xxx
-    || ((c & 0xF8) == 0xF8 && (c & 0x04) == 0)   // 111110xx
-    || ((c & 0xFC) == 0xFC && (c & 0x02) == 0));
+          || ((c & 0xC0) == 0xC0 && (c & 0x20) == 0)    // 110xxxxx
+          || ((c & 0xE0) == 0xE0 && (c & 0x10) == 0)    // 1110xxxx
+          || ((c & 0xF0) == 0xF0 && (c & 0x08) == 0)    // 11110xxx
+          || ((c & 0xF8) == 0xF8 && (c & 0x04) == 0)   // 111110xx
+          || ((c & 0xFC) == 0xFC && (c & 0x02) == 0));
 }
 
 BOOL Utf8IsCont (char c)
@@ -398,7 +398,7 @@ BOOL Utf8IsCont (char c)
 char *Utf8Dec(const char *string, const char *current)
 {
   const char *temp;
-  if (string > current)
+  if (string >= current)
     return 0;
 
   temp = current - 1;
@@ -460,14 +460,16 @@ long Utf8spn (const char *s, const char *set)
   const char *it = 0;
   it = s;
 
-  for (; *it; it = Utf8Inc (it)) {
+  for (; *it; it = Utf8Inc (it))
+  {
     for (x = set; *x; x = Utf8Inc (x))
     {
       if (Utf8FirstCharsAreEqual (it, x))
         goto continue_outer;
     }
     break;
-continue_outer:;
+continue_outer:
+    ;
   }
   return it - s;
 }
@@ -483,24 +485,28 @@ char *Utf8chr (const char *s, const char *sfc) // Char is first from the string 
   return 0;
 }
 
-char * Utf8strtok (char *s1, const char *Delimit, char **Context)
+char *Utf8strtok (char *s1, const char *Delimit, char **Context)
 {
   char *tmp;
 
   /* Skip leading delimiters if new string. */
-  if ( s1 == NULL ) {
+  if ( s1 == NULL )
+  {
     s1 = *Context;
     if (s1 == NULL)         /* End of story? */
       return NULL;
     else
       s1 += Utf8spn (s1, Delimit);
-  } else {
+  }
+  else
+  {
     s1 += Utf8spn (s1, Delimit);
   }
 
   /* Find end of segment */
   tmp = Utf8pbrk (s1, Delimit);
-  if (tmp) {
+  if (tmp)
+  {
     /* Found another delimiter, split string and save state. */
     *tmp = '\0';
     tmp++;
@@ -511,7 +517,9 @@ char * Utf8strtok (char *s1, const char *Delimit, char **Context)
     }
 
     *Context = tmp;
-  } else {
+  }
+  else
+  {
     /* Last segment, remember that. */
     *Context = NULL;
   }
@@ -544,7 +552,7 @@ bool EquivCharStrings (char *a, char *b)
 size_t HashCharString (char *a)
 {
   size_t Hash = 7;
-  for(unsigned int i = 0; i < strlen (a); i++)
+  for (unsigned int i = 0; i < strlen (a); i++)
   {
     Hash = Hash * 31 + a[i];
   }
@@ -559,7 +567,7 @@ bool EquivTCHARStrings (TCHAR *a, TCHAR *b)
 size_t HashTCHARString (TCHAR *a)
 {
   size_t Hash = 7;
-  for(unsigned int i = 0; i < _tcslen (a); i++)
+  for (unsigned int i = 0; i < _tcslen (a); i++)
   {
     Hash = Hash * 31 + a[i];
   }
@@ -572,27 +580,27 @@ bool SortCompareChars (char *a, char *b)
 }
 
 const TCHAR *const AliasesFrom[] = {_T ("af_Za"), _T ("ak_GH"), _T ("bg_BG"), _T ("ca_ANY"), _T ("ca_ES"), _T ("cop_EG"), _T ("cs_CZ"), _T ("cy_GB"), _T ("da_DK"), _T ("de_AT"), _T ("de_CH"), _T ("de_DE"),
-  _T ("de_DE_comb"), _T ("de_DE_frami"), _T ("de_DE_neu"), _T ("el_GR"), _T ("en_AU"), _T ("en_CA"), _T ("en_GB"), _T ("en_GB-oed"), _T ("en_NZ"), _T ("en_US"), _T ("en_ZA"), _T ("eo_EO"), _T ("es_AR"),
-  _T ("es_BO"), _T ("es_CL"), _T ("es_CO"), _T ("es_CR"), _T ("es_CU"), _T ("es_DO"), _T ("es_EC"), _T ("es_ES"), _T ("es_GT"), _T ("es_HN"), _T ("es_MX"), _T ("es_NEW"), _T ("es_NI"), _T ("es_PA"), _T ("es_PE"),
-  _T ("es_PR"), _T ("es_PY"), _T ("es_SV"), _T ("es_UY"), _T ("es_VE"), _T ("et_EE"),  _T ("fo_FO"), _T ("fr_FR"), _T ("fr_FR-1990"), _T ("fr_FR-1990_1-3-2"), _T ("fr_FR-classique"), _T ("fr_FR-classique_1-3-2"), _T ("fr_FR_1-3-2"), _T ("fy_NL"),
-  _T ("ga_IE"), _T ("gd_GB"), _T ("gl_ES"), _T ("gu_IN"), _T ("he_IL"), _T ("hi_IN"), _T ("hil_PH"), _T ("hr_HR"), _T ("hu_HU"), _T ("ia"), _T ("id_ID"), _T ("is_IS"), _T ("it_IT"), _T ("ku_TR"),
-  _T ("la"), _T ("lt_LT"), _T ("lv_LV"), _T ("mg_MG"), _T ("mi_NZ"), _T ("mk_MK"), _T ("mos_BF"), _T ("mr_IN"), _T ("ms_MY"), _T ("nb_NO"), _T ("ne_NP"), _T ("nl_NL"), _T ("nn_NO"), _T ("nr_ZA"),
-  _T ("ns_ZA"), _T ("ny_MW"), _T ("oc_FR"), _T ("pl_PL"), _T ("pt_BR"), _T ("pt_PT"), _T ("ro_RO"), _T ("ru_RU"), _T ("ru_RU_ie"), _T ("ru_RU_ye"), _T ("ru_RU_yo"), _T ("rw_RW"), _T ("si_SI"), _T ("sk_SK"), _T ("sq_AL"),
-  _T ("ss_ZA"), _T ("st_ZA"), _T ("sv_SE"), _T ("sw_KE"),  _T ("tet_ID"), _T ("th_TH"), _T ("tl_PH"), _T ("tn_ZA"), _T ("ts_ZA"), _T ("uk_UA"), _T ("ur_PK"), _T ("ve_ZA"), _T ("vi-VN"), _T ("xh_ZA"), _T ("zu_ZA")
-};
+                                    _T ("de_DE_comb"), _T ("de_DE_frami"), _T ("de_DE_neu"), _T ("el_GR"), _T ("en_AU"), _T ("en_CA"), _T ("en_GB"), _T ("en_GB-oed"), _T ("en_NZ"), _T ("en_US"), _T ("en_ZA"), _T ("eo_EO"), _T ("es_AR"),
+                                    _T ("es_BO"), _T ("es_CL"), _T ("es_CO"), _T ("es_CR"), _T ("es_CU"), _T ("es_DO"), _T ("es_EC"), _T ("es_ES"), _T ("es_GT"), _T ("es_HN"), _T ("es_MX"), _T ("es_NEW"), _T ("es_NI"), _T ("es_PA"), _T ("es_PE"),
+                                    _T ("es_PR"), _T ("es_PY"), _T ("es_SV"), _T ("es_UY"), _T ("es_VE"), _T ("et_EE"),  _T ("fo_FO"), _T ("fr_FR"), _T ("fr_FR-1990"), _T ("fr_FR-1990_1-3-2"), _T ("fr_FR-classique"), _T ("fr_FR-classique_1-3-2"), _T ("fr_FR_1-3-2"), _T ("fy_NL"),
+                                    _T ("ga_IE"), _T ("gd_GB"), _T ("gl_ES"), _T ("gu_IN"), _T ("he_IL"), _T ("hi_IN"), _T ("hil_PH"), _T ("hr_HR"), _T ("hu_HU"), _T ("ia"), _T ("id_ID"), _T ("is_IS"), _T ("it_IT"), _T ("ku_TR"),
+                                    _T ("la"), _T ("lt_LT"), _T ("lv_LV"), _T ("mg_MG"), _T ("mi_NZ"), _T ("mk_MK"), _T ("mos_BF"), _T ("mr_IN"), _T ("ms_MY"), _T ("nb_NO"), _T ("ne_NP"), _T ("nl_NL"), _T ("nn_NO"), _T ("nr_ZA"),
+                                    _T ("ns_ZA"), _T ("ny_MW"), _T ("oc_FR"), _T ("pl_PL"), _T ("pt_BR"), _T ("pt_PT"), _T ("ro_RO"), _T ("ru_RU"), _T ("ru_RU_ie"), _T ("ru_RU_ye"), _T ("ru_RU_yo"), _T ("rw_RW"), _T ("si_SI"), _T ("sk_SK"), _T ("sq_AL"),
+                                    _T ("ss_ZA"), _T ("st_ZA"), _T ("sv_SE"), _T ("sw_KE"),  _T ("tet_ID"), _T ("th_TH"), _T ("tl_PH"), _T ("tn_ZA"), _T ("ts_ZA"), _T ("uk_UA"), _T ("ur_PK"), _T ("ve_ZA"), _T ("vi-VN"), _T ("xh_ZA"), _T ("zu_ZA")
+                                   };
 const TCHAR *const AliasesTo[] = {_T ("Afrikaans"), _T ("Akan"), _T ("Bulgarian"), _T ("Catalan (Any)"), _T ("Catalan (Spain)"), _T ("Coptic (Bohairic dialect)"), _T ("Czech"), _T ("Welsh"),
-  _T ("Danish"), _T ("German (Austria)"), _T ("German (Switzerland)"), _T ("German (Germany)"), _T ("German (Old and New Spelling)"), _T ("German (Additional)"), _T ("German (New Spelling)"),
-  _T ("Greek"), _T ("English (Australia)"), _T ("English (Canada)"), _T ("English (Great Britain)"), _T ("English (Great Britain) [OED]"), _T ("English (New Zealand)"),
-  _T ("English (United States)"), _T ("English (South Africa)"), _T ("Esperanto"), _T ("Spanish (Argentina)"), _T ("Spanish (Bolivia)"), _T ("Spanish (Chile)"), _T ("Spanish (Colombia)"), _T ("Spanish (Costa Rica)"),
-  _T ("Spanish (Cuba)"), _T ("Spanish (Dominican Republic)"), _T ("Spanish (Ecuador)"), _T ("Spanish (Spain)"), _T ("Spanish (Guatemala)"), _T ("Spanish (Honduras)"), _T ("Spanish (Mexico)"),
-  _T ("Spanish (New)"), _T ("Spanish (Nicaragua)"), _T ("Spanish (Panama)"), _T ("Spanish (Peru)"), _T ("Spanish (Puerto Rico)"), _T ("Spanish (Paraguay)"), _T ("Spanish (El Salvador)"), _T ("Spanish (Uruguay)"),
-  _T ("Spanish (Bolivarian Republic of Venezuela)"), _T ("Estonian"), _T ("Faroese"), _T ("French"), _T ("French (1990)"), _T ("French (1990)"), _T ("French (Classique)"), _T ("French (Classique)"), _T ("French"), _T ("Frisian"), _T ("Irish"), _T ("Scottish Gaelic"),
-  _T ("Galician"), _T ("Gujarati"), _T ("Hebrew"), _T ("Hindi"), _T ("Filipino"), _T ("Croatian"), _T ("Hungarian"), _T ("Interlingua"), _T ("Indonesian"), _T ("Icelandic"), _T ("Italian"), _T ("Kurdish"),
-  _T ("Latin"), _T ("Lithuanian"), _T ("Latvian"), _T ("Malagasy"), _T ("Maori"), _T ("Macedonian (FYROM)"), _T ("Mossi"), _T ("Marathi"), _T ("Malay"), _T ("Norwegian (Bokmal)"), _T ("Nepali"), _T ("Dutch"),
-  _T ("Norwegian (Nynorsk)"), _T ("Ndebele"), _T ("Northern Sotho"), _T ("Chichewa"), _T ("Occitan"), _T ("Polish"), _T ("Portuguese (Brazil)"), _T ("Portuguese (Portugal)"), _T ("Romanian"), _T ("Russian"),
-  _T ("Russian (without io)"), _T ("Russian (without io)"), _T ("Russian (with io)"), _T ("Kinyarwanda"), _T ("Slovenian"), _T ("Slovak"), _T ("Alban"), _T ("Swazi"), _T ("Northern Sotho"), _T ("Swedish"),
-  _T ("Kiswahili"), _T ("Tetum"), _T ("Thai"), _T ("Tagalog"), _T ("Setswana"), _T ("Tsonga"), _T ("Ukrainian"), _T ("Urdu"), _T ("Venda"), _T ("Vietnamese"), _T ("isiXhosa"), _T ("isiZulu")
-};
+                                  _T ("Danish"), _T ("German (Austria)"), _T ("German (Switzerland)"), _T ("German (Germany)"), _T ("German (Old and New Spelling)"), _T ("German (Additional)"), _T ("German (New Spelling)"),
+                                  _T ("Greek"), _T ("English (Australia)"), _T ("English (Canada)"), _T ("English (Great Britain)"), _T ("English (Great Britain) [OED]"), _T ("English (New Zealand)"),
+                                  _T ("English (United States)"), _T ("English (South Africa)"), _T ("Esperanto"), _T ("Spanish (Argentina)"), _T ("Spanish (Bolivia)"), _T ("Spanish (Chile)"), _T ("Spanish (Colombia)"), _T ("Spanish (Costa Rica)"),
+                                  _T ("Spanish (Cuba)"), _T ("Spanish (Dominican Republic)"), _T ("Spanish (Ecuador)"), _T ("Spanish (Spain)"), _T ("Spanish (Guatemala)"), _T ("Spanish (Honduras)"), _T ("Spanish (Mexico)"),
+                                  _T ("Spanish (New)"), _T ("Spanish (Nicaragua)"), _T ("Spanish (Panama)"), _T ("Spanish (Peru)"), _T ("Spanish (Puerto Rico)"), _T ("Spanish (Paraguay)"), _T ("Spanish (El Salvador)"), _T ("Spanish (Uruguay)"),
+                                  _T ("Spanish (Bolivarian Republic of Venezuela)"), _T ("Estonian"), _T ("Faroese"), _T ("French"), _T ("French (1990)"), _T ("French (1990)"), _T ("French (Classique)"), _T ("French (Classique)"), _T ("French"), _T ("Frisian"), _T ("Irish"), _T ("Scottish Gaelic"),
+                                  _T ("Galician"), _T ("Gujarati"), _T ("Hebrew"), _T ("Hindi"), _T ("Filipino"), _T ("Croatian"), _T ("Hungarian"), _T ("Interlingua"), _T ("Indonesian"), _T ("Icelandic"), _T ("Italian"), _T ("Kurdish"),
+                                  _T ("Latin"), _T ("Lithuanian"), _T ("Latvian"), _T ("Malagasy"), _T ("Maori"), _T ("Macedonian (FYROM)"), _T ("Mossi"), _T ("Marathi"), _T ("Malay"), _T ("Norwegian (Bokmal)"), _T ("Nepali"), _T ("Dutch"),
+                                  _T ("Norwegian (Nynorsk)"), _T ("Ndebele"), _T ("Northern Sotho"), _T ("Chichewa"), _T ("Occitan"), _T ("Polish"), _T ("Portuguese (Brazil)"), _T ("Portuguese (Portugal)"), _T ("Romanian"), _T ("Russian"),
+                                  _T ("Russian (without io)"), _T ("Russian (without io)"), _T ("Russian (with io)"), _T ("Kinyarwanda"), _T ("Slovenian"), _T ("Slovak"), _T ("Alban"), _T ("Swazi"), _T ("Northern Sotho"), _T ("Swedish"),
+                                  _T ("Kiswahili"), _T ("Tetum"), _T ("Thai"), _T ("Tagalog"), _T ("Setswana"), _T ("Tsonga"), _T ("Ukrainian"), _T ("Urdu"), _T ("Venda"), _T ("Vietnamese"), _T ("isiXhosa"), _T ("isiZulu")
+                                 };
 
 // Language Aliases
 BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName)

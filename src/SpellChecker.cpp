@@ -101,7 +101,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   ProxyPort = 0;
   SettingsLoaded = FALSE;
   UseProxy = FALSE;
-  SettingsToSave = new std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)> (SortCompare);
+  SettingsToSave = new std::map<TCHAR *, DWORD, bool ( *)(TCHAR *, TCHAR *)> (SortCompare);
   if (SendMsgToNpp (NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0))
   {
     SetUseAllocatedIds (TRUE);
@@ -141,7 +141,7 @@ void SpellChecker::PrepareStringForConversion ()
     *OutString[i] = OutBuf;
     Res = iconv (Conv, &InBuf, &InSize, &OutBuf, &OutSize);
     CLEAN_AND_ZERO_ARR (Buf);
-    if (Res == (size_t) -1)
+    if (Res == (size_t) - 1)
     {
       CLEAN_AND_ZERO_ARR (*OutString[i]);
     }
@@ -182,7 +182,7 @@ SpellChecker::~SpellChecker ()
   for (int i = 0; i < countof (DefaultServers); i++)
     CLEAN_AND_ZERO_ARR (DefaultServers[i]);
 
-  std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)>::iterator it = SettingsToSave->begin ();
+  std::map<TCHAR *, DWORD, bool ( *)(TCHAR *, TCHAR *)>::iterator it = SettingsToSave->begin ();
   for (; it != SettingsToSave->end (); ++it)
   {
     delete ((*it).first);
@@ -338,8 +338,8 @@ void SpellChecker::ReinitLanguageLists ()
   TCHAR *CurrentLang;
 
   AbstractSpellerInterface *SpellerToUse = (SpellerId == 1 ?
-    (AbstractSpellerInterface *)HunspellSpeller :
-  (AbstractSpellerInterface *)AspellSpeller);
+                                            (AbstractSpellerInterface *)HunspellSpeller :
+                                            (AbstractSpellerInterface *)AspellSpeller);
 
   if (SpellerId == 0)
   {
@@ -385,9 +385,9 @@ void SpellChecker::ReinitLanguageLists ()
       RecheckVisibleBothViews ();
     }
     SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
-      SpellerId == 1 ? HunspellLanguage : AspellLanguage,
-      SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
-      SpellerId == 1 ? HunspellSpeller : 0);
+                                                                 SpellerId == 1 ? HunspellLanguage : AspellLanguage,
+                                                                 SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
+                                                                 SpellerId == 1 ? HunspellSpeller : 0);
   }
   else
   {
@@ -658,17 +658,17 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
             return;
         }
         int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? (MFT_RADIOCHECK | MF_CHECKED)  : MF_UNCHECKED;
-        Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () :MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
+        Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () : MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
         Res = AppendMenu (NewMenu, MF_SEPARATOR, -1, 0);
-        Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () :MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Set Multiple Languages..."));
+        Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () : MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Set Multiple Languages..."));
         if (LibMode == 1) // Only Hunspell supported
         {
-          Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () :MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download More Languages..."));
-          Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? REMOVE_DICS + GetLangsMenuIdStart () :MAKEWORD (REMOVE_DICS, LANGUAGE_MENU_ID), _T ("Remove Unneeded Languages..."));
+          Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () : MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download More Languages..."));
+          Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? REMOVE_DICS + GetLangsMenuIdStart () : MAKEWORD (REMOVE_DICS, LANGUAGE_MENU_ID), _T ("Remove Unneeded Languages..."));
         }
       }
       else if (LibMode == 1)
-        Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () :MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download Languages..."));
+        Res = AppendMenu (NewMenu, MF_STRING , GetUseAllocatedIds () ? DOWNLOAD_DICS + GetLangsMenuIdStart () : MAKEWORD (DOWNLOAD_DICS, LANGUAGE_MENU_ID), _T ("Download Languages..."));
     }
   }
   else
@@ -1842,7 +1842,7 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
 
   if (!UseTextCursor)
   {
-    if(GetCursorPos(&p) == 0)
+    if (GetCursorPos(&p) == 0)
       return TRUE;
 
     ScreenToClient(GetScintillaWindow (NppDataInstance), &p);
@@ -1850,9 +1850,36 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
     initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
   }
   else
-    initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
+  {
+    int BufferSize = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSELTEXT);
+    char *Buffer = new char[BufferSize];
+    SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSELTEXT, 0, (LPARAM) Buffer);
+    switch (CurrentEncoding)
+    {
+    case ENCODING_UTF8:
+      while (*Buffer)
+      {
+        // If selection contains at least one delimiter then we're done
+        if (Utf8chr (DelimUtf8Converted, Buffer))
+          return TRUE;
+        Buffer = Utf8Inc (Buffer);
+      }
+      break;
+    case ENCODING_ANSI:
+      while (*Buffer)
+      {
+        if (strchr (DelimConverted, *Buffer))
+          return TRUE;
+        Buffer++;
+      }
+      break;
+    }
 
-  if(initCharPos != -1){
+    initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
+  }
+
+  if (initCharPos != -1)
+  {
     int Line = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, initCharPos);
     long LineLength = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINELENGTH, Line);
     char *Buf = new char[LineLength + 1];
@@ -1896,7 +1923,11 @@ char *SpellChecker::GetWordAt (long CharPos, char *Text, long Offset)
   if (CurrentEncoding == ENCODING_UTF8)
   {
     if (Utf8chr ( DelimUtf8Converted, Iterator))
-      Iterator--;
+      Iterator = Utf8Dec (Text, Iterator);
+
+    if (Iterator == 0)
+      return 0;
+
     while ((!Utf8chr ( DelimUtf8Converted, Iterator)) && Text < Iterator)
       Iterator = (char *) Utf8Dec (Text, Iterator);
   }
@@ -1904,8 +1935,14 @@ char *SpellChecker::GetWordAt (long CharPos, char *Text, long Offset)
   {
     if (strchr ( DelimConverted, *Iterator))
       Iterator--;
+    if (Iterator < Text)
+      return 0;
+
     while (!strchr (DelimConverted, *Iterator) && Text < Iterator)
       Iterator--;
+
+    if (Iterator < Text)
+      return 0;
   }
 
   UsedText = Iterator;
@@ -1939,7 +1976,7 @@ void SpellChecker::SetSuggestionsBoxTransparency ()
 {
   // Set WS_EX_LAYERED on this window
   SetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE,
-    GetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE) | WS_EX_LAYERED);
+                GetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE) | WS_EX_LAYERED);
   SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * SBTrans) / 100, LWA_ALPHA);
   SuggestionsInstance->display (true);
   SuggestionsInstance->display (false);
@@ -1974,7 +2011,8 @@ void SpellChecker::InitSuggestionsBox ()
   int XPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POINTXFROMPOSITION, 0, WUCPosition);
   int YPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POINTYFROMPOSITION, 0, WUCPosition);
 
-  p.x = XPos; p.y = YPos;
+  p.x = XPos;
+  p.y = YPos;
   RECT R;
   GetWindowRect (GetCurrentScintilla (), &R);
   ClientToScreen (GetScintillaWindow (NppDataInstance), &p);
@@ -1987,8 +2025,8 @@ void SpellChecker::InitSuggestionsBox ()
 void SpellChecker::ProcessMenuResult (UINT MenuId)
 {
   if ((!GetUseAllocatedIds () && HIBYTE (MenuId) != DSPELLCHECK_MENU_ID &&
-    HIBYTE (MenuId) != LANGUAGE_MENU_ID)
-    || (GetUseAllocatedIds () && ((int) MenuId < GetContextMenuIdStart () || (int) MenuId > GetContextMenuIdStart () + 350)))
+       HIBYTE (MenuId) != LANGUAGE_MENU_ID)
+      || (GetUseAllocatedIds () && ((int) MenuId < GetContextMenuIdStart () || (int) MenuId > GetContextMenuIdStart () + 350)))
     return;
   int UsedMenuId = 0;
   if (GetUseAllocatedIds ())
@@ -2067,8 +2105,8 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
         LangString = _T ("<MULTIPLE>");
       }
       else if (Result == CUSTOMIZE_MULTIPLE_DICS ||
-        Result == DOWNLOAD_DICS ||
-        Result == REMOVE_DICS)
+               Result == DOWNLOAD_DICS ||
+               Result == REMOVE_DICS)
       {
         // All actions are done in GUI thread in that case
         return;
@@ -2109,7 +2147,7 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   }
   else
   {
-    SuggestionMenuItems = new std::vector <SuggestionsMenuItem*>;
+    SuggestionMenuItems = new std::vector <SuggestionsMenuItem *>;
   }
 
   SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
@@ -2375,7 +2413,7 @@ void SpellChecker::SaveSettings ()
   SaveToIni (_T ("Proxy_Port"), ProxyPort, 808);
   SaveToIni (_T ("Proxy_Is_Anonymous"), ProxyAnonymous, TRUE);
   SaveToIni (_T ("Proxy_Type"), ProxyType, 0);
-  std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)>::iterator it = SettingsToSave->begin ();
+  std::map<TCHAR *, DWORD, bool ( *)(TCHAR *, TCHAR *)>::iterator it = SettingsToSave->begin ();
   for (; it != SettingsToSave->end (); ++it)
   {
     SaveToIni ((*it).first, LOWORD ((*it).second), HIWORD ((*it).second));
@@ -2518,7 +2556,7 @@ void SpellChecker::RemoveUnderline (HWND ScintillaWindow, int start, int end)
 char *SpellChecker::GetDocumentText ()
 {
   int lengthDoc = (SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLENGTH) + 1);
-  char * buf = new char [lengthDoc];
+  char *buf = new char [lengthDoc];
   SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXT, lengthDoc, (LPARAM)buf);
   return buf;
 }
@@ -2560,7 +2598,7 @@ char *SpellChecker::GetVisibleText(long *offset, BOOL NotIntersectionOnly)
 
   char *Buf = new char [range.chrg.cpMax - range.chrg.cpMin + 1]; // + one byte for terminating zero
   range.lpstrText = Buf;
-  SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, NULL ,(LPARAM)&range);
+  SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, NULL , (LPARAM)&range);
   *offset = range.chrg.cpMin;
   Buf[range.chrg.cpMax - range.chrg.cpMin] = 0;
   return Buf;
@@ -2569,7 +2607,7 @@ char *SpellChecker::GetVisibleText(long *offset, BOOL NotIntersectionOnly)
 void SpellChecker::ClearAllUnderlines ()
 {
   int length = SendMsgToEditor(NppDataInstance, SCI_GETLENGTH);
-  if(length > 0)
+  if (length > 0)
   {
     PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
     PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length);
@@ -2659,7 +2697,7 @@ void SpellChecker::SaveToIniUtf8 (const TCHAR *Name, const char *Value,  const c
 
 void SpellChecker::LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *DefaultValue, BOOL InQuotes)
 {
-  if (!Name|| !DefaultValue)
+  if (!Name || !DefaultValue)
     return;
 
   CLEAN_AND_ZERO_ARR (Value);
@@ -3024,22 +3062,22 @@ CleanUp:
 void SpellChecker::CheckSpecialDelimeters (char *&Word, const char *TextStart, long &WordStart, long &WordEnd)
 {
   if (RemoveBoundaryApostrophes)
-      {
-        while (*Word == '\'' && *Word != '\0')
-        {
-          *Word = '\0';
-          Word++;
-          WordStart++;
-        }
+  {
+    while (*Word == '\'' && *Word != '\0')
+    {
+      *Word = '\0';
+      Word++;
+      WordStart++;
+    }
 
-        char *it = Word + strlen (Word) - 1;
-        while (*it == '\'' && *it != '\0' && it > TextStart)
-        {
-          *it = '\0';
-          WordEnd--;
-          it--;
-        }
-      }
+    char *it = Word + strlen (Word) - 1;
+    while (*it == '\'' && *it != '\0' && it > TextStart)
+    {
+      *it = '\0';
+      WordEnd--;
+      it--;
+    }
+  }
 }
 
 BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
@@ -3154,7 +3192,7 @@ newtoken:
 void SpellChecker::ClearVisibleUnderlines ()
 {
   int length = SendMsgToEditor(NppDataInstance, SCI_GETLENGTH);
-  if(length > 0)
+  if (length > 0)
   {
     PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
     PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length);
@@ -3262,7 +3300,7 @@ void SpellChecker::RecheckVisible (BOOL NotIntersectionOnly)
     ClearAllUnderlines ();
 }
 
-void SpellChecker::ErrorMsgBox (const TCHAR * message)
+void SpellChecker::ErrorMsgBox (const TCHAR *message)
 {
   TCHAR buf [DEFAULT_BUF_SIZE];
   _stprintf_s (buf, _T ("%s"), "DSpellCheck Error:", message, _tcslen (message));
