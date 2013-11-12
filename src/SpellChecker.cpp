@@ -1839,6 +1839,8 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
   BOOL Ret = TRUE;
   POINT p;
   int initCharPos = -1;
+  int SelectionStart = 0;
+  int SelectionEnd = 0;
 
   if (!UseTextCursor)
   {
@@ -1851,30 +1853,8 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
   }
   else
   {
-    int BufferSize = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSELTEXT);
-    char *Buffer = new char[BufferSize];
-    SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSELTEXT, 0, (LPARAM) Buffer);
-    switch (CurrentEncoding)
-    {
-    case ENCODING_UTF8:
-      while (*Buffer)
-      {
-        // If selection contains at least one delimiter then we're done
-        if (Utf8chr (DelimUtf8Converted, Buffer))
-          return TRUE;
-        Buffer = Utf8Inc (Buffer);
-      }
-      break;
-    case ENCODING_ANSI:
-      while (*Buffer)
-      {
-        if (strchr (DelimConverted, *Buffer))
-          return TRUE;
-        Buffer++;
-      }
-      break;
-    }
-
+    SelectionStart = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSELECTIONSTART);
+    SelectionEnd = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSELECTIONEND);
     initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
   }
 
@@ -1897,6 +1877,11 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
       long PosEnd = Pos + strlen (Word);
       CheckSpecialDelimeters (Word, Buf, Pos, PosEnd);
       long WordLen = PosEnd - Pos;
+      if (SelectionStart != SelectionEnd && SelectionStart != Pos && SelectionEnd != Pos + WordLen - 1)
+      {
+        CLEAN_AND_ZERO_ARR (Buf);
+        return TRUE;
+      }
       if (CheckWord (Word, Pos, Pos + WordLen - 1))
       {
         Ret = TRUE;
