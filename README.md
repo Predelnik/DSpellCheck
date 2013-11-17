@@ -126,3 +126,6 @@ v1.2.9
 v1.2.10
 * Prevent suggestions from appearing in totally wrong places.
 * Make verbose Aspell reporting if error happened.
+
+v1.2.11
+* Fix wrong context menu behaviour when selection isn't empty.

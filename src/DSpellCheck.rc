@@ -255,8 +255,8 @@ IDI_REFRESH        ICON           "..\\Resources\\arrow_refresh.ico"
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 1 VERSIONINFO
-    FILEVERSION     1,2,10,0
-    PRODUCTVERSION  1,2,10,0
+    FILEVERSION     1,2,11,0
+    PRODUCTVERSION  1,2,11,0
     FILEOS          VOS__WINDOWS32
     FILETYPE        VFT_DLL
     FILESUBTYPE     VFT2_UNKNOWN
@@ -270,12 +270,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
             VALUE "Comments", "Source - https://github.com/Predelnik/DSpellCheck"
             VALUE "CompanyName", "Sergey Semushin <predelnik@gmail.com>"
             VALUE "FileDescription", "DSpellCheck - Spell Checker Plugin for Notepad++"
-            VALUE "FileVersion", "1.2.10.0"
+            VALUE "FileVersion", "1.2.11.0"
             VALUE "InternalName", "DSpellCheck"
             VALUE "LegalCopyright", "Copyright (C) 2013 Sergey Semushin"
             VALUE "OriginalFilename", "DSpellCheck.dll"
             VALUE "ProductName", "DSpellCheck"
-            VALUE "ProductVersion", "1,2,10,0"
+            VALUE "ProductVersion", "1,2,11,0"
             VALUE "SpecialBuild", "UNICODE"
         }
     }
