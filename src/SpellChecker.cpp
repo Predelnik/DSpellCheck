@@ -1877,7 +1877,7 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
       long PosEnd = Pos + strlen (Word);
       CheckSpecialDelimeters (Word, Buf, Pos, PosEnd);
       long WordLen = PosEnd - Pos;
-      if (SelectionStart != SelectionEnd && SelectionStart != Pos && SelectionEnd != Pos + WordLen - 1)
+      if (SelectionStart != SelectionEnd && (SelectionStart != Pos || SelectionEnd != Pos + WordLen))
       {
         CLEAN_AND_ZERO_ARR (Buf);
         return TRUE;
