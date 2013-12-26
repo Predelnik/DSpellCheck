@@ -35,6 +35,7 @@ public:
   void SetProgress (int value);
   void SetBottomMessage (TCHAR *Message);
   void SetTopMessage (TCHAR *Message);
+  void SetMarquee (bool animated);
 private:
   HWND HDescBottom;
   HWND HDescTop;

@@ -73,6 +73,18 @@ void Progress::SetProgress (int value)
   SendMessage (HProgressBar, PBM_SETPOS, value, 0);
 }
 
+void Progress::SetMarquee (bool animated)
+{
+  DWORD dwStyle = ::GetWindowLong(HProgressBar, GWL_STYLE);
+  if (animated)
+    dwStyle = dwStyle | PBS_MARQUEE;
+  else
+    dwStyle = dwStyle & (~PBS_MARQUEE);
+
+  ::SetWindowLong(HProgressBar, GWL_STYLE, dwStyle);
+  SendMessage (HProgressBar, PBM_SETMARQUEE, (int) animated, 0);
+}
+
 void Progress::SetBottomMessage (TCHAR *Message)
 {
   Static_SetText (HDescBottom, Message);

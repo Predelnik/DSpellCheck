@@ -708,7 +708,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     if (!FileHandle)
       goto cleanup;
 
-    GetProgress ()->SetProgress (100);
+    GetProgress ()->SetMarquee (true);
     while (1)
     {
       InternetQueryDataAvailable (OpenedURL, &BytesToRead, 0, 0);
@@ -740,6 +740,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       }
     }
     _close (FileHandle);
+    GetProgress ()->SetMarquee (false);
   }
 cleanup:
   if (WinInetHandle)

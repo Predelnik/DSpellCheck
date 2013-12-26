@@ -83,6 +83,7 @@ void SelectProxy::DisableControls ()
   EnableWindow (HHostName, ProxyIsUsed);
   EnableWindow (HPassword, ProxyIsUsed);
   EnableWindow (HPort, ProxyIsUsed);
+  EnableWindow (HProxyType, ProxyIsUsed);
 
   if (ProxyIsUsed)
   {
