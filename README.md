@@ -129,3 +129,7 @@ v1.2.10
 
 v1.2.11
 * Fix wrong context menu behaviour when selection isn't empty.
+
+v1.2.12
+* Minor fixes withe context menu on selection.
+* Add marquee style to progress bar for dictionaries being downloaded through ftp web proxy.
