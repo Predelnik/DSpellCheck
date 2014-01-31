@@ -133,7 +133,8 @@ private:
   {
     UNDERLINE_ERRORS = 0,
     FIND_FIRST = 1,
-    FIND_LAST = 2
+    FIND_LAST = 2,
+    GET_FIRST = 3, // Returns position of first (for recurring usage)
   };
 
   HWND GetCurrentScintilla ();
@@ -153,8 +154,7 @@ private:
   BOOL CheckWord (char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
   char *GetVisibleText(long *offset, BOOL NotIntersectionOnly = FALSE);
-  char *GetDocumentText ();
-  BOOL CheckText (char *TextToCheck, long offset, CheckTextMode Mode);
+  int CheckText (char *TextToCheck, long offset, CheckTextMode Mode);
   void CheckVisible (BOOL NotIntersectionOnly = FALSE);
   void setEncodingById (int EncId);
   void SaveSettings ();
@@ -191,6 +191,7 @@ private:
   void LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *DefaultValue, BOOL InQuotes = 0);
   void LoadFromIni (int &Value, const TCHAR *Name, int DefaultValue);
   void LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char *DefaultValue, BOOL InQuotes = 0);
+  void CopyMisspellingsToClipboard();
 
 private:
 

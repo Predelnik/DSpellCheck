@@ -488,6 +488,10 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     SaveSettings ();
     break;
 
+  case EID_COPY_MISSPELLINGS_TO_CLIPBOARD:
+    CopyMisspellingsToClipboard ();
+    break;
+
   case EID_HIDE_DIALOG:
     SettingsDlgInstance->display (false);
     break;
@@ -2537,14 +2541,6 @@ void SpellChecker::RemoveUnderline (HWND ScintillaWindow, int start, int end)
   PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
 }
 
-// Warning - temporary buffer will be created
-char *SpellChecker::GetDocumentText ()
-{
-  int lengthDoc = (SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLENGTH) + 1);
-  char *buf = new char [lengthDoc];
-  SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXT, lengthDoc, (LPARAM)buf);
-  return buf;
-}
 
 void SpellChecker::GetVisibleLimits(long &Start, long &Finish)
 {
@@ -3065,10 +3061,20 @@ void SpellChecker::CheckSpecialDelimeters (char *&Word, const char *TextStart, l
   }
 }
 
-BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
+int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
 {
   if (!TextToCheck || !*TextToCheck)
-    return FALSE;
+  {
+    switch (Mode)
+    {
+    case SpellChecker::UNDERLINE_ERRORS:
+    case SpellChecker::FIND_FIRST:
+    case SpellChecker::FIND_LAST:
+      return FALSE;
+    case SpellChecker::GET_FIRST:
+      return -1;
+    }
+  }
 
   HWND ScintillaWindow = GetCurrentScintilla ();
   int oldid = SendMsgToEditor (ScintillaWindow, NppDataInstance, SCI_GETINDICATORCURRENT);
@@ -3126,6 +3132,9 @@ BOOL SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode
             ResultingWordEnd = WordEnd;
           }
           break;
+        case GET_FIRST:
+          return WordStart;
+          break;
         }
         if (stop)
           break;
@@ -3162,6 +3171,9 @@ newtoken:
     return TRUE;
   case FIND_FIRST:
     return stop;
+  case GET_FIRST:
+    return -1;
+    break;
   case FIND_LAST:
     if (ResultingWordStart == -1)
       return FALSE;
@@ -3290,4 +3302,56 @@ void SpellChecker::ErrorMsgBox (const TCHAR *message)
   TCHAR buf [DEFAULT_BUF_SIZE];
   _stprintf_s (buf, _T ("%s"), "DSpellCheck Error:", message, _tcslen (message));
   MessageBox (NppDataInstance->_nppHandle, message, _T("Error Happened!"), MB_OK | MB_ICONSTOP);
+}
+
+void SpellChecker::CopyMisspellingsToClipboard ()
+{
+  int lengthDoc = (SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLENGTH) + 1);
+  char *buf = new char [lengthDoc];
+  SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXT, lengthDoc, (LPARAM)buf);
+  int res = 0;
+  std::string str; // Yay for first use of std::stirng
+  do
+  {
+     res = CheckText (buf + res, res, GET_FIRST);
+     if (res != -1)
+     {
+       str += std::string (buf + res);
+       str += "\n";
+     }
+     else
+       break;
+
+     while (*(buf + res) != 0)
+       res++;
+
+     while (*(buf + res) == 0)
+       res++;
+
+     if (res >= lengthDoc)
+       break;
+  } while (true);
+
+  TCHAR *wchar_str = 0;
+
+  switch (CurrentEncoding)
+  {
+  case ENCODING_UTF8:
+    SetStringSUtf8 (wchar_str, str.c_str ());
+    break;
+  case ENCODING_ANSI:
+    SetString (wchar_str, str.c_str ());
+    break;
+  }
+
+  const size_t len = (_tcslen (wchar_str) + 1) * 2;
+  HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+  memcpy(GlobalLock(hMem), wchar_str, len);
+  GlobalUnlock(hMem);
+  OpenClipboard(0);
+  EmptyClipboard();
+  SetClipboardData(CF_UNICODETEXT, hMem);
+  CloseClipboard();
+  CLEAN_AND_ZERO_ARR (buf);
+  CLEAN_AND_ZERO_ARR (wchar_str);
 }

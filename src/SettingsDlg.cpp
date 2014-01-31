@@ -938,6 +938,13 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
       return TRUE;
     }
     break;
+  case WM_CONTEXTMENU:
+    {
+      HMENU menu = CreatePopupMenu ();
+      AppendMenu (menu, MF_STRING, 0, _T ("Copy All Misspelled Words in Current Document to Clipboard"));
+      TrackPopupMenuEx (menu, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), _hSelf, NULL);
+    }
+    break;
   case WM_NOTIFY :
     {
       NMHDR *nmhdr = (NMHDR *)lParam;
@@ -956,6 +963,11 @@ BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lPara
     {
       switch (LOWORD (wParam))
       {
+      case 0: // Menu
+        {
+          SendEvent (EID_COPY_MISSPELLINGS_TO_CLIPBOARD);
+        }
+        break;
       case IDAPPLY:
         if (HIWORD (wParam) == BN_CLICKED)
         {

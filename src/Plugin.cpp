@@ -540,31 +540,31 @@ void commandMenuInit()
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'a' - 'a';
-  setCommand(0, TEXT("Spell Check Document Automatically"), SwitchAutoCheckText, shKey, false);
+  setNextCommand(TEXT("Spell Check Document Automatically"), SwitchAutoCheckText, shKey, false);
   shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'n' - 'a';
-  setCommand(1, TEXT("Find Next Misspelling"), FindNextMistake, shKey, false);
+  setNextCommand(TEXT("Find Next Misspelling"), FindNextMistake, shKey, false);
   shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'b' - 'a';
-  setCommand(2, TEXT("Find Previous Misspelling"), FindPrevMistake, shKey, false);
+  setNextCommand(TEXT("Find Previous Misspelling"), FindPrevMistake, shKey, false);
 
   shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'd' - 'a';
-  setCommand(3, TEXT("Change Current Language"), QuickLangChangeContext, shKey, false);
-  setCommand(4, TEXT("---"), NULL, NULL, false);
+  setNextCommand(TEXT("Change Current Language"), QuickLangChangeContext, shKey, false);
+  setNextCommand(TEXT("---"), NULL, NULL, false);
 
-  setCommand(5, TEXT("Settings..."), StartSettings, NULL, false);
-  setCommand(6, TEXT("Online Manual"), StartManual, NULL, false);
-  setCommand(7, TEXT("About"), StartAboutDlg, NULL, false);
+  setNextCommand(TEXT("Settings..."), StartSettings, NULL, false);
+  setNextCommand(TEXT("Online Manual"), StartManual, NULL, false);
+  setNextCommand(TEXT("About"), StartAboutDlg, NULL, false);
 }
 
 void AddIcons ()
@@ -684,18 +684,24 @@ BOOL GetAutoCheckText ()
 //
 // Function that initializes plug-in commands
 //
-bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool check0nInit)
+static int counter = 0;
+
+bool setNextCommand(TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool check0nInit)
 {
-  if (index >= nbFunc)
+  if (counter >= nbFunc)
     return false;
 
   if (!pFunc)
-    return false;
+    {
+      counter++;
+      return false;
+    }
 
-  lstrcpy(funcItem[index]._itemName, cmdName);
-  funcItem[index]._pFunc = pFunc;
-  funcItem[index]._init2Check = check0nInit;
-  funcItem[index]._pShKey = sk;
+  lstrcpy(funcItem[counter]._itemName, cmdName);
+  funcItem[counter]._pFunc = pFunc;
+  funcItem[counter]._init2Check = check0nInit;
+  funcItem[counter]._pShKey = sk;
+  counter++;
 
   return true;
 }

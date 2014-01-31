@@ -63,7 +63,7 @@ void commandMenuCleanUp();
 //
 // Function which sets your command
 //
-bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
+bool setNextCommand(TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
 
 // WARNING: Consequent messages guaranteed to be delivered in order, only if they are in corresponding order in enum
 // TODO: Change events system to PostThreadMessage
@@ -79,6 +79,7 @@ typedef enum {
   EID_RECHECK_VISIBLE,
   EID_RECHECK_VISIBLE_BOTH_VIEWS,
   EID_RECHECK_INTERSECTION,
+  EID_COPY_MISSPELLINGS_TO_CLIPBOARD,
   EID_KILLTHREAD,
   EID_THREADKILLED,
   EID_INIT_SUGGESTIONS_BOX,
