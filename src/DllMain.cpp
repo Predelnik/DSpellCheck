@@ -74,10 +74,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     break;
 
   case DLL_PROCESS_DETACH:
-    pluginCleanUp();
     _CrtDumpMemoryLeaks();
-    if (wndProcNotepad != NULL)
-      ::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LONG)wndProcNotepad); // Removing subclassing
     break;
 
   case DLL_THREAD_ATTACH:
@@ -227,7 +224,7 @@ VOID CALLBACK ExecuteQueue (
   RestylingCausedRecheckWasDone = TRUE;
 }
 
-extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
+extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
 {
   /*
   // DEBUG_CODE:
@@ -235,95 +232,109 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
   int Style = SendMsgToEditor(&nppData, SCI_GETSTYLEAT, CurPos);
   */
   switch (notifyCode->nmhdr.code)
-  {
-  case NPPN_SHUTDOWN:
     {
-      SendEvent (EID_KILLTHREAD);
-      SendNetworkEvent (EID_KILLNETWORKTHREAD);
-      commandMenuCleanUp();
-      DeleteTimerQueueTimer (0, Timer, 0);
-    }
-    break;
-
-  case NPPN_READY:
-    {
-      RegisterCustomMessages ();
-      InitClasses ();
-      CheckQueue.clear ();
-      CreateThreadResources ();
-      LoadSettings ();
-      SendEvent (EID_CHECK_FILE_NAME);
-      CreateHooks ();
-      CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
-      SendEvent (EID_RECHECK_VISIBLE_BOTH_VIEWS);
-      RestylingCausedRecheckWasDone = FALSE;
-      SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
-      SendEvent (EID_UPDATE_LANG_LISTS); // To update quick lang change menu
-      UpdateLangsMenu ();
-    }
-    break;
-
-  case NPPN_BUFFERACTIVATED:
-    {
-      SendEvent (EID_CHECK_FILE_NAME);
-      //SendEvent (EID_HIDE_SUGGESTIONS_BOX);
-      RecheckVisible ();
-      RestylingCausedRecheckWasDone = FALSE;
-    }
-    break;
-
-  case SCN_UPDATEUI:
-    if (notifyCode->updated & (SC_UPDATE_CONTENT)  && !Timer && !RestylingCausedRecheckWasDone) // If restyling wasn't caused by user input...
-    {
-      SendEvent (EID_RECHECK_VISIBLE);
-      RestylingCausedRecheckWasDone = TRUE;
-    }
-    else if (notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) && !Timer) // If scroll wasn't caused by user input...
-    {
-      SendEvent (EID_RECHECK_INTERSECTION);
-      RestylingCausedRecheckWasDone = FALSE;
-    }
-    SendEvent (EID_HIDE_SUGGESTIONS_BOX);
-    break;
-
-  case SCN_MODIFIED:
-    if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
-    {
-      // SendEvent (EID_HIDE_SUGGESTIONS_BOX);
-      long Start = 0, End = 0;
-      if (notifyCode->modificationType & SC_MOD_DELETETEXT)
+    case NPPN_SHUTDOWN:
       {
-        Start = notifyCode->position;
-        End = notifyCode->position;
+        SendEvent (EID_KILLTHREAD);
+        SendNetworkEvent (EID_KILLNETWORKTHREAD);
+        MSG msg;
+        while (PeekMessage (&msg, NULL, WM_USER, 0xFFFF, PM_REMOVE)) // Clearing message queue to make sure that we're not stuck in SendMesage somewhere
+          {};
+
+        if (Timer)
+          {
+            DeleteTimerQueueTimer (0, Timer, 0);
+            Timer = 0;
+          }
+        WaitTillThreadsClosed ();
+        commandMenuCleanUp ();
+
+        pluginCleanUp();
+        if (wndProcNotepad != NULL)
+          ::SetWindowLongPtr (nppData._nppHandle, GWL_WNDPROC, (LONG)wndProcNotepad); // Removing subclassing
+
       }
-      else
+      break;
+
+    case NPPN_READY:
       {
-        Start = notifyCode->position;
-        End = notifyCode->position + notifyCode->length - 1;
+        RegisterCustomMessages ();
+        InitClasses ();
+        CheckQueue.clear ();
+        CreateThreadResources ();
+        LoadSettings ();
+        SendEvent (EID_CHECK_FILE_NAME);
+        CreateHooks ();
+        CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
+        SendEvent (EID_RECHECK_VISIBLE_BOTH_VIEWS);
+        RestylingCausedRecheckWasDone = FALSE;
+        SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
+        SendEvent (EID_UPDATE_LANG_LISTS); // To update quick lang change menu
+        UpdateLangsMenu ();
+      }
+      break;
+
+    case NPPN_BUFFERACTIVATED:
+      {
+        SendEvent (EID_CHECK_FILE_NAME);
+        //SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+        RecheckVisible ();
+        RestylingCausedRecheckWasDone = FALSE;
+      }
+      break;
+
+    case SCN_UPDATEUI:
+      if (notifyCode->updated & (SC_UPDATE_CONTENT)  && !Timer && !RestylingCausedRecheckWasDone) // If restyling wasn't caused by user input...
+        {
+          SendEvent (EID_RECHECK_VISIBLE);
+          RestylingCausedRecheckWasDone = TRUE;
+        }
+      else if (notifyCode->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) && !Timer) // If scroll wasn't caused by user input...
+        {
+          SendEvent (EID_RECHECK_INTERSECTION);
+          RestylingCausedRecheckWasDone = FALSE;
+        }
+      SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+      break;
+
+    case SCN_MODIFIED:
+      if (notifyCode->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
+        {
+          // SendEvent (EID_HIDE_SUGGESTIONS_BOX);
+          long Start = 0, End = 0;
+          if (notifyCode->modificationType & SC_MOD_DELETETEXT)
+            {
+              Start = notifyCode->position;
+              End = notifyCode->position;
+            }
+          else
+            {
+              Start = notifyCode->position;
+              End = notifyCode->position + notifyCode->length - 1;
+            }
+
+          // AddToQueue (Start, End);
+          if (Timer)
+            ChangeTimerQueueTimer (0, Timer, RecheckDelay, 0);
+          else
+            CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, RecheckDelay, 0 , 0);
+        }
+      break;
+
+    case NPPN_LANGCHANGED:
+      {
+        SendEvent (EID_LANG_CHANGE);
+      }
+      break;
+
+    case NPPN_TBMODIFICATION:
+      {
+        AddIcons ();
       }
 
-      // AddToQueue (Start, End);
-      if (Timer)
-        ChangeTimerQueueTimer (0, Timer, RecheckDelay, 0);
-      else
-        CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, RecheckDelay, 0 , 0);
+    default:
+      return;
     }
-    break;
-
-  case NPPN_LANGCHANGED:
-    {
-      SendEvent (EID_LANG_CHANGE);
-    }
-    break;
-
-  case NPPN_TBMODIFICATION:
-    {
-      AddIcons ();
-    }
-
-  default:
-    return;
-  }
 }
 
 // Here you can process the Npp Messages

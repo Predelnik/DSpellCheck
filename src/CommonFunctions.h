@@ -41,14 +41,8 @@ void SetStringDUtf8 (char *&Target, const TCHAR *Str);
 BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName);
 
 void SetParsedString (TCHAR *&Dest, TCHAR *Source);
-HWND GetScintillaWindow(const NppData *NppDataArg);
-LRESULT SendMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-LRESULT SendMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-void SendMsgToBothEditors (const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-LRESULT PostMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
 
-LRESULT SendMsgToNpp (const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+LRESULT SendMsgToNpp (BOOL *ok, const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
 
 char *Utf8Dec(const char *string, const char *current);
 char *Utf8chr (const char *s, const char *sfc);

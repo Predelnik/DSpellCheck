@@ -39,13 +39,7 @@ struct SuggestionsMenuItem
   TCHAR *Text;
   BYTE Id;
   BOOL Separator;
-  SuggestionsMenuItem (TCHAR *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE)
-  {
-    Text = 0;
-    SetString (Text, TextArg);
-    Id = IdArg;
-    Separator = SeparatorArg;
-  }
+  SuggestionsMenuItem (TCHAR *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE);
   ~SuggestionsMenuItem ()
   {
     CLEAN_AND_ZERO_ARR (Text);
@@ -53,6 +47,11 @@ struct SuggestionsMenuItem
 };
 
 void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL Separator = FALSE);
+
+HWND GetScintillaWindow(const NppData *NppDataArg);
+LRESULT SendMsgToActiveEditor(BOOL *ok, HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+BOOL SendMsgToBothEditors (const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
 
 class SpellChecker
 {
@@ -192,7 +191,7 @@ private:
   void LoadFromIni (int &Value, const TCHAR *Name, int DefaultValue);
   void LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char *DefaultValue, BOOL InQuotes = 0);
   void CopyMisspellingsToClipboard();
-
+  int CheckTextDefaultAnswer (CheckTextMode Mode);
 private:
 
   std::vector <LanguageName> *CurrentLangs;

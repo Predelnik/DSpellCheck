@@ -237,6 +237,16 @@ int filter(unsigned int code, struct _EXCEPTION_POINTERS *ep)
   return EXCEPTION_CONTINUE_SEARCH;
 }
 
+bool isCurrentlyTerminating ()
+{
+  if (WaitForEvent (EID_KILLTHREAD, 0) == WAIT_OBJECT_0)
+    {
+      SendEvent (EID_KILLTHREAD);
+      return true;
+    }
+
+  return false;
+}
 
 DWORD WINAPI ThreadMain (LPVOID lpParam)
 {
@@ -282,8 +292,6 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
     }
 #endif
 
-  SendEvent (EID_THREADKILLED);
-  ExitThread (0);
   return 0;
 }
 
@@ -320,8 +328,6 @@ DWORD WINAPI ThreadNetwork (LPVOID lpParam)
       bRun = SpellCheckerInstance->NotifyNetworkEvent(dwWaitResult);
   }
 
-  SendNetworkEvent (EID_NETWORKTHREADKILLED);
-  ExitThread (0);
   return 0;
 }
 
@@ -352,8 +358,6 @@ void CreateHooks ()
 
 void KillThreadResources ()
 {
-  WaitForEvent (EID_THREADKILLED);
-  WaitForNetworkEvent (EID_NETWORKTHREADKILLED);
   CloseHandle (hThread);
   CloseHandle (hNetworkThread);
   /* kill events */
@@ -380,13 +384,13 @@ void pluginCleanUp ()
   CLEAN_AND_ZERO (ProgressInstance);
 }
 
-void inline SendEvent (EventId Event)
+void SendEvent (EventId Event)
 {
   if (ResourcesInited)
     SetEvent(hEvent[Event]);
 }
 
-void inline SendNetworkEvent (NetworkEventId Event)
+void SendNetworkEvent (NetworkEventId Event)
 {
   if (ResourcesInited)
     SetEvent(hNetworkEvent[Event]);
@@ -581,7 +585,10 @@ void UpdateLangsMenu ()
 
 HMENU GetDSpellCheckMenu ()
 {
-  HMENU PluginsMenu = (HMENU) SendMsgToNpp (&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
+  BOOL ok;
+  HMENU PluginsMenu = (HMENU) SendMsgToNpp (&ok, &nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
+  if (!ok)
+    return 0;
   HMENU DSpellCheckMenu = 0;
   int Count = GetMenuItemCount (PluginsMenu);
   int StrLen = 0;
@@ -704,4 +711,10 @@ bool setNextCommand(TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool 
   counter++;
 
   return true;
+}
+
+void WaitTillThreadsClosed ()
+{
+  HANDLE threadHandles[] = {hThread, hNetworkThread};
+  WaitForMultipleObjects (2, threadHandles, true, INFINITE);
 }

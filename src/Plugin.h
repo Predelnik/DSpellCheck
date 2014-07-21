@@ -81,7 +81,6 @@ typedef enum {
   EID_RECHECK_INTERSECTION,
   EID_COPY_MISSPELLINGS_TO_CLIPBOARD,
   EID_KILLTHREAD,
-  EID_THREADKILLED,
   EID_INIT_SUGGESTIONS_BOX,
   EID_HIDE_SUGGESTIONS_BOX,
   EID_SHOW_SUGGESTION_MENU,
@@ -111,7 +110,6 @@ typedef enum {
 
 typedef enum {
   EID_KILLNETWORKTHREAD,
-  EID_NETWORKTHREADKILLED,
   EID_DOWNLOAD_SELECTED,
   EID_CANCEL_DOWNLOAD,
   EID_FILL_FILE_LIST,
@@ -159,9 +157,11 @@ BOOL GetUseAllocatedIds ();
 SpellChecker *GetSpellChecker ();
 DWORD GetCustomGUIMessageId (CustomGUIMessage::e MessageId);
 void RegisterCustomMessages ();
+bool isCurrentlyTerminating (); // This function is only for main thread
 
 // From DllMain, possibly move to DllMain.h
 void SetRecheckDelay (int Value, int WriteToIni = 1);
 int GetRecheckDelay ();
+void WaitTillThreadsClosed ();
 
 #endif //PLUGINDEFINITION_H

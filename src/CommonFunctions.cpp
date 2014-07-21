@@ -332,52 +332,6 @@ void SetParsedString (TCHAR *&Dest, TCHAR *Source)
   Dest = ResString;
 }
 
-HWND GetScintillaWindow(const NppData *NppDataArg)
-{
-  int which = -1;
-  SendMessage(NppDataArg->_nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
-  if (which == -1)
-    return NULL;
-  if (which == 1)
-    return NppDataArg->_scintillaSecondHandle;
-  return (which == 0) ? NppDataArg->_scintillaMainHandle : NppDataArg->_scintillaSecondHandle;
-}
-
-void SendMsgToBothEditors (const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  SendMessage (NppDataArg->_scintillaMainHandle, Msg, wParam, lParam);
-  SendMessage (NppDataArg->_scintillaSecondHandle, Msg, wParam, lParam);
-}
-
-LRESULT SendMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  HWND wEditor = GetScintillaWindow(NppDataArg);
-  return SendMessage (wEditor, Msg, wParam, lParam);
-}
-
-LRESULT SendMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  return SendMessage (ScintillaWindow, Msg, wParam, lParam);
-}
-
-LRESULT SendMsgToNpp (const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  return SendMessage (NppDataArg->_nppHandle, Msg, wParam, lParam);
-}
-
-// Remember: it's better to use PostMsg wherever possible, to avoid gui update on each message send etc etc
-// Also it's better to avoid get current scintilla window too much times, since it's obviously uses 1 SendMsg call
-LRESULT PostMsgToEditor(const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  HWND wEditor = GetScintillaWindow(NppDataArg);
-  return PostMessage(wEditor, Msg, wParam, lParam);
-}
-
-LRESULT PostMsgToEditor(HWND ScintillaWindow, const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  return PostMessage(ScintillaWindow, Msg, wParam, lParam);
-}
-
 // These functions are mostly taken from http://research.microsoft.com
 
 BOOL Utf8IsLead (char c)

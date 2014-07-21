@@ -44,6 +44,60 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define DEFAULT_DELIMITERS _T (",.!?\":;{}()[]\\/=+-^$*<>|#$@%&~")
 #endif
 
+HWND GetScintillaWindow(const NppData *NppDataArg)
+{
+  int which = -1;
+  if (isCurrentlyTerminating ())
+    return 0;
+  SendMessage(NppDataArg->_nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
+  if (which == -1)
+    return 0;
+  if (which == 1)
+    return NppDataArg->_scintillaSecondHandle;
+  return (which == 0) ? NppDataArg->_scintillaMainHandle : NppDataArg->_scintillaSecondHandle;
+}
+
+BOOL SendMsgToBothEditors (const NppData *NppDataArg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  if (isCurrentlyTerminating ())
+    return FALSE;
+
+  SendMessage (NppDataArg->_scintillaMainHandle, Msg, wParam, lParam);
+  SendMessage (NppDataArg->_scintillaSecondHandle, Msg, wParam, lParam);
+  return TRUE;
+}
+
+LRESULT SendMsgToActiveEditor (BOOL *ok, HWND ScintillaWindow, UINT Msg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
+{
+  bool terminating = isCurrentlyTerminating ();
+  if (ok)
+   *ok = !terminating;
+
+  if (terminating)
+    return 0;
+
+  return SendMessage (ScintillaWindow, Msg, wParam, lParam);
+}
+
+LRESULT SendMsgToNpp (BOOL *ok, const NppData *NppDataArg, UINT Msg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
+{
+  bool terminating = isCurrentlyTerminating ();
+  if (ok)
+   *ok = !terminating;
+
+  if (terminating)
+    return 0;
+
+  return SendMessage (NppDataArg->_nppHandle, Msg, wParam, lParam);
+}
+
+// Remember: it's better to use PostMsg wherever possible, to avoid gui update on each message send etc etc
+// Also it's better to avoid get current scintilla window too much times, since it's obviously uses 1 SendMsg call
+LRESULT PostMsgToActiveEditor (HWND ScintillaWindow, UINT Msg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
+{
+  return PostMessage(ScintillaWindow, Msg, wParam, lParam);
+}
+
 SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
                             Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg)
 {
@@ -102,14 +156,21 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   SettingsLoaded = FALSE;
   UseProxy = FALSE;
   SettingsToSave = new std::map<TCHAR *, DWORD, bool ( *)(TCHAR *, TCHAR *)> (SortCompare);
-  if (SendMsgToNpp (NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0))
-  {
-    SetUseAllocatedIds (TRUE);
-    int Id;
-    SendMsgToNpp (NppDataInstance, NPPM_ALLOCATECMDID, 350, (LPARAM) &Id);
-    SetContextMenuIdStart (Id);
-    SetLangsMenuIdStart (Id + 103);
-  }
+  BOOL ok;
+  BOOL res = SendMsgToNpp (&ok, NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0);
+  if (!ok)
+    return;
+
+  if (res)
+    {
+      SetUseAllocatedIds (TRUE);
+      int Id;
+      SendMsgToNpp (&ok, NppDataInstance, NPPM_ALLOCATECMDID, 350, (LPARAM) &Id);
+      if (!ok)
+        return;
+      SetContextMenuIdStart (Id);
+      SetLangsMenuIdStart (Id + 103);
+    }
 }
 
 static const char Yo[] = "\xd0\x81";
@@ -425,12 +486,17 @@ void SpellChecker::RecheckVisibleBothViews ()
 {
   int OldLexer = Lexer;
   EncodingType OldEncoding = CurrentEncoding;
-  Lexer = SendMsgToEditor (NppDataInstance->_scintillaMainHandle, NppDataInstance, SCI_GETLEXER);
+  BOOL ok;
+  Lexer = SendMsgToActiveEditor (&ok, NppDataInstance->_scintillaMainHandle, SCI_GETLEXER);
+  if (!ok)
+    return;
   CurrentScintilla = NppDataInstance->_scintillaMainHandle;
   RecheckVisible ();
 
   CurrentScintilla = NppDataInstance->_scintillaSecondHandle;
-  Lexer = SendMsgToEditor (NppDataInstance->_scintillaSecondHandle, NppDataInstance, SCI_GETLEXER);
+  Lexer = SendMsgToActiveEditor (&ok, NppDataInstance->_scintillaSecondHandle, SCI_GETLEXER);
+  if (!ok)
+    return;
   RecheckVisible ();
   Lexer = OldLexer;
   CurrentEncoding = OldEncoding;
@@ -461,160 +527,168 @@ BOOL WINAPI SpellChecker::NotifyNetworkEvent (DWORD Event)
 
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
 {
+  if (Event == EID_KILLTHREAD)
+    return false;
+
   CurrentScintilla = GetScintillaWindow (NppDataInstance); // All operations should be done with current scintilla anyway
   if (!CurrentScintilla)
     return FALSE; // If scintilla is dead there's nothing else to do
   switch (Event)
-  {
-  case  EID_FILL_DIALOGS:
-    FillDialogs ();
-    break;
-  case EID_APPLY_SETTINGS:
-    SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
-    SettingsDlgInstance->GetAdvancedDlg ()->ApplySettings (this);
-    FillDialogs (TRUE);
-    SaveSettings ();
-    CheckFileName (); // Cause filters may change
-    RefreshUnderlineStyle ();
-    RecheckVisibleBothViews ();
-    break;
-  case EID_APPLY_MULTI_LANG_SETTINGS:
-    LangListInstance->ApplyChoice (this);
-    SaveSettings ();
-    break;
-
-  case EID_APPLY_PROXY_SETTINGS:
-    GetSelectProxy ()->ApplyChoice (this);
-    SaveSettings ();
-    break;
-
-  case EID_COPY_MISSPELLINGS_TO_CLIPBOARD:
-    CopyMisspellingsToClipboard ();
-    break;
-
-  case EID_HIDE_DIALOG:
-    SettingsDlgInstance->display (false);
-    break;
-  case EID_LOAD_SETTINGS:
-    LoadSettings ();
-    break;
-  case EID_RECHECK_VISIBLE:
-    RecheckVisible ();
-    break;
-  case EID_RECHECK_VISIBLE_BOTH_VIEWS:
     {
+    case  EID_FILL_DIALOGS:
+      FillDialogs ();
+      break;
+    case EID_APPLY_SETTINGS:
+      SettingsDlgInstance->GetSimpleDlg ()->ApplySettings (this);
+      SettingsDlgInstance->GetAdvancedDlg ()->ApplySettings (this);
+      FillDialogs (TRUE);
+      SaveSettings ();
+      CheckFileName (); // Cause filters may change
+      RefreshUnderlineStyle ();
       RecheckVisibleBothViews ();
-    }
-    break;
-  case EID_RECHECK_INTERSECTION:
-    RecheckVisible (TRUE);
-    break;
-  case EID_SWITCH_AUTOCHECK:
-    if (!SettingsLoaded)
+      break;
+    case EID_APPLY_MULTI_LANG_SETTINGS:
+      LangListInstance->ApplyChoice (this);
+      SaveSettings ();
+      break;
+
+    case EID_APPLY_PROXY_SETTINGS:
+      GetSelectProxy ()->ApplyChoice (this);
+      SaveSettings ();
+      break;
+
+    case EID_COPY_MISSPELLINGS_TO_CLIPBOARD:
+      CopyMisspellingsToClipboard ();
+      break;
+
+    case EID_HIDE_DIALOG:
+      SettingsDlgInstance->display (false);
+      break;
+    case EID_LOAD_SETTINGS:
+      LoadSettings ();
+      break;
+    case EID_RECHECK_VISIBLE:
+      RecheckVisible ();
+      break;
+    case EID_RECHECK_VISIBLE_BOTH_VIEWS:
+      {
+        RecheckVisibleBothViews ();
+      }
+      break;
+    case EID_RECHECK_INTERSECTION:
+      RecheckVisible (TRUE);
+      break;
+    case EID_SWITCH_AUTOCHECK:
+      if (!SettingsLoaded)
+        return FALSE;
+
+      SwitchAutoCheck ();
+      break;
+    case EID_KILLTHREAD:
       return FALSE;
+    case EID_INIT_SUGGESTIONS_BOX:
+      if (SuggestionsMode == SUGGESTIONS_BOX)
+        InitSuggestionsBox ();
+      else
+        {
+          /* placeholder */
+        }
+      break;
+    case EID_SHOW_SUGGESTION_MENU:
+      FillSuggestionsMenu (SuggestionsInstance->GetPopupMenu ());
+      SendMessage (SuggestionsInstance->getHSelf (), WM_SHOWANDRECREATEMENU, 0, 0);
+      break;
+    case EID_HIDE_SUGGESTIONS_BOX:
+      HideSuggestionBox ();
+      break;
+    case EID_SET_SUGGESTIONS_BOX_TRANSPARENCY:
+      SetSuggestionsBoxTransparency ();
+      break;
+    case EID_DEFAULT_DELIMITERS:
+      SetDefaultDelimiters ();
+      break;
+    case EID_FIND_NEXT_MISTAKE:
+      FindNextMistake ();
+      break;
+    case EID_FIND_PREV_MISTAKE:
+      FindPrevMistake ();
+      break;
+    case EID_RECHECK_MODIFIED_ZONE:
+      GetLimitsAndRecheckModified ();
+      break;
+    case EID_CHECK_FILE_NAME:
+      CheckFileName ();
+      break;
+    case EID_FILL_DOWNLOAD_DICS_DIALOG:
+      FillDownloadDics ();
+      SendNetworkEvent (EID_FILL_FILE_LIST);
+      break;
+    case EID_INIT_DOWNLOAD_COMBOBOX:
+      ResetDownloadCombobox ();
+      break;
+    case EID_REMOVE_SELECTED_DICS:
+      GetRemoveDics ()->RemoveSelected (this);
+      break;
+    case EID_UPDATE_SELECT_PROXY:
+      GetSelectProxy ()->SetOptions (UseProxy, ProxyHostName, ProxyUserName, ProxyPassword, ProxyPort, ProxyAnonymous, ProxyType);
+      break;
+    case EID_UPDATE_LANG_LISTS:
+      ReinitLanguageLists ();
+      break;
+    case EID_UPDATE_LANGS_MENU:
+      DoPluginMenuInclusion ();
+      break;
 
-    SwitchAutoCheck ();
-    break;
-  case EID_KILLTHREAD:
-    return FALSE;
-  case EID_INIT_SUGGESTIONS_BOX:
-    if (SuggestionsMode == SUGGESTIONS_BOX)
-      InitSuggestionsBox ();
-    else
-    {
-      /* placeholder */
+    case EID_UPDATE_FROM_REMOVE_DICS_OPTIONS:
+      GetRemoveDics ()->UpdateOptions (this);
+      SaveSettings ();
+      break;
+
+    case EID_UPDATE_REMOVE_DICS_OPTIONS:
+      GetRemoveDics ()->SetCheckBoxes (RemoveUserDics, RemoveSystem);
+      break;
+
+    case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS:
+      GetDownloadDics ()->UpdateOptions (this);
+      GetDownloadDics ()->UpdateListBox ();
+      SaveSettings ();
+      break;
+
+    case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE:
+      GetDownloadDics ()->UpdateOptions (this);
+      SaveSettings ();
+      break;
+
+    case EID_LIB_CHANGE:
+      SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
+      SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath, AdditionalHunspellPath);
+      RecheckVisibleBothViews ();
+      SaveSettings ();
+      break;
+
+    case EID_LANG_CHANGE:
+      {
+        BOOL ok;
+        Lexer = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLEXER);
+        if (!ok)
+          break;
+        RecheckVisible ();
+      }
+      break;
+
+    case EID_HIDE_DOWNLOAD_DICS: // TODO: Make it async, though it's really hard
+      GetDownloadDics ()->display (false);
+      break;
+
+    case EID_SHOW_SELECT_PROXY:
+      GetSelectProxy ()->display ();
+      break;
+      /*
+      case EID_APPLYMENUACTION:
+      ApplyMenuActions ();
+      break;
+      */
     }
-    break;
-  case EID_SHOW_SUGGESTION_MENU:
-    FillSuggestionsMenu (SuggestionsInstance->GetPopupMenu ());
-    SendMessage (SuggestionsInstance->getHSelf (), WM_SHOWANDRECREATEMENU, 0, 0);
-    break;
-  case EID_HIDE_SUGGESTIONS_BOX:
-    HideSuggestionBox ();
-    break;
-  case EID_SET_SUGGESTIONS_BOX_TRANSPARENCY:
-    SetSuggestionsBoxTransparency ();
-    break;
-  case EID_DEFAULT_DELIMITERS:
-    SetDefaultDelimiters ();
-    break;
-  case EID_FIND_NEXT_MISTAKE:
-    FindNextMistake ();
-    break;
-  case EID_FIND_PREV_MISTAKE:
-    FindPrevMistake ();
-    break;
-  case EID_RECHECK_MODIFIED_ZONE:
-    GetLimitsAndRecheckModified ();
-    break;
-  case EID_CHECK_FILE_NAME:
-    CheckFileName ();
-    break;
-  case EID_FILL_DOWNLOAD_DICS_DIALOG:
-    FillDownloadDics ();
-    SendNetworkEvent (EID_FILL_FILE_LIST);
-    break;
-  case EID_INIT_DOWNLOAD_COMBOBOX:
-    ResetDownloadCombobox ();
-    break;
-  case EID_REMOVE_SELECTED_DICS:
-    GetRemoveDics ()->RemoveSelected (this);
-    break;
-  case EID_UPDATE_SELECT_PROXY:
-    GetSelectProxy ()->SetOptions (UseProxy, ProxyHostName, ProxyUserName, ProxyPassword, ProxyPort, ProxyAnonymous, ProxyType);
-    break;
-  case EID_UPDATE_LANG_LISTS:
-    ReinitLanguageLists ();
-    break;
-  case EID_UPDATE_LANGS_MENU:
-    DoPluginMenuInclusion ();
-    break;
-
-  case EID_UPDATE_FROM_REMOVE_DICS_OPTIONS:
-    GetRemoveDics ()->UpdateOptions (this);
-    SaveSettings ();
-    break;
-
-  case EID_UPDATE_REMOVE_DICS_OPTIONS:
-    GetRemoveDics ()->SetCheckBoxes (RemoveUserDics, RemoveSystem);
-    break;
-
-  case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS:
-    GetDownloadDics ()->UpdateOptions (this);
-    GetDownloadDics ()->UpdateListBox ();
-    SaveSettings ();
-    break;
-
-  case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE:
-    GetDownloadDics ()->UpdateOptions (this);
-    SaveSettings ();
-    break;
-
-  case EID_LIB_CHANGE:
-    SettingsDlgInstance->GetSimpleDlg ()->ApplyLibChange (this);
-    SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath, AdditionalHunspellPath);
-    RecheckVisibleBothViews ();
-    SaveSettings ();
-    break;
-
-  case EID_LANG_CHANGE:
-    Lexer = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLEXER);
-    RecheckVisible ();
-    break;
-
-  case EID_HIDE_DOWNLOAD_DICS: // TODO: Make it async, though it's really hard
-    GetDownloadDics ()->display (false);
-    break;
-
-  case EID_SHOW_SELECT_PROXY:
-    GetSelectProxy ()->display ();
-    break;
-    /*
-    case EID_APPLYMENUACTION:
-    ApplyMenuActions ();
-    break;
-    */
-  }
   return TRUE;
 }
 
@@ -643,6 +717,8 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
   BOOL Res;
   MENUITEMINFO Mif;
   HMENU DSpellCheckMenu = GetDSpellCheckMenu ();
+  if (!DSpellCheckMenu)
+    return;
   HMENU LangsSubMenu = GetLangsSubMenu (DSpellCheckMenu);
   if (LangsSubMenu)
     DestroyMenu (LangsSubMenu);
@@ -784,7 +860,9 @@ void SpellChecker::CheckFileName ()
   SetString (FileTypesCopy, FileTypes);
   Token = _tcstok_s (FileTypesCopy, _T(";"), &Context);
   CheckTextEnabled = !CheckThose;
-  ::SendMessage(NppDataInstance->_nppHandle, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM) FullPath);
+  BOOL ok;
+  SendMsgToNpp (&ok, NppDataInstance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM) FullPath);
+  if (!ok) return;
 
   while (Token)
   {
@@ -803,12 +881,12 @@ void SpellChecker::CheckFileName ()
     Token = _tcstok_s (NULL, _T(";"), &Context);
   }
   CLEAN_AND_ZERO_ARR (FileTypesCopy);
-  Lexer = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLEXER);
+  Lexer = SendMsgToActiveEditor (0, GetCurrentScintilla (), SCI_GETLEXER);
 }
 
 int SpellChecker::GetStyle (int Pos)
 {
-  return SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSTYLEAT, Pos);
+  return SendMsgToActiveEditor (0, GetCurrentScintilla (), SCI_GETSTYLEAT, Pos);
 }
 // Actually for all languages which operate mostly in strings it's better to check only comments
 // TODO: Fix it
@@ -1682,10 +1760,15 @@ void SpellChecker::HideSuggestionBox ()
 }
 void SpellChecker::FindNextMistake ()
 {
-  CurrentPosition = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
-  int CurLine = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, CurrentPosition);
-  int LineStartPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, CurLine);
-  long DocLength = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLENGTH);
+  BOOL ok;
+  CurrentPosition = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETCURRENTPOS);
+  if (!ok) return;
+  int CurLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, CurrentPosition);
+  if (!ok) return;
+  int LineStartPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, CurLine);
+  if (!ok) return;
+  long DocLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+  if (!ok) return;
   int IteratorPos = LineStartPos;
   Sci_TextRange Range;
   BOOL Result = FALSE;
@@ -1702,7 +1785,8 @@ void SpellChecker::FindNextMistake ()
       Range.chrg.cpMax = DocLength;
     }
     Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
-    SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+    SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+    if (!ok) return;
     char *IteratingStart = Range.lpstrText + Range.chrg.cpMax - Range.chrg.cpMin - 1;
     char *IteratingChar = IteratingStart;
     if (!IgnoreOffsetting)
@@ -1725,10 +1809,12 @@ void SpellChecker::FindNextMistake ()
 
       *IteratingChar = '\0';
     }
-    SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_COLOURISE, Range.chrg.cpMin, Range.chrg.cpMax);
+    SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_COLOURISE, Range.chrg.cpMin, Range.chrg.cpMax);
+    if (!ok) return;
     SCNotification scn;
     scn.nmhdr.code = SCN_SCROLLED;
-    SendMsgToNpp (NppDataInstance, WM_NOTIFY, 0, (LPARAM )&scn); // To fix bug with hotspots being removed
+    SendMsgToNpp (&ok, NppDataInstance, WM_NOTIFY, 0, (LPARAM )&scn); // To fix bug with hotspots being removed
+    if (!ok) return;
     Result = CheckText (Range.lpstrText, IteratorPos, FIND_FIRST);
     CLEAN_AND_ZERO_ARR (Range.lpstrText);
     if (Result)
@@ -1755,12 +1841,18 @@ void SpellChecker::FindNextMistake ()
 
 void SpellChecker::FindPrevMistake ()
 {
-  CurrentPosition = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
-  int CurLine = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, CurrentPosition);
-  int LineCount = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLINECOUNT);
+  BOOL ok;
+  CurrentPosition = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETCURRENTPOS);
+  if (!ok) return;
+  int CurLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, CurrentPosition);
+  if (!ok) return;
+  int LineCount = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINECOUNT);
+  if (!ok) return;
   long LineEndPos = 0;
-  long DocLength = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLENGTH);
-  LineEndPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLINEENDPOSITION, CurLine);
+  long DocLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+  if (!ok) return;
+  LineEndPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINEENDPOSITION, CurLine);
+  if (!ok) return;
 
   int IteratorPos = LineEndPos;
   Sci_TextRange Range;
@@ -1768,64 +1860,79 @@ void SpellChecker::FindPrevMistake ()
   BOOL FullCheck = FALSE;
 
   while (1)
-  {
-    Range.chrg.cpMin = IteratorPos - BufferSize;
-    Range.chrg.cpMax = IteratorPos;
-    int IgnoreOffsetting = 0;
-    if (Range.chrg.cpMin < 0)
     {
-      Range.chrg.cpMin = 0;
-      IgnoreOffsetting = 1;
-    }
-    Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
-    SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
-    char *IteratingStart = Range.lpstrText;
-    char *IteratingChar = IteratingStart;
-    if (!IgnoreOffsetting)
-    {
-      if (CurrentEncoding == ENCODING_UTF8)
-      {
-        while (Utf8IsCont (*IteratingChar) && *IteratingChar)
-          IteratingChar++;
-
-        while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && *IteratingChar)
+      Range.chrg.cpMin = IteratorPos - BufferSize;
+      Range.chrg.cpMax = IteratorPos;
+      int IgnoreOffsetting = 0;
+      if (Range.chrg.cpMin < 0)
         {
-          IteratingChar = (char *) Utf8Inc (IteratingChar);
+          Range.chrg.cpMin = 0;
+          IgnoreOffsetting = 1;
         }
-      }
-      else
-      {
-        while (!strchr (DelimConverted, *IteratingChar) && IteratingChar)
-          IteratingChar++;
-      }
-    }
-    int offset = IteratingChar - IteratingStart;
-    SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_COLOURISE, Range.chrg.cpMin + offset, Range.chrg.cpMax);
-    SCNotification scn;
-    scn.nmhdr.code = SCN_SCROLLED;
-    SendMsgToNpp (NppDataInstance, WM_NOTIFY, 0, (LPARAM) &scn);
-    Result = CheckText (Range.lpstrText + offset, Range.chrg.cpMin + offset, FIND_LAST);
-    CLEAN_AND_ZERO_ARR (Range.lpstrText);
-    if (Result)
-      break;
+      Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
+      SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+      if (!ok)
+        {
+          CLEAN_AND_ZERO_ARR (Range.lpstrText);
+          return;
+        }
+      char *IteratingStart = Range.lpstrText;
+      char *IteratingChar = IteratingStart;
+      if (!IgnoreOffsetting)
+        {
+          if (CurrentEncoding == ENCODING_UTF8)
+            {
+              while (Utf8IsCont (*IteratingChar) && *IteratingChar)
+                IteratingChar++;
 
-    IteratorPos -= (BufferSize - offset);
-
-    if (IteratorPos < 0)
-    {
-      if (!FullCheck)
-      {
-        CurrentPosition = DocLength + 1;
-        IteratorPos = DocLength;
-        FullCheck = TRUE;
-      }
-      else
+              while ((!Utf8chr ( DelimUtf8Converted, IteratingChar)) && *IteratingChar)
+                {
+                  IteratingChar = (char *) Utf8Inc (IteratingChar);
+                }
+            }
+          else
+            {
+              while (!strchr (DelimConverted, *IteratingChar) && IteratingChar)
+                IteratingChar++;
+            }
+        }
+      int offset = IteratingChar - IteratingStart;
+      SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_COLOURISE, Range.chrg.cpMin + offset, Range.chrg.cpMax);
+      if (!ok)
+        {
+          CLEAN_AND_ZERO_ARR (Range.lpstrText);
+          return;
+        }
+      SCNotification scn;
+      scn.nmhdr.code = SCN_SCROLLED;
+      SendMsgToNpp (&ok, NppDataInstance, WM_NOTIFY, 0, (LPARAM) &scn);
+      if (!ok)
+        {
+          CLEAN_AND_ZERO_ARR (Range.lpstrText);
+          return;
+        }
+      Result = CheckText (Range.lpstrText + offset, Range.chrg.cpMin + offset, FIND_LAST);
+      CLEAN_AND_ZERO_ARR (Range.lpstrText);
+      if (Result)
         break;
 
-      if (FullCheck && IteratorPos < CurrentPosition - 1)
-        break; // So nothing was found TODO: Message probably
+      IteratorPos -= (BufferSize - offset);
+
+      if (IteratorPos < 0)
+        {
+          if (!FullCheck)
+            {
+              CurrentPosition = DocLength + 1;
+              IteratorPos = DocLength;
+              FullCheck = TRUE;
+            }
+          else
+            break;
+
+          if (FullCheck && IteratorPos < CurrentPosition - 1)
+            break; // So nothing was found TODO: Message probably
+        }
     }
-  }
 }
 
 void SpellChecker::SetDefaultDelimiters ()
@@ -1853,23 +1960,34 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
 
     ScreenToClient(GetScintillaWindow (NppDataInstance), &p);
 
-    initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+    BOOL ok;
+    initCharPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+    if (!ok) return TRUE;
   }
   else
   {
-    SelectionStart = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSELECTIONSTART);
-    SelectionEnd = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETSELECTIONEND);
-    initCharPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCURRENTPOS);
+    BOOL ok;
+    SelectionStart = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETSELECTIONSTART);
+    if (!ok) return TRUE;
+    SelectionEnd = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETSELECTIONEND);
+    if (!ok) return TRUE;
+    initCharPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETCURRENTPOS);
+    if (!ok) return TRUE;
   }
 
   if (initCharPos != -1)
   {
-    int Line = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, initCharPos);
-    long LineLength = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINELENGTH, Line);
+    BOOL ok;
+    int Line = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, initCharPos);
+    if (!ok) return TRUE;
+    long LineLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINELENGTH, Line);
+    if (!ok) return TRUE;
     char *Buf = new char[LineLength + 1];
-    SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLINE, Line, (LPARAM) Buf);
+    SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINE, Line, (LPARAM) Buf);
+    if (!ok) return TRUE;
     Buf [LineLength] = 0;
-    long Offset = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, Line);
+    long Offset = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, Line);
+    if (!ok) return TRUE;
     char *Word = GetWordAt (initCharPos, Buf, Offset);
     if (!Word || !*Word)
     {
@@ -1995,10 +2113,15 @@ void SpellChecker::InitSuggestionsBox ()
   }
   WUCLength = Length;
   WUCPosition = Pos;
-  int Line = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, WUCPosition);
-  int TextHeight = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_TEXTHEIGHT, Line);
-  int XPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POINTXFROMPOSITION, 0, WUCPosition);
-  int YPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POINTYFROMPOSITION, 0, WUCPosition);
+  BOOL ok;
+  int Line = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, WUCPosition);
+  if (!ok) return;
+  int TextHeight = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_TEXTHEIGHT, Line);
+  if (!ok) return;
+  int XPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POINTXFROMPOSITION, 0, WUCPosition);
+  if (!ok) return;
+  int YPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POINTYFROMPOSITION, 0, WUCPosition);
+  if (!ok) return;
 
   p.x = XPos;
   p.y = YPos;
@@ -2046,7 +2169,9 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
           ApplyConversions (SelectedWord);
           CurrentSpeller->IgnoreAll (SelectedWord);
           WUCLength = strlen (SelectedWord);
-          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength , WUCPosition + WUCLength );
+          BOOL ok;
+          SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_SETSEL, WUCPosition + WUCLength , WUCPosition + WUCLength );
+          if (!ok) return;
           RecheckVisibleBothViews ();
         }
         else if (Result == MID_ADDTODICTIONARY)
@@ -2054,7 +2179,9 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
           ApplyConversions (SelectedWord);
           CurrentSpeller->AddToDictionary (SelectedWord);
           WUCLength = strlen (SelectedWord);
-          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition + WUCLength , WUCPosition + WUCLength );
+          BOOL ok;
+          SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_SETSEL, WUCPosition + WUCLength , WUCPosition + WUCLength );
+          if (!ok) return;
           RecheckVisibleBothViews ();
         }
         else if ((unsigned int)Result <= LastSuggestions->size ())
@@ -2063,17 +2190,10 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
             SetStringSUtf8 (AnsiBuf, LastSuggestions->at (Result - 1));
           else
             SetString (AnsiBuf, LastSuggestions->at (Result - 1));
-          /*
-          if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
-          {
-          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETSTART, WUCPosition );
-          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETTARGETEND, WUCPosition  + WUCLength );
-          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACETARGET, -1, (LPARAM)AnsiBuf);
-          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WUCPosition  + strlen (AnsiBuf), WUCPosition  + strlen (AnsiBuf));
-          }
-          else
-          */
-          SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
+
+          BOOL ok;
+          SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_REPLACESEL, 0, (LPARAM) AnsiBuf);
+          if (!ok) return;
 
           CLEAN_AND_ZERO_ARR (AnsiBuf);
         }
@@ -2129,17 +2249,23 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   Range.chrg.cpMin = WUCPosition;
   Range.chrg.cpMax = WUCPosition + WUCLength;
   Range.lpstrText = new char [WUCLength + 1];
-  PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
+  PostMsgToActiveEditor (GetCurrentScintilla (), SCI_SETSEL, Pos, Pos + WUCLength);
   if (SuggestionsMode == SUGGESTIONS_BOX)
-  {
-    // PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
-  }
+    {
+      // PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, Pos, Pos + WUCLength);
+    }
   else
-  {
-    SuggestionMenuItems = new std::vector <SuggestionsMenuItem *>;
-  }
+    {
+      SuggestionMenuItems = new std::vector <SuggestionsMenuItem *>;
+    }
 
-  SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+  BOOL ok;
+  SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+  if (!ok)
+    {
+      CLEAN_AND_ZERO_ARR (Range.lpstrText);
+      return;
+    }
 
   SetString (SelectedWord, Range.lpstrText);
   ApplyConversions (SelectedWord);
@@ -2150,23 +2276,23 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
     return;
 
   for (unsigned int i = 0; i < LastSuggestions->size (); i++)
-  {
-    if (i >= (unsigned int) SuggestionsNum)
-      break;
-    SetStringSUtf8 (Buf, LastSuggestions->at (i));
-    if (SuggestionsMode == SUGGESTIONS_BOX)
-      InsertSuggMenuItem (Menu, Buf, i + 1, -1);
-    else
-      SuggestionMenuItems->push_back (new SuggestionsMenuItem (Buf, i + 1));
-  }
+    {
+      if (i >= (unsigned int) SuggestionsNum)
+        break;
+      SetStringSUtf8 (Buf, LastSuggestions->at (i));
+      if (SuggestionsMode == SUGGESTIONS_BOX)
+        InsertSuggMenuItem (Menu, Buf, i + 1, -1);
+      else
+        SuggestionMenuItems->push_back (new SuggestionsMenuItem (Buf, i + 1));
+    }
 
   if (LastSuggestions->size () > 0)
-  {
-    if (SuggestionsMode == SUGGESTIONS_BOX)
-      InsertSuggMenuItem (Menu, _T(""), 0, 103, TRUE);
-    else
-      SuggestionMenuItems->push_back (new SuggestionsMenuItem (_T (""), 0, TRUE));
-  }
+    {
+      if (SuggestionsMode == SUGGESTIONS_BOX)
+        InsertSuggMenuItem (Menu, _T (""), 0, 103, TRUE);
+      else
+        SuggestionMenuItems->push_back (new SuggestionsMenuItem (_T (""), 0, TRUE));
+    }
 
   TCHAR *MenuString = new TCHAR [WUCLength + 50 + 1]; // Add "" to dictionary
   char *BufUtf8 = 0;
@@ -2202,7 +2328,7 @@ void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
   if (SaveSetting)
     SaveSettings ();
 
-  SendMsgToNpp (NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem ()[0]._cmdID, AutoCheckText);
+  SendMsgToNpp (0, NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem ()[0]._cmdID, AutoCheckText);
 }
 
 void SpellChecker::SetCheckThose (int CheckThoseArg)
@@ -2529,33 +2655,51 @@ void SpellChecker::LoadSettings ()
 
 void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)
 {
-  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
-  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORFILLRANGE, start, (end - start + 1));
+  PostMsgToActiveEditor (ScintillaWindow, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
+  PostMsgToActiveEditor (ScintillaWindow, SCI_INDICATORFILLRANGE, start, (end - start + 1));
 }
 
 void SpellChecker::RemoveUnderline (HWND ScintillaWindow, int start, int end)
 {
   if (end < start)
     return;
-  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
-  PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
+  PostMsgToActiveEditor (ScintillaWindow, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
+  PostMsgToActiveEditor (ScintillaWindow, SCI_INDICATORCLEARRANGE, start, (end - start + 1));
 }
 
 
-void SpellChecker::GetVisibleLimits(long &Start, long &Finish)
+void SpellChecker::GetVisibleLimits (long &Start, long &Finish)
 {
-  long top = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETFIRSTVISIBLELINE);
-  long bottom = top + SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINESONSCREEN);
-  top = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_DOCLINEFROMVISIBLE, top);
-  bottom = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_DOCLINEFROMVISIBLE, bottom);
-  long LineCount = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLINECOUNT);
-  Start = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, top);
+  BOOL ok;
+  long top = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETFIRSTVISIBLELINE);
+  if (!ok) goto ErrorBranch;
+  long bottom = top + SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINESONSCREEN);
+  if (!ok) goto ErrorBranch;
+  top = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_DOCLINEFROMVISIBLE, top);
+  if (!ok) goto ErrorBranch;
+  bottom = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_DOCLINEFROMVISIBLE, bottom);
+  if (!ok) goto ErrorBranch;
+  long LineCount = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINECOUNT);
+  if (!ok) goto ErrorBranch;
+  Start = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, top);
+  if (!ok) goto ErrorBranch;
   // Not using end of line position cause utf-8 symbols could be more than one char
   // So we use next line start as the end of our visible text
   if (bottom + 1 < LineCount)
-    Finish = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, bottom + 1);
+    {
+      Finish = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, bottom + 1);
+      if (!ok) goto ErrorBranch;
+    }
   else
-    Finish = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTLENGTH);
+    {
+      Finish = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTLENGTH);
+      if (!ok) goto ErrorBranch;
+    }
+  return;
+
+ErrorBranch:
+  Start = 0;
+  Finish = 0;
 }
 
 char *SpellChecker::GetVisibleText(long *offset, BOOL NotIntersectionOnly)
@@ -2579,7 +2723,13 @@ char *SpellChecker::GetVisibleText(long *offset, BOOL NotIntersectionOnly)
 
   char *Buf = new char [range.chrg.cpMax - range.chrg.cpMin + 1]; // + one byte for terminating zero
   range.lpstrText = Buf;
-  SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, NULL , (LPARAM)&range);
+  BOOL ok;
+  SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTRANGE, NULL , (LPARAM)&range );
+  if (!ok)
+    {
+      CLEAN_AND_ZERO_ARR (Buf);
+      return NULL;
+    }
   *offset = range.chrg.cpMin;
   Buf[range.chrg.cpMax - range.chrg.cpMin] = 0;
   return Buf;
@@ -2587,11 +2737,14 @@ char *SpellChecker::GetVisibleText(long *offset, BOOL NotIntersectionOnly)
 
 void SpellChecker::ClearAllUnderlines ()
 {
-  int length = SendMsgToEditor(NppDataInstance, SCI_GETLENGTH);
+  BOOL ok;
+  int length = SendMsgToActiveEditor(&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+  if (!ok)
+    return;
   if (length > 0)
   {
-    PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
-    PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length);
+    PostMsgToActiveEditor (GetCurrentScintilla (), SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
+    PostMsgToActiveEditor (GetCurrentScintilla (), SCI_INDICATORCLEARRANGE, 0, length);
   }
 }
 
@@ -2952,7 +3105,12 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
     return TRUE;
 
   if (HotSpotCache[Style] == -1)
-    HotSpotCache[Style] = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_STYLEGETHOTSPOT, Style);
+    {
+      BOOL ok;
+      HotSpotCache[Style] = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_STYLEGETHOTSPOT, Style);
+      if (!ok)
+        return TRUE;
+    }
 
   if (HotSpotCache[Style] == 1)
     return TRUE;
@@ -3061,11 +3219,9 @@ void SpellChecker::CheckSpecialDelimeters (char *&Word, const char *TextStart, l
   }
 }
 
-int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
+int SpellChecker::CheckTextDefaultAnswer (CheckTextMode Mode)
 {
-  if (!TextToCheck || !*TextToCheck)
-  {
-    switch (Mode)
+  switch (Mode)
     {
     case SpellChecker::UNDERLINE_ERRORS:
     case SpellChecker::FIND_FIRST:
@@ -3074,10 +3230,21 @@ int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
     case SpellChecker::GET_FIRST:
       return -1;
     }
-  }
+  return -1;
+}
+
+int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
+{
+  if (!TextToCheck || !*TextToCheck)
+    {
+      return CheckTextDefaultAnswer (Mode);
+    }
 
   HWND ScintillaWindow = GetCurrentScintilla ();
-  int oldid = SendMsgToEditor (ScintillaWindow, NppDataInstance, SCI_GETINDICATORCURRENT);
+  BOOL ok;
+  int oldid = SendMsgToActiveEditor (&ok, ScintillaWindow, SCI_GETINDICATORCURRENT);
+  if (!ok)
+    return CheckTextDefaultAnswer (Mode);
   char *Context = 0; // Temporary variable for strtok_s usage
   char *token;
   BOOL stop = FALSE;
@@ -3088,7 +3255,7 @@ int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
   long WordEnd = 0;
 
   if (!DelimUtf8)
-    return FALSE;
+    return CheckTextDefaultAnswer (Mode);
 
   if (CurrentEncoding == ENCODING_UTF8)
     token = Utf8strtok (TextToCheck, DelimUtf8Converted, &Context);
@@ -3096,103 +3263,107 @@ int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
     token = strtok_s (TextToCheck, DelimConverted, &Context);
 
   while (token)
-  {
-    if (token)
     {
-      WordStart = Offset + token - TextToCheck;
-      WordEnd = Offset + token - TextToCheck + strlen (token);
-      CheckSpecialDelimeters (token, TextToCheck, WordStart, WordEnd);
-      if (WordEnd < WordStart)
-        goto newtoken;
-
-
-      if (!CheckWord (token, WordStart, WordEnd))
-      {
-        switch (Mode)
+      if (token)
         {
-        case UNDERLINE_ERRORS:
-          UnderlineBuffer.push_back (WordStart);
-          UnderlineBuffer.push_back (WordEnd);
-          break;
-        case FIND_FIRST:
-          if (WordEnd > CurrentPosition)
-          {
-            SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, WordStart, WordEnd);
-            stop = TRUE;
-          }
-          break;
-        case FIND_LAST:
-          {
-            if (WordEnd >= CurrentPosition)
+          WordStart = Offset + token - TextToCheck;
+          WordEnd = Offset + token - TextToCheck + strlen (token);
+          CheckSpecialDelimeters (token, TextToCheck, WordStart, WordEnd);
+          if (WordEnd < WordStart)
+            goto newtoken;
+
+
+          if (!CheckWord (token, WordStart, WordEnd))
             {
-              stop = TRUE;
-              break;
+              switch (Mode)
+                {
+                case UNDERLINE_ERRORS:
+                  UnderlineBuffer.push_back (WordStart);
+                  UnderlineBuffer.push_back (WordEnd);
+                  break;
+                case FIND_FIRST:
+                  if (WordEnd > CurrentPosition)
+                    {
+                      SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_SETSEL, WordStart, WordEnd);
+                      if (!ok)
+                        return FALSE;
+                      stop = TRUE;
+                    }
+                  break;
+                case FIND_LAST:
+                  {
+                    if (WordEnd >= CurrentPosition)
+                      {
+                        stop = TRUE;
+                        break;
+                      }
+                    ResultingWordStart = WordStart;
+                    ResultingWordEnd = WordEnd;
+                  }
+                  break;
+                case GET_FIRST:
+                  return WordStart;
+                  break;
+                }
+              if (stop)
+                break;
             }
-            ResultingWordStart = WordStart;
-            ResultingWordEnd = WordEnd;
-          }
-          break;
-        case GET_FIRST:
-          return WordStart;
-          break;
+          else
+            {
+            }
         }
-        if (stop)
-          break;
-      }
-      else
-      {
-      }
-    }
 
 newtoken:
-    if (CurrentEncoding == ENCODING_UTF8)
-      token =  Utf8strtok (NULL, DelimUtf8Converted, &Context);
-    else
-      token = strtok_s (NULL, DelimConverted, &Context);
-  }
+      if (CurrentEncoding == ENCODING_UTF8)
+        token =  Utf8strtok (NULL, DelimUtf8Converted, &Context);
+      else
+        token = strtok_s (NULL, DelimConverted, &Context);
+    }
 
   if (Mode == UNDERLINE_ERRORS)
-  {
-    long PrevPos = Offset;
-    for (long i = 0; i < (long) UnderlineBuffer.size () - 1; i += 2)
     {
-      RemoveUnderline (ScintillaWindow, PrevPos, UnderlineBuffer[i] - 1);
-      CreateWordUnderline (ScintillaWindow, UnderlineBuffer[i], UnderlineBuffer[i + 1] - 1);
-      PrevPos = UnderlineBuffer[i + 1];
+      long PrevPos = Offset;
+      for (long i = 0; i < (long) UnderlineBuffer.size () - 1; i += 2)
+        {
+          RemoveUnderline (ScintillaWindow, PrevPos, UnderlineBuffer[i] - 1);
+          CreateWordUnderline (ScintillaWindow, UnderlineBuffer[i], UnderlineBuffer[i + 1] - 1);
+          PrevPos = UnderlineBuffer[i + 1];
+        }
+      RemoveUnderline (ScintillaWindow, PrevPos, Offset + TextLen - 1);
     }
-    RemoveUnderline (ScintillaWindow, PrevPos, Offset + TextLen - 1);
-  }
 
   // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
 
   switch (Mode)
-  {
-  case UNDERLINE_ERRORS:
-    return TRUE;
-  case FIND_FIRST:
-    return stop;
-  case GET_FIRST:
-    return -1;
-    break;
-  case FIND_LAST:
-    if (ResultingWordStart == -1)
-      return FALSE;
-    else
     {
-      SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL, ResultingWordStart, ResultingWordEnd);
+    case UNDERLINE_ERRORS:
       return TRUE;
-    }
-  };
+    case FIND_FIRST:
+      return stop;
+    case GET_FIRST:
+      return -1;
+      break;
+    case FIND_LAST:
+      if (ResultingWordStart == -1)
+        return FALSE;
+      else
+        {
+          SendMsgToActiveEditor (0, GetCurrentScintilla (), SCI_SETSEL, ResultingWordStart, ResultingWordEnd);
+          return TRUE;
+        }
+    };
   return FALSE;
 }
 
 void SpellChecker::ClearVisibleUnderlines ()
 {
-  int length = SendMsgToEditor(NppDataInstance, SCI_GETLENGTH);
+  BOOL ok;
+  int length = SendMsgToActiveEditor(&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+  if (!ok) return;
   if (length > 0)
   {
-    PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
-    PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_INDICATORCLEARRANGE, 0, length);
+    PostMsgToActiveEditor (GetCurrentScintilla (), SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
+    PostMsgToActiveEditor (GetCurrentScintilla (), SCI_INDICATORCLEARRANGE, 0, length);
   }
 }
 
@@ -3249,26 +3420,37 @@ void SpellChecker::SwitchAutoCheck ()
 void SpellChecker::RecheckModified ()
 {
   if (!CurrentSpeller->IsWorking ())
-  {
-    ClearAllUnderlines ();
-    return;
-  }
+    {
+      ClearAllUnderlines ();
+      return;
+    }
 
-  long FirstModifiedLine = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, ModifiedStart);
-  long LastModifiedLine = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_LINEFROMPOSITION, ModifiedEnd);
-  long LineCount = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLINECOUNT);
-  long FirstPossiblyModifiedPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, FirstModifiedLine);
+  BOOL ok;
+  long FirstModifiedLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, ModifiedStart);
+  if (!ok) return;
+  long LastModifiedLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, ModifiedEnd);
+  if (!ok) return;
+  long LineCount = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINECOUNT);
+  if (!ok) return;
+  long FirstPossiblyModifiedPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, FirstModifiedLine);
+  if (!ok) return;
   long LastPossiblyModifiedPos = 0;
   if (LastModifiedLine + 1 < LineCount)
-    LastPossiblyModifiedPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_POSITIONFROMLINE, LastModifiedLine + 1);
+    {
+      LastPossiblyModifiedPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, LastModifiedLine + 1);
+      if (!ok) return;
+    }
   else
-    LastPossiblyModifiedPos = SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLENGTH);
+    {
+      LastPossiblyModifiedPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+      if (!ok) return;
+    }
 
   Sci_TextRange Range;
   Range.chrg.cpMin = FirstPossiblyModifiedPos;
   Range.chrg.cpMax = LastPossiblyModifiedPos;
   Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
-  SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
+  SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
 
   CheckText (Range.lpstrText, FirstPossiblyModifiedPos, UNDERLINE_ERRORS);
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
@@ -3289,7 +3471,10 @@ void SpellChecker::RecheckVisible (BOOL NotIntersectionOnly)
     ClearAllUnderlines ();
     return;
   }
-  CodepageId = (int) SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETCODEPAGE, 0, 0);
+  BOOL ok;
+  CodepageId = (int) SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETCODEPAGE, 0, 0);
+  if (!ok)
+    return;
   setEncodingById (CodepageId); // For now it just changes should we convert it to utf-8 or no
   if (CheckTextNeeded ())
     CheckVisible (NotIntersectionOnly);
@@ -3306,9 +3491,14 @@ void SpellChecker::ErrorMsgBox (const TCHAR *message)
 
 void SpellChecker::CopyMisspellingsToClipboard ()
 {
-  int lengthDoc = (SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETLENGTH) + 1);
+  BOOL ok;
+  int lengthDoc = (SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH) + 1);
+  if (!ok)
+    return;
   char *buf = new char [lengthDoc];
-  SendMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_GETTEXT, lengthDoc, (LPARAM)buf);
+  SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXT, lengthDoc, (LPARAM)buf);
+  if (!ok)
+    return;
   int res = 0;
   std::string str; // Yay for first use of std::stirng
   do
@@ -3354,4 +3544,12 @@ void SpellChecker::CopyMisspellingsToClipboard ()
   CloseClipboard();
   CLEAN_AND_ZERO_ARR (buf);
   CLEAN_AND_ZERO_ARR (wchar_str);
+}
+
+SuggestionsMenuItem::SuggestionsMenuItem (TCHAR *TextArg, BYTE IdArg, BOOL SeparatorArg /*= FALSE*/)
+{
+  Text = 0;
+  SetString (Text, TextArg);
+  Id = IdArg;
+  Separator = SeparatorArg;
 }
