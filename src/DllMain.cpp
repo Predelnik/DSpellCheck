@@ -27,6 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "MainDef.h"
 #include "SpellChecker.h"
 
+#ifdef VLD_BUILD
+#include <vld.h>
+#endif //VLD_BUILD
+
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
 extern bool doCloseTag;
@@ -74,7 +78,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     break;
 
   case DLL_PROCESS_DETACH:
-    _CrtDumpMemoryLeaks();
+    //_CrtDumpMemoryLeaks();
     break;
 
   case DLL_THREAD_ATTACH:

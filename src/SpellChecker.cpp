@@ -862,7 +862,8 @@ void SpellChecker::CheckFileName ()
   CheckTextEnabled = !CheckThose;
   BOOL ok;
   SendMsgToNpp (&ok, NppDataInstance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM) FullPath);
-  if (!ok) return;
+  if (!ok)
+    goto cleanup;
 
   while (Token)
   {
@@ -880,8 +881,10 @@ void SpellChecker::CheckFileName ()
     }
     Token = _tcstok_s (NULL, _T(";"), &Context);
   }
-  CLEAN_AND_ZERO_ARR (FileTypesCopy);
   Lexer = SendMsgToActiveEditor (0, GetCurrentScintilla (), SCI_GETLEXER);
+
+cleanup:
+  CLEAN_AND_ZERO_ARR (FileTypesCopy);
 }
 
 int SpellChecker::GetStyle (int Pos)

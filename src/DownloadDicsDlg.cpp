@@ -770,9 +770,6 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
   }
 
   FtpTrim (Address);
-  TCHAR *Url = new TCHAR[_tcslen (Address) + 6 + 1];
-  _tcscpy (Url, _T ("ftp://"));
-  _tcsncat (Url, Address, _tcslen (Address) - 1);
   Folders = _tcschr (Address, _T ('/'));
   if (Folders != 0)
   {
