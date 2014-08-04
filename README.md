@@ -133,3 +133,6 @@ v1.2.11
 v1.2.12
 * Minor fixes with context menu on selection.
 * Add marquee style to progress bar for dictionaries being downloaded through ftp web proxy.
+
+v1.2.13
+* Fix some issues regarding plugin exiting process.
