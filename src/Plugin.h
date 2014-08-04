@@ -69,7 +69,6 @@ bool setNextCommand(TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL
 // TODO: Change events system to PostThreadMessage
 typedef enum {
   EID_SWITCH_AUTOCHECK,
-  EID_SET_SUGGESTIONS_BOX_TRANSPARENCY,
   EID_LOAD_SETTINGS,
   EID_FILL_DIALOGS,
   EID_APPLY_SETTINGS,

@@ -300,7 +300,7 @@ DWORD WINAPI ThreadNetwork (LPVOID lpParam)
   DWORD dwWaitResult    = EID_MAX;
   SpellChecker *SpellCheckerInstance = (SpellChecker*)lpParam;
 
-  BOOL bRun = SpellCheckerInstance->NotifyEvent(EID_MAX);
+  BOOL bRun = SpellCheckerInstance->NotifyNetworkEvent (EID_NETWORK_MAX);
 
   MSG Msg;
 

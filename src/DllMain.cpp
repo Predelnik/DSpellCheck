@@ -272,7 +272,7 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
         CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
         SendEvent (EID_RECHECK_VISIBLE_BOTH_VIEWS);
         RestylingCausedRecheckWasDone = FALSE;
-        SendEvent (EID_SET_SUGGESTIONS_BOX_TRANSPARENCY);
+        GetSpellChecker ()->SetSuggestionsBoxTransparency ();
         SendEvent (EID_UPDATE_LANG_LISTS); // To update quick lang change menu
         UpdateLangsMenu ();
       }

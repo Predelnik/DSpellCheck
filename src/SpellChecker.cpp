@@ -601,9 +601,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     case EID_HIDE_SUGGESTIONS_BOX:
       HideSuggestionBox ();
       break;
-    case EID_SET_SUGGESTIONS_BOX_TRANSPARENCY:
-      SetSuggestionsBoxTransparency ();
-      break;
     case EID_DEFAULT_DELIMITERS:
       SetDefaultDelimiters ();
       break;

@@ -126,6 +126,7 @@ public:
   BOOL GetProxyAnonymous ();
   int GetProxyType ();
   long PreviousA, PreviousB;
+  void SetSuggestionsBoxTransparency ();
 
 private:
   enum CheckTextMode
@@ -164,7 +165,6 @@ private:
   void ProcessMenuResult (UINT MenuId);
   void InitSuggestionsBox ();
   BOOL GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseTextCursor = FALSE);
-  void SetSuggestionsBoxTransparency ();
   char *GetWordAt (long CharPos, char *Text, long Offset);
   void SetDefaultDelimiters ();
   void HideSuggestionBox ();
