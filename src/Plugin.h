@@ -124,7 +124,6 @@ DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTi
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
 void setEncodingById (int EncId);
-BOOL GetAutoCheckText ();
 void updateAutocheckStatus ();
 void LoadSettings ();
 void RecheckVisible ();
@@ -133,6 +132,8 @@ void InitClasses ();
 void CreateHooks ();
 void UpdateLangsMenu ();
 void AddIcons ();
+BOOL GetAutoCheckState ();
+void AutoCheckStateReceived (BOOL state);
 HMENU GetDSpellCheckMenu ();
 HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = 0);
 HANDLE getHModule ();

@@ -63,7 +63,6 @@ NppData nppData;
 TCHAR IniFilePath[MAX_PATH];
 DWORD CustomGUIMessageIds [CustomGUIMessage::MAX] = {0};
 bool doCloseTag = false;
-BOOL AutoCheckText = false;
 SpellChecker *SpellCheckerInstance = 0;
 SettingsDlg *SettingsDlgInstance = 0;
 Suggestions *SuggestionsInstance = 0;
@@ -82,6 +81,7 @@ int ContextMenuIdStart;
 int LangsMenuIdStart = FALSE;
 BOOL UseAllocatedIds;
 toolbarIcons *AutoCheckIcon = 0;
+BOOL AutoCheckState = FALSE;
 
 HANDLE hEvent[EID_MAX]  = {NULL};
 HANDLE hNetworkEvent[EID_NETWORK_MAX]  = {NULL};
@@ -682,12 +682,6 @@ void commandMenuCleanUp()
   CLEAN_AND_ZERO (AutoCheckIcon);
   // We should deallocate shortcuts here
 }
-
-BOOL GetAutoCheckText ()
-{
-  return AutoCheckText;
-}
-
 //
 // Function that initializes plug-in commands
 //
@@ -717,4 +711,15 @@ void WaitTillThreadsClosed ()
 {
   HANDLE threadHandles[] = {hThread, hNetworkThread};
   WaitForMultipleObjects (2, threadHandles, true, INFINITE);
+}
+
+
+void AutoCheckStateReceived (BOOL state)
+{
+  AutoCheckState = state;
+}
+
+BOOL GetAutoCheckState ()
+{
+  return AutoCheckState;
 }

@@ -132,6 +132,21 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
     {
       if (!GetUseAllocatedIds ())
         PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
+
+      if (LOWORD (wParam) == IDM_FILE_PRINTNOW || LOWORD (wParam) == IDM_FILE_PRINT)
+        {
+          BOOL AutoCheckDisabledWhilePrinting = GetAutoCheckState ();
+
+          if (AutoCheckDisabledWhilePrinting)
+            SendEvent (EID_SWITCH_AUTOCHECK);
+
+          ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
+
+          if (AutoCheckDisabledWhilePrinting)
+            SendEvent (EID_SWITCH_AUTOCHECK);
+
+          return ret;
+        }
     }
     break;
   case WM_NOTIFY:
@@ -166,6 +181,10 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
       MenuList = (std::vector <SuggestionsMenuItem *> *) lParam;
       return ::CallWindowProc(wndProcNotepad, hWnd, WM_CONTEXTMENU, LastHwnd, LastCoords);
     }
+    else if (Message == GetCustomGUIMessageId (CustomGUIMessage::SHOW_CALCULATED_MENU))
+    {
+      AutoCheckStateReceived (wParam);
+    }
   }
 
   /*
@@ -177,6 +196,8 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
   ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
   return ret;
 }
+
+static BOOL AutoCheckDisabledWhilePrinting = FALSE;
 
 extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
@@ -256,7 +277,6 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
         pluginCleanUp();
         if (wndProcNotepad != NULL)
           ::SetWindowLongPtr (nppData._nppHandle, GWL_WNDPROC, (LONG)wndProcNotepad); // Removing subclassing
-
       }
       break;
 

@@ -2329,6 +2329,7 @@ void SpellChecker::UpdateAutocheckStatus (int SaveSetting)
     SaveSettings ();
 
   SendMsgToNpp (0, NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem ()[0]._cmdID, AutoCheckText);
+  SendMessage (NppDataInstance->_nppHandle, GetCustomGUIMessageId (CustomGUIMessage::AUTOCHECK_STATE_CHANGED), AutoCheckText, 0);
 }
 
 void SpellChecker::SetCheckThose (int CheckThoseArg)
