@@ -181,7 +181,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
       MenuList = (std::vector <SuggestionsMenuItem *> *) lParam;
       return ::CallWindowProc(wndProcNotepad, hWnd, WM_CONTEXTMENU, LastHwnd, LastCoords);
     }
-    else if (Message == GetCustomGUIMessageId (CustomGUIMessage::SHOW_CALCULATED_MENU))
+    else if (Message == GetCustomGUIMessageId (CustomGUIMessage::AUTOCHECK_STATE_CHANGED))
     {
       AutoCheckStateReceived (wParam);
     }
