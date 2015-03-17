@@ -736,7 +736,7 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
         }
         int Checked = (_tcscmp (CurLang, _T ("<MULTIPLE>")) == 0) ? (MFT_RADIOCHECK | MF_CHECKED)  : MF_UNCHECKED;
         Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () : MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
-        Res = AppendMenu (NewMenu, MF_SEPARATOR, -1, 0);
+        Res = AppendMenu (NewMenu, MF_SEPARATOR, 0, 0);
         Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () : MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Set Multiple Languages..."));
         if (LibMode == 1) // Only Hunspell supported
         {
@@ -749,7 +749,7 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
     }
   }
   else
-    Res = AppendMenu (NewMenu, MF_STRING | MF_DISABLED, -1, _T ("Loading..."));
+    Res = AppendMenu (NewMenu, MF_STRING | MF_DISABLED, 0, _T ("Loading..."));
 
   Mif.fMask = MIIM_SUBMENU | MIIM_STATE;
   Mif.cbSize = sizeof (MENUITEMINFO);
@@ -1846,8 +1846,6 @@ void SpellChecker::FindPrevMistake ()
   if (!ok) return;
   int CurLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, CurrentPosition);
   if (!ok) return;
-  int LineCount = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINECOUNT);
-  if (!ok) return;
   long LineEndPos = 0;
   long DocLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH);
   if (!ok) return;
@@ -2084,7 +2082,7 @@ void SpellChecker::SetSuggestionsBoxTransparency ()
   // Set WS_EX_LAYERED on this window
   SetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE,
                 GetWindowLong(SuggestionsInstance->getHSelf (), GWL_EXSTYLE) | WS_EX_LAYERED);
-  SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * SBTrans) / 100, LWA_ALPHA);
+  SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, static_cast<BYTE> ((255 * SBTrans) / 100), LWA_ALPHA);
   SuggestionsInstance->display (true);
   SuggestionsInstance->display (false);
 }
@@ -2160,7 +2158,6 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
         Result = LOBYTE (MenuId);
       else
         Result = MenuId - GetContextMenuIdStart ();
-      AspellStringEnumeration *els = 0;
 
       if (Result != 0)
       {
@@ -2275,15 +2272,15 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   if (!LastSuggestions)
     return;
 
-  for (unsigned int i = 0; i < LastSuggestions->size (); i++)
+  for (size_t i = 0; i < LastSuggestions->size (); i++)
     {
       if (i >= (unsigned int) SuggestionsNum)
         break;
       SetStringSUtf8 (Buf, LastSuggestions->at (i));
       if (SuggestionsMode == SUGGESTIONS_BOX)
-        InsertSuggMenuItem (Menu, Buf, i + 1, -1);
+        InsertSuggMenuItem (Menu, Buf, static_cast<BYTE> (i + 1), -1);
       else
-        SuggestionMenuItems->push_back (new SuggestionsMenuItem (Buf, i + 1));
+        SuggestionMenuItems->push_back (new SuggestionsMenuItem (Buf, static_cast<BYTE> (i + 1)));
     }
 
   if (LastSuggestions->size () > 0)
@@ -2464,7 +2461,6 @@ void SpellChecker::SaveSettings ()
   FILE *Fp;
   _tfopen_s (&Fp, IniFilePath, _T ("w")); // Cleaning settings file (or creating it)
   fclose (Fp);
-  TCHAR *TBuf = 0;
   if (!SettingsLoaded)
     return;
   SaveToIni (_T ("Autocheck"), AutoCheckText, 1);
@@ -2629,7 +2625,7 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (Trans, _T ("Suggestions_Button_Opacity"), 70);
   SetSuggBoxSettings (Size, Trans, 0);
   LoadFromIni (Size, _T ("Find_Next_Buffer_Size"), 4);
-  SetBufferSize (Size, 0);
+  SetBufferSize (Size);
   RefreshUnderlineStyle ();
   CLEAN_AND_ZERO_ARR (BufUtf8);
   LoadFromIni (ShowOnlyKnown, _T ("Show_Only_Known"), TRUE);
@@ -2878,7 +2874,7 @@ void SpellChecker::LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char 
   TCHAR *BufDefault = 0;
   TCHAR *Buf = 0;
   SetStringSUtf8 (BufDefault, DefaultValue);
-  LoadFromIni (Buf, Name, BufDefault);
+  LoadFromIni (Buf, Name, BufDefault, InQuotes);
   SetStringDUtf8 (Value, Buf);
   CLEAN_AND_ZERO_ARR (Buf);
   CLEAN_AND_ZERO_ARR (BufDefault);
@@ -2974,7 +2970,6 @@ void SpellChecker::SetMultipleLanguages (const TCHAR *MultiString, AbstractSpell
 
 BOOL SpellChecker::HunspellReinitSettings (BOOL ResetDirectory)
 {
-  TCHAR *TBuf = 0;
   if (ResetDirectory)
   {
     HunspellSpeller->SetDirectory (HunspellPath);
@@ -2992,7 +2987,6 @@ BOOL SpellChecker::HunspellReinitSettings (BOOL ResetDirectory)
 
 BOOL SpellChecker::AspellReinitSettings ()
 {
-  TCHAR *TBuf = 0;
   AspellSpeller->Init (AspellPath);
 
   if (_tcscmp (AspellLanguage, _T ("<MULTIPLE>")) != 0)
@@ -3004,7 +2998,7 @@ BOOL SpellChecker::AspellReinitSettings ()
   return TRUE;
 }
 
-void SpellChecker::SetBufferSize (int Size, BOOL SaveIni)
+void SpellChecker::SetBufferSize(int Size)
 {
   if (Size < 1)
     Size = 1;
@@ -3027,7 +3021,7 @@ void SpellChecker::SetSuggBoxSettings (int Size, int Transparency, int SaveIni)
     SBTrans = Transparency;
     // Don't sure why but this helps to fix a bug with notepad++ window resizing
     // TODO: Fix it normal way
-    SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, (255 * SBTrans) / 100, LWA_ALPHA);
+    SetLayeredWindowAttributes(SuggestionsInstance->getHSelf (), 0, static_cast<BYTE> ((255 * SBTrans) / 100), LWA_ALPHA);
   }
 }
 
@@ -3068,8 +3062,12 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
     int Diff = strlen (ConvertFrom[i]) - strlen (ConvertTo[i]);
     if (Diff < 0)
       continue; // For now this case isn't needed.
-    while (Iter = strstr (Iter, ConvertFrom[i]))
+    while (true)
     {
+      Iter = strstr (Iter, ConvertFrom[i]);
+      if (!Iter)
+        break;
+
       for (size_t j = 0; j < strlen (ConvertTo[i]); j++)
       {
         *Iter = ConvertTo[i][j];
@@ -3085,8 +3083,6 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
         *(NestedIter + j) = 0;
     }
   }
-
-  unsigned int LastChar = strlen (Word) - 1; // Apostrophe is ASCII char so it's leading anyway
 }
 
 void SpellChecker::ResetHotSpotCache ()
@@ -3094,7 +3090,7 @@ void SpellChecker::ResetHotSpotCache ()
   memset (HotSpotCache, -1, sizeof (HotSpotCache));
 }
 
-BOOL SpellChecker::CheckWord (char *Word, long Start, long End)
+BOOL SpellChecker::CheckWord (char *Word, long Start, long /*End*/)
 {
   BOOL res = FALSE;
   if (!CurrentSpeller->IsWorking () || !Word || !*Word)
@@ -3243,7 +3239,7 @@ int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
 
   HWND ScintillaWindow = GetCurrentScintilla ();
   BOOL ok;
-  int oldid = SendMsgToActiveEditor (&ok, ScintillaWindow, SCI_GETINDICATORCURRENT);
+  SendMsgToActiveEditor (&ok, ScintillaWindow, SCI_GETINDICATORCURRENT);
   if (!ok)
     return CheckTextDefaultAnswer (Mode);
   char *Context = 0; // Temporary variable for strtok_s usage

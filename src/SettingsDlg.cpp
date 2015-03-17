@@ -63,7 +63,6 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailabl
 
   int SelectedIndex = 0;
   unsigned int i = 0;
-  TCHAR *ConvertedBuf = 0;
 
   for (i = 0; i < LangsAvailable->size (); i++)
   {
@@ -166,8 +165,6 @@ void SimpleDlg::ApplyLibChange (SpellChecker *SpellCheckerInstance)
 void SimpleDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
 {
   TCHAR *Buf = 0;
-  char *Lang = 0;
-  int TextLen = 0;
   int LangCount = ComboBox_GetCount (HComboLanguage);
   int CurSel = ComboBox_GetCurSel (HComboLanguage);
 
@@ -334,7 +331,7 @@ int SimpleDlg::GetSelectedLib ()
   return ComboBox_GetCurSel (HLibrary);
 }
 
-static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lParam*/, LPARAM lpData)
 {
   // If the BFFM_INITIALIZED message is received
   // set the path to the start path.
@@ -354,8 +351,6 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPAR
 
 BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
-  char *LangString = NULL;
-  int length = 0;
   TCHAR Buf[DEFAULT_BUF_SIZE];
   int x;
   TCHAR *EndPtr;

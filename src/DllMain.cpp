@@ -67,7 +67,7 @@ void SetRecheckDelay (int Value, int WriteToIni)
 
 BOOL APIENTRY DllMain( HANDLE hModule,
                        DWORD  reasonForCall,
-                       LPVOID lpReserved )
+                       LPVOID )
 {
   HModule = hModule;
 
@@ -217,30 +217,12 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF)
   return funcItem;
 }
 
-static void AddToQueue (long Start, long End)
-{
-  std::pair <long, long> *Pair = new std::pair <long, long>;
-  Pair->first = Start;
-  Pair->second = End;
-  CheckQueue.push_back (*Pair);
-}
-
 // For now doesn't look like there is such a need in check modified, but code stays until thorough testing
 VOID CALLBACK ExecuteQueue (
-  PVOID lpParameter,
-  BOOLEAN TimerOrWaitFired
+  PVOID /*lpParameter*/,
+  BOOLEAN /*TimerOrWaitFired*/
 )
 {
-  /*
-  std::vector<std::pair <long, long>>::iterator Iterator;
-  for (Iterator = CheckQueue.begin (); Iterator != CheckQueue.end (); ++Iterator)
-  {
-  std::pair <long, long> *Pair = new std::pair <long, long> (*Iterator);
-  SendEvent (EID_RECHECK_MODIFIED_ZONE);
-  PostMessageToMainThread (TM_MODIFIED_ZONE_INFO, 0, (LPARAM) Pair);
-  }
-  CheckQueue.clear ();
-  */
   if (Timer)
     DeleteTimerQueueTimer (0, Timer, 0);
 
@@ -400,7 +382,7 @@ void InitNeededDialogs (int wParam)
   }
 }
 
-extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
+extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM /*lParam*/)
 {
   switch (Message)
   {

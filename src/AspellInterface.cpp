@@ -152,7 +152,6 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
     {
       CurWordList = aspell_speller_suggest (Spellers->at (i), TargetWord, -1);
 
-      AspellStringEnumeration *els = aspell_word_list_elements(CurWordList);
       Size = aspell_word_list_size (CurWordList);
 
       if (Size > MaxSize)
@@ -168,8 +167,6 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
 
   AspellStringEnumeration *els = aspell_word_list_elements(WordList);
   const char *Suggestion;
-  TCHAR *Buf = 0;
-  int Counter = 0;
 
   while ((Suggestion = aspell_string_enumeration_next(els)) != 0)
   {

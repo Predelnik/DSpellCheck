@@ -77,8 +77,8 @@ static BOOL ListFiles(TCHAR *path, TCHAR *mask, std::vector<TCHAR *>& files, TCH
 
     if (GetLastError() != ERROR_NO_MORE_FILES) {
       FindClose(hFind);
-      goto cleanup;
       Result = FALSE;
+      goto cleanup;
     }
 
     FindClose(hFind);
@@ -181,6 +181,9 @@ BOOL ArePathsEqual (TCHAR *path1, TCHAR *path2)
     h2 = CreateFile(path2,access,share,NULL,OPEN_EXISTING,(GetFileAttributes(path2)&FILE_ATTRIBUTE_DIRECTORY)?FILE_FLAG_BACKUP_SEMANTICS:0,NULL);
     if (!GetFileInformationByHandle(h2,&bhfi2)) bhfi2.dwVolumeSerialNumber = bhfi1.dwVolumeSerialNumber + 1;
   }
+  else
+    return FALSE;
+
   CloseHandle(h1);
   CloseHandle(h2);
   return INVALID_HANDLE_VALUE != h1 && INVALID_HANDLE_VALUE != h2
@@ -412,7 +415,6 @@ BOOL HunspellInterface::CheckWord (char *Word)
     return TRUE;
 
   BOOL res = FALSE;
-  unsigned int Len = strlen (Word);
   if (!MultiMode)
   {
     if (SingularSpeller.Speller)
@@ -526,8 +528,6 @@ void HunspellInterface::AddToDictionary (char *Word)
     DicPath = UserDicPath;
   else
     DicPath = LastSelectedSpeller.LocalDicPath;
-
-  int res = 0;
 
   if (!PathFileExists (DicPath))
   {
@@ -646,9 +646,6 @@ std::vector<char *> *HunspellInterface::GetSuggestions (char *Word)
       }
     }
   }
-
-  TCHAR *Buf = 0;
-  int Counter = 0;
 
   for (int i = 0; i < Num; i++)
   {

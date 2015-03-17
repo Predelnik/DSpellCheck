@@ -184,8 +184,6 @@ void GetDefaultAspellPath (TCHAR *&Path)
 
 void GetActualAspellPath (TCHAR *&Path, TCHAR *&PathArg)
 {
-  BOOL   bRet = FALSE;
-
   if (!PathArg || !*PathArg)
   {
     GetDefaultAspellPath (Path);

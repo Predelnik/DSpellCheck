@@ -117,7 +117,7 @@ void SelectProxy::SetOptions (BOOL UseProxy, TCHAR *HostName, TCHAR *UserName, T
   ComboBox_SetCurSel (HProxyType, ProxyType);
 }
 
-BOOL CALLBACK SelectProxy::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK SelectProxy::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lParam*/)
 {
   switch (message)
   {
@@ -188,7 +188,6 @@ BOOL CALLBACK SelectProxy::run_dlgProc (UINT message, WPARAM wParam, LPARAM lPar
       }
     }
     break;
-    return FALSE;
   }
   return FALSE;
 }

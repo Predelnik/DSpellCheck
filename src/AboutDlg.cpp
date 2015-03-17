@@ -59,12 +59,6 @@ bool GetProductAndVersion (TCHAR *&strProductVersion)
     return false;
   }
 
-  // get the name and version strings
-  LPVOID pvProductName = NULL;
-  unsigned int iProductNameLen = 0;
-  LPVOID pvProductVersion = NULL;
-  unsigned int iProductVersionLen = 0;
-
   UINT                uiVerLen = 0;
   VS_FIXEDFILEINFO*   pFixedInfo = 0;     // pointer to fixed file info structure
   // get the fixed file info (language-independent)

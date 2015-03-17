@@ -58,7 +58,6 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
 {
   int Count = 0;
   BOOL Success = FALSE;
-  BOOL Res = FALSE;
   BOOL NeedSingleReset = FALSE;
   BOOL NeedMultiReset = FALSE;
   BOOL SingleTemp, MultiTemp;
@@ -127,7 +126,7 @@ void RemoveDics::SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem)
   Button_SetCheck (HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
-BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lParam*/)
 {
   switch (message)
   {

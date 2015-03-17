@@ -94,7 +94,7 @@ public:
   void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
     BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg);
   void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
-  void SetBufferSize (int Size, BOOL SaveToIni = 1);
+  void SetBufferSize (int Size);
   void SetSuggType (int SuggType);
   void SetLibMode (int i);
   void SetDecodeNames (BOOL Value);

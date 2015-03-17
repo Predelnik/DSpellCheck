@@ -230,7 +230,7 @@ protected:
     }
 };
 
-int filter(unsigned int code, struct _EXCEPTION_POINTERS *ep)
+int filter(unsigned int, struct _EXCEPTION_POINTERS *ep)
 {
   MyStackWalker sw;
   sw.ShowCallstack(GetCurrentThread(), ep->ContextRecord);
@@ -605,7 +605,9 @@ HMENU GetDSpellCheckMenu ()
       Mif.cbSize = sizeof (MENUITEMINFO);
       BOOL Res = GetMenuItemInfo (PluginsMenu, i, TRUE, &Mif);
 
-      DSpellCheckMenu = (HMENU) Mif.wID;
+      if (Res)
+        DSpellCheckMenu = (HMENU) Mif.wID;
+
       CLEAN_AND_ZERO_ARR (Buf);
       break;
     }
@@ -630,6 +632,9 @@ HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg)
   Mif.cbSize = sizeof (MENUITEMINFO);
 
   BOOL Res = GetMenuItemInfo (DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, TRUE, &Mif);
+  if (!Res)
+    return NULL;
+
   return Mif.hSubMenu;
 }
 

@@ -95,16 +95,6 @@ void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
   CheckIfSavingIsNeeded = 1;
 }
 
-static BOOL IsNetworkThreadBeingKilled ()
-{
-  if (WaitForNetworkEvent (EID_KILLNETWORKTHREAD, 0))
-  {
-    SendNetworkEvent (EID_KILLNETWORKTHREAD);
-    return TRUE;
-  }
-  return FALSE;
-}
-
 DWORD DownloadDicsDlg::AskReplacementMessage (TCHAR *DicName)
 {
   TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
@@ -450,7 +440,7 @@ public:
     BytesReceived = 0;
   }
 
-  virtual void OnBytesReceived(const nsFTP::TByteVector& vBuffer, long lReceivedBytes) override
+  virtual void OnBytesReceived(const nsFTP::TByteVector& /*vBuffer*/, long lReceivedBytes) override
   {
     BytesReceived += lReceivedBytes;
     ProgressInstance->SetProgress (BytesReceived * 100 / TargetSize);
@@ -483,6 +473,9 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
   _stprintf (ProxyFinalString, _T ("%s:%d"), SpellCheckerInstance->GetProxyHostName (), SpellCheckerInstance->GetProxyPort ());
   HINTERNET WinInetHandle = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PROXY, ProxyFinalString, _T (""), 0);
   CLEAN_AND_ZERO_ARR (ProxyFinalString);
+  FtpTrim (Address);
+  TCHAR *Url = new TCHAR[_tcslen (Address) + (Type == DOWNLOAD_FILE ? _tcslen (FileName) : 0) + 6 + 1];
+
   if (!WinInetHandle)
   {
     if (Type == FILL_FILE_LIST)
@@ -493,10 +486,6 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     goto cleanup;
   }
 
-  int Error = 0;
-
-  FtpTrim (Address);
-  TCHAR *Url = new TCHAR [_tcslen (Address) + (Type == DOWNLOAD_FILE ? _tcslen (FileName) : 0) + 6 + 1];
   _tcscpy (Url, _T ("ftp://"));
   _tcscat (Url, Address);
   if (Type == DOWNLOAD_FILE)
@@ -604,7 +593,6 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     }
     CurPos = FileBuffer;
     TCHAR *FileName = 0;
-    TCHAR *FileNameCopy = 0;
     int count = 0;
     // Bad Parsing. Really, really bad. I'm sorry :(
     if (CurPos == 0)
@@ -690,7 +678,6 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     DWORD BytesToRead = 0;
     DWORD BytesRead;
     DWORD BytesReadTotal = 0;
-    DWORD FinalSize = 0;
     FileName[_tcslen (FileName) - 4] = _T ('\0');
     TCHAR Message[DEFAULT_BUF_SIZE];
 
@@ -786,7 +773,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
     Address, 21, _T ("anonymous"), _T (""), _T (""),
     SpellCheckerInstance->GetProxyHostName (),
     _T (""), _T (""),
-    SpellCheckerInstance->GetProxyPort (),
+    static_cast<USHORT> (SpellCheckerInstance->GetProxyPort ()),
     nsFTP::CFirewallType::UserWithNoLogon ()
     );
 
@@ -897,7 +884,7 @@ cleanup:
 
 VOID CALLBACK ReinitServer (
   PVOID lpParameter,
-  BOOLEAN TimerOrWaitFired
+  BOOLEAN /*TimerOrWaitFired*/
   )
 {
   DownloadDicsDlg *DlgInstance = ((DownloadDicsDlg *) lpParameter);

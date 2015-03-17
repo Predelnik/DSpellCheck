@@ -891,9 +891,11 @@ BOOL StackWalker::LoadModules()
 static StackWalker::PReadProcessMemoryRoutine s_readMemoryFunction = NULL;
 static LPVOID s_readMemoryFunction_UserData = NULL;
 
+#pragma warning(push)
+#pragma warning(disable : 4740)
 BOOL StackWalker::ShowCallstack(HANDLE hThread, const CONTEXT *context, PReadProcessMemoryRoutine readMemoryFunction, LPVOID pUserData)
 {
-  CONTEXT c;;
+  CONTEXT c;
   CallstackEntry csEntry;
   IMAGEHLP_SYMBOL64 *pSym = NULL;
   StackWalkerInternal::IMAGEHLP_MODULE64_V2 Module;
@@ -1113,6 +1115,7 @@ BOOL StackWalker::ShowCallstack(HANDLE hThread, const CONTEXT *context, PReadPro
 
   return TRUE;
 }
+#pragma warning(pop)
 
 BOOL __stdcall StackWalker::myReadProcMem(
     HANDLE      hProcess,
@@ -1204,6 +1207,9 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
   OSVERSIONINFOEXA ver;
   ZeroMemory(&ver, sizeof(OSVERSIONINFOEXA));
   ver.dwOSVersionInfoSize = sizeof(ver);
+
+  // It was deprecate in 8.1
+  /*
   if (GetVersionExA( (OSVERSIONINFOA*) &ver) != FALSE)
   {
     _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "OS-Version: %d.%d.%d (%s) 0x%x-0x%x\n",
@@ -1211,6 +1217,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
       ver.szCSDVersion, ver.wSuiteMask, ver.wProductType);
     OnOutput(buffer);
   }
+  */
 #endif
 }
 

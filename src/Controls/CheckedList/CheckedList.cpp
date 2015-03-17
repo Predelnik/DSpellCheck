@@ -112,7 +112,7 @@ VOID ListBox_OnChar(HWND hwnd, TCHAR ch, INT cRepeat)
 /// @param keyFlags Set if certain keys down at time of click.
 ///
 /// @returns VOID.
-VOID ListBox_OnLButtonDown(HWND hwnd, BOOL fDoubleClick, INT x, INT y, UINT keyFlags)
+VOID ListBox_OnLButtonDown(HWND hwnd, BOOL /*fDoubleClick*/, INT x, INT y, UINT keyFlags)
 {
   HWND hParent;
 
@@ -193,12 +193,12 @@ VOID ListBox_OnRButtonDown(HWND hwnd, BOOL fDoubleClick, INT x, INT y, UINT keyF
 ///                    to be drawn and the type of drawing required.
 ///
 /// @returns VOID.
-VOID Control_OnDrawItem(HWND hwnd, const DRAWITEMSTRUCT * lpDrawItem)
+VOID Control_OnDrawItem(HWND /*hwnd*/, const DRAWITEMSTRUCT * lpDrawItem)
 {
   if (lpDrawItem->itemAction & (ODA_DRAWENTIRE | ODA_SELECT))
   {
-    COLORREF crBk;
-    COLORREF crTx;
+    COLORREF crBk = 0x0;
+    COLORREF crTx = 0x0;
     HDC dc = lpDrawItem->hDC;
     RECT rcBitmap = lpDrawItem->rcItem;
     RECT rcText = lpDrawItem->rcItem;
@@ -412,7 +412,7 @@ BOOL Control_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 /// @param hwnd Handle of Control.
 ///
 /// @returns VOID.
-VOID Control_OnDestroy(HWND hwnd)
+VOID Control_OnDestroy(HWND /*hwnd*/)
 {
   //Do something
 }
@@ -429,7 +429,7 @@ VOID Control_OnDestroy(HWND hwnd)
 /// @param cy The height of client area.
 ///
 /// @returns VOID.
-VOID Control_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
+VOID Control_OnSize(HWND hwnd, UINT /*state*/, INT cx, INT cy)
 {
   HWND hList = GetDlgItem(hwnd, ID_LISTBOX);
 
