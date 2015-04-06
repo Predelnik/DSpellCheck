@@ -2592,7 +2592,7 @@ void SpellChecker::LoadSettings ()
   CLEAN_AND_ZERO_ARR (TBuf);
 
   SetStringDUtf8 (BufUtf8, DEFAULT_DELIMITERS);
-  LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), BufUtf8, TRUE);
+  LoadFromIniUtf8 (BufUtf8, _T ("Delimiters"), BufUtf8);
   SetDelimiters (BufUtf8);
   LoadFromIni (SuggestionsNum, _T ("Suggestions_Number"), 5);
   LoadFromIni (IgnoreYo, _T ("Ignore_Yo"), 0);
