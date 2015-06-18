@@ -15,6 +15,9 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
+v1.2.14.1
+* Fix hanging on exit in newer version of Notepad++ in most common case.
+
 v1.2.14
 * Disable mistake underlining when printing is done.
 
