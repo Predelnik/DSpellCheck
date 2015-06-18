@@ -158,7 +158,7 @@ SimpleDlg::~SimpleDlg ()
 void SimpleDlg::ApplyLibChange (SpellChecker *SpellCheckerInstance)
 {
   SpellCheckerInstance->SetLibMode (GetSelectedLib ());
-  SpellCheckerInstance->ReinitLanguageLists ();
+  SpellCheckerInstance->ReinitLanguageLists (TRUE);
   SpellCheckerInstance->DoPluginMenuInclusion ();
 }
 // Called from main thread, beware!

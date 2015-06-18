@@ -454,6 +454,7 @@ void GetSuggestions ()
 void StartSettings ()
 {
   SettingsDlgInstance->DoDialog ();
+  UpdateLangLists ();
 }
 
 void StartManual ()
@@ -576,6 +577,11 @@ void AddIcons ()
   AutoCheckIcon = new toolbarIcons;
   AutoCheckIcon->hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)hModule, MAKEINTRESOURCE(IDB_AUTOCHECK2), IMAGE_BITMAP, 16, 16, LR_LOADMAP3DCOLORS);
   ::SendMessage(nppData._nppHandle, NPPM_ADDTOOLBARICON, (WPARAM)funcItem[0]._cmdID, (LPARAM) AutoCheckIcon);
+}
+
+void UpdateLangLists ()
+{
+  //SendEvent (EID_UPDATE_LANG_LISTS);
 }
 
 void UpdateLangsMenu ()

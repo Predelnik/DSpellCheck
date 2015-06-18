@@ -362,7 +362,7 @@ clean_and_continue:
   for (int i = 0; i < ListBox_GetCount (HFileList); i++)
     CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
   SpellCheckerInstance->HunspellReinitSettings (TRUE); // Calling the update for Hunspell dictionary list
-  SpellCheckerInstance->ReinitLanguageLists ();
+  SpellCheckerInstance->ReinitLanguageLists (TRUE);
   SpellCheckerInstance->DoPluginMenuInclusion ();
   SpellCheckerInstance->RecheckVisibleBothViews ();
   CLEAN_AND_ZERO_ARR (LocalPathANSI);

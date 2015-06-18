@@ -100,7 +100,7 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
   if (Count > 0)
   {
     SpellCheckerInstance->HunspellReinitSettings (TRUE);
-    SpellCheckerInstance->ReinitLanguageLists ();
+    SpellCheckerInstance->ReinitLanguageLists (TRUE);
     SpellCheckerInstance->DoPluginMenuInclusion ();
     SpellCheckerInstance->RecheckVisibleBothViews ();
     /*

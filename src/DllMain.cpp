@@ -275,7 +275,7 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
         SendEvent (EID_RECHECK_VISIBLE_BOTH_VIEWS);
         RestylingCausedRecheckWasDone = FALSE;
         GetSpellChecker ()->SetSuggestionsBoxTransparency ();
-        SendEvent (EID_UPDATE_LANG_LISTS); // To update quick lang change menu
+        SendEvent (EID_UPDATE_LANG_LISTS_NO_GUI); // To update quick lang change menu
         UpdateLangsMenu ();
       }
       break;
@@ -375,9 +375,15 @@ void InitNeededDialogs (int wParam)
     if (Result == DOWNLOAD_DICS)
       GetDownloadDics ()->DoDialog ();
     else if (Result == CUSTOMIZE_MULTIPLE_DICS)
-      GetLangList ()->DoDialog ();
+      {
+        GetLangList ()->DoDialog ();
+        SendEvent(EID_UPDATE_LANG_LISTS);
+      }
     else if (Result == REMOVE_DICS)
+    {
       GetRemoveDics ()->DoDialog ();
+      SendEvent(EID_UPDATE_LANG_LISTS);
+    }
     break;
   }
 }

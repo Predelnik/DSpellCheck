@@ -99,6 +99,7 @@ typedef enum {
   EID_UPDATE_REMOVE_DICS_OPTIONS,
   EID_UPDATE_FROM_REMOVE_DICS_OPTIONS,
   EID_UPDATE_LANG_LISTS,
+  EID_UPDATE_LANG_LISTS_NO_GUI,
   EID_UPDATE_LANGS_MENU,
   EID_LANG_CHANGE,
   EID_LIB_CHANGE,
@@ -163,5 +164,5 @@ bool isCurrentlyTerminating (); // This function is only for main thread
 void SetRecheckDelay (int Value, int WriteToIni = 1);
 int GetRecheckDelay ();
 void WaitTillThreadsClosed ();
-
+void UpdateLangLists ();
 #endif //PLUGINDEFINITION_H

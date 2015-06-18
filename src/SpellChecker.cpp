@@ -392,7 +392,7 @@ TCHAR *SpellChecker::GetLangByIndex (int i)
   return CurrentLangs->at(i).OrigName;
 }
 
-void SpellChecker::ReinitLanguageLists ()
+void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs)
 {
   int SpellerId = LibMode;
   BOOL CurrentLangExists = FALSE;
@@ -416,14 +416,14 @@ void SpellChecker::ReinitLanguageLists ()
 
   if (SpellerToUse->IsWorking ())
   {
-    if (SettingsDlgInstance->GetSimpleDlg ()->isVisible ())
+    if (UpdateDialogs)
       SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (FALSE);
     std::vector <TCHAR *> *LangsFromSpeller =  SpellerToUse->GetLanguageList ();
     CurrentLangs = new std::vector<LanguageName> ();
 
     if (!LangsFromSpeller || LangsFromSpeller->size () == 0)
     {
-      if (SettingsDlgInstance->GetSimpleDlg ()->isVisible ())
+      if (UpdateDialogs)
         SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
       return;
     }
@@ -447,7 +447,7 @@ void SpellChecker::ReinitLanguageLists ()
         SetAspellLanguage (CurrentLangs->at (0).OrigName);
       RecheckVisibleBothViews ();
     }
-    if (SettingsDlgInstance->GetSimpleDlg ()->isVisible ())
+      if (UpdateDialogs)
       SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
                                                                    SpellerId == 1 ? HunspellLanguage : AspellLanguage,
                                                                    SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
@@ -455,7 +455,7 @@ void SpellChecker::ReinitLanguageLists ()
   }
   else
   {
-    if (SettingsDlgInstance->GetSimpleDlg ()->isVisible ())
+    if (UpdateDialogs)
       SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
   }
 }
@@ -467,7 +467,7 @@ int SpellChecker::GetLibMode ()
 
 void SpellChecker::FillDialogs (BOOL NoDisplayCall)
 {
-  ReinitLanguageLists ();
+  ReinitLanguageLists (TRUE);
   SettingsDlgInstance->GetSimpleDlg ()->SetLibMode (LibMode);
   SettingsDlgInstance->GetSimpleDlg ()->FillLibInfo (AspellSpeller->IsWorking () ? 2 - (!CurrentLangs || CurrentLangs->size () == 0) : 0, AspellPath, HunspellPath, AdditionalHunspellPath);
   SettingsDlgInstance->GetSimpleDlg ()->FillSugestionsNum (SuggestionsNum);
@@ -634,7 +634,10 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
       GetSelectProxy ()->SetOptions (UseProxy, ProxyHostName, ProxyUserName, ProxyPassword, ProxyPort, ProxyAnonymous, ProxyType);
       break;
     case EID_UPDATE_LANG_LISTS:
-      ReinitLanguageLists ();
+      ReinitLanguageLists (TRUE);
+      break;
+    case EID_UPDATE_LANG_LISTS_NO_GUI:
+      ReinitLanguageLists (FALSE);
       break;
     case EID_UPDATE_LANGS_MENU:
       DoPluginMenuInclusion ();
@@ -2230,7 +2233,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
       else
         SetHunspellLanguage (LangString);
 
-      ReinitLanguageLists ();
+      ReinitLanguageLists (TRUE);
       UpdateLangsMenu ();
       RecheckVisibleBothViews ();
       SaveSettings ();

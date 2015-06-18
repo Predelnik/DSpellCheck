@@ -103,7 +103,7 @@ public:
   void SetShowOnlyKnow (BOOL Value);
   void SetInstallSystem (BOOL Value);
   void FillDialogs (BOOL NoDisplayCall = FALSE);
-  void ReinitLanguageLists ();
+  void ReinitLanguageLists (BOOL UpdateDialogs);
   TCHAR *GetHunspellPath () {return HunspellPath; };
   TCHAR *GetHunspellAdditionalPath () {return AdditionalHunspellPath; };
   TCHAR *GetLangByIndex (int i);
