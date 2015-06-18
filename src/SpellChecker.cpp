@@ -416,13 +416,15 @@ void SpellChecker::ReinitLanguageLists ()
 
   if (SpellerToUse->IsWorking ())
   {
-    SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (FALSE);
+    if (SettingsDlgInstance->GetSimpleDlg ()->isVisible ())
+      SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (FALSE);
     std::vector <TCHAR *> *LangsFromSpeller =  SpellerToUse->GetLanguageList ();
     CurrentLangs = new std::vector<LanguageName> ();
 
     if (!LangsFromSpeller || LangsFromSpeller->size () == 0)
     {
-      SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
+      if (SettingsDlgInstance->GetSimpleDlg ()->isVisible ())
+        SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
       return;
     }
     for (unsigned int i = 0; i < LangsFromSpeller->size (); i++)
@@ -445,14 +447,16 @@ void SpellChecker::ReinitLanguageLists ()
         SetAspellLanguage (CurrentLangs->at (0).OrigName);
       RecheckVisibleBothViews ();
     }
-    SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
-                                                                 SpellerId == 1 ? HunspellLanguage : AspellLanguage,
-                                                                 SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
-                                                                 SpellerId == 1 ? HunspellSpeller : 0);
+    if (SettingsDlgInstance->GetSimpleDlg ()->isVisible ())
+      SettingsDlgInstance->GetSimpleDlg ()->AddAvailableLanguages (CurrentLangs,
+                                                                   SpellerId == 1 ? HunspellLanguage : AspellLanguage,
+                                                                   SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
+                                                                   SpellerId == 1 ? HunspellSpeller : 0);
   }
   else
   {
-    SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
+    if (SettingsDlgInstance->GetSimpleDlg ()->isVisible ())
+      SettingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
   }
 }
 
