@@ -377,12 +377,10 @@ void InitNeededDialogs (int wParam)
     else if (Result == CUSTOMIZE_MULTIPLE_DICS)
       {
         GetLangList ()->DoDialog ();
-        SendEvent(EID_UPDATE_LANG_LISTS);
       }
     else if (Result == REMOVE_DICS)
     {
       GetRemoveDics ()->DoDialog ();
-      SendEvent(EID_UPDATE_LANG_LISTS);
     }
     break;
   }

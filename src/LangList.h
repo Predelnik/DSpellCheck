@@ -31,5 +31,5 @@ public:
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
 protected:
-  HWND HLangList;
+  HWND HLangList = NULL;
 };

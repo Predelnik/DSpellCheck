@@ -33,7 +33,7 @@ public:
 protected:
   __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
 protected:
-  HWND HLangList;
-  HWND HRemoveUserDics;
-  HWND HRemoveSystem;
+  HWND HLangList = NULL;
+  HWND HRemoveUserDics = NULL;
+  HWND HRemoveSystem = NULL;
 };

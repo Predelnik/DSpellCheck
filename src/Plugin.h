@@ -164,5 +164,4 @@ bool isCurrentlyTerminating (); // This function is only for main thread
 void SetRecheckDelay (int Value, int WriteToIni = 1);
 int GetRecheckDelay ();
 void WaitTillThreadsClosed ();
-void UpdateLangLists ();
 #endif //PLUGINDEFINITION_H
