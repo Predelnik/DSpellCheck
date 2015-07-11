@@ -22,13 +22,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 struct NppData;
 
-void SetString (char *&Target, const char *Str);
+void setString (char *&Target, const char *Str);
 
-void SetString (TCHAR *&Target, const TCHAR *Str);
+void setString (TCHAR *&Target, const TCHAR *Str);
 
-void SetString (char *&Target, const TCHAR *Str);
+void setString (char *&Target, const TCHAR *Str);
 
-void SetString (TCHAR *&Target, const char *Str);
+void setString (TCHAR *&Target, const char *Str);
 
 // In case source is in UTF-8
 void SetStringSUtf8 (char *&Target, const char *Str);
@@ -61,7 +61,9 @@ bool EquivCharStrings (char *a, char *b);
 size_t HashCharString (char *a);
 bool SortCompareChars (char *a, char *b);
 
-BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent = TRUE, HWND NppWindow = 0);
+bool CheckForDirectoryExistence (const wchar_t *path, bool silent = true, HWND NppWindow = 0);
 TCHAR *GetLastSlashPosition (TCHAR *Path);
+
+std::wstring getWindowText (HWND hwnd);
 
 #endif // COMMON_FUNCTIONS_H;

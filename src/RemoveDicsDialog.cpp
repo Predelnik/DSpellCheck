@@ -19,18 +19,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <CommCtrl.h>
 
-#include "RemoveDics.h"
+#include "RemoveDicsDialog.h"
 
 #include "Controls/CheckedList/CheckedList.h"
 #include "MainDef.h"
-#include "HunspellInterface.h"
+#include "HunspellController.h"
 #include "CommonFunctions.h"
 #include "Plugin.h"
 #include "SpellChecker.h"
 
+#include "Settings.h"
 #include "resource.h"
 
-void RemoveDics::DoDialog ()
+void RemoveDicsDialog::DoDialog ()
 {
   if (!isCreated())
   {
@@ -44,23 +45,24 @@ void RemoveDics::DoDialog ()
   SetFocus (HLangList);
 }
 
-void RemoveDics::init (HINSTANCE hInst, HWND Parent)
+void RemoveDicsDialog::init (HINSTANCE hInst, HWND Parent)
 {
   return Window::init (hInst, Parent);
 }
 
-HWND RemoveDics::GetListBox ()
+HWND RemoveDicsDialog::GetListBox ()
 {
   return HLangList;
 }
 
-void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
+void RemoveDicsDialog::RemoveSelected (SpellChecker *SpellCheckerInstance)
 {
   int Count = 0;
   BOOL Success = FALSE;
   BOOL NeedSingleReset = FALSE;
   BOOL NeedMultiReset = FALSE;
   BOOL SingleTemp, MultiTemp;
+  auto settings = SpellCheckerInstance->getSettings ();
   for (int i = 0; i < ListBox_GetCount (HLangList); i++)
   {
     if (CheckedListBox_GetCheckState (HLangList, i) == BST_CHECKED)
@@ -69,7 +71,8 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
       for (int j = 0; j < 1 + SpellCheckerInstance->GetRemoveSystem () ? 1 : 0; j++)
       {
         *FileName = _T ('\0');
-        _tcscat (FileName, (j == 0) ? SpellCheckerInstance->GetHunspellPath () : SpellCheckerInstance->GetHunspellAdditionalPath ());
+
+        _tcscat (FileName, j == 0 ? settings->spellerSettings[SpellerType::hunspell].path.data () : settings->spellerSettings[SpellerType::hunspell].additionalPath.data ());
         _tcscat (FileName, _T ("\\"));
         _tcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
         _tcscat (FileName, _T (".aff"));
@@ -99,34 +102,42 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
     CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
   if (Count > 0)
   {
-    SpellCheckerInstance->HunspellReinitSettings (TRUE);
-    SpellCheckerInstance->ReinitLanguageLists (TRUE);
-    SpellCheckerInstance->DoPluginMenuInclusion ();
-    SpellCheckerInstance->RecheckVisibleBothViews ();
-    /*
-    if (NeedSingleReset)
-    SpellCheckerInstance->
-    */
+    SpellCheckerInstance->onHunspellDictionariesChange ();
     TCHAR Buf[DEFAULT_BUF_SIZE];
     _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
     MessageBoxInfo MsgBox (_hParent, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
-    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    SendMessage (_hParent, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   }
 }
 
-void RemoveDics::UpdateOptions (SpellChecker *SpellCheckerInstance)
+void RemoveDicsDialog::UpdateOptions (SpellChecker *SpellCheckerInstance)
 {
   SpellCheckerInstance->SetRemoveUserDics (Button_GetCheck (HRemoveUserDics) == BST_CHECKED);
   SpellCheckerInstance->SetRemoveSystem (Button_GetCheck (HRemoveSystem) == BST_CHECKED);
 }
 
-void RemoveDics::SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem)
+void RemoveDicsDialog::SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem)
 {
   Button_SetCheck (HRemoveUserDics, RemoveUserDics ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
-BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lParam*/)
+void RemoveDicsDialog::update()
+{
+  if (!isCreated())
+    return;
+
+  auto langList = getSpellChecker()->getActiveLanguageList ();
+  ListBox_ResetContent (HLangList);
+  for (auto &lang : *langList)
+    {
+      std::wstring name = lang.AliasName;
+      name += (lang.systemOnly ? L" [!For All Users]" : L"");
+      ListBox_AddString (HLangList, name.data ());
+    }
+}
+
+BOOL CALLBACK RemoveDicsDialog::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lParam*/)
 {
   switch (message)
   {
@@ -137,6 +148,7 @@ BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lPa
       HRemoveSystem = ::GetDlgItem (_hSelf, IDC_REMOVE_SYSTEM);
       SendEvent (EID_UPDATE_LANG_LISTS);
       SendEvent (EID_UPDATE_REMOVE_DICS_OPTIONS);
+      update ();
       return TRUE;
     }
     break;

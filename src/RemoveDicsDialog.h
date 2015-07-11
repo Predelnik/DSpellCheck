@@ -16,4 +16,25 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#include "AbstractSpellerInterface.h"
+
+#include "StaticDialog/StaticDialog.h"
+
+class SpellChecker;
+
+class RemoveDicsDialog : public StaticDialog
+{
+public:
+  void init (HINSTANCE hInst, HWND Parent);
+  void DoDialog ();
+  void RemoveSelected (SpellChecker *SpellCheckerInstance);
+  HWND GetListBox ();
+  void UpdateOptions (SpellChecker *SpellCheckerInstance);
+  void SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem);
+  void update ();
+protected:
+  virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam) override;
+protected:
+  HWND HLangList = NULL;
+  HWND HRemoveUserDics = NULL;
+  HWND HRemoveSystem = NULL;
+};

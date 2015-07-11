@@ -17,13 +17,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "AspellInterface.h"
+#include "AspellController.h"
 #include "Aspell.h"
 #include "CommonFunctions.h"
 #include "MainDef.h"
 #include "plugin.h"
 
-AspellInterface::AspellInterface (HWND NppWindowArg)
+AspellController::AspellController (HWND NppWindowArg)
 {
   NppWindow = NppWindowArg;
   SingularSpeller = 0;
@@ -32,7 +32,7 @@ AspellInterface::AspellInterface (HWND NppWindowArg)
   AspellLoaded = 0;
 }
 
-AspellInterface::~AspellInterface ()
+AspellController::~AspellController ()
 {
   if (!AspellLoaded)
   {
@@ -48,7 +48,7 @@ AspellInterface::~AspellInterface ()
   CLEAN_AND_ZERO (Spellers);
 }
 
-std::vector<TCHAR *> *AspellInterface::GetLanguageList ()
+std::vector<TCHAR *> *AspellController::getLanguageList ()
 {
   if (!AspellLoaded)
     return 0;
@@ -77,7 +77,7 @@ std::vector<TCHAR *> *AspellInterface::GetLanguageList ()
   while ((entry = aspell_dict_info_enumeration_next(dels)) != 0)
   {
     TCHAR *TBuf = 0;
-    SetString (TBuf, entry->name);
+    setString (TBuf, entry->name);
     Names->push_back (TBuf);
   }
 
@@ -85,21 +85,21 @@ std::vector<TCHAR *> *AspellInterface::GetLanguageList ()
   return Names;
 }
 
-BOOL AspellInterface::IsWorking ()
+BOOL AspellController::IsWorking ()
 {
   return AspellLoaded;
 }
 
-void AspellInterface::SendAspellErorr (AspellCanHaveError *Error)
+void AspellController::SendAspellErorr (AspellCanHaveError *Error)
 {
   TCHAR *ErrorMsg = 0;
-  SetString (ErrorMsg, aspell_error_message (Error));
+  setString (ErrorMsg, aspell_error_message (Error));
   MessageBoxInfo MsgBox (NppWindow, ErrorMsg, _T ("Aspell Error"), MB_OK | MB_ICONEXCLAMATION);
-  SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+  SendMessage (NppWindow, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   CLEAN_AND_ZERO_ARR (ErrorMsg);
 }
 
-void AspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
+void AspellController::SetMultipleLanguages (std::vector<TCHAR *> *List)
 {
   if (!AspellLoaded)
     return;
@@ -110,7 +110,7 @@ void AspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
     AspellConfig *SpellConfig = new_aspell_config();
     aspell_config_replace (SpellConfig, "encoding", "utf-8");
     char *Buf = 0;
-    SetString (Buf, List->at (i));
+    setString (Buf, List->at (i));
     aspell_config_replace(SpellConfig, "lang", Buf);
     CLEAN_AND_ZERO_ARR (Buf);
     AspellCanHaveError *PossibleErr = new_aspell_speller(SpellConfig);
@@ -125,7 +125,7 @@ void AspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
   }
 }
 
-std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
+std::vector<char *> *AspellController::GetSuggestions (char *Word)
 {
   const AspellWordList *WordList = 0, *CurWordList = 0;
 
@@ -171,7 +171,7 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
   while ((Suggestion = aspell_string_enumeration_next(els)) != 0)
   {
     char *Buf = 0;
-    SetString (Buf, Suggestion);
+    setString (Buf, Suggestion);
     SuggList->push_back (Buf);
   }
 
@@ -181,7 +181,7 @@ std::vector<char *> *AspellInterface::GetSuggestions (char *Word)
   return SuggList;
 }
 
-void AspellInterface::AddToDictionary (char *Word)
+void AspellController::AddToDictionary (char *Word)
 {
   char *TargetWord = 0;
 
@@ -197,9 +197,9 @@ void AspellInterface::AddToDictionary (char *Word)
   if (aspell_speller_error(LastSelectedSpeller) != 0)
   {
     TCHAR *ErrorMsg = 0;
-    SetString (ErrorMsg, aspell_speller_error_message (LastSelectedSpeller));
+    setString (ErrorMsg, aspell_speller_error_message (LastSelectedSpeller));
     MessageBoxInfo MsgBox (NppWindow, ErrorMsg, _T ("Aspell Error"), MB_OK | MB_ICONEXCLAMATION);
-    SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    SendMessage (NppWindow, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     CLEAN_AND_ZERO_ARR (ErrorMsg);
   }
   LastSelectedSpeller = 0;
@@ -208,7 +208,7 @@ void AspellInterface::AddToDictionary (char *Word)
     CLEAN_AND_ZERO_ARR (TargetWord);
 }
 
-void AspellInterface::IgnoreAll (char *Word)
+void AspellController::IgnoreAll (char *Word)
 {
   if (!LastSelectedSpeller)
     return;
@@ -231,7 +231,7 @@ void AspellInterface::IgnoreAll (char *Word)
     CLEAN_AND_ZERO_ARR (TargetWord);
 }
 
-BOOL AspellInterface::CheckWord (char *Word)
+BOOL AspellController::CheckWord (char *Word)
 {
   if (!AspellLoaded)
     return TRUE;
@@ -267,12 +267,12 @@ BOOL AspellInterface::CheckWord (char *Word)
   return res;
 }
 
-BOOL AspellInterface::Init (TCHAR *PathArg)
+void AspellController::setPath(const wchar_t *PathArg)
 {
-  return (AspellLoaded = LoadAspell (PathArg));
+  AspellLoaded = LoadAspell (PathArg);
 }
 
-void AspellInterface::SetLanguage (TCHAR *Lang)
+void AspellController::setLanguage(const wchar_t *Lang)
 {
   if (!AspellLoaded)
     return;
@@ -280,7 +280,7 @@ void AspellInterface::SetLanguage (TCHAR *Lang)
   AspellConfig *spell_config = new_aspell_config();
   aspell_config_replace (spell_config, "encoding", "utf-8");
   char *Buf = 0;
-  SetString (Buf, Lang);
+  setString (Buf, Lang);
   aspell_config_replace(spell_config, "lang", Buf);
   CLEAN_AND_ZERO_ARR (Buf);
   if (SingularSpeller)
@@ -294,10 +294,10 @@ void AspellInterface::SetLanguage (TCHAR *Lang)
   if (aspell_error_number(PossibleErr) != 0)
   {
     delete_aspell_config (spell_config);
-    std::vector<TCHAR *> *LangList = GetLanguageList ();
+    std::vector<TCHAR *> *LangList = getLanguageList ();
     if (LangList && (!Lang || _tcscmp (Lang, LangList->at (0)) != 0))
     {
-      SetLanguage (LangList->at (0));
+      setLanguage (LangList->at (0));
       CLEAN_AND_ZERO_STRING_VECTOR (LangList);
       return;
     }

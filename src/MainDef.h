@@ -35,23 +35,6 @@ enum EncodingType
   ENCODING_ANSI
 };
 
-namespace CustomGUIMessage
-{
-  enum e
-  {
-    DO_MESSAGE_BOX = 0,   // Use MessageBoxInfo as wParam.
-    SHOW_CALCULATED_MENU = 1,
-    AUTOCHECK_STATE_CHANGED = 2,
-    MAX,
-  };
-}
-
-const TCHAR *const CustomGUIMesssagesNames[] = {
-  _T ("DSpellCheck_MessageBox"),
-  _T ("DSpellCheck_ShowCalculatedMenu"),
-  _T ("DSpellCheck_AutoCheckStateChanged"),
-};
-
 struct MessageBoxInfo
 {
   HWND hWnd;
@@ -94,9 +77,6 @@ public:
   }
 };
 
-#define SUGGESTIONS_BOX 0
-#define SUGGESTIONS_CONTEXT_MENU 1
-
 // Global Menu ID
 // TODO: change it all to call for n++ message which gives you free menu IDs
 #define DSPELLCHECK_MENU_ID 193
@@ -126,4 +106,5 @@ public:
 #define TM_CHANGE_DIR           WM_USER + 1006
 #define TM_ADD_USER_SERVER      WM_USER + 1007
 #define TM_UPDATE_LANGS_MENU    WM_USER + 1008
+#define TM_SETTINGS_CHANGED     WM_USER + 1009  // WPARAM - pointer to SettingsData struct
 #endif MAINDEF_H

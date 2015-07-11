@@ -26,24 +26,26 @@ struct LanguageName
   TCHAR *OrigName;
   TCHAR *AliasName;
   BOOL AliasApplied;
-  LanguageName (TCHAR *Name, BOOL UseAlias = TRUE)
+  bool systemOnly = false;
+  LanguageName (TCHAR *Name, BOOL UseAlias = TRUE, bool systemOnlyArg = false)
   {
     OrigName = 0;
     AliasName = 0;
+    systemOnly = systemOnlyArg;
     AliasApplied = FALSE;
-    SetString (OrigName, Name);
+    setString (OrigName, Name);
     if (UseAlias)
       AliasApplied = SetStringWithAliasApplied (AliasName, Name);
     else
-      SetString (AliasName, Name);
+      setString (AliasName, Name);
   }
 
   LanguageName (const LanguageName &rhs)
   {
     OrigName = 0;
     AliasName = 0;
-    SetString (OrigName, rhs.OrigName);
-    SetString (AliasName, rhs.AliasName);
+    setString (OrigName, rhs.OrigName);
+    setString (AliasName, rhs.AliasName);
     AliasApplied = rhs.AliasApplied;
   }
 
@@ -55,8 +57,9 @@ struct LanguageName
     CLEAN_AND_ZERO_ARR (OrigName);
     CLEAN_AND_ZERO_ARR (AliasName);
     AliasApplied = rhs.AliasApplied;
-    SetString (OrigName, rhs.OrigName);
-    SetString (AliasName, rhs.AliasName);
+    systemOnly = rhs.systemOnly;
+    setString (OrigName, rhs.OrigName);
+    setString (AliasName, rhs.AliasName);
     return *this;
   }
 

@@ -17,24 +17,28 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef ABSTRACTSPELLERINTERFACE_H
-#define ABSTRACTSPELLERINTERFACE_H
+#pragma  once
+
 #include <MainDef.h>
-class AbstractSpellerInterface
+
+class SpellerController
 {
 private:
 protected:
 public:
-  virtual std::vector<TCHAR*> *GetLanguageList () = 0;
-  virtual void SetLanguage (TCHAR *Lang) = 0;
+  virtual std::vector<TCHAR*> *getLanguageList () = 0;
+  virtual void setLanguage (const wchar_t *Lang) = 0;
   virtual void SetMultipleLanguages (std::vector<TCHAR *> *List) = 0; // Languages are from LangList
-  void SetMode (int Multi) { MultiMode = Multi; }                         // Multi - 1, Single - 0
-  void SetEncoding (EncodingType Encoding) {CurrentEncoding = Encoding; }
+  void setMultiMode (int Multi) { MultiMode = Multi; }                         // Multi - 1, Single - 0
+  void setEncoding (EncodingType Encoding) {CurrentEncoding = Encoding; }
   virtual BOOL CheckWord (char *Word) = 0;                         // Word in Utf-8 or ANSI
   virtual std::vector<char *> *GetSuggestions (char *Word) = 0;
   virtual void AddToDictionary (char *Word) = 0;
   virtual void IgnoreAll (char *Word) = 0;
   virtual BOOL IsWorking () = 0;
+  virtual void setPath (const wchar_t *dir) = 0;
+  virtual void setAdditionalPath (const wchar_t *dir) = 0;
+  virtual BOOL GetLangOnlySystem (const wchar_t *) { return false; };
 
 private:
 protected:
@@ -42,4 +46,3 @@ protected:
   EncodingType CurrentEncoding;
 public:
 };
-#endif // ABSTRACTSPELLERINTERFACE_H

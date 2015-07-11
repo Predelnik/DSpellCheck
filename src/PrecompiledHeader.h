@@ -16,21 +16,31 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+#define NOMINMAX
 #include <windows.h>
 
-#include <map>
-#include <set>
-#include <hash_set>
-#include <string.h>
 #include <algorithm>
+#include <functional>
+#include <hash_set>
+#include <map>
+#include <memory>
+#include <set>
 #include <stack>
+#include <string>
+#include <vector>
+
+#include "utils/enum_range.h"
+#include "utils/enum_vector.h"
+#include "utils/Uncopiable.h"
+
 #include <cstring>
+#include <tchar.h>
 #include <time.h>
 #include <shlwapi.h>
+#include <string.h>
 #include <windowsx.h>
 #include <wchar.h>
-#include <vector>
-#include <tchar.h>
+
 #include <Shlobj.h>
 
 /*

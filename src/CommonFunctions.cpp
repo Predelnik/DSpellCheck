@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Plugin.h"
 #include "PluginInterface.h"
 
-void SetString (char *&Target, const char *Str)
+void setString (char *&Target, const char *Str)
 {
   if (Target == Str)
     return;
@@ -31,7 +31,7 @@ void SetString (char *&Target, const char *Str)
   strcpy (Target, Str);
 }
 
-void SetString (TCHAR *&Target, const TCHAR *Str)
+void setString (TCHAR *&Target, const TCHAR *Str)
 {
   if (Target == Str)
     return;
@@ -40,7 +40,7 @@ void SetString (TCHAR *&Target, const TCHAR *Str)
   _tcscpy (Target, Str);
 }
 
-void SetString (char *&Target, const TCHAR *Str)
+void setString (char *&Target, const TCHAR *Str)
 {
 #ifndef UNICODE
   if (Target == Str)
@@ -88,7 +88,7 @@ void SetString (char *&Target, const TCHAR *Str)
 #endif // UNICODE
 }
 
-void SetString (TCHAR *&Target, const char *Str)
+void setString (TCHAR *&Target, const char *Str)
 {
 #ifndef UNICODE
   if (Target == Str)
@@ -164,7 +164,7 @@ void SetStringDUtf8 (char *&Target, const TCHAR *Str)
     CLEAN_AND_ZERO_ARR (TempBuf)
     return;
   }
-  SetString (Target, TempBuf); // Cutting off unnecessary symbols.
+  setString (Target, TempBuf); // Cutting off unnecessary symbols.
   CLEAN_AND_ZERO_ARR (TempBuf);
 }
 
@@ -224,7 +224,7 @@ void SetStringDUtf8 (char *&Target, const char *Str)
     CLEAN_AND_ZERO_ARR (TempBuf)
     return;
   }
-  SetString (Target, TempBuf); // Cutting off unnecessary symbols.
+  setString (Target, TempBuf); // Cutting off unnecessary symbols.
   CLEAN_AND_ZERO_ARR (TempBuf);
 }
 
@@ -578,7 +578,7 @@ BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName)
     int CompareResult = _tcscmp (AliasesFrom[CentralElement], OrigName);
     if (CompareResult == 0)
     {
-      SetString (Target, AliasesTo[CentralElement]);
+      setString (Target, AliasesTo[CentralElement]);
       return TRUE;
     }
     else if (Right - Left <= 1)
@@ -588,11 +588,11 @@ BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName)
     else
       Right = CentralElement;
   }
-  SetString (Target, OrigName);
+  setString (Target, OrigName);
   return FALSE;
 }
 
-static BOOL TryToCreateDir (TCHAR *Path, BOOL Silent, HWND NppWindow)
+static BOOL TryToCreateDir (const TCHAR *Path, BOOL Silent, HWND NppWindow)
 {
   if (!CreateDirectory (Path, NULL))
   {
@@ -604,31 +604,32 @@ static BOOL TryToCreateDir (TCHAR *Path, BOOL Silent, HWND NppWindow)
       TCHAR Message[DEFAULT_BUF_SIZE];
       _stprintf (Message, _T ("Can't create directory %s"), Path);
       MessageBoxInfo MsgBox (NppWindow, Message, _T ("Error in directory creation"), MB_OK | MB_ICONERROR);
-      SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+      SendMessage (NppWindow, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     }
     return FALSE;
   }
   return TRUE;
 }
 
-BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent, HWND NppWindow)
+bool CheckForDirectoryExistence (const wchar_t *path, bool silent, HWND NppWindow)
 {
-  for (unsigned int i = 0; i < _tcslen (Path); i++)
+  std::wstring pathCopy = path;
+  for (unsigned int i = 0; i < _tcslen (path); i++)
   {
-    if (Path[i] == _T ('\\'))
+    if (pathCopy[i] == _T ('\\'))
     {
-      Path[i] = _T ('\0');
-      if (!PathFileExists (Path))
+      pathCopy[i] = _T ('\0');
+      if (!PathFileExists (pathCopy.data ()))
       {
-        if (!TryToCreateDir (Path, Silent, NppWindow))
+        if (!TryToCreateDir (pathCopy.data (), silent, NppWindow))
           return FALSE;
       }
-      Path[i] = _T ('\\');
+      pathCopy[i] = _T ('\\');
     }
   }
-  if (!PathFileExists (Path))
+  if (!PathFileExists (pathCopy.data ()))
   {
-    if (!TryToCreateDir (Path, Silent, NppWindow))
+    if (!TryToCreateDir (pathCopy.data (), silent, NppWindow))
       return FALSE;
   }
   return TRUE;
@@ -637,4 +638,12 @@ BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent, HWND NppWindow)
 TCHAR *GetLastSlashPosition (TCHAR *Path)
 {
   return _tcsrchr (Path, _T ('\\'));
+}
+
+std::wstring getWindowText (HWND hwnd)
+{
+  int len = GetWindowTextLength (hwnd);
+  std::vector<wchar_t> buf (len + 1);
+  GetWindowText (hwnd, buf.data (), buf.size ());
+  return {buf.begin (), buf.end ()};
 }

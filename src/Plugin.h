@@ -24,19 +24,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
-#include "SettingsDlg.h"
+#include "CustomMessage.h"
 
 const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 
 const int nbFunc = 8;
 #define QUICK_LANG_CHANGE_ITEM 3
 
-class LangList;
+class LangListDialog;
 class DownloadDicsDlg;
 class SelectProxy;
 class SpellChecker;
 class Progress;
-class RemoveDics;
+class RemoveDicsDialog;
+class SettingsDlg;
 
 //
 // Initialization of your plugin data
@@ -70,8 +71,7 @@ bool setNextCommand(TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL
 typedef enum {
   EID_SWITCH_AUTOCHECK,
   EID_LOAD_SETTINGS,
-  EID_FILL_DIALOGS,
-  EID_APPLY_SETTINGS,
+
   EID_APPLY_MULTI_LANG_SETTINGS,
   EID_HIDE_DIALOG,
   EID_CHECK_FILE_NAME,
@@ -87,7 +87,6 @@ typedef enum {
   EID_RECHECK_MODIFIED_ZONE,
   EID_INIT_CONTEXT_MENU,
   EID_APPLYMENUACTION,
-  EID_DEFAULT_DELIMITERS,
   EID_FIND_NEXT_MISTAKE,
   EID_FIND_PREV_MISTAKE,
   EID_INIT_DOWNLOAD_COMBOBOX,
@@ -105,6 +104,7 @@ typedef enum {
   EID_LIB_CHANGE,
   EID_APPLY_PROXY_SETTINGS,
   EID_SHOW_SELECT_PROXY,
+  EID_HUNSPELL_DICTIONARIES_CHANGE,
   EID_MAX,
 } EventId;
 
@@ -138,8 +138,9 @@ void AutoCheckStateReceived (BOOL state);
 HMENU GetDSpellCheckMenu ();
 HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = 0);
 HANDLE getHModule ();
-LangList *GetLangList ();
-RemoveDics *GetRemoveDics ();
+LangListDialog *getLangListDialog ();
+RemoveDicsDialog *getRemoveDicsDialog ();
+SettingsDlg *getSettingsDlg ();
 SelectProxy *GetSelectProxy ();
 Progress *GetProgress ();
 DownloadDicsDlg *GetDownloadDics ();
@@ -155,8 +156,8 @@ void SetUseAllocatedIds (BOOL Id);
 int GetContextMenuIdStart ();
 int GetLangsMenuIdStart ();
 BOOL GetUseAllocatedIds ();
-SpellChecker *GetSpellChecker ();
-DWORD GetCustomGUIMessageId (CustomGUIMessage::e MessageId);
+SpellChecker *getSpellChecker ();
+DWORD getCustomGUIMessageId (CustomGUIMessage::e MessageId);
 void RegisterCustomMessages ();
 bool isCurrentlyTerminating (); // This function is only for main thread
 

@@ -16,20 +16,4 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-
-#include "StaticDialog/StaticDialog.h"
-
-class SpellChecker;
-
-class LangList : public StaticDialog
-{
-public:
-  void init (HINSTANCE hInst, HWND Parent);
-  void DoDialog ();
-  HWND GetListBox ();
-  void ApplyChoice (SpellChecker *SpellCheckerInstance);
-protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
-protected:
-  HWND HLangList = NULL;
-};
+#include "SpellerController.h"

@@ -23,16 +23,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MainDef.h"
 
+class SettingsDlg;
+class LangListDialog;
+class Suggestions;
+class SpellerController;
+class AspellController;
+class HunspellController;
+class SelectProxy;
+class Settings;
+
 struct AspellSpeller;
 struct LanguageName;
 struct AspellWordList;
-class SettingsDlg;
-class LangList;
-class Suggestions;
-class AbstractSpellerInterface;
-class AspellInterface;
-class HunspellInterface;
-class SelectProxy;
+struct SpellerSettings;
+struct SettingsData;
+
+enum class SpellerType;
+
+#define DEFAULT_DELIMITERS L",.!?\":;{}()[]\\/=+-^$*<>|#$@%&~\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D\u00B7\u00A0\u0060\u2192\u00d7"
+
+#include "LanguageName.h"
 
 struct SuggestionsMenuItem
 {
@@ -57,33 +67,22 @@ class SpellChecker
 {
 public:
   SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
-    Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg);
+    Suggestions *SuggestionsInstanceArg, LangListDialog *LangListInstanceArg);
   ~SpellChecker ();
   void RecheckVisibleBothViews ();
   BOOL WINAPI NotifyEvent (DWORD Event);
+
+  void onHunspellDictionariesChange ();
+
   BOOL WINAPI NotifyNetworkEvent (DWORD Event);
   BOOL WINAPI NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam);
   void RecheckVisible (BOOL NotIntersectionOnly = FALSE);
   void RecheckModified ();
   void ErrorMsgBox (const TCHAR * message);
 
-  BOOL AspellReinitSettings ();
-  void SetHunspellLanguage (const TCHAR *Str);
-  void SetAspellLanguage (const TCHAR *Str);
-  void SetDelimiters (const char *Str);
-  void SetSuggestionsNum (int Num);
-  void SetAspellPath (const TCHAR *Path);
-  void SetMultipleLanguages (const TCHAR *MultiString, AbstractSpellerInterface *Speller);
-  void SetHunspellPath (const TCHAR *Path);
-  void SetHunspellAdditionalPath (const TCHAR *Path);
-  void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveBoundaryApostrophesArg);
-  void SetCheckThose (int CheckThoseArg);
-  void SetFileTypes (TCHAR *FileTypesArg);
-  void SetCheckComments (BOOL Value);
-  void SetHunspellMultipleLanguages (const char *MultiLanguagesArg);
-  void SetAspellMultipleLanguages (const char *MultiLanguagesArg);
-  void SetUnderlineColor (int Value);
-  void SetUnderlineStyle (int Value);
+  void AspellReinitSettings ();
+  void setDelimiters (const wchar_t *str);
+  void SetMultipleLanguages (const TCHAR *MultiString, SpellerController *Speller);
   void SetProxyUserName (TCHAR *Str);
   void SetProxyHostName (TCHAR *Str);
   void SetProxyPassword (TCHAR *Str);
@@ -91,29 +90,14 @@ public:
   void SetUseProxy (BOOL Value);
   void SetProxyAnonymous (BOOL Value);
   void SetProxyType (int Value);
-  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
-    BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg);
-  void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
-  void SetBufferSize (int Size);
-  void SetSuggType (int SuggType);
-  void SetLibMode (int i);
-  void SetDecodeNames (BOOL Value);
-  void SetOneUserDic (BOOL Value);
-  BOOL GetOneUserDic ();
   void SetShowOnlyKnow (BOOL Value);
   void SetInstallSystem (BOOL Value);
-  void FillDialogs (BOOL NoDisplayCall = FALSE);
   void ReinitLanguageLists (BOOL UpdateDialogs);
-  TCHAR *GetHunspellPath () {return HunspellPath; };
-  TCHAR *GetHunspellAdditionalPath () {return AdditionalHunspellPath; };
   TCHAR *GetLangByIndex (int i);
   BOOL GetShowOnlyKnown ();
   BOOL GetInstallSystem ();
-  BOOL GetDecodeNames ();
   void DoPluginMenuInclusion (BOOL Invalidate = FALSE);
-  HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
-  int GetLibMode ();
-  BOOL HunspellReinitSettings (BOOL ResetDirectory);
+  HunspellController *GetHunspellSpeller ();;
   void SetRemoveUserDics (BOOL Value);
   void SetRemoveSystem (BOOL Value);
   BOOL GetRemoveUserDics ();
@@ -147,7 +131,6 @@ private:
   void Cleanup ();
   void CheckFileName ();
   void UpdateOverridenSuggestionsBox ();
-  const char *GetDelimiters ();
   const TCHAR *GetLanguage ();
   void CallLangContextMenu ();
   void GetDefaultHunspellPath (TCHAR *&Path);
@@ -167,7 +150,7 @@ private:
   BOOL GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseTextCursor = FALSE);
   char *GetWordAt (long CharPos, char *Text, long Offset);
   void SetDefaultDelimiters ();
-  void HideSuggestionBox ();
+  void hideSuggestionBox ();
   void GetLimitsAndRecheckModified ();
   BOOL CheckTextNeeded ();
   int CheckWordInCommentOrString (int Style);
@@ -189,56 +172,33 @@ private:
 
   void LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *DefaultValue, BOOL InQuotes = 0);
   void LoadFromIni (int &Value, const TCHAR *Name, int DefaultValue);
+  void LoadFromIni (std::wstring &value, const TCHAR *name, const TCHAR *defaultValue, BOOL inQuotes = 0);
+  void LoadFromIni (bool &Value, const TCHAR *Name, bool DefaultValue);
   void LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char *DefaultValue, BOOL InQuotes = 0);
   void CopyMisspellingsToClipboard();
   int CheckTextDefaultAnswer (CheckTextMode Mode);
+  void setNewSettings (const SettingsData &settingsArg);
+  void onSettingsChanged (const SettingsData &settingsData);
+  SpellerController *activeSpeller ();
+  const wchar_t *currentLanguage ();
+  const SettingsData &settings () const;
+
 private:
 
-  std::vector <LanguageName> *CurrentLangs;
+  std::shared_ptr<std::vector <LanguageName>> m_activeLangList;
   BOOL SettingsLoaded;
-  BOOL OneUserDic;
   BOOL AutoCheckText;
-  BOOL CheckTextEnabled;
+  BOOL checkTextEnabled;
   BOOL WUCisRight;
-  TCHAR *HunspellLanguage;
-  TCHAR *HunspellMultiLanguages;
-  TCHAR *AspellLanguage;
-  TCHAR *AspellMultiLanguages;
-  int LibMode; // 0 - Aspell, 1 - Hunspell
   int MultiLangMode;
-  int SuggestionsNum;
-  int SuggestionsMode;
-  char *DelimUtf8; // String without special characters but maybe with escape characters (like '\n' and stuff)
   char *DelimUtf8Converted; // String where escape characters are properly converted to corresponding symbols
   char *DelimConverted; // Same but in ANSI encoding
   TCHAR *ServerNames[3]; // Only user ones, there'll also be bunch of predetermined ones
   TCHAR *DefaultServers[3];
   int LastUsedAddress; // equals USER_SERVER_CONST + num if user address is used, otherwise equals number of default server
   int AddressIsSet;
-  TCHAR *FileTypes;
-  TCHAR *AspellPath;
-  TCHAR *HunspellPath;
-  TCHAR *AdditionalHunspellPath;
-  BOOL IgnoreYo;
-  BOOL ConvertSingleQuotes;
-  BOOL RemoveBoundaryApostrophes;
-  BOOL CheckThose;
-  BOOL CheckComments;
-  int UnderlineColor;
-  int UnderlineStyle;
-  BOOL IgnoreNumbers;
-  BOOL IgnoreCStart;
-  BOOL IgnoreCHave;
-  BOOL IgnoreCAll;
-  BOOL Ignore_;
-  BOOL IgnoreSEApostrophe;
-  BOOL IgnoreOneLetter;
-  BOOL DecodeNames;
   BOOL ShowOnlyKnown;
   BOOL InstallSystem;
-  int SBSize;
-  int SBTrans;
-  int BufferSize;
   const AspellWordList *CurWordList;
   HWND CurrentScintilla;
   int HotSpotCache[256]; // STYLE_MAX = 255
@@ -250,32 +210,32 @@ private:
   TCHAR *ProxyUserName;
   int ProxyPort;
   TCHAR *ProxyPassword;
+  bool firstTime = true;
 
   int Lexer;
   std::vector <SuggestionsMenuItem *> *SuggestionMenuItems;
   std::vector <char *> *LastSuggestions;
-  _locale_t  utf8_l;
+  _locale_t utf8_l;
   long ModifiedStart;
   long ModifiedEnd;
   long WUCPosition; // WUC = Word Under Cursor (Position in global doc coordinates),
   long WUCLength;
   long CurrentPosition;
   NppData *NppDataInstance;
-  EncodingType CurrentEncoding;
+  EncodingType currentEncoding;
   TCHAR *IniFilePath;
   char *SelectedWord;
-  SettingsDlg *SettingsDlgInstance;
+  SettingsDlg *settingsDlgInstance;
   Suggestions *SuggestionsInstance;
-  LangList *LangListInstance;
+  LangListDialog *LangListInstance;
   char *VisibleText;
   int VisibleTextLength;
   long VisibleTextOffset;
   BOOL RemoveUserDics;
   BOOL RemoveSystem;
 
-  AbstractSpellerInterface *CurrentSpeller;
-  AspellInterface *AspellSpeller;
-  HunspellInterface *HunspellSpeller;
+  enum_vector<SpellerType, std::unique_ptr<SpellerController>> m_spellers;
+  std::unique_ptr<Settings> m_settings;
 
   // 6 - is arbitrary maximum size, actually almost everywhere it's 1
   char *YoANSI;
@@ -283,5 +243,9 @@ private:
   char *yoANSI;
   char *yeANSI;
   char *PunctuationApostropheANSI;
+
+public:
+  auto getActiveLanguageList ()->decltype (m_activeLangList) { return m_activeLangList; } // TODO-MSVC2015: Move this function up, remove trailing type
+  std::shared_ptr<const SettingsData> getSettings (); // TODO-MSVC2015: Move this function up, remove trailing type
 };
 #endif // SPELLCHECKER_H

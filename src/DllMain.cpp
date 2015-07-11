@@ -21,15 +21,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CommonFunctions.h"
 #include "DownloadDicsDlg.h"
-#include "LangList.h"
+#include "LangListDialog.h"
 #include "Plugin.h"
-#include "RemoveDics.h"
+#include "RemoveDicsDialog.h"
 #include "MainDef.h"
 #include "SpellChecker.h"
+#include "menuCmdID.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
 #endif //VLD_BUILD
+#include "SettingsDlg.h"
 
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
@@ -58,7 +60,7 @@ void SetRecheckDelay (int Value, int WriteToIni)
   {
     std::pair <TCHAR *, DWORD> *x = new std::pair <TCHAR *, DWORD>;
     x->first = 0;
-    SetString (x->first, _T ("Recheck_Delay"));
+    setString (x->first, _T ("Recheck_Delay"));
     x->second = MAKELPARAM (Value, 500);
     PostMessageToMainThread (TM_WRITE_SETTING, 0, (LPARAM) x);
   }
@@ -170,20 +172,26 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
 
   if (Message != 0)
   {
-    if (Message == GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX))
+    if (Message == getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX))
     {
       MessageBoxInfo *MsgBox = (MessageBoxInfo *) wParam;
       DWORD Result = MessageBox (MsgBox->hWnd, MsgBox->Message, MsgBox->Title, MsgBox->Flags);
       return Result;
     }
-    else if (Message == GetCustomGUIMessageId (CustomGUIMessage::SHOW_CALCULATED_MENU))
+    else if (Message == getCustomGUIMessageId (CustomGUIMessage::SHOW_CALCULATED_MENU))
     {
       MenuList = (std::vector <SuggestionsMenuItem *> *) lParam;
       return ::CallWindowProc(wndProcNotepad, hWnd, WM_CONTEXTMENU, LastHwnd, LastCoords);
     }
-    else if (Message == GetCustomGUIMessageId (CustomGUIMessage::AUTOCHECK_STATE_CHANGED))
+    else if (Message == getCustomGUIMessageId (CustomGUIMessage::AUTOCHECK_STATE_CHANGED))
     {
       AutoCheckStateReceived (wParam);
+    }
+    else if (Message == getCustomGUIMessageId (CustomGUIMessage::CONFIGURATION_CHANGED))
+    {
+      getLangListDialog ()->update ();
+      getRemoveDicsDialog ()->update ();
+      getSettingsDlg ()->updateOnConfigurationChange ();
     }
   }
 
@@ -274,7 +282,7 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
         CreateTimerQueueTimer (&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE , 0);
         SendEvent (EID_RECHECK_VISIBLE_BOTH_VIEWS);
         RestylingCausedRecheckWasDone = FALSE;
-        GetSpellChecker ()->SetSuggestionsBoxTransparency ();
+        getSpellChecker ()->SetSuggestionsBoxTransparency ();
         SendEvent (EID_UPDATE_LANG_LISTS_NO_GUI); // To update quick lang change menu
         UpdateLangsMenu ();
       }
@@ -376,11 +384,11 @@ void InitNeededDialogs (int wParam)
       GetDownloadDics ()->DoDialog ();
     else if (Result == CUSTOMIZE_MULTIPLE_DICS)
       {
-        GetLangList ()->DoDialog ();
+        getLangListDialog ()->DoDialog ();
       }
     else if (Result == REMOVE_DICS)
     {
-      GetRemoveDics ()->DoDialog ();
+      getRemoveDicsDialog ()->DoDialog ();
     }
     break;
   }

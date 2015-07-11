@@ -30,12 +30,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "MainDef.h"
 #include "AboutDlg.h"
 #include "DownloadDicsDlg.h"
-#include "LangList.h"
+#include "LangListDialog.h"
 #include "Progress.h"
-#include "RemoveDics.h"
+#include "RemoveDicsDialog.h"
 #include "SelectProxy.h"
 #include "SpellChecker.h"
 #include "Suggestions.h"
+#include "SettingsDlg.h"
 
 #include "StackWalker/StackWalker.h"
 
@@ -61,13 +62,13 @@ FuncItem *get_funcItem ()
 //
 NppData nppData;
 TCHAR IniFilePath[MAX_PATH];
-DWORD CustomGUIMessageIds [CustomGUIMessage::MAX] = {0};
+DWORD CustomGUIMessageIds [CustomGUIMessage::MAX] = {};
 bool doCloseTag = false;
 SpellChecker *SpellCheckerInstance = 0;
-SettingsDlg *SettingsDlgInstance = 0;
+SettingsDlg *settingsDlgInstance = 0;
 Suggestions *SuggestionsInstance = 0;
-LangList *LangListInstance = 0;
-RemoveDics *RemoveDicsInstance = 0;
+LangListDialog *LangListInstance = 0;
+RemoveDicsDialog *RemoveDicsInstance = 0;
 SelectProxy *SelectProxyInstance = 0;
 Progress *ProgressInstance = 0;
 DownloadDicsDlg *DownloadDicsDlgInstance = 0;
@@ -135,7 +136,7 @@ BOOL GetUseAllocatedIds ()
   return UseAllocatedIds;
 }
 
-SpellChecker *GetSpellChecker ()
+SpellChecker *getSpellChecker ()
 {
   return SpellCheckerInstance;
 }
@@ -181,12 +182,12 @@ void pluginInit(HANDLE hModuleArg)
   // Init it all dialog classes:
 }
 
-LangList *GetLangList ()
+LangListDialog *getLangListDialog ()
 {
   return LangListInstance;
 }
 
-RemoveDics *GetRemoveDics ()
+RemoveDicsDialog *getRemoveDicsDialog ()
 {
   return RemoveDicsInstance;
 }
@@ -374,7 +375,7 @@ void pluginCleanUp ()
   KillThreadResources ();
 
   CLEAN_AND_ZERO (SpellCheckerInstance);
-  CLEAN_AND_ZERO (SettingsDlgInstance);
+  CLEAN_AND_ZERO (settingsDlgInstance);
   CLEAN_AND_ZERO (AboutDlgInstance);
   CLEAN_AND_ZERO (SuggestionsInstance);
   CLEAN_AND_ZERO (LangListInstance);
@@ -436,7 +437,7 @@ void RegisterCustomMessages ()
   }
 }
 
-DWORD GetCustomGUIMessageId (CustomGUIMessage::e MessageId)
+DWORD getCustomGUIMessageId (CustomGUIMessage::e MessageId)
 {
   return CustomGUIMessageIds[MessageId];
 }
@@ -453,7 +454,7 @@ void GetSuggestions ()
 
 void StartSettings ()
 {
-  SettingsDlgInstance->DoDialog ();
+  settingsDlgInstance->DoDialog ();
 }
 
 void StartManual ()
@@ -652,8 +653,8 @@ void InitClasses ()
   SuggestionsInstance->init ((HINSTANCE) hModule, nppData._nppHandle, nppData);
   SuggestionsInstance->DoDialog ();
 
-  SettingsDlgInstance = new SettingsDlg;
-  SettingsDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle, nppData);
+  settingsDlgInstance = new SettingsDlg;
+  settingsDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle, nppData);
 
   AboutDlgInstance = new AboutDlg;
   AboutDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle);
@@ -661,16 +662,16 @@ void InitClasses ()
   ProgressInstance = new Progress;
   ProgressInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
-  LangListInstance = new LangList;
+  LangListInstance = new LangListDialog;
   LangListInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
   SelectProxyInstance = new SelectProxy;
   SelectProxyInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
-  RemoveDicsInstance = new RemoveDics;
+  RemoveDicsInstance = new RemoveDicsDialog;
   RemoveDicsInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
 
-  SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance, LangListInstance);
+  SpellCheckerInstance = new SpellChecker (IniFilePath, settingsDlgInstance, &nppData, SuggestionsInstance, LangListInstance);
 
   DownloadDicsDlgInstance = new DownloadDicsDlg;
   DownloadDicsDlgInstance->init ((HINSTANCE) hModule, nppData._nppHandle, SpellCheckerInstance);
@@ -727,4 +728,9 @@ void AutoCheckStateReceived (BOOL state)
 BOOL GetAutoCheckState ()
 {
   return AutoCheckState;
+}
+
+SettingsDlg *getSettingsDlg ()
+{
+  return settingsDlgInstance;
 }
