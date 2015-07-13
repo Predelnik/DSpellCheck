@@ -283,7 +283,6 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
         SendEvent (EID_RECHECK_VISIBLE_BOTH_VIEWS);
         RestylingCausedRecheckWasDone = FALSE;
         getSpellChecker ()->SetSuggestionsBoxTransparency ();
-        SendEvent (EID_UPDATE_LANG_LISTS_NO_GUI); // To update quick lang change menu
         UpdateLangsMenu ();
       }
       break;

@@ -101,7 +101,7 @@ SpellChecker::SpellChecker(const TCHAR *IniFilePathArg,
     : m_settings{
           std::make_unique<Settings>([this](const SettingsData &settingsData) {
             onSettingsChanged(settingsData);
-          })} {
+          })}, m_status {std::make_shared<SpellCheckerStatus> ()} {
   CurrentPosition = 0;
   DelimUtf8Converted = 0;
   IniFilePath = 0;
@@ -361,7 +361,7 @@ BOOL SpellChecker::GetInstallSystem ()
 
 TCHAR *SpellChecker::GetLangByIndex (int i)
 {
-  return m_activeLangList->at(i).OrigName;
+  return m_status->languageList[i].OrigName;
 }
 
 SpellerController *SpellChecker::activeSpeller ()
@@ -369,7 +369,7 @@ SpellerController *SpellChecker::activeSpeller ()
   return m_spellers[m_settings->get ().activeSpellerType].get ();
 }
 
-void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs)
+void SpellChecker::reinitLanguageLists()
 {
   bool currentLanguageExists = false;
 
@@ -381,19 +381,15 @@ void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs)
     getRemoveDicsDialog ()->display (false);
   }
 
-  m_activeLangList.reset ();
+  auto newStatus = std::make_shared<SpellCheckerStatus> (*m_status);
+  newStatus->languageList.clear ();
 
   if (spellerToUse->IsWorking ())
   {
-    if (UpdateDialogs)
-      settingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (FALSE);
     std::vector <TCHAR *> *LangsFromSpeller =  spellerToUse->getLanguageList ();
-    m_activeLangList = std::make_shared<std::vector <LanguageName>> ();
 
     if (!LangsFromSpeller || LangsFromSpeller->size () == 0)
     {
-      if (UpdateDialogs)
-        settingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
       return;
     }
     for (unsigned int i = 0; i < LangsFromSpeller->size (); i++)
@@ -404,32 +400,30 @@ void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs)
            settings ().useLanguageNameAliases),
           spellerToUse->GetLangOnlySystem(
               LangsFromSpeller->at(i)) != FALSE);  // Using them only for Hunspell
-      m_activeLangList->push_back (Lang);                               // TODO: Add option - use or not use aliases.
+      newStatus->languageList.push_back (Lang);                               // TODO: Add option - use or not use aliases.
       if (m_settings->get ().activeSpellerSettings ().activeLanguage == Lang.OrigName)
         currentLanguageExists = true;
     }
-    if (m_settings->get ().activeSpellerSettings ().activeLanguage == L"<MULTIPLE>")
+    if (m_settings->get ().activeSpellerSettings ().activeLanguage == multipleLanguagesStr)
       currentLanguageExists = true;
 
     CLEAN_AND_ZERO_STRING_VECTOR (LangsFromSpeller);
-    std::sort (m_activeLangList->begin (), m_activeLangList->end (), settings ().useLanguageNameAliases ? CompareAliases : CompareOriginal);
-    if (!currentLanguageExists && m_activeLangList->size () > 0)
+    std::sort (newStatus->languageList.begin (), newStatus->languageList.end (), settings ().useLanguageNameAliases ? CompareAliases : CompareOriginal);
+    if (!currentLanguageExists && newStatus->languageList.size () > 0)
     {
       {
         auto settings = m_settings->change ();
-        settings->activeSpellerSettings ().activeLanguage = m_activeLangList->at (0).OrigName;
+        settings->activeSpellerSettings ().activeLanguage = newStatus->languageList[0].OrigName;
       }
       RecheckVisibleBothViews ();
     }
     PostMessage(NppDataInstance->_nppHandle,
                 getCustomGUIMessageId(CustomGUIMessage::CONFIGURATION_CHANGED),
                 0, 0);
+
   }
-  else
-  {
-    if (UpdateDialogs)
-      settingsDlgInstance->GetSimpleDlg ()->DisableLanguageCombo (TRUE);
-  }
+  atomic_store(&m_status, newStatus);
+  DoPluginMenuInclusion ();
 }
 
 void SpellChecker::RecheckVisibleBothViews ()
@@ -565,10 +559,7 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
       GetSelectProxy ()->SetOptions (UseProxy, ProxyHostName, ProxyUserName, ProxyPassword, ProxyPort, ProxyAnonymous, ProxyType);
       break;
     case EID_UPDATE_LANG_LISTS:
-      ReinitLanguageLists (TRUE);
-      break;
-    case EID_UPDATE_LANG_LISTS_NO_GUI:
-      ReinitLanguageLists (FALSE);
+      reinitLanguageLists ();
       break;
     case EID_UPDATE_LANGS_MENU:
       DoPluginMenuInclusion ();
@@ -591,13 +582,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
 
     case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE:
       GetDownloadDics ()->UpdateOptions (this);
-      SaveSettings ();
-      break;
-
-    case EID_LIB_CHANGE:
-      DoPluginMenuInclusion ();
-      ReinitLanguageLists(TRUE);
-      RecheckVisibleBothViews ();
       SaveSettings ();
       break;
 
@@ -652,6 +636,7 @@ BOOL SpellChecker::GetRemoveSystem ()
   return RemoveSystem;
 }
 
+// TODO: Move to main thread
 void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
 {
   BOOL Res;
@@ -665,18 +650,18 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
   HMENU NewMenu = CreatePopupMenu ();
   if (!Invalidate)
   {
-    if (m_activeLangList)
+    if (m_status)
     {
-      if (m_activeLangList->size () > 0)
+      if (m_status->languageList.size () > 0)
       {
-        for (unsigned int i = 0; i < m_activeLangList->size (); i++)
+        for (unsigned int i = 0; i < m_status->languageList.size (); i++)
         {
-          int Checked = (_tcscmp (currentLanguage (), m_activeLangList->at(i).OrigName) == 0) ? (MFT_RADIOCHECK | MF_CHECKED) : MF_UNCHECKED;
-          Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), settings ().useLanguageNameAliases ? m_activeLangList->at(i).AliasName : m_activeLangList->at(i).OrigName);
+          int Checked = (_tcscmp (currentLanguage (), m_status->languageList[i].OrigName) == 0) ? (MFT_RADIOCHECK | MF_CHECKED) : MF_UNCHECKED;
+          Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), settings ().useLanguageNameAliases ? m_status->languageList[i].AliasName : m_status->languageList[i].OrigName);
           if (!Res)
             return;
         }
-        int Checked = (_tcscmp (currentLanguage (), _T ("<MULTIPLE>")) == 0) ? (MFT_RADIOCHECK | MF_CHECKED)  : MF_UNCHECKED;
+        int Checked = (currentLanguage () == multipleLanguagesStr) ? (MFT_RADIOCHECK | MF_CHECKED)  : MF_UNCHECKED;
         Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? MULTIPLE_LANGS + GetLangsMenuIdStart () : MAKEWORD (MULTIPLE_LANGS, LANGUAGE_MENU_ID), _T ("Multiple Languages"));
         Res = AppendMenu (NewMenu, MF_SEPARATOR, 0, 0);
         Res = AppendMenu (NewMenu, MF_STRING, GetUseAllocatedIds () ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart () : MAKEWORD (CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID), _T ("Set Multiple Languages..."));
@@ -695,8 +680,8 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
 
   Mif.fMask = MIIM_SUBMENU | MIIM_STATE;
   Mif.cbSize = sizeof (MENUITEMINFO);
-  Mif.hSubMenu = (m_activeLangList ? NewMenu : 0);
-  Mif.fState = (!m_activeLangList ? MFS_GRAYED : MFS_ENABLED);
+  Mif.hSubMenu = (m_status ? NewMenu : 0);
+  Mif.fState = (!m_status ? MFS_GRAYED : MFS_ENABLED);
 
   SetMenuItemInfo (DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, TRUE, &Mif);
 }
@@ -2155,10 +2140,10 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
       else
         Result = MenuId - GetLangsMenuIdStart ();
 
-      TCHAR *langString = 0;
+      std::wstring langString;
       if (Result == MULTIPLE_LANGS)
       {
-        langString = _T ("<MULTIPLE>");
+        langString = multipleLanguagesStr;
       }
       else if (Result == CUSTOMIZE_MULTIPLE_DICS ||
                Result == DOWNLOAD_DICS ||
@@ -2168,7 +2153,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
         return;
       }
       else
-        langString = m_activeLangList->at (Result).OrigName;
+        langString = m_status->languageList[Result].OrigName;
       DoPluginMenuInclusion (TRUE);
 
       {
@@ -2177,7 +2162,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
       }
 
 
-      ReinitLanguageLists (TRUE);
+      reinitLanguageLists ();
       UpdateLangsMenu ();
       RecheckVisibleBothViews ();
       SaveSettings ();
@@ -2461,12 +2446,12 @@ void SpellChecker::setNewSettings(const SettingsData &settingsArg)
   // Mostly settings are used automatically but some of them are heavy to change (i.e. speller settings)
   // so we gotta change them only in case if they are really changed
   // code looks kinda clumsy right now
-  auto oldSettings = settingsArg;
+  auto oldSettings = std::make_shared<SettingsData> (settingsArg);
   m_settings->exchange (oldSettings);
 
-  auto oldType = oldSettings.activeSpellerType;
+  auto oldType = oldSettings->activeSpellerType;
   auto newType = settings ().activeSpellerType;
-  auto &oldS = oldSettings.spellerSettings[newType];
+  auto &oldS = oldSettings->spellerSettings[newType];
   auto &newS = settings ().spellerSettings[newType];
 
   if (oldType != newType || oldS.path != newS.path)
@@ -2475,30 +2460,37 @@ void SpellChecker::setNewSettings(const SettingsData &settingsArg)
   if (oldType != newType || oldS.path != newS.path)
     m_spellers[newType]->setAdditionalPath (newS.additionalPath.data ());
 
-  if (oldType != newType)
-    ReinitLanguageLists (FALSE);
+  if (oldType != newType || oldS.path != newS.path || oldS.additionalPath != newS.additionalPath)
+    reinitLanguageLists ();
 
   if (oldType != newType || oldS.activeLanguage != newS.activeLanguage)
     {
-       if (newS.activeLanguage != L"<MULTIPLE>")
+      if (newS.activeLanguage != multipleLanguagesStr)
          m_spellers[newType]->setLanguage(newS.activeLanguage.data ());
 
-       m_spellers[newType]->setMultiMode (newS.activeLanguage == L"<MULTIPLE>");
+       m_spellers[newType]->setMultiMode (newS.activeLanguage == multipleLanguagesStr);
     }
 
-  if (newS.activeLanguage == L"<MULTIPLE>" && (oldType != newType || oldS.activeMultiLanguage != newS.activeMultiLanguage))
+  if (settings ().activeSpellerType == SpellerType::aspell && (firstTime || oldS.path != newS.path))
+    {
+      auto newStatus = std::make_shared<SpellCheckerStatus> (*m_status);
+      newStatus->aspellStatus = activeSpeller()->IsWorking() ? AspellStatus::ok : AspellStatus::fail;
+      atomic_exchange (&m_status, newStatus);
+    }
+
+  if (newS.activeLanguage == multipleLanguagesStr && (oldType != newType || oldS.activeMultiLanguage != newS.activeMultiLanguage))
     SetMultipleLanguages(newS.activeMultiLanguage.data (), m_spellers[newType].get ());
 
-  if (firstTime || settings ().delimiters != oldSettings.delimiters)
+  if (firstTime || settings ().delimiters != oldSettings->delimiters)
     setDelimiters(settings ().delimiters.c_str ());
 
-  if (firstTime || settings ().unifiedUserDictionary != oldSettings.unifiedUserDictionary)
+  if (firstTime || settings ().unifiedUserDictionary != oldSettings->unifiedUserDictionary)
     static_cast<HunspellController &> (*m_spellers[SpellerType::hunspell]).SetUseOneDic (settings ().unifiedUserDictionary);
 
-  if (firstTime || settings ().suggestionControlType != oldSettings.suggestionControlType)
+  if (firstTime || settings ().suggestionControlType != oldSettings->suggestionControlType)
     hideSuggestionBox ();
 
-  if (firstTime || settings ().suggestionBoxTransparency != oldSettings.suggestionBoxTransparency)
+  if (firstTime || settings ().suggestionBoxTransparency != oldSettings->suggestionBoxTransparency)
     {
       // Don't sure why but this helps to fix a bug with notepad++ window resizing
       // TODO: Fix it normal way
@@ -2506,11 +2498,11 @@ void SpellChecker::setNewSettings(const SettingsData &settingsArg)
     }
 
   bool needRefreshUnderlineStyle = false;
-  if (firstTime || m_settings->get ().underlineColor != oldSettings.underlineColor || settings ().underlineStyle != oldSettings.underlineStyle)
+  if (firstTime || m_settings->get ().underlineColor != oldSettings->underlineColor || settings ().underlineStyle != oldSettings->underlineStyle)
     needRefreshUnderlineStyle = true;
     RefreshUnderlineStyle ();
 
-  if (firstTime || settings ().fileMask != oldSettings.fileMask || settings ().fileMaskOption != oldSettings.fileMaskOption)
+  if (firstTime || settings ().fileMask != oldSettings->fileMask || settings ().fileMaskOption != oldSettings->fileMaskOption)
     CheckFileName();
 
   PostMessage (NppDataInstance->_nppHandle,
@@ -3397,7 +3389,7 @@ void SpellChecker::onHunspellDictionariesChange ()
 {
   m_spellers[SpellerType::hunspell]->setPath (m_settings->get ().spellerSettings[SpellerType::hunspell].path.data ());
   m_spellers[SpellerType::hunspell]->setAdditionalPath (m_settings->get ().spellerSettings[SpellerType::hunspell].additionalPath.data ());
-  ReinitLanguageLists (TRUE);
+  reinitLanguageLists ();
   DoPluginMenuInclusion ();
   RecheckVisibleBothViews ();
 }

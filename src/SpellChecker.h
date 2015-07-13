@@ -44,6 +44,18 @@ enum class SpellerType;
 
 #include "LanguageName.h"
 
+enum class AspellStatus
+{
+  fail,
+  ok,
+};
+
+struct SpellCheckerStatus
+{
+  std::vector<LanguageName> languageList;
+  AspellStatus aspellStatus = AspellStatus::fail;
+};
+
 struct SuggestionsMenuItem
 {
   TCHAR *Text;
@@ -92,7 +104,7 @@ public:
   void SetProxyType (int Value);
   void SetShowOnlyKnow (BOOL Value);
   void SetInstallSystem (BOOL Value);
-  void ReinitLanguageLists (BOOL UpdateDialogs);
+  void reinitLanguageLists ();
   TCHAR *GetLangByIndex (int i);
   BOOL GetShowOnlyKnown ();
   BOOL GetInstallSystem ();
@@ -185,7 +197,7 @@ private:
 
 private:
 
-  std::shared_ptr<std::vector <LanguageName>> m_activeLangList;
+  std::shared_ptr<SpellCheckerStatus> m_status;
   BOOL SettingsLoaded;
   BOOL AutoCheckText;
   BOOL checkTextEnabled;
@@ -245,7 +257,7 @@ private:
   char *PunctuationApostropheANSI;
 
 public:
-  auto getActiveLanguageList ()->decltype (m_activeLangList) { return m_activeLangList; } // TODO-MSVC2015: Move this function up, remove trailing type
-  std::shared_ptr<const SettingsData> getSettings (); // TODO-MSVC2015: Move this function up, remove trailing type
+  auto getStatus ()->decltype (m_status) { return m_status; } // TODO-MSVC2015: Move this function up, remove trailing type
+  std::shared_ptr<const SettingsData> getSettings ();
 };
 #endif // SPELLCHECKER_H

@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <hash_set>
 #include <map>
 #include <memory>
+#include <limits>
 #include <set>
 #include <stack>
 #include <string>

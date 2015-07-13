@@ -127,9 +127,9 @@ void RemoveDicsDialog::update()
   if (!isCreated())
     return;
 
-  auto langList = getSpellChecker()->getActiveLanguageList ();
+  auto status = getSpellChecker()->getStatus ();
   ListBox_ResetContent (HLangList);
-  for (auto &lang : *langList)
+  for (auto &lang : status->languageList)
     {
       std::wstring name = lang.AliasName;
       name += (lang.systemOnly ? L" [!For All Users]" : L"");

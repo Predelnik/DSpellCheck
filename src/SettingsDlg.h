@@ -34,6 +34,7 @@ class HunspellController;
 class SpellChecker;
 struct LanguageName;
 struct SettingsData;
+struct SpellCheckerStatus;
 typedef HTHEME (WINAPI * OTDProc) (HWND, LPCWSTR);
 
 class SimpleDlg : public StaticDialog
@@ -43,15 +44,13 @@ public:
   ~SimpleDlg ();
   void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   void applySettings (SettingsData &settings);
-  BOOL AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages, HunspellController *HunspellSpeller);
   void FillSugestionsNum (int SuggestionsNum);
-  void updateVisibility (const SettingsData &settings, const std::vector <LanguageName> &languageList);
-  void DisableLanguageCombo (BOOL Disable);
+  void updateVisibility (const SettingsData &settings, const SpellCheckerStatus &status);
   SpellerType selectedSpellerType ();
   void SetLibMode (int LibMode);
   void SetOneUserDic (BOOL Value);
   void onSelectedSpellerChange ();
-  void updateOnConfigurationChange (const SettingsData &settings, const std::vector<LanguageName> &langList);
+  void updateOnConfigurationChange (const SettingsData &settings, const SpellCheckerStatus &status);
 
 protected:
   virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam) override;

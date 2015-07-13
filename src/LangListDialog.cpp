@@ -66,7 +66,6 @@ void LangListDialog::ApplyChoice(SpellChecker *spellCheckerInstance) {
   PostMessageToMainThread(TM_SETTINGS_CHANGED,
                           reinterpret_cast<WPARAM>(settingsCopy.release()));
 
-  spellCheckerInstance->RecheckVisible();
   CLEAN_AND_ZERO_ARR(ItemBuf);
 }
 
@@ -102,9 +101,9 @@ void LangListDialog::update()
   if (!isCreated ())
     return;
 
-  auto langList = getSpellChecker()->getActiveLanguageList();
+  auto status = getSpellChecker()->getStatus();
   ListBox_ResetContent(HLangList);
-  for (auto &lang : *langList) ListBox_AddString(HLangList, lang.AliasName);
+  for (auto &lang : status->languageList) ListBox_AddString(HLangList, lang.AliasName);
 
   auto settingsCopy = *getSpellChecker()->getSettings();
   wchar_t *multiLangCopy = nullptr;
@@ -114,8 +113,8 @@ void LangListDialog::update()
   auto token = _tcstok_s(multiLangCopy, _T ("|"), &context);
   while (token) {
     index = -1;
-    for (int i = 0; i < static_cast<int> (langList->size ()); ++i) {
-      if (_tcscmp (langList->at (i).OrigName, token) == 0) {
+    for (int i = 0; i < static_cast<int> (status->languageList.size ()); ++i) {
+      if (_tcscmp (status->languageList[i].OrigName, token) == 0) {
         index = i;
         break;
       }

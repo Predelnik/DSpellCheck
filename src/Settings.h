@@ -23,6 +23,8 @@ enum class SuggestionControlType
   menu,
 };
 
+static const std::wstring multipleLanguagesStr = L"<MULTIPLE>";
+
 struct SpellerSettings
 {
   std::wstring activeLanguage;
@@ -75,7 +77,7 @@ struct SettingsData
 class SettingsDataChanger : Uncopiable
 {
 public:
-  SettingsDataChanger (const SettingsData &dataSrc, std::function<void (const SettingsData&)> callback) : m_callback {callback}, m_valid {true}
+  SettingsDataChanger (SettingsData &dataSrc, std::function<void (const SettingsData&)> callback) : m_callback {callback}, m_valid {true}
   {
     m_data = dataSrc; // create-and-copy
   }
@@ -116,7 +118,7 @@ public:
   const SettingsData &get () const;
   std::shared_ptr<const SettingsData> cloneData () const;
   SettingsDataChanger change ();
-  void exchange (SettingsData &newData);
+  void exchange (std::shared_ptr<SettingsData> &newData);
 
 private:
   std::shared_ptr<SettingsData> m_data;

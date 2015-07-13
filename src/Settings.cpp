@@ -25,11 +25,9 @@ std::shared_ptr<const SettingsData> Settings::cloneData() const
   return std::static_pointer_cast<const SettingsData> (m_data);
 }
 
-void Settings::exchange (SettingsData &newData)
+void Settings::exchange (std::shared_ptr<SettingsData> &newData)
 {
-  m_data = std::make_shared<SettingsData> ();
-  using std::swap;
-  swap (*m_data, newData); // create-and-copy
+  newData = atomic_exchange (&m_data, newData);
 }
 
 SettingsDataChanger Settings::change ()

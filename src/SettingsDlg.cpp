@@ -45,68 +45,6 @@ void SimpleDlg::init(HINSTANCE hInst, HWND Parent, NppData nppData) {
   return Window::init(hInst, Parent);
 }
 
-void SimpleDlg::DisableLanguageCombo(BOOL Disable) {
-  ComboBox_ResetContent(HComboLanguage);
-  EnableWindow(HComboLanguage, !Disable);
-  ListBox_ResetContent(getRemoveDicsDialog()->GetListBox());
-  EnableWindow(HRemoveDics, !Disable);
-}
-
-BOOL SimpleDlg::AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
-                                      const TCHAR *CurrentLanguage,
-                                      const TCHAR *MultiLanguages,
-                                      HunspellController *HunspellSpeller) {
-  ComboBox_ResetContent(HComboLanguage);
-  ListBox_ResetContent(getRemoveDicsDialog()->GetListBox());
-
-  int SelectedIndex = 0;
-  unsigned int i = 0;
-
-  for (i = 0; i < LangsAvailable->size(); i++) {
-    if (_tcscmp(CurrentLanguage, LangsAvailable->at(i).OrigName) == 0)
-      SelectedIndex = i;
-
-    ComboBox_AddString(HComboLanguage, LangsAvailable->at(i).AliasName);
-    if (HunspellSpeller) {
-      TCHAR Buf[DEFAULT_BUF_SIZE];
-      _tcscpy(Buf, LangsAvailable->at(i).AliasName);
-      if (HunspellSpeller->GetLangOnlySystem(LangsAvailable->at(i).OrigName))
-        _tcscat(Buf, _T (" [!For All Users]"));
-
-      ListBox_AddString(getRemoveDicsDialog()->GetListBox(), Buf);
-    }
-  }
-
-  if (_tcscmp(CurrentLanguage, _T ("<MULTIPLE>")) == 0) SelectedIndex = i;
-  if (LangsAvailable->size() != 0)
-    ComboBox_AddString(HComboLanguage, _T ("Multiple Languages..."));
-
-  ComboBox_SetCurSel(HComboLanguage, SelectedIndex);
-
-  TCHAR *Context = 0;
-  TCHAR *MultiLanguagesCopy = 0;
-  TCHAR *Token = 0;
-  int Index = 0;
-  setString(MultiLanguagesCopy, MultiLanguages);
-  CheckedListBox_EnableCheckAll(getLangListDialog()->GetListBox(), BST_UNCHECKED);
-  Token = _tcstok_s(MultiLanguagesCopy, _T ("|"), &Context);
-  while (Token) {
-    Index = -1;
-    for (unsigned int i = 0; i < LangsAvailable->size(); i++) {
-      if (_tcscmp(LangsAvailable->at(i).OrigName, Token) == 0) {
-        Index = i;
-        break;
-      }
-    }
-    if (Index != -1)
-      CheckedListBox_SetCheckState(getLangListDialog()->GetListBox(), Index,
-                                   BST_CHECKED);
-    Token = _tcstok_s(NULL, _T ("|"), &Context);
-  }
-  CLEAN_AND_ZERO_ARR(MultiLanguagesCopy);
-  return TRUE;
-}
-
 static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText) {
   if (!toolID || !hDlg || !pszText) {
     return FALSE;
@@ -150,13 +88,13 @@ void SimpleDlg::applySettings(SettingsData &settings)
 
   auto type = selectedSpellerType ();
 
-  auto languageList = sc->getActiveLanguageList();
+  auto status = sc->getStatus();
 
   if (IsWindowEnabled(HComboLanguage) && curSel >= 0) {
     if (curSel == LangCount - 1) {
-      settings.activeSpellerSettings().activeLanguage = L"<MULTIPLE>";
+      settings.activeSpellerSettings().activeLanguage = multipleLanguagesStr;
     } else {
-      settings.activeSpellerSettings().activeLanguage = languageList->at (curSel).OrigName;
+      settings.activeSpellerSettings().activeLanguage = status->languageList[curSel].OrigName;
     }
   }
   sc->RecheckVisible();
@@ -187,23 +125,29 @@ void SimpleDlg::SetLibMode(int LibMode) {
   ComboBox_SetCurSel(HSpellerTypeCombo, LibMode);
 }
 
-void SimpleDlg::updateVisibility(const SettingsData &settings, const std::vector <LanguageName> &languageList) {
+void SimpleDlg::updateVisibility(const SettingsData &settings, const SpellCheckerStatus &status) {
   switch (settings.activeSpellerType) {
     case SpellerType::aspell: {
       ShowWindow(HAspellStatus, 1);
       ShowWindow(HDownloadDics, 0);
-      if (languageList.size () > 0) {
-        AspellStatusColor = COLOR_OK;
-        Static_SetText(HAspellStatus, _T ("Aspell Status: OK"));
-      }
-//       else if (Status == 1) {
-//         AspellStatusColor = COLOR_FAIL;
-//         Static_SetText(HAspellStatus, _T ("Aspell Status: No Dictionaries"));
-//       }
-      else {
+      switch (status.aspellStatus)
+      {
+      case AspellStatus::ok:
+        if (status.languageList.size () > 0) {
+          AspellStatusColor = COLOR_OK;
+          Static_SetText (HAspellStatus, _T ("Aspell Status: OK"));
+        }
+        else {
+          AspellStatusColor = COLOR_FAIL;
+          Static_SetText (HAspellStatus, _T ("Aspell Status: No Dictionaries"));
+        }
+        break;
+      case AspellStatus::fail:
         AspellStatusColor = COLOR_FAIL;
-        Static_SetText(HAspellStatus, _T ("Aspell Status: Fail"));
+        Static_SetText (HAspellStatus, _T ("Aspell Status: Fail"));
+        break;
       }
+
       TCHAR *Path = 0;
       GetActualAspellPath(Path, settings.activeSpellerSettings().path.c_str ());
       Edit_SetText(HLibPath, Path);
@@ -528,19 +472,22 @@ SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
   return FALSE;
 }
 
-void SimpleDlg::updateOnConfigurationChange(const SettingsData &settings, const std::vector<LanguageName> &langList)
+void SimpleDlg::updateOnConfigurationChange(const SettingsData &settings, const SpellCheckerStatus &status)
 {
   ComboBox_ResetContent (HComboLanguage);
-  for (auto &item : langList)
+  for (auto &item : status.languageList)
     {
       ComboBox_AddString (HComboLanguage, settings.useLanguageNameAliases ? item.AliasName : item.OrigName);
       if (settings.activeSpellerSettings().activeLanguage == item.OrigName)
         ComboBox_SetCurSel (HComboLanguage, ComboBox_GetCount (HComboLanguage) - 1);
     }
-  if (!langList.empty ())
+  if (!status.languageList.empty ())
     ComboBox_AddString(HComboLanguage, _T ("Multiple Languages..."));
-  else
-    EnableWindow(HComboLanguage, false);
+
+  EnableWindow(HComboLanguage, !status.languageList.empty ());
+
+  if (settings.activeSpellerSettings().activeLanguage == multipleLanguagesStr)
+    ComboBox_SetCurSel (HComboLanguage, ComboBox_GetCount (HComboLanguage) - 1);
 
   ComboBox_SetCurSel (HSpellerTypeCombo, static_cast<int> (settings.activeSpellerType));
   Edit_SetText (HSuggestionsNum, std::to_wstring (settings.suggestionCount).c_str ());
@@ -563,7 +510,7 @@ void SimpleDlg::updateOnConfigurationChange(const SettingsData &settings, const 
   Button_SetCheck (HCheckComments, settings.skipCode ? BST_CHECKED : BST_UNCHECKED);
   Edit_SetText (HFileTypes, settings.fileMask.c_str ());
   ComboBox_SetCurSel (HSuggType, static_cast<int> (settings.suggestionControlType));
-  updateVisibility (settings, langList);
+  updateVisibility (settings, status);
 }
 
 const TCHAR *const IndicNames[] = {
@@ -822,12 +769,12 @@ void SettingsDlg::updateOnConfigurationChange ()
   if (!isCreated ())
     return;
 
-  auto list = getSpellChecker ()->getActiveLanguageList ();
+  auto status = getSpellChecker ()->getStatus ();
   auto settings = getSpellChecker ()->getSettings ();
-  if (!list || !settings) // better to hide everything in that case though
+  if (!status || !settings) // better to hide everything in that case though
     return;
 
-  simpleDlgInstance.updateOnConfigurationChange (*settings, *list);
+  simpleDlgInstance.updateOnConfigurationChange (*settings, *status);
   advancedDlgInstance.updateOnConfigurationChange (*settings);
 }
 
