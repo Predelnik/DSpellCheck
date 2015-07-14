@@ -72,6 +72,10 @@ struct SettingsData
 
   int suggestionBoxSize;
   int suggestionBoxTransparency;
+
+  // for remove dictionaries dialog:
+  bool removeCorrespondingUserDictionaries;
+  bool removeDictionariesInstalledForAllUsers;
 };
 
 class SettingsDataChanger : Uncopiable

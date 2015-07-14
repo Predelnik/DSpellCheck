@@ -557,7 +557,7 @@ const TCHAR *const AliasesTo[] = {_T ("Afrikaans"), _T ("Akan"), _T ("Bulgarian"
                                  };
 
 // Language Aliases
-BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName)
+bool setStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName)
 {
   int Left, Right;
   Left = 0;
@@ -579,7 +579,7 @@ BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName)
     if (CompareResult == 0)
     {
       setString (Target, AliasesTo[CentralElement]);
-      return TRUE;
+      return true;
     }
     else if (Right - Left <= 1)
       break;
@@ -589,7 +589,7 @@ BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName)
       Right = CentralElement;
   }
   setString (Target, OrigName);
-  return FALSE;
+  return false;
 }
 
 static BOOL TryToCreateDir (const TCHAR *Path, BOOL Silent, HWND NppWindow)
@@ -599,16 +599,16 @@ static BOOL TryToCreateDir (const TCHAR *Path, BOOL Silent, HWND NppWindow)
     if (!Silent)
     {
       if (!NppWindow)
-        return FALSE;
+        return false;
 
       TCHAR Message[DEFAULT_BUF_SIZE];
       _stprintf (Message, _T ("Can't create directory %s"), Path);
       MessageBoxInfo MsgBox (NppWindow, Message, _T ("Error in directory creation"), MB_OK | MB_ICONERROR);
       SendMessage (NppWindow, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     }
-    return FALSE;
+    return false;
   }
-  return TRUE;
+  return true;
 }
 
 bool CheckForDirectoryExistence (const wchar_t *path, bool silent, HWND NppWindow)
@@ -645,5 +645,13 @@ std::wstring getWindowText (HWND hwnd)
   int len = GetWindowTextLength (hwnd);
   std::vector<wchar_t> buf (len + 1);
   GetWindowText (hwnd, buf.data (), buf.size ());
-  return {buf.begin (), buf.end ()};
+  return {buf.data ()};
+}
+
+std::wstring getListboxText (HWND hwnd, int index)
+{
+  int len = ListBox_GetTextLen (hwnd, index);
+  std::vector<wchar_t> buf (len + 1);
+  ListBox_GetText (hwnd, index, buf.data ());
+  return {buf.data ()};
 }

@@ -105,15 +105,11 @@ public:
   void SetShowOnlyKnow (BOOL Value);
   void SetInstallSystem (BOOL Value);
   void reinitLanguageLists ();
-  TCHAR *GetLangByIndex (int i);
+  const wchar_t *GetLangByIndex (int i);
   BOOL GetShowOnlyKnown ();
   BOOL GetInstallSystem ();
   void DoPluginMenuInclusion (BOOL Invalidate = FALSE);
   HunspellController *GetHunspellSpeller ();;
-  void SetRemoveUserDics (BOOL Value);
-  void SetRemoveSystem (BOOL Value);
-  BOOL GetRemoveUserDics ();
-  BOOL GetRemoveSystem ();
   TCHAR *GetProxyUserName ();
   TCHAR *GetProxyHostName ();
   TCHAR *GetProxyPassword ();
@@ -177,6 +173,7 @@ private:
   void FillDownloadDics ();
   void ResetHotSpotCache ();
   void CheckSpecialDelimeters (char *&Word, const char *TextStart, long &WordStart, long &WordEnd);
+  void removeDictionaries (const std::vector<std::wstring> &list);
 
   void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
   void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);
@@ -243,8 +240,6 @@ private:
   char *VisibleText;
   int VisibleTextLength;
   long VisibleTextOffset;
-  BOOL RemoveUserDics;
-  BOOL RemoveSystem;
 
   enum_vector<SpellerType, std::unique_ptr<SpellerController>> m_spellers;
   std::unique_ptr<Settings> m_settings;

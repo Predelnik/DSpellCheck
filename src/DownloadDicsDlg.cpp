@@ -100,7 +100,7 @@ DWORD DownloadDicsDlg::AskReplacementMessage (TCHAR *DicName)
 {
   TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
   TCHAR *TBuf = 0;
-  SetStringWithAliasApplied (TBuf, DicName);
+  setStringWithAliasApplied (TBuf, DicName);
   _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), TBuf);
   CLEAN_AND_ZERO_ARR (TBuf);
   MessageBoxInfo MsgBox (_hParent, ReplaceMessage, _T ("Dictionary already exists"), MB_YESNO);
@@ -158,9 +158,9 @@ void DownloadDicsDlg::DownloadSelected ()
     if (CheckedListBox_GetCheckState (HFileList, i) == BST_CHECKED)
     {
       SupposedDownloadedCount++;
-      FileName = new TCHAR [_tcslen (CurrentLangsFiltered->at (i).OrigName) + 4 + 1];
+      FileName = new TCHAR [CurrentLangsFiltered->at (i).originalName.size () + 4 + 1];
       FileName[0] = _T ('\0');
-      _tcscat (FileName, CurrentLangsFiltered->at (i).OrigName);
+      _tcscat (FileName, CurrentLangsFiltered->at (i).originalName.c_str ());
       _tcscat (FileName, _T (".zip"));
       _stprintf (ProgMessage, _T ("Downloading %s..."), FileName);
       p->SetTopMessage (ProgMessage);
@@ -318,7 +318,7 @@ void DownloadDicsDlg::DownloadSelected ()
             DeleteFile (DicFileLocalPath);
             Failure = 1;
           }
-          SetStringWithAliasApplied (ConvertedDicName, DicFileName);
+          setStringWithAliasApplied (ConvertedDicName, DicFileName);
           if (Failure)
             goto clean_and_continue;
 
@@ -407,7 +407,7 @@ void DownloadDicsDlg::UpdateListBox ()
   for (unsigned int i = 0; i < CurrentLangs->size (); i++)
   {
     LanguageName Lang (CurrentLangs->at (i));
-    if (SpellCheckerInstance->GetShowOnlyKnown () && !Lang.AliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
+    if (SpellCheckerInstance->GetShowOnlyKnown () && !Lang.aliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
       continue;
     CurrentLangsFiltered->push_back (Lang);
   }
@@ -416,7 +416,7 @@ void DownloadDicsDlg::UpdateListBox ()
   auto settings = getSpellChecker()->getSettings ();
   for (unsigned int i = 0; i < CurrentLangsFiltered->size (); i++)
   {
-    ListBox_AddString (HFileList, settings->useLanguageNameAliases ? CurrentLangsFiltered->at (i).AliasName : CurrentLangsFiltered->at (i).OrigName);
+    ListBox_AddString (HFileList, CurrentLangsFiltered->at (i).getLanguageName(*settings).c_str ());
   }
 }
 

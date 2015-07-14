@@ -329,7 +329,13 @@ add_user_server_cleanup:
     {
       std::unique_ptr<SettingsData> data{ reinterpret_cast<SettingsData *> (wParam) };
       setNewSettings (*data);
-      SaveSettings ();
+    }
+    break;
+  case TM_REMOVE_DICTIONARIES_APPLY:
+    {
+      std::unique_ptr<RemoveDictionariesInfo> info{ reinterpret_cast<RemoveDictionariesInfo *> (wParam) };
+      setNewSettings (*info->newSettings);
+      removeDictionaries (info->dictionaryNames);
     }
     break;
   default:
@@ -338,6 +344,45 @@ add_user_server_cleanup:
   return TRUE;
 }
 
+void SpellChecker::removeDictionaries (const std::vector<std::wstring> &list)
+{
+  int Count = 0;
+  std::vector<std::wstring> extList = {L".aff", L".dic"};
+  if (settings ().removeCorrespondingUserDictionaries)
+    extList.push_back (L".usr");
+
+  for (auto &langName : list)
+    for (int j = 0; j < 1 + settings ().removeDictionariesInstalledForAllUsers ? 1 : 0; ++j)
+      {
+        std::wstring fileName;
+        fileName += (j == 0 ? settings ().spellerSettings[SpellerType::hunspell].path : settings ().spellerSettings[SpellerType::hunspell].additionalPath);
+        fileName += L'\\';
+        fileName += langName;
+
+        bool success = true;
+        for (auto &ext : extList)
+          {
+            auto fileNameWithExt = fileName + ext;
+            SetFileAttributes (fileNameWithExt.c_str (), FILE_ATTRIBUTE_NORMAL);
+            success = success && DeleteFile (fileNameWithExt.c_str ());
+          }
+
+        if (success)
+          {
+            GetHunspellSpeller ()->UpdateOnDicRemoval (fileName.c_str ());
+            Count++;
+          }
+      }
+
+  if (Count > 0)
+  {
+    onHunspellDictionariesChange ();
+    TCHAR Buf[DEFAULT_BUF_SIZE];
+    _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
+    MessageBoxInfo MsgBox (NppDataInstance->_nppHandle, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
+    SendMessage (NppDataInstance->_nppHandle, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX), (WPARAM)&MsgBox, 0);
+  }
+}
 
 void SpellChecker::SetShowOnlyKnow (BOOL Value)
 {
@@ -359,9 +404,9 @@ BOOL SpellChecker::GetInstallSystem ()
   return InstallSystem;
 }
 
-TCHAR *SpellChecker::GetLangByIndex (int i)
+const wchar_t * SpellChecker::GetLangByIndex(int i)
 {
-  return m_status->languageList[i].OrigName;
+  return m_status->languageList[i].originalName.c_str ();
 }
 
 SpellerController *SpellChecker::activeSpeller ()
@@ -401,7 +446,7 @@ void SpellChecker::reinitLanguageLists()
           spellerToUse->GetLangOnlySystem(
               LangsFromSpeller->at(i)) != FALSE);  // Using them only for Hunspell
       newStatus->languageList.push_back (Lang);                               // TODO: Add option - use or not use aliases.
-      if (m_settings->get ().activeSpellerSettings ().activeLanguage == Lang.OrigName)
+      if (m_settings->get ().activeSpellerSettings ().activeLanguage == Lang.originalName)
         currentLanguageExists = true;
     }
     if (m_settings->get ().activeSpellerSettings ().activeLanguage == multipleLanguagesStr)
@@ -413,7 +458,7 @@ void SpellChecker::reinitLanguageLists()
     {
       {
         auto settings = m_settings->change ();
-        settings->activeSpellerSettings ().activeLanguage = newStatus->languageList[0].OrigName;
+        settings->activeSpellerSettings ().activeLanguage = newStatus->languageList[0].originalName;
       }
       RecheckVisibleBothViews ();
     }
@@ -552,9 +597,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
     case EID_INIT_DOWNLOAD_COMBOBOX:
       ResetDownloadCombobox ();
       break;
-    case EID_REMOVE_SELECTED_DICS:
-      getRemoveDicsDialog ()->RemoveSelected (this);
-      break;
     case EID_UPDATE_SELECT_PROXY:
       GetSelectProxy ()->SetOptions (UseProxy, ProxyHostName, ProxyUserName, ProxyPassword, ProxyPort, ProxyAnonymous, ProxyType);
       break;
@@ -563,15 +605,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
       break;
     case EID_UPDATE_LANGS_MENU:
       DoPluginMenuInclusion ();
-      break;
-
-    case EID_UPDATE_FROM_REMOVE_DICS_OPTIONS:
-      getRemoveDicsDialog ()->UpdateOptions (this);
-      SaveSettings ();
-      break;
-
-    case EID_UPDATE_REMOVE_DICS_OPTIONS:
-      getRemoveDicsDialog ()->SetCheckBoxes (RemoveUserDics, RemoveSystem);
       break;
 
     case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS:
@@ -616,26 +649,6 @@ BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
   return TRUE;
 }
 
-void SpellChecker::SetRemoveUserDics (BOOL Value)
-{
-  RemoveUserDics = Value;
-}
-
-void SpellChecker::SetRemoveSystem (BOOL Value)
-{
-  RemoveSystem = Value;
-}
-
-BOOL SpellChecker::GetRemoveUserDics ()
-{
-  return RemoveUserDics;
-}
-
-BOOL SpellChecker::GetRemoveSystem ()
-{
-  return RemoveSystem;
-}
-
 // TODO: Move to main thread
 void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
 {
@@ -656,8 +669,8 @@ void SpellChecker::DoPluginMenuInclusion (BOOL Invalidate)
       {
         for (unsigned int i = 0; i < m_status->languageList.size (); i++)
         {
-          int Checked = (_tcscmp (currentLanguage (), m_status->languageList[i].OrigName) == 0) ? (MFT_RADIOCHECK | MF_CHECKED) : MF_UNCHECKED;
-          Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), settings ().useLanguageNameAliases ? m_status->languageList[i].AliasName : m_status->languageList[i].OrigName);
+          int Checked = (currentLanguage () == m_status->languageList[i].originalName) ? (MFT_RADIOCHECK | MF_CHECKED) : MF_UNCHECKED;
+          Res = AppendMenu (NewMenu, MF_STRING | Checked, GetUseAllocatedIds () ? i + GetLangsMenuIdStart () : MAKEWORD (i, LANGUAGE_MENU_ID), m_status->languageList[i].getLanguageName (settings ()).c_str ());
           if (!Res)
             return;
         }
@@ -2153,7 +2166,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
         return;
       }
       else
-        langString = m_status->languageList[Result].OrigName;
+        langString = m_status->languageList[Result].originalName;
       DoPluginMenuInclusion (TRUE);
 
       {
@@ -2376,12 +2389,12 @@ void SpellChecker::SaveSettings ()
   if (!SettingsLoaded)
     return;
   SaveToIni (_T ("Autocheck"), AutoCheckText, 1);
-  SaveToIni (_T ("Hunspell_Multiple_Languages"), m_settings->get ().spellerSettings[SpellerType::hunspell].activeMultiLanguage.data (), _T (""));
-  SaveToIni (_T ("Aspell_Multiple_Languages"), m_settings->get ().spellerSettings[SpellerType::aspell].activeMultiLanguage.data (), _T (""));
-  SaveToIni (_T ("Hunspell_Language"), m_settings->get ().spellerSettings[SpellerType::hunspell].activeLanguage.data (), _T ("en_GB"));
-  SaveToIni (_T ("Aspell_Language"), m_settings->get ().spellerSettings[SpellerType::aspell].activeLanguage.data (), _T ("en"));
-  SaveToIni (_T ("Remove_User_Dics_On_Dic_Remove"), RemoveUserDics, 0);
-  SaveToIni (_T ("Remove_Dics_For_All_Users"), RemoveSystem, 0);
+  SaveToIni (_T ("Hunspell_Multiple_Languages"), settings ().spellerSettings[SpellerType::hunspell].activeMultiLanguage.data (), _T (""));
+  SaveToIni (_T ("Aspell_Multiple_Languages"), settings ().spellerSettings[SpellerType::aspell].activeMultiLanguage.data (), _T (""));
+  SaveToIni (_T ("Hunspell_Language"), settings ().spellerSettings[SpellerType::hunspell].activeLanguage.data (), _T ("en_GB"));
+  SaveToIni (_T ("Aspell_Language"), settings ().spellerSettings[SpellerType::aspell].activeLanguage.data (), _T ("en"));
+  SaveToIni (_T ("Remove_User_Dics_On_Dic_Remove"), settings ().removeCorrespondingUserDictionaries, 0);
+  SaveToIni (_T ("Remove_Dics_For_All_Users"), settings ().removeDictionariesInstalledForAllUsers, 0);
   SaveToIni (_T ("Show_Only_Known"), ShowOnlyKnown, TRUE);
   SaveToIni (_T ("Install_Dictionaries_For_All_Users"), InstallSystem, FALSE);
   TCHAR Buf[DEFAULT_BUF_SIZE];
@@ -2510,6 +2523,7 @@ void SpellChecker::setNewSettings(const SettingsData &settingsArg)
     0, 0);
 
   RecheckVisibleBothViews ();
+  SaveSettings ();
   firstTime = false;
 };
 
@@ -2576,8 +2590,8 @@ void SpellChecker::LoadSettings ()
     LoadFromIni (ServerNames[i], Buf, _T (""));
   }
   LoadFromIni (LastUsedAddress, _T ("Last_Used_Address_Index"), 0);
-  LoadFromIni (RemoveUserDics, _T ("Remove_User_Dics_On_Dic_Remove"), 0);
-  LoadFromIni (RemoveSystem, _T ("Remove_Dics_For_All_Users"), 0);
+  LoadFromIni (settings->removeCorrespondingUserDictionaries, _T ("Remove_User_Dics_On_Dic_Remove"), 0);
+  LoadFromIni (settings->removeDictionariesInstalledForAllUsers, _T ("Remove_Dics_For_All_Users"), 0);
   LoadFromIni (settings->useLanguageNameAliases, _T ("Decode_Language_Names"), true);
 
   LoadFromIni (UseProxy, _T ("Use_Proxy"), FALSE);
@@ -3401,3 +3415,4 @@ SuggestionsMenuItem::SuggestionsMenuItem (TCHAR *TextArg, BYTE IdArg, BOOL Separ
   Id = IdArg;
   Separator = SeparatorArg;
 }
+

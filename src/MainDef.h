@@ -98,13 +98,14 @@ public:
 #define COLOR_NEUTRAL (RGB (0, 0, 0))
 
 // Custom WMs (Only for our windows and threads)
-#define WM_SHOWANDRECREATEMENU  WM_USER + 1000
-#define TM_MODIFIED_ZONE_INFO   WM_USER + 1001
-#define TM_WRITE_SETTING        WM_USER + 1002
-#define TM_MENU_RESULT          WM_USER + 1004
-#define TM_PRECALCULATE_MENU    WM_USER + 1005
-#define TM_CHANGE_DIR           WM_USER + 1006
-#define TM_ADD_USER_SERVER      WM_USER + 1007
-#define TM_UPDATE_LANGS_MENU    WM_USER + 1008
-#define TM_SETTINGS_CHANGED     WM_USER + 1009  // WPARAM - pointer to SettingsData struct
+#define WM_SHOWANDRECREATEMENU       WM_USER + 1000
+#define TM_MODIFIED_ZONE_INFO        WM_USER + 1001
+#define TM_WRITE_SETTING             WM_USER + 1002
+#define TM_MENU_RESULT               WM_USER + 1004
+#define TM_PRECALCULATE_MENU         WM_USER + 1005
+#define TM_CHANGE_DIR                WM_USER + 1006
+#define TM_ADD_USER_SERVER           WM_USER + 1007
+#define TM_UPDATE_LANGS_MENU         WM_USER + 1008
+#define TM_SETTINGS_CHANGED          WM_USER + 1009  // WPARAM - pointer to SettingsData struct
+#define TM_REMOVE_DICTIONARIES_APPLY WM_USER + 1010
 #endif MAINDEF_H

@@ -55,86 +55,25 @@ HWND RemoveDicsDialog::GetListBox ()
   return HLangList;
 }
 
-void RemoveDicsDialog::RemoveSelected (SpellChecker *SpellCheckerInstance)
-{
-  int Count = 0;
-  BOOL Success = FALSE;
-  BOOL NeedSingleReset = FALSE;
-  BOOL NeedMultiReset = FALSE;
-  BOOL SingleTemp, MultiTemp;
-  auto settings = SpellCheckerInstance->getSettings ();
-  for (int i = 0; i < ListBox_GetCount (HLangList); i++)
-  {
-    if (CheckedListBox_GetCheckState (HLangList, i) == BST_CHECKED)
-    {
-      TCHAR FileName[MAX_PATH];
-      for (int j = 0; j < 1 + SpellCheckerInstance->GetRemoveSystem () ? 1 : 0; j++)
-      {
-        *FileName = _T ('\0');
-
-        _tcscat (FileName, j == 0 ? settings->spellerSettings[SpellerType::hunspell].path.data () : settings->spellerSettings[SpellerType::hunspell].additionalPath.data ());
-        _tcscat (FileName, _T ("\\"));
-        _tcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
-        _tcscat (FileName, _T (".aff"));
-        SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-        Success = DeleteFile (FileName);
-        _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".dic"), 4);
-        SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-        Success = Success && DeleteFile (FileName);
-        if (SpellCheckerInstance->GetRemoveUserDics ())
-        {
-          _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".usr"), 4);
-          SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-          DeleteFile (FileName); // Success doesn't matter in that case, 'cause dictionary might not exist.
-        }
-        if (Success)
-        {
-          FileName[_tcslen (FileName) - 4] = _T ('\0');
-          SpellCheckerInstance->GetHunspellSpeller ()->UpdateOnDicRemoval (FileName, SingleTemp, MultiTemp);
-          NeedSingleReset |= SingleTemp;
-          NeedMultiReset |= MultiTemp;
-          Count++;
-        }
-      }
-    }
-  }
-  for (int i = 0; i < ListBox_GetCount (HLangList); i++)
-    CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
-  if (Count > 0)
-  {
-    SpellCheckerInstance->onHunspellDictionariesChange ();
-    TCHAR Buf[DEFAULT_BUF_SIZE];
-    _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
-    MessageBoxInfo MsgBox (_hParent, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
-    SendMessage (_hParent, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
-  }
-}
-
-void RemoveDicsDialog::UpdateOptions (SpellChecker *SpellCheckerInstance)
-{
-  SpellCheckerInstance->SetRemoveUserDics (Button_GetCheck (HRemoveUserDics) == BST_CHECKED);
-  SpellCheckerInstance->SetRemoveSystem (Button_GetCheck (HRemoveSystem) == BST_CHECKED);
-}
-
 void RemoveDicsDialog::SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem)
 {
   Button_SetCheck (HRemoveUserDics, RemoveUserDics ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck (HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void RemoveDicsDialog::update()
+void RemoveDicsDialog::updateOnNewConfiguration()
 {
   if (!isCreated())
     return;
 
   auto status = getSpellChecker()->getStatus ();
+  auto settings = getSpellChecker()->getSettings ();
   ListBox_ResetContent (HLangList);
   for (auto &lang : status->languageList)
-    {
-      std::wstring name = lang.AliasName;
-      name += (lang.systemOnly ? L" [!For All Users]" : L"");
-      ListBox_AddString (HLangList, name.data ());
-    }
+    ListBox_AddString (HLangList, lang.getLanguageName (*settings, true).data ());
+
+  Button_SetCheck (HRemoveUserDics, settings->removeCorrespondingUserDictionaries ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck (HRemoveSystem, settings->removeDictionariesInstalledForAllUsers ? BST_CHECKED : BST_UNCHECKED);
 }
 
 BOOL CALLBACK RemoveDicsDialog::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lParam*/)
@@ -147,8 +86,7 @@ BOOL CALLBACK RemoveDicsDialog::run_dlgProc (UINT message, WPARAM wParam, LPARAM
       HRemoveUserDics = ::GetDlgItem (_hSelf, IDC_REMOVE_USER_DICS);
       HRemoveSystem = ::GetDlgItem (_hSelf, IDC_REMOVE_SYSTEM);
       SendEvent (EID_UPDATE_LANG_LISTS);
-      SendEvent (EID_UPDATE_REMOVE_DICS_OPTIONS);
-      update ();
+      updateOnNewConfiguration ();
       return TRUE;
     }
     break;
@@ -156,19 +94,10 @@ BOOL CALLBACK RemoveDicsDialog::run_dlgProc (UINT message, WPARAM wParam, LPARAM
     {
       switch (LOWORD (wParam))
       {
-      case IDC_REMOVE_USER_DICS:
-      case IDC_REMOVE_SYSTEM:
-        {
-          if (HIWORD (wParam) == BN_CLICKED)
-          {
-            SendEvent (EID_UPDATE_FROM_REMOVE_DICS_OPTIONS);
-          }
-        }
-        break;
       case IDOK:
         if (HIWORD (wParam) == BN_CLICKED)
         {
-          SendEvent (EID_REMOVE_SELECTED_DICS);
+          apply ();
           display (false);
         }
         break;
@@ -186,4 +115,29 @@ BOOL CALLBACK RemoveDicsDialog::run_dlgProc (UINT message, WPARAM wParam, LPARAM
     break;
   };
   return FALSE;
+}
+
+void RemoveDicsDialog::apply ()
+{
+  auto status = getSpellChecker()->getStatus();
+  auto settings = getSpellChecker ()->getSettings ();
+  auto &langList = status->languageList;
+  auto show_error = [this](){ ::MessageBox(_hParent, L"Some error happened during dictionaries removal, please try again.", _T("Error happened"), MB_OK); };
+  auto info = std::make_unique<RemoveDictionariesInfo> ();
+  if (ListBox_GetCount (HLangList) != langList.size ()) { show_error (); return; }
+  for (int i = 0; i < ListBox_GetCount (HLangList); ++i)
+    {
+      if (getListboxText (HLangList, i) != langList[i].getLanguageName (*settings, true))
+        {
+          show_error ();
+          return;
+        }
+      if (CheckedListBox_GetCheckState (HLangList, i) == BST_CHECKED)
+        info->dictionaryNames.push_back(langList[i].originalName);
+    }
+  info->newSettings = std::make_unique<SettingsData> (*settings);
+  info->newSettings->removeCorrespondingUserDictionaries = (Button_GetCheck (HRemoveUserDics) == BST_CHECKED);
+  info->newSettings->removeDictionariesInstalledForAllUsers = (Button_GetCheck (HRemoveSystem) == BST_CHECKED);
+  PostMessageToMainThread (TM_REMOVE_DICTIONARIES_APPLY,
+    reinterpret_cast<WPARAM>(info.release ()));
 }

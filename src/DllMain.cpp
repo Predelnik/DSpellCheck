@@ -190,7 +190,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
     else if (Message == getCustomGUIMessageId (CustomGUIMessage::CONFIGURATION_CHANGED))
     {
       getLangListDialog ()->update ();
-      getRemoveDicsDialog ()->update ();
+      getRemoveDicsDialog ()->updateOnNewConfiguration ();
       getSettingsDlg ()->updateOnConfigurationChange ();
     }
   }

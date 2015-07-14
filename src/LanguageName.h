@@ -21,63 +21,39 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define LANGUAGE_NAME_H
 #include "CommonFunctions.h"
 
+struct SettingsData;
+
 struct LanguageName
 {
-  TCHAR *OrigName;
-  TCHAR *AliasName;
-  BOOL AliasApplied;
+  std::wstring originalName;
+  std::wstring aliasName;
+  bool aliasApplied = false;
   bool systemOnly = false;
-  LanguageName (TCHAR *Name, BOOL UseAlias = TRUE, bool systemOnlyArg = false)
+  LanguageName (const std::wstring &name, bool useAlias = true, bool systemOnlyArg = false)
   {
-    OrigName = 0;
-    AliasName = 0;
     systemOnly = systemOnlyArg;
-    AliasApplied = FALSE;
-    setString (OrigName, Name);
-    if (UseAlias)
-      AliasApplied = SetStringWithAliasApplied (AliasName, Name);
+    aliasApplied = FALSE;
+    originalName = name;
+    if (useAlias)
+      {
+        wchar_t *aliasNameTemp = nullptr;
+        aliasApplied = setStringWithAliasApplied (aliasNameTemp, name.c_str ());
+        aliasName = aliasNameTemp;
+      }
     else
-      setString (AliasName, Name);
+      aliasName = name;
   }
 
-  LanguageName (const LanguageName &rhs)
-  {
-    OrigName = 0;
-    AliasName = 0;
-    setString (OrigName, rhs.OrigName);
-    setString (AliasName, rhs.AliasName);
-    AliasApplied = rhs.AliasApplied;
-  }
-
-  LanguageName &operator = (const LanguageName &rhs)
-  {
-    if (&rhs == this)
-      return *this;
-
-    CLEAN_AND_ZERO_ARR (OrigName);
-    CLEAN_AND_ZERO_ARR (AliasName);
-    AliasApplied = rhs.AliasApplied;
-    systemOnly = rhs.systemOnly;
-    setString (OrigName, rhs.OrigName);
-    setString (AliasName, rhs.AliasName);
-    return *this;
-  }
-
-  ~LanguageName ()
-  {
-    CLEAN_AND_ZERO_ARR (OrigName);
-    CLEAN_AND_ZERO_ARR (AliasName);
-    AliasApplied = FALSE;
-  }
+  std::wstring getLanguageName (const SettingsData &settings, bool forRemoveDialog = false) const;
 };
 
 inline bool CompareAliases (LanguageName &a, LanguageName &b)
 {
-  return _tcsicmp (a.AliasApplied ? a.AliasName : a.OrigName, b.AliasApplied ? b.AliasName : b.OrigName) < 0;
+  return (a.aliasApplied ? a.aliasName : a.originalName) < (b.aliasApplied ? b.aliasName : b.originalName);
 }
 
 inline bool CompareOriginal (LanguageName &a, LanguageName &b)
 {
-  return _tcsicmp (a.OrigName, b.OrigName) < 0;
+  return a.originalName < b.originalName;
 }
 #endif // LANGUAGE_NAME_H

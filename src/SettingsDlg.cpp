@@ -94,7 +94,7 @@ void SimpleDlg::applySettings(SettingsData &settings)
     if (curSel == LangCount - 1) {
       settings.activeSpellerSettings().activeLanguage = multipleLanguagesStr;
     } else {
-      settings.activeSpellerSettings().activeLanguage = status->languageList[curSel].OrigName;
+      settings.activeSpellerSettings().activeLanguage = status->languageList[curSel].originalName;
     }
   }
   sc->RecheckVisible();
@@ -477,8 +477,8 @@ void SimpleDlg::updateOnConfigurationChange(const SettingsData &settings, const 
   ComboBox_ResetContent (HComboLanguage);
   for (auto &item : status.languageList)
     {
-      ComboBox_AddString (HComboLanguage, settings.useLanguageNameAliases ? item.AliasName : item.OrigName);
-      if (settings.activeSpellerSettings().activeLanguage == item.OrigName)
+      ComboBox_AddString (HComboLanguage, item.getLanguageName (settings).c_str ());
+      if (settings.activeSpellerSettings().activeLanguage == item.originalName)
         ComboBox_SetCurSel (HComboLanguage, ComboBox_GetCount (HComboLanguage) - 1);
     }
   if (!status.languageList.empty ())

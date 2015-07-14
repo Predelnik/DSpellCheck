@@ -38,7 +38,7 @@ void SetStringSUtf8 (TCHAR *&Target, const char *Str);
 void SetStringDUtf8 (char *&Target, const char *Str);
 void SetStringDUtf8 (char *&Target, const TCHAR *Str);
 
-BOOL SetStringWithAliasApplied (TCHAR *&Target, TCHAR *OrigName);
+bool setStringWithAliasApplied (wchar_t *&Target, const wchar_t *OrigName);
 
 void SetParsedString (TCHAR *&Dest, TCHAR *Source);
 
@@ -65,5 +65,6 @@ bool CheckForDirectoryExistence (const wchar_t *path, bool silent = true, HWND N
 TCHAR *GetLastSlashPosition (TCHAR *Path);
 
 std::wstring getWindowText (HWND hwnd);
+std::wstring getListboxText (HWND hwnd, int index);
 
 #endif // COMMON_FUNCTIONS_H;

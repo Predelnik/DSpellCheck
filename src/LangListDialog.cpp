@@ -103,7 +103,7 @@ void LangListDialog::update()
 
   auto status = getSpellChecker()->getStatus();
   ListBox_ResetContent(HLangList);
-  for (auto &lang : status->languageList) ListBox_AddString(HLangList, lang.AliasName);
+  for (auto &lang : status->languageList) ListBox_AddString(HLangList, lang.aliasName.c_str ());
 
   auto settingsCopy = *getSpellChecker()->getSettings();
   wchar_t *multiLangCopy = nullptr;
@@ -114,7 +114,7 @@ void LangListDialog::update()
   while (token) {
     index = -1;
     for (int i = 0; i < static_cast<int> (status->languageList.size ()); ++i) {
-      if (_tcscmp (status->languageList[i].OrigName, token) == 0) {
+      if (status->languageList[i].originalName == token) {
         index = i;
         break;
       }

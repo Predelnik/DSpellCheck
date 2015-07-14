@@ -111,25 +111,11 @@ HunspellController::HunspellController (HWND NppWindowArg)
   SystemWrongDicPath = 0;
 }
 
-void HunspellController::UpdateOnDicRemoval (TCHAR *Path, BOOL &NeedSingleLangReset, BOOL &NeedMultiLangReset)
+void HunspellController::UpdateOnDicRemoval(const wchar_t *Path)
 {
-  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (Path);
-  NeedSingleLangReset = FALSE;
-  NeedMultiLangReset = FALSE;
+  std::map <TCHAR *, DicInfo, bool (*)(TCHAR *, TCHAR *)>::iterator it = AllHunspells->find (const_cast<wchar_t *> (Path));
   if (it != AllHunspells->end ())
   {
-    if (SingularSpeller.Speller == (*it).second.Speller)
-      NeedSingleLangReset = TRUE;
-
-    if (Spellers)
-    {
-      for (unsigned int i = 0; i < Spellers->size (); i++)
-        if (Spellers->at (i).Speller == (*it).second.Speller)
-        {
-          NeedMultiLangReset = TRUE;
-        }
-    }
-
     delete []((*it).first);
     CLEAN_AND_ZERO ((*it).second.Speller);
     WriteUserDic ((*it).second.LocalDic, (*it).second.LocalDicPath);
