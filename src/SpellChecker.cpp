@@ -42,8 +42,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 HWND GetScintillaWindow(const NppData *NppDataArg)
 {
   int which = -1;
-  if (isCurrentlyTerminating ())
-    return 0;
   SendMessage(NppDataArg->_nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
   if (which == -1)
     return 0;
@@ -516,12 +514,11 @@ BOOL WINAPI SpellChecker::NotifyNetworkEvent (DWORD Event)
 
 BOOL WINAPI SpellChecker::NotifyEvent (DWORD Event)
 {
-  if (Event == EID_KILLTHREAD)
+  if (Event == EID_KILLTHREAD || isCurrentlyTerminating())
     return false;
 
   CurrentScintilla = GetScintillaWindow (NppDataInstance); // All operations should be done with current scintilla anyway
-  if (!CurrentScintilla)
-    return FALSE; // If scintilla is dead there's nothing else to do
+
   switch (Event)
     {
     case EID_APPLY_MULTI_LANG_SETTINGS:
@@ -1904,7 +1901,10 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
     if (GetCursorPos(&p) == 0)
       return TRUE;
 
-    ScreenToClient(GetScintillaWindow (NppDataInstance), &p);
+    auto *scintilla = GetScintillaWindow (NppDataInstance);
+    if (!scintilla)
+      return TRUE;
+    ScreenToClient(scintilla, &p);
 
     BOOL ok;
     initCharPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
@@ -2047,7 +2047,8 @@ void SpellChecker::InitSuggestionsBox ()
   }
 
   GetCursorPos (&p);
-  if (WindowFromPoint (p) != GetScintillaWindow (NppDataInstance))
+  auto *scintilla = GetScintillaWindow (NppDataInstance);
+  if (!scintilla || WindowFromPoint (p) != scintilla)
   {
     return;
   }
@@ -2073,7 +2074,11 @@ void SpellChecker::InitSuggestionsBox ()
   p.y = YPos;
   RECT R;
   GetWindowRect (GetCurrentScintilla (), &R);
-  ClientToScreen (GetScintillaWindow (NppDataInstance), &p);
+  scintilla = GetScintillaWindow (NppDataInstance);
+  if (!scintilla)
+    return;
+
+  ClientToScreen (scintilla, &p);
   if (R.top > p.y + TextHeight - 3 || R.left > p.x || R.bottom < p.y + TextHeight - 3 + settings ().suggestionBoxSize ||  R.right < p.x + settings ().suggestionBoxSize)
     return;
   MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight - 3, settings ().suggestionBoxSize, settings ().suggestionBoxSize, TRUE);
