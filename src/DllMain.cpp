@@ -98,7 +98,7 @@ std::vector <SuggestionsMenuItem *> *MenuList = NULL;
 // Ok, trying to use window subclassing to handle messages
 LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-  int ret;
+  LRESULT ret; // int->LRESULT, fix x64 issue, still compatible with x86
   switch (Message)
   {
   case WM_INITMENUPOPUP:
@@ -266,7 +266,8 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
 
         pluginCleanUp();
         if (wndProcNotepad != NULL)
-          ::SetWindowLongPtr (nppData._nppHandle, GWL_WNDPROC, (LONG)wndProcNotepad); // Removing subclassing
+          // LONG_PTR is more x64 friendly, yet not affecting x86
+          ::SetWindowLongPtr (nppData._nppHandle, GWL_WNDPROC, (LONG_PTR)wndProcNotepad); // Removing subclassing
       }
       break;
 
