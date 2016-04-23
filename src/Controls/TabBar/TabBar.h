@@ -50,7 +50,7 @@
 
 #define WM_TABSETSTYLE	(WM_APP + 0x024)
 
-const int marge = 8;
+const int margeValue = 8;
 const int nbCtrlMax = 10;
 
 const TCHAR TABBAR_ACTIVEFOCUSEDINDCATOR[64] = TEXT("Active tab focused indicator");

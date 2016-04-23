@@ -51,7 +51,7 @@ public:
   void OnDisplayAction ();
   void IndicateThatSavingMightBeNeeded ();
   void SetOptions (BOOL ShowOnlyKnown, BOOL InstallSystem);
-  void UpdateOptions (SpellChecker *SpellCheckerInstance);
+  void UpdateOptions (SpellChecker * spellchecker);
   void SetCancelPressed (BOOL Value);
   void Refresh ();
   DWORD AskReplacementMessage (TCHAR *DicName);

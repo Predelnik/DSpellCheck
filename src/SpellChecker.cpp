@@ -2625,13 +2625,13 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (Value, _T ("United_User_Dictionary(Hunspell)"), FALSE);
   SetOneUserDic (Value);
   LoadFromIni (IgnoreSEApostrophe, _T ("Ignore_That_Start_or_End_with_'"), 0);
-  int i;
 
   HunspellSpeller->SetDirectory (HunspellPath);
   HunspellSpeller->SetAdditionalDirectory (AdditionalHunspellPath);
   AspellSpeller->Init (AspellPath);
-  LoadFromIni (i, _T ("Library"), 1);
-  SetLibMode (i);
+  int x;
+  LoadFromIni (x, _T ("Library"), 1);
+  SetLibMode (x);
   int Size, Trans;
   LoadFromIni (Size, _T ("Suggestions_Button_Size"), 15);
   LoadFromIni (Trans, _T ("Suggestions_Button_Opacity"), 70);
@@ -2801,7 +2801,7 @@ void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR
   {
     int Len = 1 + _tcslen (Value) + 1 + 1;
     TCHAR *Buf = new TCHAR[Len];
-    _stprintf (Buf, _T ("\"%s\""), Value, Len - 3);
+    _stprintf (Buf, _T ("\"%s\""), Value);
     WritePrivateProfileString (_T ("SpellCheck"), Name, Buf, IniFilePath);
     CLEAN_AND_ZERO_ARR (Buf);
   }
@@ -3494,7 +3494,7 @@ void SpellChecker::RecheckVisible (BOOL NotIntersectionOnly)
 void SpellChecker::ErrorMsgBox (const TCHAR *message)
 {
   TCHAR buf [DEFAULT_BUF_SIZE];
-  _stprintf_s (buf, _T ("%s"), "DSpellCheck Error:", message, _tcslen (message));
+  _stprintf_s (buf, _T ("DSpellCheck Error: %ws"), message);
   MessageBox (NppDataInstance->_nppHandle, message, _T("Error Happened!"), MB_OK | MB_ICONSTOP);
 }
 

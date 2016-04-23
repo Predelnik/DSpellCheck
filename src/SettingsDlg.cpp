@@ -62,28 +62,31 @@ BOOL SimpleDlg::AddAvailableLanguages (std::vector <LanguageName> *LangsAvailabl
   ListBox_ResetContent (GetRemoveDics ()->GetListBox ());
 
   int SelectedIndex = 0;
-  unsigned int i = 0;
 
-  for (i = 0; i < LangsAvailable->size (); i++)
   {
-    if (_tcscmp (CurrentLanguage, LangsAvailable->at (i).OrigName) == 0)
-      SelectedIndex = i;
+    unsigned int i = 0;
+    for (i = 0; i < LangsAvailable->size(); i++)
+      {
+        if (_tcscmp(CurrentLanguage, LangsAvailable->at(i).OrigName) == 0)
+          SelectedIndex = i;
 
-    ComboBox_AddString (HComboLanguage, LangsAvailable->at (i).AliasName);
-    ListBox_AddString (GetLangList ()->GetListBox (), LangsAvailable->at (i).AliasName);
-    if (HunspellSpeller)
-    {
-      TCHAR Buf[DEFAULT_BUF_SIZE];
-      _tcscpy (Buf, LangsAvailable->at (i).AliasName);
-      if (HunspellSpeller->GetLangOnlySystem (LangsAvailable->at (i).OrigName))
-        _tcscat (Buf, _T (" [!For All Users]"));
+        ComboBox_AddString(HComboLanguage, LangsAvailable->at(i).AliasName);
+        ListBox_AddString(GetLangList()->GetListBox(), LangsAvailable->at(i).AliasName);
+        if (HunspellSpeller)
+        {
+          TCHAR Buf[DEFAULT_BUF_SIZE];
+          _tcscpy(Buf, LangsAvailable->at(i).AliasName);
+          if (HunspellSpeller->GetLangOnlySystem(LangsAvailable->at(i).OrigName))
+            _tcscat(Buf, _T(" [!For All Users]"));
 
-      ListBox_AddString (GetRemoveDics ()->GetListBox (), Buf);
+          ListBox_AddString(GetRemoveDics()->GetListBox(), Buf);
+        }
+      }
+
+      if (_tcscmp(CurrentLanguage, _T("<MULTIPLE>")) == 0)
+        SelectedIndex = i;
     }
-  }
 
-  if (_tcscmp (CurrentLanguage, _T ("<MULTIPLE>")) == 0)
-    SelectedIndex = i;
   if (LangsAvailable->size () != 0)
     ComboBox_AddString (HComboLanguage, _T ("Multiple Languages..."));
 
@@ -351,7 +354,6 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lParam*/, 
 
 BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
 {
-  TCHAR Buf[DEFAULT_BUF_SIZE];
   int x;
   TCHAR *EndPtr;
 
@@ -442,6 +444,7 @@ BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam
         {
           if (HIWORD (wParam) == EN_CHANGE)
           {
+            TCHAR Buf[DEFAULT_BUF_SIZE];
             Edit_GetText (HSuggestionsNum, Buf, DEFAULT_BUF_SIZE);
             if (!*Buf)
               return TRUE;

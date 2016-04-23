@@ -466,7 +466,7 @@ void DownloadDicsDlg::SetCancelPressed (BOOL Value)
 
 #define INITIAL_BUFFER_SIZE 50 * 1024
 #define INITIAL_SMALL_BUFFER_SIZE 10 * 1024
-void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location)
+void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileNameArg, TCHAR *Location)
 {
   TCHAR *ProxyFinalString = new TCHAR [_tcslen (SpellCheckerInstance->GetProxyHostName ()) + 10];
   char *FileBuffer = 0;
@@ -474,7 +474,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
   HINTERNET WinInetHandle = InternetOpen (_T ("DSpellCheck"), INTERNET_OPEN_TYPE_PROXY, ProxyFinalString, _T (""), 0);
   CLEAN_AND_ZERO_ARR (ProxyFinalString);
   FtpTrim (Address);
-  TCHAR *Url = new TCHAR[_tcslen (Address) + (Type == DOWNLOAD_FILE ? _tcslen (FileName) : 0) + 6 + 1];
+  TCHAR *Url = new TCHAR[_tcslen (Address) + (Type == DOWNLOAD_FILE ? _tcslen (FileNameArg) : 0) + 6 + 1];
 
   if (!WinInetHandle)
   {
@@ -489,7 +489,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
   _tcscpy (Url, _T ("ftp://"));
   _tcscat (Url, Address);
   if (Type == DOWNLOAD_FILE)
-    _tcscat (Url, FileName);
+    _tcscat (Url, FileNameArg);
 
   DWORD TimeOut = 15000;
   InternetSetOption (WinInetHandle, INTERNET_OPTION_CONNECT_TIMEOUT, &TimeOut, sizeof (DWORD));
@@ -678,7 +678,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
     DWORD BytesToRead = 0;
     DWORD BytesRead;
     DWORD BytesReadTotal = 0;
-    FileName[_tcslen (FileName) - 4] = _T ('\0');
+    FileNameArg[_tcslen (FileNameArg) - 4] = _T ('\0');
     TCHAR Message[DEFAULT_BUF_SIZE];
 
     if (PathFileExists (Location))
@@ -905,10 +905,10 @@ void DownloadDicsDlg::SetOptions (BOOL ShowOnlyKnown, BOOL InstallSystem)
   Button_SetCheck (HInstallSystem, InstallSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void DownloadDicsDlg::UpdateOptions (SpellChecker *SpellCheckerInstance)
+void DownloadDicsDlg::UpdateOptions (SpellChecker * spellchecker)
 {
-  SpellCheckerInstance->SetShowOnlyKnow (Button_GetCheck (HShowOnlyKnown) == BST_CHECKED);
-  SpellCheckerInstance->SetInstallSystem (Button_GetCheck (HInstallSystem) == BST_CHECKED);
+  spellchecker->SetShowOnlyKnow (Button_GetCheck (HShowOnlyKnown) == BST_CHECKED);
+  spellchecker->SetInstallSystem (Button_GetCheck (HInstallSystem) == BST_CHECKED);
 }
 
 void DownloadDicsDlg::Refresh ()

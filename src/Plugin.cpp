@@ -251,9 +251,9 @@ bool isCurrentlyTerminating ()
 DWORD WINAPI ThreadMain (LPVOID lpParam)
 {
   DWORD dwWaitResult    = EID_MAX;
-  SpellChecker *SpellCheckerInstance = (SpellChecker*)lpParam;
+  SpellChecker *spellchecker = (SpellChecker*)lpParam;
 
-  BOOL bRun = SpellCheckerInstance->NotifyEvent(EID_MAX);
+  BOOL bRun = spellchecker->NotifyEvent(EID_MAX);
 
   MSG Msg;
 
@@ -269,20 +269,19 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
     dwWaitResult = MsgWaitForMultipleObjectsEx (EID_MAX, hEvent, INFINITE, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
     if (dwWaitResult == (unsigned int) - 1)
     {
-      SpellCheckerInstance->ErrorMsgBox (_T ("Thread has died"));
+      spellchecker->ErrorMsgBox (_T ("Thread has died"));
       break;
     }
 
     if (dwWaitResult == EID_MAX)
     {
-      MSG Msg;
       while (PeekMessage (&Msg, 0, 0, 0, PM_REMOVE) && bRun)
       {
-        bRun = SpellCheckerInstance->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
+        bRun = spellchecker->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
       }
     }
     else
-      bRun = SpellCheckerInstance->NotifyEvent(dwWaitResult);
+      bRun = spellchecker->NotifyEvent(dwWaitResult);
   }
 
   #ifdef _DEBUG
@@ -298,9 +297,9 @@ DWORD WINAPI ThreadMain (LPVOID lpParam)
 DWORD WINAPI ThreadNetwork (LPVOID lpParam)
 {
   DWORD dwWaitResult    = EID_MAX;
-  SpellChecker *SpellCheckerInstance = (SpellChecker*)lpParam;
+  SpellChecker *spellChecker = (SpellChecker*)lpParam;
 
-  BOOL bRun = SpellCheckerInstance->NotifyNetworkEvent (EID_NETWORK_MAX);
+  BOOL bRun = spellChecker->NotifyNetworkEvent (EID_NETWORK_MAX);
 
   MSG Msg;
 
@@ -312,20 +311,19 @@ DWORD WINAPI ThreadNetwork (LPVOID lpParam)
     dwWaitResult = MsgWaitForMultipleObjectsEx (EID_NETWORK_MAX, hNetworkEvent, INFINITE, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
     if (dwWaitResult == (unsigned int) - 1)
     {
-      SpellCheckerInstance->ErrorMsgBox (_T ("Thread has died"));
+      spellChecker->ErrorMsgBox (_T ("Thread has died"));
       break;
     }
 
     if (dwWaitResult == EID_NETWORK_MAX)
     {
-      MSG Msg;
       while (PeekMessage (&Msg, 0, 0, 0, PM_REMOVE) && bRun)
       {
-        bRun = SpellCheckerInstance->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
+        bRun = spellChecker->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
       }
     }
     else
-      bRun = SpellCheckerInstance->NotifyNetworkEvent(dwWaitResult);
+      bRun = spellChecker->NotifyNetworkEvent(dwWaitResult);
   }
 
   return 0;
