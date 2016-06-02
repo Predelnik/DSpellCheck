@@ -211,7 +211,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
   nppData = notpadPlusData;
   commandMenuInit();
-  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNotepad);
+  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWLP_WNDPROC, (LPARAM)SubWndProcNotepad);
 }
 
 extern "C" __declspec(dllexport) const TCHAR *getName()
@@ -267,7 +267,7 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
         pluginCleanUp();
         if (wndProcNotepad != NULL)
           // LONG_PTR is more x64 friendly, yet not affecting x86
-          ::SetWindowLongPtr (nppData._nppHandle, GWL_WNDPROC, (LONG_PTR)wndProcNotepad); // Removing subclassing
+          ::SetWindowLongPtr (nppData._nppHandle, GWLP_WNDPROC, (LONG_PTR)wndProcNotepad); // Removing subclassing
       }
       break;
 
