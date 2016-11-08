@@ -85,7 +85,7 @@ void LangList::ApplyChoice (SpellChecker *SpellCheckerInstance)
   CLEAN_AND_ZERO_ARR (ItemBuf);
 }
 
-BOOL CALLBACK LangList::run_dlgProc (UINT message, WPARAM wParam, LPARAM)
+INT_PTR LangList::run_dlgProc(UINT message, WPARAM wParam, LPARAM)
 {
   switch (message)
   {

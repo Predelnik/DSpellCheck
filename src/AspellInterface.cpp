@@ -192,7 +192,7 @@ void AspellInterface::AddToDictionary (char *Word)
 
   if (!LastSelectedSpeller)
     return;
-  aspell_speller_add_to_personal(LastSelectedSpeller, Word, strlen (Word) + 1);
+  aspell_speller_add_to_personal(LastSelectedSpeller, Word, static_cast<int> (strlen (Word)) + 1);
   aspell_speller_save_all_word_lists (LastSelectedSpeller);
   if (aspell_speller_error(LastSelectedSpeller) != 0)
   {
@@ -220,7 +220,7 @@ void AspellInterface::IgnoreAll (char *Word)
   else
     SetStringDUtf8 (TargetWord, Word);
 
-  aspell_speller_add_to_session (LastSelectedSpeller, TargetWord, strlen (TargetWord) + 1);
+  aspell_speller_add_to_session (LastSelectedSpeller, TargetWord, static_cast<int> (strlen (TargetWord)) + 1);
   aspell_speller_save_all_word_lists (LastSelectedSpeller);
   if (aspell_speller_error(LastSelectedSpeller) != 0)
   {
@@ -243,7 +243,7 @@ BOOL AspellInterface::CheckWord (char *Word)
   else
     SetStringDUtf8 (DstWord, Word);
 
-  unsigned int Len = strlen (DstWord);
+  auto Len = static_cast<int> (strlen (DstWord));
   if (!MultiMode)
   {
     if (!SingularSpeller)

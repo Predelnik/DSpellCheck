@@ -54,7 +54,7 @@ public:
   void ApplyLibChange (SpellChecker *SpellCheckerInstance);
 
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
   /* NppData struct instance */
@@ -99,14 +99,14 @@ public:
   void SetConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveSingleApostrophe);
   void SetRecheckDelay (int Delay);
   int GetRecheckDelay ();
-  void SetSuggBoxSettings (int Size, int Trans);
+  void SetSuggBoxSettings (LRESULT Size, LRESULT Trans);
   void SetUnderlineSettings (int Color, int Style);
   void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
     BOOL Ignore_SA_Apostrophe_Arg, BOOL IgnoreOneLetter);
   void SetBufferSize (int Size);
 
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
   HWND HEditDelimiters = NULL;
@@ -141,7 +141,7 @@ public:
   SimpleDlg *GetSimpleDlg ();
   AdvancedDlg *GetAdvancedDlg ();
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
   __override virtual void destroy ();
   void ApplySettings ();
 private:

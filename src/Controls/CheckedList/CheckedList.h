@@ -10,12 +10,12 @@
 ///         This source is distributed in the hope that it will be useful,
 ///         but WITHOUT ANY WARRANTY; without even the implied warranty of
 ///         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-/// 
-/// @date 9-07-10
-/// 
-/// @todo 
 ///
-/// @bug 
+/// @date 9-07-10
+///
+/// @todo
+///
+/// @bug
 ///
 //////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +52,7 @@
 /// @param fCheck A value that is set to TRUE to select the item, or FALSE to deselect it.
 ///
 /// @returns The zero-based index of the item in the listbox. If an error occurs,
-///           the return value is LB_ERR. 
+///           the return value is LB_ERR.
 #define CheckedListBox_SetCheckState(hwndCtl, iIndex, fCheck) \
     (0 > ListBox_SetItemData((hwndCtl), (iIndex), (fCheck)) ? CB_ERR : \
      (InvalidateRgn((hwndCtl), NULL, FALSE), (iIndex)))
@@ -64,7 +64,7 @@
 /// @param hwndCtl The handle of a checked listbox.
 /// @param iIndex The zero-based index of the item for which to set the check state.
 ///
-/// @returns Nonzero if the given item is selected, or zero otherwise. 
+/// @returns Nonzero if the given item is selected, or zero otherwise.
 #define CheckedListBox_GetCheckState(hwndCtl, iIndex) \
     (BOOL) ListBox_GetItemData(hwndCtl, iIndex)
 
@@ -96,6 +96,6 @@
 // Exported function prototypes
 
 ATOM InitCheckedListBox(HINSTANCE hInstance);
-HWND New_CheckedListBox(HWND hParent, DWORD dwStyle, DWORD dwExStyle, DWORD dwID, INT x, INT y, INT nWidth, INT nHeight);
+HWND New_CheckedListBox(HWND hParent, DWORD dwStyle, DWORD dwExStyle, HMENU dwID, INT x, INT y, INT nWidth, INT nHeight);
 
 #endif //CHECKEDLIST_H

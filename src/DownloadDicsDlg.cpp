@@ -95,7 +95,7 @@ void DownloadDicsDlg::IndicateThatSavingMightBeNeeded ()
   CheckIfSavingIsNeeded = 1;
 }
 
-DWORD DownloadDicsDlg::AskReplacementMessage (TCHAR *DicName)
+LRESULT DownloadDicsDlg::AskReplacementMessage(TCHAR* DicName)
 {
   TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
   TCHAR *TBuf = 0;
@@ -259,7 +259,7 @@ void DownloadDicsDlg::DownloadSelected ()
           BOOL ReplaceQuestionWasAsked = FALSE;
           if (PathFileExists (HunspellDicPath))
           {
-            DWORD Answer = AskReplacementMessage (DicFileName);
+            auto Answer = AskReplacementMessage (DicFileName);
             ReplaceQuestionWasAsked = TRUE;
             if (Answer == IDNO)
             {
@@ -374,7 +374,7 @@ void FtpTrim (TCHAR *FtpAddress)
 {
   StrTrim (FtpAddress, _T (" "));
   const TCHAR FtpPrefix[] = _T ("ftp://");
-  int FtpPrefixLen = _tcslen (FtpPrefix);
+  auto FtpPrefixLen = _tcslen (FtpPrefix);
   for (unsigned int i = 0; i < _tcslen (FtpAddress); i++) // Exchanging slashes
   {
     if (FtpAddress[i] == _T ('\\'))
@@ -514,9 +514,9 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
   if (!SpellCheckerInstance->GetProxyAnonymous ())
   {
     InternetSetOption (OpenedURL, INTERNET_OPTION_PROXY_USERNAME,
-      (LPVOID) SpellCheckerInstance->GetProxyUserName (), _tcslen (SpellCheckerInstance->GetProxyUserName ()) + 1);
+      (LPVOID) SpellCheckerInstance->GetProxyUserName (), static_cast<DWORD> (_tcslen (SpellCheckerInstance->GetProxyUserName ())) + 1);
     InternetSetOption (OpenedURL, INTERNET_OPTION_PROXY_PASSWORD,
-      (LPVOID) SpellCheckerInstance->GetProxyPassword (), _tcslen (SpellCheckerInstance->GetProxyPassword ()) + 1);
+      (LPVOID) SpellCheckerInstance->GetProxyPassword (), static_cast<DWORD> (_tcslen (SpellCheckerInstance->GetProxyPassword ())) + 1);
     InternetSetOption (OpenedURL, INTERNET_OPTION_PROXY_SETTINGS_CHANGED,
       0, 0);
     HttpSendRequest (OpenedURL, 0, 0, 0, 0);
@@ -916,7 +916,7 @@ void DownloadDicsDlg::Refresh ()
   ReinitServer (this, FALSE);
 }
 
-BOOL CALLBACK DownloadDicsDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
   {

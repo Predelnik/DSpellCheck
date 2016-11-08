@@ -24,5 +24,5 @@ public:
   void init (HINSTANCE hInst, HWND Parent);
   void DoDialog ();
 protected:
-  BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 };

@@ -599,12 +599,12 @@ HMENU GetDSpellCheckMenu ()
     if (_tcscmp (Buf, NPP_PLUGIN_NAME) == 0)
     {
       MENUITEMINFO Mif;
-      Mif.fMask = MIIM_ID;
+      Mif.fMask = MIIM_SUBMENU;
       Mif.cbSize = sizeof (MENUITEMINFO);
       BOOL Res = GetMenuItemInfo (PluginsMenu, i, TRUE, &Mif);
 
       if (Res)
-        DSpellCheckMenu = (HMENU) Mif.wID;
+        DSpellCheckMenu = (HMENU) Mif.hSubMenu;
 
       CLEAN_AND_ZERO_ARR (Buf);
       break;
@@ -633,7 +633,7 @@ HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg)
   if (!Res)
     return NULL;
 
-  return Mif.hSubMenu;
+  return Mif.hSubMenu; // TODO: CHECK IS THIS CORRECT FIX
 }
 
 void InitClasses ()

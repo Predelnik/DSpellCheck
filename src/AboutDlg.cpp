@@ -82,7 +82,7 @@ void AboutDlg::init (HINSTANCE hInst, HWND Parent)
   return Window::init (hInst, Parent);
 }
 
-BOOL CALLBACK AboutDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
   {

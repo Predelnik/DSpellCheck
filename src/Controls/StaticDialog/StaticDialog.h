@@ -93,8 +93,8 @@ public :
 
 protected :
   RECT _rc;
-  static BOOL CALLBACK dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-  virtual BOOL CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) = 0;
+  static INT_PTR dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+  virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) = 0;
 
   void alignWith(HWND handle, HWND handle2Align, PosAlign pos, POINT & point);
   HGLOBAL makeRTLResource(int dialogID, DLGTEMPLATE **ppMyDlgTemplate);

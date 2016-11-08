@@ -42,7 +42,7 @@ public:
   void DoDialog ();
   // Maybe hunspell interface should be passed here
   void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg);
-  BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
   void UpdateListBox ();
   void DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName = 0, TCHAR *Location = 0);
   void DownloadSelected ();
@@ -54,7 +54,7 @@ public:
   void UpdateOptions (SpellChecker * spellchecker);
   void SetCancelPressed (BOOL Value);
   void Refresh ();
-  DWORD AskReplacementMessage (TCHAR *DicName);
+  LRESULT AskReplacementMessage(TCHAR* DicName);
 private:
   void DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location);
 private:

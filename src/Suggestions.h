@@ -32,7 +32,7 @@ public:
   int GetResult ();
   void init (HINSTANCE hInst, HWND Parent, NppData nppData);
 protected:
-  __override BOOL CALLBACK run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam);
+  __override INT_PTR run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam);
 private:
   int MenuResult;
   BOOL AltPressed, ControlPressed, ShiftPressed;

@@ -31,7 +31,7 @@ public:
   void UpdateOptions (SpellChecker *SpellCheckerInstance);
   void SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem);
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 protected:
   HWND HLangList = NULL;
   HWND HRemoveUserDics = NULL;

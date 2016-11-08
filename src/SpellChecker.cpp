@@ -155,7 +155,7 @@ SpellChecker::SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDl
   UseProxy = FALSE;
   SettingsToSave = new std::map<TCHAR *, DWORD, bool ( *)(TCHAR *, TCHAR *)> (SortCompare);
   BOOL ok;
-  BOOL res = SendMsgToNpp (&ok, NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0);
+  BOOL res = (SendMsgToNpp (&ok, NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
   if (!ok)
     return;
 
@@ -270,7 +270,7 @@ void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL S
       mi.wID = GetContextMenuIdStart () + Id;
 
     mi.dwTypeData = Text;
-    mi.cch = _tcslen (Text) + 1;
+    mi.cch = static_cast<int> (_tcslen (Text)) + 1;
   }
   if (InsertPos == -1)
     InsertMenuItem (Menu, GetMenuItemCount (Menu), TRUE, &mi);
@@ -486,7 +486,7 @@ void SpellChecker::FillDialogs (BOOL NoDisplayCall)
 
 void SpellChecker::RecheckVisibleBothViews ()
 {
-  int OldLexer = Lexer;
+  LRESULT OldLexer = Lexer;
   EncodingType OldEncoding = CurrentEncoding;
   BOOL ok;
   Lexer = SendMsgToActiveEditor (&ok, NppDataInstance->_scintillaMainHandle, SCI_GETLEXER);
@@ -888,13 +888,13 @@ cleanup:
   CLEAN_AND_ZERO_ARR (FileTypesCopy);
 }
 
-int SpellChecker::GetStyle (int Pos)
+LRESULT SpellChecker::GetStyle (int Pos)
 {
   return SendMsgToActiveEditor (0, GetCurrentScintilla (), SCI_GETSTYLEAT, Pos);
 }
 // Actually for all languages which operate mostly in strings it's better to check only comments
 // TODO: Fix it
-int SpellChecker::CheckWordInCommentOrString (int Style)
+int SpellChecker::CheckWordInCommentOrString (LRESULT Style)
 {
   switch (Lexer)
   {
@@ -1767,26 +1767,26 @@ void SpellChecker::FindNextMistake ()
   BOOL ok;
   CurrentPosition = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETCURRENTPOS);
   if (!ok) return;
-  int CurLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, CurrentPosition);
+  auto CurLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, CurrentPosition);
   if (!ok) return;
-  int LineStartPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, CurLine);
+  auto LineStartPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, CurLine);
   if (!ok) return;
-  long DocLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+  auto DocLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH);
   if (!ok) return;
-  int IteratorPos = LineStartPos;
+  auto IteratorPos = LineStartPos;
   Sci_TextRange Range;
   BOOL Result = FALSE;
   BOOL FullCheck = FALSE;
 
   while (1)
   {
-    Range.chrg.cpMin = IteratorPos;
-    Range.chrg.cpMax = IteratorPos + BufferSize;
+    Range.chrg.cpMin = static_cast<long> (IteratorPos);
+    Range.chrg.cpMax = static_cast<long> (IteratorPos + BufferSize);
     int IgnoreOffsetting = 0;
     if (Range.chrg.cpMax > DocLength)
     {
       IgnoreOffsetting = 1;
-      Range.chrg.cpMax = DocLength;
+      Range.chrg.cpMax = static_cast<long> (DocLength);
     }
     Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
     SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
@@ -1819,7 +1819,7 @@ void SpellChecker::FindNextMistake ()
     scn.nmhdr.code = SCN_SCROLLED;
     SendMsgToNpp (&ok, NppDataInstance, WM_NOTIFY, 0, (LPARAM )&scn); // To fix bug with hotspots being removed
     if (!ok) return;
-    Result = CheckText (Range.lpstrText, IteratorPos, FIND_FIRST);
+    Result = CheckText (Range.lpstrText, static_cast<long> (IteratorPos), FIND_FIRST);
     CLEAN_AND_ZERO_ARR (Range.lpstrText);
     if (Result)
       break;
@@ -1848,23 +1848,22 @@ void SpellChecker::FindPrevMistake ()
   BOOL ok;
   CurrentPosition = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETCURRENTPOS);
   if (!ok) return;
-  int CurLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, CurrentPosition);
+  auto CurLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, CurrentPosition);
   if (!ok) return;
-  long LineEndPos = 0;
-  long DocLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+  auto DocLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH);
   if (!ok) return;
-  LineEndPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINEENDPOSITION, CurLine);
+  auto LineEndPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINEENDPOSITION, CurLine);
   if (!ok) return;
 
-  int IteratorPos = LineEndPos;
+  auto IteratorPos = LineEndPos;
   Sci_TextRange Range;
   BOOL Result = FALSE;
   BOOL FullCheck = FALSE;
 
   while (1)
     {
-      Range.chrg.cpMin = IteratorPos - BufferSize;
-      Range.chrg.cpMax = IteratorPos;
+      Range.chrg.cpMin = static_cast<long> (IteratorPos - BufferSize);
+      Range.chrg.cpMax = static_cast<long> (IteratorPos);
       int IgnoreOffsetting = 0;
       if (Range.chrg.cpMin < 0)
         {
@@ -1898,7 +1897,7 @@ void SpellChecker::FindPrevMistake ()
                 IteratingChar++;
             }
         }
-      int offset = IteratingChar - IteratingStart;
+      auto offset = IteratingChar - IteratingStart;
       SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_COLOURISE, Range.chrg.cpMin + offset, Range.chrg.cpMax);
       if (!ok)
         {
@@ -1913,7 +1912,7 @@ void SpellChecker::FindPrevMistake ()
           CLEAN_AND_ZERO_ARR (Range.lpstrText);
           return;
         }
-      Result = CheckText (Range.lpstrText + offset, Range.chrg.cpMin + offset, FIND_LAST);
+      Result = CheckText (Range.lpstrText + offset, static_cast<long> (Range.chrg.cpMin + offset), FIND_LAST);
       CLEAN_AND_ZERO_ARR (Range.lpstrText);
       if (Result)
         break;
@@ -1951,9 +1950,9 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
 {
   BOOL Ret = TRUE;
   POINT p;
-  int initCharPos = -1;
-  int SelectionStart = 0;
-  int SelectionEnd = 0;
+  std::ptrdiff_t initCharPos = -1;
+  LRESULT SelectionStart = 0;
+  LRESULT SelectionEnd = 0;
 
   if (!UseTextCursor)
   {
@@ -1983,25 +1982,25 @@ BOOL SpellChecker::GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseT
   if (initCharPos != -1)
   {
     BOOL ok;
-    int Line = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, initCharPos);
+    auto Line = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, initCharPos);
     if (!ok) return TRUE;
-    long LineLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINELENGTH, Line);
+    auto LineLength = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINELENGTH, Line);
     if (!ok) return TRUE;
     char *Buf = new char[LineLength + 1];
     SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINE, Line, (LPARAM) Buf);
     if (!ok) return TRUE;
     Buf [LineLength] = 0;
-    long Offset = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, Line);
+    auto Offset = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, Line);
     if (!ok) return TRUE;
-    char *Word = GetWordAt (initCharPos, Buf, Offset);
+    char *Word = GetWordAt (static_cast<long> (initCharPos), Buf, static_cast<long> (Offset));
     if (!Word || !*Word)
     {
       Ret = TRUE;
     }
     else
     {
-      Pos = Word - Buf + Offset;
-      long PosEnd = Pos + strlen (Word);
+      Pos = static_cast<long> (Word - Buf + Offset);
+      long PosEnd = Pos + static_cast<long> (strlen(Word));
       CheckSpecialDelimeters (Word, Buf, Pos, PosEnd);
       long WordLen = PosEnd - Pos;
       if (SelectionStart != SelectionEnd && (SelectionStart != Pos || SelectionEnd != Pos + WordLen))
@@ -2120,17 +2119,17 @@ void SpellChecker::InitSuggestionsBox ()
   WUCLength = Length;
   WUCPosition = Pos;
   BOOL ok;
-  int Line = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, WUCPosition);
+  auto Line = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, WUCPosition);
   if (!ok) return;
-  int TextHeight = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_TEXTHEIGHT, Line);
+  auto TextHeight = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_TEXTHEIGHT, Line);
   if (!ok) return;
-  int XPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POINTXFROMPOSITION, 0, WUCPosition);
+  auto XPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POINTXFROMPOSITION, 0, WUCPosition);
   if (!ok) return;
-  int YPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POINTYFROMPOSITION, 0, WUCPosition);
+  auto YPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POINTYFROMPOSITION, 0, WUCPosition);
   if (!ok) return;
 
-  p.x = XPos;
-  p.y = YPos;
+  p.x = static_cast<LONG> (XPos);
+  p.y = static_cast<LONG> (YPos);
   RECT R;
   GetWindowRect (GetCurrentScintilla (), &R);
   scintilla = GetScintillaWindow (NppDataInstance);
@@ -2140,11 +2139,11 @@ void SpellChecker::InitSuggestionsBox ()
   ClientToScreen (scintilla, &p);
   if (R.top > p.y + TextHeight - 3 || R.left > p.x || R.bottom < p.y + TextHeight - 3 + SBSize ||  R.right < p.x + SBSize)
     return;
-  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + TextHeight - 3, SBSize, SBSize, TRUE);
+  MoveWindow (SuggestionsInstance->getHSelf (), p.x, p.y + static_cast<int> (TextHeight) - 3, SBSize, SBSize, TRUE);
   SuggestionsInstance->display ();
 }
 
-void SpellChecker::ProcessMenuResult (UINT MenuId)
+void SpellChecker::ProcessMenuResult (WPARAM MenuId)
 {
   if ((!GetUseAllocatedIds () && HIBYTE (MenuId) != DSPELLCHECK_MENU_ID &&
        HIBYTE (MenuId) != LANGUAGE_MENU_ID)
@@ -2165,7 +2164,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
   case  DSPELLCHECK_MENU_ID:
     {
       char *AnsiBuf = 0;
-      int Result = 0;
+      WPARAM Result = 0;
       if (!GetUseAllocatedIds ())
         Result = LOBYTE (MenuId);
       else
@@ -2211,7 +2210,7 @@ void SpellChecker::ProcessMenuResult (UINT MenuId)
     break;
   case LANGUAGE_MENU_ID:
     {
-      int Result = 0;
+      WPARAM Result = 0;
       if (!GetUseAllocatedIds ())
         Result = LOBYTE (MenuId);
       else
@@ -2256,7 +2255,7 @@ void SpellChecker::FillSuggestionsMenu (HMENU Menu)
   Sci_TextRange Range;
   TCHAR *Buf = 0;
   Range.chrg.cpMin = WUCPosition;
-  Range.chrg.cpMax = WUCPosition + WUCLength;
+  Range.chrg.cpMax = WUCPosition + static_cast<long> (WUCLength);
   Range.lpstrText = new char [WUCLength + 1];
   PostMsgToActiveEditor (GetCurrentScintilla (), SCI_SETSEL, Pos, Pos + WUCLength);
   if (SuggestionsMode == SUGGESTIONS_BOX)
@@ -2662,13 +2661,13 @@ void SpellChecker::LoadSettings ()
   LoadFromIni (ProxyType, _T ("Proxy_Type"), 0);
 }
 
-void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, int start, int end)
+void SpellChecker::CreateWordUnderline (HWND ScintillaWindow, long start, long end)
 {
   PostMsgToActiveEditor (ScintillaWindow, SCI_SETINDICATORCURRENT, SCE_ERROR_UNDERLINE);
   PostMsgToActiveEditor (ScintillaWindow, SCI_INDICATORFILLRANGE, start, (end - start + 1));
 }
 
-void SpellChecker::RemoveUnderline (HWND ScintillaWindow, int start, int end)
+void SpellChecker::RemoveUnderline (HWND ScintillaWindow, long start, long end)
 {
   if (end < start)
     return;
@@ -2680,28 +2679,28 @@ void SpellChecker::RemoveUnderline (HWND ScintillaWindow, int start, int end)
 void SpellChecker::GetVisibleLimits (long &Start, long &Finish)
 {
   BOOL ok;
-  long top = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETFIRSTVISIBLELINE);
+  auto top = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETFIRSTVISIBLELINE);
   if (!ok) goto ErrorBranch;
-  long bottom = top + SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINESONSCREEN);
+  auto bottom = top + SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINESONSCREEN);
   if (!ok) goto ErrorBranch;
   top = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_DOCLINEFROMVISIBLE, top);
   if (!ok) goto ErrorBranch;
   bottom = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_DOCLINEFROMVISIBLE, bottom);
   if (!ok) goto ErrorBranch;
-  long LineCount = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINECOUNT);
+  auto LineCount = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINECOUNT);
   if (!ok) goto ErrorBranch;
-  Start = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, top);
+  Start = static_cast<long> (SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, top));
   if (!ok) goto ErrorBranch;
   // Not using end of line position cause utf-8 symbols could be more than one char
   // So we use next line start as the end of our visible text
   if (bottom + 1 < LineCount)
     {
-      Finish = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, bottom + 1);
+      Finish = static_cast<long> (SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, bottom + 1));
       if (!ok) goto ErrorBranch;
     }
   else
     {
-      Finish = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTLENGTH);
+      Finish = static_cast<long> (SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTLENGTH));
       if (!ok) goto ErrorBranch;
     }
   return;
@@ -2747,7 +2746,7 @@ char *SpellChecker::GetVisibleText(long *offset, BOOL NotIntersectionOnly)
 void SpellChecker::ClearAllUnderlines ()
 {
   BOOL ok;
-  int length = SendMsgToActiveEditor(&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+  auto length = SendMsgToActiveEditor(&ok, GetCurrentScintilla (), SCI_GETLENGTH);
   if (!ok)
     return;
   if (length > 0)
@@ -2799,7 +2798,7 @@ void SpellChecker::SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR
 
   if (InQuotes)
   {
-    int Len = 1 + _tcslen (Value) + 1 + 1;
+    auto Len = 1 + _tcslen (Value) + 1 + 1;
     TCHAR *Buf = new TCHAR[Len];
     _stprintf (Buf, _T ("\"%s\""), Value);
     WritePrivateProfileString (_T ("SpellCheck"), Name, Buf, IniFilePath);
@@ -2850,7 +2849,7 @@ void SpellChecker::LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *D
 
   if (InQuotes)
   {
-    int Len = _tcslen (Value);
+    auto Len = _tcslen (Value);
     // Proof check for quotes
     if (Value[0] != '\"' || Value[Len] != '\"')
     {
@@ -2946,7 +2945,7 @@ void SpellChecker::SetDelimiters (const char *Str)
   SetString (DelimUtf8, Str);
   SetStringSUtf8 (SrcBuf, DelimUtf8);
   SetParsedString (DestBuf, SrcBuf);
-  int TargetBufLength = _tcslen (DestBuf) + 5 + 1;
+  auto TargetBufLength = _tcslen (DestBuf) + 5 + 1;
   TCHAR *TargetBuf = new TCHAR [_tcslen (DestBuf) + 5 + 1];
   _tcscpy (TargetBuf, DestBuf);
   _tcscat_s (TargetBuf, TargetBufLength, _T (" \n\r\t\v"));
@@ -3071,7 +3070,7 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
 
     char *Iter = Word;
     char *NestedIter = 0;
-    int Diff = strlen (ConvertFrom[i]) - strlen (ConvertTo[i]);
+    auto Diff = strlen (ConvertFrom[i]) - strlen (ConvertTo[i]);
     if (Diff < 0)
       continue; // For now this case isn't needed.
     while (true)
@@ -3109,7 +3108,7 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long /*End*/)
     return TRUE;
   // Well Numbers have same codes for ANSI and Unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
-  int Style = GetStyle (Start);
+  auto Style = GetStyle (Start);
   if (CheckComments && !CheckWordInCommentOrString (Style))
     return TRUE;
 
@@ -3127,7 +3126,7 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long /*End*/)
   ApplyConversions (Word);
 
   TCHAR *Ts = 0;
-  long SymbolsNum = (CurrentEncoding == ENCODING_UTF8) ? Utf8Length (Word) : strlen (Word);
+  auto SymbolsNum = (CurrentEncoding == ENCODING_UTF8) ? Utf8Length (Word) : strlen (Word);
   if (SymbolsNum == 0)
   {
     res = TRUE;
@@ -3188,7 +3187,7 @@ BOOL SpellChecker::CheckWord (char *Word, long Start, long /*End*/)
     goto CleanUp;
   }
 
-  unsigned int Len = strlen (Word);
+  auto Len = strlen (Word);
 
   if (IgnoreSEApostrophe)
   {
@@ -3258,7 +3257,7 @@ int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
   char *token;
   BOOL stop = FALSE;
   long ResultingWordEnd = -1, ResultingWordStart = -1;
-  long TextLen = strlen (TextToCheck);
+  auto TextLen = strlen (TextToCheck);
   std::vector<long> UnderlineBuffer;
   long WordStart = 0;
   long WordEnd = 0;
@@ -3275,8 +3274,8 @@ int SpellChecker::CheckText (char *TextToCheck, long Offset, CheckTextMode Mode)
     {
       if (token)
         {
-          WordStart = Offset + token - TextToCheck;
-          WordEnd = Offset + token - TextToCheck + strlen (token);
+          WordStart = Offset + static_cast<long> (token - TextToCheck);
+          WordEnd = Offset + static_cast<long> (token - TextToCheck + strlen (token));
           CheckSpecialDelimeters (token, TextToCheck, WordStart, WordEnd);
           if (WordEnd < WordStart)
             goto newtoken;
@@ -3338,7 +3337,7 @@ newtoken:
           CreateWordUnderline (ScintillaWindow, UnderlineBuffer[i], UnderlineBuffer[i + 1] - 1);
           PrevPos = UnderlineBuffer[i + 1];
         }
-      RemoveUnderline (ScintillaWindow, PrevPos, Offset + TextLen - 1);
+      RemoveUnderline (ScintillaWindow, PrevPos, Offset + static_cast<long> (TextLen) - 1);
     }
 
   // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT, oldid);
@@ -3367,7 +3366,7 @@ newtoken:
 void SpellChecker::ClearVisibleUnderlines ()
 {
   BOOL ok;
-  int length = SendMsgToActiveEditor(&ok, GetCurrentScintilla (), SCI_GETLENGTH);
+  auto length = SendMsgToActiveEditor(&ok, GetCurrentScintilla (), SCI_GETLENGTH);
   if (!ok) return;
   if (length > 0)
   {
@@ -3435,15 +3434,15 @@ void SpellChecker::RecheckModified ()
     }
 
   BOOL ok;
-  long FirstModifiedLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, ModifiedStart);
+  auto FirstModifiedLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, ModifiedStart);
   if (!ok) return;
-  long LastModifiedLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, ModifiedEnd);
+  auto LastModifiedLine = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_LINEFROMPOSITION, ModifiedEnd);
   if (!ok) return;
-  long LineCount = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINECOUNT);
+  auto LineCount = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLINECOUNT);
   if (!ok) return;
-  long FirstPossiblyModifiedPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, FirstModifiedLine);
+  auto FirstPossiblyModifiedPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, FirstModifiedLine);
   if (!ok) return;
-  long LastPossiblyModifiedPos = 0;
+  LRESULT LastPossiblyModifiedPos = 0;
   if (LastModifiedLine + 1 < LineCount)
     {
       LastPossiblyModifiedPos = SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_POSITIONFROMLINE, LastModifiedLine + 1);
@@ -3456,12 +3455,12 @@ void SpellChecker::RecheckModified ()
     }
 
   Sci_TextRange Range;
-  Range.chrg.cpMin = FirstPossiblyModifiedPos;
-  Range.chrg.cpMax = LastPossiblyModifiedPos;
+  Range.chrg.cpMin = static_cast<long> (FirstPossiblyModifiedPos);
+  Range.chrg.cpMax = static_cast<long> (LastPossiblyModifiedPos);
   Range.lpstrText = new char [Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1];
   SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETTEXTRANGE, 0, (LPARAM) &Range);
 
-  CheckText (Range.lpstrText, FirstPossiblyModifiedPos, UNDERLINE_ERRORS);
+  CheckText (Range.lpstrText, static_cast<long> (FirstPossiblyModifiedPos), UNDERLINE_ERRORS);
   CLEAN_AND_ZERO_ARR (Range.lpstrText);
 }
 
@@ -3501,7 +3500,7 @@ void SpellChecker::ErrorMsgBox (const TCHAR *message)
 void SpellChecker::CopyMisspellingsToClipboard ()
 {
   BOOL ok;
-  int lengthDoc = (SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH) + 1);
+  auto lengthDoc = (SendMsgToActiveEditor (&ok, GetCurrentScintilla (), SCI_GETLENGTH) + 1);
   if (!ok)
     return;
   char *buf = new char [lengthDoc];

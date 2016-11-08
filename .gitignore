@@ -41,3 +41,9 @@ lib/*
 build/*
 bld/*
 bin/*
+build-x64/*
+bld-x64/*
+bin-x64/*
+build-x86/*
+bld-x86/*
+bin-x86/*

@@ -28,7 +28,7 @@ public:
   Progress(void);
   ~Progress(void);
 
-  BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
   void init (HINSTANCE hInst, HWND Parent);
   void DoDialog ();
   void SetProgress ();

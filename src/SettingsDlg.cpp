@@ -352,7 +352,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lParam*/, 
   return 0; // The function should always return 0.
 }
 
-BOOL CALLBACK SimpleDlg::run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   int x;
   TCHAR *EndPtr;
@@ -636,7 +636,7 @@ void AdvancedDlg::SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL I
   Button_SetCheck (HIgnoreSEApostrophe, Ignore_SA_Apostrophe_Arg ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void AdvancedDlg::SetSuggBoxSettings (int Size, int Trans)
+void AdvancedDlg::SetSuggBoxSettings (LRESULT Size, LRESULT Trans)
 {
   SendMessage (HSliderSize, TBM_SETPOS, TRUE, Size);
   SendMessage (HSliderTransparency, TBM_SETPOS, TRUE, Trans);
@@ -654,7 +654,7 @@ const TCHAR *const IndicNames[] = {_T ("Plain"), _T ("Squiggle"), _T ("TT"), _T 
                                    _T ("Dots"), _T ("Squiggle Low")
                                   };
 
-BOOL CALLBACK AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   TCHAR *EndPtr = 0;
   TCHAR Buf[DEFAULT_BUF_SIZE];
@@ -858,8 +858,8 @@ void AdvancedDlg::ApplySettings (SpellChecker *SpellCheckerInstance)
                                    Button_GetCheck (HIgnoreSEApostrophe) == BST_CHECKED,
                                    Button_GetCheck (HIgnoreOneLetter) == BST_CHECKED
                                   );
-  SpellCheckerInstance->SetSuggBoxSettings (SendMessage (HSliderSize, TBM_GETPOS, 0, 0),
-                                            SendMessage (HSliderTransparency, TBM_GETPOS, 0, 0));
+  SpellCheckerInstance->SetSuggBoxSettings (static_cast<int> (SendMessage (HSliderSize, TBM_GETPOS, 0, 0)),
+                                            static_cast<int> (SendMessage (HSliderTransparency, TBM_GETPOS, 0, 0)));
   int Len = Edit_GetTextLength (HBufferSize) + 1;
   TBuf = new TCHAR [Len];
   Edit_GetText (HBufferSize, TBuf, Len);
@@ -901,7 +901,7 @@ void SettingsDlg::ApplySettings ()
   SetRecheckDelay (AdvancedDlgInstance.GetRecheckDelay ());
 }
 
-BOOL CALLBACK SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
   switch (Message)
   {

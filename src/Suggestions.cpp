@@ -88,7 +88,7 @@ void Suggestions::init (HINSTANCE hInst, HWND Parent, NppData nppData)
   return Window::init (hInst, Parent);
 }
 
-BOOL CALLBACK Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
   POINT p;
   HDC Dc;

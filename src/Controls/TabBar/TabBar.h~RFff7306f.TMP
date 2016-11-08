@@ -94,7 +94,7 @@ public:
     return _nbItem;
   };
 
-  void setFont(TCHAR *fontName, int fontSize);
+  void setFont(TCHAR *fontName, size_t fontSize);
 
   void setVertical(bool b) {
     _isVertical = b;
@@ -257,7 +257,7 @@ protected:
   void drawItem(DRAWITEMSTRUCT *pDrawItemStruct);
   void draggingCursor(POINT screenPoint);
 
-  int getTabIndexAt(const POINT& p) {
+  int getTabIndexAt(const POINT & p) {
     return getTabIndexAt(p.x, p.y);
   };
 
@@ -265,7 +265,7 @@ protected:
     TCHITTESTINFO hitInfo;
     hitInfo.pt.x = x;
     hitInfo.pt.y = y;
-    return static_cast<int> (::SendMessage(_hSelf, TCM_HITTEST, 0, (LPARAM)&hitInfo));
+    return ::SendMessage(_hSelf, TCM_HITTEST, 0, (LPARAM)&hitInfo);
   };
 
   bool isPointInParentZone(POINT screenPoint) const {

@@ -29,7 +29,7 @@ public:
   HWND GetListBox ();
   void ApplyChoice (SpellChecker *SpellCheckerInstance);
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 protected:
   HWND HLangList = NULL;
 };

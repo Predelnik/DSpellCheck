@@ -267,7 +267,7 @@ std::vector<TCHAR*> *HunspellInterface::GetLanguageList ()
 
 DicInfo HunspellInterface::CreateHunspell (TCHAR *Name, int Type)
 {
-  int size = (Type ? _tcslen (SysDicDir) : _tcslen (DicDir)) + 1 + _tcslen (Name) + 1 + 3 + 1; // + . + aff/dic + /0
+  auto size = (Type ? _tcslen (SysDicDir) : _tcslen (DicDir)) + 1 + _tcslen (Name) + 1 + 3 + 1; // + . + aff/dic + /0
   TCHAR *AffBuf = new TCHAR [size];
   char *AffBufAnsi = 0;
   char *DicBufAnsi = 0;
@@ -462,7 +462,7 @@ void HunspellInterface::WriteUserDic (WordSet *Target, TCHAR *Path)
     return;
   {
     WordSet::iterator it = Target->begin ();
-    fprintf (Fp, "%d\n", Target->size ());
+    fprintf (Fp, "%zu\n", Target->size ());
     for (; it != Target->end (); ++it)
     {
       TemporarySortedWordSet.insert (*it);

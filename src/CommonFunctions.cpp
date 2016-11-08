@@ -408,7 +408,7 @@ char *Utf8pbrk(const char *s, const char *set)
   return NULL;
 }
 
-long Utf8spn (const char *s, const char *set)
+std::ptrdiff_t Utf8spn (const char *s, const char *set)
 {
   const char *x;
   const char *it = 0;

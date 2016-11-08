@@ -138,8 +138,8 @@ private:
   };
 
   HWND GetCurrentScintilla ();
-  void CreateWordUnderline (HWND ScintillaWindow, int start, int end);
-  void RemoveUnderline (HWND ScintillaWindow, int start, int end);
+  void CreateWordUnderline (HWND ScintillaWindow, long start, long end);
+  void RemoveUnderline (HWND ScintillaWindow, long start, long end);
   void ClearAllUnderlines ();
   void FindNextMistake ();
   void FindPrevMistake ();
@@ -162,7 +162,7 @@ private:
   void UpdateAutocheckStatus (int SaveSetting = 1);
   void SwitchAutoCheck ();
   void FillSuggestionsMenu (HMENU Menu);
-  void ProcessMenuResult (UINT MenuId);
+  void ProcessMenuResult (WPARAM MenuId);
   void InitSuggestionsBox ();
   BOOL GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseTextCursor = FALSE);
   char *GetWordAt (long CharPos, char *Text, long Offset);
@@ -170,9 +170,9 @@ private:
   void HideSuggestionBox ();
   void GetLimitsAndRecheckModified ();
   BOOL CheckTextNeeded ();
-  int CheckWordInCommentOrString (int Style);
+  int CheckWordInCommentOrString (LRESULT Style);
   void WriteSetting ();
-  int GetStyle (int Pos);
+  LRESULT GetStyle (int Pos);
   void RefreshUnderlineStyle ();
   void WriteSetting (LPARAM lParam);
   void ApplyConversions (char *Word);
@@ -241,7 +241,7 @@ private:
   int BufferSize;
   const AspellWordList *CurWordList;
   HWND CurrentScintilla;
-  int HotSpotCache[256]; // STYLE_MAX = 255
+  LRESULT HotSpotCache[256]; // STYLE_MAX = 255
   std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)> *SettingsToSave;
   BOOL UseProxy;
   BOOL ProxyAnonymous;
@@ -251,15 +251,15 @@ private:
   int ProxyPort;
   TCHAR *ProxyPassword;
 
-  int Lexer;
+  LRESULT Lexer;
   std::vector <SuggestionsMenuItem *> *SuggestionMenuItems;
   std::vector <char *> *LastSuggestions;
   _locale_t  utf8_l;
   long ModifiedStart;
   long ModifiedEnd;
   long WUCPosition; // WUC = Word Under Cursor (Position in global doc coordinates),
-  long WUCLength;
-  long CurrentPosition;
+  std::size_t WUCLength;
+  LRESULT CurrentPosition;
   NppData *NppDataInstance;
   EncodingType CurrentEncoding;
   TCHAR *IniFilePath;
@@ -268,7 +268,7 @@ private:
   Suggestions *SuggestionsInstance;
   LangList *LangListInstance;
   char *VisibleText;
-  int VisibleTextLength;
+  std::ptrdiff_t VisibleTextLength;
   long VisibleTextOffset;
   BOOL RemoveUserDics;
   BOOL RemoveSystem;

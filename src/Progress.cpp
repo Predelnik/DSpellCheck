@@ -40,7 +40,7 @@ void Progress::init (HINSTANCE hInst, HWND Parent)
   return Window::init (hInst, Parent);
 }
 
-BOOL CALLBACK Progress::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lParam*/)
+INT_PTR Progress::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
 {
   switch (message)
   {

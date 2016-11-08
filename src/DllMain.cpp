@@ -183,7 +183,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam, LPARA
     }
     else if (Message == GetCustomGUIMessageId (CustomGUIMessage::AUTOCHECK_STATE_CHANGED))
     {
-      AutoCheckStateReceived (wParam);
+      AutoCheckStateReceived (wParam != 0);
     }
   }
 
@@ -203,7 +203,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
   nppData = notpadPlusData;
   commandMenuInit();
-  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNotepad);
+  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWLP_WNDPROC, (LPARAM)SubWndProcNotepad);
 }
 
 extern "C" __declspec(dllexport) const TCHAR *getName()
@@ -259,7 +259,7 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
         pluginCleanUp();
         if (wndProcNotepad != NULL)
           // LONG_PTR is more x64 friendly, yet not affecting x86
-          ::SetWindowLongPtr (nppData._nppHandle, GWL_WNDPROC, (LONG_PTR)wndProcNotepad); // Removing subclassing
+          ::SetWindowLongPtr (nppData._nppHandle, GWLP_WNDPROC, (LONG_PTR)wndProcNotepad); // Removing subclassing
       }
       break;
 
@@ -348,10 +348,10 @@ extern "C" __declspec (dllexport) void beNotified (SCNotification *notifyCode)
 // I will make the messages accessible little by little, according to the need of plugin development.
 // Please let me know if you need to access to some messages :
 
-void InitNeededDialogs (int wParam)
+void InitNeededDialogs (WPARAM wParam)
 {
   // A little bit of code duplication here :(
-  int MenuId = wParam;
+  auto MenuId = wParam;
   if ((!GetUseAllocatedIds () && HIBYTE (MenuId) != DSPELLCHECK_MENU_ID &&
        HIBYTE (MenuId) != LANGUAGE_MENU_ID)
       || (GetUseAllocatedIds () && ((int) MenuId < GetContextMenuIdStart () || (int) MenuId > GetContextMenuIdStart () + 350)))
@@ -368,7 +368,7 @@ void InitNeededDialogs (int wParam)
   switch (UsedMenuId)
   {
   case  LANGUAGE_MENU_ID:
-    int Result = 0;
+    WPARAM Result = 0;
     if (!GetUseAllocatedIds ())
       Result = LOBYTE (MenuId);
     else

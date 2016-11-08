@@ -250,7 +250,7 @@ VOID Control_OnDrawItem(HWND /*hwnd*/, const DRAWITEMSTRUCT * lpDrawItem)
     // Erase and draw
     ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rcText, 0, 0, 0);
 
-    DrawText(dc, buf, _tcslen(buf), &rcText, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
+    DrawText(dc, buf, static_cast<int> (_tcslen(buf)), &rcText, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
 
     if ((lpDrawItem->itemState & (ODS_FOCUS | ODS_SELECTED)) == (ODS_FOCUS | ODS_SELECTED))
       DrawFocusRect(dc, &rcText);
@@ -340,7 +340,7 @@ ATOM InitCheckedListBox(HINSTANCE hInstance)
 ///         CBS_SIMPLE, CBS_DROPDOWN, and CBS_OWNERDRAWVARIABLE.
 ///
 /// @returns HWND If the function succeeds, the checked listbox handle, otherwise NULL.
-HWND New_CheckedListBox(HWND hParent, DWORD dwStyle, DWORD dwExStyle, DWORD dwID, INT x, INT y, INT nWidth, INT nHeight)
+HWND New_CheckedListBox(HWND hParent, DWORD dwStyle, DWORD dwExStyle, HMENU dwID, INT x, INT y, INT nWidth, INT nHeight)
 {
   static ATOM aCheckedListBox = 0;
   static HWND hCheckedListBox;
@@ -353,7 +353,7 @@ HWND New_CheckedListBox(HWND hParent, DWORD dwStyle, DWORD dwExStyle, DWORD dwID
 
   hCheckedListBox = CreateWindowEx(dwExStyle, g_szClassName, NULL,
     dwStyle, x, y, nWidth, nHeight,
-    hParent, (HMENU)dwID, hinst, NULL);
+    hParent, dwID, hinst, NULL);
 
   return hCheckedListBox;
 }
@@ -479,7 +479,7 @@ static LRESULT CALLBACK ListBox_Proc(HWND hList, UINT msg, WPARAM wParam, LPARAM
       WNDPROC wp = (WNDPROC)GetProp(hList, WPROC);
       if (NULL != wp)
       {
-        SetWindowLongPtr(hList, GWLP_WNDPROC, (DWORD)wp);
+        SetWindowLongPtr(hList, GWLP_WNDPROC, (LONG_PTR)wp);
         RemoveProp(hList, WPROC);
         return CallWindowProc(wp, hList, msg, wParam, lParam);
       }

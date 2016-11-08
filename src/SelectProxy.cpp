@@ -47,7 +47,7 @@ void SelectProxy::init (HINSTANCE hInst, HWND Parent)
 void SelectProxy::ApplyChoice (SpellChecker *SpellCheckerInstance)
 {
   TCHAR *TBuf = 0;
-  size_t BufSize = 0;
+  int BufSize = 0;
   BufSize = Edit_GetTextLength (HUserName) + 1;
   TBuf = new TCHAR [BufSize];
   Edit_GetText (HUserName, TBuf, BufSize);
@@ -117,7 +117,7 @@ void SelectProxy::SetOptions (BOOL UseProxy, TCHAR *HostName, TCHAR *UserName, T
   ComboBox_SetCurSel (HProxyType, ProxyType);
 }
 
-BOOL CALLBACK SelectProxy::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lParam*/)
+INT_PTR SelectProxy::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
 {
   switch (message)
   {

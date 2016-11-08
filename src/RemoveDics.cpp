@@ -126,7 +126,7 @@ void RemoveDics::SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem)
   Button_SetCheck (HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
-BOOL CALLBACK RemoveDics::run_dlgProc (UINT message, WPARAM wParam, LPARAM /*lParam*/)
+INT_PTR RemoveDics::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
 {
   switch (message)
   {

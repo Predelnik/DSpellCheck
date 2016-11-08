@@ -131,7 +131,7 @@ void TabBar::getCurrentTitle(TCHAR *title, int titleLen)
   ::SendMessage(_hSelf, TCM_GETITEM, getCurrentTabIndex(), reinterpret_cast<LPARAM>(&tci));
 }
 
-void TabBar::setFont(TCHAR *fontName, size_t fontSize)
+void TabBar::setFont(TCHAR *fontName, int fontSize)
 {
   if (_hFont)
     ::DeleteObject(_hFont);
@@ -156,7 +156,7 @@ void TabBar::activateAt(int index) const
   TBHDR nmhdr;
   nmhdr.hdr.hwndFrom = _hSelf;
   nmhdr.hdr.code = TCN_SELCHANGE;
-  nmhdr.hdr.idFrom = reinterpret_cast<unsigned int>(this);
+  nmhdr.hdr.idFrom = reinterpret_cast<UINT_PTR>(this);
   nmhdr.tabOrigin = index;
 }
 
@@ -287,7 +287,7 @@ void TabBarPlus::init(HINSTANCE hInst, HWND parent, bool isVertical, bool isTrad
     _nbCtrl++;
 
     ::SetWindowLongPtr(_hSelf, GWLP_USERDATA, (LONG_PTR)this);
-    _tabBarDefaultProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(_hSelf, GWLP_WNDPROC, (LONG_PTR)TabBarPlus_Proc));
+    _tabBarDefaultProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(_hSelf, GWLP_USERDATA, (LONG_PTR)TabBarPlus_Proc));
   }
 
   LOGFONT LogFont;
@@ -318,7 +318,7 @@ void TabBarPlus::doOwnerDrawTab()
   {
     if (_hwndArray[i])
     {
-      DWORD style = ::GetWindowLongPtr(_hwndArray[i], GWL_STYLE);
+      auto style = ::GetWindowLongPtr(_hwndArray[i], GWL_STYLE);
       if (isOwnerDrawTab())
         style |= TCS_OWNERDRAWFIXED;
       else
@@ -383,9 +383,8 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
     // Custom window message to change tab control style on the fly
   case WM_TABSETSTYLE:
     {
-      DWORD style;
       //::SendMessage(upDownWnd, UDM_SETBUDDY, NULL, 0);
-      style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
+      auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
 
       if (wParam > 0)
         style |= lParam;
@@ -417,7 +416,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
       }
 
       ::CallWindowProc(_tabBarDefaultProc, hwnd, Message, wParam, lParam);
-      int currentTabOn = ::SendMessage(_hSelf, TCM_GETCURSEL, 0, 0);
+      int currentTabOn = static_cast<int> (::SendMessage(_hSelf, TCM_GETCURSEL, 0, 0));
 
       if (wParam == 2)
         return TRUE;
@@ -441,7 +440,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
       TBHDR nmhdr;
       nmhdr.hdr.hwndFrom = _hSelf;
       nmhdr.hdr.code = NM_CLICK;
-      nmhdr.hdr.idFrom = reinterpret_cast<unsigned int>(this);
+      nmhdr.hdr.idFrom = reinterpret_cast<UINT_PTR>(this);
       nmhdr.tabOrigin = currentTabOn;
 
       ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
@@ -523,7 +522,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
         TBHDR nmhdr;
         nmhdr.hdr.hwndFrom = _hSelf;
         nmhdr.hdr.code = _isDraggingInside?TCN_TABDROPPED:TCN_TABDROPPEDOUTSIDE;
-        nmhdr.hdr.idFrom = reinterpret_cast<unsigned int>(this);
+        nmhdr.hdr.idFrom = reinterpret_cast<UINT_PTR>(this);
         nmhdr.tabOrigin = currentTabOn;
 
         ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
@@ -537,7 +536,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
           TBHDR nmhdr;
           nmhdr.hdr.hwndFrom = _hSelf;
           nmhdr.hdr.code = TCN_TABDELETE;
-          nmhdr.hdr.idFrom = reinterpret_cast<unsigned int>(this);
+          nmhdr.hdr.idFrom = reinterpret_cast<UINT_PTR>(this);
           nmhdr.tabOrigin = currentTabOn;
 
           ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
@@ -582,7 +581,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
       TBHDR nmhdr;
       nmhdr.hdr.hwndFrom = _hSelf;
       nmhdr.hdr.code = TCN_TABDELETE;
-      nmhdr.hdr.idFrom = reinterpret_cast<unsigned int>(this);
+      nmhdr.hdr.idFrom = reinterpret_cast<UINT_PTR>(this);
       nmhdr.tabOrigin = currentTabOn;
 
       ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
@@ -599,7 +598,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
         TBHDR nmhdr;
         nmhdr.hdr.hwndFrom = _hSelf;
         nmhdr.hdr.code = TCN_TABDELETE;
-        nmhdr.hdr.idFrom = reinterpret_cast<unsigned int>(this);
+        nmhdr.hdr.idFrom = reinterpret_cast<UINT_PTR>(this);
         nmhdr.tabOrigin = currentTabOn;
 
         ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
