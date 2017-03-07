@@ -1,12 +1,8 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.7)
 project (DSpellCheck)
-set (DSpellCheck_VERSION_MAJOR 1)
-set (DSpellCheck_VERSION_MINOR 0)
-set (SRC_DIR ${PROJECT_SOURCE_DIR}/src)
-set (BIN_DIR ${PROJECT_SOURCE_DIR})
-configure_file ("${SRC_DIR}/config.h.in" "${SRC_DIR}/config.h")
-include_directories (${SRC_DIR}/Controls)
-include_directories (${SRC_DIR})
+
+include_directories (src/Controls)
+include_directories (src)
 include_directories (Hunspell/src)
 include_directories (minizip/)
 include_directories (FtpClient/)
@@ -17,113 +13,30 @@ add_subdirectory ("libiconv")
 add_subdirectory ("minizip")
 add_subdirectory ("FtpClient")
 
-set (GENERIC_OUTPUT_DIR, ${BIN_DIR})
-set (DEBUG_OUTPUT_DIR, ${BIN_DIR}/debug)
-set (RELEASE_OUTPUT_DIR, ${BIN_DIR}/release)
-add_definitions ("-D_CRT_NONSTDC_NO_DEPRECATE -D_UNICODE -DUNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NON_CONFORMING_SWPRINTFS -D_CRT_SECURE_NO_DEPRECATE -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS")
+add_definitions ("-D_CRT_NONSTDC_NO_DEPRECATE -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NON_CONFORMING_SWPRINTFS -D_CRT_SECURE_NO_DEPRECATE -D_WINSOCK_DEPRECATED_NO_WARNINGS")
 
 set(DEBUG_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
+if (DEFINED DEBUG_OUTPUT_PATH)
+	set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${DEBUG_OUTPUT_PATH} )
+endif ()
+
 set(VLD_BUILD_ON "OFF" CACHE BOOL "Use Visual Leak Detector")
 
 if ( VLD_BUILD_ON )
   add_definitions ("-DVLD_BUILD")
-endif ( VLD_BUILD_ON )
+endif ()
 
-if ( MSVC )
-    #set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${GENERIC_OUTPUT_DIR} )
-    if (NOT DEFINED DEBUG_OUTPUT_PATH)
-    	set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${DEBUG_OUTPUT_DIR} )
-   	else (NOT DEFINED DEBUG_OUTPUT_PATH)
-   		set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${DEBUG_OUTPUT_PATH} )
-   	endif (NOT DEFINED DEBUG_OUTPUT_PATH)
-    # set ( CMAKE_PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE ${RELEASE_OUTPUT_DIR} )
-    set (add_definitions, UNICODE)
-    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG} )
-	set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG} )
-else ( MSVC )
-# For possible MinGW compilation
-	set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${GENERIC_OUTPUT_DIR} )
-	set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${GENERIC_OUTPUT_DIR} )
-	set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${GENERIC_OUTPUT_DIR} )
-endif ( MSVC )
-
-set (list_of_files_DSpellCheck
-  ${SRC_DIR}/Plugin.cpp
-  ${SRC_DIR}/Plugin.h
-  ${SRC_DIR}/SpellChecker.cpp
-  ${SRC_DIR}/SpellChecker.h
-  ${SRC_DIR}/DllMain.cpp
-  ${SRC_DIR}/menuCmdID.h
-  ${SRC_DIR}/scintilla.h
-  ${SRC_DIR}/SciLexer.h
-  ${SRC_DIR}/PluginInterface.h
-  ${SRC_DIR}/Notepad_plus_msgs.h
-  ${SRC_DIR}/LangList.cpp
-  ${SRC_DIR}/LangList.h
-  ${SRC_DIR}/aspell.h
-  ${SRC_DIR}/aspell.cpp
-  ${SRC_DIR}/MainDef.h
-  ${SRC_DIR}/Progress.cpp
-  ${SRC_DIR}/Progress.h
-  ${SRC_DIR}/SettingsDlg.cpp
-  ${SRC_DIR}/SettingsDlg.h
-  ${SRC_DIR}/CommonFunctions.cpp
-  ${SRC_DIR}/CommonFunctions.h
-  ${SRC_DIR}/Suggestions.cpp
-  ${SRC_DIR}/Suggestions.h
-  ${SRC_DIR}/PrecompiledHeader.cpp
-  ${SRC_DIR}/PrecompiledHeader.h
-  ${SRC_DIR}/AboutDlg.cpp
-  ${SRC_DIR}/AboutDlg.h
-  ${SRC_DIR}/DownloadDicsDlg.cpp
-  ${SRC_DIR}/DownloadDicsDlg.h
-  ${SRC_DIR}/LanguageName.h
-  ${SRC_DIR}/RemoveDics.cpp
-  ${SRC_DIR}/RemoveDics.h
-  ${SRC_DIR}/SelectProxy.cpp
-  ${SRC_DIR}/SelectProxy.h
-  ${SRC_DIR}/DSpellCheck.rc
-  ${SRC_DIR}/AbstractSpellerInterface.cpp
-  ${SRC_DIR}/AbstractSpellerInterface.h
-  ${SRC_DIR}/AspellInterface.cpp
-  ${SRC_DIR}/AspellInterface.h
-  ${SRC_DIR}/HunspellInterface.cpp
-  ${SRC_DIR}/HunspellInterface.h
-  ${SRC_DIR}/Controls/CheckedList/CheckedList.h
-  ${SRC_DIR}/Controls/CheckedList/CheckedList.cpp
-  ${SRC_DIR}/Controls/StaticDialog/StaticDialog.cpp
-  ${SRC_DIR}/Controls/StaticDialog/StaticDialog.h
-  ${SRC_DIR}/Controls/Window.h
-  ${SRC_DIR}/Controls/StaticDialog/StaticDialog.h
-  ${SRC_DIR}/Controls/TabBar/ControlsTab.cpp
-  ${SRC_DIR}/Controls/TabBar/ControlsTab.h
-  ${SRC_DIR}/Controls/TabBar/TabBar.cpp
-  ${SRC_DIR}/Controls/TabBar/TabBar.h
-  ${SRC_DIR}/StackWalker/StackWalker.h
-  ${SRC_DIR}/StackWalker/StackWalker.cpp
-)
+file (GLOB_RECURSE source_files src/*.cpp src/*.h)
 
 SET(LINK_LIBRARY shlwapi comctl32 version wininet Ws2_32)
-add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
+add_library (DSpellCheck SHARED ${source_files})
 
-#if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
-# SET_TARGET_PROPERTIES(DSpellCheck PROPERTIES LINK_FLAGS "/FORCE:MULTIPLE")
-#endif (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
-
-SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SUBSYSTEM:CONSOLE,5.01")
-SET (CMAKE_CXX_FLAGS "/WX /EHsc /MP /W4 /wd4127 /wd4091")
-foreach(flag_var CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-    string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-    string(REGEX REPLACE "/MDd" "/MTd" ${flag_var} "${${flag_var}}")
-endforeach(flag_var)
-SET (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}" CACHE STRING "MSVC C Debug MT flags " FORCE)
-SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}" CACHE STRING "MSVC CXX Debug MT flags " FORCE)
-SET (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}" CACHE STRING "MSVC C Release MT flags " FORCE)
-SET (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" CACHE STRING "MSVC CXX Release MT flags " FORCE)
-SET (CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL}" CACHE STRING "MSVC C Debug MT flags " FORCE)
-SET (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL}" CACHE STRING "MSVC C Release MT flags " FORCE)
-SET (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}" CACHE STRING "MSVC CXX Debug MT flags " FORCE)
-SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}" CACHE STRING "MSVC CXX Release MT flags " FORCE)
+foreach(CONFIG DEBUG MINSIZEREL RELEASE RELWITHDEBINFO)
+  string(REPLACE "/MD" "/MT"
+    "CMAKE_CXX_FLAGS_${CONFIG}"
+    "${CMAKE_CXX_FLAGS_${CONFIG}}"
+  )
+endforeach()
 
 target_link_libraries (DSpellCheck debug ${PROJECT_BINARY_DIR}/Hunspell/Debug/libhunspell.lib)
 target_link_libraries (DSpellCheck debug ${PROJECT_BINARY_DIR}/libiconv/DebugStatic_Win32/libiconv.lib)
@@ -134,8 +47,8 @@ target_link_libraries (DSpellCheck optimized ${PROJECT_BINARY_DIR}/libiconv/Rele
 target_link_libraries (DSpellCheck optimized ${PROJECT_BINARY_DIR}/minizip/Release/minizip.lib)
 target_link_libraries (DSpellCheck optimized ${PROJECT_BINARY_DIR}/ftpclient/Release/ftpclient.lib)
 
-
-include (PrecompiledHeader.cmake)
-add_precompiled_header(DSpellCheck PrecompiledHeader.h FORCEINCLUDE)
-
 target_link_libraries(DSpellCheck ${LINK_LIBRARY})
+
+include (cotire.cmake)
+set_target_properties(DSpellCheck PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "src/PrecompiledHeader.h")
+cotire (DSpellCheck)

@@ -1,3 +1,0 @@
-// File for cmake configuring
-#define DSpellCheck_VERSION_MAJOR @DSpellCheck_VERSION_MAJOR@
-#define DSpellCheck_VERSION_MINOR @DSpellCheck_VERSION_MINOR@
