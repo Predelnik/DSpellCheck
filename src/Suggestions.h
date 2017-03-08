@@ -22,16 +22,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
 
-class Suggestions : public StaticDialog
-{
+class Suggestions : public StaticDialog {
 public:
-  Suggestions ();
-  void DoDialog ();
-  HMENU GetPopupMenu ();
-  int GetResult ();
-  void init (HINSTANCE hInst, HWND Parent, NppData nppData);
+  Suggestions();
+  void DoDialog();
+  HMENU GetPopupMenu();
+  int GetResult();
+  void init(HINSTANCE hInst, HWND Parent, NppData nppData);
+
 protected:
   INT_PTR run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) override;
+
 private:
   int MenuResult;
   BOOL AltPressed, ControlPressed, ShiftPressed;

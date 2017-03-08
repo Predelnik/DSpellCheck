@@ -28,95 +28,74 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "resource.h"
 
-void LangList::DoDialog ()
-{
-  if (!isCreated())
-  {
-    create (IDD_CHOOSE_MULTIPLE_LANGUAGES);
+void LangList::DoDialog() {
+  if (!isCreated()) {
+    create(IDD_CHOOSE_MULTIPLE_LANGUAGES);
   }
-  goToCenter ();
-  display ();
-  SetFocus (HLangList);
+  goToCenter();
+  display();
+  SetFocus(HLangList);
 }
 
-void LangList::init (HINSTANCE hInst, HWND Parent)
-{
-  return Window::init (hInst, Parent);
+void LangList::init(HINSTANCE hInst, HWND Parent) {
+  return Window::init(hInst, Parent);
 }
 
-HWND LangList::GetListBox ()
-{
-  return HLangList;
-}
+HWND LangList::GetListBox() { return HLangList; }
 
-void LangList::ApplyChoice (SpellChecker *SpellCheckerInstance)
-{
-  int count = ListBox_GetCount (HLangList);
+void LangList::ApplyChoice(SpellChecker *SpellCheckerInstance) {
+  int count = ListBox_GetCount(HLangList);
   wchar_t Buf[DEFAULT_BUF_SIZE];
   wchar_t *ItemBuf = 0;
   char *ConvertedBuf = 0;
   BOOL FirstOne = TRUE;
   Buf[0] = L'\0';
-  for (int i = 0; i < count; i++)
-  {
-    if (CheckedListBox_GetCheckState (HLangList, i))
-    {
-      SetString (ItemBuf, SpellCheckerInstance->GetLangByIndex (i));
+  for (int i = 0; i < count; i++) {
+    if (CheckedListBox_GetCheckState(HLangList, i)) {
+      SetString(ItemBuf, SpellCheckerInstance->GetLangByIndex(i));
       if (!FirstOne)
-        wcscat (Buf, L"|");
+        wcscat(Buf, L"|");
 
-      wcscat_s (Buf, ItemBuf);
+      wcscat_s(Buf, ItemBuf);
       FirstOne = FALSE;
     }
   }
-  SetStringDUtf8 (ConvertedBuf, Buf);
-  if (SpellCheckerInstance->GetLibMode () == 1)
-  {
-    SpellCheckerInstance->SetHunspellMultipleLanguages (ConvertedBuf);
-    SpellCheckerInstance->HunspellReinitSettings (FALSE);
+  SetStringDUtf8(ConvertedBuf, Buf);
+  if (SpellCheckerInstance->GetLibMode() == 1) {
+    SpellCheckerInstance->SetHunspellMultipleLanguages(ConvertedBuf);
+    SpellCheckerInstance->HunspellReinitSettings(FALSE);
+  } else {
+    SpellCheckerInstance->SetAspellMultipleLanguages(ConvertedBuf);
+    SpellCheckerInstance->AspellReinitSettings();
   }
-  else
-  {
-    SpellCheckerInstance->SetAspellMultipleLanguages (ConvertedBuf);
-    SpellCheckerInstance->AspellReinitSettings ();
-  }
-  SpellCheckerInstance->RecheckVisible ();
-  CLEAN_AND_ZERO_ARR (ConvertedBuf);
-  CLEAN_AND_ZERO_ARR (ItemBuf);
+  SpellCheckerInstance->RecheckVisible();
+  CLEAN_AND_ZERO_ARR(ConvertedBuf);
+  CLEAN_AND_ZERO_ARR(ItemBuf);
 }
 
-INT_PTR LangList::run_dlgProc(UINT message, WPARAM wParam, LPARAM)
-{
-  switch (message)
-  {
-  case WM_INITDIALOG:
-    {
-      HLangList = ::GetDlgItem (_hSelf, IDC_LANGLIST);
-      SendEvent (EID_UPDATE_LANG_LISTS);
-      return TRUE;
-    }
-    break;
-  case WM_COMMAND:
-    {
-      switch (LOWORD (wParam))
-      {
-      case IDOK:
-        if (HIWORD (wParam) == BN_CLICKED)
-        {
-          SendEvent (EID_APPLY_MULTI_LANG_SETTINGS);
-          display (false);
-        }
-        break;
-      case IDCANCEL:
-        if (HIWORD (wParam) == BN_CLICKED)
-        {
-          SendEvent (EID_UPDATE_LANG_LISTS); // Reset all settings
-          display (false);
-        }
-        break;
+INT_PTR LangList::run_dlgProc(UINT message, WPARAM wParam, LPARAM) {
+  switch (message) {
+  case WM_INITDIALOG: {
+    HLangList = ::GetDlgItem(_hSelf, IDC_LANGLIST);
+    SendEvent(EID_UPDATE_LANG_LISTS);
+    return TRUE;
+  } break;
+  case WM_COMMAND: {
+    switch (LOWORD(wParam)) {
+    case IDOK:
+      if (HIWORD(wParam) == BN_CLICKED) {
+        SendEvent(EID_APPLY_MULTI_LANG_SETTINGS);
+        display(false);
       }
+      break;
+    case IDCANCEL:
+      if (HIWORD(wParam) == BN_CLICKED) {
+        SendEvent(EID_UPDATE_LANG_LISTS); // Reset all settings
+        display(false);
+      }
+      break;
     }
-    break;
+  } break;
   };
   return FALSE;
 }

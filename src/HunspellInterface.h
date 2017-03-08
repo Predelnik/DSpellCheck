@@ -1,4 +1,4 @@
-#/*
+/*
 This file is part of DSpellCheck Plug-in for Notepad++
 Copyright (C)2013 Sergey Semushin <Predelnik@gmail.com>
 
@@ -20,7 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "AbstractSpellerInterface.h"
 
-
 #include "iconv.h"
 #include "CommonFunctions.h"
 #include "MainDef.h"
@@ -28,10 +27,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class Hunspell;
 
 typedef std::unordered_set<char *, hash_compare_strings> WordSet;
-typedef std::set <char *, bool (*)(char *, char *)> SortedWordSet;
+typedef std::set<char *, bool (*)(char *, char *)> SortedWordSet;
 
-struct DicInfo
-{
+struct DicInfo {
   Hunspell *Speller;
   iconv_t Converter;
   iconv_t BackConverter;
@@ -41,60 +39,61 @@ struct DicInfo
   WordSet *LocalDic; // Stored in Dictionary encoding
 };
 
-struct AvailableLangInfo
-{
+struct AvailableLangInfo {
   wchar_t *Name;
   int Type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
 
-  bool operator < (const AvailableLangInfo &rhs ) const
-  {
-    return (wcscmp (Name, rhs.Name) < 0);
+  bool operator<(const AvailableLangInfo &rhs) const {
+    return (wcscmp(Name, rhs.Name) < 0);
   }
 };
 
-class HunspellInterface : public AbstractSpellerInterface
-{
+class HunspellInterface : public AbstractSpellerInterface {
 public:
-  HunspellInterface (HWND NppWindowArg);
-  ~HunspellInterface ();
-  __override virtual std::vector<wchar_t*> *GetLanguageList ();
-  __override virtual void SetLanguage (wchar_t *Lang);
-  __override virtual void SetMultipleLanguages (std::vector<wchar_t *> *List); // Languages are from LangList
-  __override virtual BOOL CheckWord (char *Word); // Word in Utf-8 or ANSI
-  __override virtual BOOL IsWorking ();
-  __override virtual std::vector<char *> *GetSuggestions (char *Word);
-  __override virtual void AddToDictionary (char *Word);
-  __override virtual void IgnoreAll (char *Word);
+  HunspellInterface(HWND NppWindowArg);
+  ~HunspellInterface();
+  __override virtual std::vector<wchar_t *> *GetLanguageList();
+  __override virtual void SetLanguage(wchar_t *Lang);
+  __override virtual void SetMultipleLanguages(
+      std::vector<wchar_t *> *List);             // Languages are from LangList
+  __override virtual BOOL CheckWord(char *Word); // Word in Utf-8 or ANSI
+  __override virtual BOOL IsWorking();
+  __override virtual std::vector<char *> *GetSuggestions(char *Word);
+  __override virtual void AddToDictionary(char *Word);
+  __override virtual void IgnoreAll(char *Word);
 
-  void SetDirectory (wchar_t *Dir);
-  void SetAdditionalDirectory (wchar_t *Dir);
-  void WriteUserDic (WordSet *Target, wchar_t *Path);
-  void ReadUserDic (WordSet *Target, wchar_t *Path);
-  void SetUseOneDic (BOOL Value);
-  void UpdateOnDicRemoval (wchar_t *Path, BOOL &NeedSingleLangReset, BOOL &NeedMultiLangReset);
-  BOOL GetLangOnlySystem (wchar_t *Lang);
+  void SetDirectory(wchar_t *Dir);
+  void SetAdditionalDirectory(wchar_t *Dir);
+  void WriteUserDic(WordSet *Target, wchar_t *Path);
+  void ReadUserDic(WordSet *Target, wchar_t *Path);
+  void SetUseOneDic(BOOL Value);
+  void UpdateOnDicRemoval(wchar_t *Path, BOOL &NeedSingleLangReset,
+                          BOOL &NeedMultiLangReset);
+  BOOL GetLangOnlySystem(wchar_t *Lang);
+
 private:
-  DicInfo CreateHunspell (wchar_t *Name, int Type);
-  BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);
-  void MessageBoxWordCannotBeAdded ();
+  DicInfo CreateHunspell(wchar_t *Name, int Type);
+  BOOL SpellerCheckWord(DicInfo Dic, char *Word, EncodingType Encoding);
+  void MessageBoxWordCannotBeAdded();
+
 public:
 private:
   BOOL IsHunspellWorking;
   BOOL UseOneDic;
   wchar_t *DicDir;
   wchar_t *SysDicDir;
-  std::set <AvailableLangInfo> *DicList;
-  std::map <wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)> *AllHunspells;
-  char *GetConvertedWord (const char *Source, iconv_t Converter);
+  std::set<AvailableLangInfo> *DicList;
+  std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)> *AllHunspells;
+  char *GetConvertedWord(const char *Source, iconv_t Converter);
   DicInfo SingularSpeller;
   DicInfo LastSelectedSpeller;
   DicInfo Empty;
-  std::vector <DicInfo> *Spellers;
+  std::vector<DicInfo> *Spellers;
   WordSet *Memorized;
   WordSet *Ignored;
   BOOL InitialReadingBeenDone;
   char *TemporaryBuffer;
-  wchar_t *UserDicPath; // For now only default one.
+  wchar_t *UserDicPath;        // For now only default one.
   wchar_t *SystemWrongDicPath; // Only for reading and then removing
   HWND NppWindow;
 };

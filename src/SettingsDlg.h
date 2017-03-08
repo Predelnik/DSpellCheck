@@ -25,34 +25,37 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <uxtheme.h>
 
-
 class HunspellInterface;
 class SpellChecker;
 struct LanguageName;
-typedef HTHEME (WINAPI * OTDProc) (HWND, LPCWSTR);
+typedef HTHEME(WINAPI *OTDProc)(HWND, LPCWSTR);
 
-class SimpleDlg : public StaticDialog
-{
+class SimpleDlg : public StaticDialog {
 public:
-  SimpleDlg ();
-  ~SimpleDlg ();
-  __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
-  void ApplySettings (SpellChecker *SpellCheckerInstance);
-  BOOL AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const wchar_t *CurrentLanguage, const wchar_t *MultiLanguages, HunspellInterface *HunspellSpeller);
-  void FillSugestionsNum (int SuggestionsNum);
-  void FillLibInfo (int Status, wchar_t *AspellPath, wchar_t *HunspellPath, wchar_t *HunspellAdditionalPath);
-  void DisableLanguageCombo (BOOL Disable);
-  void SetFileTypes (BOOL CheckThose, const wchar_t *FileTypes);
-  void SetSuggType (int SuggType);
-  void SetCheckComments (BOOL Value);
-  int GetSelectedLib ();
-  void SetLibMode (int LibMode);
-  void SetDecodeNames (BOOL Value);
-  void SetOneUserDic (BOOL Value);
-  void ApplyLibChange (SpellChecker *SpellCheckerInstance);
+  SimpleDlg();
+  ~SimpleDlg();
+  __override void init(HINSTANCE hInst, HWND Parent, NppData nppData);
+  void ApplySettings(SpellChecker *SpellCheckerInstance);
+  BOOL AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
+                             const wchar_t *CurrentLanguage,
+                             const wchar_t *MultiLanguages,
+                             HunspellInterface *HunspellSpeller);
+  void FillSugestionsNum(int SuggestionsNum);
+  void FillLibInfo(int Status, wchar_t *AspellPath, wchar_t *HunspellPath,
+                   wchar_t *HunspellAdditionalPath);
+  void DisableLanguageCombo(BOOL Disable);
+  void SetFileTypes(BOOL CheckThose, const wchar_t *FileTypes);
+  void SetSuggType(int SuggType);
+  void SetCheckComments(BOOL Value);
+  int GetSelectedLib();
+  void SetLibMode(int LibMode);
+  void SetDecodeNames(BOOL Value);
+  void SetOneUserDic(BOOL Value);
+  void ApplyLibChange(SpellChecker *SpellCheckerInstance);
 
 protected:
-  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam,
+                                         LPARAM lParam);
 
 private:
   /* NppData struct instance */
@@ -88,23 +91,25 @@ private:
   OTDProc _OpenThemeData;
 };
 
-class AdvancedDlg : public StaticDialog
-{
+class AdvancedDlg : public StaticDialog {
 public:
-  void ApplySettings (SpellChecker *SpellCheckerInstance);
-  void FillDelimiters (const char *Delimiters);
-  void SetDelimetersEdit (wchar_t *Delimiters);
-  void SetConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveSingleApostrophe);
-  void SetRecheckDelay (int Delay);
-  int GetRecheckDelay ();
-  void SetSuggBoxSettings (LRESULT Size, LRESULT Trans);
-  void SetUnderlineSettings (int Color, int Style);
-  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
-    BOOL Ignore_SA_Apostrophe_Arg, BOOL IgnoreOneLetter);
-  void SetBufferSize (int Size);
+  void ApplySettings(SpellChecker *SpellCheckerInstance);
+  void FillDelimiters(const char *Delimiters);
+  void SetDelimetersEdit(wchar_t *Delimiters);
+  void SetConversionOpts(BOOL ConvertYo, BOOL ConvertSingleQuotesArg,
+                         BOOL RemoveSingleApostrophe);
+  void SetRecheckDelay(int Delay);
+  int GetRecheckDelay();
+  void SetSuggBoxSettings(LRESULT Size, LRESULT Trans);
+  void SetUnderlineSettings(int Color, int Style);
+  void SetIgnore(BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg,
+                 BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
+                 BOOL Ignore_SA_Apostrophe_Arg, BOOL IgnoreOneLetter);
+  void SetBufferSize(int Size);
 
 protected:
-  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam,
+                                         LPARAM lParam);
 
 private:
   HWND HEditDelimiters = NULL;
@@ -131,17 +136,18 @@ private:
   COLORREF UnderlineColorBtn;
 };
 
-class SettingsDlg : public StaticDialog
-{
+class SettingsDlg : public StaticDialog {
 public:
-  UINT DoDialog (void);
-  void init (HINSTANCE hInst, HWND Parent, NppData nppData);
-  SimpleDlg *GetSimpleDlg ();
-  AdvancedDlg *GetAdvancedDlg ();
+  UINT DoDialog(void);
+  void init(HINSTANCE hInst, HWND Parent, NppData nppData);
+  SimpleDlg *GetSimpleDlg();
+  AdvancedDlg *GetAdvancedDlg();
+
 protected:
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
-  void destroy () override;
-  void ApplySettings ();
+  void destroy() override;
+  void ApplySettings();
+
 private:
   NppData NppDataInstance;
   SimpleDlg SimpleDlgInstance;

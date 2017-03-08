@@ -26,38 +26,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CommonFunctions.h"
 
-#define MOUSELEAVE      0x0001
-#define MOUSEHOVER      0x0002
+#define MOUSELEAVE 0x0001
+#define MOUSEHOVER 0x0002
 
-void Suggestions::DoDialog ()
-{
-  HWND Temp = GetFocus ();
-  create (IDD_SUGGESTIONS);
-  SetFocus (Temp);
+void Suggestions::DoDialog() {
+  HWND Temp = GetFocus();
+  create(IDD_SUGGESTIONS);
+  SetFocus(Temp);
 }
 
-BOOL RegMsg(HWND hWnd, DWORD dwMsgType)
-{
-  TRACKMOUSEEVENT tmeEventTrack;  // tracking information
+BOOL RegMsg(HWND hWnd, DWORD dwMsgType) {
+  TRACKMOUSEEVENT tmeEventTrack; // tracking information
 
   tmeEventTrack.cbSize = sizeof(TRACKMOUSEEVENT);
   tmeEventTrack.dwFlags = 0;
 
-  if(dwMsgType & MOUSELEAVE)
+  if (dwMsgType & MOUSELEAVE)
     tmeEventTrack.dwFlags |= TME_LEAVE;
-  if(dwMsgType & MOUSEHOVER)
+  if (dwMsgType & MOUSEHOVER)
     tmeEventTrack.dwFlags |= TME_HOVER;
 
   tmeEventTrack.hwndTrack = hWnd;
   tmeEventTrack.dwHoverTime = HOVER_DEFAULT;
   //      tmeEventTrack.dwHoverTime = 10;
 
-  if( !TrackMouseEvent(&tmeEventTrack) )
-  {
+  if (!TrackMouseEvent(&tmeEventTrack)) {
     wchar_t szError[64];
 
-    swprintf (szError, L"Can't TrackMouseEvent ! ErrorId: %d", GetLastError());
-    MessageBox(hWnd, szError, L"Error", MB_OK|MB_ICONSTOP);
+    swprintf(szError, L"Can't TrackMouseEvent ! ErrorId: %d", GetLastError());
+    MessageBox(hWnd, szError, L"Error", MB_OK | MB_ICONSTOP);
 
     return FALSE;
   }
@@ -65,31 +62,22 @@ BOOL RegMsg(HWND hWnd, DWORD dwMsgType)
   return TRUE;
 }
 
-HMENU Suggestions::GetPopupMenu ()
-{
-  return PopupMenu;
-}
+HMENU Suggestions::GetPopupMenu() { return PopupMenu; }
 
-int Suggestions::GetResult ()
-{
-  return MenuResult;
-}
+int Suggestions::GetResult() { return MenuResult; }
 
-Suggestions::Suggestions ()
-{
+Suggestions::Suggestions() {
   StatePressed = FALSE;
   StateHovered = FALSE;
   StateMenu = FALSE;
 }
 
-void Suggestions::init (HINSTANCE hInst, HWND Parent, NppData nppData)
-{
+void Suggestions::init(HINSTANCE hInst, HWND Parent, NppData nppData) {
   NppDataInstance = nppData;
-  return Window::init (hInst, Parent);
+  return Window::init(hInst, Parent);
 }
 
-INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
-{
+INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
   POINT p;
   HDC Dc;
   HBITMAP hBmp;
@@ -98,19 +86,18 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
   int idImg = 0;
   PAINTSTRUCT ps;
 
-  switch (Message)
-  {
+  switch (Message) {
   case WM_INITDIALOG:
 
-    display (false);
-    PopupMenu = CreatePopupMenu ();
+    display(false);
+    PopupMenu = CreatePopupMenu();
 
     return FALSE;
 
   case WM_MOUSEMOVE:
     StateHovered = TRUE;
     RegMsg(_hSelf, MOUSELEAVE);
-    RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
+    RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
     return FALSE;
 
   case WM_MOUSEHOVER:
@@ -118,22 +105,22 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
 
   case WM_LBUTTONDOWN:
     StatePressed = TRUE;
-    RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
+    RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
     return FALSE;
 
   case WM_LBUTTONUP:
     if (!StatePressed)
       return FALSE;
-    SendEvent (EID_SHOW_SUGGESTION_MENU);
+    SendEvent(EID_SHOW_SUGGESTION_MENU);
     return FALSE;
 
   case WM_MOUSEWHEEL:
-    ShowWindow (_hSelf, SW_HIDE);
-    PostMessage (GetScintillaWindow (&NppDataInstance), Message, wParam, lParam);
+    ShowWindow(_hSelf, SW_HIDE);
+    PostMessage(GetScintillaWindow(&NppDataInstance), Message, wParam, lParam);
     return FALSE;
 
   case WM_PAINT:
-    if (!isVisible ())
+    if (!isVisible())
       return FALSE;
 
     idImg = IDR_DOWNARROW;
@@ -147,45 +134,48 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
     hdcMemory = ::CreateCompatibleDC(Dc);
     hBmp = LoadBitmap(_hInst, MAKEINTRESOURCE(idImg));
     GetObject(hBmp, sizeof(Bmp), &Bmp);
-    hOldBitmap = (HBITMAP) SelectObject(hdcMemory, hBmp);
-    SetStretchBltMode (Dc, HALFTONE);
+    hOldBitmap = (HBITMAP)SelectObject(hdcMemory, hBmp);
+    SetStretchBltMode(Dc, HALFTONE);
     RECT R;
-    GetWindowRect (_hSelf, &R);
-    StretchBlt (Dc, 0, 0, R.right - R.left, R.bottom - R.top, hdcMemory, 0, 0, Bmp.bmWidth, Bmp.bmHeight, SRCCOPY);
-    SelectObject (hdcMemory, hOldBitmap);
+    GetWindowRect(_hSelf, &R);
+    StretchBlt(Dc, 0, 0, R.right - R.left, R.bottom - R.top, hdcMemory, 0, 0,
+               Bmp.bmWidth, Bmp.bmHeight, SRCCOPY);
+    SelectObject(hdcMemory, hOldBitmap);
     DeleteDC(hdcMemory);
     DeleteObject(hBmp);
     EndPaint(_hSelf, &ps);
     RECT Rect;
-    GetWindowRect (_hSelf, &Rect);
-    ValidateRect (_hSelf, &Rect);
+    GetWindowRect(_hSelf, &Rect);
+    ValidateRect(_hSelf, &Rect);
     return FALSE;
 
   case WM_SHOWANDRECREATEMENU:
     tagTPMPARAMS TPMParams;
-    TPMParams.cbSize = sizeof (tagTPMPARAMS);
-    GetWindowRect (_hSelf, &TPMParams.rcExclude);
-    p.x = 0; p.y = 0;
-    ClientToScreen (_hSelf, &p);
+    TPMParams.cbSize = sizeof(tagTPMPARAMS);
+    GetWindowRect(_hSelf, &TPMParams.rcExclude);
+    p.x = 0;
+    p.y = 0;
+    ClientToScreen(_hSelf, &p);
     StateMenu = TRUE;
-    MenuResult = TrackPopupMenuEx (PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x, p.y, _hSelf, &TPMParams);
-    SendEvent (EID_APPLYMENUACTION);
-    SetFocus (GetScintillaWindow (&NppDataInstance));
+    MenuResult = TrackPopupMenuEx(PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
+                                  p.x, p.y, _hSelf, &TPMParams);
+    SendEvent(EID_APPLYMENUACTION);
+    SetFocus(GetScintillaWindow(&NppDataInstance));
     StateMenu = FALSE;
-    DestroyMenu (PopupMenu);
-    PopupMenu = CreatePopupMenu ();
+    DestroyMenu(PopupMenu);
+    PopupMenu = CreatePopupMenu();
     return FALSE;
 
   case WM_COMMAND:
-    if (HIWORD (wParam) == 0)
-      PostMessageToMainThread (TM_MENU_RESULT, wParam, 0);
+    if (HIWORD(wParam) == 0)
+      PostMessageToMainThread(TM_MENU_RESULT, wParam, 0);
 
     return FALSE;
 
   case WM_MOUSELEAVE:
     StateHovered = FALSE;
     StatePressed = FALSE;
-    RedrawWindow (_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
+    RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
     return FALSE;
   }
   return FALSE;

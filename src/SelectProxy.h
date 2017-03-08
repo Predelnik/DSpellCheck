@@ -22,16 +22,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class SpellChecker;
 
-class SelectProxy : public StaticDialog
-{
+class SelectProxy : public StaticDialog {
 public:
-  void init (HINSTANCE hInst, HWND Parent);
-  void DoDialog ();
-  void ApplyChoice (SpellChecker *SpellCheckerInstance);
-  void SetOptions (BOOL UseProxy, wchar_t *HostName, wchar_t *UserName, wchar_t *Password, int Port, BOOL ProxyAnonymous, int ProxyType);
+  void init(HINSTANCE hInst, HWND Parent);
+  void DoDialog();
+  void ApplyChoice(SpellChecker *SpellCheckerInstance);
+  void SetOptions(BOOL UseProxy, wchar_t *HostName, wchar_t *UserName,
+                  wchar_t *Password, int Port, BOOL ProxyAnonymous,
+                  int ProxyType);
+
 protected:
-  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
-  void DisableControls ();
+  virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam,
+                              LPARAM lParam) override;
+  void DisableControls();
+
 protected:
   HWND HPort = nullptr;
   HWND HUserName = nullptr;

@@ -20,19 +20,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "StaticDialog\StaticDialog.h"
 
-class Progress : public StaticDialog
-{
+class Progress : public StaticDialog {
 public:
   Progress(void);
   ~Progress(void);
 
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
-  void init (HINSTANCE hInst, HWND Parent) override;
-  void DoDialog ();
-  void SetProgress (int value);
-  void SetBottomMessage (wchar_t *Message);
-  void SetTopMessage (wchar_t *Message);
-  void SetMarquee (bool animated);
+  void init(HINSTANCE hInst, HWND Parent) override;
+  void DoDialog();
+  void SetProgress(int value);
+  void SetBottomMessage(wchar_t *Message);
+  void SetTopMessage(wchar_t *Message);
+  void SetMarquee(bool animated);
+
 private:
   HWND HDescBottom;
   HWND HDescTop;

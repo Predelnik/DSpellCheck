@@ -33,163 +33,172 @@ class AspellInterface;
 class HunspellInterface;
 class SelectProxy;
 
-struct SuggestionsMenuItem
-{
+struct SuggestionsMenuItem {
   wchar_t *Text;
   BYTE Id;
   BOOL Separator;
-  SuggestionsMenuItem (wchar_t *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE);
-  ~SuggestionsMenuItem ()
-  {
-    CLEAN_AND_ZERO_ARR (Text);
-  };
+  SuggestionsMenuItem(wchar_t *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE);
+  ~SuggestionsMenuItem() { CLEAN_AND_ZERO_ARR(Text); };
 };
 
-void InsertSuggMenuItem (HMENU Menu, wchar_t *Text, BYTE Id, int InsertPos, BOOL Separator = FALSE);
+void InsertSuggMenuItem(HMENU Menu, wchar_t *Text, BYTE Id, int InsertPos,
+                        BOOL Separator = FALSE);
 
 HWND GetScintillaWindow(const NppData *NppDataArg);
-LRESULT SendMsgToActiveEditor(BOOL *ok, HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-BOOL SendMsgToBothEditors (const NppData *NppDataArg, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+LRESULT SendMsgToActiveEditor(BOOL *ok, HWND ScintillaWindow, UINT Msg,
+                              WPARAM wParam = 0, LPARAM lParam = 0);
+BOOL SendMsgToBothEditors(const NppData *NppDataArg, UINT Msg,
+                          WPARAM wParam = 0, LPARAM lParam = 0);
+LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0,
+                              LPARAM lParam = 0);
 
-class SpellChecker
-{
+class SpellChecker {
 public:
-  SpellChecker (const wchar_t *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
-    Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg);
-  ~SpellChecker ();
-  void RecheckVisibleBothViews ();
-  BOOL WINAPI NotifyEvent (DWORD Event);
-  BOOL WINAPI NotifyNetworkEvent (DWORD Event);
-  BOOL WINAPI NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam);
-  void RecheckVisible (BOOL NotIntersectionOnly = FALSE);
-  void RecheckModified ();
-  void ErrorMsgBox (const wchar_t * message);
+  SpellChecker(const wchar_t *IniFilePathArg,
+               SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
+               Suggestions *SuggestionsInstanceArg,
+               LangList *LangListInstanceArg);
+  ~SpellChecker();
+  void RecheckVisibleBothViews();
+  BOOL WINAPI NotifyEvent(DWORD Event);
+  BOOL WINAPI NotifyNetworkEvent(DWORD Event);
+  BOOL WINAPI NotifyMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
+  void RecheckVisible(BOOL NotIntersectionOnly = FALSE);
+  void RecheckModified();
+  void ErrorMsgBox(const wchar_t *message);
 
-  BOOL AspellReinitSettings ();
-  void SetHunspellLanguage (const wchar_t *Str);
-  void SetAspellLanguage (const wchar_t *Str);
-  void SetDelimiters (const char *Str);
-  void SetSuggestionsNum (int Num);
-  void SetAspellPath (const wchar_t *Path);
-  void SetMultipleLanguages (const wchar_t *MultiString, AbstractSpellerInterface *Speller);
-  void SetHunspellPath (const wchar_t *Path);
-  void SetHunspellAdditionalPath (const wchar_t *Path);
-  void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveBoundaryApostrophesArg);
-  void SetCheckThose (int CheckThoseArg);
-  void SetFileTypes (wchar_t *FileTypesArg);
-  void SetCheckComments (BOOL Value);
-  void SetHunspellMultipleLanguages (const char *MultiLanguagesArg);
-  void SetAspellMultipleLanguages (const char *MultiLanguagesArg);
-  void SetUnderlineColor (int Value);
-  void SetUnderlineStyle (int Value);
-  void SetProxyUserName (wchar_t *Str);
-  void SetProxyHostName (wchar_t *Str);
-  void SetProxyPassword (wchar_t *Str);
-  void SetProxyPort (int Value);
-  void SetUseProxy (BOOL Value);
-  void SetProxyAnonymous (BOOL Value);
-  void SetProxyType (int Value);
-  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
-    BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg);
-  void SetSuggBoxSettings (int Size, int Transparency, int SaveIni = 1);
-  void SetBufferSize (int Size);
-  void SetSuggType (int SuggType);
-  void SetLibMode (int i);
-  void SetDecodeNames (BOOL Value);
-  void SetOneUserDic (BOOL Value);
-  BOOL GetOneUserDic ();
-  void SetShowOnlyKnow (BOOL Value);
-  void SetInstallSystem (BOOL Value);
-  void FillDialogs (BOOL NoDisplayCall = FALSE);
-  void ReinitLanguageLists (BOOL UpdateDialogs);
-  wchar_t *GetHunspellPath () {return HunspellPath; };
-  wchar_t *GetHunspellAdditionalPath () {return AdditionalHunspellPath; };
-  wchar_t *GetLangByIndex (int i);
-  BOOL GetShowOnlyKnown ();
-  BOOL GetInstallSystem ();
-  BOOL GetDecodeNames ();
-  void DoPluginMenuInclusion (BOOL Invalidate = FALSE);
-  HunspellInterface *GetHunspellSpeller () {return HunspellSpeller; };
-  int GetLibMode ();
-  BOOL HunspellReinitSettings (BOOL ResetDirectory);
-  void SetRemoveUserDics (BOOL Value);
-  void SetRemoveSystem (BOOL Value);
-  BOOL GetRemoveUserDics ();
-  BOOL GetRemoveSystem ();
-  wchar_t *GetProxyUserName ();
-  wchar_t *GetProxyHostName ();
-  wchar_t *GetProxyPassword ();
-  int GetProxyPort ();
-  BOOL GetUseProxy ();
-  BOOL GetProxyAnonymous ();
-  int GetProxyType ();
+  BOOL AspellReinitSettings();
+  void SetHunspellLanguage(const wchar_t *Str);
+  void SetAspellLanguage(const wchar_t *Str);
+  void SetDelimiters(const char *Str);
+  void SetSuggestionsNum(int Num);
+  void SetAspellPath(const wchar_t *Path);
+  void SetMultipleLanguages(const wchar_t *MultiString,
+                            AbstractSpellerInterface *Speller);
+  void SetHunspellPath(const wchar_t *Path);
+  void SetHunspellAdditionalPath(const wchar_t *Path);
+  void SetConversionOptions(BOOL ConvertYo, BOOL ConvertSingleQuotesArg,
+                            BOOL RemoveBoundaryApostrophesArg);
+  void SetCheckThose(int CheckThoseArg);
+  void SetFileTypes(wchar_t *FileTypesArg);
+  void SetCheckComments(BOOL Value);
+  void SetHunspellMultipleLanguages(const char *MultiLanguagesArg);
+  void SetAspellMultipleLanguages(const char *MultiLanguagesArg);
+  void SetUnderlineColor(int Value);
+  void SetUnderlineStyle(int Value);
+  void SetProxyUserName(wchar_t *Str);
+  void SetProxyHostName(wchar_t *Str);
+  void SetProxyPassword(wchar_t *Str);
+  void SetProxyPort(int Value);
+  void SetUseProxy(BOOL Value);
+  void SetProxyAnonymous(BOOL Value);
+  void SetProxyType(int Value);
+  void SetIgnore(BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg,
+                 BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
+                 BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg);
+  void SetSuggBoxSettings(int Size, int Transparency, int SaveIni = 1);
+  void SetBufferSize(int Size);
+  void SetSuggType(int SuggType);
+  void SetLibMode(int i);
+  void SetDecodeNames(BOOL Value);
+  void SetOneUserDic(BOOL Value);
+  BOOL GetOneUserDic();
+  void SetShowOnlyKnow(BOOL Value);
+  void SetInstallSystem(BOOL Value);
+  void FillDialogs(BOOL NoDisplayCall = FALSE);
+  void ReinitLanguageLists(BOOL UpdateDialogs);
+  wchar_t *GetHunspellPath() { return HunspellPath; };
+  wchar_t *GetHunspellAdditionalPath() { return AdditionalHunspellPath; };
+  wchar_t *GetLangByIndex(int i);
+  BOOL GetShowOnlyKnown();
+  BOOL GetInstallSystem();
+  BOOL GetDecodeNames();
+  void DoPluginMenuInclusion(BOOL Invalidate = FALSE);
+  HunspellInterface *GetHunspellSpeller() { return HunspellSpeller; };
+  int GetLibMode();
+  BOOL HunspellReinitSettings(BOOL ResetDirectory);
+  void SetRemoveUserDics(BOOL Value);
+  void SetRemoveSystem(BOOL Value);
+  BOOL GetRemoveUserDics();
+  BOOL GetRemoveSystem();
+  wchar_t *GetProxyUserName();
+  wchar_t *GetProxyHostName();
+  wchar_t *GetProxyPassword();
+  int GetProxyPort();
+  BOOL GetUseProxy();
+  BOOL GetProxyAnonymous();
+  int GetProxyType();
   long PreviousA, PreviousB;
-  void SetSuggestionsBoxTransparency ();
+  void SetSuggestionsBoxTransparency();
 
 private:
-  enum CheckTextMode
-  {
+  enum CheckTextMode {
     UNDERLINE_ERRORS = 0,
     FIND_FIRST = 1,
     FIND_LAST = 2,
     GET_FIRST = 3, // Returns position of first (for recurring usage)
   };
 
-  HWND GetCurrentScintilla ();
-  void CreateWordUnderline (HWND ScintillaWindow, long start, long end);
-  void RemoveUnderline (HWND ScintillaWindow, long start, long end);
-  void ClearAllUnderlines ();
-  void FindNextMistake ();
-  void FindPrevMistake ();
-  void ClearVisibleUnderlines ();
-  void Cleanup ();
-  void CheckFileName ();
-  const char *GetDelimiters ();
-  void GetDefaultHunspellPath (wchar_t *&Path);
-  BOOL CheckWord (char *Word, long Start, long End);
+  HWND GetCurrentScintilla();
+  void CreateWordUnderline(HWND ScintillaWindow, long start, long end);
+  void RemoveUnderline(HWND ScintillaWindow, long start, long end);
+  void ClearAllUnderlines();
+  void FindNextMistake();
+  void FindPrevMistake();
+  void ClearVisibleUnderlines();
+  void Cleanup();
+  void CheckFileName();
+  const char *GetDelimiters();
+  void GetDefaultHunspellPath(wchar_t *&Path);
+  BOOL CheckWord(char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
   char *GetVisibleText(long *offset, BOOL NotIntersectionOnly = FALSE);
-  int CheckText (char *TextToCheck, long offset, CheckTextMode Mode);
-  void CheckVisible (BOOL NotIntersectionOnly = FALSE);
-  void setEncodingById (int EncId);
-  void SaveSettings ();
-  void LoadSettings ();
-  void UpdateAutocheckStatus (int SaveSetting = 1);
-  void SwitchAutoCheck ();
-  void FillSuggestionsMenu (HMENU Menu);
-  void ProcessMenuResult (WPARAM MenuId);
-  void InitSuggestionsBox ();
-  BOOL GetWordUnderCursorIsRight (long &Pos, long &Length, BOOL UseTextCursor = FALSE);
-  char *GetWordAt (long CharPos, char *Text, long Offset);
-  void SetDefaultDelimiters ();
-  void HideSuggestionBox ();
-  void GetLimitsAndRecheckModified ();
-  BOOL CheckTextNeeded ();
-  int CheckWordInCommentOrString (LRESULT Style);
-  LRESULT GetStyle (int Pos);
-  void RefreshUnderlineStyle ();
-  void WriteSetting (LPARAM lParam);
-  void ApplyConversions (char *Word);
-  void PrepareStringForConversion ();
-  void ResetDownloadCombobox ();
-  void PreserveCurrentAddressIndex ();
-  void FillDownloadDics ();
-  void ResetHotSpotCache ();
-  void CheckSpecialDelimeters (char *&Word, const char *TextStart, long &WordStart, long &WordEnd);
+  int CheckText(char *TextToCheck, long offset, CheckTextMode Mode);
+  void CheckVisible(BOOL NotIntersectionOnly = FALSE);
+  void setEncodingById(int EncId);
+  void SaveSettings();
+  void LoadSettings();
+  void UpdateAutocheckStatus(int SaveSetting = 1);
+  void SwitchAutoCheck();
+  void FillSuggestionsMenu(HMENU Menu);
+  void ProcessMenuResult(WPARAM MenuId);
+  void InitSuggestionsBox();
+  BOOL GetWordUnderCursorIsRight(long &Pos, long &Length,
+                                 BOOL UseTextCursor = FALSE);
+  char *GetWordAt(long CharPos, char *Text, long Offset);
+  void SetDefaultDelimiters();
+  void HideSuggestionBox();
+  void GetLimitsAndRecheckModified();
+  BOOL CheckTextNeeded();
+  int CheckWordInCommentOrString(LRESULT Style);
+  LRESULT GetStyle(int Pos);
+  void RefreshUnderlineStyle();
+  void WriteSetting(LPARAM lParam);
+  void ApplyConversions(char *Word);
+  void PrepareStringForConversion();
+  void ResetDownloadCombobox();
+  void PreserveCurrentAddressIndex();
+  void FillDownloadDics();
+  void ResetHotSpotCache();
+  void CheckSpecialDelimeters(char *&Word, const char *TextStart,
+                              long &WordStart, long &WordEnd);
 
-  void SaveToIni (const wchar_t *Name, const wchar_t *Value, const wchar_t * DefaultValue, BOOL InQuotes = 0);
-  void SaveToIni (const wchar_t *Name, int Value, int DefaultValue);
-  void SaveToIniUtf8 (const wchar_t *Name, const char *Value, const char * DefaultValue, BOOL InQuotes = 0);
+  void SaveToIni(const wchar_t *Name, const wchar_t *Value,
+                 const wchar_t *DefaultValue, BOOL InQuotes = 0);
+  void SaveToIni(const wchar_t *Name, int Value, int DefaultValue);
+  void SaveToIniUtf8(const wchar_t *Name, const char *Value,
+                     const char *DefaultValue, BOOL InQuotes = 0);
 
-  void LoadFromIni (wchar_t *&Value, const wchar_t *Name, const wchar_t *DefaultValue, BOOL InQuotes = 0);
-  void LoadFromIni (int &Value, const wchar_t *Name, int DefaultValue);
-  void LoadFromIniUtf8 (char *&Value, const wchar_t *Name, const char *DefaultValue, BOOL InQuotes = 0);
+  void LoadFromIni(wchar_t *&Value, const wchar_t *Name,
+                   const wchar_t *DefaultValue, BOOL InQuotes = 0);
+  void LoadFromIni(int &Value, const wchar_t *Name, int DefaultValue);
+  void LoadFromIniUtf8(char *&Value, const wchar_t *Name,
+                       const char *DefaultValue, BOOL InQuotes = 0);
   void CopyMisspellingsToClipboard();
-  int CheckTextDefaultAnswer (CheckTextMode Mode);
-private:
+  int CheckTextDefaultAnswer(CheckTextMode Mode);
 
-  std::vector <LanguageName> *CurrentLangs;
+private:
+  std::vector<LanguageName> *CurrentLangs;
   BOOL SettingsLoaded;
   BOOL OneUserDic;
   BOOL AutoCheckText;
@@ -203,12 +212,16 @@ private:
   int MultiLangMode;
   int SuggestionsNum;
   int SuggestionsMode;
-  char *DelimUtf8; // String without special characters but maybe with escape characters (like '\n' and stuff)
-  char *DelimUtf8Converted; // String where escape characters are properly converted to corresponding symbols
-  char *DelimConverted; // Same but in ANSI encoding
-  wchar_t *ServerNames[3]; // Only user ones, there'll also be bunch of predetermined ones
+  char *DelimUtf8; // String without special characters but maybe with escape
+                   // characters (like '\n' and stuff)
+  char *DelimUtf8Converted; // String where escape characters are properly
+                            // converted to corresponding symbols
+  char *DelimConverted;     // Same but in ANSI encoding
+  wchar_t *ServerNames[3];  // Only user ones, there'll also be bunch of
+                            // predetermined ones
   wchar_t *DefaultServers[3];
-  int LastUsedAddress; // equals USER_SERVER_CONST + num if user address is used, otherwise equals number of default server
+  int LastUsedAddress; // equals USER_SERVER_CONST + num if user address is
+                       // used, otherwise equals number of default server
   int AddressIsSet;
   wchar_t *FileTypes;
   wchar_t *AspellPath;
@@ -247,12 +260,13 @@ private:
   wchar_t *ProxyPassword;
 
   LRESULT Lexer;
-  std::vector <SuggestionsMenuItem *> *SuggestionMenuItems;
-  std::vector <char *> *LastSuggestions;
-  _locale_t  utf8_l;
+  std::vector<SuggestionsMenuItem *> *SuggestionMenuItems;
+  std::vector<char *> *LastSuggestions;
+  _locale_t utf8_l;
   long ModifiedStart;
   long ModifiedEnd;
-  long WUCPosition; // WUC = Word Under Cursor (Position in global doc coordinates),
+  long WUCPosition; // WUC = Word Under Cursor (Position in global doc
+                    // coordinates),
   std::size_t WUCLength;
   LRESULT CurrentPosition;
   NppData *NppDataInstance;

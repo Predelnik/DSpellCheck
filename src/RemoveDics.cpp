@@ -30,64 +30,55 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "resource.h"
 
-void RemoveDics::DoDialog ()
-{
-  if (!isCreated())
-  {
-    create (IDD_REMOVE_DICS);
+void RemoveDics::DoDialog() {
+  if (!isCreated()) {
+    create(IDD_REMOVE_DICS);
+  } else {
+    goToCenter();
+    display();
   }
-  else
-  {
-    goToCenter ();
-    display ();
-  }
-  SetFocus (HLangList);
+  SetFocus(HLangList);
 }
 
-void RemoveDics::init (HINSTANCE hInst, HWND Parent)
-{
-  return Window::init (hInst, Parent);
+void RemoveDics::init(HINSTANCE hInst, HWND Parent) {
+  return Window::init(hInst, Parent);
 }
 
-HWND RemoveDics::GetListBox ()
-{
-  return HLangList;
-}
+HWND RemoveDics::GetListBox() { return HLangList; }
 
-void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
-{
+void RemoveDics::RemoveSelected(SpellChecker *SpellCheckerInstance) {
   int Count = 0;
   BOOL Success = FALSE;
   BOOL NeedSingleReset = FALSE;
   BOOL NeedMultiReset = FALSE;
   BOOL SingleTemp, MultiTemp;
-  for (int i = 0; i < ListBox_GetCount (HLangList); i++)
-  {
-    if (CheckedListBox_GetCheckState (HLangList, i) == BST_CHECKED)
-    {
+  for (int i = 0; i < ListBox_GetCount(HLangList); i++) {
+    if (CheckedListBox_GetCheckState(HLangList, i) == BST_CHECKED) {
       wchar_t FileName[MAX_PATH];
-      for (int j = 0; j < 1 + SpellCheckerInstance->GetRemoveSystem () ? 1 : 0; j++)
-      {
+      for (int j = 0; j < 1 + SpellCheckerInstance->GetRemoveSystem() ? 1 : 0;
+           j++) {
         *FileName = L'\0';
-        wcscat (FileName, (j == 0) ? SpellCheckerInstance->GetHunspellPath () : SpellCheckerInstance->GetHunspellAdditionalPath ());
-        wcscat (FileName, L"\\");
-        wcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
-        wcscat (FileName, L".aff");
-        SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-        Success = DeleteFile (FileName);
-        wcsncpy (FileName + wcslen (FileName) - 4, L".dic", 4);
-        SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-        Success = Success && DeleteFile (FileName);
-        if (SpellCheckerInstance->GetRemoveUserDics ())
-        {
-          wcsncpy (FileName + wcslen (FileName) - 4, L".usr", 4);
-          SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
-          DeleteFile (FileName); // Success doesn't matter in that case, 'cause dictionary might not exist.
+        wcscat(FileName,
+               (j == 0) ? SpellCheckerInstance->GetHunspellPath()
+                        : SpellCheckerInstance->GetHunspellAdditionalPath());
+        wcscat(FileName, L"\\");
+        wcscat(FileName, SpellCheckerInstance->GetLangByIndex(i));
+        wcscat(FileName, L".aff");
+        SetFileAttributes(FileName, FILE_ATTRIBUTE_NORMAL);
+        Success = DeleteFile(FileName);
+        wcsncpy(FileName + wcslen(FileName) - 4, L".dic", 4);
+        SetFileAttributes(FileName, FILE_ATTRIBUTE_NORMAL);
+        Success = Success && DeleteFile(FileName);
+        if (SpellCheckerInstance->GetRemoveUserDics()) {
+          wcsncpy(FileName + wcslen(FileName) - 4, L".usr", 4);
+          SetFileAttributes(FileName, FILE_ATTRIBUTE_NORMAL);
+          DeleteFile(FileName); // Success doesn't matter in that case, 'cause
+                                // dictionary might not exist.
         }
-        if (Success)
-        {
-          FileName[wcslen (FileName) - 4] = L'\0';
-          SpellCheckerInstance->GetHunspellSpeller ()->UpdateOnDicRemoval (FileName, SingleTemp, MultiTemp);
+        if (Success) {
+          FileName[wcslen(FileName) - 4] = L'\0';
+          SpellCheckerInstance->GetHunspellSpeller()->UpdateOnDicRemoval(
+              FileName, SingleTemp, MultiTemp);
           NeedSingleReset |= SingleTemp;
           NeedMultiReset |= MultiTemp;
           Count++;
@@ -95,83 +86,76 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
       }
     }
   }
-  for (int i = 0; i < ListBox_GetCount (HLangList); i++)
-    CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
-  if (Count > 0)
-  {
-    SpellCheckerInstance->HunspellReinitSettings (TRUE);
-    SpellCheckerInstance->ReinitLanguageLists (TRUE);
-    SpellCheckerInstance->DoPluginMenuInclusion ();
-    SpellCheckerInstance->RecheckVisibleBothViews ();
+  for (int i = 0; i < ListBox_GetCount(HLangList); i++)
+    CheckedListBox_SetCheckState(HLangList, i, BST_UNCHECKED);
+  if (Count > 0) {
+    SpellCheckerInstance->HunspellReinitSettings(TRUE);
+    SpellCheckerInstance->ReinitLanguageLists(TRUE);
+    SpellCheckerInstance->DoPluginMenuInclusion();
+    SpellCheckerInstance->RecheckVisibleBothViews();
     /*
     if (NeedSingleReset)
     SpellCheckerInstance->
     */
     wchar_t Buf[DEFAULT_BUF_SIZE];
-    swprintf (Buf, L"%d dictionary(ies) has(ve) been successfully removed", Count);
-    MessageBoxInfo MsgBox (_hParent, Buf, L"Dictionaries were removed", MB_OK | MB_ICONINFORMATION);
-    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    swprintf(Buf, L"%d dictionary(ies) has(ve) been successfully removed",
+             Count);
+    MessageBoxInfo MsgBox(_hParent, Buf, L"Dictionaries were removed",
+                          MB_OK | MB_ICONINFORMATION);
+    SendMessage(_hParent,
+                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
+                (WPARAM)&MsgBox, 0);
   }
 }
 
-void RemoveDics::UpdateOptions (SpellChecker *SpellCheckerInstance)
-{
-  SpellCheckerInstance->SetRemoveUserDics (Button_GetCheck (HRemoveUserDics) == BST_CHECKED);
-  SpellCheckerInstance->SetRemoveSystem (Button_GetCheck (HRemoveSystem) == BST_CHECKED);
+void RemoveDics::UpdateOptions(SpellChecker *SpellCheckerInstance) {
+  SpellCheckerInstance->SetRemoveUserDics(Button_GetCheck(HRemoveUserDics) ==
+                                          BST_CHECKED);
+  SpellCheckerInstance->SetRemoveSystem(Button_GetCheck(HRemoveSystem) ==
+                                        BST_CHECKED);
 }
 
-void RemoveDics::SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem)
-{
-  Button_SetCheck (HRemoveUserDics, RemoveUserDics ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck (HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
+void RemoveDics::SetCheckBoxes(BOOL RemoveUserDics, BOOL RemoveSystem) {
+  Button_SetCheck(HRemoveUserDics,
+                  RemoveUserDics ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
-INT_PTR RemoveDics::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
-{
-  switch (message)
-  {
-  case WM_INITDIALOG:
-    {
-      HLangList = ::GetDlgItem (_hSelf, IDC_REMOVE_LANGLIST);
-      HRemoveUserDics = ::GetDlgItem (_hSelf, IDC_REMOVE_USER_DICS);
-      HRemoveSystem = ::GetDlgItem (_hSelf, IDC_REMOVE_SYSTEM);
-      SendEvent (EID_UPDATE_LANG_LISTS);
-      SendEvent (EID_UPDATE_REMOVE_DICS_OPTIONS);
-      return TRUE;
-    }
-    break;
-  case WM_COMMAND:
-    {
-      switch (LOWORD (wParam))
-      {
-      case IDC_REMOVE_USER_DICS:
-      case IDC_REMOVE_SYSTEM:
-        {
-          if (HIWORD (wParam) == BN_CLICKED)
-          {
-            SendEvent (EID_UPDATE_FROM_REMOVE_DICS_OPTIONS);
-          }
-        }
-        break;
-      case IDOK:
-        if (HIWORD (wParam) == BN_CLICKED)
-        {
-          SendEvent (EID_REMOVE_SELECTED_DICS);
-          display (false);
-        }
-        break;
-      case IDCANCEL:
-        if (HIWORD (wParam) == BN_CLICKED)
-        {
-          for (int i = 0; i < ListBox_GetCount (HLangList); i++)
-            CheckedListBox_SetCheckState (HLangList, i, BST_UNCHECKED);
-          display (false);
-        }
-
-        break;
+INT_PTR RemoveDics::run_dlgProc(UINT message, WPARAM wParam,
+                                LPARAM /*lParam*/) {
+  switch (message) {
+  case WM_INITDIALOG: {
+    HLangList = ::GetDlgItem(_hSelf, IDC_REMOVE_LANGLIST);
+    HRemoveUserDics = ::GetDlgItem(_hSelf, IDC_REMOVE_USER_DICS);
+    HRemoveSystem = ::GetDlgItem(_hSelf, IDC_REMOVE_SYSTEM);
+    SendEvent(EID_UPDATE_LANG_LISTS);
+    SendEvent(EID_UPDATE_REMOVE_DICS_OPTIONS);
+    return TRUE;
+  } break;
+  case WM_COMMAND: {
+    switch (LOWORD(wParam)) {
+    case IDC_REMOVE_USER_DICS:
+    case IDC_REMOVE_SYSTEM: {
+      if (HIWORD(wParam) == BN_CLICKED) {
+        SendEvent(EID_UPDATE_FROM_REMOVE_DICS_OPTIONS);
       }
+    } break;
+    case IDOK:
+      if (HIWORD(wParam) == BN_CLICKED) {
+        SendEvent(EID_REMOVE_SELECTED_DICS);
+        display(false);
+      }
+      break;
+    case IDCANCEL:
+      if (HIWORD(wParam) == BN_CLICKED) {
+        for (int i = 0; i < ListBox_GetCount(HLangList); i++)
+          CheckedListBox_SetCheckState(HLangList, i, BST_UNCHECKED);
+        display(false);
+      }
+
+      break;
     }
-    break;
+  } break;
   };
   return FALSE;
 }

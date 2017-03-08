@@ -50,8 +50,7 @@ const wchar_t configFileName[] = L"DSpellCheck.ini";
 FuncItem funcItem[nbFunc];
 BOOL ResourcesInited = FALSE;
 
-FuncItem *get_funcItem ()
-{
+FuncItem *get_funcItem() {
   // Well maybe we should lock mutex here
   return funcItem;
 }
@@ -61,7 +60,7 @@ FuncItem *get_funcItem ()
 //
 NppData nppData;
 wchar_t IniFilePath[MAX_PATH];
-DWORD CustomGUIMessageIds [CustomGUIMessage::MAX] = {0};
+DWORD CustomGUIMessageIds[CustomGUIMessage::MAX] = {0};
 bool doCloseTag = false;
 SpellChecker *SpellCheckerInstance = 0;
 SettingsDlg *SettingsDlgInstance = 0;
@@ -75,16 +74,16 @@ AboutDlg *AboutDlgInstance = 0;
 HANDLE hThread = NULL;
 HANDLE hNetworkThread = NULL;
 HMENU LangsMenu;
-DWORD  ThreadId = 0;
-DWORD  NetworkThreadId = 0;
+DWORD ThreadId = 0;
+DWORD NetworkThreadId = 0;
 int ContextMenuIdStart;
 int LangsMenuIdStart = FALSE;
 BOOL UseAllocatedIds;
 toolbarIcons *AutoCheckIcon = 0;
 BOOL AutoCheckState = FALSE;
 
-HANDLE hEvent[EID_MAX]  = {NULL};
-HANDLE hNetworkEvent[EID_NETWORK_MAX]  = {NULL};
+HANDLE hEvent[EID_MAX] = {NULL};
+HANDLE hNetworkEvent[EID_NETWORK_MAX] = {NULL};
 HANDLE hModule = NULL;
 HHOOK HMouseHook = NULL;
 // HHOOK HCmHook = NULL;
@@ -92,53 +91,29 @@ HHOOK HMouseHook = NULL;
 //
 // Initialize your plug-in data here
 // It will be called while plug-in loading
-LRESULT CALLBACK MouseProc (int nCode,
-                            WPARAM wParam,
-                            LPARAM lParam)
-{
-  switch (wParam)
-  {
+LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
+  switch (wParam) {
   case WM_MOUSEMOVE:
-    SendEvent (EID_INIT_SUGGESTIONS_BOX);
+    SendEvent(EID_INIT_SUGGESTIONS_BOX);
     break;
   }
-  return CallNextHookEx(HMouseHook, nCode, wParam, lParam);;
+  return CallNextHookEx(HMouseHook, nCode, wParam, lParam);
+  ;
 }
 
-void SetContextMenuIdStart (int Id)
-{
-  ContextMenuIdStart = Id;
-}
+void SetContextMenuIdStart(int Id) { ContextMenuIdStart = Id; }
 
-void SetLangsMenuIdStart (int Id)
-{
-  LangsMenuIdStart = Id;
-}
+void SetLangsMenuIdStart(int Id) { LangsMenuIdStart = Id; }
 
-void SetUseAllocatedIds (BOOL Value)
-{
-  UseAllocatedIds = Value;
-}
+void SetUseAllocatedIds(BOOL Value) { UseAllocatedIds = Value; }
 
-int GetContextMenuIdStart ()
-{
-  return ContextMenuIdStart;
-}
+int GetContextMenuIdStart() { return ContextMenuIdStart; }
 
-int GetLangsMenuIdStart ()
-{
-  return LangsMenuIdStart;
-}
+int GetLangsMenuIdStart() { return LangsMenuIdStart; }
 
-BOOL GetUseAllocatedIds ()
-{
-  return UseAllocatedIds;
-}
+BOOL GetUseAllocatedIds() { return UseAllocatedIds; }
 
-SpellChecker *GetSpellChecker ()
-{
-  return SpellCheckerInstance;
-}
+SpellChecker *GetSpellChecker() { return SpellCheckerInstance; }
 
 /*
 static BOOL ContextMenu = FALSE;
@@ -166,198 +141,160 @@ return CallNextHookEx(HCmHook, nCode, wParam, lParam);
 }
 */
 
-void GetDefaultHunspellPath_ (wchar_t *&Path)
-{
+void GetDefaultHunspellPath_(wchar_t *&Path) {
   Path = new wchar_t[MAX_PATH];
-  wcscpy (Path, IniFilePath);
-  wchar_t *Pointer = wcsrchr (Path, L'\\');
+  wcscpy(Path, IniFilePath);
+  wchar_t *Pointer = wcsrchr(Path, L'\\');
   *Pointer = 0;
-  wcscat (Path, L"\\Hunspell");
+  wcscat(Path, L"\\Hunspell");
 }
 
-void pluginInit(HANDLE hModuleArg)
-{
+void pluginInit(HANDLE hModuleArg) {
   hModule = hModuleArg;
   // Init it all dialog classes:
 }
 
-LangList *GetLangList ()
-{
-  return LangListInstance;
-}
+LangList *GetLangList() { return LangListInstance; }
 
-RemoveDics *GetRemoveDics ()
-{
-  return RemoveDicsInstance;
-}
+RemoveDics *GetRemoveDics() { return RemoveDicsInstance; }
 
-SelectProxy *GetSelectProxy ()
-{
-  return SelectProxyInstance;
-}
+SelectProxy *GetSelectProxy() { return SelectProxyInstance; }
 
-Progress *GetProgress ()
-{
-  return ProgressInstance;
-}
+Progress *GetProgress() { return ProgressInstance; }
 
-DownloadDicsDlg *GetDownloadDics ()
-{
-  return DownloadDicsDlgInstance;
-}
+DownloadDicsDlg *GetDownloadDics() { return DownloadDicsDlgInstance; }
 
-HANDLE getHModule ()
-{
-  return hModule;
-}
+HANDLE getHModule() { return hModule; }
 
-HANDLE *GethEvent ()
-{
-  return hEvent;
-}
+HANDLE *GethEvent() { return hEvent; }
 
-class MyStackWalker : public StackWalker
-{
+class MyStackWalker : public StackWalker {
 public:
   MyStackWalker() : StackWalker() {}
+
 protected:
-  virtual void OnOutput(LPCSTR szText)
-    {
-      FILE *fp = _wfopen (L"DSpellCheck_Debug.log", L"a");
-      fprintf (fp, szText);
-      fclose (fp);
-      StackWalker::OnOutput(szText);
-    }
+  virtual void OnOutput(LPCSTR szText) {
+    FILE *fp = _wfopen(L"DSpellCheck_Debug.log", L"a");
+    fprintf(fp, szText);
+    fclose(fp);
+    StackWalker::OnOutput(szText);
+  }
 };
 
-int filter(unsigned int, struct _EXCEPTION_POINTERS *ep)
-{
+int filter(unsigned int, struct _EXCEPTION_POINTERS *ep) {
   MyStackWalker sw;
   sw.ShowCallstack(GetCurrentThread(), ep->ContextRecord);
   return EXCEPTION_CONTINUE_SEARCH;
 }
 
-bool isCurrentlyTerminating ()
-{
-  if (WaitForEvent (EID_KILLTHREAD, 0) == WAIT_OBJECT_0)
-    {
-      SendEvent (EID_KILLTHREAD);
-      return true;
-    }
+bool isCurrentlyTerminating() {
+  if (WaitForEvent(EID_KILLTHREAD, 0) == WAIT_OBJECT_0) {
+    SendEvent(EID_KILLTHREAD);
+    return true;
+  }
 
   return false;
 }
 
-DWORD WINAPI ThreadMain (LPVOID lpParam)
-{
-  DWORD dwWaitResult    = EID_MAX;
-  SpellChecker *spellchecker = (SpellChecker*)lpParam;
+DWORD WINAPI ThreadMain(LPVOID lpParam) {
+  DWORD dwWaitResult = EID_MAX;
+  SpellChecker *spellchecker = (SpellChecker *)lpParam;
 
   BOOL bRun = spellchecker->NotifyEvent(EID_MAX);
 
   MSG Msg;
 
   // Creating thread message queue
-  PeekMessage (&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
-  #ifdef _DEBUG
-    __try
-    {
+  PeekMessage(&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+#ifdef _DEBUG
+  __try {
 #endif
 
-  while (bRun)
-  {
-    dwWaitResult = MsgWaitForMultipleObjectsEx (EID_MAX, hEvent, INFINITE, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
-    if (dwWaitResult == (unsigned int) - 1)
-    {
-      spellchecker->ErrorMsgBox (L"Thread has died");
-      break;
-    }
-
-    if (dwWaitResult == EID_MAX)
-    {
-      while (PeekMessage (&Msg, 0, 0, 0, PM_REMOVE) && bRun)
-      {
-        bRun = spellchecker->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
+    while (bRun) {
+      dwWaitResult = MsgWaitForMultipleObjectsEx(
+          EID_MAX, hEvent, INFINITE, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+      if (dwWaitResult == (unsigned int)-1) {
+        spellchecker->ErrorMsgBox(L"Thread has died");
+        break;
       }
-    }
-    else
-      bRun = spellchecker->NotifyEvent(dwWaitResult);
-  }
 
-  #ifdef _DEBUG
+      if (dwWaitResult == EID_MAX) {
+        while (PeekMessage(&Msg, 0, 0, 0, PM_REMOVE) && bRun) {
+          bRun =
+              spellchecker->NotifyMessage(Msg.message, Msg.wParam, Msg.lParam);
+        }
+      } else
+        bRun = spellchecker->NotifyEvent(dwWaitResult);
     }
-  __except (filter(GetExceptionCode(), GetExceptionInformation()))
-    {
-    }
+
+#ifdef _DEBUG
+  } __except (filter(GetExceptionCode(), GetExceptionInformation())) {
+  }
 #endif
 
   return 0;
 }
 
-DWORD WINAPI ThreadNetwork (LPVOID lpParam)
-{
-  DWORD dwWaitResult    = EID_MAX;
-  SpellChecker *spellChecker = (SpellChecker*)lpParam;
+DWORD WINAPI ThreadNetwork(LPVOID lpParam) {
+  DWORD dwWaitResult = EID_MAX;
+  SpellChecker *spellChecker = (SpellChecker *)lpParam;
 
-  BOOL bRun = spellChecker->NotifyNetworkEvent (EID_NETWORK_MAX);
+  BOOL bRun = spellChecker->NotifyNetworkEvent(EID_NETWORK_MAX);
 
   MSG Msg;
 
   // Creating thread message queue
-  PeekMessage (&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+  PeekMessage(&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 
-  while (bRun)
-  {
-    dwWaitResult = MsgWaitForMultipleObjectsEx (EID_NETWORK_MAX, hNetworkEvent, INFINITE, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
-    if (dwWaitResult == (unsigned int) - 1)
-    {
-      spellChecker->ErrorMsgBox (L"Thread has died");
+  while (bRun) {
+    dwWaitResult =
+        MsgWaitForMultipleObjectsEx(EID_NETWORK_MAX, hNetworkEvent, INFINITE,
+                                    QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+    if (dwWaitResult == (unsigned int)-1) {
+      spellChecker->ErrorMsgBox(L"Thread has died");
       break;
     }
 
-    if (dwWaitResult == EID_NETWORK_MAX)
-    {
-      while (PeekMessage (&Msg, 0, 0, 0, PM_REMOVE) && bRun)
-      {
-        bRun = spellChecker->NotifyMessage (Msg.message, Msg.wParam, Msg.lParam);
+    if (dwWaitResult == EID_NETWORK_MAX) {
+      while (PeekMessage(&Msg, 0, 0, 0, PM_REMOVE) && bRun) {
+        bRun = spellChecker->NotifyMessage(Msg.message, Msg.wParam, Msg.lParam);
       }
-    }
-    else
+    } else
       bRun = spellChecker->NotifyNetworkEvent(dwWaitResult);
   }
 
   return 0;
 }
 
-void CreateThreadResources ()
-{
+void CreateThreadResources() {
   /* create events */
   for (int i = 0; i < EID_MAX; i++)
-    hEvent[i] = ::CreateEvent (NULL, FALSE, FALSE, NULL);
+    hEvent[i] = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 
   for (int i = 0; i < EID_NETWORK_MAX; i++)
-    hNetworkEvent[i] = ::CreateEvent (NULL, FALSE, FALSE, NULL);
+    hNetworkEvent[i] = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 
   /* create thread */
-  hThread = CreateThread (NULL, 0, ThreadMain, SpellCheckerInstance, 0, &ThreadId);
-  SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
+  hThread =
+      CreateThread(NULL, 0, ThreadMain, SpellCheckerInstance, 0, &ThreadId);
+  SetThreadPriority(hThread, THREAD_PRIORITY_BELOW_NORMAL);
 
-  hNetworkThread = CreateThread (NULL, 0, ThreadNetwork, SpellCheckerInstance, 0, &NetworkThreadId);
-  SetThreadPriority (hThread, THREAD_PRIORITY_BELOW_NORMAL);
+  hNetworkThread = CreateThread(NULL, 0, ThreadNetwork, SpellCheckerInstance, 0,
+                                &NetworkThreadId);
+  SetThreadPriority(hThread, THREAD_PRIORITY_BELOW_NORMAL);
 
   ResourcesInited = TRUE;
 }
 
-void CreateHooks ()
-{
-  HMouseHook = SetWindowsHookEx (WH_MOUSE, MouseProc, 0, GetCurrentThreadId ());
-  // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0, GetCurrentThreadId());
+void CreateHooks() {
+  HMouseHook = SetWindowsHookEx(WH_MOUSE, MouseProc, 0, GetCurrentThreadId());
+  // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0,
+  // GetCurrentThreadId());
 }
 
-void KillThreadResources ()
-{
-  CloseHandle (hThread);
-  CloseHandle (hNetworkThread);
+void KillThreadResources() {
+  CloseHandle(hThread);
+  CloseHandle(hNetworkThread);
   /* kill events */
   for (int i = 0; i < EID_MAX; i++)
     CloseHandle(hEvent[i]);
@@ -366,183 +303,156 @@ void KillThreadResources ()
     CloseHandle(hNetworkEvent[i]);
 }
 
-void pluginCleanUp ()
-{
+void pluginCleanUp() {
   UnhookWindowsHookEx(HMouseHook);
-  KillThreadResources ();
+  KillThreadResources();
 
-  CLEAN_AND_ZERO (SpellCheckerInstance);
-  CLEAN_AND_ZERO (SettingsDlgInstance);
-  CLEAN_AND_ZERO (AboutDlgInstance);
-  CLEAN_AND_ZERO (SuggestionsInstance);
-  CLEAN_AND_ZERO (LangListInstance);
-  CLEAN_AND_ZERO (SelectProxyInstance);
-  CLEAN_AND_ZERO (RemoveDicsInstance);
-  CLEAN_AND_ZERO (DownloadDicsDlgInstance);
-  CLEAN_AND_ZERO (ProgressInstance);
+  CLEAN_AND_ZERO(SpellCheckerInstance);
+  CLEAN_AND_ZERO(SettingsDlgInstance);
+  CLEAN_AND_ZERO(AboutDlgInstance);
+  CLEAN_AND_ZERO(SuggestionsInstance);
+  CLEAN_AND_ZERO(LangListInstance);
+  CLEAN_AND_ZERO(SelectProxyInstance);
+  CLEAN_AND_ZERO(RemoveDicsInstance);
+  CLEAN_AND_ZERO(DownloadDicsDlgInstance);
+  CLEAN_AND_ZERO(ProgressInstance);
 }
 
-void SendEvent (EventId Event)
-{
+void SendEvent(EventId Event) {
   if (ResourcesInited)
     SetEvent(hEvent[Event]);
 }
 
-void SendNetworkEvent (NetworkEventId Event)
-{
+void SendNetworkEvent(NetworkEventId Event) {
   if (ResourcesInited)
     SetEvent(hNetworkEvent[Event]);
 }
 
-void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam)
-{
-  if (ResourcesInited && ThreadId != 0)
-  {
-    PostThreadMessage (ThreadId, Msg, WParam, LParam);
+void PostMessageToMainThread(UINT Msg, WPARAM WParam, LPARAM LParam) {
+  if (ResourcesInited && ThreadId != 0) {
+    PostThreadMessage(ThreadId, Msg, WParam, LParam);
   }
 }
 
-DWORD WaitForEvent (EventId Event, DWORD WaitTime)
-{
+DWORD WaitForEvent(EventId Event, DWORD WaitTime) {
   if (ResourcesInited)
-    return WaitForSingleObject (hEvent[Event], WaitTime);
+    return WaitForSingleObject(hEvent[Event], WaitTime);
   else
     return WAIT_FAILED;
 }
 
-DWORD WaitForNetworkEvent (NetworkEventId Event, DWORD WaitTime)
-{
+DWORD WaitForNetworkEvent(NetworkEventId Event, DWORD WaitTime) {
   if (ResourcesInited)
-    return WaitForSingleObject (hNetworkEvent[Event], WaitTime);
+    return WaitForSingleObject(hNetworkEvent[Event], WaitTime);
   else
     return WAIT_FAILED;
 }
 
-DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime)
-{
+DWORD WaitForMultipleEvents(EventId EventFirst, EventId EventLast,
+                            DWORD WaitTime) {
   if (ResourcesInited)
-    return WaitForMultipleObjects (EventLast - EventFirst + 1, hEvent + EventFirst, FALSE, WaitTime);
+    return WaitForMultipleObjects(EventLast - EventFirst + 1,
+                                  hEvent + EventFirst, FALSE, WaitTime);
   else
     return WAIT_FAILED;
 }
 
-void RegisterCustomMessages ()
-{
-  for (int i = 0; i < static_cast<int> (CustomGUIMessage::MAX); i++)
-  {
-    CustomGUIMessageIds[i] = RegisterWindowMessage (CustomGUIMesssagesNames[i]);
+void RegisterCustomMessages() {
+  for (int i = 0; i < static_cast<int>(CustomGUIMessage::MAX); i++) {
+    CustomGUIMessageIds[i] = RegisterWindowMessage(CustomGUIMesssagesNames[i]);
   }
 }
 
-DWORD GetCustomGUIMessageId (CustomGUIMessage MessageId)
-{
-  return CustomGUIMessageIds[static_cast<int> (MessageId)];
+DWORD GetCustomGUIMessageId(CustomGUIMessage MessageId) {
+  return CustomGUIMessageIds[static_cast<int>(MessageId)];
 }
 
-void SwitchAutoCheckText ()
-{
-  SendEvent (EID_SWITCH_AUTOCHECK);
+void SwitchAutoCheckText() { SendEvent(EID_SWITCH_AUTOCHECK); }
+
+void GetSuggestions() {
+  // SendEvent (EID_INITSUGGESTIONS);
 }
 
-void GetSuggestions ()
-{
-  //SendEvent (EID_INITSUGGESTIONS);
+void StartSettings() { SettingsDlgInstance->DoDialog(); }
+
+void StartManual() {
+  ShellExecute(NULL, L"open",
+               L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", NULL,
+               NULL, SW_SHOW);
 }
 
-void StartSettings ()
-{
-  SettingsDlgInstance->DoDialog ();
-}
+void StartAboutDlg() { AboutDlgInstance->DoDialog(); }
 
-void StartManual ()
-{
-  ShellExecute (NULL, L"open", L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", NULL, NULL, SW_SHOW);
-}
+void StartLanguageList() { LangListInstance->DoDialog(); }
 
-void StartAboutDlg ()
-{
-  AboutDlgInstance->DoDialog ();
-}
+void LoadSettings() { SendEvent(EID_LOAD_SETTINGS); }
 
-void StartLanguageList ()
-{
-  LangListInstance->DoDialog ();
-}
+void RecheckVisible() { SendEvent(EID_RECHECK_VISIBLE); }
 
-void LoadSettings ()
-{
-  SendEvent (EID_LOAD_SETTINGS);
-}
+void FindNextMistake() { SendEvent(EID_FIND_NEXT_MISTAKE); }
 
-void RecheckVisible ()
-{
-  SendEvent (EID_RECHECK_VISIBLE);
-}
+void FindPrevMistake() { SendEvent(EID_FIND_PREV_MISTAKE); }
 
-void FindNextMistake ()
-{
-  SendEvent (EID_FIND_NEXT_MISTAKE);
-}
-
-void FindPrevMistake ()
-{
-  SendEvent (EID_FIND_PREV_MISTAKE);
-}
-
-void QuickLangChangeContext ()
-{
+void QuickLangChangeContext() {
   POINT Pos;
-  GetCursorPos (&Pos);
-  TrackPopupMenu (GetLangsSubMenu (), 0, Pos.x, Pos.y, 0, nppData._nppHandle, 0);
+  GetCursorPos(&Pos);
+  TrackPopupMenu(GetLangsSubMenu(), 0, Pos.x, Pos.y, 0, nppData._nppHandle, 0);
 }
 
 //
 // Initialization of your plug-in commands
 // You should fill your plug-ins commands here
-void commandMenuInit()
-{
+void commandMenuInit() {
   //
   // Firstly we get the parameters from your plugin config file (if any)
   //
 
   // get path of plugin configuration
-  ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, (LPARAM) IniFilePath);
+  ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH,
+                (LPARAM)IniFilePath);
 
   // if config path doesn't exist, we create it
-  if (PathFileExists(IniFilePath) == FALSE)
-  {
+  if (PathFileExists(IniFilePath) == FALSE) {
     ::CreateDirectory(IniFilePath, NULL);
   }
 
   // make your plugin config file full file path name
-  PathAppend (IniFilePath, configFileName);
+  PathAppend(IniFilePath, configFileName);
 
   wchar_t Buf[DEFAULT_BUF_SIZE];
   wchar_t *EndPtr;
   int x;
-  GetPrivateProfileString (L"SpellCheck", L"Recheck_Delay", L"500", Buf, DEFAULT_BUF_SIZE, IniFilePath);
-  x = wcstol (Buf, &EndPtr, 10);
+  GetPrivateProfileString(L"SpellCheck", L"Recheck_Delay", L"500", Buf,
+                          DEFAULT_BUF_SIZE, IniFilePath);
+  x = wcstol(Buf, &EndPtr, 10);
   if (*EndPtr)
-    SetRecheckDelay (500, 0);
+    SetRecheckDelay(500, 0);
   else
-    SetRecheckDelay (x, 0);
+    SetRecheckDelay(x, 0);
 
   //--------------------------------------------//
   //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
   //--------------------------------------------//
   // with function :
-  // setCommand(int index,                      // zero based number to indicate the order of command
-  //            wchar_t *commandName,             // the command name that you want to see in plugin menu
-  //            PFUNCPLUGINCMD functionPointer, // the symbol of function (function pointer) associated with this command. The body should be defined below. See Step 4.
-  //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
-  //            bool check0nInit                // optional. Make this menu item be checked visually
+  // setCommand(int index,                      // zero based number to indicate
+  // the order of command
+  //            wchar_t *commandName,             // the command name that you
+  //            want to see in plugin menu
+  //            PFUNCPLUGINCMD functionPointer, // the symbol of function
+  //            (function pointer) associated with this command. The body should
+  //            be defined below. See Step 4.
+  //            ShortcutKey *shortcut,          // optional. Define a shortcut
+  //            to trigger this command
+  //            bool check0nInit                // optional. Make this menu item
+  //            be checked visually
   //            );
   ShortcutKey *shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'a' - 'a';
-  setNextCommand(TEXT("Spell Check Document Automatically"), SwitchAutoCheckText, shKey, false);
+  setNextCommand(TEXT("Spell Check Document Automatically"),
+                 SwitchAutoCheckText, shKey, false);
   shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
@@ -554,14 +464,16 @@ void commandMenuInit()
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'b' - 'a';
-  setNextCommand(TEXT("Find Previous Misspelling"), FindPrevMistake, shKey, false);
+  setNextCommand(TEXT("Find Previous Misspelling"), FindPrevMistake, shKey,
+                 false);
 
   shKey = new ShortcutKey;
   shKey->_isAlt = true;
   shKey->_isCtrl = false;
   shKey->_isShift = false;
   shKey->_key = 0x41 + 'd' - 'a';
-  setNextCommand(TEXT("Change Current Language"), QuickLangChangeContext, shKey, false);
+  setNextCommand(TEXT("Change Current Language"), QuickLangChangeContext, shKey,
+                 false);
   setNextCommand(TEXT("---"), NULL, NULL, false);
 
   setNextCommand(TEXT("Settings..."), StartSettings, NULL, false);
@@ -569,56 +481,52 @@ void commandMenuInit()
   setNextCommand(TEXT("About"), StartAboutDlg, NULL, false);
 }
 
-void AddIcons ()
-{
+void AddIcons() {
   AutoCheckIcon = new toolbarIcons;
-  AutoCheckIcon->hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)hModule, MAKEINTRESOURCE(IDB_AUTOCHECK2), IMAGE_BITMAP, 16, 16, LR_LOADMAP3DCOLORS);
-  ::SendMessage(nppData._nppHandle, NPPM_ADDTOOLBARICON, (WPARAM)funcItem[0]._cmdID, (LPARAM) AutoCheckIcon);
+  AutoCheckIcon->hToolbarBmp =
+      (HBITMAP)::LoadImage((HINSTANCE)hModule, MAKEINTRESOURCE(IDB_AUTOCHECK2),
+                           IMAGE_BITMAP, 16, 16, LR_LOADMAP3DCOLORS);
+  ::SendMessage(nppData._nppHandle, NPPM_ADDTOOLBARICON,
+                (WPARAM)funcItem[0]._cmdID, (LPARAM)AutoCheckIcon);
 }
 
-void UpdateLangsMenu ()
-{
-  SendEvent (EID_UPDATE_LANGS_MENU);
-}
+void UpdateLangsMenu() { SendEvent(EID_UPDATE_LANGS_MENU); }
 
-HMENU GetDSpellCheckMenu ()
-{
+HMENU GetDSpellCheckMenu() {
   BOOL ok;
-  HMENU PluginsMenu = (HMENU) SendMsgToNpp (&ok, &nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
+  HMENU PluginsMenu =
+      (HMENU)SendMsgToNpp(&ok, &nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
   if (!ok)
     return 0;
   HMENU DSpellCheckMenu = 0;
-  int Count = GetMenuItemCount (PluginsMenu);
+  int Count = GetMenuItemCount(PluginsMenu);
   int StrLen = 0;
   wchar_t *Buf = 0;
-  for (int i = 0; i < Count; i++)
-  {
-    StrLen = GetMenuString (PluginsMenu, i, 0, 0, MF_BYPOSITION);
+  for (int i = 0; i < Count; i++) {
+    StrLen = GetMenuString(PluginsMenu, i, 0, 0, MF_BYPOSITION);
     Buf = new wchar_t[StrLen + 1];
-    GetMenuString (PluginsMenu, i, Buf, StrLen + 1, MF_BYPOSITION);
-    if (wcscmp (Buf, NPP_PLUGIN_NAME) == 0)
-    {
+    GetMenuString(PluginsMenu, i, Buf, StrLen + 1, MF_BYPOSITION);
+    if (wcscmp(Buf, NPP_PLUGIN_NAME) == 0) {
       MENUITEMINFO Mif;
       Mif.fMask = MIIM_SUBMENU;
-      Mif.cbSize = sizeof (MENUITEMINFO);
-      BOOL Res = GetMenuItemInfo (PluginsMenu, i, TRUE, &Mif);
+      Mif.cbSize = sizeof(MENUITEMINFO);
+      BOOL Res = GetMenuItemInfo(PluginsMenu, i, TRUE, &Mif);
 
       if (Res)
-        DSpellCheckMenu = (HMENU) Mif.hSubMenu;
+        DSpellCheckMenu = (HMENU)Mif.hSubMenu;
 
-      CLEAN_AND_ZERO_ARR (Buf);
+      CLEAN_AND_ZERO_ARR(Buf);
       break;
     }
-    CLEAN_AND_ZERO_ARR (Buf);
+    CLEAN_AND_ZERO_ARR(Buf);
   }
   return DSpellCheckMenu;
 }
 
-HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg)
-{
+HMENU GetLangsSubMenu(HMENU DSpellCheckMenuArg) {
   HMENU DSpellCheckMenu;
   if (!DSpellCheckMenuArg)
-    DSpellCheckMenu = GetDSpellCheckMenu ();
+    DSpellCheckMenu = GetDSpellCheckMenu();
   else
     DSpellCheckMenu = DSpellCheckMenuArg;
   if (!DSpellCheckMenu)
@@ -627,62 +535,64 @@ HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg)
   MENUITEMINFO Mif;
 
   Mif.fMask = MIIM_SUBMENU;
-  Mif.cbSize = sizeof (MENUITEMINFO);
+  Mif.cbSize = sizeof(MENUITEMINFO);
 
-  BOOL Res = GetMenuItemInfo (DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, TRUE, &Mif);
+  BOOL Res =
+      GetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, TRUE, &Mif);
   if (!Res)
     return NULL;
 
   return Mif.hSubMenu; // TODO: CHECK IS THIS CORRECT FIX
 }
 
-void InitClasses ()
-{
+void InitClasses() {
   INITCOMMONCONTROLSEX icc;
 
   icc.dwSize = sizeof(icc);
   icc.dwICC = ICC_WIN95_CLASSES;
   InitCommonControlsEx(&icc);
 
-  InitCheckedListBox ((HINSTANCE) hModule);
+  InitCheckedListBox((HINSTANCE)hModule);
 
   SuggestionsInstance = new Suggestions;
-  SuggestionsInstance->init ((HINSTANCE) hModule, nppData._nppHandle, nppData);
-  SuggestionsInstance->DoDialog ();
+  SuggestionsInstance->init((HINSTANCE)hModule, nppData._nppHandle, nppData);
+  SuggestionsInstance->DoDialog();
 
   SettingsDlgInstance = new SettingsDlg;
-  SettingsDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle, nppData);
+  SettingsDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle, nppData);
 
   AboutDlgInstance = new AboutDlg;
-  AboutDlgInstance->init((HINSTANCE) hModule, nppData._nppHandle);
+  AboutDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
   ProgressInstance = new Progress;
-  ProgressInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
+  ProgressInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
   LangListInstance = new LangList;
-  LangListInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
+  LangListInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
   SelectProxyInstance = new SelectProxy;
-  SelectProxyInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
+  SelectProxyInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
   RemoveDicsInstance = new RemoveDics;
-  RemoveDicsInstance->init ((HINSTANCE) hModule, nppData._nppHandle);
+  RemoveDicsInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
-  SpellCheckerInstance = new SpellChecker (IniFilePath, SettingsDlgInstance, &nppData, SuggestionsInstance, LangListInstance);
+  SpellCheckerInstance =
+      new SpellChecker(IniFilePath, SettingsDlgInstance, &nppData,
+                       SuggestionsInstance, LangListInstance);
 
   DownloadDicsDlgInstance = new DownloadDicsDlg;
-  DownloadDicsDlgInstance->init ((HINSTANCE) hModule, nppData._nppHandle, SpellCheckerInstance);
+  DownloadDicsDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle,
+                                SpellCheckerInstance);
 }
 
-void commandMenuCleanUp()
-{
-  CLEAN_AND_ZERO (funcItem[0]._pShKey);
-  CLEAN_AND_ZERO (funcItem[1]._pShKey);
-  CLEAN_AND_ZERO (funcItem[2]._pShKey);
-  CLEAN_AND_ZERO (funcItem[3]._pShKey);
+void commandMenuCleanUp() {
+  CLEAN_AND_ZERO(funcItem[0]._pShKey);
+  CLEAN_AND_ZERO(funcItem[1]._pShKey);
+  CLEAN_AND_ZERO(funcItem[2]._pShKey);
+  CLEAN_AND_ZERO(funcItem[3]._pShKey);
   if (AutoCheckIcon)
-    DeleteObject (AutoCheckIcon->hToolbarBmp);
-  CLEAN_AND_ZERO (AutoCheckIcon);
+    DeleteObject(AutoCheckIcon->hToolbarBmp);
+  CLEAN_AND_ZERO(AutoCheckIcon);
   // We should deallocate shortcuts here
 }
 //
@@ -690,16 +600,15 @@ void commandMenuCleanUp()
 //
 static int counter = 0;
 
-bool setNextCommand(wchar_t *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool check0nInit)
-{
+bool setNextCommand(wchar_t *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk,
+                    bool check0nInit) {
   if (counter >= nbFunc)
     return false;
 
-  if (!pFunc)
-    {
-      counter++;
-      return false;
-    }
+  if (!pFunc) {
+    counter++;
+    return false;
+  }
 
   lstrcpy(funcItem[counter]._itemName, cmdName);
   funcItem[counter]._pFunc = pFunc;
@@ -710,19 +619,11 @@ bool setNextCommand(wchar_t *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, boo
   return true;
 }
 
-void WaitTillThreadsClosed ()
-{
+void WaitTillThreadsClosed() {
   HANDLE threadHandles[] = {hThread, hNetworkThread};
-  WaitForMultipleObjects (2, threadHandles, true, INFINITE);
+  WaitForMultipleObjects(2, threadHandles, true, INFINITE);
 }
 
+void AutoCheckStateReceived(BOOL state) { AutoCheckState = state; }
 
-void AutoCheckStateReceived (BOOL state)
-{
-  AutoCheckState = state;
-}
-
-BOOL GetAutoCheckState ()
-{
-  return AutoCheckState;
-}
+BOOL GetAutoCheckState() { return AutoCheckState; }

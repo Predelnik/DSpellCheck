@@ -22,44 +22,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Plugin.h"
 #include "resource.h"
 
-void Progress::DoDialog ()
-{
-  if (!isCreated())
-  {
-    create (IDD_DIALOGPROGRESS);
-  }
-  else
-  {
-    goToCenter ();
-    display ();
+void Progress::DoDialog() {
+  if (!isCreated()) {
+    create(IDD_DIALOGPROGRESS);
+  } else {
+    goToCenter();
+    display();
   }
 }
 
-void Progress::init (HINSTANCE hInst, HWND Parent)
-{
-  return Window::init (hInst, Parent);
+void Progress::init(HINSTANCE hInst, HWND Parent) {
+  return Window::init(hInst, Parent);
 }
 
-INT_PTR Progress::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
-{
-  switch (message)
-  {
-  case WM_INITDIALOG:
-    {
-      HDescTop = GetDlgItem (_hSelf, IDC_DESCTOP);
-      HDescBottom = GetDlgItem (_hSelf, IDC_DESCBOTTOM);
-      HProgressBar = GetDlgItem (_hSelf, IDC_PROGRESSBAR);
-      SendMessage (HProgressBar, PBM_SETRANGE, 0, (LPARAM)MAKELONG(0,100));
-      return TRUE;
-    }
-    break;
+INT_PTR Progress::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/) {
+  switch (message) {
+  case WM_INITDIALOG: {
+    HDescTop = GetDlgItem(_hSelf, IDC_DESCTOP);
+    HDescBottom = GetDlgItem(_hSelf, IDC_DESCBOTTOM);
+    HProgressBar = GetDlgItem(_hSelf, IDC_PROGRESSBAR);
+    SendMessage(HProgressBar, PBM_SETRANGE, 0, (LPARAM)MAKELONG(0, 100));
+    return TRUE;
+  } break;
   case WM_COMMAND:
-    switch (LOWORD (wParam))
-    {
+    switch (LOWORD(wParam)) {
     case IDC_STOP:
-      if (HIWORD (wParam) == BN_CLICKED)
-      {
-        SendNetworkEvent (EID_CANCEL_DOWNLOAD);
+      if (HIWORD(wParam) == BN_CLICKED) {
+        SendNetworkEvent(EID_CANCEL_DOWNLOAD);
       }
       break;
     };
@@ -68,13 +57,11 @@ INT_PTR Progress::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
   return FALSE;
 }
 
-void Progress::SetProgress (int value)
-{
-  SendMessage (HProgressBar, PBM_SETPOS, value, 0);
+void Progress::SetProgress(int value) {
+  SendMessage(HProgressBar, PBM_SETPOS, value, 0);
 }
 
-void Progress::SetMarquee (bool animated)
-{
+void Progress::SetMarquee(bool animated) {
   DWORD dwStyle = ::GetWindowLong(HProgressBar, GWL_STYLE);
   if (animated)
     dwStyle = dwStyle | PBS_MARQUEE;
@@ -82,23 +69,17 @@ void Progress::SetMarquee (bool animated)
     dwStyle = dwStyle & (~PBS_MARQUEE);
 
   ::SetWindowLong(HProgressBar, GWL_STYLE, dwStyle);
-  SendMessage (HProgressBar, PBM_SETMARQUEE, (int) animated, 0);
+  SendMessage(HProgressBar, PBM_SETMARQUEE, (int)animated, 0);
 }
 
-void Progress::SetBottomMessage (wchar_t *Message)
-{
-  Static_SetText (HDescBottom, Message);
+void Progress::SetBottomMessage(wchar_t *Message) {
+  Static_SetText(HDescBottom, Message);
 }
 
-void Progress::SetTopMessage (wchar_t *Message)
-{
-  Static_SetText (HDescTop, Message);
+void Progress::SetTopMessage(wchar_t *Message) {
+  Static_SetText(HDescTop, Message);
 }
 
-Progress::Progress(void)
-{
-}
+Progress::Progress(void) {}
 
-Progress::~Progress(void)
-{
-}
+Progress::~Progress(void) {}

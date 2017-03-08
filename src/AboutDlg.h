@@ -19,11 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 #include "Controls/StaticDialog/StaticDialog.h"
 
-class AboutDlg : public StaticDialog
-{
+class AboutDlg : public StaticDialog {
 public:
-  void init (HINSTANCE hInst, HWND Parent) override;
-  void DoDialog ();
+  void init(HINSTANCE hInst, HWND Parent) override;
+  void DoDialog();
+
 protected:
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 };
