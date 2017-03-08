@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 This file is part of DSpellCheck Plug-in for Notepad++
 Copyright (C)2013 Sergey Semushin <Predelnik@gmail.com>

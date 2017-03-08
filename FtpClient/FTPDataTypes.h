@@ -382,7 +382,7 @@ namespace nsFTP
       public:
          CCode()
          {
-            std::fill_n(m_szCode, sizeof(m_szCode)/sizeof(TCHAR), 0);
+            std::fill_n(m_szCode, sizeof(m_szCode)/sizeof(TCHAR), L'0');
          }
          LPCTSTR Value() const { return m_szCode; }
          bool Set(const tstring& strCode)
@@ -391,7 +391,7 @@ namespace nsFTP
                 strCode[0]<_T('1') || strCode[0]>_T('5') ||
                 strCode[1]<_T('0') || strCode[1]>_T('5') )
             {
-               std::fill_n(m_szCode, sizeof(m_szCode)/sizeof(TCHAR), 0);
+               std::fill_n(m_szCode, sizeof(m_szCode)/sizeof(TCHAR), L'0');
                return false;
             }
             std::copy(strCode.begin(), strCode.end(), m_szCode);
