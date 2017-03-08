@@ -23,23 +23,26 @@ struct AspellSpeller;
 
 #include "AbstractSpellerInterface.h"
 
-class AspellInterface : public AbstractSpellerInterface
-{
+class AspellInterface : public AbstractSpellerInterface {
 public:
-  AspellInterface (HWND NppWindowArg); // Window for error reporting
-  ~AspellInterface ();
- std::vector<wchar_t*> *GetLanguageList () override;
- void SetLanguage (wchar_t *Lang) override;
- void SetMultipleLanguages (std::vector<wchar_t *> *List) override; // Languages are from LangList
- BOOL CheckWord (char *Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
- BOOL IsWorking () override;
- std::vector<char *> *GetSuggestions (char *Word) override;
- void AddToDictionary (char *Word) override;
- void IgnoreAll (char *Word) override;
+  AspellInterface(HWND NppWindowArg); // Window for error reporting
+  ~AspellInterface();
+  std::vector<wchar_t *> *GetLanguageList() override;
+  void SetLanguage(wchar_t *Lang) override;
+  void SetMultipleLanguages(
+      std::vector<wchar_t *> *List) override; // Languages are from LangList
+  BOOL
+  CheckWord(char *Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
+  BOOL IsWorking() override;
+  std::vector<char *> *GetSuggestions(char *Word) override;
+  void AddToDictionary(char *Word) override;
+  void IgnoreAll(char *Word) override;
 
-  BOOL Init (wchar_t *PathArg);
+  BOOL Init(wchar_t *PathArg);
+
 private:
-  void SendAspellErorr (AspellCanHaveError *Error);
+  void SendAspellErorr(AspellCanHaveError *Error);
+
 public:
 private:
   AspellSpeller *LastSelectedSpeller;

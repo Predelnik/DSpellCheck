@@ -20,59 +20,53 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 #include "CommonFunctions.h"
 
-struct LanguageName
-{
+struct LanguageName {
   wchar_t *OrigName;
   wchar_t *AliasName;
   BOOL AliasApplied;
-  LanguageName (wchar_t *Name, BOOL UseAlias = TRUE)
-  {
+  LanguageName(wchar_t *Name, BOOL UseAlias = TRUE) {
     OrigName = nullptr;
     AliasName = nullptr;
     AliasApplied = FALSE;
-    SetString (OrigName, Name);
+    SetString(OrigName, Name);
     if (UseAlias)
-      AliasApplied = SetStringWithAliasApplied (AliasName, Name);
+      AliasApplied = SetStringWithAliasApplied(AliasName, Name);
     else
-      SetString (AliasName, Name);
+      SetString(AliasName, Name);
   }
 
-  LanguageName (const LanguageName &rhs)
-  {
+  LanguageName(const LanguageName &rhs) {
     OrigName = nullptr;
     AliasName = nullptr;
-    SetString (OrigName, rhs.OrigName);
-    SetString (AliasName, rhs.AliasName);
+    SetString(OrigName, rhs.OrigName);
+    SetString(AliasName, rhs.AliasName);
     AliasApplied = rhs.AliasApplied;
   }
 
-  LanguageName &operator = (const LanguageName &rhs)
-  {
+  LanguageName &operator=(const LanguageName &rhs) {
     if (&rhs == this)
       return *this;
 
-    CLEAN_AND_ZERO_ARR (OrigName);
-    CLEAN_AND_ZERO_ARR (AliasName);
+    CLEAN_AND_ZERO_ARR(OrigName);
+    CLEAN_AND_ZERO_ARR(AliasName);
     AliasApplied = rhs.AliasApplied;
-    SetString (OrigName, rhs.OrigName);
-    SetString (AliasName, rhs.AliasName);
+    SetString(OrigName, rhs.OrigName);
+    SetString(AliasName, rhs.AliasName);
     return *this;
   }
 
-  ~LanguageName ()
-  {
-    CLEAN_AND_ZERO_ARR (OrigName);
-    CLEAN_AND_ZERO_ARR (AliasName);
+  ~LanguageName() {
+    CLEAN_AND_ZERO_ARR(OrigName);
+    CLEAN_AND_ZERO_ARR(AliasName);
     AliasApplied = FALSE;
   }
 };
 
-inline bool CompareAliases (LanguageName &a, LanguageName &b)
-{
-  return wcscmp (a.AliasApplied ? a.AliasName : a.OrigName, b.AliasApplied ? b.AliasName : b.OrigName) < 0;
+inline bool CompareAliases(LanguageName &a, LanguageName &b) {
+  return wcscmp(a.AliasApplied ? a.AliasName : a.OrigName,
+                b.AliasApplied ? b.AliasName : b.OrigName) < 0;
 }
 
-inline bool CompareOriginal (LanguageName &a, LanguageName &b)
-{
-  return wcscmp (a.OrigName, b.OrigName) < 0;
+inline bool CompareOriginal(LanguageName &a, LanguageName &b) {
+  return wcscmp(a.OrigName, b.OrigName) < 0;
 }

@@ -23,17 +23,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class SpellChecker;
 
-class RemoveDics : public StaticDialog
-{
+class RemoveDics : public StaticDialog {
 public:
-  void init (HINSTANCE hInst, HWND Parent) override;
-  void DoDialog ();
-  void RemoveSelected (SpellChecker *SpellCheckerInstance);
-  HWND GetListBox ();
-  void UpdateOptions (SpellChecker *SpellCheckerInstance);
-  void SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem);
+  void init(HINSTANCE hInst, HWND Parent) override;
+  void DoDialog();
+  void RemoveSelected(SpellChecker *SpellCheckerInstance);
+  HWND GetListBox();
+  void UpdateOptions(SpellChecker *SpellCheckerInstance);
+  void SetCheckBoxes(BOOL RemoveUserDics, BOOL RemoveSystem);
+
 protected:
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+
 protected:
   HWND HLangList = nullptr;
   HWND HRemoveUserDics = nullptr;

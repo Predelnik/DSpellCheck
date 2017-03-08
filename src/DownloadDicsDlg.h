@@ -24,38 +24,41 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 struct LanguageName;
 
-void FtpTrim (wchar_t *FtpAddress);
+void FtpTrim(wchar_t *FtpAddress);
 
-enum FTP_OPERATION_TYPE
-{
+enum FTP_OPERATION_TYPE {
   FILL_FILE_LIST = 0,
   DOWNLOAD_FILE,
 };
 class SpellChecker;
 
-class DownloadDicsDlg : public StaticDialog
-{
+class DownloadDicsDlg : public StaticDialog {
 public:
-  ~DownloadDicsDlg ();
-  DownloadDicsDlg ();
-  void DoDialog ();
+  ~DownloadDicsDlg();
+  DownloadDicsDlg();
+  void DoDialog();
   // Maybe hunspell interface should be passed here
-  void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg);
+  void init(HINSTANCE hInst, HWND Parent,
+            SpellChecker *SpellCheckerInstanceArg);
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
-  void UpdateListBox ();
-  void DoFtpOperation (FTP_OPERATION_TYPE Type, wchar_t *Address, wchar_t *FileName = nullptr, wchar_t *Location = nullptr);
-  void DownloadSelected ();
-  void FillFileList ();
-  void RemoveTimer ();
-  void OnDisplayAction ();
-  void IndicateThatSavingMightBeNeeded ();
-  void SetOptions (BOOL ShowOnlyKnown, BOOL InstallSystem);
-  void UpdateOptions (SpellChecker * spellchecker);
-  void SetCancelPressed (BOOL Value);
-  void Refresh ();
-  LRESULT AskReplacementMessage(wchar_t* DicName);
+  void UpdateListBox();
+  void DoFtpOperation(FTP_OPERATION_TYPE Type, wchar_t *Address,
+                      wchar_t *FileName = nullptr, wchar_t *Location = nullptr);
+  void DownloadSelected();
+  void FillFileList();
+  void RemoveTimer();
+  void OnDisplayAction();
+  void IndicateThatSavingMightBeNeeded();
+  void SetOptions(BOOL ShowOnlyKnown, BOOL InstallSystem);
+  void UpdateOptions(SpellChecker *spellchecker);
+  void SetCancelPressed(BOOL Value);
+  void Refresh();
+  LRESULT AskReplacementMessage(wchar_t *DicName);
+
 private:
-  void DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, wchar_t *Address, wchar_t *FileName, wchar_t *Location);
+  void DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type, wchar_t *Address,
+                                      wchar_t *FileName, wchar_t *Location);
+
 private:
   std::vector<LanguageName> *CurrentLangs;
   std::vector<LanguageName> *CurrentLangsFiltered;
@@ -75,4 +78,3 @@ private:
   BOOL CancelPressed;
   int CheckIfSavingIsNeeded;
 };
-

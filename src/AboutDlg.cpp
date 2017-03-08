@@ -25,107 +25,90 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Plugin.h"
 #include "resource.h"
 
-void AboutDlg::DoDialog ()
-{
-  if (!isCreated())
-  {
-    create (IDD_ABOUT);
-    goToCenter ();
+void AboutDlg::DoDialog() {
+  if (!isCreated()) {
+    create(IDD_ABOUT);
+    goToCenter();
   }
-  display ();
+  display();
 }
 
-bool GetProductAndVersion (wchar_t *&strProductVersion)
-{
+bool GetProductAndVersion(wchar_t *&strProductVersion) {
   // get the filename of the executable containing the version resource
   wchar_t szFilename[MAX_PATH + 1] = {0};
-  if (GetModuleFileName ((HMODULE) getHModule (), szFilename, MAX_PATH) == 0)
-  {
+  if (GetModuleFileName((HMODULE)getHModule(), szFilename, MAX_PATH) == 0) {
     return false;
   }
 
   // allocate a block of memory for the version info
   DWORD dummy;
   DWORD dwSize = GetFileVersionInfoSize(szFilename, &dummy);
-  if (dwSize == 0)
-  {
+  if (dwSize == 0) {
     return false;
   }
   std::vector<BYTE> data(dwSize);
 
   // load the version info
-  if (!GetFileVersionInfo(szFilename, NULL, dwSize, &data[0]))
-  {
+  if (!GetFileVersionInfo(szFilename, NULL, dwSize, &data[0])) {
     return false;
   }
 
-  UINT                uiVerLen = 0;
-  VS_FIXEDFILEINFO*   pFixedInfo = 0;     // pointer to fixed file info structure
+  UINT uiVerLen = 0;
+  VS_FIXEDFILEINFO *pFixedInfo = 0; // pointer to fixed file info structure
   // get the fixed file info (language-independent)
-  if(VerQueryValue(&data[0], TEXT("\\"), (void**)&pFixedInfo, (UINT *)&uiVerLen) == 0)
-  {
+  if (VerQueryValue(&data[0], TEXT("\\"), (void **)&pFixedInfo,
+                    (UINT *)&uiVerLen) == 0) {
     return false;
   }
 
-  CLEAN_AND_ZERO_ARR (strProductVersion);
+  CLEAN_AND_ZERO_ARR(strProductVersion);
   strProductVersion = new wchar_t[DEFAULT_BUF_SIZE];
-  swprintf (strProductVersion, L"Version: %u.%u.%u.%u",     HIWORD (pFixedInfo->dwProductVersionMS),
-    LOWORD (pFixedInfo->dwProductVersionMS),
-    HIWORD (pFixedInfo->dwProductVersionLS),
-    LOWORD (pFixedInfo->dwProductVersionLS));
+  swprintf(strProductVersion, L"Version: %u.%u.%u.%u",
+           HIWORD(pFixedInfo->dwProductVersionMS),
+           LOWORD(pFixedInfo->dwProductVersionMS),
+           HIWORD(pFixedInfo->dwProductVersionLS),
+           LOWORD(pFixedInfo->dwProductVersionLS));
 
   return true;
 }
 
-void AboutDlg::init (HINSTANCE hInst, HWND Parent)
-{
-  return Window::init (hInst, Parent);
+void AboutDlg::init(HINSTANCE hInst, HWND Parent) {
+  return Window::init(hInst, Parent);
 }
 
-INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
-{
-  switch (message)
-  {
-  case WM_INITDIALOG:
-    {
-      wchar_t *Ver = 0;
-      GetProductAndVersion (Ver);
-      Static_SetText (::GetDlgItem(_hSelf, IDC_VERSION), Ver);
-      CLEAN_AND_ZERO_ARR (Ver);
-    }
+INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
+  switch (message) {
+  case WM_INITDIALOG: {
+    wchar_t *Ver = 0;
+    GetProductAndVersion(Ver);
+    Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), Ver);
+    CLEAN_AND_ZERO_ARR(Ver);
+  }
     return TRUE;
-  case WM_NOTIFY:
-    {
-      switch (((LPNMHDR)lParam)->code)
-      {
-      case NM_CLICK:          // Fall through to the next case.
-      case NM_RETURN:
-        {
-          PNMLINK pNMLink = (PNMLINK)lParam;
-          LITEM   item    = pNMLink->item;
+  case WM_NOTIFY: {
+    switch (((LPNMHDR)lParam)->code) {
+    case NM_CLICK: // Fall through to the next case.
+    case NM_RETURN: {
+      PNMLINK pNMLink = (PNMLINK)lParam;
+      LITEM item = pNMLink->item;
 
-          ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
+      ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
 
-          return TRUE;
-        }
-      }
-      return FALSE;
+      return TRUE;
     }
-    break;
-  case WM_COMMAND:
-    {
-      switch (LOWORD (wParam))
-      {
-      case IDOK:
-      case IDCANCEL:
-        if (HIWORD (wParam) == BN_CLICKED)
-        {
-          display (false);
-          return TRUE;
-        }
+    }
+    return FALSE;
+  } break;
+  case WM_COMMAND: {
+    switch (LOWORD(wParam)) {
+    case IDOK:
+    case IDCANCEL:
+      if (HIWORD(wParam) == BN_CLICKED) {
+        display(false);
+        return TRUE;
       }
     }
-    break;
+  } break;
   }
   return FALSE;
 }

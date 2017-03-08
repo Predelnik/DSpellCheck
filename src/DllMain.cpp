@@ -168,12 +168,6 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
     }
   }
 
-  /*
-  wchar_t Buf[DEFAULT_BUF_SIZE];
-  _itow (Message, Buf, 16);
-  wcscat (Buf, L"\n");
-  OutputDebugString (Buf);
-  */
   ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
   return ret;
 }
