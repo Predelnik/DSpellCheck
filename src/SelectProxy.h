@@ -33,11 +33,11 @@ protected:
   __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
   void DisableControls ();
 protected:
-  HWND HPort;
-  HWND HUserName;
-  HWND HHostName;
-  HWND HPassword;
-  HWND HUseProxy;
-  HWND HProxyAnonymous;
-  HWND HProxyType;
+  HWND HPort = nullptr;
+  HWND HUserName = nullptr;
+  HWND HHostName = nullptr;
+  HWND HPassword = nullptr;
+  HWND HUseProxy = nullptr;
+  HWND HProxyAnonymous = nullptr;
+  HWND HProxyType = nullptr;
 };

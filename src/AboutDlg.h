@@ -22,8 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class AboutDlg : public StaticDialog
 {
 public:
-  void init (HINSTANCE hInst, HWND Parent);
+  void init (HINSTANCE hInst, HWND Parent) override;
   void DoDialog ();
 protected:
-  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 };

@@ -34,16 +34,13 @@ enum EncodingType
   ENCODING_ANSI
 };
 
-namespace CustomGUIMessage
+enum class CustomGUIMessage
 {
-  enum e
-  {
-    DO_MESSAGE_BOX = 0,   // Use MessageBoxInfo as wParam.
-    SHOW_CALCULATED_MENU = 1,
-    AUTOCHECK_STATE_CHANGED = 2,
-    MAX,
-  };
-}
+  DO_MESSAGE_BOX = 0,   // Use MessageBoxInfo as wParam.
+  SHOW_CALCULATED_MENU = 1,
+  AUTOCHECK_STATE_CHANGED = 2,
+  MAX,
+};
 
 const TCHAR *const CustomGUIMesssagesNames[] = {
   _T ("DSpellCheck_MessageBox"),
@@ -97,7 +94,6 @@ public:
 #define SUGGESTIONS_CONTEXT_MENU 1
 
 // Global Menu ID
-// TODO: change it all to call for n++ message which gives you free menu IDs
 #define DSPELLCHECK_MENU_ID 193
 #define LANGUAGE_MENU_ID 197
 

@@ -41,9 +41,9 @@ public:
   void DoDialog ();
   // Maybe hunspell interface should be passed here
   void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg);
-  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
   void UpdateListBox ();
-  void DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName = 0, TCHAR *Location = 0);
+  void DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName = nullptr, TCHAR *Location = nullptr);
   void DownloadSelected ();
   void FillFileList ();
   void RemoveTimer ();

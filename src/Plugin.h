@@ -30,6 +30,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 const int nbFunc = 8;
 #define QUICK_LANG_CHANGE_ITEM 3
 
+enum class CustomGUIMessage;
 class LangList;
 class DownloadDicsDlg;
 class SelectProxy;
@@ -62,10 +63,9 @@ void commandMenuCleanUp();
 //
 // Function which sets your command
 //
-bool setNextCommand(TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
+bool setNextCommand(TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = nullptr, bool check0nInit = false);
 
 // WARNING: Consequent messages guaranteed to be delivered in order, only if they are in corresponding order in enum
-// TODO: Change events system to PostThreadMessage
 typedef enum {
   EID_SWITCH_AUTOCHECK,
   EID_LOAD_SETTINGS,
@@ -155,7 +155,7 @@ int GetContextMenuIdStart ();
 int GetLangsMenuIdStart ();
 BOOL GetUseAllocatedIds ();
 SpellChecker *GetSpellChecker ();
-DWORD GetCustomGUIMessageId (CustomGUIMessage::e MessageId);
+DWORD GetCustomGUIMessageId (CustomGUIMessage MessageId);
 void RegisterCustomMessages ();
 bool isCurrentlyTerminating (); // This function is only for main thread
 

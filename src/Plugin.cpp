@@ -428,15 +428,15 @@ DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTi
 
 void RegisterCustomMessages ()
 {
-  for (int i = 0; i < CustomGUIMessage::MAX; i++)
+  for (int i = 0; i < static_cast<int> (CustomGUIMessage::MAX); i++)
   {
     CustomGUIMessageIds[i] = RegisterWindowMessage (CustomGUIMesssagesNames[i]);
   }
 }
 
-DWORD GetCustomGUIMessageId (CustomGUIMessage::e MessageId)
+DWORD GetCustomGUIMessageId (CustomGUIMessage MessageId)
 {
-  return CustomGUIMessageIds[MessageId];
+  return CustomGUIMessageIds[static_cast<int> (MessageId)];
 }
 
 void SwitchAutoCheckText ()

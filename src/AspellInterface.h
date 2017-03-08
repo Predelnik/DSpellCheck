@@ -28,14 +28,14 @@ class AspellInterface : public AbstractSpellerInterface
 public:
   AspellInterface (HWND NppWindowArg); // Window for error reporting
   ~AspellInterface ();
-  __override virtual std::vector<TCHAR*> *GetLanguageList ();
-  __override virtual void SetLanguage (TCHAR *Lang);
-  __override virtual void SetMultipleLanguages (std::vector<TCHAR *> *List); // Languages are from LangList
-  __override virtual BOOL CheckWord (char *Word); // Word in Utf-8 or ANSI (For now only Utf-8)
-  __override virtual BOOL IsWorking ();
-  __override virtual std::vector<char *> *GetSuggestions (char *Word);
-  __override virtual void AddToDictionary (char *Word);
-  __override virtual void IgnoreAll (char *Word);
+ std::vector<TCHAR*> *GetLanguageList () override;
+ void SetLanguage (TCHAR *Lang) override;
+ void SetMultipleLanguages (std::vector<TCHAR *> *List) override; // Languages are from LangList
+ BOOL CheckWord (char *Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
+ BOOL IsWorking () override;
+ std::vector<char *> *GetSuggestions (char *Word) override;
+ void AddToDictionary (char *Word) override;
+ void IgnoreAll (char *Word) override;
 
   BOOL Init (TCHAR *PathArg);
 private:

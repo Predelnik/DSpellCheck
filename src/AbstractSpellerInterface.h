@@ -24,6 +24,7 @@ class AbstractSpellerInterface
 private:
 protected:
 public:
+  virtual ~AbstractSpellerInterface() = default;
   virtual std::vector<TCHAR*> *GetLanguageList () = 0;
   virtual void SetLanguage (TCHAR *Lang) = 0;
   virtual void SetMultipleLanguages (std::vector<TCHAR *> *List) = 0; // Languages are from LangList
@@ -37,7 +38,7 @@ public:
 
 private:
 protected:
-  int MultiMode;
-  EncodingType CurrentEncoding;
+  int MultiMode = 0;
+  EncodingType CurrentEncoding = ENCODING_UTF8;
 public:
 };

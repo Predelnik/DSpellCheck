@@ -51,17 +51,17 @@ public :
   ControlsTab() : TabBar(), _pWinVector(NULL), _current(0), _isVertical(false) {};
   ~ControlsTab(){};
 
-  virtual void init(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false) {
+  void init(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false) override {
     _isVertical = isVertical;
     TabBar::init(hInst, hwnd, false, isTraditional, isMultiLine);
   };
   void ControlsTab::createTabs(WindowVector & winVector);
 
-  void destroy() {
+  void destroy() override {
     TabBar::destroy();
   };
 
-  virtual void reSizeTo(RECT & rc);
+  void reSizeTo(RECT & rc) override;
   void activateWindowAt(int index);
 
   void clickedUpdate()

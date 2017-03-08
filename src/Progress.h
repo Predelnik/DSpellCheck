@@ -26,10 +26,9 @@ public:
   Progress(void);
   ~Progress(void);
 
-  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
-  void init (HINSTANCE hInst, HWND Parent);
+  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+  void init (HINSTANCE hInst, HWND Parent) override;
   void DoDialog ();
-  void SetProgress ();
   void SetProgress (int value);
   void SetBottomMessage (TCHAR *Message);
   void SetTopMessage (TCHAR *Message);

@@ -145,10 +145,7 @@ private:
   void ClearVisibleUnderlines ();
   void Cleanup ();
   void CheckFileName ();
-  void UpdateOverridenSuggestionsBox ();
   const char *GetDelimiters ();
-  const TCHAR *GetLanguage ();
-  void CallLangContextMenu ();
   void GetDefaultHunspellPath (TCHAR *&Path);
   BOOL CheckWord (char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
@@ -170,7 +167,6 @@ private:
   void GetLimitsAndRecheckModified ();
   BOOL CheckTextNeeded ();
   int CheckWordInCommentOrString (LRESULT Style);
-  void WriteSetting ();
   LRESULT GetStyle (int Pos);
   void RefreshUnderlineStyle ();
   void WriteSetting (LPARAM lParam);

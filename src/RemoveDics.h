@@ -26,16 +26,16 @@ class SpellChecker;
 class RemoveDics : public StaticDialog
 {
 public:
-  void init (HINSTANCE hInst, HWND Parent);
+  void init (HINSTANCE hInst, HWND Parent) override;
   void DoDialog ();
   void RemoveSelected (SpellChecker *SpellCheckerInstance);
   HWND GetListBox ();
   void UpdateOptions (SpellChecker *SpellCheckerInstance);
   void SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem);
 protected:
-  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 protected:
-  HWND HLangList = NULL;
-  HWND HRemoveUserDics = NULL;
-  HWND HRemoveSystem = NULL;
+  HWND HLangList = nullptr;
+  HWND HRemoveUserDics = nullptr;
+  HWND HRemoveSystem = nullptr;
 };

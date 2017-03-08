@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
 #include "TabBar/ControlsTab.h"
-#include "MainDef.h"
 
 #include <uxtheme.h>
 
@@ -136,12 +135,12 @@ class SettingsDlg : public StaticDialog
 {
 public:
   UINT DoDialog (void);
-  __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
+  void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   SimpleDlg *GetSimpleDlg ();
   AdvancedDlg *GetAdvancedDlg ();
 protected:
-  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
-  __override virtual void destroy ();
+  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+  void destroy () override;
   void ApplySettings ();
 private:
   NppData NppDataInstance;
