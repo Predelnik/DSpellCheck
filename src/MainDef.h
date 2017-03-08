@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef MAINDEF_H
-#define MAINDEF_H
+#pragma once
 
 #define SCE_ERROR_UNDERLINE (19) // Only index from 8 to 21 are free
 #define CLEAN_AND_ZERO(x) do { if (x) {delete x; x = 0; }  } while (0);
@@ -126,4 +125,4 @@ public:
 #define TM_CHANGE_DIR           WM_USER + 1006
 #define TM_ADD_USER_SERVER      WM_USER + 1007
 #define TM_UPDATE_LANGS_MENU    WM_USER + 1008
-#endif MAINDEF_H
+

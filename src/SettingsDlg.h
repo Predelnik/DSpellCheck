@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef SETTINGS_DLG_H
-#define SETTINGS_DLG_H
+#pragma once
 
 #include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
@@ -151,4 +150,3 @@ private:
   WindowVector WindowVectorInstance;
   ControlsTab ControlsTabInstance;
 };
-#endif //SETTINGS_DLG_H

@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef ABSTRACTSPELLERINTERFACE_H
-#define ABSTRACTSPELLERINTERFACE_H
+#pragma once
 #include <MainDef.h>
 class AbstractSpellerInterface
 {
@@ -42,4 +41,3 @@ protected:
   EncodingType CurrentEncoding;
 public:
 };
-#endif // ABSTRACTSPELLERINTERFACE_H

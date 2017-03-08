@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef DOWNLOAD_DICS_DLG_H
-#define DOWNLOAD_DICS_DLG_H
+#pragma once
 
 #include "staticdialog\staticdialog.h"
 #include <Wininet.h>
@@ -76,4 +75,4 @@ private:
   BOOL CancelPressed;
   int CheckIfSavingIsNeeded;
 };
-#endif // DOWNLOAD_DICS_DLG_H
+

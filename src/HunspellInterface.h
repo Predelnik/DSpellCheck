@@ -16,14 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#ifndef HUNSPELLINTERFACE_H
-#define HUNSPELLINTERFACE_H
+#pragma once
 
 #include "AbstractSpellerInterface.h"
 
-#ifndef USING_STATIC_LIBICONV
-#define USING_STATIC_LIBICONV
-#endif // !USING_STATIC_LIBICONV
 
 #include "iconv.h"
 #include "CommonFunctions.h"
@@ -102,4 +98,3 @@ private:
   TCHAR *SystemWrongDicPath; // Only for reading and then removing
   HWND NppWindow;
 };
-#endif // HUNSPELLINTERFACE_H

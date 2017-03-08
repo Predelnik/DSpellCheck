@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef COMMON_FUNCTIONS_H
-#define COMMON_FUNCTIONS_H
+#pragma once
 
 struct NppData;
 
@@ -63,5 +62,3 @@ bool SortCompareChars (char *a, char *b);
 
 BOOL CheckForDirectoryExistence (TCHAR *Path, BOOL Silent = TRUE, HWND NppWindow = 0);
 TCHAR *GetLastSlashPosition (TCHAR *Path);
-
-#endif // COMMON_FUNCTIONS_H;

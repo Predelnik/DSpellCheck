@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef SPELLCHECKER_H
-#define SPELLCHECKER_H
+#pragma once
 // Class that will do most of the job with spellchecker
 
 #include "MainDef.h"
@@ -284,4 +283,3 @@ private:
   char *yeANSI;
   char *PunctuationApostropheANSI;
 };
-#endif // SPELLCHECKER_H

@@ -1,5 +1,3 @@
-#pragma once
-
 /*
 This file is part of DSpellCheck Plug-in for Notepad++
 Copyright (C)2013 Sergey Semushin <Predelnik@gmail.com>
@@ -18,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+#pragma once
+
 #include <windows.h>
 
 #include <map>

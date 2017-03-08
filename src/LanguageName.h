@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef LANGUAGE_NAME_H
-#define LANGUAGE_NAME_H
+#pragma once
 #include "CommonFunctions.h"
 
 struct LanguageName
@@ -77,4 +76,3 @@ inline bool CompareOriginal (LanguageName &a, LanguageName &b)
 {
   return _tcsicmp (a.OrigName, b.OrigName) < 0;
 }
-#endif // LANGUAGE_NAME_H

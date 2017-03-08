@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef PLUGINDEFINITION_H
-#define PLUGINDEFINITION_H
+#pragma once
 
 //
 // All difinitions of plugin interface
@@ -164,4 +163,3 @@ bool isCurrentlyTerminating (); // This function is only for main thread
 void SetRecheckDelay (int Value, int WriteToIni = 1);
 int GetRecheckDelay ();
 void WaitTillThreadsClosed ();
-#endif //PLUGINDEFINITION_H

@@ -17,8 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef SUGGESTIONS_H
-#define SUGGESTIONS_H
+#pragma once
 
 #include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
@@ -42,4 +41,3 @@ private:
   HMENU PopupMenu;
   NppData NppDataInstance;
 };
-#endif // SUGGESTIONS_H
