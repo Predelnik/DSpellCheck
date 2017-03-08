@@ -48,7 +48,7 @@ AspellInterface::~AspellInterface ()
   CLEAN_AND_ZERO (Spellers);
 }
 
-std::vector<TCHAR *> *AspellInterface::GetLanguageList ()
+std::vector<wchar_t *> *AspellInterface::GetLanguageList ()
 {
   if (!AspellLoaded)
     return 0;
@@ -56,7 +56,7 @@ std::vector<TCHAR *> *AspellInterface::GetLanguageList ()
   const AspellDictInfo *entry;
   AspellDictInfoList *dlist;
   AspellDictInfoEnumeration *dels;
-  std::vector<TCHAR *> *Names = new std::vector<TCHAR *>;
+  std::vector<wchar_t *> *Names = new std::vector<wchar_t *>;
 
   aspCfg = new_aspell_config();
 
@@ -76,7 +76,7 @@ std::vector<TCHAR *> *AspellInterface::GetLanguageList ()
 
   while ((entry = aspell_dict_info_enumeration_next(dels)) != 0)
   {
-    TCHAR *TBuf = 0;
+    wchar_t *TBuf = 0;
     SetString (TBuf, entry->name);
     Names->push_back (TBuf);
   }
@@ -92,14 +92,14 @@ BOOL AspellInterface::IsWorking ()
 
 void AspellInterface::SendAspellErorr (AspellCanHaveError *Error)
 {
-  TCHAR *ErrorMsg = 0;
+  wchar_t *ErrorMsg = 0;
   SetString (ErrorMsg, aspell_error_message (Error));
-  MessageBoxInfo MsgBox (NppWindow, ErrorMsg, _T ("Aspell Error"), MB_OK | MB_ICONEXCLAMATION);
+  MessageBoxInfo MsgBox (NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
   SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   CLEAN_AND_ZERO_ARR (ErrorMsg);
 }
 
-void AspellInterface::SetMultipleLanguages (std::vector<TCHAR *> *List)
+void AspellInterface::SetMultipleLanguages (std::vector<wchar_t *> *List)
 {
   if (!AspellLoaded)
     return;
@@ -196,9 +196,9 @@ void AspellInterface::AddToDictionary (char *Word)
   aspell_speller_save_all_word_lists (LastSelectedSpeller);
   if (aspell_speller_error(LastSelectedSpeller) != 0)
   {
-    TCHAR *ErrorMsg = 0;
+    wchar_t *ErrorMsg = 0;
     SetString (ErrorMsg, aspell_speller_error_message (LastSelectedSpeller));
-    MessageBoxInfo MsgBox (NppWindow, ErrorMsg, _T ("Aspell Error"), MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxInfo MsgBox (NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
     SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     CLEAN_AND_ZERO_ARR (ErrorMsg);
   }
@@ -267,12 +267,12 @@ BOOL AspellInterface::CheckWord (char *Word)
   return res;
 }
 
-BOOL AspellInterface::Init (TCHAR *PathArg)
+BOOL AspellInterface::Init (wchar_t *PathArg)
 {
   return (AspellLoaded = LoadAspell (PathArg));
 }
 
-void AspellInterface::SetLanguage (TCHAR *Lang)
+void AspellInterface::SetLanguage (wchar_t *Lang)
 {
   if (!AspellLoaded)
     return;
@@ -294,8 +294,8 @@ void AspellInterface::SetLanguage (TCHAR *Lang)
   if (aspell_error_number(PossibleErr) != 0)
   {
     delete_aspell_config (spell_config);
-    std::vector<TCHAR *> *LangList = GetLanguageList ();
-    if (LangList && (!Lang || _tcscmp (Lang, LangList->at (0)) != 0))
+    std::vector<wchar_t *> *LangList = GetLanguageList ();
+    if (LangList && (!Lang || wcscmp (Lang, LangList->at (0)) != 0))
     {
       SetLanguage (LangList->at (0));
       CLEAN_AND_ZERO_STRING_VECTOR (LangList);

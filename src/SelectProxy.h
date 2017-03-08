@@ -28,7 +28,7 @@ public:
   void init (HINSTANCE hInst, HWND Parent);
   void DoDialog ();
   void ApplyChoice (SpellChecker *SpellCheckerInstance);
-  void SetOptions (BOOL UseProxy, TCHAR *HostName, TCHAR *UserName, TCHAR *Password, int Port, BOOL ProxyAnonymous, int ProxyType);
+  void SetOptions (BOOL UseProxy, wchar_t *HostName, wchar_t *UserName, wchar_t *Password, int Port, BOOL ProxyAnonymous, int ProxyType);
 protected:
   __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
   void DisableControls ();

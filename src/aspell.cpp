@@ -155,34 +155,34 @@ PFUNC_delete_aspell_string_pair_enumeration         delete_aspell_string_pair_en
 PFUNC_aspell_string_pair_enumeration_clone          aspell_string_pair_enumeration_clone          = NULL;
 PFUNC_aspell_string_pair_enumeration_assign         aspell_string_pair_enumeration_assign         = NULL;
 
-void GetDefaultAspellPath (TCHAR *&Path)
+void GetDefaultAspellPath (wchar_t *&Path)
 {
-  TCHAR pszPath[MAX_PATH];
+  wchar_t pszPath[MAX_PATH];
   pszPath[0] = '\0';
   HKEY    hKey = NULL;
   DWORD   size = MAX_PATH;
 
-  if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T ("SOFTWARE\\Aspell"), 0, KEY_READ, &hKey))
+  if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Aspell", 0, KEY_READ, &hKey))
   {
-    if (ERROR_SUCCESS == ::RegQueryValueEx(hKey, _T ("Path"), NULL ,NULL, (LPBYTE)pszPath, &size))
-      wcscat(pszPath, _T ("\\aspell-15.dll"));
+    if (ERROR_SUCCESS == ::RegQueryValueEx(hKey, L"Path", NULL ,NULL, (LPBYTE)pszPath, &size))
+      wcscat(pszPath, L"\\aspell-15.dll");
     ::RegCloseKey(hKey);
   }
   else
   {
-    TCHAR Pf[MAX_PATH];
+    wchar_t Pf[MAX_PATH];
     SHGetSpecialFolderPath(
       0,
       Pf,
       CSIDL_PROGRAM_FILES,
       FALSE );
     PathAppend(pszPath, Pf);
-    PathAppend(pszPath, _T("\\Aspell\\bin\\aspell-15.dll"));
+    PathAppend(pszPath, L"\\Aspell\\bin\\aspell-15.dll");
   }
   SetString (Path, pszPath);
 }
 
-void GetActualAspellPath (TCHAR *&Path, TCHAR *&PathArg)
+void GetActualAspellPath (wchar_t *&Path, wchar_t *&PathArg)
 {
   if (!PathArg || !*PathArg)
   {
@@ -194,9 +194,9 @@ void GetActualAspellPath (TCHAR *&Path, TCHAR *&PathArg)
   }
 }
 
-BOOL LoadAspell (TCHAR *PathArg)
+BOOL LoadAspell (wchar_t *PathArg)
 {
-  TCHAR *Path = 0;
+  wchar_t *Path = 0;
   GetActualAspellPath (Path, PathArg);
   /*
   if (hInstLib)
@@ -350,13 +350,13 @@ void UnloadAspell(void)
 
 void AspellErrorMsgBox(HWND hWnd, LPCSTR szErrorMsg)
 {
-  TCHAR	szMsg[MAX_PATH];
+  wchar_t	szMsg[MAX_PATH];
 #ifdef UNICODE
-  TCHAR	szTemp[MAX_PATH];
+  wchar_t	szTemp[MAX_PATH];
   ::MultiByteToWideChar(CP_ACP, 0, szErrorMsg, -1, szTemp, MAX_PATH);
-  _stprintf(szMsg, _T("Error:\n%s"), szTemp);
+  swprintf(szMsg, L"Error:\n%s", szTemp);
 #else
-  _stprintf(szMsg, _T("Error:\n%s"), szErrorMsg);
+  swprintf(szMsg, _T("Error:\n%s"), szErrorMsg);
 #endif
-  ::MessageBox(hWnd, szMsg, _T("GNU Aspell"), MB_OK);
+  ::MessageBox(hWnd, szMsg, L"GNU Aspell", MB_OK);
 }

@@ -42,20 +42,20 @@ enum class CustomGUIMessage
   MAX,
 };
 
-const TCHAR *const CustomGUIMesssagesNames[] = {
-  _T ("DSpellCheck_MessageBox"),
-  _T ("DSpellCheck_ShowCalculatedMenu"),
-  _T ("DSpellCheck_AutoCheckStateChanged"),
+const wchar_t *const CustomGUIMesssagesNames[] = {
+  L"DSpellCheck_MessageBox",
+  L"DSpellCheck_ShowCalculatedMenu",
+  L"DSpellCheck_AutoCheckStateChanged",
 };
 
 struct MessageBoxInfo
 {
   HWND hWnd;
-  TCHAR *Title;
-  TCHAR *Message;
+  wchar_t *Title;
+  wchar_t *Message;
   DWORD Flags;
   DWORD Answer;
-  MessageBoxInfo (HWND hWndArg, TCHAR *MessageArg, TCHAR *TitleArg, DWORD FlagsArg)
+  MessageBoxInfo (HWND hWndArg, wchar_t *MessageArg, wchar_t *TitleArg, DWORD FlagsArg)
   {
     hWnd = hWndArg;
     Title = TitleArg;

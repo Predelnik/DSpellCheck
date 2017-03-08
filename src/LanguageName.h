@@ -22,10 +22,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 struct LanguageName
 {
-  TCHAR *OrigName;
-  TCHAR *AliasName;
+  wchar_t *OrigName;
+  wchar_t *AliasName;
   BOOL AliasApplied;
-  LanguageName (TCHAR *Name, BOOL UseAlias = TRUE)
+  LanguageName (wchar_t *Name, BOOL UseAlias = TRUE)
   {
     OrigName = nullptr;
     AliasName = nullptr;
@@ -69,10 +69,10 @@ struct LanguageName
 
 inline bool CompareAliases (LanguageName &a, LanguageName &b)
 {
-  return _tcsicmp (a.AliasApplied ? a.AliasName : a.OrigName, b.AliasApplied ? b.AliasName : b.OrigName) < 0;
+  return wcscmp (a.AliasApplied ? a.AliasName : a.OrigName, b.AliasApplied ? b.AliasName : b.OrigName) < 0;
 }
 
 inline bool CompareOriginal (LanguageName &a, LanguageName &b)
 {
-  return _tcsicmp (a.OrigName, b.OrigName) < 0;
+  return wcscmp (a.OrigName, b.OrigName) < 0;
 }

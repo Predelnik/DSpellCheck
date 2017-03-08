@@ -38,11 +38,11 @@ public:
   ~SimpleDlg ();
   __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings (SpellChecker *SpellCheckerInstance);
-  BOOL AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages, HunspellInterface *HunspellSpeller);
+  BOOL AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const wchar_t *CurrentLanguage, const wchar_t *MultiLanguages, HunspellInterface *HunspellSpeller);
   void FillSugestionsNum (int SuggestionsNum);
-  void FillLibInfo (int Status, TCHAR *AspellPath, TCHAR *HunspellPath, TCHAR *HunspellAdditionalPath);
+  void FillLibInfo (int Status, wchar_t *AspellPath, wchar_t *HunspellPath, wchar_t *HunspellAdditionalPath);
   void DisableLanguageCombo (BOOL Disable);
-  void SetFileTypes (BOOL CheckThose, const TCHAR *FileTypes);
+  void SetFileTypes (BOOL CheckThose, const wchar_t *FileTypes);
   void SetSuggType (int SuggType);
   void SetCheckComments (BOOL Value);
   int GetSelectedLib ();
@@ -93,7 +93,7 @@ class AdvancedDlg : public StaticDialog
 public:
   void ApplySettings (SpellChecker *SpellCheckerInstance);
   void FillDelimiters (const char *Delimiters);
-  void SetDelimetersEdit (TCHAR *Delimiters);
+  void SetDelimetersEdit (wchar_t *Delimiters);
   void SetConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveSingleApostrophe);
   void SetRecheckDelay (int Delay);
   int GetRecheckDelay ();

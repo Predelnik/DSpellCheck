@@ -35,17 +35,17 @@ class SelectProxy;
 
 struct SuggestionsMenuItem
 {
-  TCHAR *Text;
+  wchar_t *Text;
   BYTE Id;
   BOOL Separator;
-  SuggestionsMenuItem (TCHAR *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE);
+  SuggestionsMenuItem (wchar_t *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE);
   ~SuggestionsMenuItem ()
   {
     CLEAN_AND_ZERO_ARR (Text);
   };
 };
 
-void InsertSuggMenuItem (HMENU Menu, TCHAR *Text, BYTE Id, int InsertPos, BOOL Separator = FALSE);
+void InsertSuggMenuItem (HMENU Menu, wchar_t *Text, BYTE Id, int InsertPos, BOOL Separator = FALSE);
 
 HWND GetScintillaWindow(const NppData *NppDataArg);
 LRESULT SendMsgToActiveEditor(BOOL *ok, HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
@@ -55,7 +55,7 @@ LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0,
 class SpellChecker
 {
 public:
-  SpellChecker (const TCHAR *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
+  SpellChecker (const wchar_t *IniFilePathArg, SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
     Suggestions *SuggestionsInstanceArg, LangList *LangListInstanceArg);
   ~SpellChecker ();
   void RecheckVisibleBothViews ();
@@ -64,28 +64,28 @@ public:
   BOOL WINAPI NotifyMessage (UINT Msg, WPARAM wParam, LPARAM lParam);
   void RecheckVisible (BOOL NotIntersectionOnly = FALSE);
   void RecheckModified ();
-  void ErrorMsgBox (const TCHAR * message);
+  void ErrorMsgBox (const wchar_t * message);
 
   BOOL AspellReinitSettings ();
-  void SetHunspellLanguage (const TCHAR *Str);
-  void SetAspellLanguage (const TCHAR *Str);
+  void SetHunspellLanguage (const wchar_t *Str);
+  void SetAspellLanguage (const wchar_t *Str);
   void SetDelimiters (const char *Str);
   void SetSuggestionsNum (int Num);
-  void SetAspellPath (const TCHAR *Path);
-  void SetMultipleLanguages (const TCHAR *MultiString, AbstractSpellerInterface *Speller);
-  void SetHunspellPath (const TCHAR *Path);
-  void SetHunspellAdditionalPath (const TCHAR *Path);
+  void SetAspellPath (const wchar_t *Path);
+  void SetMultipleLanguages (const wchar_t *MultiString, AbstractSpellerInterface *Speller);
+  void SetHunspellPath (const wchar_t *Path);
+  void SetHunspellAdditionalPath (const wchar_t *Path);
   void SetConversionOptions (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveBoundaryApostrophesArg);
   void SetCheckThose (int CheckThoseArg);
-  void SetFileTypes (TCHAR *FileTypesArg);
+  void SetFileTypes (wchar_t *FileTypesArg);
   void SetCheckComments (BOOL Value);
   void SetHunspellMultipleLanguages (const char *MultiLanguagesArg);
   void SetAspellMultipleLanguages (const char *MultiLanguagesArg);
   void SetUnderlineColor (int Value);
   void SetUnderlineStyle (int Value);
-  void SetProxyUserName (TCHAR *Str);
-  void SetProxyHostName (TCHAR *Str);
-  void SetProxyPassword (TCHAR *Str);
+  void SetProxyUserName (wchar_t *Str);
+  void SetProxyHostName (wchar_t *Str);
+  void SetProxyPassword (wchar_t *Str);
   void SetProxyPort (int Value);
   void SetUseProxy (BOOL Value);
   void SetProxyAnonymous (BOOL Value);
@@ -103,9 +103,9 @@ public:
   void SetInstallSystem (BOOL Value);
   void FillDialogs (BOOL NoDisplayCall = FALSE);
   void ReinitLanguageLists (BOOL UpdateDialogs);
-  TCHAR *GetHunspellPath () {return HunspellPath; };
-  TCHAR *GetHunspellAdditionalPath () {return AdditionalHunspellPath; };
-  TCHAR *GetLangByIndex (int i);
+  wchar_t *GetHunspellPath () {return HunspellPath; };
+  wchar_t *GetHunspellAdditionalPath () {return AdditionalHunspellPath; };
+  wchar_t *GetLangByIndex (int i);
   BOOL GetShowOnlyKnown ();
   BOOL GetInstallSystem ();
   BOOL GetDecodeNames ();
@@ -117,9 +117,9 @@ public:
   void SetRemoveSystem (BOOL Value);
   BOOL GetRemoveUserDics ();
   BOOL GetRemoveSystem ();
-  TCHAR *GetProxyUserName ();
-  TCHAR *GetProxyHostName ();
-  TCHAR *GetProxyPassword ();
+  wchar_t *GetProxyUserName ();
+  wchar_t *GetProxyHostName ();
+  wchar_t *GetProxyPassword ();
   int GetProxyPort ();
   BOOL GetUseProxy ();
   BOOL GetProxyAnonymous ();
@@ -146,7 +146,7 @@ private:
   void Cleanup ();
   void CheckFileName ();
   const char *GetDelimiters ();
-  void GetDefaultHunspellPath (TCHAR *&Path);
+  void GetDefaultHunspellPath (wchar_t *&Path);
   BOOL CheckWord (char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
   char *GetVisibleText(long *offset, BOOL NotIntersectionOnly = FALSE);
@@ -178,13 +178,13 @@ private:
   void ResetHotSpotCache ();
   void CheckSpecialDelimeters (char *&Word, const char *TextStart, long &WordStart, long &WordEnd);
 
-  void SaveToIni (const TCHAR *Name, const TCHAR *Value, const TCHAR * DefaultValue, BOOL InQuotes = 0);
-  void SaveToIni (const TCHAR *Name, int Value, int DefaultValue);
-  void SaveToIniUtf8 (const TCHAR *Name, const char *Value, const char * DefaultValue, BOOL InQuotes = 0);
+  void SaveToIni (const wchar_t *Name, const wchar_t *Value, const wchar_t * DefaultValue, BOOL InQuotes = 0);
+  void SaveToIni (const wchar_t *Name, int Value, int DefaultValue);
+  void SaveToIniUtf8 (const wchar_t *Name, const char *Value, const char * DefaultValue, BOOL InQuotes = 0);
 
-  void LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *DefaultValue, BOOL InQuotes = 0);
-  void LoadFromIni (int &Value, const TCHAR *Name, int DefaultValue);
-  void LoadFromIniUtf8 (char *&Value, const TCHAR *Name, const char *DefaultValue, BOOL InQuotes = 0);
+  void LoadFromIni (wchar_t *&Value, const wchar_t *Name, const wchar_t *DefaultValue, BOOL InQuotes = 0);
+  void LoadFromIni (int &Value, const wchar_t *Name, int DefaultValue);
+  void LoadFromIniUtf8 (char *&Value, const wchar_t *Name, const char *DefaultValue, BOOL InQuotes = 0);
   void CopyMisspellingsToClipboard();
   int CheckTextDefaultAnswer (CheckTextMode Mode);
 private:
@@ -195,10 +195,10 @@ private:
   BOOL AutoCheckText;
   BOOL CheckTextEnabled;
   BOOL WUCisRight;
-  TCHAR *HunspellLanguage;
-  TCHAR *HunspellMultiLanguages;
-  TCHAR *AspellLanguage;
-  TCHAR *AspellMultiLanguages;
+  wchar_t *HunspellLanguage;
+  wchar_t *HunspellMultiLanguages;
+  wchar_t *AspellLanguage;
+  wchar_t *AspellMultiLanguages;
   int LibMode; // 0 - Aspell, 1 - Hunspell
   int MultiLangMode;
   int SuggestionsNum;
@@ -206,14 +206,14 @@ private:
   char *DelimUtf8; // String without special characters but maybe with escape characters (like '\n' and stuff)
   char *DelimUtf8Converted; // String where escape characters are properly converted to corresponding symbols
   char *DelimConverted; // Same but in ANSI encoding
-  TCHAR *ServerNames[3]; // Only user ones, there'll also be bunch of predetermined ones
-  TCHAR *DefaultServers[3];
+  wchar_t *ServerNames[3]; // Only user ones, there'll also be bunch of predetermined ones
+  wchar_t *DefaultServers[3];
   int LastUsedAddress; // equals USER_SERVER_CONST + num if user address is used, otherwise equals number of default server
   int AddressIsSet;
-  TCHAR *FileTypes;
-  TCHAR *AspellPath;
-  TCHAR *HunspellPath;
-  TCHAR *AdditionalHunspellPath;
+  wchar_t *FileTypes;
+  wchar_t *AspellPath;
+  wchar_t *HunspellPath;
+  wchar_t *AdditionalHunspellPath;
   BOOL IgnoreYo;
   BOOL ConvertSingleQuotes;
   BOOL RemoveBoundaryApostrophes;
@@ -237,14 +237,14 @@ private:
   const AspellWordList *CurWordList;
   HWND CurrentScintilla;
   LRESULT HotSpotCache[256]; // STYLE_MAX = 255
-  std::map<TCHAR *, DWORD, bool (*)(TCHAR *, TCHAR *)> *SettingsToSave;
+  std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)> *SettingsToSave;
   BOOL UseProxy;
   BOOL ProxyAnonymous;
   int ProxyType;
-  TCHAR *ProxyHostName;
-  TCHAR *ProxyUserName;
+  wchar_t *ProxyHostName;
+  wchar_t *ProxyUserName;
   int ProxyPort;
-  TCHAR *ProxyPassword;
+  wchar_t *ProxyPassword;
 
   LRESULT Lexer;
   std::vector <SuggestionsMenuItem *> *SuggestionMenuItems;
@@ -257,7 +257,7 @@ private:
   LRESULT CurrentPosition;
   NppData *NppDataInstance;
   EncodingType CurrentEncoding;
-  TCHAR *IniFilePath;
+  wchar_t *IniFilePath;
   char *SelectedWord;
   SettingsDlg *SettingsDlgInstance;
   Suggestions *SuggestionsInstance;

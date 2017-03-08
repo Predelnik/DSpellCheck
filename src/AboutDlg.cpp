@@ -35,10 +35,10 @@ void AboutDlg::DoDialog ()
   display ();
 }
 
-bool GetProductAndVersion (TCHAR *&strProductVersion)
+bool GetProductAndVersion (wchar_t *&strProductVersion)
 {
   // get the filename of the executable containing the version resource
-  TCHAR szFilename[MAX_PATH + 1] = {0};
+  wchar_t szFilename[MAX_PATH + 1] = {0};
   if (GetModuleFileName ((HMODULE) getHModule (), szFilename, MAX_PATH) == 0)
   {
     return false;
@@ -68,8 +68,8 @@ bool GetProductAndVersion (TCHAR *&strProductVersion)
   }
 
   CLEAN_AND_ZERO_ARR (strProductVersion);
-  strProductVersion = new TCHAR[DEFAULT_BUF_SIZE];
-  _stprintf (strProductVersion, _T ("Version: %u.%u.%u.%u"),     HIWORD (pFixedInfo->dwProductVersionMS),
+  strProductVersion = new wchar_t[DEFAULT_BUF_SIZE];
+  swprintf (strProductVersion, L"Version: %u.%u.%u.%u",     HIWORD (pFixedInfo->dwProductVersionMS),
     LOWORD (pFixedInfo->dwProductVersionMS),
     HIWORD (pFixedInfo->dwProductVersionLS),
     LOWORD (pFixedInfo->dwProductVersionLS));
@@ -88,7 +88,7 @@ INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
   {
   case WM_INITDIALOG:
     {
-      TCHAR *Ver = 0;
+      wchar_t *Ver = 0;
       GetProductAndVersion (Ver);
       Static_SetText (::GetDlgItem(_hSelf, IDC_VERSION), Ver);
       CLEAN_AND_ZERO_ARR (Ver);
@@ -104,7 +104,7 @@ INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
           PNMLINK pNMLink = (PNMLINK)lParam;
           LITEM   item    = pNMLink->item;
 
-          ShellExecute(NULL, _T ("open"), item.szUrl, NULL, NULL, SW_SHOW);
+          ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
 
           return TRUE;
         }

@@ -109,7 +109,7 @@ void TabBar::destroy()
   _hSelf = NULL;
 }
 
-int TabBar::insertAtEnd(const TCHAR *subTabName)
+int TabBar::insertAtEnd(const wchar_t *subTabName)
 {
   TCITEM tie;
   tie.mask = TCIF_TEXT | TCIF_IMAGE;
@@ -118,11 +118,11 @@ int TabBar::insertAtEnd(const TCHAR *subTabName)
   if (_hasImgLst)
     index = 0;
   tie.iImage = index;
-  tie.pszText = (TCHAR *)subTabName;
+  tie.pszText = (wchar_t *)subTabName;
   return int(::SendMessage(_hSelf, TCM_INSERTITEM, _nbItem++, reinterpret_cast<LPARAM>(&tie)));
 }
 
-void TabBar::getCurrentTitle(TCHAR *title, int titleLen)
+void TabBar::getCurrentTitle(wchar_t *title, int titleLen)
 {
   TCITEM tci;
   tci.mask = TCIF_TEXT;
@@ -131,7 +131,7 @@ void TabBar::getCurrentTitle(TCHAR *title, int titleLen)
   ::SendMessage(_hSelf, TCM_GETITEM, getCurrentTabIndex(), reinterpret_cast<LPARAM>(&tci));
 }
 
-void TabBar::setFont(TCHAR *fontName, int fontSize)
+void TabBar::setFont(wchar_t *fontName, int fontSize)
 {
   if (_hFont)
     ::DeleteObject(_hFont);
@@ -621,7 +621,7 @@ void TabBarPlus::drawItem(DRAWITEMSTRUCT *pDrawItemStruct)
   }
   bool isSelected = (nTab == ::SendMessage(_hSelf, TCM_GETCURSEL, 0, 0));
 
-  TCHAR label[MAX_PATH];
+  wchar_t label[MAX_PATH];
   TCITEM tci;
   tci.mask = TCIF_TEXT|TCIF_IMAGE;
   tci.pszText = label;
@@ -806,7 +806,7 @@ void TabBarPlus::draggingCursor(POINT screenPoint)
     ::SetCursor(::LoadCursor(NULL, IDC_ARROW));
   else
   {
-    TCHAR className[256];
+    wchar_t className[256];
     ::GetClassName(hWin, className, 256);
     if ((!lstrcmp(className, TEXT("Scintilla"))) || (!lstrcmp(className, WC_TABCONTROL)))
     {
@@ -842,8 +842,8 @@ void TabBarPlus::exchangeItemData(POINT point)
       TCITEM itemData_nDraggedTab, itemData_shift;
       itemData_nDraggedTab.mask = itemData_shift.mask = TCIF_IMAGE | TCIF_TEXT | TCIF_PARAM;
       const int stringSize = 256;
-      TCHAR str1[stringSize];
-      TCHAR str2[stringSize];
+      wchar_t str1[stringSize];
+      wchar_t str2[stringSize];
 
       itemData_nDraggedTab.pszText = str1;
       itemData_nDraggedTab.cchTextMax = (stringSize);

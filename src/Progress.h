@@ -30,8 +30,8 @@ public:
   void init (HINSTANCE hInst, HWND Parent) override;
   void DoDialog ();
   void SetProgress (int value);
-  void SetBottomMessage (TCHAR *Message);
-  void SetTopMessage (TCHAR *Message);
+  void SetBottomMessage (wchar_t *Message);
+  void SetTopMessage (wchar_t *Message);
   void SetMarquee (bool animated);
 private:
   HWND HDescBottom;

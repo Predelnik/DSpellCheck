@@ -53,7 +53,7 @@ typedef sptr_t (*SciFnDirect)(sptr_t ptr, unsigned int iMessage, uptr_t wParam, 
 #define SCI_CLEARALL 2004
 #define SCI_CLEARDOCUMENTSTYLE 2005
 #define SCI_GETLENGTH 2006
-#define SCI_GETCHARAT 2007
+#define SCI_GEwchar_tAT 2007
 #define SCI_GETCURRENTPOS 2008
 #define SCI_GETANCHOR 2009
 #define SCI_GETSTYLEAT 2010
@@ -215,12 +215,12 @@ typedef sptr_t (*SciFnDirect)(sptr_t ptr, unsigned int iMessage, uptr_t wParam, 
 #define SCI_STYLEGETEOLFILLED 2487
 #define SCI_STYLEGETUNDERLINE 2488
 #define SCI_STYLEGETCASE 2489
-#define SCI_STYLEGETCHARACTERSET 2490
+#define SCI_STYLEGEwchar_tACTERSET 2490
 #define SCI_STYLEGETVISIBLE 2491
 #define SCI_STYLEGETCHANGEABLE 2492
 #define SCI_STYLEGETHOTSPOT 2493
 #define SCI_STYLESETCASE 2060
-#define SCI_STYLESETCHARACTERSET 2066
+#define SCI_STYLESEwchar_tACTERSET 2066
 #define SCI_STYLESETHOTSPOT 2409
 #define SCI_SETSELFORE 2067
 #define SCI_SETSELBACK 2068
@@ -673,7 +673,7 @@ typedef sptr_t (*SciFnDirect)(sptr_t ptr, unsigned int iMessage, uptr_t wParam, 
 #define SCI_WORDRIGHTEND 2441
 #define SCI_WORDRIGHTENDEXTEND 2442
 #define SCI_SETWHITESPACECHARS 2443
-#define SCI_SETCHARSDEFAULT 2444
+#define SCI_SEwchar_tSDEFAULT 2444
 #define SCI_AUTOCGETCURRENT 2445
 #define SCI_AUTOCGETCURRENTTEXT 2610
 #define SCI_ALLOCATE 2446
@@ -713,7 +713,7 @@ typedef sptr_t (*SciFnDirect)(sptr_t ptr, unsigned int iMessage, uptr_t wParam, 
 #define SCI_SETPOSITIONCACHE 2514
 #define SCI_GETPOSITIONCACHE 2515
 #define SCI_COPYALLOWLINE 2519
-#define SCI_GETCHARACTERPOINTER 2520
+#define SCI_GEwchar_tACTERPOINTER 2520
 #define SCI_SETKEYSUNICODE 2521
 #define SCI_GETKEYSUNICODE 2522
 #define SCI_INDICSETALPHA 2523

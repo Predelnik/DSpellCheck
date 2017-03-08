@@ -28,16 +28,16 @@ class AspellInterface : public AbstractSpellerInterface
 public:
   AspellInterface (HWND NppWindowArg); // Window for error reporting
   ~AspellInterface ();
- std::vector<TCHAR*> *GetLanguageList () override;
- void SetLanguage (TCHAR *Lang) override;
- void SetMultipleLanguages (std::vector<TCHAR *> *List) override; // Languages are from LangList
+ std::vector<wchar_t*> *GetLanguageList () override;
+ void SetLanguage (wchar_t *Lang) override;
+ void SetMultipleLanguages (std::vector<wchar_t *> *List) override; // Languages are from LangList
  BOOL CheckWord (char *Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
  BOOL IsWorking () override;
  std::vector<char *> *GetSuggestions (char *Word) override;
  void AddToDictionary (char *Word) override;
  void IgnoreAll (char *Word) override;
 
-  BOOL Init (TCHAR *PathArg);
+  BOOL Init (wchar_t *PathArg);
 private:
   void SendAspellErorr (AspellCanHaveError *Error);
 public:

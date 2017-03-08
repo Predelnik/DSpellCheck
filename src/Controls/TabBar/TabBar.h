@@ -53,10 +53,10 @@
 const int margeValue = 8;
 const int nbCtrlMax = 10;
 
-const TCHAR TABBAR_ACTIVEFOCUSEDINDCATOR[64] = TEXT("Active tab focused indicator");
-const TCHAR TABBAR_ACTIVEUNFOCUSEDINDCATOR[64] = TEXT("Active tab unfocused indicator");
-const TCHAR TABBAR_ACTIVETEXT[64] = TEXT("Active tab text");
-const TCHAR TABBAR_INACTIVETEXT[64] = TEXT("Inactive tabs");
+const wchar_t TABBAR_ACTIVEFOCUSEDINDCATOR[64] = TEXT("Active tab focused indicator");
+const wchar_t TABBAR_ACTIVEUNFOCUSEDINDCATOR[64] = TEXT("Active tab unfocused indicator");
+const wchar_t TABBAR_ACTIVETEXT[64] = TEXT("Active tab text");
+const wchar_t TABBAR_INACTIVETEXT[64] = TEXT("Inactive tabs");
 
 struct TBHDR {
   NMHDR hdr;
@@ -71,9 +71,9 @@ public:
   virtual void destroy();
   virtual void init(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false);
   virtual void reSizeTo(RECT & rc2Ajust);
-  int insertAtEnd(const TCHAR *subTabName);
+  int insertAtEnd(const wchar_t *subTabName);
   void activateAt(int index) const;
-  void getCurrentTitle(TCHAR *title, int titleLen);
+  void getCurrentTitle(wchar_t *title, int titleLen);
 
   auto getCurrentTabIndex() const {
     return ::SendMessage(_hSelf, TCM_GETCURSEL, 0, 0);
@@ -94,7 +94,7 @@ public:
     return _nbItem;
   };
 
-  void setFont(TCHAR *fontName, int fontSize);
+  void setFont(wchar_t *fontName, int fontSize);
 
   void setVertical(bool b) {
     _isVertical = b;

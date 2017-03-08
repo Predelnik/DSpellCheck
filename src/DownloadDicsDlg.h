@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 struct LanguageName;
 
-void FtpTrim (TCHAR *FtpAddress);
+void FtpTrim (wchar_t *FtpAddress);
 
 enum FTP_OPERATION_TYPE
 {
@@ -43,7 +43,7 @@ public:
   void init (HINSTANCE hInst, HWND Parent, SpellChecker *SpellCheckerInstanceArg);
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
   void UpdateListBox ();
-  void DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName = nullptr, TCHAR *Location = nullptr);
+  void DoFtpOperation (FTP_OPERATION_TYPE Type, wchar_t *Address, wchar_t *FileName = nullptr, wchar_t *Location = nullptr);
   void DownloadSelected ();
   void FillFileList ();
   void RemoveTimer ();
@@ -53,9 +53,9 @@ public:
   void UpdateOptions (SpellChecker * spellchecker);
   void SetCancelPressed (BOOL Value);
   void Refresh ();
-  LRESULT AskReplacementMessage(TCHAR* DicName);
+  LRESULT AskReplacementMessage(wchar_t* DicName);
 private:
-  void DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, TCHAR *Address, TCHAR *FileName, TCHAR *Location);
+  void DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, wchar_t *Address, wchar_t *FileName, wchar_t *Location);
 private:
   std::vector<LanguageName> *CurrentLangs;
   std::vector<LanguageName> *CurrentLangsFiltered;

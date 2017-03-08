@@ -34,13 +34,13 @@
 #include "TabBar.h"
 #endif //TAB_BAR_H
 
-typedef std::basic_string<TCHAR> generic_string;
+typedef std::basic_string<wchar_t> generic_string;
 struct DlgInfo {
   Window *_dlg;
   generic_string _name;
   generic_string _internalName;
 
-  DlgInfo(Window *dlg, TCHAR *name, TCHAR *internalName = NULL): _dlg(dlg), _name(name), _internalName(internalName?internalName:TEXT("")) {};
+  DlgInfo(Window *dlg, wchar_t *name, wchar_t *internalName = NULL): _dlg(dlg), _name(name), _internalName(internalName?internalName:TEXT("")) {};
 };
 
 typedef std::vector<DlgInfo> WindowVector;
@@ -69,8 +69,8 @@ public :
     int indexClicked = int(::SendMessage(_hSelf, TCM_GETCURSEL, 0, 0));
     activateWindowAt(indexClicked);
   };
-  void renameTab(int index, const TCHAR *newName);
-  bool renameTab(const TCHAR *internalName, const TCHAR *newName);
+  void renameTab(int index, const wchar_t *newName);
+  bool renameTab(const wchar_t *internalName, const wchar_t *newName);
 
 private :
   WindowVector *_pWinVector;

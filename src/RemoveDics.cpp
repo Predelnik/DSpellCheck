@@ -65,28 +65,28 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
   {
     if (CheckedListBox_GetCheckState (HLangList, i) == BST_CHECKED)
     {
-      TCHAR FileName[MAX_PATH];
+      wchar_t FileName[MAX_PATH];
       for (int j = 0; j < 1 + SpellCheckerInstance->GetRemoveSystem () ? 1 : 0; j++)
       {
-        *FileName = _T ('\0');
-        _tcscat (FileName, (j == 0) ? SpellCheckerInstance->GetHunspellPath () : SpellCheckerInstance->GetHunspellAdditionalPath ());
-        _tcscat (FileName, _T ("\\"));
-        _tcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
-        _tcscat (FileName, _T (".aff"));
+        *FileName = L'\0';
+        wcscat (FileName, (j == 0) ? SpellCheckerInstance->GetHunspellPath () : SpellCheckerInstance->GetHunspellAdditionalPath ());
+        wcscat (FileName, L"\\");
+        wcscat (FileName, SpellCheckerInstance->GetLangByIndex (i));
+        wcscat (FileName, L".aff");
         SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
         Success = DeleteFile (FileName);
-        _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".dic"), 4);
+        wcsncpy (FileName + wcslen (FileName) - 4, L".dic", 4);
         SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
         Success = Success && DeleteFile (FileName);
         if (SpellCheckerInstance->GetRemoveUserDics ())
         {
-          _tcsncpy (FileName + _tcslen (FileName) - 4, _T (".usr"), 4);
+          wcsncpy (FileName + wcslen (FileName) - 4, L".usr", 4);
           SetFileAttributes (FileName, FILE_ATTRIBUTE_NORMAL);
           DeleteFile (FileName); // Success doesn't matter in that case, 'cause dictionary might not exist.
         }
         if (Success)
         {
-          FileName[_tcslen (FileName) - 4] = _T ('\0');
+          FileName[wcslen (FileName) - 4] = L'\0';
           SpellCheckerInstance->GetHunspellSpeller ()->UpdateOnDicRemoval (FileName, SingleTemp, MultiTemp);
           NeedSingleReset |= SingleTemp;
           NeedMultiReset |= MultiTemp;
@@ -107,9 +107,9 @@ void RemoveDics::RemoveSelected (SpellChecker *SpellCheckerInstance)
     if (NeedSingleReset)
     SpellCheckerInstance->
     */
-    TCHAR Buf[DEFAULT_BUF_SIZE];
-    _stprintf (Buf, _T ("%d dictionary(ies) has(ve) been successfully removed"), Count);
-    MessageBoxInfo MsgBox (_hParent, Buf, _T ("Dictionaries were removed"), MB_OK | MB_ICONINFORMATION);
+    wchar_t Buf[DEFAULT_BUF_SIZE];
+    swprintf (Buf, L"%d dictionary(ies) has(ve) been successfully removed", Count);
+    MessageBoxInfo MsgBox (_hParent, Buf, L"Dictionaries were removed", MB_OK | MB_ICONINFORMATION);
     SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   }
 }

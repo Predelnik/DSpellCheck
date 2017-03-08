@@ -85,12 +85,12 @@ void Progress::SetMarquee (bool animated)
   SendMessage (HProgressBar, PBM_SETMARQUEE, (int) animated, 0);
 }
 
-void Progress::SetBottomMessage (TCHAR *Message)
+void Progress::SetBottomMessage (wchar_t *Message)
 {
   Static_SetText (HDescBottom, Message);
 }
 
-void Progress::SetTopMessage (TCHAR *Message)
+void Progress::SetTopMessage (wchar_t *Message)
 {
   Static_SetText (HDescTop, Message);
 }

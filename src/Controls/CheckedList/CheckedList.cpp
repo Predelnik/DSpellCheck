@@ -76,7 +76,7 @@ static LRESULT CALLBACK Control_Proc(HWND, UINT, WPARAM, LPARAM);
 ///         as a result of the user holding down the key.
 ///
 /// @returns VOID.
-VOID ListBox_OnChar(HWND hwnd, TCHAR ch, INT cRepeat)
+VOID ListBox_OnChar(HWND hwnd, wchar_t ch, INT cRepeat)
 {
   if (VK_SPACE == ch)
   {
@@ -204,8 +204,8 @@ VOID Control_OnDrawItem(HWND /*hwnd*/, const DRAWITEMSTRUCT * lpDrawItem)
     RECT rcText = lpDrawItem->rcItem;
 
     INT iLen = ListBox_GetTextLen(lpDrawItem->hwndItem, lpDrawItem->itemID);
-    TCHAR *buf = (TCHAR *) malloc ((iLen + 1) * sizeof (TCHAR));
-    memset (buf, 0, (iLen + 1) * sizeof (TCHAR));
+    wchar_t *buf = (wchar_t *) malloc ((iLen + 1) * sizeof (wchar_t));
+    memset (buf, 0, (iLen + 1) * sizeof (wchar_t));
     ListBox_GetText(lpDrawItem->hwndItem, lpDrawItem->itemID, buf);
 
     TEXTMETRIC metrics;
@@ -250,7 +250,7 @@ VOID Control_OnDrawItem(HWND /*hwnd*/, const DRAWITEMSTRUCT * lpDrawItem)
     // Erase and draw
     ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rcText, 0, 0, 0);
 
-    DrawText(dc, buf, static_cast<int> (_tcslen(buf)), &rcText, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
+    DrawText(dc, buf, static_cast<int> (wcslen(buf)), &rcText, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
 
     if ((lpDrawItem->itemState & (ODS_FOCUS | ODS_SELECTED)) == (ODS_FOCUS | ODS_SELECTED))
       DrawFocusRect(dc, &rcText);
