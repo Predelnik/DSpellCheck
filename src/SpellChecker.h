@@ -178,7 +178,7 @@ private:
   void PrepareStringForConversion();
   void ResetDownloadCombobox();
   void PreserveCurrentAddressIndex();
-  void FillDownloadDics();
+  void FillDownloadDics() const;
   void ResetHotSpotCache();
   void CheckSpecialDelimeters(char *&Word, const char *TextStart,
                               long &WordStart, long &WordEnd);

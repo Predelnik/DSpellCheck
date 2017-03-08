@@ -201,7 +201,7 @@ void SpellChecker::PrepareStringForConversion() {
   const char *InBuf = 0;
   size_t InSize = 0;
   size_t OutSize = 0;
-  size_t Res = 0;
+  size_t Res;
 
   for (int i = 0; i < countof(InString); i++) {
     InSize = strlen(InString[i]) + 1;
@@ -292,7 +292,7 @@ BOOL WINAPI SpellChecker::NotifyMessage(UINT Msg, WPARAM wParam,
   case TM_MENU_RESULT: {
     ProcessMenuResult(wParam);
     return TRUE;
-  } break;
+  }
   case TM_PRECALCULATE_MENU: {
     if (CheckTextNeeded() && SuggestionsMode == SUGGESTIONS_CONTEXT_MENU) {
       long Pos, Length;
@@ -709,40 +709,39 @@ void SpellChecker::DoPluginMenuInclusion(BOOL Invalidate) {
         int Checked = (wcscmp(CurLang, L"<MULTIPLE>") == 0)
                           ? (MFT_RADIOCHECK | MF_CHECKED)
                           : MF_UNCHECKED;
-        Res = AppendMenu(NewMenu, MF_STRING | Checked,
-                         GetUseAllocatedIds()
-                             ? MULTIPLE_LANGS + GetLangsMenuIdStart()
-                             : MAKEWORD(MULTIPLE_LANGS, LANGUAGE_MENU_ID),
-                         L"Multiple Languages");
-        Res = AppendMenu(NewMenu, MF_SEPARATOR, 0, 0);
-        Res = AppendMenu(
-            NewMenu, MF_STRING,
-            GetUseAllocatedIds()
-                ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart()
-                : MAKEWORD(CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID),
-            L"Set Multiple Languages...");
+        AppendMenu(NewMenu, MF_STRING | Checked,
+                   GetUseAllocatedIds()
+                       ? MULTIPLE_LANGS + GetLangsMenuIdStart()
+                       : MAKEWORD(MULTIPLE_LANGS, LANGUAGE_MENU_ID),
+                   L"Multiple Languages");
+        AppendMenu(NewMenu, MF_SEPARATOR, 0, 0);
+        AppendMenu(NewMenu, MF_STRING,
+                   GetUseAllocatedIds()
+                       ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart()
+                       : MAKEWORD(CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID),
+                   L"Set Multiple Languages...");
         if (LibMode == 1) // Only Hunspell supported
         {
-          Res = AppendMenu(NewMenu, MF_STRING,
-                           GetUseAllocatedIds()
-                               ? DOWNLOAD_DICS + GetLangsMenuIdStart()
-                               : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
-                           L"Download More Languages...");
-          Res = AppendMenu(NewMenu, MF_STRING,
-                           GetUseAllocatedIds()
-                               ? REMOVE_DICS + GetLangsMenuIdStart()
-                               : MAKEWORD(REMOVE_DICS, LANGUAGE_MENU_ID),
-                           L"Remove Unneeded Languages...");
+          AppendMenu(NewMenu, MF_STRING,
+                     GetUseAllocatedIds()
+                         ? DOWNLOAD_DICS + GetLangsMenuIdStart()
+                         : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
+                     L"Download More Languages...");
+          AppendMenu(NewMenu, MF_STRING,
+                     GetUseAllocatedIds()
+                         ? REMOVE_DICS + GetLangsMenuIdStart()
+                         : MAKEWORD(REMOVE_DICS, LANGUAGE_MENU_ID),
+                     L"Remove Unneeded Languages...");
         }
       } else if (LibMode == 1)
-        Res = AppendMenu(NewMenu, MF_STRING,
-                         GetUseAllocatedIds()
-                             ? DOWNLOAD_DICS + GetLangsMenuIdStart()
-                             : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
-                         L"Download Languages...");
+        AppendMenu(NewMenu, MF_STRING,
+                   GetUseAllocatedIds()
+                       ? DOWNLOAD_DICS + GetLangsMenuIdStart()
+                       : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
+                   L"Download Languages...");
     }
   } else
-    Res = AppendMenu(NewMenu, MF_STRING | MF_DISABLED, 0, L"Loading...");
+    AppendMenu(NewMenu, MF_STRING | MF_DISABLED, 0, L"Loading...");
 
   Mif.fMask = MIIM_SUBMENU | MIIM_STATE;
   Mif.cbSize = sizeof(MENUITEMINFO);
@@ -829,7 +828,7 @@ void SpellChecker::SetCheckComments(BOOL Value) { CheckComments = Value; }
 
 void SpellChecker::CheckFileName() {
   wchar_t *Context = 0;
-  wchar_t *Token = 0;
+  wchar_t *Token;
   wchar_t *FileTypesCopy = 0;
   wchar_t FullPath[MAX_PATH];
   SetString(FileTypesCopy, FileTypes);
@@ -1670,7 +1669,7 @@ void SpellChecker::FindNextMistake() {
     return;
   auto IteratorPos = LineStartPos;
   Sci_TextRange Range;
-  BOOL Result = FALSE;
+  BOOL Result;
   BOOL FullCheck = FALSE;
 
   while (1) {
@@ -1759,7 +1758,7 @@ void SpellChecker::FindPrevMistake() {
 
   auto IteratorPos = LineEndPos;
   Sci_TextRange Range;
-  BOOL Result = FALSE;
+  BOOL Result;
   BOOL FullCheck = FALSE;
 
   while (1) {
@@ -1839,7 +1838,7 @@ BOOL SpellChecker::GetWordUnderCursorIsRight(long &Pos, long &Length,
                                              BOOL UseTextCursor) {
   BOOL Ret = TRUE;
   POINT p;
-  std::ptrdiff_t iniwchar_tPos = -1;
+  std::ptrdiff_t iniwchar_tPos;
   LRESULT SelectionStart = 0;
   LRESULT SelectionEnd = 0;
 
@@ -1920,7 +1919,7 @@ BOOL SpellChecker::GetWordUnderCursorIsRight(long &Pos, long &Length,
 }
 
 char *SpellChecker::GetWordAt(long CharPos, char *Text, long Offset) {
-  char *UsedText = 0;
+  char *UsedText;
   if (!DelimUtf8)
     return 0;
 
@@ -1962,7 +1961,7 @@ char *SpellChecker::GetWordAt(long CharPos, char *Text, long Offset) {
   // We're just taking the first token (basically repeating the same code as an
   // in CheckVisible
 
-  char *Res = 0;
+  char *Res;
   if (CurrentEncoding == ENCODING_UTF8)
     Res = (char *)Utf8strtok(UsedText, DelimUtf8Converted, &Context);
   else
@@ -2048,7 +2047,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
       (GetUseAllocatedIds() && ((int)MenuId < GetContextMenuIdStart() ||
                                 (int)MenuId > GetContextMenuIdStart() + 350)))
     return;
-  int UsedMenuId = 0;
+  int UsedMenuId;
   if (GetUseAllocatedIds()) {
     UsedMenuId = ((int)MenuId < GetLangsMenuIdStart() ? DSPELLCHECK_MENU_ID
                                                       : LANGUAGE_MENU_ID);
@@ -2059,7 +2058,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
   switch (UsedMenuId) {
   case DSPELLCHECK_MENU_ID: {
     char *AnsiBuf = 0;
-    WPARAM Result = 0;
+    WPARAM Result;
     if (!GetUseAllocatedIds())
       Result = LOBYTE(MenuId);
     else
@@ -2103,13 +2102,13 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
     }
   } break;
   case LANGUAGE_MENU_ID: {
-    WPARAM Result = 0;
+    WPARAM Result;
     if (!GetUseAllocatedIds())
       Result = LOBYTE(MenuId);
     else
       Result = MenuId - GetLangsMenuIdStart();
 
-    wchar_t *LangString = 0;
+    wchar_t *LangString;
     if (Result == MULTIPLE_LANGS) {
       LangString = L"<MULTIPLE>";
     } else if (Result == CUSTOMIZE_MULTIPLE_DICS || Result == DOWNLOAD_DICS ||
@@ -2785,7 +2784,7 @@ void SpellChecker::SetMultipleLanguages(const wchar_t *MultiString,
   wchar_t *Context = 0;
   std::vector<wchar_t *> *MultiLangList = new std::vector<wchar_t *>;
   wchar_t *MultiStringCopy = 0;
-  wchar_t *Token = 0;
+  wchar_t *Token;
   wchar_t *TBuf = 0;
 
   SetString(MultiStringCopy, MultiString);
@@ -2883,8 +2882,9 @@ void SpellChecker::ApplyConversions(
       continue;
 
     char *Iter = Word;
-    char *NestedIter = 0;
-    auto Diff = strlen(ConvertFrom[i]) - strlen(ConvertTo[i]);
+    char *NestedIter;
+    auto Diff = static_cast<int>(strlen(ConvertFrom[i])) -
+                static_cast<int>(strlen(ConvertTo[i]));
     if (Diff < 0)
       continue; // For now this case isn't needed.
     while (true) {
@@ -2912,7 +2912,7 @@ void SpellChecker::ResetHotSpotCache() {
 }
 
 BOOL SpellChecker::CheckWord(char *Word, long Start, long /*End*/) {
-  BOOL res = FALSE;
+  BOOL res;
   if (!CurrentSpeller->IsWorking() || !Word || !*Word)
     return TRUE;
   // Well Numbers have same codes for ANSI and Unicode I guess, so
@@ -3098,7 +3098,6 @@ int SpellChecker::CheckText(char *TextToCheck, long Offset,
         } break;
         case GET_FIRST:
           return WordStart;
-          break;
         }
         if (stop)
           break;
@@ -3135,7 +3134,6 @@ int SpellChecker::CheckText(char *TextToCheck, long Offset,
     return stop;
   case GET_FIRST:
     return -1;
-    break;
   case FIND_LAST:
     if (ResultingWordStart == -1)
       return FALSE;
@@ -3231,7 +3229,7 @@ void SpellChecker::RecheckModified() {
       &ok, GetCurrentScintilla(), SCI_POSITIONFROMLINE, FirstModifiedLine);
   if (!ok)
     return;
-  LRESULT LastPossiblyModifiedPos = 0;
+  LRESULT LastPossiblyModifiedPos;
   if (LastModifiedLine + 1 < LineCount) {
     LastPossiblyModifiedPos = SendMsgToActiveEditor(
         &ok, GetCurrentScintilla(), SCI_POSITIONFROMLINE, LastModifiedLine + 1);
@@ -3265,7 +3263,7 @@ void SpellChecker::SetConversionOptions(BOOL ConvertYo,
 }
 
 void SpellChecker::RecheckVisible(BOOL NotIntersectionOnly) {
-  int CodepageId = 0;
+  int CodepageId;
   if (!CurrentSpeller->IsWorking()) {
     ClearAllUnderlines();
     return;
