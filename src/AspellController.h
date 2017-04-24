@@ -16,37 +16,38 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#ifndef ASPELLINTERFACE_H
-#define ASPELLINTERFACE_H
+
+#pragma  once
 
 struct AspellCanHaveError;
 struct AspellSpeller;
 
-#include "AbstractSpellerInterface.h"
+#include "SpellerController.h"
 
-class AspellInterface : public AbstractSpellerInterface
+class AspellController : public SpellerController
 {
 public:
-  AspellInterface (HWND NppWindowArg); // Window for error reporting
-  ~AspellInterface ();
-  __override virtual std::vector<TCHAR*> *GetLanguageList ();
-  __override virtual void SetLanguage (TCHAR *Lang);
-  __override virtual void SetMultipleLanguages (std::vector<TCHAR *> *List); // Languages are from LangList
-  __override virtual BOOL CheckWord (char *Word); // Word in Utf-8 or ANSI (For now only Utf-8)
-  __override virtual BOOL IsWorking ();
-  __override virtual std::vector<char *> *GetSuggestions (char *Word);
-  __override virtual void AddToDictionary (char *Word);
-  __override virtual void IgnoreAll (char *Word);
+  AspellController (HWND NppWindowArg); // Window for error reporting
+  ~AspellController ();
+  std::vector<TCHAR*> *getLanguageList () override;
+  void setLanguage (const wchar_t *Lang) override;
+  void SetMultipleLanguages (std::vector<TCHAR *> *List) override; // Languages are from LangList
+  BOOL CheckWord (char *Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
+  BOOL IsWorking () override;
+  std::vector<char *> *GetSuggestions (char *Word) override;
+  void AddToDictionary (char *Word) override;
+  void IgnoreAll (char *Word) override;
+  void setPath (const wchar_t *PathArg) override;
+  void setAdditionalPath (const wchar_t *) override {};
 
-  BOOL Init (TCHAR *PathArg);
 private:
   void SendAspellErorr (AspellCanHaveError *Error);
+
 public:
 private:
   AspellSpeller *LastSelectedSpeller;
   AspellSpeller *SingularSpeller;
   std::vector<AspellSpeller *> *Spellers;
-  BOOL AspellLoaded;
+  bool AspellLoaded;
   HWND NppWindow; // For message boxes
 };
-#endif // ASPELLINTERFACE_H

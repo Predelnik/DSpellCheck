@@ -29,7 +29,7 @@ public:
   void ApplyChoice (SpellChecker *SpellCheckerInstance);
   void SetOptions (BOOL UseProxy, TCHAR *HostName, TCHAR *UserName, TCHAR *Password, int Port, BOOL ProxyAnonymous, int ProxyType);
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam) override;
   void DisableControls ();
 protected:
   HWND HPort;

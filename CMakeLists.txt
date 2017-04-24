@@ -58,8 +58,8 @@ set (list_of_files_DSpellCheck
   ${SRC_DIR}/SciLexer.h
   ${SRC_DIR}/PluginInterface.h
   ${SRC_DIR}/Notepad_plus_msgs.h
-  ${SRC_DIR}/LangList.cpp
-  ${SRC_DIR}/LangList.h
+  ${SRC_DIR}/LangListDialog.cpp
+  ${SRC_DIR}/LangListDialog.h
   ${SRC_DIR}/aspell.h
   ${SRC_DIR}/aspell.cpp
   ${SRC_DIR}/MainDef.h
@@ -77,18 +77,25 @@ set (list_of_files_DSpellCheck
   ${SRC_DIR}/AboutDlg.h
   ${SRC_DIR}/DownloadDicsDlg.cpp
   ${SRC_DIR}/DownloadDicsDlg.h
+  ${SRC_DIR}/LanguageName.cpp
   ${SRC_DIR}/LanguageName.h
-  ${SRC_DIR}/RemoveDics.cpp
-  ${SRC_DIR}/RemoveDics.h
+  ${SRC_DIR}/RemoveDicsDialog.cpp
+  ${SRC_DIR}/RemoveDicsDialog.h
   ${SRC_DIR}/SelectProxy.cpp
   ${SRC_DIR}/SelectProxy.h
   ${SRC_DIR}/DSpellCheck.rc
-  ${SRC_DIR}/AbstractSpellerInterface.cpp
-  ${SRC_DIR}/AbstractSpellerInterface.h
-  ${SRC_DIR}/AspellInterface.cpp
-  ${SRC_DIR}/AspellInterface.h
-  ${SRC_DIR}/HunspellInterface.cpp
-  ${SRC_DIR}/HunspellInterface.h
+  ${SRC_DIR}/SpellerController.cpp
+  ${SRC_DIR}/SpellerController.h
+  ${SRC_DIR}/AspellController.cpp
+  ${SRC_DIR}/AspellController.h
+  ${SRC_DIR}/HunspellController.cpp
+  ${SRC_DIR}/HunspellController.h
+  ${SRC_DIR}/Settings.h
+  ${SRC_DIR}/Settings.cpp
+  ${SRC_DIR}/CustomMessage.h
+  ${SRC_DIR}/utils/enum_vector.h
+  ${SRC_DIR}/utils/enum_range.h
+  ${SRC_DIR}/utils/Uncopiable.h
   ${SRC_DIR}/Controls/CheckedList/CheckedList.h
   ${SRC_DIR}/Controls/CheckedList/CheckedList.cpp
   ${SRC_DIR}/Controls/StaticDialog/StaticDialog.cpp

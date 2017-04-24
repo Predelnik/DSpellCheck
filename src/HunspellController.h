@@ -16,10 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#ifndef HUNSPELLINTERFACE_H
-#define HUNSPELLINTERFACE_H
 
-#include "AbstractSpellerInterface.h"
+#pragma once
+
+#include "SpellerController.h"
 
 #ifndef USING_STATIC_LIBICONV
 #define USING_STATIC_LIBICONV
@@ -47,7 +47,7 @@ struct DicInfo
 
 struct AvailableLangInfo
 {
-  TCHAR *Name;
+  wchar_t *Name;
   int Type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
 
   bool operator < (const AvailableLangInfo &rhs ) const
@@ -56,27 +56,28 @@ struct AvailableLangInfo
   }
 };
 
-class HunspellInterface : public AbstractSpellerInterface
+class HunspellController : public SpellerController
 {
 public:
-  HunspellInterface (HWND NppWindowArg);
-  ~HunspellInterface ();
-  __override virtual std::vector<TCHAR*> *GetLanguageList ();
-  __override virtual void SetLanguage (TCHAR *Lang);
-  __override virtual void SetMultipleLanguages (std::vector<TCHAR *> *List); // Languages are from LangList
-  __override virtual BOOL CheckWord (char *Word); // Word in Utf-8 or ANSI
-  __override virtual BOOL IsWorking ();
-  __override virtual std::vector<char *> *GetSuggestions (char *Word);
-  __override virtual void AddToDictionary (char *Word);
-  __override virtual void IgnoreAll (char *Word);
+  HunspellController (HWND NppWindowArg);
+  ~HunspellController ();
+  std::vector<TCHAR*> *getLanguageList () override;
+  void setLanguage (const wchar_t *Lang) override;
+  void SetMultipleLanguages (std::vector<TCHAR *> *List) override; // Languages are from LangList
+  BOOL CheckWord (char *Word) override; // Word in Utf-8 or ANSI
+  BOOL IsWorking () override;
+  std::vector<char *> *GetSuggestions (char *Word) override;
+  void AddToDictionary (char *Word) override;
+  void IgnoreAll (char *Word) override;
+  void setPath (const wchar_t *dir) override;
+  void setAdditionalPath (const wchar_t *dir) override;
+  BOOL GetLangOnlySystem (const wchar_t *Lang) override;
 
-  void SetDirectory (TCHAR *Dir);
-  void SetAdditionalDirectory (TCHAR *Dir);
   void WriteUserDic (WordSet *Target, TCHAR *Path);
   void ReadUserDic (WordSet *Target, TCHAR *Path);
   void SetUseOneDic (BOOL Value);
-  void UpdateOnDicRemoval (TCHAR *Path, BOOL &NeedSingleLangReset, BOOL &NeedMultiLangReset);
-  BOOL GetLangOnlySystem (TCHAR *Lang);
+  void UpdateOnDicRemoval (const wchar_t *Path);
+
 private:
   DicInfo CreateHunspell (TCHAR *Name, int Type);
   BOOL SpellerCheckWord (DicInfo Dic, char *Word, EncodingType Encoding);
@@ -102,4 +103,3 @@ private:
   TCHAR *SystemWrongDicPath; // Only for reading and then removing
   HWND NppWindow;
 };
-#endif // HUNSPELLINTERFACE_H

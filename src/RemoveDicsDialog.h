@@ -21,15 +21,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class SpellChecker;
 
-class LangList : public StaticDialog
+struct SettingsData;
+
+struct RemoveDictionariesInfo
+{
+  std::vector<std::wstring> dictionaryNames;
+  std::unique_ptr<SettingsData> newSettings;
+};
+
+class RemoveDicsDialog : public StaticDialog
 {
 public:
   void init (HINSTANCE hInst, HWND Parent);
   void DoDialog ();
   HWND GetListBox ();
-  void ApplyChoice (SpellChecker *SpellCheckerInstance);
+  void SetCheckBoxes (BOOL RemoveUserDics, BOOL RemoveSystem);
+  void updateOnNewConfiguration ();
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
+  virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam) override;
+  void apply ();
 protected:
   HWND HLangList = NULL;
+  HWND HRemoveUserDics = NULL;
+  HWND HRemoveSystem = NULL;
 };

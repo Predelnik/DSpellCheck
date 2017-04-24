@@ -4,7 +4,7 @@ Copyright (C)2013 Sergey Semushin <Predelnik@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
+as published by the Free Software Foundation`; either version 2
 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -28,9 +28,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <uxtheme.h>
 
 
-class HunspellInterface;
+enum class SpellerType;
+
+class HunspellController;
 class SpellChecker;
 struct LanguageName;
+struct SettingsData;
+struct SpellCheckerStatus;
 typedef HTHEME (WINAPI * OTDProc) (HWND, LPCWSTR);
 
 class SimpleDlg : public StaticDialog
@@ -38,24 +42,18 @@ class SimpleDlg : public StaticDialog
 public:
   SimpleDlg ();
   ~SimpleDlg ();
-  __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
-  void ApplySettings (SpellChecker *SpellCheckerInstance);
-  BOOL AddAvailableLanguages (std::vector <LanguageName> *LangsAvailable, const TCHAR *CurrentLanguage, const TCHAR *MultiLanguages, HunspellInterface *HunspellSpeller);
+  void init (HINSTANCE hInst, HWND Parent, NppData nppData);
+  void applySettings (SettingsData &settings);
   void FillSugestionsNum (int SuggestionsNum);
-  void FillLibInfo (int Status, TCHAR *AspellPath, TCHAR *HunspellPath, TCHAR *HunspellAdditionalPath);
-  void DisableLanguageCombo (BOOL Disable);
-  void SetFileTypes (BOOL CheckThose, const TCHAR *FileTypes);
-  void SetSuggType (int SuggType);
-  void SetCheckComments (BOOL Value);
-  int GetSelectedLib ();
+  void updateVisibility (const SettingsData &settings, const SpellCheckerStatus &status);
+  SpellerType selectedSpellerType ();
   void SetLibMode (int LibMode);
-  void SetDecodeNames (BOOL Value);
   void SetOneUserDic (BOOL Value);
-  void ApplyLibChange (SpellChecker *SpellCheckerInstance);
+  void onSelectedSpellerChange ();
+  void updateOnConfigurationChange (const SettingsData &settings, const SpellCheckerStatus &status);
 
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
-
+  virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam) override;
 private:
   /* NppData struct instance */
   NppData NppDataInstance;
@@ -74,7 +72,7 @@ private:
   HWND HCheckComments = NULL;
   HWND HLibLink = NULL;
   HWND HSuggType = NULL;
-  HWND HLibrary = NULL;
+  HWND HSpellerTypeCombo = NULL;
   HWND HLibGroupBox = NULL;
   HWND HDownloadDics = NULL;
   HWND HRemoveDics = NULL;
@@ -93,21 +91,15 @@ private:
 class AdvancedDlg : public StaticDialog
 {
 public:
-  void ApplySettings (SpellChecker *SpellCheckerInstance);
-  void FillDelimiters (const char *Delimiters);
+  void applySettings (SettingsData &settings);
   void SetDelimetersEdit (TCHAR *Delimiters);
   void SetConversionOpts (BOOL ConvertYo, BOOL ConvertSingleQuotesArg, BOOL RemoveSingleApostrophe);
   void SetRecheckDelay (int Delay);
   int GetRecheckDelay ();
-  void SetSuggBoxSettings (int Size, int Trans);
-  void SetUnderlineSettings (int Color, int Style);
-  void SetIgnore (BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg, BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
-    BOOL Ignore_SA_Apostrophe_Arg, BOOL IgnoreOneLetter);
-  void SetBufferSize (int Size);
+  void updateOnConfigurationChange (const SettingsData &settings);
 
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
-
+  virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam) override;
 private:
   HWND HEditDelimiters = NULL;
   HWND HDefaultDelimiters = NULL;
@@ -130,24 +122,25 @@ private:
 
   HBRUSH Brush;
   NppData NppDataInstance;
-  COLORREF UnderlineColorBtn;
+  COLORREF underlineColorBtn;
 };
 
 class SettingsDlg : public StaticDialog
 {
 public:
-  UINT DoDialog (void);
-  __override void init (HINSTANCE hInst, HWND Parent, NppData nppData);
   SimpleDlg *GetSimpleDlg ();
   AdvancedDlg *GetAdvancedDlg ();
+  UINT DoDialog (void);
+  void init (HINSTANCE hInst, HWND Parent, NppData nppData);
+  void updateOnConfigurationChange ();
 protected:
-  __override virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam);
-  __override virtual void destroy ();
-  void ApplySettings ();
+  virtual BOOL CALLBACK run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam) override;
+  virtual void destroy () override;
+  void applySettings ();
 private:
   NppData NppDataInstance;
-  SimpleDlg SimpleDlgInstance;
-  AdvancedDlg AdvancedDlgInstance;
+  SimpleDlg simpleDlgInstance;
+  AdvancedDlg advancedDlgInstance;
   WindowVector WindowVectorInstance;
   ControlsTab ControlsTabInstance;
 };

@@ -25,10 +25,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "Definements.h"
 #include "DownloadDicsDlg.h"
+#include "Settings.h"
 
 #include "FTPClient.h"
 #include "FTPDataTypes.h"
-#include "HunspellInterface.h"
+#include "HunspellController.h"
 #include "LanguageName.h"
 #include "Plugin.h"
 #include "Progress.h"
@@ -99,11 +100,11 @@ DWORD DownloadDicsDlg::AskReplacementMessage (TCHAR *DicName)
 {
   TCHAR ReplaceMessage[DEFAULT_BUF_SIZE];
   TCHAR *TBuf = 0;
-  SetStringWithAliasApplied (TBuf, DicName);
+  setStringWithAliasApplied (TBuf, DicName);
   _stprintf_s (ReplaceMessage, _T ("Looks like %s dictionary is already present. Do you want to replace it?"), TBuf);
   CLEAN_AND_ZERO_ARR (TBuf);
   MessageBoxInfo MsgBox (_hParent, ReplaceMessage, _T ("Dictionary already exists"), MB_YESNO);
-  return SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX), (WPARAM) &MsgBox, 0);
+  return SendMessage (_hParent, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX), (WPARAM) &MsgBox, 0);
 }
 
 #define BUF_SIZE_FOR_COPY 10240
@@ -131,7 +132,7 @@ void DownloadDicsDlg::DownloadSelected ()
   if (!CheckForDirectoryExistence (TempPath, FALSE, _hParent)) // If path isn't exist we're gonna try to create it else it's finish
   {
     MessageBoxInfo MsgBox (_hParent, _T ("Path defined as temporary dir doesn't exist and couldn't be created, probably one of subdirectories have limited access, please make temporary path valid."), _T ("Temporary Path is Broken"), MB_OK | MB_ICONEXCLAMATION);
-    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    SendMessage (_hParent, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     return;
   }
   CancelPressed = FALSE;
@@ -144,10 +145,12 @@ void DownloadDicsDlg::DownloadSelected ()
   p->SetTopMessage (_T (""));
   int DownloadedCount = 0;
   int SupposedDownloadedCount = 0;
-  if (!CheckForDirectoryExistence (SpellCheckerInstance->GetInstallSystem () ? SpellCheckerInstance->GetHunspellAdditionalPath () : SpellCheckerInstance->GetHunspellPath (), 0, _hParent)) // If path doesn't exist we're gonna try to create it else it's finish
+  auto settings = SpellCheckerInstance->getSettings ();
+  auto dicPath = SpellCheckerInstance->GetInstallSystem () ? settings->spellerSettings[SpellerType::hunspell].path.data () : settings->spellerSettings[SpellerType::hunspell].additionalPath.data ();
+  if (!CheckForDirectoryExistence (dicPath, 0, _hParent)) // If path doesn't exist we're gonna try to create it else it's finish
   {
     MessageBoxInfo MsgBox (_hParent, _T ("Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
-    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    SendMessage (_hParent, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
     return;
   }
   for (int i = 0; i < Count; i++)
@@ -155,9 +158,9 @@ void DownloadDicsDlg::DownloadSelected ()
     if (CheckedListBox_GetCheckState (HFileList, i) == BST_CHECKED)
     {
       SupposedDownloadedCount++;
-      FileName = new TCHAR [_tcslen (CurrentLangsFiltered->at (i).OrigName) + 4 + 1];
+      FileName = new TCHAR [CurrentLangsFiltered->at (i).originalName.size () + 4 + 1];
       FileName[0] = _T ('\0');
-      _tcscat (FileName, CurrentLangsFiltered->at (i).OrigName);
+      _tcscat (FileName, CurrentLangsFiltered->at (i).originalName.c_str ());
       _tcscat (FileName, _T (".zip"));
       _stprintf (ProgMessage, _T ("Downloading %s..."), FileName);
       p->SetTopMessage (ProgMessage);
@@ -167,7 +170,7 @@ void DownloadDicsDlg::DownloadSelected ()
       DoFtpOperation (DOWNLOAD_FILE, Buf, FileName, LocalPath);
       if (CancelPressed)
         break;
-      SetString (LocalPathANSI, LocalPath);
+      setString (LocalPathANSI, LocalPath);
       unzFile fp = unzOpen (LocalPathANSI);
       if (unzGoToFirstFile (fp) != UNZ_OK)
         goto clean_and_continue;
@@ -194,7 +197,7 @@ void DownloadDicsDlg::DownloadSelected ()
           unzOpenCurrentFile (fp);
           int BytesCopied = 0;
           _tcscpy (DicFileLocalPath, TempPath);
-          SetString (DicFileName, DicFileNameANSI);
+          setString (DicFileName, DicFileNameANSI);
           _tcscat (DicFileLocalPath, DicFileName);
           if (IsAffFile)
             _tcscat (DicFileLocalPath, _T (".aff"));
@@ -231,7 +234,7 @@ void DownloadDicsDlg::DownloadSelected ()
         if ((*it).second != 3) // Some of .aff/.dic is missing
         {
           _tcscpy (DicFileLocalPath, TempPath);
-          SetString (DicFileName, (*it).first);
+          setString (DicFileName, (*it).first);
           _tcscat (DicFileLocalPath, DicFileName);
           switch ((*it).second)
           {
@@ -248,10 +251,10 @@ void DownloadDicsDlg::DownloadSelected ()
         else
         {
           _tcscpy (DicFileLocalPath, TempPath);
-          SetString (DicFileName, (*it).first);
+          setString (DicFileName, (*it).first);
           _tcscat (DicFileLocalPath, DicFileName);
           _tcscat (DicFileLocalPath, _T (".aff"));
-          _tcscpy (HunspellDicPath, SpellCheckerInstance->GetInstallSystem () ? SpellCheckerInstance->GetHunspellAdditionalPath () : SpellCheckerInstance->GetHunspellPath ());
+          _tcscpy (HunspellDicPath, dicPath);
           _tcscat (HunspellDicPath, _T ("\\"));
           _tcscat (HunspellDicPath, DicFileName);
           _tcscat (HunspellDicPath, _T (".aff"));
@@ -315,7 +318,7 @@ void DownloadDicsDlg::DownloadSelected ()
             DeleteFile (DicFileLocalPath);
             Failure = 1;
           }
-          SetStringWithAliasApplied (ConvertedDicName, DicFileName);
+          setStringWithAliasApplied (ConvertedDicName, DicFileName);
           if (Failure)
             goto clean_and_continue;
 
@@ -347,24 +350,21 @@ clean_and_continue:
   if (Failure == 1)
   {
     MessageBoxInfo MsgBox (_hParent, _T ("Access denied to dictionaries directory, either try to run Notepad++ as administrator or select some different, accessible dictionary path"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
-    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    SendMessage (_hParent, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   }
   else if (DownloadedCount)
   {
     MessageBoxInfo MsgBox (_hParent, Message, _T ("Dictionaries Downloaded"), MB_OK | MB_ICONINFORMATION);
-    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    SendMessage (_hParent, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   }
   else if (SupposedDownloadedCount) // Otherwise - silent
   {
     MessageBoxInfo MsgBox (_hParent, _T ("Sadly, no dictionaries were copied, please try again"), _T ("Dictionaries Haven't Been Downloaded"), MB_OK | MB_ICONEXCLAMATION);
-    SendMessage (_hParent, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    SendMessage (_hParent, getCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
   }
   for (int i = 0; i < ListBox_GetCount (HFileList); i++)
     CheckedListBox_SetCheckState (HFileList, i, BST_UNCHECKED);
-  SpellCheckerInstance->HunspellReinitSettings (TRUE); // Calling the update for Hunspell dictionary list
-  SpellCheckerInstance->ReinitLanguageLists (TRUE);
-  SpellCheckerInstance->DoPluginMenuInclusion ();
-  SpellCheckerInstance->RecheckVisibleBothViews ();
+  SendEvent (EID_HUNSPELL_DICTIONARIES_CHANGE);
   CLEAN_AND_ZERO_ARR (LocalPathANSI);
   CLEAN_AND_ZERO_ARR (DicFileName);
   CLEAN_AND_ZERO_ARR (ConvertedDicName);
@@ -407,14 +407,16 @@ void DownloadDicsDlg::UpdateListBox ()
   for (unsigned int i = 0; i < CurrentLangs->size (); i++)
   {
     LanguageName Lang (CurrentLangs->at (i));
-    if (SpellCheckerInstance->GetShowOnlyKnown () && !Lang.AliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
+    if (SpellCheckerInstance->GetShowOnlyKnown () && !Lang.aliasApplied) // TODO: Add option to ignore/don't ignore non resolved package names
       continue;
     CurrentLangsFiltered->push_back (Lang);
   }
   ListBox_ResetContent (HFileList);
+
+  auto settings = getSpellChecker()->getSettings ();
   for (unsigned int i = 0; i < CurrentLangsFiltered->size (); i++)
   {
-    ListBox_AddString (HFileList, SpellCheckerInstance->GetDecodeNames () ? CurrentLangsFiltered->at (i).AliasName : CurrentLangsFiltered->at (i).OrigName);
+    ListBox_AddString (HFileList, CurrentLangsFiltered->at (i).getLanguageName(*settings).c_str ());
   }
 }
 
@@ -641,7 +643,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       count++;
 
       FileName = 0;
-      SetString (FileName, TempBuf);
+      setString (FileName, TempBuf);
 
       LanguageName Lang (FileName); // Probably should add options for using/not using aliases
       CurrentLangs->push_back (Lang);
@@ -656,7 +658,10 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy (FTP_OPERATION_TYPE Type, T
       goto cleanup;
     }
 
-    std::sort (CurrentLangs->begin (), CurrentLangs->end (), SpellCheckerInstance->GetDecodeNames () ? CompareAliases : CompareOriginal);
+    {
+      auto settings = getSpellChecker ()->getSettings ();
+      std::sort (CurrentLangs->begin (), CurrentLangs->end (), settings->useLanguageNameAliases ? CompareAliases : CompareOriginal);
+    }
 
     UpdateListBox (); // Used only here and on filter change
     // If it is success when we perhaps should add this address to our list.
@@ -807,7 +812,7 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
         continue;
 
       count++;
-      SetString (Buf, List.at (i)->Name ().c_str ());
+      setString (Buf, List.at (i)->Name ().c_str ());
       Buf[_tcslen (Buf) - 4] = 0;
       LanguageName Lang (Buf); // Probably should add options for using/not using aliases
       CurrentLangs->push_back (Lang);
@@ -820,7 +825,11 @@ void DownloadDicsDlg::DoFtpOperation (FTP_OPERATION_TYPE Type, TCHAR *Address, T
       goto cleanup;
     }
 
-    std::sort (CurrentLangs->begin (), CurrentLangs->end (), SpellCheckerInstance->GetDecodeNames () ? CompareAliases : CompareOriginal);
+    {
+      auto settings = getSpellChecker()->getSettings();
+      std::sort (CurrentLangs->begin (), CurrentLangs->end (), settings->useLanguageNameAliases ? CompareAliases : CompareOriginal);
+    }
+
 
     UpdateListBox (); // Used only here and on filter change
     CLEAN_AND_ZERO_ARR (Buf);

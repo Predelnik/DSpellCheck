@@ -179,10 +179,10 @@ void GetDefaultAspellPath (TCHAR *&Path)
     PathAppend(pszPath, Pf);
     PathAppend(pszPath, _T("\\Aspell\\bin\\aspell-15.dll"));
   }
-  SetString (Path, pszPath);
+  setString (Path, pszPath);
 }
 
-void GetActualAspellPath (TCHAR *&Path, TCHAR *&PathArg)
+void GetActualAspellPath(wchar_t *&Path, const wchar_t *PathArg)
 {
   if (!PathArg || !*PathArg)
   {
@@ -190,11 +190,11 @@ void GetActualAspellPath (TCHAR *&Path, TCHAR *&PathArg)
   }
   else
   {
-    SetString (Path, PathArg);
+    setString (Path, PathArg);
   }
 }
 
-BOOL LoadAspell (TCHAR *PathArg)
+bool LoadAspell(const wchar_t *PathArg)
 {
   TCHAR *Path = 0;
   GetActualAspellPath (Path, PathArg);
@@ -208,7 +208,7 @@ BOOL LoadAspell (TCHAR *PathArg)
 
   hInstLib = LoadLibrary (Path);
   CLEAN_AND_ZERO_ARR (Path);
-  BOOL bRet = FALSE;
+  bool bRet = false;
 
   if (hInstLib != NULL)
   {
@@ -334,9 +334,9 @@ BOOL LoadAspell (TCHAR *PathArg)
     aspell_string_pair_enumeration_assign         = (PFUNC_aspell_string_pair_enumeration_assign        )GetProcAddress(hInstLib, "aspell_string_pair_enumeration_assign");
 
     if (!new_aspell_config) // TODO: Add check for all used functions
-      return FALSE;
+      return false;
 
-    bRet = TRUE;
+    bRet = true;
   }
 
   return bRet;
