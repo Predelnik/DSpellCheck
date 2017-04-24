@@ -842,6 +842,23 @@ int SpellChecker::CheckWordInCommentOrString (int Style)
   case SCLEX_CONTAINER:
   case SCLEX_NULL:
     return TRUE;
+  case SCLEX_USER:
+    switch(Style)
+    {
+    case SCE_USER_STYLE_COMMENT:
+    case SCE_USER_STYLE_COMMENTLINE:
+    case SCE_USER_STYLE_DELIMITER1:
+    case SCE_USER_STYLE_DELIMITER2:
+    case SCE_USER_STYLE_DELIMITER3:
+    case SCE_USER_STYLE_DELIMITER4:
+    case SCE_USER_STYLE_DELIMITER5:
+    case SCE_USER_STYLE_DELIMITER6:
+    case SCE_USER_STYLE_DELIMITER7:
+    case SCE_USER_STYLE_DELIMITER8:
+      return TRUE;
+    default:
+      return FALSE;
+    };
   case SCLEX_PYTHON:
     switch (Style)
     {
