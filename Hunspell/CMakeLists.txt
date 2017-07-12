@@ -51,7 +51,6 @@ SET(HEADERS
 
 ADD_LIBRARY( hunspell-static STATIC ${HEADERS} ${SRCS})
 TARGET_LINK_LIBRARIES( hunspell-static  )
-ADD_DEPENDENCIES( hunspell-static  ${HEADERS})
 
 SET_TARGET_PROPERTIES(
     hunspell-static

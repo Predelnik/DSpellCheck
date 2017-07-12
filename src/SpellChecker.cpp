@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Aspell.h"
 #include "DownloadDicsDlg.h"
-#include "iconv.h"
 #include "CommonFunctions.h"
 #include "LanguageName.h"
 #include "LangList.h"

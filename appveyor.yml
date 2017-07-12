@@ -1,0 +1,66 @@
+version: 1.2.14.2{build}
+image: Visual Studio 2015
+
+
+environment:
+  matrix:
+  - PlatformToolset: v140_xp
+  - PlatformToolset: v120_xp
+
+platform:
+    - x64
+    - Win32
+
+configuration:
+    - Release
+    #- Debug
+
+install:
+    - if "%platform%"=="x64" set archi=amd64
+    - if "%platform%"=="Win32" set archi=x86
+    - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %archi%
+
+build:
+    parallel: true                  # enable MSBuild parallel builds
+    verbosity: minimal
+
+before_build:
+- ps: |
+    Write-Output "Configuration: $env:CONFIGURATION"
+    Write-Output "Platform: $env:PLATFORM"
+    $generator = switch ($env:PLATFORMTOOLSET)
+    {
+        "v140_xp" {"Visual Studio 14 2015"}
+        "v120_xp" {"Visual Studio 12 2013"}
+    }
+    if ($env:PLATFORM -eq "x64")
+    {
+        $generator = "$generator Win64"
+    }
+
+build_script:
+- ps: |
+    md _build -Force | Out-Null
+    cd _build
+    & cmake -G "$generator" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" ..
+    if ($LastExitCode -ne 0) {
+        throw "Exec: $ErrorMessage"
+    }
+    & cmake --build . --config $env:CONFIGURATION -- /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+    if ($LastExitCode -ne 0) {
+        throw "Exec: $ErrorMessage"
+    }
+
+after_build:
+    - cd "%APPVEYOR_BUILD_FOLDER%"\_build\
+    - ps: >-
+        $dspellcheckFileName = "DSpellCheck.$env:PLATFORM.$env:CONFIGURATION.$env:PLATFORMTOOLSET.dll"
+
+        if ($env:PLATFORM -eq "x64") {
+            Push-AppveyorArtifact "x64\$env:CONFIGURATION\DSpellCheck.dll" -FileName DSpellCheck.dll
+        }
+
+        if ($env:PLATFORM -eq "Win32") {
+            Push-AppveyorArtifact "$env:CONFIGURATION\DSpellCheck.dll" -FileName DSpellCheck.dll
+        }
+
