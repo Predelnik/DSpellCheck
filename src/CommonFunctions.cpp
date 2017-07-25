@@ -17,6 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #include "CommonFunctions.h"
+
+#ifndef USING_STATIC_LIBICONV
+#define USING_STATIC_LIBICONV
+#endif // !USING_STATIC_LIBICONV
+
 #include "iconv.h"
 #include "MainDef.h"
 #include "Plugin.h"

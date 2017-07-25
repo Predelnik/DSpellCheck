@@ -24,7 +24,6 @@ set (list_of_files_MiniZip
   ${SRC_DIR}/crc32.h
   ${SRC_DIR}/deflate.c
   ${SRC_DIR}/deflate.h
-  ${SRC_DIR}/example.c
   ${SRC_DIR}/gzclose.c
   ${SRC_DIR}/gzguts.h
   ${SRC_DIR}/gzlib.c

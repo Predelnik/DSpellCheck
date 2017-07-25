@@ -105,6 +105,7 @@ set (list_of_files_DSpellCheck
 
 SET(LINK_LIBRARY shlwapi comctl32 version wininet Ws2_32)
 add_library (DSpellCheck SHARED ${list_of_files_DSpellCheck})
+add_dependencies(DSpellCheck hunspell-static libiconv minizip ftpclient)
 
 #if (MSVC80 OR MSVC71 OR MSVC70 OR MSVC60)
 # SET_TARGET_PROPERTIES(DSpellCheck PROPERTIES LINK_FLAGS "/FORCE:MULTIPLE")
