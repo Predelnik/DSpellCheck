@@ -87,7 +87,7 @@ bool ControlsTab::renameTab(const TCHAR *internalName, const TCHAR *newName)
   if (!foundIt)
     return false;
 
-  renameTab(i, newName);
+  renameTab(static_cast<int> (i), newName);
   return true;
 }
 

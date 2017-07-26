@@ -280,7 +280,7 @@ namespace nsFTP
   void COutputStream::OnPreBytesSend(char* pszBuffer, size_t bufferSize, size_t& bytesToSend)
   {
     for( bytesToSend=0; m_spPimpl->m_itCurrentPos!=m_spPimpl->m_vBuffer.end() && bytesToSend < bufferSize; ++m_spPimpl->m_itCurrentPos, ++bytesToSend )
-      pszBuffer[bytesToSend] = *m_spPimpl->m_itCurrentPos;
+      pszBuffer[bytesToSend] = static_cast<char> (*m_spPimpl->m_itCurrentPos);
   }
 }
 
