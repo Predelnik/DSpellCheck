@@ -2856,7 +2856,7 @@ void SpellChecker::LoadFromIni (TCHAR *&Value, const TCHAR *Name, const TCHAR *D
       return;
     }
 
-    for (int i = 0; i < Len; i++)
+    for (size_t i = 0; i < Len; i++)
       Value[i] = Value[i + 1];
 
     Value[Len - 1] = 0;
@@ -3089,7 +3089,7 @@ void SpellChecker::ApplyConversions (char *Word) // In Utf-8, Maybe shortened du
         *NestedIter =  *(NestedIter + Diff);
         NestedIter++;
       }
-      for (int j = 0; j < Diff; j++)
+      for (size_t j = 0; j < Diff; j++)
         *(NestedIter + j) = 0;
     }
   }

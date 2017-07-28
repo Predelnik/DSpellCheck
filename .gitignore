@@ -38,9 +38,9 @@ Win32/*
 src/config.h
 ipch/*
 lib/*
-build/*
-bld/*
-bin/*
+build*/*
+bld*/*
+bin*/*
 build-x64/*
 bld-x64/*
 bin-x64/*

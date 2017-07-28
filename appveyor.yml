@@ -5,7 +5,6 @@ image: Visual Studio 2015
 environment:
   matrix:
   - PlatformToolset: v140_xp
-  - PlatformToolset: v120_xp
 
 platform:
     - x64
@@ -31,7 +30,6 @@ before_build:
     $generator = switch ($env:PLATFORMTOOLSET)
     {
         "v140_xp" {"Visual Studio 14 2015"}
-        "v120_xp" {"Visual Studio 12 2013"}
     }
     if ($env:PLATFORM -eq "x64")
     {
@@ -40,8 +38,8 @@ before_build:
 
 build_script:
 - ps: |
-    md _build -Force | Out-Null
-    cd _build
+    md _build_$env:PLATFORM -Force | Out-Null
+    cd _build_$env:PLATFORM
     & cmake -G "$generator" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" ..
     if ($LastExitCode -ne 0) {
         throw "Exec: $ErrorMessage"
@@ -52,12 +50,12 @@ build_script:
     }
 
 after_build:
-    - cd "%APPVEYOR_BUILD_FOLDER%"\_build\
+    - cd "%APPVEYOR_BUILD_FOLDER%"\_build_%platform%\
     - ps: >-
         $dspellcheckFileName = "DSpellCheck.$env:PLATFORM.$env:CONFIGURATION.$env:PLATFORMTOOLSET.dll"
 
         if ($env:PLATFORM -eq "x64") {
-            Push-AppveyorArtifact "x64\$env:CONFIGURATION\DSpellCheck.dll" -FileName DSpellCheck.dll
+            Push-AppveyorArtifact "$env:CONFIGURATION\DSpellCheck.dll" -FileName DSpellCheck.dll
         }
 
         if ($env:PLATFORM -eq "Win32") {
