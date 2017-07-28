@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/n1dk0ym3nxtn5nu5/branch/stable?svg=true)](https://ci.appveyor.com/project/Predelnik/dspellcheck/branch/stable)
+
 DSpellCheck
 ===========
 
