@@ -62,35 +62,18 @@ HWND GetScintillaWindow(const NppData *NppDataArg) {
 
 BOOL SendMsgToBothEditors(const NppData *NppDataArg, UINT Msg, WPARAM wParam,
                           LPARAM lParam) {
-  if (isCurrentlyTerminating())
-    return FALSE;
-
   SendMessage(NppDataArg->_scintillaMainHandle, Msg, wParam, lParam);
   SendMessage(NppDataArg->_scintillaSecondHandle, Msg, wParam, lParam);
   return TRUE;
 }
 
-LRESULT SendMsgToActiveEditor(BOOL *ok, HWND ScintillaWindow, UINT Msg,
+LRESULT SendMsgToActiveEditor(BOOL * /*ok*/, HWND ScintillaWindow, UINT Msg,
                               WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/) {
-  bool terminating = isCurrentlyTerminating();
-  if (ok)
-    *ok = !terminating;
-
-  if (terminating)
-    return 0;
-
   return SendMessage(ScintillaWindow, Msg, wParam, lParam);
 }
 
-LRESULT SendMsgToNpp(BOOL *ok, const NppData *NppDataArg, UINT Msg,
+LRESULT SendMsgToNpp(BOOL * /*ok*/, const NppData *NppDataArg, UINT Msg,
                      WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/) {
-  bool terminating = isCurrentlyTerminating();
-  if (ok)
-    *ok = !terminating;
-
-  if (terminating)
-    return 0;
-
   return SendMessage(NppDataArg->_nppHandle, Msg, wParam, lParam);
 }
 
@@ -506,7 +489,7 @@ BOOL WINAPI SpellChecker::NotifyNetworkEvent(DWORD Event) {
 }
 
 BOOL WINAPI SpellChecker::NotifyEvent(DWORD Event) {
-  if (Event == EID_KILLTHREAD || isCurrentlyTerminating())
+  if (Event == EID_KILLTHREAD)
     return false;
 
   CurrentScintilla =

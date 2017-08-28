@@ -120,7 +120,6 @@ void SendNetworkEvent (NetworkEventId Event);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam = 0, LPARAM LParam = 0);
 DWORD WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
 DWORD WaitForNetworkEvent (NetworkEventId Event, DWORD WaitTime = INFINITE);
-DWORD WaitForMultipleEvents (EventId EventFirst, EventId EventLast, DWORD WaitTime = INFINITE);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
 void setEncodingById (int EncId);
@@ -157,7 +156,6 @@ BOOL GetUseAllocatedIds ();
 SpellChecker *GetSpellChecker ();
 DWORD GetCustomGUIMessageId (CustomGUIMessage MessageId);
 void RegisterCustomMessages ();
-bool isCurrentlyTerminating (); // This function is only for main thread
 
 // From DllMain, possibly move to DllMain.h
 void SetRecheckDelay (int Value, int WriteToIni = 1);

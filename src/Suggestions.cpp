@@ -157,8 +157,10 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
     p.y = 0;
     ClientToScreen(_hSelf, &p);
     StateMenu = TRUE;
+    SetForegroundWindow(NppDataInstance._nppHandle);
     MenuResult = TrackPopupMenuEx(PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
                                   p.x, p.y, _hSelf, &TPMParams);
+    PostMessage(NppDataInstance._nppHandle, WM_NULL, 0, 0);
     SendEvent(EID_APPLYMENUACTION);
     SetFocus(GetScintillaWindow(&NppDataInstance));
     StateMenu = FALSE;
