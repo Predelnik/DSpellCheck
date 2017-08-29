@@ -43,7 +43,7 @@ void StaticDialog::goToCenter()
   ::SetWindowPos(_hSelf, HWND_TOP, x, y, _rc.right - _rc.left, _rc.bottom - _rc.top, 0);
 }
 
-void StaticDialog::display(bool toShow) const
+void StaticDialog::display(bool toShow, bool activate) const
 {
   if (toShow) {
     // If the user has switched from a dual monitor to a single monitor since we last
@@ -68,7 +68,7 @@ void StaticDialog::display(bool toShow) const
         ::MoveWindow(_hSelf, newLeft, newTop, rc.right - rc.left, rc.bottom - rc.top, TRUE);
   }
 
-  Window::display(toShow);
+  Window::display(toShow, activate);
 }
 
 HGLOBAL StaticDialog::makeRTLResource(int dialogID, DLGTEMPLATE **ppMyDlgTemplate)

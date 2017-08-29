@@ -42,8 +42,11 @@ public:
 
   virtual void destroy() = 0;
 
-  virtual void display(bool toShow = true) const {
-    ::ShowWindow(_hSelf, toShow?SW_SHOW:SW_HIDE);
+  virtual void display(bool toShow = true, bool activate = true) const {
+      if (toShow)
+       ::ShowWindow(_hSelf, activate?SW_SHOW:SW_SHOWNOACTIVATE);
+      else
+        ::ShowWindow(_hSelf, SW_HIDE);
   };
 
   virtual void reSizeTo(RECT & rc) // should NEVER be const !!!

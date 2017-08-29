@@ -2021,7 +2021,7 @@ void SpellChecker::InitSuggestionsBox() {
     return;
   MoveWindow(SuggestionsInstance->getHSelf(), p.x,
              p.y + static_cast<int>(TextHeight) - 3, SBSize, SBSize, TRUE);
-  SuggestionsInstance->display();
+  SuggestionsInstance->display(true, false);
 }
 
 void SpellChecker::ProcessMenuResult(WPARAM MenuId) {

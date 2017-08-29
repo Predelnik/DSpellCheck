@@ -70,7 +70,7 @@ public :
 
   void goToCenter();
 
-  void display(bool toShow = true) const;
+  void display(bool toShow = true, bool activate = true) const;
 
   POINT getLeftTopPoint(HWND hwnd/*, POINT & p*/) const {
     RECT rc;
