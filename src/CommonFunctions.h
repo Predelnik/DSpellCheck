@@ -41,7 +41,7 @@ BOOL SetStringWithAliasApplied(wchar_t *&Target, wchar_t *OrigName);
 
 void SetParsedString(wchar_t *&Dest, wchar_t *Source);
 
-LRESULT SendMsgToNpp(BOOL *ok, const NppData *NppDataArg, UINT Msg,
+LRESULT SendMsgToNpp(const NppData *NppDataArg, UINT Msg,
                      WPARAM wParam = 0, LPARAM lParam = 0);
 
 char *Utf8Dec(const char *string, const char *current);

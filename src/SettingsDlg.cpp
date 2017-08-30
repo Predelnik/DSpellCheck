@@ -478,11 +478,7 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
         Edit_GetText(HLibPath, Buf, DEFAULT_BUF_SIZE);
         wchar_t NppPath[MAX_PATH];
         wchar_t FinalPath[MAX_PATH];
-        BOOL ok;
-        SendMsgToNpp(&ok, &NppDataInstance, NPPM_GETNPPDIRECTORY, MAX_PATH,
-                     (LPARAM)NppPath);
-        if (!ok)
-          break;
+        SendMsgToNpp(&NppDataInstance, NPPM_GETNPPDIRECTORY, MAX_PATH, (LPARAM)NppPath);
         PathCombine(FinalPath, NppPath, Buf);
         bi.lParam = (LPARAM)FinalPath;
         LPITEMIDLIST pidl = SHBrowseForFolder(&bi);

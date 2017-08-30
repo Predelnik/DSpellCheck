@@ -782,7 +782,7 @@ void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, wchar_t *Address,
   nsFTP::CFTPClient ftpClient(nsSocket::CreateDefaultBlockingSocketInstance(),
                               3);
   if (!SpellCheckerInstance->GetUseProxy())
-    logonInfo = new nsFTP::CLogonInfo(Address, 21, L"anonymous", L"", L"");
+    logonInfo = new nsFTP::CLogonInfo(Address);
   else
     logonInfo = new nsFTP::CLogonInfo(
         Address, 21, L"anonymous", L"", L"",

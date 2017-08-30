@@ -45,7 +45,7 @@ void InsertSuggMenuItem(HMENU Menu, wchar_t *Text, BYTE Id, int InsertPos,
                         BOOL Separator = FALSE);
 
 HWND GetScintillaWindow(const NppData *NppDataArg);
-LRESULT SendMsgToActiveEditor(BOOL *ok, HWND ScintillaWindow, UINT Msg,
+LRESULT SendMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
                               WPARAM wParam = 0, LPARAM lParam = 0);
 BOOL SendMsgToBothEditors(const NppData *NppDataArg, UINT Msg,
                           WPARAM wParam = 0, LPARAM lParam = 0);

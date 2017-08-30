@@ -389,11 +389,8 @@ void AddIcons() {
 void UpdateLangsMenu() { SendEvent(EID_UPDATE_LANGS_MENU); }
 
 HMENU GetDSpellCheckMenu() {
-  BOOL ok;
   HMENU PluginsMenu =
-      (HMENU)SendMsgToNpp(&ok, &nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
-  if (!ok)
-    return 0;
+      (HMENU)SendMsgToNpp(&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
   HMENU DSpellCheckMenu = 0;
   int Count = GetMenuItemCount(PluginsMenu);
   int StrLen = 0;
