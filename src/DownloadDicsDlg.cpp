@@ -49,9 +49,7 @@ void DownloadDicsDlg::DoDialog() {
 }
 
 void DownloadDicsDlg::FillFileList() {
-  wchar_t Buf[DEFAULT_BUF_SIZE];
-  ComboBox_GetText(HAddress, Buf, DEFAULT_BUF_SIZE);
-  GetDownloadDics()->DoFtpOperation(FILL_FILE_LIST, Buf);
+  GetDownloadDics()->DoFtpOperation(FILL_FILE_LIST, currentAddress ().c_str ());
 }
 
 void DownloadDicsDlg::OnDisplayAction() {
@@ -108,7 +106,6 @@ void DownloadDicsDlg::DownloadSelected() {
   wchar_t LocalPath[MAX_PATH];
   wchar_t *ConvertedDicName = 0;
   char *LocalPathANSI = 0;
-  wchar_t Buf[DEFAULT_BUF_SIZE];
   char *DicFileNameANSI = 0;
   std::map<char *, int, bool (*)(char *, char *)>::iterator it;
   wchar_t *DicFileName = 0;
@@ -179,8 +176,7 @@ void DownloadDicsDlg::DownloadSelected() {
       p->SetTopMessage(ProgMessage);
       wcscpy(LocalPath, TempPath);
       wcscat(LocalPath, FileName);
-      ComboBox_GetText(HAddress, Buf, DEFAULT_BUF_SIZE);
-      DoFtpOperation(DOWNLOAD_FILE, Buf, FileName, LocalPath);
+      DoFtpOperation(DOWNLOAD_FILE, currentAddress (), FileName, LocalPath);
       if (CancelPressed)
         break;
       SetString(LocalPathANSI, LocalPath);
@@ -385,29 +381,18 @@ void DownloadDicsDlg::DownloadSelected() {
   CLEAN_AND_ZERO_ARR(ConvertedDicName);
 }
 
-void FtpTrim(wchar_t *FtpAddress) {
-  StrTrim(FtpAddress, L" ");
-  const wchar_t FtpPrefix[] = L"ftp://";
-  auto FtpPrefixLen = wcslen(FtpPrefix);
-  for (unsigned int i = 0; i < wcslen(FtpAddress); i++) // Exchanging slashes
-  {
-    if (FtpAddress[i] == L'\\')
-      FtpAddress[i] = L'/';
+void FtpTrim(std::wstring& ftpAddress) {
+  trim (ftpAddress);
+  for (auto &c : ftpAddress) {
+      if (c == L'\\')
+          c = L'/';
   }
+  std::wstring ftpPrefix = L"ftp://";
+  if (ftpAddress.find (ftpPrefix) == 0)
+      ftpAddress.erase (ftpAddress.begin (), ftpAddress.begin () + ftpPrefix.length ());
 
-  if (wcsncmp(FtpPrefix, FtpAddress, FtpPrefixLen) ==
-      0) // Cutting out stuff like ftp://
-  {
-    for (unsigned int i = 0; i <= wcslen(FtpAddress) - FtpPrefixLen; i++) {
-      FtpAddress[i] = FtpAddress[i + FtpPrefixLen];
-    }
-  }
-
-  for (unsigned int i = 0; i < wcslen(FtpAddress); i++) {
-    FtpAddress[i] = towlower(FtpAddress[i]);
-    if (FtpAddress[i] == '/')
-      break; // In dir names upper/lower case could matter
-  }
+  std::transform (ftpAddress.begin(), std::find (ftpAddress.begin (), ftpAddress.end(),L'/'), ftpAddress.begin(),
+      &towlower); // In dir names upper/lower case could matter
 }
 
 void DownloadDicsDlg::UpdateListBox() {
@@ -469,12 +454,12 @@ public:
              TargetSize, BytesReceived * 100 / TargetSize);
     ProgressInstance->SetBottomMessage(Message);
 
-    if (WaitForNetworkEvent(EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0) {
+    /*
       ProgressInstance->SetBottomMessage(L"Aborting Download...");
       DownloadDicsInstance->SetCancelPressed(TRUE);
       FtpSession->Abort();
       return;
-    }
+    */
   }
 };
 
@@ -483,7 +468,7 @@ void DownloadDicsDlg::SetCancelPressed(BOOL Value) { CancelPressed = Value; }
 #define INITIAL_BUFFER_SIZE 50 * 1024
 #define INITIAL_SMALL_BUFFER_SIZE 10 * 1024
 void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
-                                                     wchar_t *Address,
+                                                     std::wstring Address,
                                                      wchar_t *FileNameArg,
                                                      wchar_t *Location) {
   wchar_t *ProxyFinalString =
@@ -496,7 +481,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
   CLEAN_AND_ZERO_ARR(ProxyFinalString);
   FtpTrim(Address);
   wchar_t *Url =
-      new wchar_t[wcslen(Address) +
+      new wchar_t[Address.length () +
                   (Type == DOWNLOAD_FILE ? wcslen(FileNameArg) : 0) + 6 + 1];
 
   if (!WinInetHandle) {
@@ -508,7 +493,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
   }
 
   wcscpy(Url, L"ftp://");
-  wcscat(Url, Address);
+  wcscat(Url, Address.c_str ());
   if (Type == DOWNLOAD_FILE)
     wcscat(Url, FileNameArg);
 
@@ -683,11 +668,8 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
 
     UpdateListBox(); // Used only here and on filter change
     // If it is success when we perhaps should add this address to our list.
-    int Len = ComboBox_GetTextLength(HAddress) + 1;
     if (CheckIfSavingIsNeeded) {
-      wchar_t *NewServer = new wchar_t[Len];
-      ComboBox_GetText(HAddress, NewServer, Len);
-      PostMessageToMainThread(TM_ADD_USER_SERVER, (WPARAM)NewServer, 0);
+      SpellCheckerInstance->addUserServer(currentAddress ());
     }
     StatusColor = COLOR_OK;
     Static_SetText(HStatus,
@@ -736,11 +718,11 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
 
       GetProgress()->SetBottomMessage(Message);
 
-      if (WaitForNetworkEvent(EID_CANCEL_DOWNLOAD, 0) == WAIT_OBJECT_0) {
+      /*
         GetProgress()->SetBottomMessage(L"Aborting Download...");
         SetCancelPressed(TRUE);
         break;
-      }
+      */
     }
     _close(FileHandle);
     GetProgress()->SetMarquee(false);
@@ -752,9 +734,16 @@ cleanup:
   CLEAN_AND_ZERO_ARR(Url);
 }
 
-void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, wchar_t *Address,
+std::wstring DownloadDicsDlg::currentAddress () const {
+   auto sel = ComboBox_GetCurSel (HAddress);
+   auto textLen = ComboBox_GetLBTextLen (HAddress, sel);
+   std::vector<wchar_t> buf (textLen + 1);
+   ComboBox_GetLBText (HAddress, sel, buf.data ());
+   return buf.data ();
+}
+
+void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, std::wstring address,
                                      wchar_t *FileName, wchar_t *Location) {
-  wchar_t *Folders = 0;
   Observer *ProgressUpdater = 0;
   if (Type == FILL_FILE_LIST) {
     EnableWindow(HInstallSelected, FALSE);
@@ -767,25 +756,25 @@ void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, wchar_t *Address,
 
   if (SpellCheckerInstance->GetUseProxy() &&
       SpellCheckerInstance->GetProxyType() == 0) {
-    DoFtpOperationThroughHttpProxy(Type, Address, FileName, Location);
+    DoFtpOperationThroughHttpProxy(Type, address, FileName, Location);
     return;
   }
 
-  FtpTrim(Address);
-  Folders = wcschr(Address, L'/');
-  if (Folders != 0) {
-    *Folders = L'\0';
-    Folders++;
+  FtpTrim(address);
+  auto foldersIt = std::find (address.begin (), address.end (), L'/');
+  if (foldersIt != address.end ()) {
+    *foldersIt = L'\0';
+    ++foldersIt;
   }
 
   nsFTP::CLogonInfo *logonInfo = 0;
   nsFTP::CFTPClient ftpClient(nsSocket::CreateDefaultBlockingSocketInstance(),
                               3);
   if (!SpellCheckerInstance->GetUseProxy())
-    logonInfo = new nsFTP::CLogonInfo(Address);
+    logonInfo = new nsFTP::CLogonInfo(address);
   else
     logonInfo = new nsFTP::CLogonInfo(
-        Address, 21, L"anonymous", L"", L"",
+        address, 21, L"anonymous", L"", L"",
         SpellCheckerInstance->GetProxyHostName(), L"", L"",
         static_cast<USHORT>(SpellCheckerInstance->GetProxyPort()),
         nsFTP::CFirewallType::UserWithNoLogon());
@@ -801,7 +790,7 @@ void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, wchar_t *Address,
   if (Type == FILL_FILE_LIST) {
     nsFTP::TFTPFileStatusShPtrVec List;
 
-    if (!ftpClient.List(Folders, List, true)) {
+    if (!ftpClient.List({foldersIt, address.end ()}, List, true)) {
       StatusColor = COLOR_FAIL;
       Static_SetText(HStatus, L"Status: Can't list directory files");
       goto cleanup;
@@ -836,11 +825,8 @@ void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, wchar_t *Address,
     UpdateListBox(); // Used only here and on filter change
     CLEAN_AND_ZERO_ARR(Buf);
     // If it is success when we perhaps should add this address to our list.
-    int Len = ComboBox_GetTextLength(HAddress) + 1;
     if (CheckIfSavingIsNeeded) {
-      wchar_t *NewServer = new wchar_t[Len];
-      ComboBox_GetText(HAddress, NewServer, Len);
-      PostMessageToMainThread(TM_ADD_USER_SERVER, (WPARAM)NewServer, 0);
+        SpellCheckerInstance->addUserServer (currentAddress ());
     }
     StatusColor = COLOR_OK;
     Static_SetText(HStatus,
@@ -851,14 +837,8 @@ void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, wchar_t *Address,
       SetFileAttributes(Location, FILE_ATTRIBUTE_NORMAL);
       DeleteFile(Location);
     }
-    /*
-    int FileHandle = _wopen (Location, _O_CREAT | _O_BINARY | _O_WRONLY);
-    if (FileHandle == -1)
-    goto cleanup; // Then file couldn't be downloaded
-    close (FileHandle);
-    */
 
-    if (ftpClient.ChangeWorkingDirectory(Folders) != nsFTP::FTP_OK)
+    if (ftpClient.ChangeWorkingDirectory({foldersIt, address.end ()}) != nsFTP::FTP_OK)
       goto cleanup;
 
     long FileSize = 0;
@@ -930,10 +910,7 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
     RefreshIcon = (HICON)LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH),
                                    IMAGE_ICON, 16, 16, 0);
     SendMessage(HRefresh, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)RefreshIcon);
-    // ComboBox_SetText(HAddress, L"ftp://127.0.0.1");
     SendEvent(EID_INIT_DOWNLOAD_COMBOBOX);
-    // ComboBox_SetText(HAddress,
-    // L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries");
     SendEvent(EID_FILL_DOWNLOAD_DICS_DIALOG);
     DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
     return TRUE;

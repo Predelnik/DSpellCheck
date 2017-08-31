@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #pragma once
+#include <locale>
 
 struct NppData;
 
@@ -64,3 +65,23 @@ bool SortCompareChars(char *a, char *b);
 BOOL CheckForDirectoryExistence(wchar_t *Path, BOOL Silent = TRUE,
                                 HWND NppWindow = 0);
 wchar_t *GetLastSlashPosition(wchar_t *Path);
+
+// trim from start (in place)
+inline void ltrim(std::wstring &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](wchar_t ch) {
+        return !iswspace(ch);
+    }));
+}
+
+// trim from end (in place)
+inline void rtrim(std::wstring &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](wchar_t ch) {
+        return !iswspace(ch);
+    }).base(), s.end());
+}
+
+// trim from both ends (in place)
+inline void trim(std::wstring &s) {
+    ltrim(s);
+    rtrim(s);
+}

@@ -118,15 +118,12 @@ typedef enum {
 void SendEvent (EventId Event);
 void SendNetworkEvent (NetworkEventId Event);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam = 0, LPARAM LParam = 0);
-DWORD WaitForEvent (EventId Event, DWORD WaitTime = INFINITE);
-DWORD WaitForNetworkEvent (NetworkEventId Event, DWORD WaitTime = INFINITE);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
 void setEncodingById (int EncId);
 void updateAutocheckStatus ();
 void LoadSettings ();
 void RecheckVisible ();
-void CreateThreadResources ();
 void InitClasses ();
 void CreateHooks ();
 void UpdateLangsMenu ();
@@ -160,4 +157,3 @@ void RegisterCustomMessages ();
 // From DllMain, possibly move to DllMain.h
 void SetRecheckDelay (int Value, int WriteToIni = 1);
 int GetRecheckDelay ();
-void WaitTillThreadsClosed ();

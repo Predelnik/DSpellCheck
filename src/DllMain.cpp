@@ -223,7 +223,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
       DeleteTimerQueueTimer(0, Timer, 0);
       Timer = 0;
     }
-    WaitTillThreadsClosed();
     commandMenuCleanUp();
 
     pluginCleanUp();
@@ -237,7 +236,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     RegisterCustomMessages();
     InitClasses();
     CheckQueue.clear();
-    CreateThreadResources();
     LoadSettings();
     SendEvent(EID_CHECK_FILE_NAME);
     CreateHooks();

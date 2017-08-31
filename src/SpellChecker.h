@@ -130,6 +130,7 @@ public:
   int GetProxyType();
   long PreviousA, PreviousB;
   void SetSuggestionsBoxTransparency();
+  void addUserServer (std::wstring server);
 
 private:
   enum CheckTextMode {

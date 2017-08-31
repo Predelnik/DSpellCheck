@@ -86,6 +86,32 @@ LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
   return PostMessage(ScintillaWindow, Msg, wParam, lParam);
 }
 
+void SpellChecker::addUserServer(std::wstring server) {
+    FtpTrim(server);
+    wchar_t *Buf = 0;
+    for (int i = 0; i < countof(DefaultServers); i++) {
+      const auto defServer = DefaultServers[i];
+      if (server == defServer)
+        goto add_user_server_cleanup; // Nothing is done in this case
+    }
+    for (int i = 0; i < countof(ServerNames); i++) {
+      const auto addedServer = ServerNames[i];
+      if (server == addedServer)
+        goto add_user_server_cleanup; // Nothing is done in this case
+    }
+    // Then we're adding finally
+    CLEAN_AND_ZERO_ARR(ServerNames[countof(ServerNames) - 1]);
+    for (int i = countof(ServerNames) - 1; i > 0; i--) {
+      ServerNames[i] = ServerNames[i - 1];
+    }
+    ServerNames[0] = 0;
+    SetString(ServerNames[0], server.c_str ());
+  add_user_server_cleanup:
+    CLEAN_AND_ZERO_ARR(Buf);
+    ResetDownloadCombobox();
+    SaveSettings();
+}
+
 SpellChecker::SpellChecker(const wchar_t *IniFilePathArg,
                            SettingsDlg *SettingsDlgInstanceArg,
                            NppData *NppDataInstanceArg,
@@ -289,38 +315,6 @@ BOOL WINAPI SpellChecker::NotifyMessage(UINT Msg, WPARAM wParam,
   } break;
   case TM_WRITE_SETTING: {
     WriteSetting(lParam);
-  } break;
-  case TM_ADD_USER_SERVER: {
-    wchar_t *Name = (wchar_t *)wParam;
-    wchar_t *TrimmedName = 0;
-    SetString(TrimmedName, Name);
-    FtpTrim(TrimmedName);
-    wchar_t *Buf = 0;
-    for (int i = 0; i < countof(DefaultServers); i++) {
-      SetString(Buf, DefaultServers[i]);
-      FtpTrim(Buf);
-      if (wcscmp(Buf, TrimmedName) == 0)
-        goto add_user_server_cleanup; // Nothing is done in this case
-    }
-    for (int i = 0; i < countof(ServerNames); i++) {
-      SetString(Buf, ServerNames[i]);
-      FtpTrim(Buf);
-      if (wcscmp(Buf, TrimmedName) == 0)
-        goto add_user_server_cleanup; // Nothing is done in this case
-    }
-    // Then we're adding finally
-    CLEAN_AND_ZERO_ARR(ServerNames[countof(ServerNames) - 1]);
-    for (int i = countof(ServerNames) - 1; i > 0; i--) {
-      ServerNames[i] = ServerNames[i - 1];
-    }
-    ServerNames[0] = 0;
-    SetString(ServerNames[0], Name);
-  add_user_server_cleanup:
-    CLEAN_AND_ZERO_ARR(Buf);
-    CLEAN_AND_ZERO_ARR(Name);
-    CLEAN_AND_ZERO_ARR(TrimmedName);
-    ResetDownloadCombobox();
-    SaveSettings();
   } break;
   default:
     break;
@@ -747,39 +741,25 @@ void SpellChecker::ResetDownloadCombobox() {
 }
 
 void SpellChecker::PreserveCurrentAddressIndex() {
-  HWND TargetCombobox = GetDlgItem(GetDownloadDics()->getHSelf(), IDC_ADDRESS);
-  if (!TargetCombobox)
-    return;
-  wchar_t CurText[DEFAULT_BUF_SIZE];
-  wchar_t *Buf = 0;
-  ComboBox_GetText(TargetCombobox, CurText, DEFAULT_BUF_SIZE);
-  FtpTrim(CurText);
+  auto address = GetDownloadDics()->currentAddress();
+  FtpTrim(address);
   for (int i = 0; i < countof(ServerNames); i++) {
-    SetString(Buf, DefaultServers[i]);
-    FtpTrim(Buf);
-    if (wcscmp(Buf, CurText) == 0) {
+    std::wstring defServer = DefaultServers[i];
+    FtpTrim(defServer);
+    if (address == defServer) {
       LastUsedAddress = i;
-      goto cleanup;
+      return;
     }
   };
   for (int i = 0; i < countof(ServerNames); i++) {
-    SetString(Buf, ServerNames[i]);
-    FtpTrim(Buf);
-    if (wcscmp(Buf, CurText) == 0) {
+    std::wstring server = ServerNames[i];
+    if (address == server) {
       LastUsedAddress = USER_SERVER_CONST + i;
-      goto cleanup;
+      return;
     }
   }
   LastUsedAddress = 0;
-cleanup:
-  CLEAN_AND_ZERO_ARR(Buf);
 }
-
-/*
-void SpellChecker::ApplyMenuActions ()
-{
-}
-*/
 
 // For now just int option, later maybe choose option type in wParam
 void SpellChecker::WriteSetting(LPARAM lParam) {

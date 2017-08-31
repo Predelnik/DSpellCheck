@@ -71,16 +71,13 @@ SelectProxy *SelectProxyInstance = 0;
 Progress *ProgressInstance = 0;
 DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
-HANDLE hNetworkThread = NULL;
 HMENU LangsMenu;
-DWORD NetworkThreadId = 0;
 int ContextMenuIdStart;
 int LangsMenuIdStart = FALSE;
 BOOL UseAllocatedIds;
 toolbarIcons *AutoCheckIcon = 0;
 BOOL AutoCheckState = FALSE;
 
-HANDLE hNetworkEvent[EID_NETWORK_MAX] = {NULL};
 HANDLE hModule = NULL;
 HHOOK HMouseHook = NULL;
 // HHOOK HCmHook = NULL;
@@ -158,67 +155,14 @@ int filter(unsigned int, struct _EXCEPTION_POINTERS *ep) {
   return EXCEPTION_CONTINUE_SEARCH;
 }
 
-DWORD WINAPI ThreadNetwork(LPVOID lpParam) {
-  DWORD dwWaitResult = EID_MAX;
-  SpellChecker *spellChecker = (SpellChecker *)lpParam;
-
-  BOOL bRun = spellChecker->NotifyNetworkEvent(EID_NETWORK_MAX);
-
-  MSG Msg;
-
-  // Creating thread message queue
-  PeekMessage(&Msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
-
-  while (bRun) {
-    dwWaitResult =
-        MsgWaitForMultipleObjectsEx(EID_NETWORK_MAX, hNetworkEvent, INFINITE,
-                                    QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
-    if (dwWaitResult == (unsigned int)-1) {
-      spellChecker->ErrorMsgBox(L"Thread has died");
-      break;
-    }
-
-    if (dwWaitResult == EID_NETWORK_MAX) {
-      while (PeekMessage(&Msg, 0, 0, 0, PM_REMOVE) && bRun) {
-        bRun = spellChecker->NotifyMessage(Msg.message, Msg.wParam, Msg.lParam);
-      }
-    } else
-      bRun = spellChecker->NotifyNetworkEvent(dwWaitResult);
-  }
-
-  return 0;
-}
-
-void CreateThreadResources() {
-
-  for (int i = 0; i < EID_NETWORK_MAX; i++)
-    hNetworkEvent[i] = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-
-
-  hNetworkThread = CreateThread(NULL, 0, ThreadNetwork, SpellCheckerInstance, 0,
-                                &NetworkThreadId);
-
-  ResourcesInited = TRUE;
-}
-
 void CreateHooks() {
   HMouseHook = SetWindowsHookEx(WH_MOUSE, MouseProc, 0, GetCurrentThreadId());
   // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0,
   // GetCurrentThreadId());
 }
 
-void KillThreadResources() {
-  CloseHandle(hNetworkThread);
-  /* kill events */
-
-  for (int i = 0; i < EID_NETWORK_MAX; i++)
-    CloseHandle(hNetworkEvent[i]);
-}
-
 void pluginCleanUp() {
   UnhookWindowsHookEx(HMouseHook);
-  KillThreadResources();
-
   CLEAN_AND_ZERO(SpellCheckerInstance);
   CLEAN_AND_ZERO(SettingsDlgInstance);
   CLEAN_AND_ZERO(AboutDlgInstance);
@@ -237,20 +181,13 @@ void SendEvent(EventId Event) {
 
 void SendNetworkEvent(NetworkEventId Event) {
   if (ResourcesInited)
-    SetEvent(hNetworkEvent[Event]);
+      SpellCheckerInstance->NotifyNetworkEvent(Event);
 }
 
 void PostMessageToMainThread(UINT Msg, WPARAM WParam, LPARAM LParam) {
   if (ResourcesInited) {
     SpellCheckerInstance->NotifyMessage (Msg, WParam, LParam);
   }
-}
-
-DWORD WaitForNetworkEvent(NetworkEventId Event, DWORD WaitTime) {
-  if (ResourcesInited)
-    return WaitForSingleObject(hNetworkEvent[Event], WaitTime);
-  else
-    return WAIT_FAILED;
 }
 
 void RegisterCustomMessages() {
@@ -476,6 +413,8 @@ void InitClasses() {
   DownloadDicsDlgInstance = new DownloadDicsDlg;
   DownloadDicsDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle,
                                 SpellCheckerInstance);
+
+  ResourcesInited = true;
 }
 
 void commandMenuCleanUp() {
@@ -510,11 +449,6 @@ bool setNextCommand(wchar_t *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk,
   counter++;
 
   return true;
-}
-
-void WaitTillThreadsClosed() {
-  HANDLE threadHandles[] = {hNetworkThread};
-  WaitForMultipleObjects(1, threadHandles, true, INFINITE);
 }
 
 void AutoCheckStateReceived(BOOL state) { AutoCheckState = state; }
