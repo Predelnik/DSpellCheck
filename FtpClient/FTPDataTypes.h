@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// 
+//
 // Copyright (c) 2004-2012 Thomas Oswald
 //
 // Permission to copy, use, sell and distribute this software is granted
@@ -24,13 +24,13 @@
 namespace nsFTP
 {
    typedef std::vector<char> TByteVector;
-  
+
    class IInterface
    {
    protected:
       IInterface() {}
       virtual ~IInterface() {}
-   
+
    private: // prevent copy action
       IInterface(const IInterface&);
       const IInterface& operator=(const IInterface&);
@@ -110,7 +110,7 @@ namespace nsFTP
       // don't change order of enumeration
       enum TFirewallTypeEnum {
          ftNone, ftSiteHostName, ftUserAfterLogon, ftProxyOpen, ftTransparent,
-         ftUserWithNoLogon, ftUserFireIDatRemotehost, ftUserRemoteIDatRemoteHostFireID, 
+         ftUserWithNoLogon, ftUserFireIDatRemotehost, ftUserRemoteIDatRemoteHostFireID,
          ftUserRemoteIDatFireIDatRemoteHost };
 
       CFirewallType() : m_enFirewallType(ftNone) {}
@@ -214,7 +214,7 @@ namespace nsFTP
       bool operator==(const CRepresentation& rhs) const { return rhs.m_Type == m_Type && rhs.m_Format == m_Format; }
       bool operator!=(const CRepresentation& rhs) const { return !operator==(rhs); }
       CRepresentation& operator=(const CRepresentation& rhs)
-      { 
+      {
          m_Type = rhs.m_Type;
          m_Format = rhs.m_Format;
          return *this;
@@ -332,13 +332,13 @@ namespace nsFTP
    {
    public:
       CLogonInfo();
-      CLogonInfo(const tstring& strHostname, USHORT ushHostport=DEFAULT_FTP_PORT, const tstring& strUsername=ANONYMOUS_USER, 
+      CLogonInfo(const tstring& strHostname, USHORT ushHostport=DEFAULT_FTP_PORT, const tstring& strUsername=ANONYMOUS_USER,
                  const tstring& strPassword=_T("anonymous@user.com"), const tstring& strAccount=_T(""));
       CLogonInfo(const tstring& strHostname, USHORT ushHostport, const tstring& strUsername, const tstring& strPassword,
                  const tstring& strAccount, const tstring& strFwHostname, const tstring& strFwUsername, const tstring& strFwPassword,
                  USHORT ushFwPort, const CFirewallType& crFwType);
 
-      void SetHost(const tstring& strHostname, USHORT ushHostport=DEFAULT_FTP_PORT, const tstring& strUsername=ANONYMOUS_USER, 
+      void SetHost(const tstring& strHostname, USHORT ushHostport=DEFAULT_FTP_PORT, const tstring& strUsername=ANONYMOUS_USER,
                    const tstring& strPassword=_T("anonymous@user.com"), const tstring& strAccount=_T(""));
 
       void SetFirewall(const tstring& strFwHostname, const tstring& strFwUsername, const tstring& strFwPassword,
@@ -356,7 +356,7 @@ namespace nsFTP
       const tstring&       FwPassword() const  { return m_strFwPassword;  }
       USHORT               FwPort()     const  { return m_ushFwPort;      }
       const CFirewallType& FwType()     const  { return m_FwType;         }
-   
+
    private:
       tstring        m_strHostname;   ///< name or ip-address of the ftp-server
       USHORT         m_ushHostport;   ///< port of the ftp-server
@@ -382,7 +382,7 @@ namespace nsFTP
       public:
          CCode()
          {
-            std::fill_n(m_szCode, sizeof(m_szCode)/sizeof(TCHAR), L'0');
+            std::fill_n(m_szCode, sizeof(m_szCode)/sizeof(TCHAR), L'\0');
          }
          LPCTSTR Value() const { return m_szCode; }
          bool Set(const tstring& strCode)
@@ -391,7 +391,7 @@ namespace nsFTP
                 strCode[0]<_T('1') || strCode[0]>_T('5') ||
                 strCode[1]<_T('0') || strCode[1]>_T('5') )
             {
-               std::fill_n(m_szCode, sizeof(m_szCode)/sizeof(TCHAR), L'0');
+               std::fill_n(m_szCode, sizeof(m_szCode)/sizeof(TCHAR), L'\0');
                return false;
             }
             std::copy(strCode.begin(), strCode.end(), m_szCode);

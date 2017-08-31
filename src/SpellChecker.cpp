@@ -2546,7 +2546,7 @@ void SpellChecker::LoadFromIni(wchar_t *&Value, const wchar_t *Name,
       return;
     }
 
-    for (int i = 0; i < Len; i++)
+    for (size_t i = 0; i < Len; i++)
       Value[i] = Value[i + 1];
 
     Value[Len - 1] = 0;
