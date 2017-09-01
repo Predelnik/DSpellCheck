@@ -21,7 +21,7 @@
 #ifdef WIN32
    #ifdef _WINSOCKAPI_
       #ifndef _WINSOCK2API_
-      // NOTICE: In Microsoft Visual Studio you can add the header 'winsock2.h" to 
+      // NOTICE: In Microsoft Visual Studio you can add the header 'winsock2.h" to
       //         "Configuration --> Properties --> C/C++ --> Advanced --> Forced Include File"
       #pragma message("\nIt is recommended to include 'winsock2.h' instead of 'winsock.h'\n")
       #endif
@@ -42,7 +42,7 @@ namespace nsSocket
    typedef int socklen_t;
    inline int _select(UINT_PTR /*nfds*/, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const struct timeval* timeout)
    {
-      // The nfds parameter is ignored in windows (included only for 
+      // The nfds parameter is ignored in windows (included only for
       // compatibility with Berkeley sockets).
       return select(0, readfds, writefds, exceptfds, timeout);
    }
@@ -53,16 +53,16 @@ namespace nsSocket
    typedef sockaddr_in SOCKADDR_IN;
    typedef sockaddr_in* LPSOCKADDR_IN;
    typedef timeval TIMEVAL;
-   #define SOCKET_ERROR   (-1) 
+   #define SOCKET_ERROR   (-1)
    #define INVALID_SOCKET (SOCKET)(~0)
-   #define closesocket close 
+   #define closesocket close
    #define WSAGetLastError() errno
    #define WSAEINTR EINTR
    inline int _select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval *__restrict timeout)
    {
       return select(nfds, readfds, writefds, exceptfds, timeout);
    }
-#endif   
+#endif
 
    typedef const struct sockaddr* LPCSOCKADDR;
 
@@ -75,10 +75,10 @@ public:
    // Constructor
    CBlockingSocketException(LPCTSTR pchMessage);
    virtual ~CBlockingSocketException() {}
-   
+
    virtual bool GetErrorMessage(LPTSTR lpstrError, UINT nMaxError, PUINT pnHelpContext = NULL);
    virtual tstring GetErrorMessage(PUINT pnHelpContext = NULL);
-   
+
 private:
    int     m_nError;
    tstring m_strMessage;
@@ -97,27 +97,27 @@ public:
       sin_port          = 0;       // ip port
       sin_addr.s_addr   = 0;       // ip address
    }
-   
+
    CSockAddr(const SOCKADDR& sa)
             { memcpy(this, &sa, sizeof(SOCKADDR)); }
-   
-   CSockAddr(const SOCKADDR_IN& sin) 
+
+   CSockAddr(const SOCKADDR_IN& sin)
             { memcpy(this, &sin, sizeof(SOCKADDR_IN)); }
-   
+
    CSockAddr(ULONG ulAddr, USHORT ushPort = 0) // parms are host byte ordered
-            { 
+            {
                sin_family      = AF_INET;          // specifies address family
                sin_port        = htons(ushPort);   // ip port
                sin_addr.s_addr = htonl(ulAddr);    // ip address
             }
-   
+
    CSockAddr(const char* pchIP, USHORT ushPort = 0) // dotted IP addr string
-            { 
+            {
                sin_family = AF_INET;               // specifies address family
                sin_port = htons(ushPort);          // ip port
                sin_addr.s_addr = inet_addr(pchIP); // ip address
             } // already network byte ordered
-   
+
    // Return the address in dotted-decimal format
    tstring DottedDecimal()
       { return nsHelper::CCnv::ConvertToTString(inet_ntoa(sin_addr)); }
@@ -125,10 +125,10 @@ public:
    // Get port and address (even though they're public)
    USHORT Port() const
             { return ntohs(sin_port); }
-   
+
    ULONG IPAddr() const
             { return ntohl(sin_addr.s_addr); }
-   
+
    // operators added for efficiency
    CSockAddr& operator=(const SOCKADDR& sa)
             {
@@ -137,9 +137,9 @@ public:
             }
 
    CSockAddr& operator=(const SOCKADDR_IN& sin)
-            { 
+            {
                memcpy(this, &sin, sizeof(SOCKADDR_IN));
-               return *this; 
+               return *this;
             }
 
    operator SOCKADDR()
@@ -214,7 +214,7 @@ private:
    SOCKET m_hSocket;
 };
 
-std::auto_ptr<IBlockingSocket> CreateDefaultBlockingSocketInstance();
+std::unique_ptr<IBlockingSocket> CreateDefaultBlockingSocketInstance();
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //******************************** CHttpBlockingSocket ******************************//

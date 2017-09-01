@@ -462,7 +462,7 @@ int CHttpBlockingSocket::ReadHttpResponse(char* pch, int nSize, int nSecs)
   return nBytesRead;
 }
 
-std::auto_ptr<IBlockingSocket> nsSocket::CreateDefaultBlockingSocketInstance()
+std::unique_ptr<IBlockingSocket> nsSocket::CreateDefaultBlockingSocketInstance()
 {
-  return std::auto_ptr<IBlockingSocket>(new CBlockingSocket());
+  return std::unique_ptr<IBlockingSocket>(new CBlockingSocket());
 }

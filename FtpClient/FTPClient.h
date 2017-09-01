@@ -6,15 +6,15 @@
 // platform independent. For the communication i used the classes CBlockingSocket,
 // CSockAddr, ... from David J. Kruglinski (Inside Visual C++). These classes are
 // only small wrappers for the sockets-API.
-// Further I used a smart pointer-implementation from Scott Meyers (Effective C++, 
+// Further I used a smart pointer-implementation from Scott Meyers (Effective C++,
 // More Effective C++, Effective STL).
-// The implementation of the logon-sequence (with firewall support) was published 
-// in an article on Codeguru by Phil Anderson. 
-// The code for the parsing of the different FTP LIST responses is taken from 
+// The implementation of the logon-sequence (with firewall support) was published
+// in an article on Codeguru by Phil Anderson.
+// The code for the parsing of the different FTP LIST responses is taken from
 // D. J. Bernstein (http://cr.yp.to/ftpparse.html). I only wrapped the c-code in
 // a class.
 // I have tested the code on Windows and Linux (Kubuntu).
-// 
+//
 // Copyright (c) 2004-2012 Thomas Oswald
 //
 // Permission to copy, use, sell and distribute this software is granted
@@ -66,14 +66,14 @@ namespace nsFTP
       class IFileListParser;
       class TObserverSet : public nsHelper::CObserverPatternBase<CNotification*, TObserverSet*> {};
 
-      CFTPClient(std::auto_ptr<IBlockingSocket> apSocket=nsSocket::CreateDefaultBlockingSocketInstance(),
-                 unsigned int uiTimeout=10, unsigned int uiBufferSize=2048, 
+      CFTPClient(std::unique_ptr<IBlockingSocket> apSocket=nsSocket::CreateDefaultBlockingSocketInstance(),
+                 unsigned int uiTimeout=10, unsigned int uiBufferSize=2048,
                  unsigned int uiResponseWait=0, const tstring& strRemoteDirectorySeparator=_T("/"));
       virtual ~CFTPClient();
 
       void AttachObserver(CNotification* pObserver);
       void DetachObserver(CNotification* pObserver);
-      void SetFileListParser(std::auto_ptr<IFileListParser> apFileListParser);
+      void SetFileListParser(std::unique_ptr<IFileListParser> apFileListParser);
 
       bool IsConnected() const;
       bool IsTransferringData() const;
@@ -98,20 +98,20 @@ namespace nsFTP
                         const CRepresentation& repType=CRepresentation(CType::Image()), bool fPasv=false) const;
       bool DownloadFile(const tstring& strRemoteFile, const tstring& strLocalFile,
                         const CRepresentation& repType=CRepresentation(CType::Image()), bool fPasv=false) const;
-      bool DownloadFile(const tstring& strSourceFile, const CFTPClient& TargetFtpServer, 
-                        const tstring& strTargetFile, const CRepresentation& repType=CRepresentation(CType::Image()), 
+      bool DownloadFile(const tstring& strSourceFile, const CFTPClient& TargetFtpServer,
+                        const tstring& strTargetFile, const CRepresentation& repType=CRepresentation(CType::Image()),
                         bool fPasv=true) const;
 
-      bool UploadFile(ITransferNotification& Observer, const tstring& strRemoteFile, bool fStoreUnique=false, 
+      bool UploadFile(ITransferNotification& Observer, const tstring& strRemoteFile, bool fStoreUnique=false,
                       const CRepresentation& repType=CRepresentation(CType::Image()), bool fPasv=false) const;
-      bool UploadFile(const tstring& strLocalFile, const tstring& strRemoteFile, bool fStoreUnique=false, 
+      bool UploadFile(const tstring& strLocalFile, const tstring& strRemoteFile, bool fStoreUnique=false,
                       const CRepresentation& repType=CRepresentation(CType::Image()), bool fPasv=false) const;
       bool UploadFile(const CFTPClient& SourceFtpServer, const tstring& strSourceFile,
-                      const tstring& strTargetFile, const CRepresentation& repType=CRepresentation(CType::Image()), 
+                      const tstring& strTargetFile, const CRepresentation& repType=CRepresentation(CType::Image()),
                       bool fPasv=true) const;
 
-      static bool TransferFile(const CFTPClient& SourceFtpServer, const tstring& strSourceFile, 
-                               const CFTPClient& TargetFtpServer, const tstring& strTargetFile, 
+      static bool TransferFile(const CFTPClient& SourceFtpServer, const tstring& strSourceFile,
+                               const CFTPClient& TargetFtpServer, const tstring& strTargetFile,
                                const CRepresentation& repType=CRepresentation(CType::Image()), bool fSourcePasv=false);
 
       int RemoveDirectory(const tstring& strDirectory) const;
@@ -143,7 +143,7 @@ namespace nsFTP
       int FileModificationTime(const tstring& strPath, tstring& strModificationTime) const;
 
    protected:
-      bool ExecuteDatachannelCommand(const CCommand& crDatachannelCmd, const tstring& strPath, const CRepresentation& representation, 
+      bool ExecuteDatachannelCommand(const CCommand& crDatachannelCmd, const tstring& strPath, const CRepresentation& representation,
                                      bool fPasv, DWORD dwByteOffset, ITransferNotification& Observer) const;
 
       TObserverSet& GetObservers();
@@ -179,10 +179,10 @@ namespace nsFTP
 
       mutable TByteVector                    m_vBuffer;                  ///< buffer for sending and receiving
       mutable std::queue<std::string>        m_qResponseBuffer;          ///< buffer for server-responses
-      mutable std::auto_ptr<CRepresentation> m_apCurrentRepresentation;  ///< representation currently set
+      mutable std::unique_ptr<CRepresentation> m_apCurrentRepresentation;  ///< representation currently set
 
-      std::auto_ptr<IBlockingSocket>         m_apSckControlConnection;   ///< socket for connection to FTP server
-      std::auto_ptr<IFileListParser>         m_apFileListParser;         ///< object which is used for parsing the result of the LIST command
+      std::unique_ptr<IBlockingSocket>         m_apSckControlConnection;   ///< socket for connection to FTP server
+      std::unique_ptr<IFileListParser>         m_apFileListParser;         ///< object which is used for parsing the result of the LIST command
       mutable bool                           m_fTransferInProgress;      ///< if true, a file transfer is in progress
       mutable bool                           m_fAbortTransfer;           ///< indicates that a running filetransfer should be canceled
       bool                                   m_fResumeIfPossible;        ///< try to resume download/upload if possible

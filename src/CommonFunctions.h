@@ -19,6 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
 #include <locale>
+#include "MainDef.h"
+#include "Plugin.h"
 
 struct NppData;
 
@@ -38,7 +40,7 @@ void SetStringSUtf8(wchar_t *&Target, const char *Str);
 void SetStringDUtf8(char *&Target, const char *Str);
 void SetStringDUtf8(char *&Target, const wchar_t *Str);
 
-BOOL SetStringWithAliasApplied(wchar_t *&Target, wchar_t *OrigName);
+BOOL SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName);
 
 void SetParsedString(wchar_t *&Dest, wchar_t *Source);
 
@@ -85,3 +87,25 @@ inline void trim(std::wstring &s) {
     ltrim(s);
     rtrim(s);
 }
+
+struct TaskWrapper {
+    explicit TaskWrapper(HWND targetHwnd);
+    template <typename ActionType, typename GuiCallbackType>
+     void doDeferred (ActionType action, GuiCallbackType guiCallback) {
+    concurrency::create_task([=, as=m_aliveStatus]()
+    {
+        auto ret = action ();
+        auto cbData = std::make_unique<CallbackData>();
+        cbData->callback = [=](){ guiCallback (ret); };
+        cbData->aliveStatus = as;
+         PostMessage(m_targetHwnd,
+            GetCustomGUIMessageId(CustomGUIMessage::GENERIC_CALLBACK), reinterpret_cast<WPARAM> (cbData.release ())
+            , 0);
+    });
+}
+
+private:
+    HWND m_targetHwnd;
+    std::shared_ptr<void> m_aliveStatus;
+};
+

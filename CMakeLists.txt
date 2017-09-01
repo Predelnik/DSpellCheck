@@ -32,6 +32,7 @@ target_link_libraries(DSpellCheck libiconv)
 target_link_libraries(DSpellCheck shlwapi comctl32 version wininet Ws2_32)
 target_include_directories (DSpellCheck PRIVATE src/Controls)
 target_include_directories (DSpellCheck PRIVATE src)
+target_compile_options (DSpellCheck PRIVATE /std:c++latest)
 
 include (cotire.cmake)
 set_target_properties(DSpellCheck PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "src/PrecompiledHeader.h")

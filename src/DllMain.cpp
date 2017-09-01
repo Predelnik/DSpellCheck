@@ -152,7 +152,13 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   }
 
   if (Message != 0) {
-    if (Message == GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX)) {
+    if (Message == GetCustomGUIMessageId (CustomGUIMessage::GENERIC_CALLBACK)) {
+        const auto callbackPtr = reinterpret_cast<CallbackData *> (wParam);
+        if (!callbackPtr->aliveStatus.expired())
+          callbackPtr->callback ();
+        delete callbackPtr;
+    }
+    else if (Message == GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX)) {
       MessageBoxInfo *MsgBox = (MessageBoxInfo *)wParam;
       DWORD Result = MessageBox(MsgBox->hWnd, MsgBox->Message, MsgBox->Title,
                                 MsgBox->Flags);

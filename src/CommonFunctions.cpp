@@ -698,7 +698,7 @@ const wchar_t *const AliasesTo[] = {
     L"isiZulu"};
 
 // Language Aliases
-BOOL SetStringWithAliasApplied(wchar_t *&Target, wchar_t *OrigName) {
+BOOL SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName) {
   int Left, Right;
   Left = 0;
 #ifdef _DEBUG
@@ -765,3 +765,6 @@ BOOL CheckForDirectoryExistence(wchar_t *Path, BOOL Silent, HWND NppWindow) {
 }
 
 wchar_t *GetLastSlashPosition(wchar_t *Path) { return wcsrchr(Path, L'\\'); }
+
+TaskWrapper::TaskWrapper(HWND targetHwnd): m_targetHwnd(targetHwnd), m_aliveStatus(std::shared_ptr<void> (reinterpret_cast<void *> (1), [](void*){}))  {
+}

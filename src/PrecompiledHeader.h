@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <windows.h>
 
+#include <array>
 #include <map>
 #include <set>
 #include <unordered_set>
@@ -32,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <windowsx.h>
 #include <wchar.h>
 #include <vector>
+#include <ppltasks.h>
 #pragma warning(push)
 #pragma warning(disable: 4091)
 #include <Shlobj.h>

@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "MainDef.h"
 #include "unzip.h"
+#include <variant>
 
 void DownloadDicsDlg::DoDialog() {
   if (!isCreated()) {
@@ -49,7 +50,7 @@ void DownloadDicsDlg::DoDialog() {
 }
 
 void DownloadDicsDlg::FillFileList() {
-  GetDownloadDics()->DoFtpOperation(FILL_FILE_LIST, currentAddress ().c_str ());
+  GetDownloadDics()->DoFtpOperation(fillFileList, currentAddress ().c_str ());
 }
 
 void DownloadDicsDlg::OnDisplayAction() {
@@ -67,6 +68,7 @@ DownloadDicsDlg::DownloadDicsDlg() {
 
 void DownloadDicsDlg::init(HINSTANCE hInst, HWND Parent,
                            SpellChecker *SpellCheckerInstanceArg) {
+  requestFileListTask = TaskWrapper {Parent};
   SpellCheckerInstance = SpellCheckerInstanceArg;
   return Window::init(hInst, Parent);
 }
@@ -176,7 +178,7 @@ void DownloadDicsDlg::DownloadSelected() {
       p->SetTopMessage(ProgMessage);
       wcscpy(LocalPath, TempPath);
       wcscat(LocalPath, FileName);
-      DoFtpOperation(DOWNLOAD_FILE, currentAddress (), FileName, LocalPath);
+      DoFtpOperation(downloadFile, currentAddress (), FileName, LocalPath);
       if (CancelPressed)
         break;
       SetString(LocalPathANSI, LocalPath);
@@ -381,7 +383,7 @@ void DownloadDicsDlg::DownloadSelected() {
   CLEAN_AND_ZERO_ARR(ConvertedDicName);
 }
 
-void FtpTrim(std::wstring& ftpAddress) {
+void ftpTrim(std::wstring& ftpAddress) {
   trim (ftpAddress);
   for (auto &c : ftpAddress) {
       if (c == L'\\')
@@ -393,6 +395,16 @@ void FtpTrim(std::wstring& ftpAddress) {
 
   std::transform (ftpAddress.begin(), std::find (ftpAddress.begin (), ftpAddress.end(),L'/'), ftpAddress.begin(),
       &towlower); // In dir names upper/lower case could matter
+}
+
+std::pair<std::wstring, std::wstring> ftpSplit(std::wstring fullPath) {
+    ftpTrim (fullPath);
+    auto it = std::find (fullPath.begin (), fullPath.end (), L'/');
+    if (it != fullPath.end ()) {
+      *it = L'\0';
+    ++it;
+    }
+    return {{fullPath.begin (), it}, {it, fullPath.end ()}};
 }
 
 void DownloadDicsDlg::UpdateListBox() {
@@ -467,7 +479,7 @@ void DownloadDicsDlg::SetCancelPressed(BOOL Value) { CancelPressed = Value; }
 
 #define INITIAL_BUFFER_SIZE 50 * 1024
 #define INITIAL_SMALL_BUFFER_SIZE 10 * 1024
-void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
+void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FtpOperationType Type,
                                                      std::wstring Address,
                                                      wchar_t *FileNameArg,
                                                      wchar_t *Location) {
@@ -479,13 +491,13 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
   HINTERNET WinInetHandle = InternetOpen(
       L"DSpellCheck", INTERNET_OPEN_TYPE_PROXY, ProxyFinalString, L"", 0);
   CLEAN_AND_ZERO_ARR(ProxyFinalString);
-  FtpTrim(Address);
+  ftpTrim(Address);
   wchar_t *Url =
       new wchar_t[Address.length () +
-                  (Type == DOWNLOAD_FILE ? wcslen(FileNameArg) : 0) + 6 + 1];
+                  (Type == downloadFile ? wcslen(FileNameArg) : 0) + 6 + 1];
 
   if (!WinInetHandle) {
-    if (Type == FILL_FILE_LIST) {
+    if (Type == fillFileList) {
       StatusColor = COLOR_FAIL;
       Static_SetText(HStatus, L"Status: Connection cannot be established");
     }
@@ -494,7 +506,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
 
   wcscpy(Url, L"ftp://");
   wcscat(Url, Address.c_str ());
-  if (Type == DOWNLOAD_FILE)
+  if (Type == downloadFile)
     wcscat(Url, FileNameArg);
 
   DWORD TimeOut = 15000;
@@ -511,7 +523,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
                                   INTERNET_FLAG_PRAGMA_NOCACHE,
                               0);
   if (!OpenedURL) {
-    if (Type == FILL_FILE_LIST) {
+    if (Type == fillFileList) {
       StatusColor = COLOR_FAIL;
       wchar_t Buf[256];
 
@@ -550,7 +562,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
 
   if (!HttpQueryInfo(OpenedURL, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
                      &Code, &Size, &Dummy)) {
-    if (Type == FILL_FILE_LIST) {
+    if (Type == fillFileList) {
       StatusColor = COLOR_FAIL;
       wchar_t Buf[256];
       swprintf(Buf, L"Status: Query status code failed (Error: %d)",
@@ -560,7 +572,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
     goto cleanup;
   }
   if (Code != 200) {
-    if (Type == FILL_FILE_LIST) {
+    if (Type == fillFileList) {
       StatusColor = COLOR_FAIL;
       if (Code == HTTP_STATUS_PROXY_AUTH_REQ)
         Static_SetText(HStatus, L"Status: Proxy Authorization Required");
@@ -574,7 +586,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
     goto cleanup;
   }
 
-  if (Type == FILL_FILE_LIST) {
+  if (Type == fillFileList) {
     FileBuffer = new char[INITIAL_BUFFER_SIZE];
     char *CurPos = FileBuffer;
     char *TempBuf = 0;
@@ -675,7 +687,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type,
     Static_SetText(HStatus,
                    L"Status: List of available files was successfully loaded");
     EnableWindow(HInstallSelected, TRUE);
-  } else if (Type == DOWNLOAD_FILE) {
+  } else if (Type == downloadFile) {
     FileBuffer = new char[INITIAL_SMALL_BUFFER_SIZE];
     DWORD CurBufSize = INITIAL_SMALL_BUFFER_SIZE;
     DWORD BytesToRead = 0;
@@ -742,30 +754,130 @@ std::wstring DownloadDicsDlg::currentAddress () const {
    return buf.data ();
 }
 
-void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, std::wstring address,
-                                     wchar_t *FileName, wchar_t *Location) {
-  Observer *ProgressUpdater = 0;
-  if (Type == FILL_FILE_LIST) {
+
+static bool ftpLogin (nsFTP::CFTPClient &client, const FtpOperationParams &params) {
+  std::unique_ptr<nsFTP::CLogonInfo> logonInfo;
+  if (!params.useProxy)
+    logonInfo = std::make_unique<nsFTP::CLogonInfo> (params.address);
+  else
+    logonInfo = std::make_unique<nsFTP::CLogonInfo> (
+        params.address, USHORT(21), L"anonymous", L"", L"",
+        params.proxyAddress, L"", L"",
+        static_cast<USHORT>(params.proxyPort),
+        nsFTP::CFirewallType::UserWithNoLogon());
+   return client.Login(*logonInfo);
+}
+
+
+std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> doDownloadFileList (FtpOperationParams params) {
+    nsFTP::CFTPClient client (nsSocket::CreateDefaultBlockingSocketInstance(), 3);
+    if (!ftpLogin (client, params))
+        return FtpOperationError::loginFailed;
+
+    nsFTP::TFTPFileStatusShPtrVec ret;
+    if (!client.List(params.path, ret, true))
+        return FtpOperationError::downloadFailed;
+
+    return ret;
+}
+
+
+void DownloadDicsDlg::updateStatus(const wchar_t* text, COLORREF statusColor) {
+  StatusColor = statusColor;
+  Static_SetText(HStatus, text);
+}
+
+void DownloadDicsDlg::onNewFileList (std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> response)
+{
+    auto errorPtr = std::get_if<FtpOperationError>(&response);
+    if (auto error = errorPtr) {
+        if (*error == FtpOperationError::loginFailed)
+           return updateStatus (L"Status: Connection cannot be established", COLOR_FAIL);
+        else if (*error == FtpOperationError::downloadFailed) {
+          return updateStatus (L"Status: Can't list directory files", COLOR_FAIL);
+        }
+    }
+
+    auto list = std::get<nsFTP::TFTPFileStatusShPtrVec> (response);
+    int count = 0;
+
+    for (unsigned int i = 0; i < list.size(); i++) {
+      if (!PathMatchSpec(list.at(i)->Name().c_str(), L"*.zip"))
+        continue;
+
+      count++;
+      auto name = list.at(i)->Name();
+      name.erase (name.end () - 4, name.end ());
+      LanguageName Lang(name.c_str ());
+      CurrentLangs->push_back(Lang);
+    }
+
+    if (count == 0) {
+      return updateStatus (L"Status: Directory doesn't contain any zipped files", COLOR_WARN);
+    }
+
+    std::sort(CurrentLangs->begin(), CurrentLangs->end(),
+              SpellCheckerInstance->GetDecodeNames() ? CompareAliases
+                                                     : CompareOriginal);
+
+    UpdateListBox(); // Used only here and on filter change
+    // If it is success when we perhaps should add this address to our list.
+    if (CheckIfSavingIsNeeded) {
+        SpellCheckerInstance->addUserServer (currentAddress ());
+    }
+    updateStatus (L"Status: List of available files was successfully loaded", COLOR_OK);
+    EnableWindow(HInstallSelected, TRUE);
+}
+
+void DownloadDicsDlg::preparFileListUpdate () {
     EnableWindow(HInstallSelected, FALSE);
     StatusColor = COLOR_NEUTRAL;
     Static_SetText(HStatus, L"Status: Loading...");
     ListBox_ResetContent(HFileList);
     CLEAN_AND_ZERO(CurrentLangs);
     CurrentLangs = new std::vector<LanguageName>();
-  }
+}
+
+FtpOperationParams DownloadDicsDlg::spawnFtpOperationParams (const std::wstring &fullPath) {
+    FtpOperationParams params;
+    std::tie (params.address, params.path) = ftpSplit (fullPath);
+    params.useProxy = SpellCheckerInstance->GetUseProxy();
+    params.proxyPort = SpellCheckerInstance->GetProxyPort();
+    params.proxyAddress = SpellCheckerInstance->GetProxyHostName();
+    return params;
+}
+
+void DownloadDicsDlg::updateFileListAsync (const std::wstring& fullPath)
+{
+    // temporary workaround for xsmf_control.h bug
+    static_assert(std::is_copy_constructible_v<std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec>>);
+    preparFileListUpdate ();
+    requestFileListTask->doDeferred([params = spawnFtpOperationParams (fullPath)]()
+    {
+      return doDownloadFileList (params);
+    }, [this](std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> res)
+    {
+        onNewFileList (res);
+    });
+}
+
+
+void DownloadDicsDlg::DoFtpOperation(FtpOperationType Type, std::wstring fullPath,
+                                     wchar_t *FileName, wchar_t *Location) {
+  Observer *ProgressUpdater = 0;
 
   if (SpellCheckerInstance->GetUseProxy() &&
       SpellCheckerInstance->GetProxyType() == 0) {
-    DoFtpOperationThroughHttpProxy(Type, address, FileName, Location);
+    DoFtpOperationThroughHttpProxy(Type, fullPath, FileName, Location);
     return;
   }
 
-  FtpTrim(address);
-  auto foldersIt = std::find (address.begin (), address.end (), L'/');
-  if (foldersIt != address.end ()) {
-    *foldersIt = L'\0';
-    ++foldersIt;
+  if (Type == fillFileList) {
+      return updateFileListAsync (fullPath);
   }
+
+  std::wstring address, path;
+  std::tie (address, path) = ftpSplit (fullPath);
 
   nsFTP::CLogonInfo *logonInfo = 0;
   nsFTP::CFTPClient ftpClient(nsSocket::CreateDefaultBlockingSocketInstance(),
@@ -780,65 +892,20 @@ void DownloadDicsDlg::DoFtpOperation(FTP_OPERATION_TYPE Type, std::wstring addre
         nsFTP::CFirewallType::UserWithNoLogon());
 
   if (!ftpClient.Login(*logonInfo)) {
-    if (Type == FILL_FILE_LIST) {
+    if (Type == fillFileList) {
       StatusColor = COLOR_FAIL;
       Static_SetText(HStatus, L"Status: Connection Error");
     }
     goto cleanup;
   }
 
-  if (Type == FILL_FILE_LIST) {
-    nsFTP::TFTPFileStatusShPtrVec List;
-
-    if (!ftpClient.List({foldersIt, address.end ()}, List, true)) {
-      StatusColor = COLOR_FAIL;
-      Static_SetText(HStatus, L"Status: Can't list directory files");
-      goto cleanup;
-    }
-
-    wchar_t *Buf = 0;
-    int count = 0;
-
-    for (unsigned int i = 0; i < List.size(); i++) {
-      if (!PathMatchSpec(List.at(i)->Name().c_str(), L"*.zip"))
-        continue;
-
-      count++;
-      SetString(Buf, List.at(i)->Name().c_str());
-      Buf[wcslen(Buf) - 4] = 0;
-      LanguageName Lang(
-          Buf); // Probably should add options for using/not using aliases
-      CurrentLangs->push_back(Lang);
-    }
-
-    if (count == 0) {
-      StatusColor = COLOR_WARN;
-      Static_SetText(HStatus,
-                     L"Status: Directory doesn't contain any zipped files");
-      goto cleanup;
-    }
-
-    std::sort(CurrentLangs->begin(), CurrentLangs->end(),
-              SpellCheckerInstance->GetDecodeNames() ? CompareAliases
-                                                     : CompareOriginal);
-
-    UpdateListBox(); // Used only here and on filter change
-    CLEAN_AND_ZERO_ARR(Buf);
-    // If it is success when we perhaps should add this address to our list.
-    if (CheckIfSavingIsNeeded) {
-        SpellCheckerInstance->addUserServer (currentAddress ());
-    }
-    StatusColor = COLOR_OK;
-    Static_SetText(HStatus,
-                   L"Status: List of available files was successfully loaded");
-    EnableWindow(HInstallSelected, TRUE);
-  } else if (Type == DOWNLOAD_FILE) {
+  if (Type == downloadFile) {
     if (PathFileExists(Location)) {
       SetFileAttributes(Location, FILE_ATTRIBUTE_NORMAL);
       DeleteFile(Location);
     }
 
-    if (ftpClient.ChangeWorkingDirectory({foldersIt, address.end ()}) != nsFTP::FTP_OK)
+    if (ftpClient.ChangeWorkingDirectory(path) != nsFTP::FTP_OK)
       goto cleanup;
 
     long FileSize = 0;

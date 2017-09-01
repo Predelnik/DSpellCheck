@@ -24,7 +24,7 @@ struct LanguageName {
   wchar_t *OrigName;
   wchar_t *AliasName;
   BOOL AliasApplied;
-  LanguageName(wchar_t *Name, BOOL UseAlias = TRUE) {
+  LanguageName(const wchar_t *Name, BOOL UseAlias = TRUE) {
     OrigName = nullptr;
     AliasName = nullptr;
     AliasApplied = FALSE;

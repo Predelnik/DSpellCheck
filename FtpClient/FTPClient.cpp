@@ -308,7 +308,7 @@ using namespace nsFTP;
 /// @param[in] uiResponseWait Sleep time between receive calls to socket when getting
 ///                           the response. Sometimes the socket hangs if no wait time
 ///                           is set. Normally not wait time is necessary.
-CFTPClient::CFTPClient(std::auto_ptr<IBlockingSocket> apSocket, unsigned int uiTimeout/*=10*/,
+CFTPClient::CFTPClient(std::unique_ptr<IBlockingSocket> apSocket, unsigned int uiTimeout/*=10*/,
                        unsigned int uiBufferSize/*=2048*/, unsigned int uiResponseWait/*=0*/,
                        const tstring& strRemoteDirectorySeparator/*=_T("/")*/) :
 mc_uiTimeout(uiTimeout),
@@ -316,7 +316,7 @@ mc_uiTimeout(uiTimeout),
   mc_strEolCharacterSequence(_T("\r\n")),
   mc_strRemoteDirectorySeparator(strRemoteDirectorySeparator),//+# documentation missing
   m_vBuffer(uiBufferSize),
-  m_apSckControlConnection(apSocket),
+  m_apSckControlConnection(std::move (apSocket)),
   m_apFileListParser(new CFTPListParser()),
   m_fTransferInProgress(false),
   m_fAbortTransfer(false),
@@ -354,9 +354,9 @@ void CFTPClient::DetachObserver(CFTPClient::CNotification* pObserver)
 }
 
 /// Sets the file list parser which is used for parsing the results of the LIST command.
-void CFTPClient::SetFileListParser(std::auto_ptr<IFileListParser> apFileListParser)
+void CFTPClient::SetFileListParser(std::unique_ptr<IFileListParser> apFileListParser)
 {
-  m_apFileListParser = apFileListParser;
+  m_apFileListParser = std::move (apFileListParser);
 }
 
 /// Returns a set of all observers currently attached to the client.
@@ -895,7 +895,7 @@ bool CFTPClient::ExecuteDatachannelCommand(const CCommand& crDatachannelCmd, con
   if( RepresentationType(representation)!=FTP_OK )
     return false;
 
-  std::auto_ptr<IBlockingSocket> apSckDataConnection(m_apSckControlConnection->CreateInstance());
+  std::unique_ptr<IBlockingSocket> apSckDataConnection(m_apSckControlConnection->CreateInstance());
 
   if( fPasv )
   {
@@ -957,7 +957,7 @@ bool CFTPClient::OpenActiveDataConnection(IBlockingSocket& sckDataConnection, co
     return false;
   }
 
-  std::auto_ptr<IBlockingSocket> apSckServer(m_apSckControlConnection->CreateInstance());
+  std::unique_ptr<IBlockingSocket> apSckServer(m_apSckControlConnection->CreateInstance());
 
   USHORT ushLocalSock = 0;
   try

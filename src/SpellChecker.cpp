@@ -87,7 +87,7 @@ LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
 }
 
 void SpellChecker::addUserServer(std::wstring server) {
-    FtpTrim(server);
+    ftpTrim(server);
     wchar_t *Buf = 0;
     for (int i = 0; i < countof(DefaultServers); i++) {
       const auto defServer = DefaultServers[i];
@@ -742,10 +742,10 @@ void SpellChecker::ResetDownloadCombobox() {
 
 void SpellChecker::PreserveCurrentAddressIndex() {
   auto address = GetDownloadDics()->currentAddress();
-  FtpTrim(address);
+  ftpTrim(address);
   for (int i = 0; i < countof(ServerNames); i++) {
     std::wstring defServer = DefaultServers[i];
-    FtpTrim(defServer);
+    ftpTrim(defServer);
     if (address == defServer) {
       LastUsedAddress = i;
       return;

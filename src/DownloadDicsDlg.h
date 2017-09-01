@@ -21,16 +21,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "staticdialog\staticdialog.h"
 #include <Wininet.h>
+#include <optional>
+#include "FTPFileStatus.h"
+#include <variant>
+#include "CommonFunctions.h"
 
 struct LanguageName;
 
-void FtpTrim(std::wstring& FtpAddress);
+void ftpTrim(std::wstring& FtpAddress);
 
-enum FTP_OPERATION_TYPE {
-  FILL_FILE_LIST = 0,
-  DOWNLOAD_FILE,
+enum FtpOperationType {
+  fillFileList = 0,
+  downloadFile,
 };
+
+enum class FtpOperationError {
+  none,
+  loginFailed,
+  downloadFailed,
+};
+
 class SpellChecker;
+
+struct FtpOperationParams {
+    std::wstring address;
+    std::wstring path;
+    bool useProxy;
+    std::wstring proxyAddress;
+    int proxyPort;
+};
 
 class DownloadDicsDlg : public StaticDialog {
 public:
@@ -42,7 +61,11 @@ public:
             SpellChecker *SpellCheckerInstanceArg);
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
   void UpdateListBox();
-  void DoFtpOperation(FTP_OPERATION_TYPE Type, std::wstring Address,
+    void onNewFileList(std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> response);
+    void preparFileListUpdate();
+    FtpOperationParams spawnFtpOperationParams(const std::wstring& fullPath);
+    void updateFileListAsync(const std::wstring& fullPath);
+    void DoFtpOperation(FtpOperationType Type, std::wstring fullPath,
                       wchar_t *FileName = nullptr, wchar_t *Location = nullptr);
   void DownloadSelected();
   void FillFileList();
@@ -55,9 +78,10 @@ public:
   void Refresh();
   LRESULT AskReplacementMessage(wchar_t *DicName);
   std::wstring currentAddress() const;
+  void updateStatus (const wchar_t *text, COLORREF statusColor);
 
 private:
-  void DoFtpOperationThroughHttpProxy(FTP_OPERATION_TYPE Type, std::wstring Address,
+  void DoFtpOperationThroughHttpProxy(FtpOperationType Type, std::wstring Address,
                                       wchar_t *FileName, wchar_t *Location);
 
 private:
@@ -78,4 +102,5 @@ private:
   HANDLE Timer;
   BOOL CancelPressed;
   int CheckIfSavingIsNeeded;
+  std::optional<TaskWrapper> requestFileListTask;
 };
