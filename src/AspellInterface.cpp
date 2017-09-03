@@ -94,9 +94,7 @@ void AspellInterface::SendAspellErorr (AspellCanHaveError *Error)
 {
   wchar_t *ErrorMsg = 0;
   SetString (ErrorMsg, aspell_error_message (Error));
-  MessageBoxInfo MsgBox (NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
-  SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
-  CLEAN_AND_ZERO_ARR (ErrorMsg);
+  MessageBox (NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
 }
 
 void AspellInterface::SetMultipleLanguages (std::vector<wchar_t *> *List)
@@ -198,8 +196,7 @@ void AspellInterface::AddToDictionary (char *Word)
   {
     wchar_t *ErrorMsg = 0;
     SetString (ErrorMsg, aspell_speller_error_message (LastSelectedSpeller));
-    MessageBoxInfo MsgBox (NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
-    SendMessage (NppWindow, GetCustomGUIMessageId (CustomGUIMessage::DO_MESSAGE_BOX),  (WPARAM) &MsgBox, 0);
+    MessageBox (NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
     CLEAN_AND_ZERO_ARR (ErrorMsg);
   }
   LastSelectedSpeller = 0;

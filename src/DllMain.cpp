@@ -160,12 +160,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
        callbackPtr->callback ();
        return TRUE;
     }
-    else if (Message == GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX)) {
-      MessageBoxInfo *MsgBox = (MessageBoxInfo *)wParam;
-      DWORD Result = MessageBox(MsgBox->hWnd, MsgBox->Message, MsgBox->Title,
-                                MsgBox->Flags);
-      return Result;
-    } else if (Message ==
+    else if (Message ==
                GetCustomGUIMessageId(CustomGUIMessage::SHOW_CALCULATED_MENU)) {
       MenuList = (std::vector<SuggestionsMenuItem *> *)lParam;
       return ::CallWindowProc(wndProcNotepad, hWnd, WM_CONTEXTMENU, LastHwnd,

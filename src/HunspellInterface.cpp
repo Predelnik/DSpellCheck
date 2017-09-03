@@ -503,15 +503,12 @@ void HunspellInterface::ReadUserDic(WordSet *Target, wchar_t *Path) {
 }
 
 void HunspellInterface::MessageBoxWordCannotBeAdded() {
-  MessageBoxInfo MsgBox(
+  MessageBox (
       NppWindow, L"Sadly, this word contains symbols out of current dictionary "
                  L"encoding, thus it cannot be added to user dictionary. You "
                  L"can convert this dictionary to UTF-8 or choose the "
                  L"different one with appropriate encoding.",
       L"Word cannot be added", MB_OK | MB_ICONWARNING);
-  SendMessage(NppWindow,
-              GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-              (WPARAM)&MsgBox, 0);
 }
 
 void HunspellInterface::AddToDictionary(char *Word) {
@@ -535,15 +532,12 @@ void HunspellInterface::AddToDictionary(char *Word) {
     // harm in it
     int LocalDicFileHandle = _wopen(DicPath, _O_CREAT | _O_BINARY | _O_WRONLY);
     if (LocalDicFileHandle == -1) {
-      MessageBoxInfo MsgBox(
+      MessageBox (
           NppWindow, L"User dictionary cannot be written, please check if you "
                      L"have access for writing into your dictionary directory, "
                      L"otherwise you can change it or run Notepad++ as "
                      L"administrator.",
           L"User dictionary cannot be saved", MB_OK | MB_ICONWARNING);
-      SendMessage(NppWindow,
-                  GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                  (WPARAM)&MsgBox, 0);
     } else {
       _close(LocalDicFileHandle);
     }
@@ -552,15 +546,12 @@ void HunspellInterface::AddToDictionary(char *Word) {
     SetFileAttributes(DicPath, FILE_ATTRIBUTE_NORMAL);
     int LocalDicFileHandle = _wopen(DicPath, _O_APPEND | _O_BINARY | _O_WRONLY);
     if (LocalDicFileHandle == -1) {
-      MessageBoxInfo MsgBox(
+      MessageBox (
           NppWindow, L"User dictionary cannot be written, please check if you "
                      L"have access for writing into your dictionary directory, "
                      L"otherwise you can change it or run Notepad++ as "
                      L"administrator.",
           L"User dictionary cannot be saved", MB_OK | MB_ICONWARNING);
-      SendMessage(NppWindow,
-                  GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                  (WPARAM)&MsgBox, 0);
     } else
       _close(LocalDicFileHandle);
   }

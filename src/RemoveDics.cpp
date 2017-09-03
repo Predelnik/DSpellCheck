@@ -100,11 +100,8 @@ void RemoveDics::RemoveSelected(SpellChecker *SpellCheckerInstance) {
     wchar_t Buf[DEFAULT_BUF_SIZE];
     swprintf(Buf, L"%d dictionary(ies) has(ve) been successfully removed",
              Count);
-    MessageBoxInfo MsgBox(_hParent, Buf, L"Dictionaries were removed",
-                          MB_OK | MB_ICONINFORMATION);
-    SendMessage(_hParent,
-                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                (WPARAM)&MsgBox, 0);
+    MessageBox (_hParent, Buf, L"Dictionaries were removed",
+                MB_OK | MB_ICONINFORMATION);
   }
 }
 

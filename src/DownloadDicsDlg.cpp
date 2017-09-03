@@ -94,11 +94,7 @@ LRESULT DownloadDicsDlg::AskReplacementMessage(wchar_t *DicName) {
                              L"you want to replace it?",
              TBuf);
   CLEAN_AND_ZERO_ARR(TBuf);
-  MessageBoxInfo MsgBox(_hParent, ReplaceMessage, L"Dictionary already exists",
-                        MB_YESNO);
-  return SendMessage(_hParent,
-                     GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                     (WPARAM)&MsgBox, 0);
+  return MessageBox (_hParent, ReplaceMessage, L"Dictionary already exists", MB_YESNO);
 }
 
 static std::wstring getTempPath () {
@@ -117,14 +113,11 @@ bool DownloadDicsDlg::prepareDownloading() {
   // If path isn't exist we're gonna try to create it else it's finish
   if (!CheckForDirectoryExistence(getTempPath ().c_str (), FALSE, _hParent))
       {
-        MessageBoxInfo MsgBox(
+        MessageBox (
             _hParent, L"Path defined as temporary dir doesn't exist and couldn't "
                       L"be created, probably one of subdirectories have limited "
                       L"access, please make temporary path valid.",
             L"Temporary Path is Broken", MB_OK | MB_ICONEXCLAMATION);
-        SendMessage(_hParent,
-                    GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                    (WPARAM)&MsgBox, 0);
         return false;
       }
   CancelPressed = FALSE;
@@ -139,15 +132,12 @@ bool DownloadDicsDlg::prepareDownloading() {
       0, _hParent)) // If path doesn't exist we're gonna try to create it
                         // else it's finish
       {
-        MessageBoxInfo MsgBox(
+        MessageBox (
             _hParent, L"Directory for dictionaries doesn't exist and couldn't be "
                       L"created, probably one of subdirectories have limited "
                       L"access, please choose accessible directory for "
                       L"dictionaries",
             L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
-        SendMessage(_hParent,
-                    GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                    (WPARAM)&MsgBox, 0);
         return false;
       }
     for (int i = 0; i < ListBox_GetCount(HFileList); i++) {
@@ -166,25 +156,19 @@ bool DownloadDicsDlg::prepareDownloading() {
 void DownloadDicsDlg::finalizeDownloading () {
   getProgress()->display(false);
   if (Failure == 1) {
-    MessageBoxInfo MsgBox(
+    MessageBox (
         _hParent, L"Access denied to dictionaries directory, either try to run "
                   L"Notepad++ as administrator or select some different, "
                   L"accessible dictionary path",
         L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
-    SendMessage(_hParent,
-                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                (WPARAM)&MsgBox, 0);
   } else if (DownloadedCount) {
     MessageBox (_hParent, Message.c_str (), L"Dictionaries Downloaded",
                 MB_OK | MB_ICONINFORMATION);
   } else if (supposedDownloadedCount) // Otherwise - silent
   {
-    MessageBoxInfo MsgBox(
+    MessageBox (
         _hParent, L"Sadly, no dictionaries were copied, please try again",
         L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
-    SendMessage(_hParent,
-                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                (WPARAM)&MsgBox, 0);
   }
   for (int i = 0; i < ListBox_GetCount(HFileList); i++)
     CheckedListBox_SetCheckState(HFileList, i, BST_UNCHECKED);

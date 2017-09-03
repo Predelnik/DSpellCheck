@@ -735,11 +735,8 @@ static BOOL TryToCreateDir(wchar_t *Path, BOOL Silent, HWND NppWindow) {
 
       wchar_t Message[DEFAULT_BUF_SIZE];
       swprintf(Message, L"Can't create directory %s", Path);
-      MessageBoxInfo MsgBox(NppWindow, Message, L"Error in directory creation",
-                            MB_OK | MB_ICONERROR);
-      SendMessage(NppWindow,
-                  GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                  (WPARAM)&MsgBox, 0);
+      MessageBox (NppWindow, Message, L"Error in directory creation",
+                  MB_OK | MB_ICONERROR);
     }
     return FALSE;
   }
