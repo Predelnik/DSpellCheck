@@ -746,19 +746,20 @@ static BOOL TryToCreateDir(wchar_t *Path, BOOL Silent, HWND NppWindow) {
   return TRUE;
 }
 
-BOOL CheckForDirectoryExistence(wchar_t *Path, BOOL Silent, HWND NppWindow) {
-  for (unsigned int i = 0; i < wcslen(Path); i++) {
+BOOL CheckForDirectoryExistence(const wchar_t* PathArg, BOOL Silent, HWND NppWindow) {
+    auto Path = cpyBuf<wchar_t> (PathArg);
+  for (unsigned int i = 0; i < wcslen(PathArg); i++) {
     if (Path[i] == L'\\') {
       Path[i] = L'\0';
-      if (!PathFileExists(Path)) {
-        if (!TryToCreateDir(Path, Silent, NppWindow))
+      if (!PathFileExists(PathArg)) {
+        if (!TryToCreateDir(Path.get (), Silent, NppWindow))
           return FALSE;
       }
       Path[i] = L'\\';
     }
   }
-  if (!PathFileExists(Path)) {
-    if (!TryToCreateDir(Path, Silent, NppWindow))
+  if (!PathFileExists(PathArg)) {
+    if (!TryToCreateDir(Path.get (), Silent, NppWindow))
       return FALSE;
   }
   return TRUE;
@@ -766,5 +767,39 @@ BOOL CheckForDirectoryExistence(wchar_t *Path, BOOL Silent, HWND NppWindow) {
 
 wchar_t *GetLastSlashPosition(wchar_t *Path) { return wcsrchr(Path, L'\\'); }
 
-TaskWrapper::TaskWrapper(HWND targetHwnd): m_targetHwnd(targetHwnd), m_aliveStatus(std::shared_ptr<void> (reinterpret_cast<void *> (1), [](void*){}))  {
+TaskWrapper::TaskWrapper(HWND targetHwnd): m_targetHwnd(targetHwnd)  {
 }
+
+TaskWrapper::~TaskWrapper() {
+    cancel ();
+}
+
+void TaskWrapper::resetAliveStatus() {
+    m_aliveStatus = {new concurrency::cancellation_token_source (), [](
+        concurrency::cancellation_token_source *source){ source->cancel(); delete source; }};
+}
+
+void TaskWrapper::cancel() {
+    if (m_aliveStatus)
+        {
+            m_aliveStatus->cancel();
+            m_aliveStatus.reset ();
+        }
+}
+
+void ProgressData::set(int progress, const std::wstring& status) {
+    std::lock_guard<std::mutex> lg (m_mutex);
+    m_progress = progress;
+    m_status = status;
+}
+
+int ProgressData::getProgress() const {
+    std::lock_guard<std::mutex> lg (m_mutex);
+    return m_progress;
+}
+
+std::wstring ProgressData::getStatus()const{
+    std::lock_guard<std::mutex> lg (m_mutex);
+    return m_status;
+}
+

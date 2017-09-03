@@ -35,7 +35,7 @@ class LangList;
 class DownloadDicsDlg;
 class SelectProxy;
 class SpellChecker;
-class Progress;
+class ProgressDlg;
 class RemoveDics;
 
 //
@@ -136,7 +136,7 @@ HANDLE getHModule ();
 LangList *GetLangList ();
 RemoveDics *GetRemoveDics ();
 SelectProxy *GetSelectProxy ();
-Progress *GetProgress ();
+ProgressDlg *getProgress ();
 DownloadDicsDlg *GetDownloadDics ();
 FuncItem *get_funcItem ();
 void SetModifiedZoneShared (long Start, long End);

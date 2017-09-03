@@ -20,20 +20,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "StaticDialog\StaticDialog.h"
 
-class Progress : public StaticDialog {
+struct ProgressData;
+
+class ProgressDlg : public StaticDialog {
 public:
-  Progress(void);
-  ~Progress(void);
+  ProgressDlg();
+  ~ProgressDlg();
 
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
   void init(HINSTANCE hInst, HWND Parent) override;
   void DoDialog();
   void SetProgress(int value);
-  void SetBottomMessage(wchar_t *Message);
-  void SetTopMessage(wchar_t *Message);
+  void SetBottomMessage(const wchar_t* Message);
+  void SetTopMessage(const wchar_t* Message);
   void SetMarquee(bool animated);
+  std::shared_ptr<ProgressData> getProgressData () { return m_progressData; }
+  void update();
 
 private:
+  std::shared_ptr<ProgressData> m_progressData;
   HWND HDescBottom;
   HWND HDescTop;
   HWND HProgressBar;

@@ -17,12 +17,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "Progress.h"
+#include "ProgressDlg.h"
 
 #include "Plugin.h"
 #include "resource.h"
+#include "CommonFunctions.h"
 
-void Progress::DoDialog() {
+void ProgressDlg::DoDialog() {
   if (!isCreated()) {
     create(IDD_DIALOGPROGRESS);
   } else {
@@ -31,11 +32,11 @@ void Progress::DoDialog() {
   }
 }
 
-void Progress::init(HINSTANCE hInst, HWND Parent) {
+void ProgressDlg::init(HINSTANCE hInst, HWND Parent) {
   return Window::init(hInst, Parent);
 }
 
-INT_PTR Progress::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/) {
+INT_PTR ProgressDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {
     HDescTop = GetDlgItem(_hSelf, IDC_DESCTOP);
@@ -57,11 +58,11 @@ INT_PTR Progress::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/) {
   return FALSE;
 }
 
-void Progress::SetProgress(int value) {
+void ProgressDlg::SetProgress(int value) {
   SendMessage(HProgressBar, PBM_SETPOS, value, 0);
 }
 
-void Progress::SetMarquee(bool animated) {
+void ProgressDlg::SetMarquee(bool animated) {
   DWORD dwStyle = ::GetWindowLong(HProgressBar, GWL_STYLE);
   if (animated)
     dwStyle = dwStyle | PBS_MARQUEE;
@@ -72,14 +73,19 @@ void Progress::SetMarquee(bool animated) {
   SendMessage(HProgressBar, PBM_SETMARQUEE, (int)animated, 0);
 }
 
-void Progress::SetBottomMessage(wchar_t *Message) {
+void ProgressDlg::update() {
+    SetTopMessage (m_progressData->getStatus().c_str ());
+    SetProgress (m_progressData->getProgress());
+}
+
+void ProgressDlg::SetBottomMessage(const wchar_t* Message) {
   Static_SetText(HDescBottom, Message);
 }
 
-void Progress::SetTopMessage(wchar_t *Message) {
+void ProgressDlg::SetTopMessage(const wchar_t* Message) {
   Static_SetText(HDescTop, Message);
 }
 
-Progress::Progress(void) {}
+ProgressDlg::ProgressDlg() : m_progressData(std::make_shared<ProgressData> ()) {}
 
-Progress::~Progress(void) {}
+ProgressDlg::~ProgressDlg() {}

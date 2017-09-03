@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "AboutDlg.h"
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
-#include "Progress.h"
+#include "ProgressDlg.h"
 #include "RemoveDics.h"
 #include "SelectProxy.h"
 #include "SpellChecker.h"
@@ -68,7 +68,7 @@ Suggestions *SuggestionsInstance = 0;
 LangList *LangListInstance = 0;
 RemoveDics *RemoveDicsInstance = 0;
 SelectProxy *SelectProxyInstance = 0;
-Progress *ProgressInstance = 0;
+ProgressDlg *ProgressInstance = 0;
 DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
 HMENU LangsMenu;
@@ -129,7 +129,7 @@ RemoveDics *GetRemoveDics() { return RemoveDicsInstance; }
 
 SelectProxy *GetSelectProxy() { return SelectProxyInstance; }
 
-Progress *GetProgress() { return ProgressInstance; }
+ProgressDlg *getProgress() { return ProgressInstance; }
 
 DownloadDicsDlg *GetDownloadDics() { return DownloadDicsDlgInstance; }
 
@@ -394,7 +394,7 @@ void InitClasses() {
   AboutDlgInstance = new AboutDlg;
   AboutDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
-  ProgressInstance = new Progress;
+  ProgressInstance = new ProgressDlg;
   ProgressInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
   LangListInstance = new LangList;

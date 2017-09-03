@@ -37,7 +37,7 @@ extern bool doCloseTag;
 HANDLE HModule;
 int RecheckDelay;
 std::vector<std::pair<long, long>> CheckQueue;
-HANDLE Timer = 0;
+HANDLE Timer = 0, uiTimer = 0;
 WNDPROC wndProcNotepad = NULL;
 BOOL RestylingCausedRecheckWasDone =
     FALSE; // Hack to avoid eternal cycle in case of scintilla bug
@@ -153,10 +153,12 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
 
   if (Message != 0) {
     if (Message == GetCustomGUIMessageId (CustomGUIMessage::GENERIC_CALLBACK)) {
-        const auto callbackPtr = reinterpret_cast<CallbackData *> (wParam);
-        if (!callbackPtr->aliveStatus.expired())
-          callbackPtr->callback ();
-        delete callbackPtr;
+        const auto callbackPtr = std::unique_ptr<CallbackData> (reinterpret_cast<CallbackData *> (wParam));
+        if (callbackPtr->aliveStatus.expired())
+            return FALSE;
+
+       callbackPtr->callback ();
+       return TRUE;
     }
     else if (Message == GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX)) {
       MessageBoxInfo *MsgBox = (MessageBoxInfo *)wParam;
@@ -173,7 +175,6 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
       AutoCheckStateReceived(wParam != 0);
     }
   }
-
   ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
   return ret;
 }
@@ -208,6 +209,10 @@ VOID CALLBACK ExecuteQueue(PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/
   RestylingCausedRecheckWasDone = TRUE;
 }
 
+void uiUpdate (PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/) {
+    GetDownloadDics()->uiUpdate ();
+}
+
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
   /*
   // DEBUG_CODE:
@@ -227,6 +232,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
 
     if (Timer) {
       DeleteTimerQueueTimer(0, Timer, 0);
+      DeleteTimerQueueTimer (0, uiTimer, 0);
       Timer = 0;
     }
     commandMenuCleanUp();
@@ -246,6 +252,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     SendEvent(EID_CHECK_FILE_NAME);
     CreateHooks();
     CreateTimerQueueTimer(&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE, 0);
+     CreateTimerQueueTimer(&uiTimer, 0, uiUpdate, NULL, 0, 100, 0);
     SendEvent(EID_RECHECK_VISIBLE_BOTH_VIEWS);
     RestylingCausedRecheckWasDone = FALSE;
     GetSpellChecker()->SetSuggestionsBoxTransparency();

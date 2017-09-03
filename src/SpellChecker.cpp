@@ -462,7 +462,7 @@ BOOL WINAPI SpellChecker::NotifyNetworkEvent(DWORD Event) {
     GetDownloadDics()->FillFileList();
     break;
   case EID_CANCEL_DOWNLOAD:
-    // Do nothing, just unflag event
+    GetDownloadDics()->SetCancelPressed(true);
     break;
   case EID_KILLNETWORKTHREAD:
     return FALSE;

@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <algorithm>
 #include <stack>
 #include <cstring>
+#include <string>
 #include <time.h>
 #include <shlwapi.h>
 #include <windowsx.h>
@@ -38,3 +39,5 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma warning(disable: 4091)
 #include <Shlobj.h>
 #pragma warning(pop)
+
+using namespace std::literals;

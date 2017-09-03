@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "HunspellInterface.h"
 #include "LanguageName.h"
 #include "Plugin.h"
-#include "Progress.h"
+#include "ProgressDlg.h"
 #include "resource.h"
 #include "SelectProxy.h"
 #include "SpellChecker.h"
@@ -68,7 +68,7 @@ DownloadDicsDlg::DownloadDicsDlg() {
 
 void DownloadDicsDlg::init(HINSTANCE hInst, HWND Parent,
                            SpellChecker *SpellCheckerInstanceArg) {
-  requestFileListTask = TaskWrapper {Parent};
+  ftpOperationTask = TaskWrapper {Parent};
   SpellCheckerInstance = SpellCheckerInstanceArg;
   return Window::init(hInst, Parent);
 }
@@ -101,87 +101,117 @@ LRESULT DownloadDicsDlg::AskReplacementMessage(wchar_t *DicName) {
                      (WPARAM)&MsgBox, 0);
 }
 
-#define BUF_SIZE_FOR_COPY 10240
-void DownloadDicsDlg::DownloadSelected() {
-  int Count = ListBox_GetCount(HFileList);
-  wchar_t TempPath[MAX_PATH];
-  wchar_t LocalPath[MAX_PATH];
-  wchar_t *ConvertedDicName = 0;
-  char *LocalPathANSI = 0;
-  char *DicFileNameANSI = 0;
-  std::map<char *, int, bool (*)(char *, char *)>::iterator it;
-  wchar_t *DicFileName = 0;
-  wchar_t DicFileLocalPath[MAX_PATH];
-  wchar_t HunspellDicPath[MAX_PATH];
-  wchar_t Message[DEFAULT_BUF_SIZE];
-  wchar_t *FileName = 0;
-  BOOL IsAffFile = FALSE;
-  BOOL IsDicFile = FALSE;
-  unz_file_info FInfo;
-  char FileCopyBuf[(BUF_SIZE_FOR_COPY)];
-  wchar_t ProgMessage[DEFAULT_BUF_SIZE];
-  GetTempPath(MAX_PATH, TempPath);
-  if (!CheckForDirectoryExistence(TempPath, FALSE, _hParent)) // If path isn't
-                                                              // exist we're
-                                                              // gonna try to
-                                                              // create it else
-                                                              // it's finish
-  {
-    MessageBoxInfo MsgBox(
-        _hParent, L"Path defined as temporary dir doesn't exist and couldn't "
-                  L"be created, probably one of subdirectories have limited "
-                  L"access, please make temporary path valid.",
-        L"Temporary Path is Broken", MB_OK | MB_ICONEXCLAMATION);
-    SendMessage(_hParent,
-                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                (WPARAM)&MsgBox, 0);
-    return;
-  }
+static std::wstring getTempPath () {
+  std::vector<wchar_t> tempPathBuf (MAX_PATH);
+  GetTempPath(MAX_PATH, tempPathBuf.data ());
+  return tempPathBuf.data ();
+}
+
+bool DownloadDicsDlg::prepareDownloading() {
+  DownloadedCount = 0;
+  supposedDownloadedCount = 0;
+  Failure = 0;
+  Message = L"Dictionaries copied:\n";
+  m_toDownload.clear ();
+
+  // If path isn't exist we're gonna try to create it else it's finish
+  if (!CheckForDirectoryExistence(getTempPath ().c_str (), FALSE, _hParent))
+      {
+        MessageBoxInfo MsgBox(
+            _hParent, L"Path defined as temporary dir doesn't exist and couldn't "
+                      L"be created, probably one of subdirectories have limited "
+                      L"access, please make temporary path valid.",
+            L"Temporary Path is Broken", MB_OK | MB_ICONEXCLAMATION);
+        SendMessage(_hParent,
+                    GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
+                    (WPARAM)&MsgBox, 0);
+        return false;
+      }
   CancelPressed = FALSE;
-  int Failure = 0;
-  wcscpy(Message, L"Dictionaries copied:\n");
-  std::map<char *, int, bool (*)(char *, char *)> FilesFound(
-      SortCompareChars); // 0x01 - .aff found, 0x02 - .dic found
-  Progress *p = GetProgress();
+  ProgressDlg *p = getProgress();
   p->SetProgress(0);
   p->SetBottomMessage(L"");
   p->SetTopMessage(L"");
-  int DownloadedCount = 0;
-  int SupposedDownloadedCount = 0;
   if (!CheckForDirectoryExistence(
-          SpellCheckerInstance->GetInstallSystem()
-              ? SpellCheckerInstance->GetHunspellAdditionalPath()
-              : SpellCheckerInstance->GetHunspellPath(),
-          0, _hParent)) // If path doesn't exist we're gonna try to create it
+      SpellCheckerInstance->GetInstallSystem()
+          ? SpellCheckerInstance->GetHunspellAdditionalPath()
+          : SpellCheckerInstance->GetHunspellPath(),
+      0, _hParent)) // If path doesn't exist we're gonna try to create it
                         // else it's finish
-  {
+      {
+        MessageBoxInfo MsgBox(
+            _hParent, L"Directory for dictionaries doesn't exist and couldn't be "
+                      L"created, probably one of subdirectories have limited "
+                      L"access, please choose accessible directory for "
+                      L"dictionaries",
+            L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
+        SendMessage(_hParent,
+                    GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
+                    (WPARAM)&MsgBox, 0);
+        return false;
+      }
+    for (int i = 0; i < ListBox_GetCount(HFileList); i++) {
+    if (CheckedListBox_GetCheckState(HFileList, i) == BST_CHECKED) {
+        DownloadRequest req;
+        req.fileName = CurrentLangsFiltered->at(i).OrigName + L".zip"s;
+        req.targetPath = getTempPath () + req.fileName;
+        m_toDownload.push_back (req);
+        ++supposedDownloadedCount;
+    }
+    }
+    m_cur = m_toDownload.begin ();
+    return true;
+}
+
+void DownloadDicsDlg::finalizeDownloading () {
+  getProgress()->display(false);
+  if (Failure == 1) {
     MessageBoxInfo MsgBox(
-        _hParent, L"Directory for dictionaries doesn't exist and couldn't be "
-                  L"created, probably one of subdirectories have limited "
-                  L"access, please choose accessible directory for "
-                  L"dictionaries",
+        _hParent, L"Access denied to dictionaries directory, either try to run "
+                  L"Notepad++ as administrator or select some different, "
+                  L"accessible dictionary path",
         L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
     SendMessage(_hParent,
                 GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
                 (WPARAM)&MsgBox, 0);
-    return;
+  } else if (DownloadedCount) {
+    MessageBox (_hParent, Message.c_str (), L"Dictionaries Downloaded",
+                MB_OK | MB_ICONINFORMATION);
+  } else if (supposedDownloadedCount) // Otherwise - silent
+  {
+    MessageBoxInfo MsgBox(
+        _hParent, L"Sadly, no dictionaries were copied, please try again",
+        L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
+    SendMessage(_hParent,
+                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
+                (WPARAM)&MsgBox, 0);
   }
-  for (int i = 0; i < Count; i++) {
-    if (CheckedListBox_GetCheckState(HFileList, i) == BST_CHECKED) {
-      SupposedDownloadedCount++;
-      FileName =
-          new wchar_t[wcslen(CurrentLangsFiltered->at(i).OrigName) + 4 + 1];
-      FileName[0] = L'\0';
-      wcscat(FileName, CurrentLangsFiltered->at(i).OrigName);
-      wcscat(FileName, L".zip");
-      swprintf(ProgMessage, L"Downloading %s...", FileName);
-      p->SetTopMessage(ProgMessage);
-      wcscpy(LocalPath, TempPath);
-      wcscat(LocalPath, FileName);
-      DoFtpOperation(downloadFile, currentAddress (), FileName, LocalPath);
-      if (CancelPressed)
-        break;
-      SetString(LocalPathANSI, LocalPath);
+  for (int i = 0; i < ListBox_GetCount(HFileList); i++)
+    CheckedListBox_SetCheckState(HFileList, i, BST_UNCHECKED);
+  SpellCheckerInstance->HunspellReinitSettings(
+      TRUE); // Calling the update for Hunspell dictionary list
+  SpellCheckerInstance->ReinitLanguageLists(TRUE);
+  SpellCheckerInstance->DoPluginMenuInclusion();
+  SpellCheckerInstance->RecheckVisibleBothViews();
+}
+
+#define BUF_SIZE_FOR_COPY 10240
+void DownloadDicsDlg::onFileDownloaded () {
+    wchar_t *ConvertedDicName = 0;
+    char *LocalPathANSI = 0;
+    char *DicFileNameANSI = 0;
+    std::map<char *, int, bool (*)(char *, char *)>::iterator it;
+    wchar_t *DicFileName = 0;
+    wchar_t DicFileLocalPath[MAX_PATH];
+    wchar_t HunspellDicPath[MAX_PATH];
+    BOOL IsAffFile = FALSE;
+    BOOL IsDicFile = FALSE;
+    unz_file_info FInfo;
+    char FileCopyBuf[(BUF_SIZE_FOR_COPY)];
+    wchar_t ProgMessage[DEFAULT_BUF_SIZE];
+    std::map<char *, int, bool (*)(char *, char *)> FilesFound(
+      SortCompareChars); // 0x01 - .aff found, 0x02 - .dic found
+    SetString(LocalPathANSI, m_cur->targetPath.c_str ());
       unzFile fp = unzOpen(LocalPathANSI);
       if (unzGoToFirstFile(fp) != UNZ_OK)
         goto clean_and_continue;
@@ -206,8 +236,7 @@ void DownloadDicsDlg::DownloadSelected() {
 
           (*it).second |= (IsAffFile ? 0x01 : 0x02);
           unzOpenCurrentFile(fp);
-          int BytesCopied = 0;
-          wcscpy(DicFileLocalPath, TempPath);
+          wcscpy(DicFileLocalPath, getTempPath ().c_str ());
           SetString(DicFileName, DicFileNameANSI);
           wcscat(DicFileLocalPath, DicFileName);
           if (IsAffFile)
@@ -222,18 +251,19 @@ void DownloadDicsDlg::DownloadSelected() {
             continue;
 
           swprintf(ProgMessage, L"Extracting %s...", DicFileName);
-          p->SetTopMessage(ProgMessage);
+          getProgress ()->SetTopMessage(ProgMessage);
           DWORD BytesTotal = 0;
+          int BytesCopied;
           while ((BytesCopied = unzReadCurrentFile(fp, FileCopyBuf,
                                                    (BUF_SIZE_FOR_COPY))) != 0) {
             _write(LocalDicFileHandle, FileCopyBuf, BytesCopied);
             BytesTotal += BytesCopied;
             FInfo.uncompressed_size, BytesTotal * 100 / FInfo.uncompressed_size;
-            p->SetProgress(BytesTotal * 100 / FInfo.uncompressed_size);
+            getProgress ()->SetProgress(BytesTotal * 100 / FInfo.uncompressed_size);
             swprintf(ProgMessage, L"%d / %d bytes extracted (%d %%)",
                      BytesTotal, FInfo.uncompressed_size,
                      BytesTotal * 100 / FInfo.uncompressed_size);
-            p->SetBottomMessage(ProgMessage);
+            getProgress ()->SetBottomMessage(ProgMessage);
           }
           unzCloseCurrentFile(fp);
           _close(LocalDicFileHandle);
@@ -247,7 +277,7 @@ void DownloadDicsDlg::DownloadSelected() {
       for (; it != FilesFound.end(); ++it) {
         if ((*it).second != 3) // Some of .aff/.dic is missing
         {
-          wcscpy(DicFileLocalPath, TempPath);
+          wcscpy(DicFileLocalPath, getTempPath ().c_str ());
           SetString(DicFileName, (*it).first);
           wcscat(DicFileLocalPath, DicFileName);
           switch ((*it).second) {
@@ -261,7 +291,7 @@ void DownloadDicsDlg::DownloadSelected() {
           SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
           DeleteFile(DicFileLocalPath);
         } else {
-          wcscpy(DicFileLocalPath, TempPath);
+          wcscpy(DicFileLocalPath, getTempPath ().c_str ());
           SetString(DicFileName, (*it).first);
           wcscat(DicFileLocalPath, DicFileName);
           wcscat(DicFileLocalPath, L".aff");
@@ -324,12 +354,12 @@ void DownloadDicsDlg::DownloadSelected() {
             goto clean_and_continue;
 
           if (Confirmation) {
-            wcscat(Message, ConvertedDicName);
-            wcscat(Message, L"\n");
+            Message += ConvertedDicName;
+            Message += L"\n";
             DownloadedCount++;
           }
           if (!Confirmation)
-            SupposedDownloadedCount--;
+            supposedDownloadedCount--;
         }
       }
     clean_and_continue:
@@ -339,48 +369,28 @@ void DownloadDicsDlg::DownloadSelected() {
 
       FilesFound.clear();
       unzClose(fp);
-      SetFileAttributes(LocalPath, FILE_ATTRIBUTE_NORMAL);
-      DeleteFile(LocalPath); // Removing downloaded .zip file
-      CLEAN_AND_ZERO_ARR(FileName);
+      SetFileAttributes(m_cur->targetPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+      DeleteFile(m_cur->targetPath.c_str ()); // Removing downloaded .zip file
       if (Failure)
-        break;
-    }
-  }
-  GetProgress()->display(false);
-  if (Failure == 1) {
-    MessageBoxInfo MsgBox(
-        _hParent, L"Access denied to dictionaries directory, either try to run "
-                  L"Notepad++ as administrator or select some different, "
-                  L"accessible dictionary path",
-        L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
-    SendMessage(_hParent,
-                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                (WPARAM)&MsgBox, 0);
-  } else if (DownloadedCount) {
-    MessageBoxInfo MsgBox(_hParent, Message, L"Dictionaries Downloaded",
-                          MB_OK | MB_ICONINFORMATION);
-    SendMessage(_hParent,
-                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                (WPARAM)&MsgBox, 0);
-  } else if (SupposedDownloadedCount) // Otherwise - silent
-  {
-    MessageBoxInfo MsgBox(
-        _hParent, L"Sadly, no dictionaries were copied, please try again",
-        L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
-    SendMessage(_hParent,
-                GetCustomGUIMessageId(CustomGUIMessage::DO_MESSAGE_BOX),
-                (WPARAM)&MsgBox, 0);
-  }
-  for (int i = 0; i < ListBox_GetCount(HFileList); i++)
-    CheckedListBox_SetCheckState(HFileList, i, BST_UNCHECKED);
-  SpellCheckerInstance->HunspellReinitSettings(
-      TRUE); // Calling the update for Hunspell dictionary list
-  SpellCheckerInstance->ReinitLanguageLists(TRUE);
-  SpellCheckerInstance->DoPluginMenuInclusion();
-  SpellCheckerInstance->RecheckVisibleBothViews();
-  CLEAN_AND_ZERO_ARR(LocalPathANSI);
-  CLEAN_AND_ZERO_ARR(DicFileName);
-  CLEAN_AND_ZERO_ARR(ConvertedDicName);
+        return finalizeDownloading();
+
+    ++m_cur;
+    startNextDownload ();
+}
+
+void DownloadDicsDlg::startNextDownload ()
+{
+   if (m_cur == m_toDownload.end () || CancelPressed)
+      return finalizeDownloading ();
+
+   DoFtpOperation(downloadFile, currentAddress (), m_cur->fileName, m_cur->targetPath);
+}
+
+void DownloadDicsDlg::DownloadSelected() {
+  if (!prepareDownloading ())
+      return;
+
+  startNextDownload ();
 }
 
 void ftpTrim(std::wstring& ftpAddress) {
@@ -431,58 +441,44 @@ void DownloadDicsDlg::UpdateListBox() {
 
 // Copy of CFile with ability to kick progress bar
 class Observer : public nsFTP::CFTPClient::CNotification {
-  FILE *m_pFile;
-  tstring m_strFileName;
-  Progress *ProgressInstance;
-  DownloadDicsDlg *DownloadDicsInstance;
-  long BytesReceived;
-  long TargetSize;
-  nsFTP::CFTPClient *FtpSession;
+  std::shared_ptr<ProgressData> m_progressData;
+  long m_bytesReceived = 0;
+  long m_targetSize;
+  concurrency::cancellation_token m_token;
+   nsFTP::CFTPClient &m_client;
 
 public:
-  enum TOriginEnum {
-    orBegin = SEEK_SET,
-    orEnd = SEEK_END,
-    orCurrent = SEEK_CUR
-  };
-
-  Observer(Progress *ProgressArg, long TargetSizeArg,
-           nsFTP::CFTPClient *FtpSessionArg, DownloadDicsDlg *DownloadDicsArg)
-      : m_pFile(NULL) {
-    ProgressInstance = ProgressArg;
-    TargetSize = TargetSizeArg;
-    FtpSession = FtpSessionArg;
-    DownloadDicsInstance = DownloadDicsArg;
-    BytesReceived = 0;
-  }
+  Observer(std::shared_ptr<ProgressData> progressData, long targetSize, nsFTP::CFTPClient &client,
+      concurrency::cancellation_token token)
+      : m_progressData (progressData), m_targetSize (targetSize), m_client (client), m_token (token) {}
 
   virtual void OnBytesReceived(const nsFTP::TByteVector & /*vBuffer*/,
                                long lReceivedBytes) override {
-    BytesReceived += lReceivedBytes;
-    ProgressInstance->SetProgress(BytesReceived * 100 / TargetSize);
-    wchar_t Message[DEFAULT_BUF_SIZE];
-
-    swprintf(Message, L"%d / %d bytes downloaded (%d %%)", BytesReceived,
-             TargetSize, BytesReceived * 100 / TargetSize);
-    ProgressInstance->SetBottomMessage(Message);
-
-    /*
-      ProgressInstance->SetBottomMessage(L"Aborting Download...");
-      DownloadDicsInstance->SetCancelPressed(TRUE);
-      FtpSession->Abort();
-      return;
-    */
+    if (m_token.is_canceled())
+        {
+            m_client.Logout();
+            return;
+        }
+    m_bytesReceived += lReceivedBytes;
+      m_progressData->set(m_bytesReceived * 100 / m_targetSize,
+          wstring_printf (L"%d / %d bytes downloaded (%d %%)", m_bytesReceived,
+             m_targetSize, m_bytesReceived * 100 / m_targetSize));
   }
 };
 
-void DownloadDicsDlg::SetCancelPressed(BOOL Value) { CancelPressed = Value; }
+void DownloadDicsDlg::SetCancelPressed(BOOL Value) {
+    CancelPressed = Value;
+    ftpOperationTask->cancel();
+    m_cur = m_toDownload.end ();
+    finalizeDownloading ();
+}
 
 #define INITIAL_BUFFER_SIZE 50 * 1024
 #define INITIAL_SMALL_BUFFER_SIZE 10 * 1024
 void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FtpOperationType Type,
                                                      std::wstring Address,
-                                                     wchar_t *FileNameArg,
-                                                     wchar_t *Location) {
+                                                     const wchar_t* FileNameArg,
+                                                     const wchar_t* Location) {
   wchar_t *ProxyFinalString =
       new wchar_t[wcslen(SpellCheckerInstance->GetProxyHostName()) + 10];
   char *FileBuffer = 0;
@@ -552,13 +548,6 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FtpOperationType Type,
   DWORD Code = 0;
   DWORD Dummy = 0;
   DWORD Size = sizeof(DWORD);
-
-  /*
-  char Buffer[10000];
-  DWORD Length = 10000;
-  HttpQueryInfo (OpenedURL, HTTP_QUERY_RAW_HEADERS_CRLF, Buffer, &Length,
-  &Dummy);
-  */
 
   if (!HttpQueryInfo(OpenedURL, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
                      &Code, &Size, &Dummy)) {
@@ -693,8 +682,6 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FtpOperationType Type,
     DWORD BytesToRead = 0;
     DWORD BytesRead;
     DWORD BytesReadTotal = 0;
-    FileNameArg[wcslen(FileNameArg) - 4] = L'\0';
-    wchar_t Message[DEFAULT_BUF_SIZE];
 
     if (PathFileExists(Location)) {
       SetFileAttributes(Location, FILE_ATTRIBUTE_NORMAL);
@@ -708,7 +695,7 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FtpOperationType Type,
     if (!FileHandle)
       goto cleanup;
 
-    GetProgress()->SetMarquee(true);
+    getProgress()->SetMarquee(true);
     while (1) {
       InternetQueryDataAvailable(OpenedURL, &BytesToRead, 0, 0);
       if (BytesToRead == 0)
@@ -726,18 +713,13 @@ void DownloadDicsDlg::DoFtpOperationThroughHttpProxy(FtpOperationType Type,
       write(FileHandle, FileBuffer, BytesRead);
       BytesReadTotal += BytesRead;
 
-      swprintf(Message, L"%d / ???   bytes downloaded", BytesReadTotal);
+      wchar_t msg[DEFAULT_BUF_SIZE];
+      swprintf(msg, L"%d / ???   bytes downloaded", BytesReadTotal);
+      getProgress()->SetBottomMessage(msg);
 
-      GetProgress()->SetBottomMessage(Message);
-
-      /*
-        GetProgress()->SetBottomMessage(L"Aborting Download...");
-        SetCancelPressed(TRUE);
-        break;
-      */
     }
     _close(FileHandle);
-    GetProgress()->SetMarquee(false);
+    getProgress()->SetMarquee(false);
   }
 cleanup:
   if (WinInetHandle)
@@ -748,6 +730,8 @@ cleanup:
 
 std::wstring DownloadDicsDlg::currentAddress () const {
    auto sel = ComboBox_GetCurSel (HAddress);
+   if (sel < 0)
+      return L"";
    auto textLen = ComboBox_GetLBTextLen (HAddress, sel);
    std::vector<wchar_t> buf (textLen + 1);
    ComboBox_GetLBText (HAddress, sel, buf.data ());
@@ -781,10 +765,46 @@ std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> doDownloadFileLis
     return ret;
 }
 
+std::optional<FtpOperationError> doDownloadFile (FtpOperationParams params, const std::wstring &targetPath, std::shared_ptr<ProgressData> progressData, concurrency::
+                                                 cancellation_token token) {
+    if (PathFileExists(targetPath.c_str ())) {
+      SetFileAttributes(targetPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+      DeleteFile(targetPath.c_str ());
+    }
+
+    nsFTP::CFTPClient client (nsSocket::CreateDefaultBlockingSocketInstance(), 3);
+    if (!ftpLogin (client, params))
+        return FtpOperationError::loginFailed;
+
+    long FileSize = 0;
+    if (client.FileSize(params.path, FileSize) != nsFTP::FTP_OK)
+      return FtpOperationError::downloadFailed;
+
+    auto progressUpdater = std::make_unique<Observer> (std::move (progressData), FileSize, client, token);
+    client.AttachObserver(progressUpdater.get ());
+
+    if (!client.DownloadFile(params.path, targetPath,
+                                nsFTP::CRepresentation(nsFTP::CType::Image()),
+                                true)) {
+      if (PathFileExists(targetPath.c_str ())) {
+        SetFileAttributes(targetPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+        DeleteFile(targetPath.c_str ());
+      }
+    }
+
+    client.DetachObserver(progressUpdater.get ());
+    return std::nullopt;
+}
+
+
 
 void DownloadDicsDlg::updateStatus(const wchar_t* text, COLORREF statusColor) {
   StatusColor = statusColor;
   Static_SetText(HStatus, text);
+}
+
+void DownloadDicsDlg::uiUpdate() {
+    getProgress()->update ();
 }
 
 void DownloadDicsDlg::onNewFileList (std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> response)
@@ -829,7 +849,7 @@ void DownloadDicsDlg::onNewFileList (std::variant<FtpOperationError, nsFTP::TFTP
     EnableWindow(HInstallSelected, TRUE);
 }
 
-void DownloadDicsDlg::preparFileListUpdate () {
+void DownloadDicsDlg::prepareFileListUpdate () {
     EnableWindow(HInstallSelected, FALSE);
     StatusColor = COLOR_NEUTRAL;
     Static_SetText(HStatus, L"Status: Loading...");
@@ -851,8 +871,8 @@ void DownloadDicsDlg::updateFileListAsync (const std::wstring& fullPath)
 {
     // temporary workaround for xsmf_control.h bug
     static_assert(std::is_copy_constructible_v<std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec>>);
-    preparFileListUpdate ();
-    requestFileListTask->doDeferred([params = spawnFtpOperationParams (fullPath)]()
+    prepareFileListUpdate ();
+    ftpOperationTask->doDeferred([params = spawnFtpOperationParams (fullPath)](auto token)
     {
       return doDownloadFileList (params);
     }, [this](std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> res)
@@ -861,79 +881,31 @@ void DownloadDicsDlg::updateFileListAsync (const std::wstring& fullPath)
     });
 }
 
+void DownloadDicsDlg::downloadFileAsync (const std::wstring& fullPath, const std::wstring& targetLocation)
+{
+    ftpOperationTask->doDeferred([params = spawnFtpOperationParams (fullPath), targetLocation,
+    progressData = getProgress()->getProgressData()](auto token)
+    {
+      return doDownloadFile (params, targetLocation, progressData, token);
+    }, [this](std::optional<FtpOperationError>)
+    {
+        onFileDownloaded ();
+    });
+}
 
-void DownloadDicsDlg::DoFtpOperation(FtpOperationType Type, std::wstring fullPath,
-                                     wchar_t *FileName, wchar_t *Location) {
-  Observer *ProgressUpdater = 0;
 
+void DownloadDicsDlg::DoFtpOperation(FtpOperationType Type, const std::wstring& fullPath,
+                                     const std::wstring& fileName, const std::wstring& Location) {
   if (SpellCheckerInstance->GetUseProxy() &&
       SpellCheckerInstance->GetProxyType() == 0) {
-    DoFtpOperationThroughHttpProxy(Type, fullPath, FileName, Location);
+    DoFtpOperationThroughHttpProxy(Type, fullPath, fileName.c_str (), Location.c_str ());
     return;
   }
 
-  if (Type == fillFileList) {
-      return updateFileListAsync (fullPath);
+  switch (Type) {
+  case fillFileList: return updateFileListAsync (fullPath);
+  case downloadFile: return downloadFileAsync (fullPath + fileName, Location);
   }
-
-  std::wstring address, path;
-  std::tie (address, path) = ftpSplit (fullPath);
-
-  nsFTP::CLogonInfo *logonInfo = 0;
-  nsFTP::CFTPClient ftpClient(nsSocket::CreateDefaultBlockingSocketInstance(),
-                              3);
-  if (!SpellCheckerInstance->GetUseProxy())
-    logonInfo = new nsFTP::CLogonInfo(address);
-  else
-    logonInfo = new nsFTP::CLogonInfo(
-        address, 21, L"anonymous", L"", L"",
-        SpellCheckerInstance->GetProxyHostName(), L"", L"",
-        static_cast<USHORT>(SpellCheckerInstance->GetProxyPort()),
-        nsFTP::CFirewallType::UserWithNoLogon());
-
-  if (!ftpClient.Login(*logonInfo)) {
-    if (Type == fillFileList) {
-      StatusColor = COLOR_FAIL;
-      Static_SetText(HStatus, L"Status: Connection Error");
-    }
-    goto cleanup;
-  }
-
-  if (Type == downloadFile) {
-    if (PathFileExists(Location)) {
-      SetFileAttributes(Location, FILE_ATTRIBUTE_NORMAL);
-      DeleteFile(Location);
-    }
-
-    if (ftpClient.ChangeWorkingDirectory(path) != nsFTP::FTP_OK)
-      goto cleanup;
-
-    long FileSize = 0;
-    if (ftpClient.FileSize(FileName, FileSize) != nsFTP::FTP_OK)
-      goto cleanup;
-
-    ProgressUpdater = new Observer(GetProgress(), FileSize, &ftpClient, this);
-    ftpClient.AttachObserver(ProgressUpdater);
-
-    if (!ftpClient.DownloadFile(FileName, Location,
-                                nsFTP::CRepresentation(nsFTP::CType::Image()),
-                                true)) {
-      if (PathFileExists(Location)) {
-        SetFileAttributes(Location, FILE_ATTRIBUTE_NORMAL);
-        DeleteFile(Location);
-      }
-      goto cleanup;
-    }
-
-    ftpClient.DetachObserver(ProgressUpdater);
-  }
-cleanup:
-  if (ProgressUpdater)
-    ftpClient.DetachObserver(ProgressUpdater);
-  CLEAN_AND_ZERO(ProgressUpdater);
-  CLEAN_AND_ZERO(logonInfo);
-  if (ftpClient.IsConnected())
-    ftpClient.Logout();
   return;
 }
 
@@ -987,7 +959,7 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
     case IDOK:
       if (HIWORD(wParam) == BN_CLICKED) {
         SendNetworkEvent(EID_DOWNLOAD_SELECTED);
-        GetProgress()->DoDialog();
+        getProgress()->DoDialog();
         display(false);
       }
       break;

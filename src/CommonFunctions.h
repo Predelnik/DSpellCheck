@@ -32,6 +32,13 @@ void SetString(char *&Target, const wchar_t *Str);
 
 void SetString(wchar_t *&Target, const char *Str);
 
+template <typename T, typename V>
+auto cpyBuf (const V *str) {
+  T *temp = nullptr;
+  SetString (temp, str);
+  return std::unique_ptr<T []> {temp};
+}
+
 // In case source is in UTF-8
 void SetStringSUtf8(char *&Target, const char *Str);
 void SetStringSUtf8(wchar_t *&Target, const char *Str);
@@ -64,7 +71,7 @@ bool EquivCharStrings(char *a, char *b);
 size_t HashCharString(char *a);
 bool SortCompareChars(char *a, char *b);
 
-BOOL CheckForDirectoryExistence(wchar_t *Path, BOOL Silent = TRUE,
+BOOL CheckForDirectoryExistence(const wchar_t* PathArg, BOOL Silent = TRUE,
                                 HWND NppWindow = 0);
 wchar_t *GetLastSlashPosition(wchar_t *Path);
 
@@ -88,17 +95,38 @@ inline void trim(std::wstring &s) {
     rtrim(s);
 }
 
+template <typename T>
+std::weak_ptr<T> weaken (std::shared_ptr<T> ptr) { return ptr; }
+
 struct TaskWrapper {
+private:
+    using AliveStatusType = std::shared_ptr<concurrency::cancellation_token_source>;
+
+public:
     explicit TaskWrapper(HWND targetHwnd);
+    ~TaskWrapper ();
+    void resetAliveStatus ();
+    void cancel ();
     template <typename ActionType, typename GuiCallbackType>
      void doDeferred (ActionType action, GuiCallbackType guiCallback) {
-    concurrency::create_task([=, as=m_aliveStatus]()
+     resetAliveStatus ();
+    concurrency::create_task(
+        [
+            action = std::move (action),
+            guiCallback = std::move(guiCallback),
+            as = weaken (m_aliveStatus),
+            ctoken = m_aliveStatus->get_token(),
+            hwnd = m_targetHwnd
+        ]()
     {
-        auto ret = action ();
+        auto ret = action (ctoken);
+        if (as.expired() || ctoken.is_canceled())
+            return;
+
         auto cbData = std::make_unique<CallbackData>();
-        cbData->callback = [=](){ guiCallback (ret); };
+        cbData->callback = [guiCallback = std::move (guiCallback), ret = std::move (ret)](){ guiCallback (ret); };
         cbData->aliveStatus = as;
-         PostMessage(m_targetHwnd,
+         PostMessage(hwnd,
             GetCustomGUIMessageId(CustomGUIMessage::GENERIC_CALLBACK), reinterpret_cast<WPARAM> (cbData.release ())
             , 0);
     });
@@ -106,6 +134,25 @@ struct TaskWrapper {
 
 private:
     HWND m_targetHwnd;
-    std::shared_ptr<void> m_aliveStatus;
+    AliveStatusType m_aliveStatus;
 };
 
+struct ProgressData {
+public:
+    void set (int progress, const std::wstring &status);
+    int getProgress() const;
+    std::wstring getStatus () const;
+
+private:
+    int m_progress = 0;
+    std::wstring m_status;
+    mutable std::mutex m_mutex;
+};
+
+template <typename... ArgTypes>
+std::wstring wstring_printf (const wchar_t *format, ArgTypes &&... args) {
+    auto size = _snwprintf (nullptr, 0, format, args...);
+    std::vector<wchar_t> buf (size + 1);
+    _snwprintf (buf.data (), size + 1, format, args...);
+    return buf.data ();
+}

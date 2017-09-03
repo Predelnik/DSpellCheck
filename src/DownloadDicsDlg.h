@@ -62,11 +62,15 @@ public:
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
   void UpdateListBox();
     void onNewFileList(std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> response);
-    void preparFileListUpdate();
+    void prepareFileListUpdate();
     FtpOperationParams spawnFtpOperationParams(const std::wstring& fullPath);
     void updateFileListAsync(const std::wstring& fullPath);
-    void DoFtpOperation(FtpOperationType Type, std::wstring fullPath,
-                      wchar_t *FileName = nullptr, wchar_t *Location = nullptr);
+    void downloadFileAsync(const std::wstring& fullPath, const std::wstring& targetLocation);
+    void prepareDictionariesDownload();
+    void downloadFilesAsync(const std::wstring& fullPath);
+    void DoFtpOperation(FtpOperationType Type, const std::wstring& fullPath,
+                        const std::wstring& FileName = L"", const std::wstring& Location = L"");
+    void startNextDownload();
   void DownloadSelected();
   void FillFileList();
   void RemoveTimer();
@@ -77,12 +81,16 @@ public:
   void SetCancelPressed(BOOL Value);
   void Refresh();
   LRESULT AskReplacementMessage(wchar_t *DicName);
+  bool prepareDownloading();
+  void finalizeDownloading();
+  void onFileDownloaded();
   std::wstring currentAddress() const;
   void updateStatus (const wchar_t *text, COLORREF statusColor);
+  void uiUpdate();
 
 private:
   void DoFtpOperationThroughHttpProxy(FtpOperationType Type, std::wstring Address,
-                                      wchar_t *FileName, wchar_t *Location);
+                                      const wchar_t* FileName, const wchar_t* Location);
 
 private:
   std::vector<LanguageName> *CurrentLangs;
@@ -100,7 +108,19 @@ private:
   HWND HInstallSystem;
   HICON RefreshIcon;
   HANDLE Timer;
-  BOOL CancelPressed;
+  bool CancelPressed;
   int CheckIfSavingIsNeeded;
-  std::optional<TaskWrapper> requestFileListTask;
+  std::optional<TaskWrapper> ftpOperationTask;
+
+// Download State:
+  struct DownloadRequest {
+      std::wstring targetPath;
+      std::wstring fileName;
+  };
+  int Failure;
+  int DownloadedCount;
+  int supposedDownloadedCount;
+  std::wstring Message;
+  std::vector<DownloadRequest> m_toDownload;
+  decltype (m_toDownload)::iterator m_cur;
 };
