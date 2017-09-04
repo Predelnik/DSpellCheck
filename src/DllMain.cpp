@@ -121,7 +121,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
 
       if (LOWORD(wParam) == IDM_FILE_PRINTNOW ||
           LOWORD(wParam) == IDM_FILE_PRINT) {
-        BOOL AutoCheckDisabledWhilePrinting = GetAutoCheckState();
+        BOOL AutoCheckDisabledWhilePrinting = GetSpellChecker()->getAutoCheckText ();
 
         if (AutoCheckDisabledWhilePrinting)
           SendEvent(EID_SWITCH_AUTOCHECK);
@@ -160,19 +160,16 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
        callbackPtr->callback ();
        return TRUE;
     }
-    else if (Message ==
-               GetCustomGUIMessageId(CustomGUIMessage::SHOW_CALCULATED_MENU)) {
-      MenuList = (std::vector<SuggestionsMenuItem *> *)lParam;
-      return ::CallWindowProc(wndProcNotepad, hWnd, WM_CONTEXTMENU, LastHwnd,
-                              LastCoords);
-    } else if (Message == GetCustomGUIMessageId(
-                              CustomGUIMessage::AUTOCHECK_STATE_CHANGED)) {
-      AutoCheckStateReceived(wParam != 0);
-    }
   }
   ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
   return ret;
 }
+
+LRESULT showCalculatedMenu(std::vector<SuggestionsMenuItem *>* menuListPtr) {
+    MenuList = menuListPtr;
+    return ::CallWindowProc(wndProcNotepad, nppData._nppHandle, WM_CONTEXTMENU, LastHwnd, LastCoords);
+}
+
 
 static BOOL AutoCheckDisabledWhilePrinting = FALSE;
 
@@ -247,7 +244,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     SendEvent(EID_CHECK_FILE_NAME);
     CreateHooks();
     CreateTimerQueueTimer(&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE, 0);
-     CreateTimerQueueTimer(&uiTimer, 0, uiUpdate, NULL, 0, 100, 0);
+    CreateTimerQueueTimer(&uiTimer, 0, uiUpdate, NULL, 0, 100, 0);
     SendEvent(EID_RECHECK_VISIBLE_BOTH_VIEWS);
     RestylingCausedRecheckWasDone = FALSE;
     GetSpellChecker()->SetSuggestionsBoxTransparency();

@@ -71,16 +71,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 enum EncodingType { ENCODING_UTF8 = 0, ENCODING_ANSI };
 
 enum class CustomGUIMessage {
-  SHOW_CALCULATED_MENU,
-  AUTOCHECK_STATE_CHANGED,
   GENERIC_CALLBACK,
   MAX,
 };
 
-const wchar_t *const CustomGUIMesssagesNames[] = {
-    L"DSpellCheck_MessageBox", L"DSpellCheck_ShowCalculatedMenu",
-    L"DSpellCheck_AutoCheckStateChanged", L"DSpellCheck_GenericCallback"
-};
+const wchar_t *const CustomGUIMesssagesNames[] = {L"DSpellCheck_GenericCallback" };
 
 struct CallbackData {
   std::weak_ptr<void> aliveStatus;

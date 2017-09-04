@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "PluginInterface.h"
 #include "SettingsDlg.h"
 
+struct SuggestionsMenuItem;
 const wchar_t NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 
 const int nbFunc = 8;
@@ -121,12 +122,12 @@ void PostMessageToMainThread (UINT Msg, WPARAM WParam = 0, LPARAM LParam = 0);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
 void setEncodingById (int EncId);
-void updateAutocheckStatus ();
 void LoadSettings ();
 void RecheckVisible ();
 void InitClasses ();
 void CreateHooks ();
 void UpdateLangsMenu ();
+LRESULT showCalculatedMenu(std::vector<SuggestionsMenuItem *>* menuListPtr);
 void AddIcons ();
 BOOL GetAutoCheckState ();
 void AutoCheckStateReceived (BOOL state);

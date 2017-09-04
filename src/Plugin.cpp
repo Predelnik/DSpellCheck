@@ -76,7 +76,6 @@ int ContextMenuIdStart;
 int LangsMenuIdStart = FALSE;
 BOOL UseAllocatedIds;
 toolbarIcons *AutoCheckIcon = 0;
-BOOL AutoCheckState = FALSE;
 
 HANDLE hModule = NULL;
 HHOOK HMouseHook = NULL;
@@ -451,6 +450,3 @@ bool setNextCommand(wchar_t *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk,
   return true;
 }
 
-void AutoCheckStateReceived(BOOL state) { AutoCheckState = state; }
-
-BOOL GetAutoCheckState() { return AutoCheckState; }

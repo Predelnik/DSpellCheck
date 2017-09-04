@@ -307,10 +307,7 @@ BOOL WINAPI SpellChecker::NotifyMessage(UINT Msg, WPARAM wParam,
         FillSuggestionsMenu(0);
       }
     }
-
-    PostMessage(NppDataInstance->_nppHandle,
-                GetCustomGUIMessageId(CustomGUIMessage::SHOW_CALCULATED_MENU),
-                0, (LPARAM)SuggestionMenuItems);
+    showCalculatedMenu (SuggestionMenuItems);
     SuggestionMenuItems = 0;
   } break;
   case TM_WRITE_SETTING: {
@@ -2082,9 +2079,6 @@ void SpellChecker::UpdateAutocheckStatus(int SaveSetting) {
 
   SendMsgToNpp(NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem()[0]._cmdID,
                AutoCheckText);
-  SendMessage(NppDataInstance->_nppHandle,
-              GetCustomGUIMessageId(CustomGUIMessage::AUTOCHECK_STATE_CHANGED),
-              AutoCheckText, 0);
 }
 
 void SpellChecker::SetCheckThose(int CheckThoseArg) {

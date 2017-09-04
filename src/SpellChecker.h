@@ -131,6 +131,7 @@ public:
   long PreviousA, PreviousB;
   void SetSuggestionsBoxTransparency();
   void addUserServer (std::wstring server);
+  BOOL getAutoCheckText () const { return AutoCheckText; }
 
 private:
   enum CheckTextMode {
