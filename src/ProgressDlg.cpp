@@ -58,9 +58,6 @@ INT_PTR ProgressDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
   return FALSE;
 }
 
-void ProgressDlg::SetProgress(int value) {
-  SendMessage(HProgressBar, PBM_SETPOS, value, 0);
-}
 
 void ProgressDlg::SetMarquee(bool animated) {
   DWORD dwStyle = ::GetWindowLong(HProgressBar, GWL_STYLE);
@@ -74,12 +71,9 @@ void ProgressDlg::SetMarquee(bool animated) {
 }
 
 void ProgressDlg::update() {
-    SetTopMessage (m_progressData->getStatus().c_str ());
-    SetProgress (m_progressData->getProgress());
-}
-
-void ProgressDlg::SetBottomMessage(const wchar_t* Message) {
-  Static_SetText(HDescBottom, Message);
+    SendMessage(HProgressBar, PBM_SETPOS, m_progressData->getProgress(), 0);
+    Static_SetText(HDescBottom, m_progressData->getStatus().c_str ());
+    SetMarquee (m_progressData->getMarquee());
 }
 
 void ProgressDlg::SetTopMessage(const wchar_t* Message) {

@@ -30,8 +30,6 @@ public:
   INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
   void init(HINSTANCE hInst, HWND Parent) override;
   void DoDialog();
-  void SetProgress(int value);
-  void SetBottomMessage(const wchar_t* Message);
   void SetTopMessage(const wchar_t* Message);
   void SetMarquee(bool animated);
   std::shared_ptr<ProgressData> getProgressData () { return m_progressData; }

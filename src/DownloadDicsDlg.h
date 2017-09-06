@@ -31,14 +31,32 @@ struct LanguageName;
 void ftpTrim(std::wstring& FtpAddress);
 
 enum FtpOperationType {
-  fillFileList = 0,
-  downloadFile,
+    fillFileList = 0,
+    downloadFile,
 };
 
-enum class FtpOperationError {
-  none,
-  loginFailed,
-  downloadFailed,
+enum class FtpWebOperationErrorType {
+    none,
+    httpClientCannotBeInitialized,
+    urlCannotBeOpened,
+    queryingStatusCodeFailed,
+    proxyAuthorizationRequired,
+    httpError,
+    htmlCannotBeParsed,
+    FileIsNotWriteable,
+    DownloadCancelled,
+};
+
+struct FtpWebOperationError {
+    FtpWebOperationErrorType type;
+    int statusCode;
+};
+
+enum class FtpOperationErrorType {
+    none,
+    loginFailed,
+    downloadFailed,
+    downloadCancelled,
 };
 
 class SpellChecker;
@@ -49,78 +67,86 @@ struct FtpOperationParams {
     bool useProxy;
     std::wstring proxyAddress;
     int proxyPort;
+    bool anonymous;
+    std::wstring proxyUsername;
+    std::wstring proxyPassword;
 };
 
 class DownloadDicsDlg : public StaticDialog {
 public:
-  ~DownloadDicsDlg();
-  DownloadDicsDlg();
-  void DoDialog();
-  // Maybe hunspell interface should be passed here
-  void init(HINSTANCE hInst, HWND Parent,
-            SpellChecker *SpellCheckerInstanceArg);
-  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
-  void UpdateListBox();
-    void onNewFileList(std::variant<FtpOperationError, nsFTP::TFTPFileStatusShPtrVec> response);
+    ~DownloadDicsDlg();
+    DownloadDicsDlg();
+    void DoDialog();
+    // Maybe hunspell interface should be passed here
+    void init(HINSTANCE hInst, HWND Parent,
+              SpellChecker* SpellCheckerInstanceArg);
+    INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+    void UpdateListBox();
+    void onNewFileList(const std::vector<std::wstring>& list);
     void prepareFileListUpdate();
     FtpOperationParams spawnFtpOperationParams(const std::wstring& fullPath);
+    void updateFileListAsyncWebProxy(const std::wstring& fullPath);
     void updateFileListAsync(const std::wstring& fullPath);
     void downloadFileAsync(const std::wstring& fullPath, const std::wstring& targetLocation);
     void prepareDictionariesDownload();
     void downloadFilesAsync(const std::wstring& fullPath);
+    void downloadFileAsyncWebPRoxy(const std::wstring& fullPath, const std::wstring& targetLocation);
     void DoFtpOperation(FtpOperationType Type, const std::wstring& fullPath,
                         const std::wstring& FileName = L"", const std::wstring& Location = L"");
     void startNextDownload();
-  void DownloadSelected();
-  void FillFileList();
-  void RemoveTimer();
-  void OnDisplayAction();
-  void IndicateThatSavingMightBeNeeded();
-  void SetOptions(BOOL ShowOnlyKnown, BOOL InstallSystem);
-  void UpdateOptions(SpellChecker *spellchecker);
-  void SetCancelPressed(BOOL Value);
-  void Refresh();
-  LRESULT AskReplacementMessage(wchar_t *DicName);
-  bool prepareDownloading();
-  void finalizeDownloading();
-  void onFileDownloaded();
-  std::wstring currentAddress() const;
-  void updateStatus (const wchar_t *text, COLORREF statusColor);
-  void uiUpdate();
+    void DownloadSelected();
+    void FillFileList();
+    void RemoveTimer();
+    void OnDisplayAction();
+    void IndicateThatSavingMightBeNeeded();
+    void SetOptions(BOOL ShowOnlyKnown, BOOL InstallSystem);
+    void UpdateOptions(SpellChecker* spellchecker);
+    void SetCancelPressed(BOOL Value);
+    void Refresh();
+    LRESULT AskReplacementMessage(wchar_t* DicName);
+    bool prepareDownloading();
+    void finalizeDownloading();
+    void onFileDownloaded();
+    std::wstring currentAddress() const;
+    void updateStatus(const wchar_t* text, COLORREF statusColor);
+    void uiUpdate();
+    void processFileListError(FtpOperationErrorType error);
+    void processFileListError(const FtpWebOperationError& error);
 
 private:
-  void DoFtpOperationThroughHttpProxy(FtpOperationType Type, std::wstring Address,
-                                      const wchar_t* FileName, const wchar_t* Location);
+    void DoFtpOperationThroughHttpProxy(FtpOperationType Type, std::wstring Address,
+                                        const wchar_t* FileName, const wchar_t* Location);
 
 private:
-  std::vector<LanguageName> *CurrentLangs;
-  std::vector<LanguageName> *CurrentLangsFiltered;
-  HBRUSH DefaultBrush;
-  COLORREF StatusColor;
-  SpellChecker *SpellCheckerInstance;
-  HWND LibCombo;
-  HWND HFileList;
-  HWND HAddress;
-  HWND HStatus;
-  HWND HInstallSelected;
-  HWND HShowOnlyKnown;
-  HWND HRefresh;
-  HWND HInstallSystem;
-  HICON RefreshIcon;
-  HANDLE Timer;
-  bool CancelPressed;
-  int CheckIfSavingIsNeeded;
-  std::optional<TaskWrapper> ftpOperationTask;
+    std::vector<LanguageName>* CurrentLangs;
+    std::vector<LanguageName>* CurrentLangsFiltered;
+    HBRUSH DefaultBrush;
+    COLORREF StatusColor;
+    SpellChecker* SpellCheckerInstance;
+    HWND LibCombo;
+    HWND HFileList;
+    HWND HAddress;
+    HWND HStatus;
+    HWND HInstallSelected;
+    HWND HShowOnlyKnown;
+    HWND HRefresh;
+    HWND HInstallSystem;
+    HICON RefreshIcon;
+    HANDLE Timer;
+    bool CancelPressed;
+    int CheckIfSavingIsNeeded;
+    std::optional<TaskWrapper> ftpOperationTask;
 
-// Download State:
-  struct DownloadRequest {
-      std::wstring targetPath;
-      std::wstring fileName;
-  };
-  int Failure;
-  int DownloadedCount;
-  int supposedDownloadedCount;
-  std::wstring Message;
-  std::vector<DownloadRequest> m_toDownload;
-  decltype (m_toDownload)::iterator m_cur;
+    // Download State:
+    struct DownloadRequest {
+        std::wstring targetPath;
+        std::wstring fileName;
+    };
+
+    int Failure;
+    int DownloadedCount;
+    int supposedDownloadedCount;
+    std::wstring Message;
+    std::vector<DownloadRequest> m_toDownload;
+    decltype (m_toDownload)::iterator m_cur;
 };
