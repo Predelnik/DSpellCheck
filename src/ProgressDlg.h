@@ -37,7 +37,9 @@ public:
 
 private:
   std::shared_ptr<ProgressData> m_progressData;
-  HWND HDescBottom;
-  HWND HDescTop;
-  HWND HProgressBar;
+  HWND HDescBottom = nullptr;
+  HWND HDescTop = nullptr;
+  HWND HProgressBar = nullptr;
+  bool m_marquee = false;
+  std::wstring m_topMessage;
 };

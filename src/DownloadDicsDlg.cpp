@@ -702,7 +702,7 @@ std::optional<FtpWebOperationError> doDownloadFileWebProxy(FtpOperationParams pa
         write(FileHandle, FileBuffer.data(), BytesRead);
         BytesReadTotal += BytesRead;
 
-        progressData->set(0, wstring_printf(L"%d / ???   bytes downloaded", BytesReadTotal));
+        progressData->set(0, wstring_printf(L"%d / ???   bytes downloaded", BytesReadTotal), true);
     }
     _close(FileHandle);
     return std::nullopt;

@@ -60,6 +60,9 @@ INT_PTR ProgressDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
 
 
 void ProgressDlg::SetMarquee(bool animated) {
+  if (m_marquee == animated)
+     return;
+  m_marquee = animated;
   DWORD dwStyle = ::GetWindowLong(HProgressBar, GWL_STYLE);
   if (animated)
     dwStyle = dwStyle | PBS_MARQUEE;
@@ -74,10 +77,11 @@ void ProgressDlg::update() {
     SendMessage(HProgressBar, PBM_SETPOS, m_progressData->getProgress(), 0);
     Static_SetText(HDescBottom, m_progressData->getStatus().c_str ());
     SetMarquee (m_progressData->getMarquee());
+    Static_SetText (HDescTop, m_topMessage.c_str ());
 }
 
 void ProgressDlg::SetTopMessage(const wchar_t* Message) {
-  Static_SetText(HDescTop, Message);
+  m_topMessage = Message;
 }
 
 ProgressDlg::ProgressDlg() : m_progressData(std::make_shared<ProgressData> ()) {}
