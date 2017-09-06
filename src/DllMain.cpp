@@ -37,10 +37,13 @@ extern bool doCloseTag;
 HANDLE HModule;
 int RecheckDelay;
 std::vector<std::pair<long, long>> CheckQueue;
-HANDLE Timer = 0, uiTimer = 0;
+UINT_PTR uiTimer = 0u;
+UINT_PTR recheckTimer = 0u;
+bool recheckDone = false;
 WNDPROC wndProcNotepad = NULL;
-BOOL RestylingCausedRecheckWasDone =
+bool restylingCausedRecheckWasDone =
     FALSE; // Hack to avoid eternal cycle in case of scintilla bug
+bool firstRestyle = true;
 
 int GetRecheckDelay() { return RecheckDelay; }
 
@@ -191,17 +194,19 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
 
 // For now doesn't look like there is such a need in check modified, but code
 // stays until thorough testing
-VOID CALLBACK ExecuteQueue(PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/
-                           ) {
-  if (Timer)
-    DeleteTimerQueueTimer(0, Timer, 0);
+void doRecheck(HWND, UINT, UINT_PTR, DWORD) {
+  if (recheckTimer)
+    SetTimer (nppData._nppHandle,  recheckTimer, USER_TIMER_MAXIMUM, doRecheck);
+  recheckDone = true;
 
-  Timer = 0;
   SendEvent(EID_RECHECK_VISIBLE);
-  RestylingCausedRecheckWasDone = TRUE;
+  if (!firstRestyle)
+    restylingCausedRecheckWasDone = true;
+  firstRestyle = false;
 }
 
-void uiUpdate (PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/) {
+// (PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/)
+void uiUpdate (HWND, UINT, UINT_PTR, DWORD)  {
     GetDownloadDics()->uiUpdate ();
 }
 
@@ -222,11 +227,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     {
     };
 
-    if (Timer) {
-      DeleteTimerQueueTimer(0, Timer, 0);
-      DeleteTimerQueueTimer (0, uiTimer, 0);
-      Timer = 0;
-    }
+    if (recheckTimer) KillTimer (nullptr, recheckTimer);
+    if (uiTimer) KillTimer (nullptr, uiTimer);
     commandMenuCleanUp();
 
     pluginCleanUp();
@@ -243,10 +245,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     LoadSettings();
     SendEvent(EID_CHECK_FILE_NAME);
     CreateHooks();
-    CreateTimerQueueTimer(&Timer, 0, ExecuteQueue, NULL, INFINITE, INFINITE, 0);
-    CreateTimerQueueTimer(&uiTimer, 0, uiUpdate, NULL, 0, 100, 0);
+    recheckTimer = SetTimer (nppData._nppHandle, 0, USER_TIMER_MAXIMUM , doRecheck);
+    uiTimer = SetTimer (nppData._nppHandle,  0, 100, uiUpdate);
     SendEvent(EID_RECHECK_VISIBLE_BOTH_VIEWS);
-    RestylingCausedRecheckWasDone = FALSE;
+    restylingCausedRecheckWasDone = false;
     GetSpellChecker()->SetSuggestionsBoxTransparency();
     SendEvent(EID_UPDATE_LANG_LISTS_NO_GUI); // To update quick lang change menu
     UpdateLangsMenu();
@@ -256,22 +258,21 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     SendEvent(EID_CHECK_FILE_NAME);
     // SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     RecheckVisible();
-    RestylingCausedRecheckWasDone = FALSE;
+    restylingCausedRecheckWasDone = false;
   } break;
 
   case SCN_UPDATEUI:
-    if (notifyCode->updated & (SC_UPDATE_CONTENT) && !Timer &&
-        !RestylingCausedRecheckWasDone) // If restyling wasn't caused by user
-                                        // input...
+    if (notifyCode->updated & (SC_UPDATE_CONTENT) && (recheckDone || firstRestyle) &&
+        !restylingCausedRecheckWasDone ) // If restyling wasn't caused by user input...
     {
       SendEvent(EID_RECHECK_VISIBLE);
-      RestylingCausedRecheckWasDone = TRUE;
+      restylingCausedRecheckWasDone = true;
     } else if (notifyCode->updated &
                    (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) &&
-               !Timer) // If scroll wasn't caused by user input...
+               recheckDone) // If scroll wasn't caused by user input...
     {
       SendEvent(EID_RECHECK_INTERSECTION);
-      RestylingCausedRecheckWasDone = FALSE;
+      restylingCausedRecheckWasDone = false;
     }
     SendEvent(EID_HIDE_SUGGESTIONS_BOX);
     break;
@@ -279,7 +280,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
   case SCN_MODIFIED:
     if (notifyCode->modificationType &
         (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) {
-      // SendEvent (EID_HIDE_SUGGESTIONS_BOX);
       long Start = 0, End = 0;
       if (notifyCode->modificationType & SC_MOD_DELETETEXT) {
         Start = notifyCode->position;
@@ -289,12 +289,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
         End = notifyCode->position + notifyCode->length - 1;
       }
 
-      // AddToQueue (Start, End);
-      if (Timer)
-        ChangeTimerQueueTimer(0, Timer, RecheckDelay, 0);
-      else
-        CreateTimerQueueTimer(&Timer, 0, ExecuteQueue, NULL, RecheckDelay, 0,
-                              0);
+      SetTimer (nppData._nppHandle,  recheckTimer, RecheckDelay, doRecheck);
+      recheckDone = false;
     }
     break;
 
