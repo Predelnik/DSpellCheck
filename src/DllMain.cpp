@@ -194,7 +194,7 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
 
 // For now doesn't look like there is such a need in check modified, but code
 // stays until thorough testing
-void doRecheck(HWND, UINT, UINT_PTR, DWORD) {
+void WINAPI doRecheck(HWND, UINT, UINT_PTR, DWORD) {
   if (recheckTimer)
     SetTimer (nppData._nppHandle,  recheckTimer, USER_TIMER_MAXIMUM, doRecheck);
   recheckDone = true;
@@ -206,7 +206,7 @@ void doRecheck(HWND, UINT, UINT_PTR, DWORD) {
 }
 
 // (PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/)
-void uiUpdate (HWND, UINT, UINT_PTR, DWORD)  {
+void WINAPI uiUpdate (HWND, UINT, UINT_PTR, DWORD)  {
     GetDownloadDics()->uiUpdate ();
 }
 
