@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/n1dk0ym3nxtn5nu5/branch/master?svg=true)](https://ci.appveyor.com/project/Predelnik/dspellcheck/branch/master)
+
 DSpellCheck
 ===========
 
@@ -14,6 +16,9 @@ Following main features:
 - A lot of customizing available from Plugin settings (Ignoring/Allowing only specific files, Choosing delimiters for words, Maximum number of suggestions etc)
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
+
+v1.3
+* Simplify plugin interaction with worker threads. Now most of the job is done in the main thread, it should increase plugin stability on exit.
 
 v1.2.14.2
 * Fix plugin's sudden demise after user executes "Find in Files"
