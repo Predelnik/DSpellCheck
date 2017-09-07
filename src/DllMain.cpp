@@ -43,7 +43,7 @@ bool recheckDone = false;
 WNDPROC wndProcNotepad = NULL;
 bool restylingCausedRecheckWasDone =
     FALSE; // Hack to avoid eternal cycle in case of scintilla bug
-bool firstRestyle = true;
+bool firstRestyle = true; // hack to successfully avoid checking hyperlinks when they appear on program start
 
 int GetRecheckDelay() { return RecheckDelay; }
 
@@ -266,7 +266,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
         !restylingCausedRecheckWasDone ) // If restyling wasn't caused by user input...
     {
       SendEvent(EID_RECHECK_VISIBLE);
-      restylingCausedRecheckWasDone = true;
+      if (!firstRestyle)
+        restylingCausedRecheckWasDone = true;
     } else if (notifyCode->updated &
                    (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) &&
                recheckDone) // If scroll wasn't caused by user input...
