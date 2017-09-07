@@ -88,14 +88,13 @@ LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
 
 void SpellChecker::addUserServer(std::wstring server) {
     ftpTrim(server);
-    wchar_t *Buf = 0;
     for (int i = 0; i < countof(DefaultServers); i++) {
-      const auto defServer = DefaultServers[i];
+      std::wstring defServer = DefaultServers[i]; ftpTrim (defServer);
       if (server == defServer)
         goto add_user_server_cleanup; // Nothing is done in this case
     }
     for (int i = 0; i < countof(ServerNames); i++) {
-      const auto addedServer = ServerNames[i];
+      std::wstring  addedServer = ServerNames[i]; ftpTrim (addedServer);
       if (server == addedServer)
         goto add_user_server_cleanup; // Nothing is done in this case
     }
@@ -107,7 +106,6 @@ void SpellChecker::addUserServer(std::wstring server) {
     ServerNames[0] = 0;
     SetString(ServerNames[0], server.c_str ());
   add_user_server_cleanup:
-    CLEAN_AND_ZERO_ARR(Buf);
     ResetDownloadCombobox();
     SaveSettings();
 }

@@ -472,7 +472,12 @@ void DownloadDicsDlg::SetCancelPressed(BOOL Value) {
 std::wstring DownloadDicsDlg::currentAddress() const {
     auto sel = ComboBox_GetCurSel (HAddress);
     if (sel < 0)
-        return L"";
+        {
+            auto textLen = ComboBox_GetTextLength (HAddress);
+            std::vector<wchar_t> buf(textLen + 1);
+            ComboBox_GetText (HAddress, buf.data (), textLen + 1);
+            return buf.data();
+        }
     auto textLen = ComboBox_GetLBTextLen (HAddress, sel);
     std::vector<wchar_t> buf(textLen + 1);
     ComboBox_GetLBText (HAddress, sel, buf.data ());
