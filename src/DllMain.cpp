@@ -39,7 +39,7 @@ int RecheckDelay;
 std::vector<std::pair<long, long>> CheckQueue;
 UINT_PTR uiTimer = 0u;
 UINT_PTR recheckTimer = 0u;
-bool recheckDone = false;
+bool recheckDone = true;
 WNDPROC wndProcNotepad = NULL;
 bool restylingCausedRecheckWasDone =
     FALSE; // Hack to avoid eternal cycle in case of scintilla bug
@@ -290,8 +290,11 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
         End = notifyCode->position + notifyCode->length - 1;
       }
 
-      SetTimer (nppData._nppHandle,  recheckTimer, RecheckDelay, doRecheck);
-      recheckDone = false;
+      if (recheckTimer)
+          {
+              SetTimer (nppData._nppHandle,  recheckTimer, RecheckDelay, doRecheck);
+              recheckDone = false;
+          }
     }
     break;
 
