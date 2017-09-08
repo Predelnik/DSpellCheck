@@ -51,7 +51,7 @@ void DownloadDicsDlg::DoDialog() {
 }
 
 void DownloadDicsDlg::FillFileList() {
-    GetDownloadDics()->DoFtpOperation(fillFileList, currentAddress().c_str());
+    GetDownloadDics()->DoFtpOperation(fillFileList, currentAddress()->c_str ());
 }
 
 void DownloadDicsDlg::OnDisplayAction() {
@@ -377,7 +377,7 @@ void DownloadDicsDlg::startNextDownload() {
         SetFileAttributes(m_cur->targetPath.c_str(), FILE_ATTRIBUTE_NORMAL);
         DeleteFile(m_cur->targetPath.c_str());
     }
-    DoFtpOperation(downloadFile, currentAddress(), m_cur->fileName, m_cur->targetPath);
+    DoFtpOperation(downloadFile, *currentAddress(), m_cur->fileName, m_cur->targetPath);
 }
 
 void DownloadDicsDlg::DownloadSelected() {
@@ -469,7 +469,9 @@ void DownloadDicsDlg::SetCancelPressed(BOOL Value) {
 #define INITIAL_BUFFER_SIZE 50 * 1024
 #define INITIAL_SMALL_BUFFER_SIZE 10 * 1024
 
-std::wstring DownloadDicsDlg::currentAddress() const {
+std::optional<std::wstring> DownloadDicsDlg::currentAddress() const {
+    if (!HAddress)
+        return std::nullopt;
     auto sel = ComboBox_GetCurSel (HAddress);
     if (sel < 0)
         {
@@ -749,7 +751,7 @@ void DownloadDicsDlg::onNewFileList(const std::vector<std::wstring>& list) {
     UpdateListBox(); // Used only here and on filter change
     // If it is success when we perhaps should add this address to our list.
     if (CheckIfSavingIsNeeded) {
-        SpellCheckerInstance->addUserServer(currentAddress());
+        SpellCheckerInstance->addUserServer(*currentAddress());
     }
     updateStatus(L"Status: List of available files was successfully loaded", COLOR_OK);
     EnableWindow(HInstallSelected, TRUE);

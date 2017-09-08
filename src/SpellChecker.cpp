@@ -736,7 +736,10 @@ void SpellChecker::ResetDownloadCombobox() {
 }
 
 void SpellChecker::PreserveCurrentAddressIndex() {
-  auto address = GetDownloadDics()->currentAddress();
+  auto mb_address = GetDownloadDics()->currentAddress();
+  if (!mb_address)
+      return;
+  auto address = *mb_address;
   ftpTrim(address);
   for (int i = 0; i < countof(ServerNames); i++) {
     std::wstring defServer = DefaultServers[i];

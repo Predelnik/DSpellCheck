@@ -107,7 +107,7 @@ public:
     bool prepareDownloading();
     void finalizeDownloading();
     void onFileDownloaded();
-    std::wstring currentAddress() const;
+    std::optional<std::wstring> currentAddress() const;
     void updateStatus(const wchar_t* text, COLORREF statusColor);
     void uiUpdate();
     void processFileListError(FtpOperationErrorType error);
@@ -125,7 +125,7 @@ private:
     SpellChecker* SpellCheckerInstance;
     HWND LibCombo;
     HWND HFileList;
-    HWND HAddress;
+    HWND HAddress = nullptr;
     HWND HStatus;
     HWND HInstallSelected;
     HWND HShowOnlyKnown;
