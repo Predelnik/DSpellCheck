@@ -353,6 +353,9 @@ void DownloadDicsDlg::onFileDownloaded() {
         }
     }
 clean_and_continue:
+    CLEAN_AND_ZERO_ARR (ConvertedDicName);
+    CLEAN_AND_ZERO_ARR (DicFileName);
+    CLEAN_AND_ZERO_ARR (LocalPathANSI);
     it = FilesFound.begin();
     for (; it != FilesFound.end(); it++)
         delete[]((*it).first);

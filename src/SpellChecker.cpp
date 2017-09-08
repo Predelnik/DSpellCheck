@@ -796,6 +796,7 @@ void SpellChecker::CheckFileName() {
     Token = wcstok_s(NULL, L";", &Context);
   }
   Lexer = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLEXER);
+  CLEAN_AND_ZERO_ARR (FileTypesCopy);
 }
 
 LRESULT SpellChecker::GetStyle(int Pos) {
