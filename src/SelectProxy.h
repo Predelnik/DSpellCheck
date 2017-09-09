@@ -24,7 +24,6 @@ class SpellChecker;
 
 class SelectProxy : public StaticDialog {
 public:
-  void init(HINSTANCE hInst, HWND Parent);
   void DoDialog();
   void ApplyChoice(SpellChecker *SpellCheckerInstance);
   void SetOptions(BOOL UseProxy, wchar_t *HostName, wchar_t *UserName,

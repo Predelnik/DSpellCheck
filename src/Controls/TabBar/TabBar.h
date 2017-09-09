@@ -69,7 +69,7 @@ public:
   TabBar() : Window(), _nbItem(0), _hasImgLst(false), _hFont(NULL){};
   virtual ~TabBar() {};
   virtual void destroy();
-  virtual void init(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false);
+  virtual void initTabBar(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false);
   virtual void reSizeTo(RECT & rc2Ajust);
   int insertAtEnd(const wchar_t *subTabName);
   void activateAt(int index) const;
@@ -94,7 +94,7 @@ public:
     return _nbItem;
   };
 
-  void setFont(wchar_t *fontName, int fontSize);
+  void setFont(const wchar_t* fontName, int fontSize);
 
   void setVertical(bool b) {
     _isVertical = b;
@@ -148,7 +148,7 @@ public :
     _doDragNDrop = justDoIt;
   };
 
-  virtual void init(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false);
+  virtual void initTabBar(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false);
 
   static bool doDragNDropOrNot() {
     return _doDragNDrop;

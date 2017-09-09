@@ -18,10 +18,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "AspellInterface.h"
-#include "Aspell.h"
+#include "aspell.h"
 #include "CommonFunctions.h"
 #include "MainDef.h"
-#include "plugin.h"
+#include "Plugin.h"
 
 AspellInterface::AspellInterface (HWND NppWindowArg)
 {

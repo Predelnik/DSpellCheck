@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "AspellInterface.h"
 #include "HunspellInterface.h"
 
-#include "Aspell.h"
+#include "aspell.h"
 #include "DownloadDicsDlg.h"
 #include "iconv.h"
 #include "CommonFunctions.h"
@@ -88,12 +88,12 @@ LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
 
 void SpellChecker::addUserServer(std::wstring server) {
     ftpTrim(server);
-    for (int i = 0; i < countof(DefaultServers); i++) {
+    for (int i = 0; i < static_cast<int> (countof(DefaultServers)); i++) {
       std::wstring defServer = DefaultServers[i]; ftpTrim (defServer);
       if (server == defServer)
         goto add_user_server_cleanup; // Nothing is done in this case
     }
-    for (int i = 0; i < countof(ServerNames); i++) {
+    for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
       std::wstring  addedServer = ServerNames[i]; ftpTrim (addedServer);
       if (server == addedServer)
         goto add_user_server_cleanup; // Nothing is done in this case
@@ -205,7 +205,7 @@ void SpellChecker::PrepareStringForConversion() {
   size_t OutSize = 0;
   size_t Res;
 
-  for (int i = 0; i < countof(InString); i++) {
+  for (int i = 0; i < static_cast<int> (countof(InString)); i++) {
     InSize = strlen(InString[i]) + 1;
     Buf = 0;
     SetString(Buf, InString[i]);
@@ -249,9 +249,9 @@ SpellChecker::~SpellChecker() {
   CLEAN_AND_ZERO_ARR(ProxyHostName);
   CLEAN_AND_ZERO_ARR(ProxyUserName);
   CLEAN_AND_ZERO_ARR(ProxyPassword);
-  for (int i = 0; i < countof(ServerNames); i++)
+  for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++)
     CLEAN_AND_ZERO_ARR(ServerNames[i]);
-  for (int i = 0; i < countof(DefaultServers); i++)
+  for (int i = 0; i < static_cast<int> (countof(DefaultServers)); i++)
     CLEAN_AND_ZERO_ARR(DefaultServers[i]);
 
   std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)>::iterator it =
@@ -264,7 +264,7 @@ SpellChecker::~SpellChecker() {
   CLEAN_AND_ZERO(CurrentLangs);
 }
 
-void InsertSuggMenuItem(HMENU Menu, wchar_t *Text, BYTE Id, int InsertPos,
+void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
                         BOOL Separator) {
   MENUITEMINFO mi;
   memset(&mi, 0, sizeof(mi));
@@ -279,7 +279,7 @@ void InsertSuggMenuItem(HMENU Menu, wchar_t *Text, BYTE Id, int InsertPos,
     else
       mi.wID = GetContextMenuIdStart() + Id;
 
-    mi.dwTypeData = Text;
+    mi.dwTypeData = const_cast<wchar_t *> (Text);
     mi.cch = static_cast<int>(wcslen(Text)) + 1;
   }
   if (InsertPos == -1)
@@ -720,10 +720,10 @@ void SpellChecker::ResetDownloadCombobox() {
     PreserveCurrentAddressIndex();
   }
   ComboBox_ResetContent(TargetCombobox);
-  for (int i = 0; i < countof(DefaultServers); i++) {
+  for (int i = 0; i < static_cast<int> (countof(DefaultServers)); i++) {
     ComboBox_AddString(TargetCombobox, DefaultServers[i]);
   }
-  for (int i = 0; i < countof(ServerNames); i++) {
+  for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     if (*ServerNames[i])
       ComboBox_AddString(TargetCombobox, ServerNames[i]);
   }
@@ -741,7 +741,7 @@ void SpellChecker::PreserveCurrentAddressIndex() {
       return;
   auto address = *mb_address;
   ftpTrim(address);
-  for (int i = 0; i < countof(ServerNames); i++) {
+  for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     std::wstring defServer = DefaultServers[i];
     ftpTrim(defServer);
     if (address == defServer) {
@@ -749,7 +749,7 @@ void SpellChecker::PreserveCurrentAddressIndex() {
       return;
     }
   };
-  for (int i = 0; i < countof(ServerNames); i++) {
+  for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     std::wstring server = ServerNames[i];
     if (address == server) {
       LastUsedAddress = USER_SERVER_CONST + i;
@@ -1972,7 +1972,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
     else
       Result = MenuId - GetLangsMenuIdStart();
 
-    wchar_t *LangString;
+    const wchar_t *LangString;
     if (Result == MULTIPLE_LANGS) {
       LangString = L"<MULTIPLE>";
     } else if (Result == CUSTOMIZE_MULTIPLE_DICS || Result == DOWNLOAD_DICS ||
@@ -2181,7 +2181,7 @@ void SpellChecker::SaveSettings() {
   SaveToIni(L"Show_Only_Known", ShowOnlyKnown, TRUE);
   SaveToIni(L"Install_Dictionaries_For_All_Users", InstallSystem, FALSE);
   wchar_t Buf[DEFAULT_BUF_SIZE];
-  for (int i = 0; i < countof(ServerNames); i++) {
+  for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     if (!*ServerNames[i])
       continue;
     swprintf(Buf, L"Server_Address[%d]", i);
@@ -2330,7 +2330,7 @@ void SpellChecker::LoadSettings() {
   LoadFromIni(ShowOnlyKnown, L"Show_Only_Known", TRUE);
   LoadFromIni(InstallSystem, L"Install_Dictionaries_For_All_Users", FALSE);
   wchar_t Buf[DEFAULT_BUF_SIZE];
-  for (int i = 0; i < countof(ServerNames); i++) {
+  for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     swprintf(Buf, L"Server_Address[%d]", i);
     LoadFromIni(ServerNames[i], Buf, L"");
   }
@@ -2703,7 +2703,7 @@ void SpellChecker::ApplyConversions(
 
   // FOR NOW It works only if destination string is shorter than source string.
 
-  for (int i = 0; i < countof(ConvertFrom); i++) {
+  for (int i = 0; i < static_cast<int> (countof(ConvertFrom)); i++) {
     if (!Apply[i] || ConvertFrom[i] == 0 || ConvertTo[i] == 0 ||
         *ConvertFrom[i] == 0 || *ConvertTo[i] == 0)
       continue;
@@ -2759,17 +2759,14 @@ BOOL SpellChecker::CheckWord(char *Word, long Start, long /*End*/) {
 
   ApplyConversions(Word);
 
-  wchar_t *Ts = 0;
   auto SymbolsNum =
       (CurrentEncoding == ENCODING_UTF8) ? Utf8Length(Word) : strlen(Word);
   if (SymbolsNum == 0) {
-    res = TRUE;
-    goto CleanUp;
+    return TRUE;
   }
 
   if (IgnoreOneLetter && SymbolsNum == 1) {
-    res = TRUE;
-    goto CleanUp;
+    return TRUE;
   }
 
   if (IgnoreNumbers &&
@@ -2777,58 +2774,49 @@ BOOL SpellChecker::CheckWord(char *Word, long Start, long /*End*/) {
            ? Utf8pbrk(Word, "0123456789")
            : strpbrk(Word, "0123456789")) != 0) // Same for UTF-8 and not
   {
-    res = TRUE;
-    goto CleanUp;
+    return TRUE;
   }
 
   if (IgnoreCStart || IgnoreCHave || IgnoreCAll) {
+    std::unique_ptr<wchar_t []> Ts;
     if (CurrentEncoding == ENCODING_UTF8)
-      SetStringSUtf8(Ts, Word);
+      Ts = cpyBufSUtf8<wchar_t>(Word);
     else
-      SetString(Ts, Word);
+      Ts = cpyBuf<wchar_t>(Word);
     if (IgnoreCStart && IsCharUpper(Ts[0])) {
-      res = TRUE;
-      goto CleanUp;
+      return TRUE;
     }
     if (IgnoreCHave || IgnoreCAll) {
       BOOL AllUpper = IsCharUpper(Ts[0]);
-      for (unsigned int i = 1; i < wcslen(Ts); i++) {
+      for (unsigned int i = 1; i < wcslen(Ts.get ()); i++) {
         if (IsCharUpper(Ts[i])) {
           if (IgnoreCHave) {
-            res = TRUE;
-            goto CleanUp;
+            return TRUE;
           }
         } else
           AllUpper = FALSE;
       }
 
       if (AllUpper && IgnoreCAll) {
-        res = TRUE;
-        goto CleanUp;
+        return TRUE;
       }
     }
   }
 
   if (Ignore_ && strchr(Word, '_') != 0) // I guess the same for UTF-8 and ANSI
   {
-    res = TRUE;
-    goto CleanUp;
+    return TRUE;
   }
 
   auto Len = strlen(Word);
 
   if (IgnoreSEApostrophe) {
     if (Word[0] == '\'' || Word[Len - 1] == '\'') {
-      res = TRUE;
-      goto CleanUp;
+      return TRUE;
     }
   }
 
   res = CurrentSpeller->CheckWord(Word);
-
-CleanUp:
-  CLEAN_AND_ZERO_ARR(Ts);
-
   return res;
 }
 
@@ -3140,7 +3128,7 @@ void SpellChecker::CopyMisspellingsToClipboard() {
   CLEAN_AND_ZERO_ARR(wchar_str);
 }
 
-SuggestionsMenuItem::SuggestionsMenuItem(wchar_t *TextArg, BYTE IdArg,
+SuggestionsMenuItem::SuggestionsMenuItem(const wchar_t *TextArg, BYTE IdArg,
                                          BOOL SeparatorArg /*= FALSE*/) {
   Text = 0;
   SetString(Text, TextArg);

@@ -43,6 +43,13 @@ auto cpyBuf (const V *str) {
 void SetStringSUtf8(char *&Target, const char *Str);
 void SetStringSUtf8(wchar_t *&Target, const char *Str);
 
+template <typename T, typename V>
+auto cpyBufSUtf8 (const V *str) {
+  T *temp = nullptr;
+  SetStringSUtf8 (temp, str);
+  return std::unique_ptr<T []> {temp};
+}
+
 // In case destination is in UTF-8
 void SetStringDUtf8(char *&Target, const char *Str);
 void SetStringDUtf8(char *&Target, const wchar_t *Str);

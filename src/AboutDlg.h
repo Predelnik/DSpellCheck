@@ -25,5 +25,5 @@ public:
   void DoDialog();
 
 protected:
-  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+  INT_PTR WINAPI run_dlgProc (UINT message, WPARAM wParam, LPARAM lParam) override;
 };

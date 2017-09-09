@@ -173,9 +173,6 @@ LRESULT showCalculatedMenu(std::vector<SuggestionsMenuItem *>* menuListPtr) {
     return ::CallWindowProc(wndProcNotepad, nppData._nppHandle, WM_CONTEXTMENU, LastHwnd, LastCoords);
 }
 
-
-static BOOL AutoCheckDisabledWhilePrinting = FALSE;
-
 extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) {
   nppData = notpadPlusData;
   commandMenuInit();

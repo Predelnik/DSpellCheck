@@ -39,7 +39,7 @@ SimpleDlg::SimpleDlg() : StaticDialog() {
     _OpenThemeData = (OTDProc)::GetProcAddress(_hUxTheme, "OpenThemeData");
 }
 
-void SimpleDlg::init(HINSTANCE hInst, HWND Parent, NppData nppData) {
+void SimpleDlg::initSettings(HINSTANCE hInst, HWND Parent, NppData nppData) {
   NppDataInstance = nppData;
   return Window::init(hInst, Parent);
 }
@@ -114,7 +114,7 @@ BOOL SimpleDlg::AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
   return TRUE;
 }
 
-static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText) {
+static HWND CreateToolTip(int toolID, HWND hDlg, const wchar_t* pszText) {
   if (!toolID || !hDlg || !pszText) {
     return FALSE;
   }
@@ -132,12 +132,13 @@ static HWND CreateToolTip(int toolID, HWND hDlg, PTSTR pszText) {
   }
 
   // Associate the tooltip with the tool.
-  TOOLINFO toolInfo = {0};
+  TOOLINFO toolInfo;
+  memset (&toolInfo, 0, sizeof (toolInfo));
   toolInfo.cbSize = sizeof(toolInfo);
   toolInfo.hwnd = hDlg;
   toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
   toolInfo.uId = (UINT_PTR)hwndTool;
-  toolInfo.lpszText = pszText;
+  toolInfo.lpszText = const_cast<wchar_t *> (pszText);
   SendMessage(hwndTip, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
 
   return hwndTip;
@@ -463,7 +464,8 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
           Edit_SetText(HLibPath, ofn.lpstrFile);
       } else {
         // Thanks to http://vcfaq.mvps.org/sdk/20.htm
-        BROWSEINFO bi = {0};
+        BROWSEINFO bi;
+        memset (&bi, 0, sizeof(bi));
         wchar_t path[MAX_PATH];
 
         LPITEMIDLIST pidlRoot = NULL;
@@ -626,11 +628,11 @@ INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
                   L"Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are "
                   L"always counted as delimiters");
     CreateToolTip(IDC_RECHECK_DELAY, _hSelf, L"Delay between the end of typing "
-                                             L"and rechecking the the text "
-                                             L"after it");
+                  L"and rechecking the the text "
+                  L"after it");
     CreateToolTip(IDC_IGNORE_CSTART, _hSelf, L"Remember that words at the "
-                                             L"beginning of sentences would "
-                                             L"also be ignored that way.");
+                  L"beginning of sentences would "
+                  L"also be ignored that way.");
     CreateToolTip(
         IDC_IGNORE_SE_APOSTROPHE, _hSelf,
         L"Words like this sadly cannot be added to Aspell user dictionary");
@@ -640,7 +642,7 @@ INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
                   L"dictionary manually, please uncheck");
 
     ComboBox_ResetContent(HUnderlineStyle);
-    for (int i = 0; i < countof(IndicNames); i++)
+    for (int i = 0; i < static_cast<int> (countof(IndicNames)); i++)
       ComboBox_AddString(HUnderlineStyle, IndicNames[i]);
     return TRUE;
   } break;
@@ -745,7 +747,7 @@ INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
   return FALSE;
 }
 
-void AdvancedDlg::SetDelimetersEdit(wchar_t *Delimiters) {
+void AdvancedDlg::SetDelimetersEdit(const wchar_t* Delimiters) {
   Edit_SetText(HEditDelimiters, Delimiters);
 }
 
@@ -807,7 +809,7 @@ SimpleDlg *SettingsDlg::GetSimpleDlg() { return &SimpleDlgInstance; }
 
 AdvancedDlg *SettingsDlg::GetAdvancedDlg() { return &AdvancedDlgInstance; }
 
-void SettingsDlg::init(HINSTANCE hInst, HWND Parent, NppData nppData) {
+void SettingsDlg::initSettings(HINSTANCE hInst, HWND Parent, NppData nppData) {
   NppDataInstance = nppData;
   return Window::init(hInst, Parent);
 }
@@ -826,10 +828,10 @@ void SettingsDlg::ApplySettings() {
 INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
   switch (Message) {
   case WM_INITDIALOG: {
-    ControlsTabInstance.init(_hInst, _hSelf, false, true, false);
-    ControlsTabInstance.setFont(TEXT("Tahoma"), 13);
+    ControlsTabInstance.initTabBar(_hInst, _hSelf, false, true, false);
+    ControlsTabInstance.setFont(L"Tahoma", 13);
 
-    SimpleDlgInstance.init(_hInst, _hSelf, NppDataInstance);
+    SimpleDlgInstance.initSettings(_hInst, _hSelf, NppDataInstance);
     SimpleDlgInstance.create(IDD_SIMPLE, false, false);
     SimpleDlgInstance.display();
     AdvancedDlgInstance.init(_hInst, _hSelf);

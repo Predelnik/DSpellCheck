@@ -29,9 +29,6 @@
 #include <stdexcept>
 #include <Notepad_plus_msgs.h>
 
-const COLORREF blue      	            = RGB(0,       0, 0xFF);
-const COLORREF black     	            = RGB(0,       0,    0);
-const COLORREF white     	            = RGB(0xFF, 0xFF, 0xFF);
 const COLORREF grey      	            = RGB(128,   128,  128);
 
 #define	IDC_DRAG_TAB     1404
@@ -57,7 +54,7 @@ COLORREF TabBarPlus::_inactiveBgColour = RGB(192, 192, 192);
 HWND TabBarPlus::_hwndArray[nbCtrlMax] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 int TabBarPlus::_nbCtrl = 0;
 
-void TabBar::init(HINSTANCE hInst, HWND parent, bool isVertical, bool isTraditional, bool isMultiLine)
+void TabBar::initTabBar(HINSTANCE hInst, HWND parent, bool isVertical, bool isTraditional, bool isMultiLine)
 {
   Window::init(hInst, parent);
   int vertical = isVertical?(TCS_VERTICAL | TCS_MULTILINE | TCS_RIGHTJUSTIFY):0;
@@ -87,7 +84,7 @@ void TabBar::init(HINSTANCE hInst, HWND parent, bool isVertical, bool isTraditio
 
   if (!_hSelf)
   {
-    throw std::runtime_error("TabBar::init : CreateWindowEx() function return null");
+    throw std::runtime_error("TabBar::initTabBar : CreateWindowEx() function return null");
   }
 }
 
@@ -131,7 +128,7 @@ void TabBar::getCurrentTitle(wchar_t *title, int titleLen)
   ::SendMessage(_hSelf, TCM_GETITEM, getCurrentTabIndex(), reinterpret_cast<LPARAM>(&tci));
 }
 
-void TabBar::setFont(wchar_t *fontName, int fontSize)
+void TabBar::setFont(const wchar_t* fontName, int fontSize)
 {
   if (_hFont)
     ::DeleteObject(_hFont);
@@ -162,7 +159,7 @@ void TabBar::activateAt(int index) const
 
 void TabBar::deletItemAt(size_t index)
 {
-  if ((index == _nbItem-1))
+  if (index == _nbItem-1)
   {
     //prevent invisible tabs. If last visible tab is removed, other tabs are put in view but not redrawn
     //Therefore, scroll one tab to the left if only one tab visible
@@ -227,7 +224,7 @@ void TabBar::reSizeTo(RECT & rc2Ajust)
   }
 }
 
-void TabBarPlus::init(HINSTANCE hInst, HWND parent, bool isVertical, bool isTraditional, bool isMultiLine)
+void TabBarPlus::initTabBar(HINSTANCE hInst, HWND parent, bool isVertical, bool isTraditional, bool isMultiLine)
 {
   Window::init(hInst, parent);
   int vertical = isVertical?(TCS_VERTICAL | TCS_MULTILINE | TCS_RIGHTJUSTIFY):0;
@@ -259,7 +256,7 @@ void TabBarPlus::init(HINSTANCE hInst, HWND parent, bool isVertical, bool isTrad
 
   if (!_hSelf)
   {
-    throw std::runtime_error("TabBarPlus::init : CreateWindowEx() function return null");
+    throw std::runtime_error("TabBarPlus::initTabBar : CreateWindowEx() function return null");
   }
   if (!_isTraditional)
   {
@@ -279,7 +276,7 @@ void TabBarPlus::init(HINSTANCE hInst, HWND parent, bool isVertical, bool isTrad
       {
         _ctrlID = -1;
         destroy();
-        throw std::runtime_error("TabBarPlus::init : Tab Control error - Tab Control # is over its limit");
+        throw std::runtime_error("TabBarPlus::initTabBar : Tab Control error - Tab Control # is over its limit");
       }
       _hwndArray[i] = _hSelf;
       _ctrlID = i;

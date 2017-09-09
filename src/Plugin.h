@@ -64,7 +64,7 @@ void commandMenuCleanUp();
 //
 // Function which sets your command
 //
-bool setNextCommand(wchar_t *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = nullptr, bool check0nInit = false);
+bool setNextCommand(const wchar_t* cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = nullptr, bool check0nInit = false);
 
 // WARNING: Consequent messages guaranteed to be delivered in order, only if they are in corresponding order in enum
 typedef enum {

@@ -37,11 +37,11 @@ struct SuggestionsMenuItem {
   wchar_t *Text;
   BYTE Id;
   BOOL Separator;
-  SuggestionsMenuItem(wchar_t *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE);
+  SuggestionsMenuItem(const wchar_t *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE);
   ~SuggestionsMenuItem() { CLEAN_AND_ZERO_ARR(Text); };
 };
 
-void InsertSuggMenuItem(HMENU Menu, wchar_t *Text, BYTE Id, int InsertPos,
+void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
                         BOOL Separator = FALSE);
 
 HWND GetScintillaWindow(const NppData *NppDataArg);
@@ -264,7 +264,6 @@ private:
   LRESULT Lexer;
   std::vector<SuggestionsMenuItem *> *SuggestionMenuItems;
   std::vector<char *> *LastSuggestions;
-  _locale_t utf8_l;
   long ModifiedStart;
   long ModifiedEnd;
   long WUCPosition; // WUC = Word Under Cursor (Position in global doc

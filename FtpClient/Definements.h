@@ -125,7 +125,7 @@ namespace nsHelper
    {
    public:
       static DWORD GetLastError() { return ::GetLastError(); }
-   
+
       static tstring GetErrorDescription(int iErrorCode = GetLastError())
       {
          LPVOID lpMsgBuf=NULL;
@@ -147,7 +147,7 @@ namespace nsHelper
    {
    public:
       static DWORD GetLastError() { return errno; }
-   
+
       static tstring GetErrorDescription(int iErrorCode = GetLastError())
       {
          return strerror(iErrorCode);
@@ -236,15 +236,15 @@ public:
    {
       if (find(p)!=base_type::end())
          return false;
-      insert(p);
+      this->insert(p);
       p->Attach(static_cast<T2>(this));
       return true;
    }
    bool Detach(T p)
    {
-      if (find(p)==base_type::end())
+      if (this->find(p)==base_type::end())
          return false;
-      erase(p);
+      this->erase(p);
       p->Detach(static_cast<T2>(this));
       return true;
    }

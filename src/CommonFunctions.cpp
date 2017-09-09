@@ -702,7 +702,7 @@ BOOL SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName) {
   int Left, Right;
   Left = 0;
 #ifdef _DEBUG
-  for (int i = 0; i < countof(AliasesFrom) - 1; i++) {
+  for (int i = 0; i < static_cast<int> (countof(AliasesFrom)) - 1; i++) {
     if (wcscmp(AliasesFrom[i], AliasesFrom[i + 1]) >= 0) {
       DebugBreak();
       // String are not sorted correctly in AliasesFrom

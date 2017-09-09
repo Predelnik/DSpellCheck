@@ -51,7 +51,7 @@ void DownloadDicsDlg::DoDialog() {
 }
 
 void DownloadDicsDlg::FillFileList() {
-    GetDownloadDics()->DoFtpOperation(fillFileList, currentAddress()->c_str ());
+    GetDownloadDics()->DoFtpOperation(fillFileList, currentAddress()->c_str());
 }
 
 void DownloadDicsDlg::OnDisplayAction() {
@@ -67,7 +67,7 @@ DownloadDicsDlg::DownloadDicsDlg() {
     HFileList = 0;
 }
 
-void DownloadDicsDlg::init(HINSTANCE hInst, HWND Parent,
+void DownloadDicsDlg::initDlg(HINSTANCE hInst, HWND Parent,
                            SpellChecker* SpellCheckerInstanceArg) {
     ftpOperationTask = TaskWrapper{Parent};
     SpellCheckerInstance = SpellCheckerInstanceArg;
@@ -407,7 +407,7 @@ void ftpTrim(std::wstring& ftpAddress) {
 std::pair<std::wstring, std::wstring> ftpSplit(std::wstring fullPath) {
     ftpTrim(fullPath);
     auto it = std::find(fullPath.begin(), fullPath.end(), L'/');
-    return {{fullPath.begin(), it}, {it != fullPath.end () ? next (it) : it, fullPath.end()}};
+    return {{fullPath.begin(), it}, {it != fullPath.end() ? next(it) : it, fullPath.end()}};
 }
 
 void DownloadDicsDlg::UpdateListBox() {
@@ -445,13 +445,14 @@ public:
     Observer(std::shared_ptr<ProgressData> progressData, const std::wstring& targetPath,
              long targetSize, nsFTP::CFTPClient& client,
              concurrency::cancellation_token token)
-        : m_progressData(progressData), m_targetPath (targetPath), m_targetSize(targetSize), m_client(client), m_token(token) {
+        : m_progressData(progressData), m_targetPath(targetPath), m_targetSize(targetSize), m_token(token),
+          m_client(client) {
     }
 
     virtual void OnBytesReceived(const nsFTP::TByteVector& /*vBuffer*/,
                                  long lReceivedBytes) override {
         if (m_token.is_canceled()) {
-            DeleteFile (m_targetPath.c_str ());
+            DeleteFile(m_targetPath.c_str());
             m_client.Logout();
             return;
         }
@@ -476,13 +477,12 @@ std::optional<std::wstring> DownloadDicsDlg::currentAddress() const {
     if (!HAddress)
         return std::nullopt;
     auto sel = ComboBox_GetCurSel (HAddress);
-    if (sel < 0)
-        {
-            auto textLen = ComboBox_GetTextLength (HAddress);
-            std::vector<wchar_t> buf(textLen + 1);
-            ComboBox_GetText (HAddress, buf.data (), textLen + 1);
-            return buf.data();
-        }
+    if (sel < 0) {
+        auto textLen = ComboBox_GetTextLength (HAddress);
+        std::vector<wchar_t> buf(textLen + 1);
+        ComboBox_GetText (HAddress, buf.data (), textLen + 1);
+        return buf.data();
+    }
     auto textLen = ComboBox_GetLBTextLen (HAddress, sel);
     std::vector<wchar_t> buf(textLen + 1);
     ComboBox_GetLBText (HAddress, sel, buf.data ());
@@ -590,7 +590,7 @@ static std::variant<HINTERNET, FtpWebOperationError> ftpWebProxyLogin(const FtpO
     std::wstring proxyFinalString = params.proxyAddress + L":" + std::to_wstring(params.proxyPort);
     const auto WinInetHandle = InternetOpen(L"DSpellCheck", INTERNET_OPEN_TYPE_PROXY, proxyFinalString.c_str(), L"", 0);
     if (!WinInetHandle)
-        return FtpWebOperationError{FtpWebOperationErrorType::httpClientCannotBeInitialized};
+        return FtpWebOperationError{FtpWebOperationErrorType::httpClientCannotBeInitialized, -1};
     DWORD TimeOut = 15000;
     for (auto option : {INTERNET_OPTION_CONNECT_TIMEOUT, INTERNET_OPTION_SEND_TIMEOUT, INTERNET_OPTION_RECEIVE_TIMEOUT})
         InternetSetOption(WinInetHandle, option, &TimeOut, sizeof(DWORD));
@@ -662,12 +662,13 @@ std::variant<FtpWebOperationError, std::vector<std::wstring>> doDownloadFileList
             continue;
 
         count++;
-        out.push_back(cpyBuf<wchar_t>(TempBuf.data ()).get ());
+        out.push_back(cpyBuf<wchar_t>(TempBuf.data()).get());
     }
     return out;
 }
 
-std::optional<FtpWebOperationError> doDownloadFileWebProxy(FtpOperationParams params, const std::wstring& targetPath, std::shared_ptr<ProgressData> progressData, concurrency::
+std::optional<FtpWebOperationError> doDownloadFileWebProxy(FtpOperationParams params, const std::wstring& targetPath,
+                                                           std::shared_ptr<ProgressData> progressData, concurrency::
                                                            cancellation_token token) {
     auto result = ftpWebProxyLogin(params);
     if (auto error = std::get_if<FtpWebOperationError>(&result))
@@ -686,7 +687,7 @@ std::optional<FtpWebOperationError> doDownloadFileWebProxy(FtpOperationParams pa
     DWORD BytesReadTotal = 0;
     int FileHandle = _wopen(targetPath.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
     if (!FileHandle)
-        return FtpWebOperationError {FtpWebOperationErrorType::FileIsNotWriteable, -1};
+        return FtpWebOperationError{FtpWebOperationErrorType::FileIsNotWriteable, -1};
 
     getProgress()->SetMarquee(true);
     while (1) {
@@ -696,7 +697,7 @@ std::optional<FtpWebOperationError> doDownloadFileWebProxy(FtpOperationParams pa
                 SetFileAttributes(targetPath.c_str(), FILE_ATTRIBUTE_NORMAL);
                 DeleteFile(targetPath.c_str());
             }
-            return FtpWebOperationError {FtpWebOperationErrorType::DownloadCancelled, -1};
+            return FtpWebOperationError{FtpWebOperationErrorType::DownloadCancelled, -1};
         }
         InternetQueryDataAvailable(urlHandle, &BytesToRead, 0, 0);
         if (BytesToRead == 0)
@@ -766,6 +767,7 @@ void DownloadDicsDlg::processFileListError(FtpOperationErrorType error) {
     case FtpOperationErrorType::loginFailed: return updateStatus(L"Status: Connection cannot be established",
                                                                  COLOR_FAIL);
     case FtpOperationErrorType::downloadFailed: return updateStatus(L"Status: Can't list directory files", COLOR_FAIL);
+    case FtpOperationErrorType::downloadCancelled: return updateStatus(L"Status: Download Cancelled", COLOR_WARN);
     }
 }
 
@@ -781,9 +783,12 @@ void DownloadDicsDlg::processFileListError(const FtpWebOperationError& error) {
             L"Status: Proxy authorization required", COLOR_FAIL);
     case FtpWebOperationErrorType::httpError: return updateStatus(
             wstring_printf(L"Status: HTTP error %d", error.statusCode).c_str(), COLOR_FAIL);
-    case FtpWebOperationErrorType::htmlCannotBeParsed: return
-            updateStatus(L"Status: HTML cannot be parsed", COLOR_FAIL);
-    default: ;
+    case FtpWebOperationErrorType::htmlCannotBeParsed:
+        return updateStatus(L"Status: HTML cannot be parsed", COLOR_FAIL);
+    case FtpWebOperationErrorType::FileIsNotWriteable:
+        return updateStatus(L"Status: Target file cannot be written", COLOR_FAIL);
+    case FtpWebOperationErrorType::DownloadCancelled:
+        return updateStatus(L"Status: Target file cannot be written", COLOR_WARN);
     }
 }
 
@@ -812,7 +817,7 @@ void DownloadDicsDlg::updateFileListAsyncWebProxy(const std::wstring& fullPath) 
     // temporary workaround for xsmf_control.h bug
     static_assert(std::is_copy_constructible_v<std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
     prepareFileListUpdate();
-    ftpOperationTask->doDeferred([params = spawnFtpOperationParams(fullPath)](auto token)
+    ftpOperationTask->doDeferred([params = spawnFtpOperationParams(fullPath)](auto)
                              {
                                  return doDownloadFileListFTPWebProxy(params);
                              }, [this](std::variant<FtpWebOperationError, std::vector<std::wstring>> res)
@@ -828,7 +833,7 @@ void DownloadDicsDlg::updateFileListAsync(const std::wstring& fullPath) {
     // temporary workaround for xsmf_control.h bug
     static_assert(std::is_copy_constructible_v<std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
     prepareFileListUpdate();
-    ftpOperationTask->doDeferred([params = spawnFtpOperationParams(fullPath)](auto token)
+    ftpOperationTask->doDeferred([params = spawnFtpOperationParams(fullPath)](auto)
                              {
                                  return doDownloadFileListFTP(params);
                              }, [this](std::variant<FtpOperationErrorType, std::vector<std::wstring>> res)

@@ -37,10 +37,6 @@ void SelectProxy::DoDialog() {
   goToCenter();
 }
 
-void SelectProxy::init(HINSTANCE hInst, HWND Parent) {
-  return Window::init(hInst, Parent);
-}
-
 void SelectProxy::ApplyChoice(SpellChecker *SpellCheckerInstance) {
   wchar_t *TBuf = 0;
   int BufSize = 0;

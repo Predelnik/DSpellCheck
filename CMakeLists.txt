@@ -8,7 +8,11 @@ add_subdirectory (minizip)
 add_subdirectory (FtpClient)
 
 if(MSVC)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX")
+endif()
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
 endif()
 
 set(DEBUG_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
@@ -19,11 +23,13 @@ endif ()
 set(VLD_BUILD_ON "OFF" CACHE BOOL "Use Visual Leak Detector")
 
 if ( VLD_BUILD_ON )
-  add_definitions ("-DVLD_BUILD")
+    add_definitions ("-DVLD_BUILD")
 endif ()
 file (GLOB_RECURSE source_files src/*.cpp src/*.h src/*.rc)
 
+include (PrecompiledHeader.cmake)
 add_library (DSpellCheck SHARED ${source_files})
+add_precompiled_header(DSpellCheck src/PrecompiledHeader.h FORCEINCLUDE)
 
 target_link_libraries(DSpellCheck hunspell)
 target_link_libraries(DSpellCheck minizip)
@@ -33,7 +39,3 @@ target_link_libraries(DSpellCheck shlwapi comctl32 version wininet Ws2_32)
 target_include_directories (DSpellCheck PRIVATE src/Controls)
 target_include_directories (DSpellCheck PRIVATE src)
 target_compile_options (DSpellCheck PRIVATE /std:c++latest)
-
-include (cotire.cmake)
-set_target_properties(DSpellCheck PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "src/PrecompiledHeader.h")
-cotire (DSpellCheck)

@@ -438,7 +438,7 @@ VOID Control_OnSize(HWND hwnd, UINT /*state*/, INT cx, INT cy)
     SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
   //Resize parent container to listBox new integral height
-  RECT rc = { 0 };
+  RECT rc = { 0, 0, 0, 0 };
   GetWindowRect(hList, &rc);
 
   SetWindowPos(hwnd, NULL, 0, 0, cx, rc.bottom - rc.top,
@@ -468,7 +468,7 @@ static LRESULT CALLBACK ListBox_Proc(HWND hList, UINT msg, WPARAM wParam, LPARAM
     {
       DWORD dwItem = (DWORD)CallWindowProc((WNDPROC)GetProp(hList, WPROC),
         hList, msg, wParam, lParam);
-      if (LB_ERR != dwItem)
+      if (LB_ERR != static_cast<int> (dwItem))
         FORWARD_WM_COMMAND(GetParent(hList), GetDlgCtrlID(hList), hList,
         LBCN_ITEMCHECK, SNDMSG);
 

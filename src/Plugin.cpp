@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "aspell.h"
 #include "CommonFunctions.h"
-#include "controls/CheckedList/CheckedList.h"
+#include "Controls/CheckedList/CheckedList.h"
 #include "MainDef.h"
 #include "AboutDlg.h"
 #include "DownloadDicsDlg.h"
@@ -60,7 +60,7 @@ FuncItem *get_funcItem() {
 //
 NppData nppData;
 wchar_t IniFilePath[MAX_PATH];
-DWORD CustomGUIMessageIds[CustomGUIMessage::MAX] = {0};
+DWORD CustomGUIMessageIds[static_cast<int> (CustomGUIMessage::MAX)] = {0};
 bool doCloseTag = false;
 SpellChecker *SpellCheckerInstance = 0;
 SettingsDlg *SettingsDlgInstance = 0;
@@ -142,7 +142,7 @@ public:
 protected:
   virtual void OnOutput(LPCSTR szText) {
     FILE *fp = _wfopen(L"DSpellCheck_Debug.log", L"a");
-    fprintf(fp, szText);
+    fprintf(fp, "%s", szText);
     fclose(fp);
     StackWalker::OnOutput(szText);
   }
@@ -384,11 +384,11 @@ void InitClasses() {
   InitCheckedListBox((HINSTANCE)hModule);
 
   SuggestionsInstance = new Suggestions;
-  SuggestionsInstance->init((HINSTANCE)hModule, nppData._nppHandle, nppData);
+  SuggestionsInstance->initDlg((HINSTANCE)hModule, nppData._nppHandle, nppData);
   SuggestionsInstance->DoDialog();
 
   SettingsDlgInstance = new SettingsDlg;
-  SettingsDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle, nppData);
+  SettingsDlgInstance->initSettings((HINSTANCE)hModule, nppData._nppHandle, nppData);
 
   AboutDlgInstance = new AboutDlg;
   AboutDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle);
@@ -410,7 +410,7 @@ void InitClasses() {
                        SuggestionsInstance, LangListInstance);
 
   DownloadDicsDlgInstance = new DownloadDicsDlg;
-  DownloadDicsDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle,
+  DownloadDicsDlgInstance->initDlg((HINSTANCE)hModule, nppData._nppHandle,
                                 SpellCheckerInstance);
 
   ResourcesInited = true;
@@ -431,7 +431,7 @@ void commandMenuCleanUp() {
 //
 static int counter = 0;
 
-bool setNextCommand(wchar_t *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk,
+bool setNextCommand(const wchar_t* cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk,
                     bool check0nInit) {
   if (counter >= nbFunc)
     return false;

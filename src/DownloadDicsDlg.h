@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
 
-#include "staticdialog\staticdialog.h"
+#include "StaticDialog\StaticDialog.h"
 #include <Wininet.h>
 #include <optional>
 #include "FTPFileStatus.h"
@@ -78,9 +78,9 @@ public:
     DownloadDicsDlg();
     void DoDialog();
     // Maybe hunspell interface should be passed here
-    void init(HINSTANCE hInst, HWND Parent,
+    void initDlg(HINSTANCE hInst, HWND Parent,
               SpellChecker* SpellCheckerInstanceArg);
-    INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+    INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
     void UpdateListBox();
     void onNewFileList(const std::vector<std::wstring>& list);
     void prepareFileListUpdate();
@@ -125,7 +125,8 @@ private:
     SpellChecker* SpellCheckerInstance;
     HWND LibCombo;
     HWND HFileList;
-    HWND HAddress = nullptr;
+    HWND HAddress = nullptr
+    ;
     HWND HStatus;
     HWND HInstallSelected;
     HWND HShowOnlyKnown;

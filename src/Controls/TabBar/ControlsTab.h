@@ -40,7 +40,7 @@ struct DlgInfo {
   generic_string _name;
   generic_string _internalName;
 
-  DlgInfo(Window *dlg, wchar_t *name, wchar_t *internalName = NULL): _dlg(dlg), _name(name), _internalName(internalName?internalName:TEXT("")) {};
+  DlgInfo(Window *dlg, const wchar_t *name, const wchar_t *internalName = NULL): _dlg(dlg), _name(name), _internalName(internalName?internalName:TEXT("")) {};
 };
 
 typedef std::vector<DlgInfo> WindowVector;
@@ -51,11 +51,11 @@ public :
   ControlsTab() : TabBar(), _pWinVector(NULL), _current(0), _isVertical(false) {};
   ~ControlsTab(){};
 
-  void init(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false) override {
+  void initTabBar(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false) override {
     _isVertical = isVertical;
-    TabBar::init(hInst, hwnd, false, isTraditional, isMultiLine);
+    TabBar::initTabBar(hInst, hwnd, false, isTraditional, isMultiLine);
   };
-  void ControlsTab::createTabs(WindowVector & winVector);
+  void createTabs(WindowVector & winVector);
 
   void destroy() override {
     TabBar::destroy();

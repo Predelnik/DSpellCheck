@@ -24,14 +24,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "hunspell/hunspell.hxx"
 #include "HunspellInterface.h"
-#include "plugin.h"
+#include "Plugin.h"
 
 #include <locale>
 #include <io.h>
 #include <fcntl.h>
 
-static BOOL ListFiles(wchar_t *path, wchar_t *mask,
-                      std::vector<wchar_t *> &files, wchar_t *Filter) {
+static BOOL ListFiles(wchar_t *path, const wchar_t* mask,
+                      std::vector<wchar_t *> &files, const wchar_t* Filter) {
   HANDLE hFind = INVALID_HANDLE_VALUE;
   WIN32_FIND_DATA ffd;
   wchar_t *spec = 0;
@@ -295,7 +295,7 @@ DicInfo HunspellInterface::CreateHunspell(wchar_t *Name, int Type) {
   AffBuf[wcslen(AffBuf) - 4] = L'\0';
   SetString(NewName, AffBuf); // Without aff and dic
   DicInfo NewDic;
-  char *DicEnconding = NewHunspell->get_dic_encoding();
+  const char *DicEnconding = NewHunspell->get_dic_encoding();
   if (stricmp(DicEnconding, "Microsoft-cp1251") == 0)
     DicEnconding = "cp1251"; // Queer fix for encoding which isn't being guessed
                              // correctly by libiconv TODO: Find other possible

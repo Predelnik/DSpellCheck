@@ -34,7 +34,7 @@ class SimpleDlg : public StaticDialog {
 public:
   SimpleDlg();
   ~SimpleDlg();
-  __override void init(HINSTANCE hInst, HWND Parent, NppData nppData);
+  void initSettings(HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings(SpellChecker *SpellCheckerInstance);
   BOOL AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
                              const wchar_t *CurrentLanguage,
@@ -54,8 +54,7 @@ public:
   void ApplyLibChange(SpellChecker *SpellCheckerInstance);
 
 protected:
-  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam,
-                                         LPARAM lParam);
+  __override virtual INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
   /* NppData struct instance */
@@ -67,7 +66,6 @@ private:
   HWND HAspellStatus = NULL;
   HWND HLibPath = NULL;
   HWND HSuggestionsNum = NULL;
-  HWND HSpinSuggestionsNum = NULL;
   HWND HComboLanguage = NULL;
   HWND HCheckNotThose = NULL;
   HWND HCheckOnlyThose = NULL;
@@ -95,7 +93,7 @@ class AdvancedDlg : public StaticDialog {
 public:
   void ApplySettings(SpellChecker *SpellCheckerInstance);
   void FillDelimiters(const char *Delimiters);
-  void SetDelimetersEdit(wchar_t *Delimiters);
+  void SetDelimetersEdit(const wchar_t* Delimiters);
   void SetConversionOpts(BOOL ConvertYo, BOOL ConvertSingleQuotesArg,
                          BOOL RemoveSingleApostrophe);
   void SetRecheckDelay(int Delay);
@@ -108,8 +106,7 @@ public:
   void SetBufferSize(int Size);
 
 protected:
-  __override virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam,
-                                         LPARAM lParam);
+  __override virtual INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
   HWND HEditDelimiters = NULL;
@@ -132,19 +129,18 @@ private:
   HWND HRemoveBoundaryApostrophes = NULL;
 
   HBRUSH Brush;
-  NppData NppDataInstance;
   COLORREF UnderlineColorBtn;
 };
 
 class SettingsDlg : public StaticDialog {
 public:
   UINT DoDialog(void);
-  void init(HINSTANCE hInst, HWND Parent, NppData nppData);
+  void initSettings(HINSTANCE hInst, HWND Parent, NppData nppData);
   SimpleDlg *GetSimpleDlg();
   AdvancedDlg *GetAdvancedDlg();
 
 protected:
-  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+  INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
   void destroy() override;
   void ApplySettings();
 

@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Suggestions.h"
 
 #include "MainDef.h"
-#include "plugin.h"
+#include "Plugin.h"
 #include "resource.h"
 #include "SpellChecker.h"
 
@@ -72,7 +72,7 @@ Suggestions::Suggestions() {
   StateMenu = FALSE;
 }
 
-void Suggestions::init(HINSTANCE hInst, HWND Parent, NppData nppData) {
+void Suggestions::initDlg(HINSTANCE hInst, HWND Parent, NppData nppData) {
   NppDataInstance = nppData;
   return Window::init(hInst, Parent);
 }
