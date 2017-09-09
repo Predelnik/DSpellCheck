@@ -33,7 +33,7 @@ public:
   void SetCheckBoxes(BOOL RemoveUserDics, BOOL RemoveSystem);
 
 protected:
-  INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+  INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 
 protected:
   HWND HLangList = nullptr;

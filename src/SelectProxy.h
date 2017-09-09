@@ -31,7 +31,7 @@ public:
                   int ProxyType);
 
 protected:
-  virtual INT_PTR run_dlgProc(UINT message, WPARAM wParam,
+  virtual INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam,
                               LPARAM lParam) override;
   void DisableControls();
 

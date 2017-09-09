@@ -80,7 +80,7 @@ public:
     // Maybe hunspell interface should be passed here
     void initDlg(HINSTANCE hInst, HWND Parent,
               SpellChecker* SpellCheckerInstanceArg);
-    INT_PTR run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+    INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
     void UpdateListBox();
     void onNewFileList(const std::vector<std::wstring>& list);
     void prepareFileListUpdate();

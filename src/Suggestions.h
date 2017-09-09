@@ -31,7 +31,7 @@ public:
   void initDlg(HINSTANCE hInst, HWND Parent, NppData nppData);
 
 protected:
-  INT_PTR run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) override;
+  INT_PTR WINAPI run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) override;
 
 private:
   int MenuResult;
