@@ -1,6 +1,22 @@
 cmake_minimum_required (VERSION 3.7)
 project (DSpellCheck)
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
+    set(DSpellCheck_SANITIZE "none" CACHE STRING "Enable one of llvm sanitizers")
+    set_property(CACHE DSpellCheck_SANITIZE PROPERTY STRINGS none address thread undefined)
+    if ( NOT ${DSpellCheck_SANITIZE} STREQUAL none)
+        set(DSpellCheck_CLANG_WINDOWS_LIB_PATH "c:/Program Files/LLVM/lib/clang/5.0.0/lib/windows" CACHE PATH "Path to sanitizer libraries on windows")
+        link_directories (${DSpellCheck_CLANG_WINDOWS_LIB_PATH})
+    endif ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${DSpellCheck_SANITIZE}")
+    include (CMake/ucm.cmake)
+    ucm_gather_flags(0 flags_configs)
+    foreach(flags ${flags_configs})
+      string(REGEX REPLACE "/MDd" "/MD" ${flags} "${${flags}}")
+    endforeach()
+endif()
+
 add_definitions ("-D_CRT_NONSTDC_NO_DEPRECATE -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NON_CONFORMING_SWPRINTFS -D_CRT_SECURE_NO_DEPRECATE -D_WINSOCK_DEPRECATED_NO_WARNINGS")
 add_subdirectory (Hunspell) #Thanks https://github.com/zdenop/hunspell-mingw
 add_subdirectory (libiconv)
@@ -9,27 +25,30 @@ add_subdirectory (FtpClient)
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX")
+    set(DSpellCheck_USE_VLD "OFF" CACHE BOOL "Use Visual Leak Detector")
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
-endif()
-
-set(DEBUG_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
-if (DEFINED DEBUG_OUTPUT_PATH)
-	set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG  ${DEBUG_OUTPUT_PATH} )
+set(DSpellCheck_DEBUG_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
+if (DEFINED DSpellCheck_DEBUG_OUTPUT_PATH)
+	set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG  ${DSpellCheck_DEBUG_OUTPUT_PATH} )
 endif ()
 
-set(VLD_BUILD_ON "OFF" CACHE BOOL "Use Visual Leak Detector")
-
-if ( VLD_BUILD_ON )
+if ( DSpellCheck_USE_VLD )
     add_definitions ("-DVLD_BUILD")
 endif ()
 file (GLOB_RECURSE source_files src/*.cpp src/*.h src/*.rc)
 
-include (PrecompiledHeader.cmake)
+include (CMake/PrecompiledHeader.cmake)
 add_library (DSpellCheck SHARED ${source_files})
 add_precompiled_header(DSpellCheck src/PrecompiledHeader.h FORCEINCLUDE)
+
+if ( NOT ${DSpellCheck_SANITIZE} STREQUAL none)
+  if ( ${DSpellCheck_SANITIZE} STREQUAL address)
+    target_link_libraries (DSpellCheck
+      clang_rt.asan_dynamic-x86_64
+      clang_rt.asan_dynamic_runtime_thunk-x86_64)
+  endif ()
+endif ()
 
 target_link_libraries(DSpellCheck hunspell)
 target_link_libraries(DSpellCheck minizip)
