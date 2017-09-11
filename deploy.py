@@ -19,8 +19,8 @@ for arch in ['x64', 'x86']:
 	dir = 'build-msvc2017-{}'.format (arch)
 	build_args = ['cmake', '--build', dir, '--config', 'Release']
 	FNULL = open(os.devnull, 'w')
-	call(build_args, stdout=FNULL, stderr=subprocess.STDOUT)
 	print ('Building {} version...'.format (arch))
+	call(build_args, stdout=FNULL, stderr=subprocess.STDOUT)
 	binary_path = os.path.join (dir, 'Release', 'DSpellCheck.dll')
 	target_zip_path = os.path.join ('out', str (get_version_number (binary_path)),
 		'DSpellCheck_{}.zip'.format (arch))
