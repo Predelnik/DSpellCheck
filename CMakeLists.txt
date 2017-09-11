@@ -20,10 +20,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 add_definitions ("-D_CRT_NONSTDC_NO_DEPRECATE -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NON_CONFORMING_SWPRINTFS -D_CRT_SECURE_NO_DEPRECATE -D_WINSOCK_DEPRECATED_NO_WARNINGS")
-add_subdirectory (Hunspell) #Thanks https://github.com/zdenop/hunspell-mingw
-add_subdirectory (libiconv)
-add_subdirectory (minizip)
-add_subdirectory (FtpClient)
+add_subdirectory (deps/Hunspell) #Thanks https://github.com/zdenop/hunspell-mingw
+add_subdirectory (deps/libiconv)
+add_subdirectory (deps/minizip)
+add_subdirectory (deps/FtpClient)
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX")
