@@ -288,33 +288,18 @@ void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
     InsertMenuItem(Menu, InsertPos, TRUE, &mi);
 }
 
-BOOL WINAPI SpellChecker::NotifyMessage(UINT Msg, WPARAM wParam,
-                                        LPARAM lParam) {
-  switch (Msg) {
-  case TM_MENU_RESULT: {
-    ProcessMenuResult(wParam);
-    return TRUE;
-  }
-  case TM_PRECALCULATE_MENU: {
+void SpellChecker::precalculateMenu() {
     if (CheckTextNeeded() && SuggestionsMode == SUGGESTIONS_CONTEXT_MENU) {
-      long Pos, Length;
-      WUCisRight = GetWordUnderCursorIsRight(Pos, Length, TRUE);
-      if (!WUCisRight) {
-        WUCPosition = Pos;
-        WUCLength = Length;
-        FillSuggestionsMenu(0);
-      }
+        long Pos, Length;
+        WUCisRight = GetWordUnderCursorIsRight(Pos, Length, TRUE);
+        if (!WUCisRight) {
+            WUCPosition = Pos;
+            WUCLength = Length;
+            FillSuggestionsMenu(0);
+        }
     }
     showCalculatedMenu (SuggestionMenuItems);
     SuggestionMenuItems = 0;
-  } break;
-  case TM_WRITE_SETTING: {
-    WriteSetting(lParam);
-  } break;
-  default:
-    break;
-  }
-  return TRUE;
 }
 
 void SpellChecker::SetSuggType(int SuggType) {
@@ -760,14 +745,12 @@ void SpellChecker::PreserveCurrentAddressIndex() {
 }
 
 // For now just int option, later maybe choose option type in wParam
-void SpellChecker::WriteSetting(LPARAM lParam) {
-  std::pair<wchar_t *, DWORD> *x = (std::pair<wchar_t *, DWORD> *)lParam;
-  if (SettingsToSave->find(x->first) == SettingsToSave->end())
-    (*SettingsToSave)[x->first] = x->second;
+void SpellChecker::WriteSetting(std::pair<wchar_t*, DWORD>& x) {
+  if (SettingsToSave->find(x.first) == SettingsToSave->end())
+    (*SettingsToSave)[x.first] = x.second;
   else {
-    CLEAN_AND_ZERO_ARR(x->first);
+    CLEAN_AND_ZERO_ARR(x.first);
   }
-  CLEAN_AND_ZERO(x);
 }
 
 void SpellChecker::SetCheckComments(BOOL Value) { CheckComments = Value; }

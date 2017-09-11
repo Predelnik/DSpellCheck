@@ -53,6 +53,13 @@ LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0,
                               LPARAM lParam = 0);
 
 class SpellChecker {
+  enum CheckTextMode {
+    UNDERLINE_ERRORS = 0,
+    FIND_FIRST = 1,
+    FIND_LAST = 2,
+    GET_FIRST = 3, // Returns position of first (for recurring usage)
+  };
+
 public:
   SpellChecker(const wchar_t *IniFilePathArg,
                SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
@@ -62,7 +69,7 @@ public:
   void RecheckVisibleBothViews();
   BOOL WINAPI NotifyEvent(DWORD Event);
   BOOL WINAPI NotifyNetworkEvent(DWORD Event);
-  BOOL WINAPI NotifyMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
+    void precalculateMenu();
   void RecheckVisible(BOOL NotIntersectionOnly = FALSE);
   void RecheckModified();
   void ErrorMsgBox(const wchar_t *message);
@@ -132,15 +139,10 @@ public:
   void SetSuggestionsBoxTransparency();
   void addUserServer (std::wstring server);
   BOOL getAutoCheckText () const { return AutoCheckText; }
+  void ProcessMenuResult(WPARAM MenuId);
+  void WriteSetting(std::pair<wchar_t*, DWORD>& x);
 
 private:
-  enum CheckTextMode {
-    UNDERLINE_ERRORS = 0,
-    FIND_FIRST = 1,
-    FIND_LAST = 2,
-    GET_FIRST = 3, // Returns position of first (for recurring usage)
-  };
-
   HWND GetCurrentScintilla();
   void CreateWordUnderline(HWND ScintillaWindow, long start, long end);
   void RemoveUnderline(HWND ScintillaWindow, long start, long end);
@@ -163,7 +165,6 @@ private:
   void UpdateAutocheckStatus(int SaveSetting = 1);
   void SwitchAutoCheck();
   void FillSuggestionsMenu(HMENU Menu);
-  void ProcessMenuResult(WPARAM MenuId);
   void InitSuggestionsBox();
   BOOL GetWordUnderCursorIsRight(long &Pos, long &Length,
                                  BOOL UseTextCursor = FALSE);
@@ -175,7 +176,6 @@ private:
   int CheckWordInCommentOrString(LRESULT Style);
   LRESULT GetStyle(int Pos);
   void RefreshUnderlineStyle();
-  void WriteSetting(LPARAM lParam);
   void ApplyConversions(char *Word);
   void PrepareStringForConversion();
   void ResetDownloadCombobox();

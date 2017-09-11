@@ -183,12 +183,6 @@ void SendNetworkEvent(NetworkEventId Event) {
       SpellCheckerInstance->NotifyNetworkEvent(Event);
 }
 
-void PostMessageToMainThread(UINT Msg, WPARAM WParam, LPARAM LParam) {
-  if (ResourcesInited) {
-    SpellCheckerInstance->NotifyMessage (Msg, WParam, LParam);
-  }
-}
-
 void RegisterCustomMessages() {
   for (int i = 0; i < static_cast<int>(CustomGUIMessage::MAX); i++) {
     CustomGUIMessageIds[i] = RegisterWindowMessage(CustomGUIMesssagesNames[i]);

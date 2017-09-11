@@ -118,7 +118,6 @@ typedef enum {
 
 void SendEvent (EventId Event);
 void SendNetworkEvent (NetworkEventId Event);
-void PostMessageToMainThread (UINT Msg, WPARAM WParam = 0, LPARAM LParam = 0);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
 void setEncodingById (int EncId);

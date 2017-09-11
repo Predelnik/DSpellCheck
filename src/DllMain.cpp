@@ -55,11 +55,11 @@ void SetRecheckDelay(int Value, int WriteToIni) {
     Value = 20000;
 
   if (WriteToIni) {
-    std::pair<wchar_t *, DWORD> *x = new std::pair<wchar_t *, DWORD>;
-    x->first = 0;
-    SetString(x->first, L"Recheck_Delay");
-    x->second = MAKELPARAM(Value, 500);
-    PostMessageToMainThread(TM_WRITE_SETTING, 0, (LPARAM)x);
+    std::pair<wchar_t *, DWORD> x;
+    x.first = 0;
+    SetString(x.first, L"Recheck_Delay");
+    x.second = MAKELPARAM(Value, 500);
+    GetSpellChecker()->WriteSetting(x);
   }
   RecheckDelay = Value;
 }
@@ -120,7 +120,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   case WM_COMMAND:
     if (HIWORD(wParam) == 0) {
       if (!GetUseAllocatedIds())
-        PostMessageToMainThread(TM_MENU_RESULT, wParam, 0);
+        GetSpellChecker()->ProcessMenuResult (wParam);
 
       if (LOWORD(wParam) == IDM_FILE_PRINTNOW ||
           LOWORD(wParam) == IDM_FILE_PRINT) {
@@ -147,7 +147,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   case WM_CONTEXTMENU:
     LastHwnd = wParam;
     LastCoords = lParam;
-    PostMessageToMainThread(TM_PRECALCULATE_MENU, wParam, lParam);
+    GetSpellChecker()->precalculateMenu();
     return TRUE;
   case WM_DISPLAYCHANGE: {
     SendEvent(EID_HIDE_SUGGESTIONS_BOX);
@@ -355,7 +355,7 @@ extern "C" __declspec(dllexport) LRESULT
   case WM_COMMAND: {
     if (HIWORD(wParam) == 0 && GetUseAllocatedIds()) {
       InitNeededDialogs(wParam);
-      PostMessageToMainThread(TM_MENU_RESULT, wParam, 0);
+      GetSpellChecker()->ProcessMenuResult (wParam);
     }
   } break;
   }

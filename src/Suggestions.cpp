@@ -170,7 +170,7 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
 
   case WM_COMMAND:
     if (HIWORD(wParam) == 0)
-      PostMessageToMainThread(TM_MENU_RESULT, wParam, 0);
+      GetSpellChecker()->ProcessMenuResult(wParam);
 
     return FALSE;
 
