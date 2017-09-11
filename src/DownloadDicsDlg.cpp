@@ -55,7 +55,7 @@ void DownloadDicsDlg::FillFileList() {
 }
 
 void DownloadDicsDlg::OnDisplayAction() {
-    SendNetworkEvent(EID_FILL_FILE_LIST);
+    FillFileList();
 }
 
 DownloadDicsDlg::DownloadDicsDlg() {
@@ -936,7 +936,7 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
             switch (LOWORD(wParam)) {
             case IDOK:
                 if (HIWORD(wParam) == BN_CLICKED) {
-                    SendNetworkEvent(EID_DOWNLOAD_SELECTED);
+                    DownloadSelected();
                     getProgress()->DoDialog();
                     display(false);
                 }

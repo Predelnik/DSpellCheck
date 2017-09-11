@@ -178,11 +178,6 @@ void SendEvent(EventId Event) {
       SpellCheckerInstance->NotifyEvent(Event);
 }
 
-void SendNetworkEvent(NetworkEventId Event) {
-  if (ResourcesInited)
-      SpellCheckerInstance->NotifyNetworkEvent(Event);
-}
-
 void RegisterCustomMessages() {
   for (int i = 0; i < static_cast<int>(CustomGUIMessage::MAX); i++) {
     CustomGUIMessageIds[i] = RegisterWindowMessage(CustomGUIMesssagesNames[i]);

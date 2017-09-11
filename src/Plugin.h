@@ -108,16 +108,7 @@ typedef enum {
   EID_MAX,
 } EventId;
 
-typedef enum {
-  EID_KILLNETWORKTHREAD,
-  EID_DOWNLOAD_SELECTED,
-  EID_CANCEL_DOWNLOAD,
-  EID_FILL_FILE_LIST,
-  EID_NETWORK_MAX
-} NetworkEventId;
-
 void SendEvent (EventId Event);
-void SendNetworkEvent (NetworkEventId Event);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
 void setEncodingById (int EncId);

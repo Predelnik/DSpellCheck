@@ -216,7 +216,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
   switch (notifyCode->nmhdr.code) {
   case NPPN_SHUTDOWN: {
     SendEvent(EID_KILLTHREAD);
-    SendNetworkEvent(EID_KILLNETWORKTHREAD);
     MSG msg;
     while (PeekMessage(&msg, NULL, WM_USER, 0xFFFF,
                        PM_REMOVE)) // Clearing message queue to make sure that

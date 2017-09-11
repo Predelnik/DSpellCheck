@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Plugin.h"
 #include "resource.h"
 #include "CommonFunctions.h"
+#include "DownloadDicsDlg.h"
 
 void ProgressDlg::DoDialog() {
   if (!isCreated()) {
@@ -49,7 +50,7 @@ INT_PTR ProgressDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
     switch (LOWORD(wParam)) {
     case IDC_STOP:
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendNetworkEvent(EID_CANCEL_DOWNLOAD);
+        GetDownloadDics()->SetCancelPressed(true);
       }
       break;
     };
