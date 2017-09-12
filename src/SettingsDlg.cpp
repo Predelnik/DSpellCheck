@@ -380,7 +380,7 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
       break;
     case IDC_LIBRARY:
       if (HIWORD(wParam) == CBN_SELCHANGE) {
-        SendEvent(EID_LIB_CHANGE);
+        getSpellChecker()->libChange();
       }
       break;
     case IDC_HUNSPELL_PATH_TYPE:
@@ -689,7 +689,7 @@ INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
     switch (LOWORD(wParam)) {
     case IDC_DEFAULT_DELIMITERS:
       if (HIWORD(wParam) == BN_CLICKED)
-        SendEvent(EID_DEFAULT_DELIMITERS);
+        getSpellChecker()->SetDefaultDelimiters();
       return TRUE;
     case IDC_RECHECK_DELAY:
       if (HIWORD(wParam) == EN_CHANGE) {
@@ -821,7 +821,7 @@ void SettingsDlg::destroy() {
 
 // Send appropriate event and set some npp thread properties
 void SettingsDlg::ApplySettings() {
-  SendEvent(EID_APPLY_SETTINGS);
+  getSpellChecker ()->applySettings ();
   SetRecheckDelay(AdvancedDlgInstance.GetRecheckDelay());
 }
 
@@ -859,7 +859,7 @@ INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
     if (enableDlgTheme)
       enableDlgTheme(_hSelf, ETDT_ENABLETAB);
 
-    SendEvent(EID_FILL_DIALOGS);
+    getSpellChecker()->FillDialogs();
 
     return TRUE;
   } break;
@@ -884,7 +884,7 @@ INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
     switch (LOWORD(wParam)) {
     case 0: // Menu
     {
-      SendEvent(EID_COPY_MISSPELLINGS_TO_CLIPBOARD);
+      getSpellChecker ()->copyMisspellingsToClipboard ();
     } break;
     case IDAPPLY:
       if (HIWORD(wParam) == BN_CLICKED) {
@@ -895,14 +895,14 @@ INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
       break;
     case IDOK:
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendEvent(EID_HIDE_DIALOG);
+        display(false);
         ApplySettings();
         return FALSE;
       }
       break;
     case IDCANCEL:
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendEvent(EID_HIDE_DIALOG);
+        display(false);
         return FALSE;
       }
       break;
@@ -918,7 +918,7 @@ UINT SettingsDlg::DoDialog(void) {
     goToCenter();
   } else {
     goToCenter();
-    SendEvent(EID_FILL_DIALOGS);
+    getSpellChecker()->FillDialogs();
   }
 
   return TRUE;

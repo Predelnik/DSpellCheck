@@ -925,8 +925,8 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
             RefreshIcon = (HICON)LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH),
                                            IMAGE_ICON, 16, 16, 0);
             SendMessage(HRefresh, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)RefreshIcon);
-            SendEvent(EID_INIT_DOWNLOAD_COMBOBOX);
-            SendEvent(EID_FILL_DOWNLOAD_DICS_DIALOG);
+            getSpellChecker ()->ResetDownloadCombobox();
+            getSpellChecker ()->fillDownloadDicsDialog();
             DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
             return TRUE;
         }
@@ -945,7 +945,7 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
                 if (HIWORD(wParam) == BN_CLICKED) {
                     for (int i = 0; i < ListBox_GetCount(HFileList); i++)
                         CheckedListBox_SetCheckState(HFileList, i, BST_UNCHECKED);
-                    SendEvent(EID_HIDE_DOWNLOAD_DICS);
+                    display(false);
                 }
 
                 break;
@@ -957,7 +957,7 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
                         CreateTimerQueueTimer(&Timer, 0, ReinitServer, this, 1000, 0, 0);
                 }
                 else if (HIWORD(wParam) == CBN_SELCHANGE) {
-                    SendEvent(EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE);
+                    getSpellChecker ()->updateFromDownloadDicsOptionsNoUpdate();
                     ReinitServer(this, FALSE);
                     CheckIfSavingIsNeeded = 0;
                 }
@@ -969,18 +969,18 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
                 break;
             case IDC_INSTALL_SYSTEM:
                 if (HIWORD(wParam) == BN_CLICKED) {
-                    SendEvent(EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE);
+                    getSpellChecker ()->updateFromDownloadDicsOptionsNoUpdate();
                 }
                 break;
             case IDC_SHOWONLYKNOWN:
                 if (HIWORD(wParam) == BN_CLICKED) {
-                    SendEvent(EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS);
+                    getSpellChecker()->updateFromDownloadDicsOptions ();
                 }
                 break;
             case IDC_SELECTPROXY:
                 if (HIWORD(wParam) == BN_CLICKED) {
                     GetSelectProxy()->DoDialog();
-                    SendEvent(EID_SHOW_SELECT_PROXY);
+                    GetSelectProxy()->display();
                 }
             }
         }

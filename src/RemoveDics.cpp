@@ -125,8 +125,8 @@ INT_PTR RemoveDics::run_dlgProc(UINT message, WPARAM wParam,
     HLangList = ::GetDlgItem(_hSelf, IDC_REMOVE_LANGLIST);
     HRemoveUserDics = ::GetDlgItem(_hSelf, IDC_REMOVE_USER_DICS);
     HRemoveSystem = ::GetDlgItem(_hSelf, IDC_REMOVE_SYSTEM);
-    SendEvent(EID_UPDATE_LANG_LISTS);
-    SendEvent(EID_UPDATE_REMOVE_DICS_OPTIONS);
+    getSpellChecker ()->ReinitLanguageLists(true);
+    getSpellChecker ()->updateRemoveDicsOptions();
     return TRUE;
   } break;
   case WM_COMMAND: {
@@ -134,12 +134,12 @@ INT_PTR RemoveDics::run_dlgProc(UINT message, WPARAM wParam,
     case IDC_REMOVE_USER_DICS:
     case IDC_REMOVE_SYSTEM: {
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendEvent(EID_UPDATE_FROM_REMOVE_DICS_OPTIONS);
+        getSpellChecker ()->updateFromRemoveDicsOptions();
       }
     } break;
     case IDOK:
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendEvent(EID_REMOVE_SELECTED_DICS);
+        RemoveSelected(getSpellChecker ());
         display(false);
       }
       break;

@@ -66,49 +66,6 @@ void commandMenuCleanUp();
 //
 bool setNextCommand(const wchar_t* cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = nullptr, bool check0nInit = false);
 
-// WARNING: Consequent messages guaranteed to be delivered in order, only if they are in corresponding order in enum
-typedef enum {
-  EID_SWITCH_AUTOCHECK,
-  EID_LOAD_SETTINGS,
-  EID_FILL_DIALOGS,
-  EID_APPLY_SETTINGS,
-  EID_APPLY_MULTI_LANG_SETTINGS,
-  EID_HIDE_DIALOG,
-  EID_CHECK_FILE_NAME,
-  EID_RECHECK_VISIBLE,
-  EID_RECHECK_VISIBLE_BOTH_VIEWS,
-  EID_RECHECK_INTERSECTION,
-  EID_COPY_MISSPELLINGS_TO_CLIPBOARD,
-  EID_KILLTHREAD,
-  EID_INIT_SUGGESTIONS_BOX,
-  EID_HIDE_SUGGESTIONS_BOX,
-  EID_SHOW_SUGGESTION_MENU,
-  EID_UPDATE_SELECT_PROXY,
-  EID_RECHECK_MODIFIED_ZONE,
-  EID_INIT_CONTEXT_MENU,
-  EID_APPLYMENUACTION,
-  EID_DEFAULT_DELIMITERS,
-  EID_FIND_NEXT_MISTAKE,
-  EID_FIND_PREV_MISTAKE,
-  EID_INIT_DOWNLOAD_COMBOBOX,
-  EID_FILL_DOWNLOAD_DICS_DIALOG,
-  EID_REMOVE_SELECTED_DICS,
-  EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS,
-  EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE,
-  EID_HIDE_DOWNLOAD_DICS,
-  EID_UPDATE_REMOVE_DICS_OPTIONS,
-  EID_UPDATE_FROM_REMOVE_DICS_OPTIONS,
-  EID_UPDATE_LANG_LISTS,
-  EID_UPDATE_LANG_LISTS_NO_GUI,
-  EID_UPDATE_LANGS_MENU,
-  EID_LANG_CHANGE,
-  EID_LIB_CHANGE,
-  EID_APPLY_PROXY_SETTINGS,
-  EID_SHOW_SELECT_PROXY,
-  EID_MAX,
-} EventId;
-
-void SendEvent (EventId Event);
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
 void setEncodingById (int EncId);
@@ -141,7 +98,7 @@ void SetUseAllocatedIds (BOOL Id);
 int GetContextMenuIdStart ();
 int GetLangsMenuIdStart ();
 BOOL GetUseAllocatedIds ();
-SpellChecker *GetSpellChecker ();
+SpellChecker *getSpellChecker ();
 DWORD GetCustomGUIMessageId (CustomGUIMessage MessageId);
 void RegisterCustomMessages ();
 

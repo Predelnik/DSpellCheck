@@ -67,8 +67,11 @@ public:
                LangList *LangListInstanceArg);
   ~SpellChecker();
   void RecheckVisibleBothViews();
-  BOOL WINAPI NotifyEvent(DWORD Event);
-    void precalculateMenu();
+  void applySettings();
+  void applyMultiLangSettings();
+  void applyProxySettings();
+  void showSuggestionMenu();
+  void precalculateMenu();
   void RecheckVisible(BOOL NotIntersectionOnly = FALSE);
   void RecheckModified();
   void ErrorMsgBox(const wchar_t *message);
@@ -140,17 +143,33 @@ public:
   BOOL getAutoCheckText () const { return AutoCheckText; }
   void ProcessMenuResult(WPARAM MenuId);
   void WriteSetting(std::pair<wchar_t*, DWORD>& x);
+  void copyMisspellingsToClipboard();
+  void LoadSettings();
+  void SwitchAutoCheck();
+  void InitSuggestionsBox();
+  void HideSuggestionBox();
+  void SetDefaultDelimiters();
+  void FindNextMistake();
+  void FindPrevMistake();
+  void CheckFileName();
+  void fillDownloadDicsDialog();
+  void updateSelectProxy();
+  void updateFromRemoveDicsOptions();
+  void updateRemoveDicsOptions();
+  void updateFromDownloadDicsOptions();
+  void updateFromDownloadDicsOptionsNoUpdate();
+  void libChange();
+  void langChange();
+  void ResetDownloadCombobox();
 
 private:
+  void GetLimitsAndRecheckModified();
   HWND GetCurrentScintilla();
   void CreateWordUnderline(HWND ScintillaWindow, long start, long end);
   void RemoveUnderline(HWND ScintillaWindow, long start, long end);
   void ClearAllUnderlines();
-  void FindNextMistake();
-  void FindPrevMistake();
   void ClearVisibleUnderlines();
   void Cleanup();
-  void CheckFileName();
   const char *GetDelimiters();
   void GetDefaultHunspellPath(wchar_t *&Path);
   BOOL CheckWord(char *Word, long Start, long End);
@@ -160,24 +179,17 @@ private:
   void CheckVisible(BOOL NotIntersectionOnly = FALSE);
   void setEncodingById(int EncId);
   void SaveSettings();
-  void LoadSettings();
   void UpdateAutocheckStatus(int SaveSetting = 1);
-  void SwitchAutoCheck();
   void FillSuggestionsMenu(HMENU Menu);
-  void InitSuggestionsBox();
   BOOL GetWordUnderCursorIsRight(long &Pos, long &Length,
                                  BOOL UseTextCursor = FALSE);
   char *GetWordAt(long CharPos, char *Text, long Offset);
-  void SetDefaultDelimiters();
-  void HideSuggestionBox();
-  void GetLimitsAndRecheckModified();
   BOOL CheckTextNeeded();
   int CheckWordInCommentOrString(LRESULT Style);
   LRESULT GetStyle(int Pos);
   void RefreshUnderlineStyle();
   void ApplyConversions(char *Word);
   void PrepareStringForConversion();
-  void ResetDownloadCombobox();
   void PreserveCurrentAddressIndex();
   void FillDownloadDics();
   void ResetHotSpotCache();
@@ -195,7 +207,6 @@ private:
   void LoadFromIni(int &Value, const wchar_t *Name, int DefaultValue);
   void LoadFromIniUtf8(char *&Value, const wchar_t *Name,
                        const char *DefaultValue, BOOL InQuotes = 0);
-  void CopyMisspellingsToClipboard();
   int CheckTextDefaultAnswer(CheckTextMode Mode);
 
 private:

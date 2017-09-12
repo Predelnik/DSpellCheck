@@ -77,20 +77,20 @@ INT_PTR LangList::run_dlgProc(UINT message, WPARAM wParam, LPARAM) {
   switch (message) {
   case WM_INITDIALOG: {
     HLangList = ::GetDlgItem(_hSelf, IDC_LANGLIST);
-    SendEvent(EID_UPDATE_LANG_LISTS);
+    getSpellChecker ()->ReinitLanguageLists(true);
     return TRUE;
   } break;
   case WM_COMMAND: {
     switch (LOWORD(wParam)) {
     case IDOK:
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendEvent(EID_APPLY_MULTI_LANG_SETTINGS);
+        getSpellChecker ()->applyMultiLangSettings ();
         display(false);
       }
       break;
     case IDCANCEL:
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendEvent(EID_UPDATE_LANG_LISTS); // Reset all settings
+        getSpellChecker ()->ReinitLanguageLists(true); // Reset all settings
         display(false);
       }
       break;

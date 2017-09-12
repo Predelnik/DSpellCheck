@@ -87,7 +87,7 @@ HHOOK HMouseHook = NULL;
 LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
   switch (wParam) {
   case WM_MOUSEMOVE:
-    SendEvent(EID_INIT_SUGGESTIONS_BOX);
+    getSpellChecker()->InitSuggestionsBox();
     break;
   }
   return CallNextHookEx(HMouseHook, nCode, wParam, lParam);
@@ -106,7 +106,7 @@ int GetLangsMenuIdStart() { return LangsMenuIdStart; }
 
 BOOL GetUseAllocatedIds() { return UseAllocatedIds; }
 
-SpellChecker *GetSpellChecker() { return SpellCheckerInstance; }
+SpellChecker *getSpellChecker() { return SpellCheckerInstance; }
 
 
 void GetDefaultHunspellPath_(wchar_t *&Path) {
@@ -173,11 +173,6 @@ void pluginCleanUp() {
   CLEAN_AND_ZERO(ProgressInstance);
 }
 
-void SendEvent(EventId Event) {
-  if (ResourcesInited)
-      SpellCheckerInstance->NotifyEvent(Event);
-}
-
 void RegisterCustomMessages() {
   for (int i = 0; i < static_cast<int>(CustomGUIMessage::MAX); i++) {
     CustomGUIMessageIds[i] = RegisterWindowMessage(CustomGUIMesssagesNames[i]);
@@ -188,7 +183,7 @@ DWORD GetCustomGUIMessageId(CustomGUIMessage MessageId) {
   return CustomGUIMessageIds[static_cast<int>(MessageId)];
 }
 
-void SwitchAutoCheckText() { SendEvent(EID_SWITCH_AUTOCHECK); }
+void SwitchAutoCheckText() { getSpellChecker()->SwitchAutoCheck(); }
 
 void GetSuggestions() {
   // SendEvent (EID_INITSUGGESTIONS);
@@ -206,13 +201,13 @@ void StartAboutDlg() { AboutDlgInstance->DoDialog(); }
 
 void StartLanguageList() { LangListInstance->DoDialog(); }
 
-void LoadSettings() { SendEvent(EID_LOAD_SETTINGS); }
+void LoadSettings() { getSpellChecker()->LoadSettings (); }
 
-void RecheckVisible() { SendEvent(EID_RECHECK_VISIBLE); }
+void RecheckVisible() { getSpellChecker()->RecheckVisible(); }
 
-void FindNextMistake() { SendEvent(EID_FIND_NEXT_MISTAKE); }
+void FindNextMistake() { getSpellChecker ()->FindNextMistake(); }
 
-void FindPrevMistake() { SendEvent(EID_FIND_PREV_MISTAKE); }
+void FindPrevMistake() { getSpellChecker ()->FindPrevMistake(); }
 
 void QuickLangChangeContext() {
   POINT Pos;
@@ -311,7 +306,10 @@ void AddIcons() {
                 (WPARAM)funcItem[0]._cmdID, (LPARAM)AutoCheckIcon);
 }
 
-void UpdateLangsMenu() { SendEvent(EID_UPDATE_LANGS_MENU); }
+void UpdateLangsMenu()
+{
+  getSpellChecker ()->DoPluginMenuInclusion();
+}
 
 HMENU GetDSpellCheckMenu() {
   HMENU PluginsMenu =

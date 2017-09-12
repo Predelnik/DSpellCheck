@@ -431,139 +431,65 @@ void SpellChecker::RecheckVisibleBothViews() {
   HunspellSpeller->SetEncoding(CurrentEncoding);
 }
 
-BOOL WINAPI SpellChecker::NotifyEvent(DWORD Event) {
-  if (Event == EID_KILLTHREAD)
-    return false;
+void SpellChecker::applySettings () {
+  SettingsDlgInstance->GetSimpleDlg()->ApplySettings(this);
+  SettingsDlgInstance->GetAdvancedDlg()->ApplySettings(this);
+  FillDialogs(TRUE);
+  SaveSettings();
+  CheckFileName(); // Cause filters may change
+  RefreshUnderlineStyle();
+  RecheckVisibleBothViews();
+}
 
-  CurrentScintilla =
-      GetScintillaWindow(NppDataInstance); // All operations should be done with
-                                           // current scintilla anyway
+void SpellChecker::applyMultiLangSettings () {
+  LangListInstance->ApplyChoice(this);
+  SaveSettings();
+}
 
-  switch (Event) {
-  case EID_FILL_DIALOGS:
-    FillDialogs();
-    break;
-  case EID_APPLY_SETTINGS:
-    SettingsDlgInstance->GetSimpleDlg()->ApplySettings(this);
-    SettingsDlgInstance->GetAdvancedDlg()->ApplySettings(this);
-    FillDialogs(TRUE);
+void SpellChecker::applyProxySettings () {
+  GetSelectProxy()->ApplyChoice(this);
     SaveSettings();
-    CheckFileName(); // Cause filters may change
-    RefreshUnderlineStyle();
-    RecheckVisibleBothViews();
-    break;
-  case EID_APPLY_MULTI_LANG_SETTINGS:
-    LangListInstance->ApplyChoice(this);
-    SaveSettings();
-    break;
+}
 
-  case EID_APPLY_PROXY_SETTINGS:
-    GetSelectProxy()->ApplyChoice(this);
-    SaveSettings();
-    break;
-
-  case EID_COPY_MISSPELLINGS_TO_CLIPBOARD:
-    CopyMisspellingsToClipboard();
-    break;
-
-  case EID_HIDE_DIALOG:
-    SettingsDlgInstance->display(false);
-    break;
-  case EID_LOAD_SETTINGS:
-    LoadSettings();
-    break;
-  case EID_RECHECK_VISIBLE:
-    RecheckVisible();
-    break;
-  case EID_RECHECK_VISIBLE_BOTH_VIEWS: {
-    RecheckVisibleBothViews();
-  } break;
-  case EID_RECHECK_INTERSECTION:
-    RecheckVisible(TRUE);
-    break;
-  case EID_SWITCH_AUTOCHECK:
-    if (!SettingsLoaded)
-      return FALSE;
-
-    SwitchAutoCheck();
-    break;
-  case EID_KILLTHREAD:
-    return FALSE;
-  case EID_INIT_SUGGESTIONS_BOX:
-    if (SuggestionsMode == SUGGESTIONS_BOX)
-      InitSuggestionsBox();
-    else {
-      /* placeholder */
-    }
-    break;
-  case EID_SHOW_SUGGESTION_MENU:
+void SpellChecker::showSuggestionMenu () {
     FillSuggestionsMenu(SuggestionsInstance->GetPopupMenu());
     SendMessage(SuggestionsInstance->getHSelf(), WM_SHOWANDRECREATEMENU, 0, 0);
-    break;
-  case EID_HIDE_SUGGESTIONS_BOX:
-    HideSuggestionBox();
-    break;
-  case EID_DEFAULT_DELIMITERS:
-    SetDefaultDelimiters();
-    break;
-  case EID_FIND_NEXT_MISTAKE:
-    FindNextMistake();
-    break;
-  case EID_FIND_PREV_MISTAKE:
-    FindPrevMistake();
-    break;
-  case EID_RECHECK_MODIFIED_ZONE:
-    GetLimitsAndRecheckModified();
-    break;
-  case EID_CHECK_FILE_NAME:
-    CheckFileName();
-    break;
-  case EID_FILL_DOWNLOAD_DICS_DIALOG:
+}
+
+
+
+void SpellChecker::fillDownloadDicsDialog () {
     FillDownloadDics();
     GetDownloadDics()->FillFileList();
-    break;
-  case EID_INIT_DOWNLOAD_COMBOBOX:
-    ResetDownloadCombobox();
-    break;
-  case EID_REMOVE_SELECTED_DICS:
-    GetRemoveDics()->RemoveSelected(this);
-    break;
-  case EID_UPDATE_SELECT_PROXY:
+}
+
+void SpellChecker::updateSelectProxy() {
     GetSelectProxy()->SetOptions(UseProxy, ProxyHostName, ProxyUserName,
                                  ProxyPassword, ProxyPort, ProxyAnonymous,
                                  ProxyType);
-    break;
-  case EID_UPDATE_LANG_LISTS:
-    ReinitLanguageLists(TRUE);
-    break;
-  case EID_UPDATE_LANG_LISTS_NO_GUI:
-    ReinitLanguageLists(FALSE);
-    break;
-  case EID_UPDATE_LANGS_MENU:
-    DoPluginMenuInclusion();
-    break;
+}
 
-  case EID_UPDATE_FROM_REMOVE_DICS_OPTIONS:
+void SpellChecker::updateFromRemoveDicsOptions () {
     GetRemoveDics()->UpdateOptions(this);
     SaveSettings();
-    break;
+}
 
-  case EID_UPDATE_REMOVE_DICS_OPTIONS:
-    GetRemoveDics()->SetCheckBoxes(RemoveUserDics, RemoveSystem);
-    break;
+void SpellChecker::updateRemoveDicsOptions () {
+  GetRemoveDics()->SetCheckBoxes(RemoveUserDics, RemoveSystem);
+}
 
-  case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS:
+void SpellChecker::updateFromDownloadDicsOptions () {
+  GetDownloadDics()->UpdateOptions(this);
+  GetDownloadDics()->UpdateListBox();
+  SaveSettings();
+}
+
+void SpellChecker::updateFromDownloadDicsOptionsNoUpdate () {
     GetDownloadDics()->UpdateOptions(this);
-    GetDownloadDics()->UpdateListBox();
     SaveSettings();
-    break;
+}
 
-  case EID_UPDATE_FROM_DOWNLOAD_DICS_OPTIONS_NO_UPDATE:
-    GetDownloadDics()->UpdateOptions(this);
-    SaveSettings();
-    break;
-
-  case EID_LIB_CHANGE:
+void SpellChecker::libChange () {
     SettingsDlgInstance->GetSimpleDlg()->ApplyLibChange(this);
     SettingsDlgInstance->GetSimpleDlg()->FillLibInfo(
         AspellSpeller->IsWorking()
@@ -572,27 +498,11 @@ BOOL WINAPI SpellChecker::NotifyEvent(DWORD Event) {
         AspellPath, HunspellPath, AdditionalHunspellPath);
     RecheckVisibleBothViews();
     SaveSettings();
-    break;
+}
 
-  case EID_LANG_CHANGE: {
+void SpellChecker::langChange () {
     Lexer = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLEXER);
     RecheckVisible();
-  } break;
-
-  case EID_HIDE_DOWNLOAD_DICS: // TODO: Make it async, though it's really hard
-    GetDownloadDics()->display(false);
-    break;
-
-  case EID_SHOW_SELECT_PROXY:
-    GetSelectProxy()->display();
-    break;
-    /*
-    case EID_APPLYMENUACTION:
-    ApplyMenuActions ();
-    break;
-    */
-  }
-  return TRUE;
 }
 
 void SpellChecker::SetRemoveUserDics(BOOL Value) { RemoveUserDics = Value; }
@@ -1832,6 +1742,8 @@ void SpellChecker::SetSuggestionsBoxTransparency() {
 }
 
 void SpellChecker::InitSuggestionsBox() {
+  if (!SuggestionsMode == SUGGESTIONS_BOX)
+      return;
   if (!CurrentSpeller->IsWorking())
     return;
   POINT p;
@@ -2970,6 +2882,8 @@ void SpellChecker::setEncodingById(int EncId) {
 }
 
 void SpellChecker::SwitchAutoCheck() {
+  if (!SettingsLoaded)
+    return;
   AutoCheckText = !AutoCheckText;
   UpdateAutocheckStatus();
   RecheckVisibleBothViews();
@@ -3042,7 +2956,7 @@ void SpellChecker::ErrorMsgBox(const wchar_t *message) {
              MB_OK | MB_ICONSTOP);
 }
 
-void SpellChecker::CopyMisspellingsToClipboard() {
+void SpellChecker::copyMisspellingsToClipboard() {
   auto lengthDoc =
       (SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLENGTH) + 1);
 

@@ -111,7 +111,7 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
   case WM_LBUTTONUP:
     if (!StatePressed)
       return FALSE;
-    SendEvent(EID_SHOW_SUGGESTION_MENU);
+    getSpellChecker()->showSuggestionMenu();
     return FALSE;
 
   case WM_MOUSEWHEEL:
@@ -161,7 +161,6 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
     MenuResult = TrackPopupMenuEx(PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
                                   p.x, p.y, _hSelf, &TPMParams);
     PostMessage(NppDataInstance._nppHandle, WM_NULL, 0, 0);
-    SendEvent(EID_APPLYMENUACTION);
     SetFocus(GetScintillaWindow(&NppDataInstance));
     StateMenu = FALSE;
     DestroyMenu(PopupMenu);
@@ -170,7 +169,7 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
 
   case WM_COMMAND:
     if (HIWORD(wParam) == 0)
-      GetSpellChecker()->ProcessMenuResult(wParam);
+      getSpellChecker()->ProcessMenuResult(wParam);
 
     return FALSE;
 

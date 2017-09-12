@@ -59,7 +59,7 @@ void SetRecheckDelay(int Value, int WriteToIni) {
     x.first = 0;
     SetString(x.first, L"Recheck_Delay");
     x.second = MAKELPARAM(Value, 500);
-    GetSpellChecker()->WriteSetting(x);
+    getSpellChecker()->WriteSetting(x);
   }
   RecheckDelay = Value;
 }
@@ -120,19 +120,19 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   case WM_COMMAND:
     if (HIWORD(wParam) == 0) {
       if (!GetUseAllocatedIds())
-        GetSpellChecker()->ProcessMenuResult (wParam);
+        getSpellChecker()->ProcessMenuResult (wParam);
 
       if (LOWORD(wParam) == IDM_FILE_PRINTNOW ||
           LOWORD(wParam) == IDM_FILE_PRINT) {
-        BOOL AutoCheckDisabledWhilePrinting = GetSpellChecker()->getAutoCheckText ();
+        BOOL AutoCheckDisabledWhilePrinting = getSpellChecker()->getAutoCheckText ();
 
         if (AutoCheckDisabledWhilePrinting)
-          SendEvent(EID_SWITCH_AUTOCHECK);
+          getSpellChecker()->SwitchAutoCheck();
 
         ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
 
         if (AutoCheckDisabledWhilePrinting)
-          SendEvent(EID_SWITCH_AUTOCHECK);
+          getSpellChecker()->SwitchAutoCheck();
 
         return ret;
       }
@@ -147,10 +147,10 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   case WM_CONTEXTMENU:
     LastHwnd = wParam;
     LastCoords = lParam;
-    GetSpellChecker()->precalculateMenu();
+    getSpellChecker()->precalculateMenu();
     return TRUE;
   case WM_DISPLAYCHANGE: {
-    SendEvent(EID_HIDE_SUGGESTIONS_BOX);
+    getSpellChecker()->HideSuggestionBox();
   } break;
   }
 
@@ -196,7 +196,7 @@ void WINAPI doRecheck(HWND, UINT, UINT_PTR, DWORD) {
     SetTimer (nppData._nppHandle,  recheckTimer, USER_TIMER_MAXIMUM, doRecheck);
   recheckDone = true;
 
-  SendEvent(EID_RECHECK_VISIBLE);
+  getSpellChecker()->RecheckVisible();
   if (!firstRestyle)
     restylingCausedRecheckWasDone = true;
   firstRestyle = false;
@@ -215,7 +215,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
   */
   switch (notifyCode->nmhdr.code) {
   case NPPN_SHUTDOWN: {
-    SendEvent(EID_KILLTHREAD);
     MSG msg;
     while (PeekMessage(&msg, NULL, WM_USER, 0xFFFF,
                        PM_REMOVE)) // Clearing message queue to make sure that
@@ -239,19 +238,19 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     InitClasses();
     CheckQueue.clear();
     LoadSettings();
-    SendEvent(EID_CHECK_FILE_NAME);
+    getSpellChecker ()->CheckFileName();
     CreateHooks();
     recheckTimer = SetTimer (nppData._nppHandle, 0, USER_TIMER_MAXIMUM , doRecheck);
     uiTimer = SetTimer (nppData._nppHandle,  0, 100, uiUpdate);
-    SendEvent(EID_RECHECK_VISIBLE_BOTH_VIEWS);
+    getSpellChecker()->RecheckVisibleBothViews();
     restylingCausedRecheckWasDone = false;
-    GetSpellChecker()->SetSuggestionsBoxTransparency();
-    SendEvent(EID_UPDATE_LANG_LISTS_NO_GUI); // To update quick lang change menu
+    getSpellChecker()->SetSuggestionsBoxTransparency();
+    getSpellChecker()->ReinitLanguageLists(false); // To update quick lang change menu
     UpdateLangsMenu();
   } break;
 
   case NPPN_BUFFERACTIVATED: {
-    SendEvent(EID_CHECK_FILE_NAME);
+    getSpellChecker ()->CheckFileName();
     // SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     RecheckVisible();
     restylingCausedRecheckWasDone = false;
@@ -261,17 +260,17 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     if (notifyCode->updated & (SC_UPDATE_CONTENT) && (recheckDone || firstRestyle) &&
         !restylingCausedRecheckWasDone ) // If restyling wasn't caused by user input...
     {
-      SendEvent(EID_RECHECK_VISIBLE);
+      getSpellChecker()->RecheckVisible();
       if (!firstRestyle)
         restylingCausedRecheckWasDone = true;
     } else if (notifyCode->updated &
                    (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) &&
                recheckDone) // If scroll wasn't caused by user input...
     {
-      SendEvent(EID_RECHECK_INTERSECTION);
+      getSpellChecker()->RecheckVisible(true);
       restylingCausedRecheckWasDone = false;
     }
-    SendEvent(EID_HIDE_SUGGESTIONS_BOX);
+    getSpellChecker()->HideSuggestionBox();
     break;
 
   case SCN_MODIFIED:
@@ -295,7 +294,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     break;
 
   case NPPN_LANGCHANGED: {
-    SendEvent(EID_LANG_CHANGE);
+    getSpellChecker()->langChange();
   } break;
 
   case NPPN_TBMODIFICATION: {
@@ -349,12 +348,12 @@ extern "C" __declspec(dllexport) LRESULT
     messageProc(UINT Message, WPARAM wParam, LPARAM /*lParam*/) {
   switch (Message) {
   case WM_MOVE:
-    SendEvent(EID_HIDE_SUGGESTIONS_BOX);
+    getSpellChecker()->HideSuggestionBox();
     return FALSE;
   case WM_COMMAND: {
     if (HIWORD(wParam) == 0 && GetUseAllocatedIds()) {
       InitNeededDialogs(wParam);
-      GetSpellChecker()->ProcessMenuResult (wParam);
+      getSpellChecker()->ProcessMenuResult (wParam);
     }
   } break;
   }

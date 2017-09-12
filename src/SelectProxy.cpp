@@ -121,20 +121,20 @@ INT_PTR SelectProxy::run_dlgProc(UINT message, WPARAM wParam,
     HProxyType = ::GetDlgItem(_hSelf, IDC_PROXY_TYPE);
     ComboBox_AddString(HProxyType, L"FTP Web Proxy");
     ComboBox_AddString(HProxyType, L"FTP Gateway");
-    SendEvent(EID_UPDATE_SELECT_PROXY);
+    getSpellChecker ()->updateSelectProxy();
     return TRUE;
   } break;
   case WM_COMMAND: {
     switch (LOWORD(wParam)) {
     case IDOK:
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendEvent(EID_APPLY_PROXY_SETTINGS);
+        getSpellChecker()->applyProxySettings ();
         display(false);
       }
       break;
     case IDCANCEL:
       if (HIWORD(wParam) == BN_CLICKED) {
-        SendEvent(EID_UPDATE_SELECT_PROXY); // Reset all settings
+        getSpellChecker ()->updateSelectProxy(); // Reset all settings
         display(false);
       }
       break;
