@@ -44,7 +44,7 @@ INT_PTR ProgressDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
     HDescBottom = GetDlgItem(_hSelf, IDC_DESCBOTTOM);
     HProgressBar = GetDlgItem(_hSelf, IDC_PROGRESSBAR);
     SendMessage(HProgressBar, PBM_SETRANGE, 0, (LPARAM)MAKELONG(0, 100));
-    return TRUE;
+    return true;
   } break;
   case WM_COMMAND:
     switch (LOWORD(wParam)) {
@@ -56,7 +56,7 @@ INT_PTR ProgressDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/)
     };
     break;
   };
-  return FALSE;
+  return false;
 }
 
 

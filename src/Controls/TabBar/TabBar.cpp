@@ -204,7 +204,7 @@ void TabBar::reSizeTo(RECT & rc2Ajust)
   TabCtrl_GetItemRect(_hSelf, 0, &RowRect);
   if (_isTraditional)
   {
-    TabCtrl_AdjustRect(_hSelf, FALSE, &rc2Ajust);
+    TabCtrl_AdjustRect(_hSelf, false, &rc2Ajust);
   }
   else if (_isVertical)
   {
@@ -322,7 +322,7 @@ void TabBarPlus::doOwnerDrawTab()
         style &= ~TCS_OWNERDRAWFIXED;
 
       ::SetWindowLongPtr(_hwndArray[i], GWL_STYLE, style);
-      ::InvalidateRect(_hwndArray[i], NULL, TRUE);
+      ::InvalidateRect(_hwndArray[i], NULL, true);
 
       const int base = 6;
       ::SendMessage(_hwndArray[i], TCM_SETPADDING, 0, MAKELPARAM(_drawTabCloseButton?base+3:base, 0));
@@ -392,9 +392,9 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
       _isMultiLine = ((style & TCS_MULTILINE) != 0);
 
       ::SetWindowLongPtr(hwnd, GWL_STYLE, style);
-      ::InvalidateRect(hwnd, NULL, TRUE);
+      ::InvalidateRect(hwnd, NULL, true);
 
-      return TRUE;
+      return true;
     }
 
   case WM_LBUTTONDOWN :
@@ -408,7 +408,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
         {
           _whichCloseClickDown = getTabIndexAt(xPos, yPos);
           ::SendMessage(_hParent, WM_COMMAND, IDM_VIEW_REFRESHTABAR, 0);
-          return TRUE;
+          return true;
         }
       }
 
@@ -416,7 +416,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
       int currentTabOn = static_cast<int> (::SendMessage(_hSelf, TCM_GETCURSEL, 0, 0));
 
       if (wParam == 2)
-        return TRUE;
+        return true;
 
       if (_doDragNDrop)
       {
@@ -442,12 +442,12 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
       ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
 
-      return TRUE;
+      return true;
     }
   case WM_RBUTTONDOWN :	//rightclick selects tab aswell
     {
       ::CallWindowProc(_tabBarDefaultProc, hwnd, WM_LBUTTONDOWN, wParam, lParam);
-      return TRUE;
+      return true;
     }
     //#define NPPM_INTERNAL_ISDRAGGING 40926
   case WM_MOUSEMOVE :
@@ -469,7 +469,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
         draggingCursor(_draggingPoint);
         //::SendMessage(h, NPPM_INTERNAL_ISDRAGGING, 0, 0);
-        return TRUE;
+        return true;
       }
 
       if (_drawTabCloseButton)
@@ -494,8 +494,8 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
           if (oldVal != _isCloseHover)
           {
-            InvalidateRect(hwnd, &oldRect, FALSE);
-            InvalidateRect(hwnd, &_currentHoverTabRect, FALSE);
+            InvalidateRect(hwnd, &oldRect, false);
+            InvalidateRect(hwnd, &_currentHoverTabRect, false);
           }
         }
       }
@@ -523,7 +523,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
         nmhdr.tabOrigin = currentTabOn;
 
         ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
-        return TRUE;
+        return true;
       }
 
       if (_drawTabCloseButton)
@@ -539,7 +539,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
           ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
 
           _whichCloseClickDown = -1;
-          return TRUE;
+          return true;
         }
         _whichCloseClickDown = -1;
       }
@@ -552,7 +552,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
       if (_isDragging)
       {
         _isDragging = false;
-        return TRUE;
+        return true;
       }
       break;
     }
@@ -560,14 +560,14 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
   case WM_DRAWITEM :
     {
       drawItem((DRAWITEMSTRUCT *)lParam);
-      return TRUE;
+      return true;
     }
 
   case WM_KEYDOWN :
     {
       if (wParam == VK_LCONTROL)
         ::SetCursor(::LoadCursor(_hInst, MAKEINTRESOURCE(IDC_DRAG_PLUS_TAB)));
-      return TRUE;
+      return true;
     }
 
   case WM_MBUTTONUP:
@@ -582,7 +582,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
       nmhdr.tabOrigin = currentTabOn;
 
       ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
-      return TRUE;
+      return true;
     }
 
   case WM_LBUTTONDBLCLK :
@@ -600,7 +600,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
         ::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&nmhdr));
       }
-      return TRUE;
+      return true;
     }
   }
   return ::CallWindowProc(_tabBarDefaultProc, hwnd, Message, wParam, lParam);

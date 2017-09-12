@@ -42,7 +42,7 @@ UINT_PTR recheckTimer = 0u;
 bool recheckDone = true;
 WNDPROC wndProcNotepad = NULL;
 bool restylingCausedRecheckWasDone =
-    FALSE; // Hack to avoid eternal cycle in case of scintilla bug
+    false; // Hack to avoid eternal cycle in case of scintilla bug
 bool firstRestyle = true; // hack to successfully avoid checking hyperlinks when they appear on program start
 
 int GetRecheckDelay() { return RecheckDelay; }
@@ -64,7 +64,7 @@ void SetRecheckDelay(int Value, int WriteToIni) {
   RecheckDelay = Value;
 }
 
-BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID) {
+bool APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID) {
   HModule = hModule;
 
   switch (reasonForCall) {
@@ -83,7 +83,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID) {
     break;
   }
 
-  return TRUE;
+  return true;
 }
 WPARAM LastHwnd = NULL;
 LPARAM LastCoords = 0;
@@ -104,7 +104,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
       MENUITEMINFO FileMenuItem;
       FileMenuItem.cbSize = sizeof(MENUITEMINFO);
       FileMenuItem.fMask = MIIM_SUBMENU;
-      GetMenuItemInfo(MainMenu, 0, TRUE, &FileMenuItem);
+      GetMenuItemInfo(MainMenu, 0, true, &FileMenuItem);
 
       HMENU Menu = (HMENU)wParam;
       if (FileMenuItem.hSubMenu != Menu && GetLangsSubMenu() != Menu) {
@@ -124,7 +124,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
 
       if (LOWORD(wParam) == IDM_FILE_PRINTNOW ||
           LOWORD(wParam) == IDM_FILE_PRINT) {
-        BOOL AutoCheckDisabledWhilePrinting = getSpellChecker()->getAutoCheckText ();
+        bool AutoCheckDisabledWhilePrinting = getSpellChecker()->getAutoCheckText ();
 
         if (AutoCheckDisabledWhilePrinting)
           getSpellChecker()->SwitchAutoCheck();
@@ -148,7 +148,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
     LastHwnd = wParam;
     LastCoords = lParam;
     getSpellChecker()->precalculateMenu();
-    return TRUE;
+    return true;
   case WM_DISPLAYCHANGE: {
     getSpellChecker()->HideSuggestionBox();
   } break;
@@ -158,10 +158,10 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
     if (Message == GetCustomGUIMessageId (CustomGUIMessage::GENERIC_CALLBACK)) {
         const auto callbackPtr = std::unique_ptr<CallbackData> (reinterpret_cast<CallbackData *> (wParam));
         if (callbackPtr->aliveStatus.expired())
-            return FALSE;
+            return false;
 
        callbackPtr->callback ();
-       return TRUE;
+       return true;
     }
   }
   ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
@@ -349,7 +349,7 @@ extern "C" __declspec(dllexport) LRESULT
   switch (Message) {
   case WM_MOVE:
     getSpellChecker()->HideSuggestionBox();
-    return FALSE;
+    return false;
   case WM_COMMAND: {
     if (HIWORD(wParam) == 0 && GetUseAllocatedIds()) {
       InitNeededDialogs(wParam);
@@ -358,7 +358,7 @@ extern "C" __declspec(dllexport) LRESULT
   } break;
   }
 
-  return FALSE;
+  return false;
 }
 
 #ifdef UNICODE

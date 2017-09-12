@@ -99,9 +99,9 @@ public:
     void RemoveTimer();
     void OnDisplayAction();
     void IndicateThatSavingMightBeNeeded();
-    void SetOptions(BOOL ShowOnlyKnown, BOOL InstallSystem);
+    void SetOptions(bool ShowOnlyKnown, bool InstallSystem);
     void UpdateOptions(SpellChecker* spellchecker);
-    void SetCancelPressed(BOOL Value);
+    void SetCancelPressed(bool Value);
     void Refresh();
     LRESULT AskReplacementMessage(wchar_t* DicName);
     bool prepareDownloading();

@@ -48,10 +48,10 @@ HWND RemoveDics::GetListBox() { return HLangList; }
 
 void RemoveDics::RemoveSelected(SpellChecker *SpellCheckerInstance) {
   int Count = 0;
-  BOOL Success = FALSE;
-  BOOL NeedSingleReset = FALSE;
-  BOOL NeedMultiReset = FALSE;
-  BOOL SingleTemp, MultiTemp;
+  bool Success = false;
+  bool NeedSingleReset = false;
+  bool NeedMultiReset = false;
+  bool SingleTemp, MultiTemp;
   for (int i = 0; i < ListBox_GetCount(HLangList); i++) {
     if (CheckedListBox_GetCheckState(HLangList, i) == BST_CHECKED) {
       wchar_t FileName[MAX_PATH];
@@ -89,8 +89,8 @@ void RemoveDics::RemoveSelected(SpellChecker *SpellCheckerInstance) {
   for (int i = 0; i < ListBox_GetCount(HLangList); i++)
     CheckedListBox_SetCheckState(HLangList, i, BST_UNCHECKED);
   if (Count > 0) {
-    SpellCheckerInstance->HunspellReinitSettings(TRUE);
-    SpellCheckerInstance->ReinitLanguageLists(TRUE);
+    SpellCheckerInstance->HunspellReinitSettings(true);
+    SpellCheckerInstance->ReinitLanguageLists(true);
     SpellCheckerInstance->DoPluginMenuInclusion();
     SpellCheckerInstance->RecheckVisibleBothViews();
     /*
@@ -112,7 +112,7 @@ void RemoveDics::UpdateOptions(SpellChecker *SpellCheckerInstance) {
                                         BST_CHECKED);
 }
 
-void RemoveDics::SetCheckBoxes(BOOL RemoveUserDics, BOOL RemoveSystem) {
+void RemoveDics::SetCheckBoxes(bool RemoveUserDics, bool RemoveSystem) {
   Button_SetCheck(HRemoveUserDics,
                   RemoveUserDics ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
@@ -127,7 +127,7 @@ INT_PTR RemoveDics::run_dlgProc(UINT message, WPARAM wParam,
     HRemoveSystem = ::GetDlgItem(_hSelf, IDC_REMOVE_SYSTEM);
     getSpellChecker ()->ReinitLanguageLists(true);
     getSpellChecker ()->updateRemoveDicsOptions();
-    return TRUE;
+    return true;
   } break;
   case WM_COMMAND: {
     switch (LOWORD(wParam)) {
@@ -154,5 +154,5 @@ INT_PTR RemoveDics::run_dlgProc(UINT message, WPARAM wParam,
     }
   } break;
   };
-  return FALSE;
+  return false;
 }

@@ -68,7 +68,7 @@ std::vector<wchar_t *> *AspellInterface::GetLanguageList ()
 
   dels = aspell_dict_info_list_elements(dlist);
 
-  if (aspell_dict_info_enumeration_at_end(dels) == TRUE)
+  if (aspell_dict_info_enumeration_at_end(dels))
   {
     delete_aspell_dict_info_enumeration(dels);
     return 0;
@@ -85,7 +85,7 @@ std::vector<wchar_t *> *AspellInterface::GetLanguageList ()
   return Names;
 }
 
-BOOL AspellInterface::IsWorking ()
+bool AspellInterface::IsWorking ()
 {
   return AspellLoaded;
 }
@@ -228,13 +228,13 @@ void AspellInterface::IgnoreAll (char *Word)
     CLEAN_AND_ZERO_ARR (TargetWord);
 }
 
-BOOL AspellInterface::CheckWord (char *Word)
+bool AspellInterface::CheckWord (char *Word)
 {
   if (!AspellLoaded)
-    return TRUE;
+    return true;
 
   char *DstWord = 0;
-  BOOL res = FALSE;
+  bool res = false;
   if (CurrentEncoding == ENCODING_UTF8)
     DstWord = Word;
   else
@@ -244,14 +244,14 @@ BOOL AspellInterface::CheckWord (char *Word)
   if (!MultiMode)
   {
     if (!SingularSpeller)
-      return TRUE;
+      return true;
 
     res = aspell_speller_check(SingularSpeller, DstWord, Len);
   }
   else
   {
     if (!Spellers || Spellers->size () == 0)
-      return TRUE;
+      return true;
 
     for (int i = 0; i < (int )Spellers->size () && !res; i++)
     {
@@ -264,7 +264,7 @@ BOOL AspellInterface::CheckWord (char *Word)
   return res;
 }
 
-BOOL AspellInterface::Init (wchar_t *PathArg)
+bool AspellInterface::Init (wchar_t *PathArg)
 {
   return (AspellLoaded = LoadAspell (PathArg));
 }

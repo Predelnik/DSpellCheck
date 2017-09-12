@@ -31,14 +31,14 @@ public:
   void SetLanguage(wchar_t *Lang) override;
   void SetMultipleLanguages(
       std::vector<wchar_t *> *List) override; // Languages are from LangList
-  BOOL
+  bool
   CheckWord(char *Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
-  BOOL IsWorking() override;
+  bool IsWorking() override;
   std::vector<char *> *GetSuggestions(char *Word) override;
   void AddToDictionary(char *Word) override;
   void IgnoreAll(char *Word) override;
 
-  BOOL Init(wchar_t *PathArg);
+  bool Init(wchar_t *PathArg);
 
 private:
   void SendAspellErorr(AspellCanHaveError *Error);
@@ -48,6 +48,6 @@ private:
   AspellSpeller *LastSelectedSpeller;
   AspellSpeller *SingularSpeller;
   std::vector<AspellSpeller *> *Spellers;
-  BOOL AspellLoaded;
+  bool AspellLoaded;
   HWND NppWindow; // For message boxes
 };

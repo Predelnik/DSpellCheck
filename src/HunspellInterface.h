@@ -56,8 +56,8 @@ public:
   __override virtual void SetLanguage(wchar_t *Lang);
   __override virtual void SetMultipleLanguages(
       std::vector<wchar_t *> *List);             // Languages are from LangList
-  __override virtual BOOL CheckWord(char *Word); // Word in Utf-8 or ANSI
-  __override virtual BOOL IsWorking();
+  __override virtual bool CheckWord(char *Word); // Word in Utf-8 or ANSI
+  __override virtual bool IsWorking();
   __override virtual std::vector<char *> *GetSuggestions(char *Word);
   __override virtual void AddToDictionary(char *Word);
   __override virtual void IgnoreAll(char *Word);
@@ -66,20 +66,20 @@ public:
   void SetAdditionalDirectory(wchar_t *Dir);
   void WriteUserDic(WordSet *Target, wchar_t *Path);
   void ReadUserDic(WordSet *Target, wchar_t *Path);
-  void SetUseOneDic(BOOL Value);
-  void UpdateOnDicRemoval(wchar_t *Path, BOOL &NeedSingleLangReset,
-                          BOOL &NeedMultiLangReset);
-  BOOL GetLangOnlySystem(wchar_t *Lang);
+  void SetUseOneDic(bool Value);
+  void UpdateOnDicRemoval(wchar_t *Path, bool &NeedSingleLangReset,
+                          bool &NeedMultiLangReset);
+  bool GetLangOnlySystem(wchar_t *Lang);
 
 private:
   DicInfo CreateHunspell(wchar_t *Name, int Type);
-  BOOL SpellerCheckWord(DicInfo Dic, char *Word, EncodingType Encoding);
+  bool SpellerCheckWord(DicInfo Dic, char *Word, EncodingType Encoding);
   void MessageBoxWordCannotBeAdded();
 
 public:
 private:
-  BOOL IsHunspellWorking;
-  BOOL UseOneDic;
+  bool IsHunspellWorking;
+  bool UseOneDic;
   wchar_t *DicDir;
   wchar_t *SysDicDir;
   std::set<AvailableLangInfo> *DicList;
@@ -91,7 +91,7 @@ private:
   std::vector<DicInfo> *Spellers;
   WordSet *Memorized;
   WordSet *Ignored;
-  BOOL InitialReadingBeenDone;
+  bool InitialReadingBeenDone;
   char *TemporaryBuffer;
   wchar_t *UserDicPath;        // For now only default one.
   wchar_t *SystemWrongDicPath; // Only for reading and then removing

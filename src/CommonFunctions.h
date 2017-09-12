@@ -54,7 +54,7 @@ auto cpyBufSUtf8 (const V *str) {
 void SetStringDUtf8(char *&Target, const char *Str);
 void SetStringDUtf8(char *&Target, const wchar_t *Str);
 
-BOOL SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName);
+bool SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName);
 
 void SetParsedString(wchar_t *&Dest, wchar_t *Source);
 
@@ -68,8 +68,8 @@ char *Utf8strtok(char *s1, const char *Delimit, char **Context);
 char *Utf8Inc(const char *string);
 char *Utf8pbrk(const char *s, const char *set);
 size_t Utf8Length(const char *String);
-BOOL Utf8IsLead(char c);
-BOOL Utf8IsCont(char c);
+bool Utf8IsLead(char c);
+bool Utf8IsCont(char c);
 
 bool SortCompare(wchar_t *a, wchar_t *b);
 bool Equivwchar_tStrings(wchar_t *a, wchar_t *b);
@@ -78,7 +78,7 @@ bool EquivCharStrings(char *a, char *b);
 size_t HashCharString(char *a);
 bool SortCompareChars(char *a, char *b);
 
-BOOL CheckForDirectoryExistence(const wchar_t* PathArg, BOOL Silent = TRUE,
+bool CheckForDirectoryExistence(const wchar_t* PathArg, bool Silent = true,
                                 HWND NppWindow = 0);
 wchar_t *GetLastSlashPosition(wchar_t *Path);
 

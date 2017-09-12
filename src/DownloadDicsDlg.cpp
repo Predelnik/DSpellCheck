@@ -112,7 +112,7 @@ bool DownloadDicsDlg::prepareDownloading() {
     m_toDownload.clear();
 
     // If path isn't exist we're gonna try to create it else it's finish
-    if (!CheckForDirectoryExistence(getTempPath().c_str(), FALSE, _hParent)) {
+    if (!CheckForDirectoryExistence(getTempPath().c_str(), false, _hParent)) {
         MessageBox(
             _hParent, L"Path defined as temporary dir doesn't exist and couldn't "
             L"be created, probably one of subdirectories have limited "
@@ -120,7 +120,7 @@ bool DownloadDicsDlg::prepareDownloading() {
             L"Temporary Path is Broken", MB_OK | MB_ICONEXCLAMATION);
         return false;
     }
-    CancelPressed = FALSE;
+    CancelPressed = false;
     ProgressDlg* p = getProgress();
     p->getProgressData()->set(0, L"");
     getProgress()->update();
@@ -175,8 +175,8 @@ void DownloadDicsDlg::finalizeDownloading() {
     for (int i = 0; i < ListBox_GetCount(HFileList); i++)
         CheckedListBox_SetCheckState(HFileList, i, BST_UNCHECKED);
     SpellCheckerInstance->HunspellReinitSettings(
-        TRUE); // Calling the update for Hunspell dictionary list
-    SpellCheckerInstance->ReinitLanguageLists(TRUE);
+        true); // Calling the update for Hunspell dictionary list
+    SpellCheckerInstance->ReinitLanguageLists(true);
     SpellCheckerInstance->DoPluginMenuInclusion();
     SpellCheckerInstance->RecheckVisibleBothViews();
 }
@@ -191,8 +191,8 @@ void DownloadDicsDlg::onFileDownloaded() {
     wchar_t* DicFileName = 0;
     wchar_t DicFileLocalPath[MAX_PATH];
     wchar_t HunspellDicPath[MAX_PATH];
-    BOOL IsAffFile = FALSE;
-    BOOL IsDicFile = FALSE;
+    bool IsAffFile = false;
+    bool IsDicFile = false;
     unz_file_info FInfo;
     char FileCopyBuf[(BUF_SIZE_FOR_COPY)];
     wchar_t ProgMessage[DEFAULT_BUF_SIZE];
@@ -210,13 +210,13 @@ void DownloadDicsDlg::onFileDownloaded() {
                             ".aff") == 0);
         IsDicFile = (strcmp(DicFileNameANSI + strlen(DicFileNameANSI) - 4,
                             ".dic") == 0);
-        BOOL CleanArr = TRUE;
+        bool CleanArr = true;
         if (IsAffFile || IsDicFile) {
             DicFileNameANSI[strlen(DicFileNameANSI) - 4] = '\0';
 
             if (FilesFound.find(DicFileNameANSI) == FilesFound.end()) {
                 FilesFound[DicFileNameANSI] = 0;
-                CleanArr = FALSE;
+                CleanArr = false;
             }
 
             it = FilesFound.find(DicFileNameANSI);
@@ -289,13 +289,13 @@ void DownloadDicsDlg::onFileDownloaded() {
             wcscat(HunspellDicPath, L"\\");
             wcscat(HunspellDicPath, DicFileName);
             wcscat(HunspellDicPath, L".aff");
-            BOOL Confirmation = TRUE;
-            BOOL ReplaceQuestionWasAsked = FALSE;
+            bool Confirmation = true;
+            bool ReplaceQuestionWasAsked = false;
             if (PathFileExists(HunspellDicPath)) {
                 auto Answer = AskReplacementMessage(DicFileName);
-                ReplaceQuestionWasAsked = TRUE;
+                ReplaceQuestionWasAsked = true;
                 if (Answer == IDNO) {
-                    Confirmation = FALSE;
+                    Confirmation = false;
                     SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
                     DeleteFile(DicFileLocalPath);
                 }
@@ -326,7 +326,7 @@ void DownloadDicsDlg::onFileDownloaded() {
                 if (Res) {
                     SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
                     DeleteFile(DicFileLocalPath);
-                    Confirmation = FALSE;
+                    Confirmation = false;
                 }
                 else {
                     SetFileAttributes(HunspellDicPath, FILE_ATTRIBUTE_NORMAL);
@@ -463,7 +463,7 @@ public:
     }
 };
 
-void DownloadDicsDlg::SetCancelPressed(BOOL Value) {
+void DownloadDicsDlg::SetCancelPressed(bool Value) {
     CancelPressed = Value;
     ftpOperationTask->cancel();
     m_cur = m_toDownload.end();
@@ -758,7 +758,7 @@ void DownloadDicsDlg::onNewFileList(const std::vector<std::wstring>& list) {
         SpellCheckerInstance->addUserServer(*currentAddress());
     }
     updateStatus(L"Status: List of available files was successfully loaded", COLOR_OK);
-    EnableWindow(HInstallSelected, TRUE);
+    EnableWindow(HInstallSelected, true);
 }
 
 void DownloadDicsDlg::processFileListError(FtpOperationErrorType error) {
@@ -793,7 +793,7 @@ void DownloadDicsDlg::processFileListError(const FtpWebOperationError& error) {
 }
 
 void DownloadDicsDlg::prepareFileListUpdate() {
-    EnableWindow(HInstallSelected, FALSE);
+    EnableWindow(HInstallSelected, false);
     StatusColor = COLOR_NEUTRAL;
     Static_SetText(HStatus, L"Status: Loading...");
     ListBox_ResetContent(HFileList);
@@ -897,7 +897,7 @@ void DownloadDicsDlg::RemoveTimer() {
     Timer = 0;
 }
 
-void DownloadDicsDlg::SetOptions(BOOL ShowOnlyKnown, BOOL InstallSystem) {
+void DownloadDicsDlg::SetOptions(bool ShowOnlyKnown, bool InstallSystem) {
     Button_SetCheck(HShowOnlyKnown, ShowOnlyKnown ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(HInstallSystem, InstallSystem ? BST_CHECKED : BST_UNCHECKED);
 }
@@ -908,7 +908,7 @@ void DownloadDicsDlg::UpdateOptions(SpellChecker* spellchecker) {
         BST_CHECKED);
 }
 
-void DownloadDicsDlg::Refresh() { ReinitServer(this, FALSE); }
+void DownloadDicsDlg::Refresh() { ReinitServer(this, false); }
 
 INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
                                      LPARAM lParam) {
@@ -928,7 +928,7 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
             getSpellChecker ()->ResetDownloadCombobox();
             getSpellChecker ()->fillDownloadDicsDialog();
             DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-            return TRUE;
+            return true;
         }
         break;
     case WM_COMMAND:
@@ -958,7 +958,7 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
                 }
                 else if (HIWORD(wParam) == CBN_SELCHANGE) {
                     getSpellChecker ()->updateFromDownloadDicsOptionsNoUpdate();
-                    ReinitServer(this, FALSE);
+                    ReinitServer(this, false);
                     CheckIfSavingIsNeeded = 0;
                 }
                 break;
@@ -998,5 +998,5 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
         DeleteObject(DefaultBrush);
         break;
     };
-    return FALSE;
+    return false;
 }

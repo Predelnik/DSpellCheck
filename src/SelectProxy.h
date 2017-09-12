@@ -26,8 +26,8 @@ class SelectProxy : public StaticDialog {
 public:
   void DoDialog();
   void ApplyChoice(SpellChecker *SpellCheckerInstance);
-  void SetOptions(BOOL UseProxy, wchar_t *HostName, wchar_t *UserName,
-                  wchar_t *Password, int Port, BOOL ProxyAnonymous,
+  void SetOptions(bool UseProxy, wchar_t *HostName, wchar_t *UserName,
+                  wchar_t *Password, int Port, bool ProxyAnonymous,
                   int ProxyType);
 
 protected:

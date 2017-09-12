@@ -35,7 +35,7 @@ void Suggestions::DoDialog() {
   SetFocus(Temp);
 }
 
-BOOL RegMsg(HWND hWnd, DWORD dwMsgType) {
+bool RegMsg(HWND hWnd, DWORD dwMsgType) {
   TRACKMOUSEEVENT tmeEventTrack; // tracking information
 
   tmeEventTrack.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -56,10 +56,10 @@ BOOL RegMsg(HWND hWnd, DWORD dwMsgType) {
     swprintf(szError, L"Can't TrackMouseEvent ! ErrorId: %d", GetLastError());
     MessageBox(hWnd, szError, L"Error", MB_OK | MB_ICONSTOP);
 
-    return FALSE;
+    return false;
   }
 
-  return TRUE;
+  return true;
 }
 
 HMENU Suggestions::GetPopupMenu() { return PopupMenu; }
@@ -67,9 +67,9 @@ HMENU Suggestions::GetPopupMenu() { return PopupMenu; }
 int Suggestions::GetResult() { return MenuResult; }
 
 Suggestions::Suggestions() {
-  StatePressed = FALSE;
-  StateHovered = FALSE;
-  StateMenu = FALSE;
+  StatePressed = false;
+  StateHovered = false;
+  StateMenu = false;
 }
 
 void Suggestions::initDlg(HINSTANCE hInst, HWND Parent, NppData nppData) {
@@ -92,36 +92,36 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
     display(false);
     PopupMenu = CreatePopupMenu();
 
-    return FALSE;
+    return false;
 
   case WM_MOUSEMOVE:
-    StateHovered = TRUE;
+    StateHovered = true;
     RegMsg(_hSelf, MOUSELEAVE);
     RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
-    return FALSE;
+    return false;
 
   case WM_MOUSEHOVER:
-    return FALSE;
+    return false;
 
   case WM_LBUTTONDOWN:
-    StatePressed = TRUE;
+    StatePressed = true;
     RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
-    return FALSE;
+    return false;
 
   case WM_LBUTTONUP:
     if (!StatePressed)
-      return FALSE;
+      return false;
     getSpellChecker()->showSuggestionMenu();
-    return FALSE;
+    return false;
 
   case WM_MOUSEWHEEL:
     ShowWindow(_hSelf, SW_HIDE);
     PostMessage(GetScintillaWindow(&NppDataInstance), Message, wParam, lParam);
-    return FALSE;
+    return false;
 
   case WM_PAINT:
     if (!isVisible())
-      return FALSE;
+      return false;
 
     idImg = IDR_DOWNARROW;
     if (StatePressed || StateMenu)
@@ -147,7 +147,7 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
     RECT Rect;
     GetWindowRect(_hSelf, &Rect);
     ValidateRect(_hSelf, &Rect);
-    return FALSE;
+    return false;
 
   case WM_SHOWANDRECREATEMENU:
     tagTPMPARAMS TPMParams;
@@ -156,28 +156,28 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
     p.x = 0;
     p.y = 0;
     ClientToScreen(_hSelf, &p);
-    StateMenu = TRUE;
+    StateMenu = true;
     SetForegroundWindow(NppDataInstance._nppHandle);
     MenuResult = TrackPopupMenuEx(PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
                                   p.x, p.y, _hSelf, &TPMParams);
     PostMessage(NppDataInstance._nppHandle, WM_NULL, 0, 0);
     SetFocus(GetScintillaWindow(&NppDataInstance));
-    StateMenu = FALSE;
+    StateMenu = false;
     DestroyMenu(PopupMenu);
     PopupMenu = CreatePopupMenu();
-    return FALSE;
+    return false;
 
   case WM_COMMAND:
     if (HIWORD(wParam) == 0)
       getSpellChecker()->ProcessMenuResult(wParam);
 
-    return FALSE;
+    return false;
 
   case WM_MOUSELEAVE:
-    StateHovered = FALSE;
-    StatePressed = FALSE;
+    StateHovered = false;
+    StatePressed = false;
     RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
-    return FALSE;
+    return false;
   }
-  return FALSE;
+  return false;
 }

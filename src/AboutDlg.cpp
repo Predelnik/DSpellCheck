@@ -83,7 +83,7 @@ INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
     Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), Ver);
     CLEAN_AND_ZERO_ARR(Ver);
   }
-    return TRUE;
+    return true;
   case WM_NOTIFY: {
     switch (((LPNMHDR)lParam)->code) {
     case NM_CLICK: // Fall through to the next case.
@@ -93,10 +93,10 @@ INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
 
       ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
 
-      return TRUE;
+      return true;
     }
     }
-    return FALSE;
+    return false;
   } break;
   case WM_COMMAND: {
     switch (LOWORD(wParam)) {
@@ -104,10 +104,10 @@ INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
     case IDCANCEL:
       if (HIWORD(wParam) == BN_CLICKED) {
         display(false);
-        return TRUE;
+        return true;
       }
     }
   } break;
   }
-  return FALSE;
+  return false;
 }

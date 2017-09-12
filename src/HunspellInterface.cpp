@@ -30,13 +30,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <io.h>
 #include <fcntl.h>
 
-static BOOL ListFiles(wchar_t *path, const wchar_t* mask,
+static bool ListFiles(wchar_t *path, const wchar_t* mask,
                       std::vector<wchar_t *> &files, const wchar_t* Filter) {
   HANDLE hFind = INVALID_HANDLE_VALUE;
   WIN32_FIND_DATA ffd;
   wchar_t *spec = 0;
   std::stack<wchar_t *> *directories = new std::stack<wchar_t *>;
-  BOOL Result = TRUE;
+  bool Result = true;
 
   directories->push(path);
   files.clear();
@@ -52,7 +52,7 @@ static BOOL ListFiles(wchar_t *path, const wchar_t* mask,
 
     hFind = FindFirstFile(spec, &ffd);
     if (hFind == INVALID_HANDLE_VALUE) {
-      Result = FALSE;
+      Result = false;
       goto cleanup;
     }
 
@@ -77,7 +77,7 @@ static BOOL ListFiles(wchar_t *path, const wchar_t* mask,
 
     if (GetLastError() != ERROR_NO_MORE_FILES) {
       FindClose(hFind);
-      Result = FALSE;
+      Result = false;
       goto cleanup;
     }
 
@@ -106,27 +106,27 @@ HunspellInterface::HunspellInterface(HWND NppWindowArg) {
   AllHunspells =
       new std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)>(
           SortCompare);
-  IsHunspellWorking = FALSE;
+  IsHunspellWorking = false;
   TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
   UserDicPath = 0;
   SystemWrongDicPath = 0;
 }
 
 void HunspellInterface::UpdateOnDicRemoval(wchar_t *Path,
-                                           BOOL &NeedSingleLangReset,
-                                           BOOL &NeedMultiLangReset) {
+                                           bool &NeedSingleLangReset,
+                                           bool &NeedMultiLangReset) {
   std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)>::iterator it =
       AllHunspells->find(Path);
-  NeedSingleLangReset = FALSE;
-  NeedMultiLangReset = FALSE;
+  NeedSingleLangReset = false;
+  NeedMultiLangReset = false;
   if (it != AllHunspells->end()) {
     if (SingularSpeller.Speller == (*it).second.Speller)
-      NeedSingleLangReset = TRUE;
+      NeedSingleLangReset = true;
 
     if (Spellers) {
       for (unsigned int i = 0; i < Spellers->size(); i++)
         if (Spellers->at(i).Speller == (*it).second.Speller) {
-          NeedMultiLangReset = TRUE;
+          NeedMultiLangReset = true;
         }
     }
 
@@ -160,9 +160,9 @@ static void CleanAndZeroWordList(WordSet *&WordListInstance) {
   CLEAN_AND_ZERO(WordListInstance);
 }
 
-void HunspellInterface::SetUseOneDic(BOOL Value) { UseOneDic = Value; }
+void HunspellInterface::SetUseOneDic(bool Value) { UseOneDic = Value; }
 
-BOOL ArePathsEqual(wchar_t *path1, wchar_t *path2) {
+bool ArePathsEqual(wchar_t *path1, wchar_t *path2) {
   BY_HANDLE_FILE_INFORMATION bhfi1, bhfi2;
   HANDLE h1, h2 = NULL;
   DWORD access = 0;
@@ -184,7 +184,7 @@ BOOL ArePathsEqual(wchar_t *path1, wchar_t *path2) {
     if (!GetFileInformationByHandle(h2, &bhfi2))
       bhfi2.dwVolumeSerialNumber = bhfi1.dwVolumeSerialNumber + 1;
   } else
-    return FALSE;
+    return false;
 
   CloseHandle(h1);
   CloseHandle(h2);
@@ -195,7 +195,7 @@ BOOL ArePathsEqual(wchar_t *path1, wchar_t *path2) {
 }
 
 HunspellInterface::~HunspellInterface() {
-  IsHunspellWorking = FALSE;
+  IsHunspellWorking = false;
   {
     std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)>::iterator it =
         AllHunspells->begin();
@@ -391,12 +391,12 @@ char *HunspellInterface::GetConvertedWord(const char *Source,
   return TemporaryBuffer;
 }
 
-BOOL HunspellInterface::SpellerCheckWord(DicInfo Dic, char *Word,
+bool HunspellInterface::SpellerCheckWord(DicInfo Dic, char *Word,
                                          EncodingType Encoding) {
   char *WordToCheck = GetConvertedWord(
       Word, Encoding == (ENCODING_UTF8) ? Dic.Converter : Dic.ConverterANSI);
   if (!*WordToCheck)
-    return FALSE;
+    return false;
 
   // No additional check for memorized is needed since all words are already in
   // dictionary
@@ -404,26 +404,26 @@ BOOL HunspellInterface::SpellerCheckWord(DicInfo Dic, char *Word,
   return Dic.Speller->spell(WordToCheck);
 }
 
-BOOL HunspellInterface::CheckWord(char *Word) {
+bool HunspellInterface::CheckWord(char *Word) {
   /*
   if (Memorized->find (Word) != Memorized->end ()) // This check is for
   dictionaries which are in other than utf-8 encoding
-  return TRUE;                                   // Though it slows down stuff a
+  return true;                                   // Though it slows down stuff a
   little, I hope it will do
   */
 
   if (Ignored->find(Word) != Ignored->end())
-    return TRUE;
+    return true;
 
-  BOOL res = FALSE;
+  bool res = false;
   if (!MultiMode) {
     if (SingularSpeller.Speller)
       res = SpellerCheckWord(SingularSpeller, Word, CurrentEncoding);
     else
-      res = TRUE;
+      res = true;
   } else {
     if (!Spellers || Spellers->size() == 0)
-      return TRUE;
+      return true;
 
     for (int i = 0; i < (int)Spellers->size() && !res; i++) {
       res = res || SpellerCheckWord(Spellers->at(i), Word, CurrentEncoding);
@@ -659,7 +659,7 @@ void HunspellInterface::SetDirectory(wchar_t *Dir) {
   wcscat(UserDicPath, L"UserDic.dic"); // Should be tunable really
   ReadUserDic(Memorized, UserDicPath); // We should load user dictionary first.
 
-  InitialReadingBeenDone = FALSE;
+  InitialReadingBeenDone = false;
   std::vector<wchar_t *> *FileList = new std::vector<wchar_t *>;
   SetString(DicDir, Dir);
 
@@ -671,9 +671,9 @@ void HunspellInterface::SetDirectory(wchar_t *Dir) {
   CLEAN_AND_ZERO(DicList);
 
   DicList = new std::set<AvailableLangInfo>;
-  IsHunspellWorking = TRUE;
+  IsHunspellWorking = true;
 
-  BOOL Res = ListFiles(Dir, L"*.*", *FileList, L"*.aff");
+  bool Res = ListFiles(Dir, L"*.*", *FileList, L"*.aff");
   if (!Res) {
     CLEAN_AND_ZERO_STRING_VECTOR(FileList);
     return;
@@ -701,15 +701,15 @@ void HunspellInterface::SetDirectory(wchar_t *Dir) {
 }
 
 void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
-  InitialReadingBeenDone = FALSE;
+  InitialReadingBeenDone = false;
   std::vector<wchar_t *> *FileList = new std::vector<wchar_t *>;
   SetString(SysDicDir, Dir);
 
   if (!DicList)
     return;
-  IsHunspellWorking = TRUE;
+  IsHunspellWorking = true;
 
-  BOOL Res = ListFiles(Dir, L"*.*", *FileList, L"*.aff");
+  bool Res = ListFiles(Dir, L"*.*", *FileList, L"*.aff");
   if (!Res) {
     CLEAN_AND_ZERO_STRING_VECTOR(FileList);
     return;
@@ -737,7 +737,7 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
   }
   // Now we have 2 dictionaries on our hands
 
-  InitialReadingBeenDone = TRUE;
+  InitialReadingBeenDone = true;
 
   CLEAN_AND_ZERO_ARR(SystemWrongDicPath);
   SystemWrongDicPath =
@@ -752,15 +752,15 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
   CLEAN_AND_ZERO_STRING_VECTOR(FileList);
 }
 
-BOOL HunspellInterface::GetLangOnlySystem(wchar_t *Lang) {
+bool HunspellInterface::GetLangOnlySystem(wchar_t *Lang) {
   AvailableLangInfo Needle;
   Needle.Name = Lang;
   Needle.Type = 1;
   std::set<AvailableLangInfo>::iterator It = DicList->find(Needle);
   if (It != DicList->end() && (*It).Type == 1)
-    return TRUE;
+    return true;
   else
-    return FALSE;
+    return false;
 }
 
-BOOL HunspellInterface::IsWorking() { return IsHunspellWorking; }
+bool HunspellInterface::IsWorking() { return IsHunspellWorking; }

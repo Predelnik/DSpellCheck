@@ -214,12 +214,12 @@ void SetStringDUtf8(char *&Target, const char *Str) {
 }
 
 // This function is more or less transferred from gcc source
-BOOL MatchSpecialChar(wchar_t *Dest, wchar_t *&Source) {
+bool MatchSpecialChar(wchar_t *Dest, wchar_t *&Source) {
   int len, i;
   wchar_t c, n;
-  BOOL m;
+  bool m;
 
-  m = TRUE;
+  m = true;
 
   switch (c = *(Source++)) {
   case 'a':
@@ -266,7 +266,7 @@ BOOL MatchSpecialChar(wchar_t *Dest, wchar_t *&Source) {
       if (c > UCHAR_MAX ||
           !(('0' <= c && c <= '9') || ('a' <= c && c <= 'f') ||
             ('A' <= c && c <= 'F')))
-        return FALSE;
+        return false;
 
       buf[0] = (unsigned char)c;
       n = n << 4;
@@ -277,7 +277,7 @@ BOOL MatchSpecialChar(wchar_t *Dest, wchar_t *&Source) {
 
   default:
     /* Unknown backslash codes are simply not expanded.  */
-    m = FALSE;
+    m = false;
     break;
   }
   return m;
@@ -309,7 +309,7 @@ void SetParsedString(wchar_t *&Dest, wchar_t *Source) {
 
 // These functions are mostly taken from http://research.microsoft.com
 
-BOOL Utf8IsLead(char c) {
+bool Utf8IsLead(char c) {
   return (((c & 0x80) == 0)                          // 0xxxxxxx
           || ((c & 0xC0) == 0xC0 && (c & 0x20) == 0) // 110xxxxx
           || ((c & 0xE0) == 0xE0 && (c & 0x10) == 0) // 1110xxxx
@@ -318,7 +318,7 @@ BOOL Utf8IsLead(char c) {
           || ((c & 0xFC) == 0xFC && (c & 0x02) == 0));
 }
 
-BOOL Utf8IsCont(char c) {
+bool Utf8IsCont(char c) {
   return ((c & 0x80) == 0x80 && (c & 0x40) == 0); // 10xxxxx
 }
 
@@ -359,11 +359,11 @@ int Utf8Gewchar_tSize(char c) {
   return 0;
 }
 
-BOOL Utf8Firswchar_tsAreEqual(const char *Str1, const char *Str2) {
+bool Utf8Firswchar_tsAreEqual(const char *Str1, const char *Str2) {
   int Firswchar_tSize1 = Utf8Gewchar_tSize(*Str1);
   int Firswchar_tSize2 = Utf8Gewchar_tSize(*Str2);
   if (Firswchar_tSize1 != Firswchar_tSize2)
-    return FALSE;
+    return false;
   return (strncmp(Str1, Str2, Firswchar_tSize1) == 0);
 }
 
@@ -698,7 +698,7 @@ const wchar_t *const AliasesTo[] = {
     L"isiZulu"};
 
 // Language Aliases
-BOOL SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName) {
+bool SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName) {
   int Left, Right;
   Left = 0;
 #ifdef _DEBUG
@@ -715,7 +715,7 @@ BOOL SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName) {
     int CompareResult = wcscmp(AliasesFrom[CentralElement], OrigName);
     if (CompareResult == 0) {
       SetString(Target, AliasesTo[CentralElement]);
-      return TRUE;
+      return true;
     } else if (Right - Left <= 1)
       break;
     else if (CompareResult < 0)
@@ -724,42 +724,42 @@ BOOL SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName) {
       Right = CentralElement;
   }
   SetString(Target, OrigName);
-  return FALSE;
+  return false;
 }
 
-static BOOL TryToCreateDir(wchar_t *Path, BOOL Silent, HWND NppWindow) {
+static bool TryToCreateDir(wchar_t *Path, bool Silent, HWND NppWindow) {
   if (!CreateDirectory(Path, NULL)) {
     if (!Silent) {
       if (!NppWindow)
-        return FALSE;
+        return false;
 
       wchar_t Message[DEFAULT_BUF_SIZE];
       swprintf(Message, L"Can't create directory %s", Path);
       MessageBox (NppWindow, Message, L"Error in directory creation",
                   MB_OK | MB_ICONERROR);
     }
-    return FALSE;
+    return false;
   }
-  return TRUE;
+  return true;
 }
 
-BOOL CheckForDirectoryExistence(const wchar_t* PathArg, BOOL Silent, HWND NppWindow) {
+bool CheckForDirectoryExistence(const wchar_t* PathArg, bool Silent, HWND NppWindow) {
     auto Path = cpyBuf<wchar_t> (PathArg);
   for (unsigned int i = 0; i < wcslen(PathArg); i++) {
     if (Path[i] == L'\\') {
       Path[i] = L'\0';
       if (!PathFileExists(PathArg)) {
         if (!TryToCreateDir(Path.get (), Silent, NppWindow))
-          return FALSE;
+          return false;
       }
       Path[i] = L'\\';
     }
   }
   if (!PathFileExists(PathArg)) {
     if (!TryToCreateDir(Path.get (), Silent, NppWindow))
-      return FALSE;
+      return false;
   }
-  return TRUE;
+  return true;
 }
 
 wchar_t *GetLastSlashPosition(wchar_t *Path) { return wcsrchr(Path, L'\\'); }

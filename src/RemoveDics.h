@@ -30,7 +30,7 @@ public:
   void RemoveSelected(SpellChecker *SpellCheckerInstance);
   HWND GetListBox();
   void UpdateOptions(SpellChecker *SpellCheckerInstance);
-  void SetCheckBoxes(BOOL RemoveUserDics, BOOL RemoveSystem);
+  void SetCheckBoxes(bool RemoveUserDics, bool RemoveSystem);
 
 protected:
   INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;

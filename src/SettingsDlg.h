@@ -36,21 +36,21 @@ public:
   ~SimpleDlg();
   void initSettings(HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings(SpellChecker *SpellCheckerInstance);
-  BOOL AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
+  bool AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
                              const wchar_t *CurrentLanguage,
                              const wchar_t *MultiLanguages,
                              HunspellInterface *HunspellSpeller);
   void FillSugestionsNum(int SuggestionsNum);
   void FillLibInfo(int Status, wchar_t *AspellPath, wchar_t *HunspellPath,
                    wchar_t *HunspellAdditionalPath);
-  void DisableLanguageCombo(BOOL Disable);
-  void SetFileTypes(BOOL CheckThose, const wchar_t *FileTypes);
+  void DisableLanguageCombo(bool Disable);
+  void SetFileTypes(bool CheckThose, const wchar_t *FileTypes);
   void SetSuggType(int SuggType);
-  void SetCheckComments(BOOL Value);
+  void SetCheckComments(bool Value);
   int GetSelectedLib();
   void SetLibMode(int LibMode);
-  void SetDecodeNames(BOOL Value);
-  void SetOneUserDic(BOOL Value);
+  void SetDecodeNames(bool Value);
+  void SetOneUserDic(bool Value);
   void ApplyLibChange(SpellChecker *SpellCheckerInstance);
 
 protected:
@@ -94,15 +94,15 @@ public:
   void ApplySettings(SpellChecker *SpellCheckerInstance);
   void FillDelimiters(const char *Delimiters);
   void SetDelimetersEdit(const wchar_t* Delimiters);
-  void SetConversionOpts(BOOL ConvertYo, BOOL ConvertSingleQuotesArg,
-                         BOOL RemoveSingleApostrophe);
+  void SetConversionOpts(bool ConvertYo, bool ConvertSingleQuotesArg,
+                         bool RemoveSingleApostrophe);
   void SetRecheckDelay(int Delay);
   int GetRecheckDelay();
   void SetSuggBoxSettings(LRESULT Size, LRESULT Trans);
   void SetUnderlineSettings(int Color, int Style);
-  void SetIgnore(BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg,
-                 BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
-                 BOOL Ignore_SA_Apostrophe_Arg, BOOL IgnoreOneLetter);
+  void SetIgnore(bool IgnoreNumbersArg, bool IgnoreCStartArg,
+                 bool IgnoreCHaveArg, bool IgnoreCAllArg, bool Ignore_Arg,
+                 bool Ignore_SA_Apostrophe_Arg, bool IgnoreOneLetter);
   void SetBufferSize(int Size);
 
 protected:

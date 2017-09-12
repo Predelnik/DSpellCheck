@@ -48,7 +48,7 @@ const wchar_t configFileName[] = L"DSpellCheck.ini";
 #endif
 
 FuncItem funcItem[nbFunc];
-BOOL ResourcesInited = FALSE;
+bool ResourcesInited = false;
 
 FuncItem *get_funcItem() {
   // Well maybe we should lock mutex here
@@ -73,8 +73,8 @@ DownloadDicsDlg *DownloadDicsDlgInstance = 0;
 AboutDlg *AboutDlgInstance = 0;
 HMENU LangsMenu;
 int ContextMenuIdStart;
-int LangsMenuIdStart = FALSE;
-BOOL UseAllocatedIds;
+int LangsMenuIdStart = false;
+bool UseAllocatedIds;
 toolbarIcons *AutoCheckIcon = 0;
 
 HANDLE hModule = NULL;
@@ -98,13 +98,13 @@ void SetContextMenuIdStart(int Id) { ContextMenuIdStart = Id; }
 
 void SetLangsMenuIdStart(int Id) { LangsMenuIdStart = Id; }
 
-void SetUseAllocatedIds(BOOL Value) { UseAllocatedIds = Value; }
+void SetUseAllocatedIds(bool Value) { UseAllocatedIds = Value; }
 
 int GetContextMenuIdStart() { return ContextMenuIdStart; }
 
 int GetLangsMenuIdStart() { return LangsMenuIdStart; }
 
-BOOL GetUseAllocatedIds() { return UseAllocatedIds; }
+bool GetUseAllocatedIds() { return UseAllocatedIds; }
 
 SpellChecker *getSpellChecker() { return SpellCheckerInstance; }
 
@@ -228,7 +228,7 @@ void commandMenuInit() {
                 (LPARAM)IniFilePath);
 
   // if config path doesn't exist, we create it
-  if (PathFileExists(IniFilePath) == FALSE) {
+  if (PathFileExists(IniFilePath) == false) {
     ::CreateDirectory(IniFilePath, NULL);
   }
 
@@ -326,7 +326,7 @@ HMENU GetDSpellCheckMenu() {
       MENUITEMINFO Mif;
       Mif.fMask = MIIM_SUBMENU;
       Mif.cbSize = sizeof(MENUITEMINFO);
-      BOOL Res = GetMenuItemInfo(PluginsMenu, i, TRUE, &Mif);
+      bool Res = GetMenuItemInfo(PluginsMenu, i, true, &Mif);
 
       if (Res)
         DSpellCheckMenu = (HMENU)Mif.hSubMenu;
@@ -353,8 +353,8 @@ HMENU GetLangsSubMenu(HMENU DSpellCheckMenuArg) {
   Mif.fMask = MIIM_SUBMENU;
   Mif.cbSize = sizeof(MENUITEMINFO);
 
-  BOOL Res =
-      GetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, TRUE, &Mif);
+  bool Res =
+      GetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, true, &Mif);
   if (!Res)
     return NULL;
 

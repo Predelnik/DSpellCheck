@@ -35,9 +35,9 @@ protected:
 
 private:
   int MenuResult;
-  BOOL StatePressed;
-  BOOL StateHovered;
-  BOOL StateMenu;
+  bool StatePressed;
+  bool StateHovered;
+  bool StateMenu;
   HMENU PopupMenu;
   NppData NppDataInstance;
 };

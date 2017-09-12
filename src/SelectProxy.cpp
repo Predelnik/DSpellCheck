@@ -68,7 +68,7 @@ void SelectProxy::ApplyChoice(SpellChecker *SpellCheckerInstance) {
 }
 
 void SelectProxy::DisableControls() {
-  BOOL ProxyIsUsed = Button_GetCheck(HUseProxy);
+  bool ProxyIsUsed = Button_GetCheck(HUseProxy);
   EnableWindow(HProxyAnonymous, ProxyIsUsed);
   EnableWindow(HUserName, ProxyIsUsed);
   EnableWindow(HHostName, ProxyIsUsed);
@@ -77,20 +77,20 @@ void SelectProxy::DisableControls() {
   EnableWindow(HProxyType, ProxyIsUsed);
 
   if (ProxyIsUsed) {
-    BOOL LoginUsed = !Button_GetCheck(HProxyAnonymous);
-    BOOL AnonymousType = (ComboBox_GetCurSel(HProxyType) == 1);
+    bool LoginUsed = !Button_GetCheck(HProxyAnonymous);
+    bool AnonymousType = (ComboBox_GetCurSel(HProxyType) == 1);
     if (AnonymousType) {
-      LoginUsed = FALSE;
-      EnableWindow(HProxyAnonymous, FALSE);
+      LoginUsed = false;
+      EnableWindow(HProxyAnonymous, false);
     }
     EnableWindow(HUserName, LoginUsed);
     EnableWindow(HPassword, LoginUsed);
   }
 }
 
-void SelectProxy::SetOptions(BOOL UseProxy, wchar_t *HostName,
+void SelectProxy::SetOptions(bool UseProxy, wchar_t *HostName,
                              wchar_t *UserName, wchar_t *Password, int Port,
-                             BOOL ProxyAnonymous, int ProxyType) {
+                             bool ProxyAnonymous, int ProxyType) {
   Button_SetCheck(HUseProxy, UseProxy ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(HProxyAnonymous,
                   ProxyAnonymous ? BST_CHECKED : BST_UNCHECKED);
@@ -122,7 +122,7 @@ INT_PTR SelectProxy::run_dlgProc(UINT message, WPARAM wParam,
     ComboBox_AddString(HProxyType, L"FTP Web Proxy");
     ComboBox_AddString(HProxyType, L"FTP Gateway");
     getSpellChecker ()->updateSelectProxy();
-    return TRUE;
+    return true;
   } break;
   case WM_COMMAND: {
     switch (LOWORD(wParam)) {
@@ -154,7 +154,7 @@ INT_PTR SelectProxy::run_dlgProc(UINT message, WPARAM wParam,
         wchar_t Buf[DEFAULT_BUF_SIZE];
         Edit_GetText(HPort, Buf, DEFAULT_BUF_SIZE);
         if (!*Buf)
-          return FALSE;
+          return false;
 
         x = wcstol(Buf, &EndPtr, 10);
         if (*EndPtr)
@@ -164,10 +164,10 @@ INT_PTR SelectProxy::run_dlgProc(UINT message, WPARAM wParam,
         else if (x < 0)
           Edit_SetText(HPort, L"0");
 
-        return FALSE;
+        return false;
       }
     }
   } break;
   }
-  return FALSE;
+  return false;
 }

@@ -60,11 +60,11 @@ HWND GetScintillaWindow(const NppData *NppDataArg) {
                       : NppDataArg->_scintillaSecondHandle;
 }
 
-BOOL SendMsgToBothEditors(const NppData *NppDataArg, UINT Msg, WPARAM wParam,
+bool SendMsgToBothEditors(const NppData *NppDataArg, UINT Msg, WPARAM wParam,
                           LPARAM lParam) {
   SendMessage(NppDataArg->_scintillaMainHandle, Msg, wParam, lParam);
   SendMessage(NppDataArg->_scintillaSecondHandle, Msg, wParam, lParam);
-  return TRUE;
+  return true;
 }
 
 LRESULT SendMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
@@ -144,7 +144,7 @@ SpellChecker::SpellChecker(const wchar_t *IniFilePathArg,
   SuggestionsMode = 1;
   WUCLength = 0;
   WUCPosition = 0;
-  WUCisRight = TRUE;
+  WUCisRight = true;
   CurrentScintilla = GetScintillaWindow(NppDataInstance);
   SuggestionMenuItems = 0;
   AspellSpeller = new AspellInterface(NppDataInstance->_nppHandle);
@@ -162,24 +162,24 @@ SpellChecker::SpellChecker(const wchar_t *IniFilePathArg,
   SetString(DefaultServers[2],
             L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/");
   CurrentLangs = 0;
-  DecodeNames = FALSE;
+  DecodeNames = false;
   ResetHotSpotCache();
   ProxyUserName = 0;
   ProxyHostName = 0;
   ProxyPassword = 0;
-  ProxyAnonymous = TRUE;
+  ProxyAnonymous = true;
   ProxyType = 0;
   ProxyPort = 0;
-  SettingsLoaded = FALSE;
-  UseProxy = FALSE;
+  SettingsLoaded = false;
+  UseProxy = false;
   SettingsToSave =
       new std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)>(
           SortCompare);
-  BOOL res =
+  bool res =
       (SendMsgToNpp(NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
 
   if (res) {
-    SetUseAllocatedIds(TRUE);
+    SetUseAllocatedIds(true);
     int Id;
     SendMsgToNpp(NppDataInstance, NPPM_ALLOCATECMDID, 350, (LPARAM)&Id);
     SetContextMenuIdStart(Id);
@@ -265,7 +265,7 @@ SpellChecker::~SpellChecker() {
 }
 
 void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
-                        BOOL Separator) {
+                        bool Separator) {
   MENUITEMINFO mi;
   memset(&mi, 0, sizeof(mi));
   mi.cbSize = sizeof(MENUITEMINFO);
@@ -283,15 +283,15 @@ void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
     mi.cch = static_cast<int>(wcslen(Text)) + 1;
   }
   if (InsertPos == -1)
-    InsertMenuItem(Menu, GetMenuItemCount(Menu), TRUE, &mi);
+    InsertMenuItem(Menu, GetMenuItemCount(Menu), true, &mi);
   else
-    InsertMenuItem(Menu, InsertPos, TRUE, &mi);
+    InsertMenuItem(Menu, InsertPos, true, &mi);
 }
 
 void SpellChecker::precalculateMenu() {
     if (CheckTextNeeded() && SuggestionsMode == SUGGESTIONS_CONTEXT_MENU) {
         long Pos, Length;
-        WUCisRight = GetWordUnderCursorIsRight(Pos, Length, TRUE);
+        WUCisRight = GetWordUnderCursorIsRight(Pos, Length, true);
         if (!WUCisRight) {
             WUCPosition = Pos;
             WUCLength = Length;
@@ -307,23 +307,23 @@ void SpellChecker::SetSuggType(int SuggType) {
   HideSuggestionBox();
 }
 
-void SpellChecker::SetShowOnlyKnow(BOOL Value) { ShowOnlyKnown = Value; }
+void SpellChecker::SetShowOnlyKnow(bool Value) { ShowOnlyKnown = Value; }
 
-void SpellChecker::SetInstallSystem(BOOL Value) { InstallSystem = Value; }
+void SpellChecker::SetInstallSystem(bool Value) { InstallSystem = Value; }
 
-BOOL SpellChecker::GetShowOnlyKnown() { return ShowOnlyKnown; }
+bool SpellChecker::GetShowOnlyKnown() { return ShowOnlyKnown; }
 
-BOOL SpellChecker::GetInstallSystem() { return InstallSystem; }
+bool SpellChecker::GetInstallSystem() { return InstallSystem; }
 
-BOOL SpellChecker::GetDecodeNames() { return DecodeNames; }
+bool SpellChecker::GetDecodeNames() { return DecodeNames; }
 
 wchar_t *SpellChecker::GetLangByIndex(int i) {
   return CurrentLangs->at(i).OrigName;
 }
 
-void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs) {
+void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
   int SpellerId = LibMode;
-  BOOL CurrentLangExists = FALSE;
+  bool CurrentLangExists = false;
   wchar_t *CurrentLang;
 
   AbstractSpellerInterface *SpellerToUse =
@@ -343,13 +343,13 @@ void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs) {
 
   if (SpellerToUse->IsWorking()) {
     if (UpdateDialogs)
-      SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(FALSE);
+      SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(false);
     std::vector<wchar_t *> *LangsFromSpeller = SpellerToUse->GetLanguageList();
     CurrentLangs = new std::vector<LanguageName>();
 
     if (!LangsFromSpeller || LangsFromSpeller->size() == 0) {
       if (UpdateDialogs)
-        SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(TRUE);
+        SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(true);
       return;
     }
     for (unsigned int i = 0; i < LangsFromSpeller->size(); i++) {
@@ -359,10 +359,10 @@ void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs) {
       CurrentLangs->push_back(
           Lang); // TODO: Add option - use or not use aliases.
       if (wcscmp(Lang.OrigName, CurrentLang) == 0)
-        CurrentLangExists = TRUE;
+        CurrentLangExists = true;
     }
     if (wcscmp(CurrentLang, L"<MULTIPLE>") == 0)
-      CurrentLangExists = TRUE;
+      CurrentLangExists = true;
 
     CLEAN_AND_ZERO_STRING_VECTOR(LangsFromSpeller);
     std::sort(CurrentLangs->begin(), CurrentLangs->end(),
@@ -381,14 +381,14 @@ void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs) {
           SpellerId == 1 ? HunspellSpeller : 0);
   } else {
     if (UpdateDialogs)
-      SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(TRUE);
+      SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(true);
   }
 }
 
 int SpellChecker::GetLibMode() { return LibMode; }
 
-void SpellChecker::FillDialogs(BOOL NoDisplayCall) {
-  ReinitLanguageLists(TRUE);
+void SpellChecker::FillDialogs(bool NoDisplayCall) {
+  ReinitLanguageLists(true);
   SettingsDlgInstance->GetSimpleDlg()->SetLibMode(LibMode);
   SettingsDlgInstance->GetSimpleDlg()->FillLibInfo(
       AspellSpeller->IsWorking()
@@ -434,7 +434,7 @@ void SpellChecker::RecheckVisibleBothViews() {
 void SpellChecker::applySettings () {
   SettingsDlgInstance->GetSimpleDlg()->ApplySettings(this);
   SettingsDlgInstance->GetAdvancedDlg()->ApplySettings(this);
-  FillDialogs(TRUE);
+  FillDialogs(true);
   SaveSettings();
   CheckFileName(); // Cause filters may change
   RefreshUnderlineStyle();
@@ -505,16 +505,16 @@ void SpellChecker::langChange () {
     RecheckVisible();
 }
 
-void SpellChecker::SetRemoveUserDics(BOOL Value) { RemoveUserDics = Value; }
+void SpellChecker::SetRemoveUserDics(bool Value) { RemoveUserDics = Value; }
 
-void SpellChecker::SetRemoveSystem(BOOL Value) { RemoveSystem = Value; }
+void SpellChecker::SetRemoveSystem(bool Value) { RemoveSystem = Value; }
 
-BOOL SpellChecker::GetRemoveUserDics() { return RemoveUserDics; }
+bool SpellChecker::GetRemoveUserDics() { return RemoveUserDics; }
 
-BOOL SpellChecker::GetRemoveSystem() { return RemoveSystem; }
+bool SpellChecker::GetRemoveSystem() { return RemoveSystem; }
 
-void SpellChecker::DoPluginMenuInclusion(BOOL Invalidate) {
-  BOOL Res;
+void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
+  bool Res;
   MENUITEMINFO Mif;
   HMENU DSpellCheckMenu = GetDSpellCheckMenu();
   if (!DSpellCheckMenu)
@@ -581,7 +581,7 @@ void SpellChecker::DoPluginMenuInclusion(BOOL Invalidate) {
   Mif.hSubMenu = (CurrentLangs ? NewMenu : 0);
   Mif.fState = (!CurrentLangs ? MFS_GRAYED : MFS_ENABLED);
 
-  SetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, TRUE, &Mif);
+  SetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, true, &Mif);
 }
 
 void SpellChecker::FillDownloadDics() {
@@ -644,7 +644,7 @@ void SpellChecker::WriteSetting(std::pair<wchar_t*, DWORD>& x) {
   }
 }
 
-void SpellChecker::SetCheckComments(BOOL Value) { CheckComments = Value; }
+void SpellChecker::SetCheckComments(bool Value) { CheckComments = Value; }
 
 void SpellChecker::CheckFileName() {
   wchar_t *Context = 0;
@@ -683,7 +683,7 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
   switch (Lexer) {
   case SCLEX_CONTAINER:
   case SCLEX_NULL:
-    return TRUE;
+    return true;
   case SCLEX_PYTHON:
     switch (Style) {
     case SCE_P_COMMENTLINE:
@@ -691,9 +691,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_P_STRING:
     case SCE_P_TRIPLE:
     case SCE_P_TRIPLEDOUBLE:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     };
   case SCLEX_CPP:
   case SCLEX_OBJC:
@@ -704,9 +704,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_C_COMMENTDOC:
     case SCE_C_COMMENTLINEDOC:
     case SCE_C_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     };
   case SCLEX_HTML:
   case SCLEX_XML:
@@ -741,9 +741,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_HPHP_SIMPLESTRING:
     case SCE_HPHP_COMMENT:
     case SCE_HPHP_COMMENTLINE:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_PERL:
     switch (Style) {
@@ -753,9 +753,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_PL_STRING_QX:
     case SCE_PL_STRING_QR:
     case SCE_PL_STRING_QW:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     };
   case SCLEX_SQL:
     switch (Style) {
@@ -764,42 +764,42 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_SQL_COMMENTDOC:
     case SCE_SQL_STRING:
     case SCE_SQL_COMMENTLINEDOC:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_PROPERTIES:
     switch (Style) {
     case SCE_PROPS_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_ERRORLIST:
-    return FALSE;
+    return false;
   case SCLEX_MAKEFILE:
     switch (Style) {
     case SCE_MAKE_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_BATCH:
     switch (Style) {
     case SCE_BAT_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_XCODE:
-    return FALSE;
+    return false;
   case SCLEX_LATEX:
     switch (Style) {
     case SCE_L_DEFAULT:
     case SCE_L_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_LUA:
     switch (Style) {
@@ -807,24 +807,24 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_LUA_COMMENTLINE:
     case SCE_LUA_COMMENTDOC:
     case SCE_LUA_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_DIFF:
     switch (Style) {
     case SCE_DIFF_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_CONF:
     switch (Style) {
     case SCE_CONF_COMMENT:
     case SCE_CONF_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_PASCAL:
     switch (Style) {
@@ -832,33 +832,33 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_PAS_COMMENT2:
     case SCE_PAS_COMMENTLINE:
     case SCE_PAS_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_AVE:
     switch (Style) {
     case SCE_AVE_COMMENT:
     case SCE_AVE_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_ADA:
     switch (Style) {
     case SCE_ADA_STRING:
     case SCE_ADA_COMMENTLINE:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_LISP:
     switch (Style) {
     case SCE_LISP_COMMENT:
     case SCE_LISP_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_RUBY:
     switch (Style) {
@@ -869,18 +869,18 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_RB_STRING_QX:
     case SCE_RB_STRING_QR:
     case SCE_RB_STRING_QW:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_EIFFEL:
   case SCLEX_EIFFELKW:
     switch (Style) {
     case SCE_EIFFEL_COMMENTLINE:
     case SCE_EIFFEL_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     };
   case SCLEX_TCL:
     switch (Style) {
@@ -888,51 +888,51 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_TCL_COMMENTLINE:
     case SCE_TCL_BLOCK_COMMENT:
     case SCE_TCL_IN_QUOTE:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_NNCRONTAB:
     switch (Style) {
     case SCE_NNCRONTAB_COMMENT:
     case SCE_NNCRONTAB_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_BAAN:
     switch (Style) {
     case SCE_BAAN_COMMENT:
     case SCE_BAAN_COMMENTDOC:
     case SCE_BAAN_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_MATLAB:
     switch (Style) {
     case SCE_MATLAB_COMMENT:
     case SCE_MATLAB_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_SCRIPTOL:
     switch (Style) {
     case SCE_SCRIPTOL_COMMENTLINE:
     case SCE_SCRIPTOL_COMMENTBLOCK:
     case SCE_SCRIPTOL_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_ASM:
     switch (Style) {
     case SCE_ASM_COMMENT:
     case SCE_ASM_COMMENTBLOCK:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_CPPNOCASE:
   case SCLEX_FORTRAN:
@@ -941,35 +941,35 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_F_COMMENT:
     case SCE_F_STRING1:
     case SCE_F_STRING2:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_CSS:
     switch (Style) {
     case SCE_CSS_COMMENT:
     case SCE_CSS_DOUBLESTRING:
     case SCE_CSS_SINGLESTRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_POV:
     switch (Style) {
     case SCE_POV_COMMENT:
     case SCE_POV_COMMENTLINE:
     case SCE_POV_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_LOUT:
     switch (Style) {
     case SCE_LOUT_COMMENT:
     case SCE_LOUT_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_ESCRIPT:
     switch (Style) {
@@ -977,18 +977,18 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_ESCRIPT_COMMENTLINE:
     case SCE_ESCRIPT_COMMENTDOC:
     case SCE_ESCRIPT_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_PS:
     switch (Style) {
     case SCE_PS_COMMENT:
     case SCE_PS_DSC_COMMENT:
     case SCE_PS_TEXT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_NSIS:
     switch (Style) {
@@ -996,60 +996,60 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_NSIS_STRINGDQ:
     case SCE_NSIS_STRINGLQ:
     case SCE_NSIS_STRINGRQ:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_MMIXAL:
     switch (Style) {
     case SCE_MMIXAL_COMMENT:
     case SCE_MMIXAL_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_CLW:
     switch (Style) {
     case SCE_CLW_COMMENT:
     case SCE_CLW_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_CLWNOCASE:
   case SCLEX_LOT:
-    return FALSE;
+    return false;
   case SCLEX_YAML:
     switch (Style) {
     case SCE_YAML_COMMENT:
     case SCE_YAML_TEXT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_TEX:
     switch (Style) {
     case SCE_TEX_TEXT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_METAPOST:
     switch (Style) {
     case SCE_METAPOST_TEXT:
     case SCE_METAPOST_DEFAULT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_FORTH:
     switch (Style) {
     case SCE_FORTH_COMMENT:
     case SCE_FORTH_COMMENT_ML:
     case SCE_FORTH_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_ERLANG:
     switch (Style) {
@@ -1059,9 +1059,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_ERLANG_COMMENT_MODULE:
     case SCE_ERLANG_COMMENT_DOC:
     case SCE_ERLANG_COMMENT_DOC_MACRO:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_OCTAVE:
   case SCLEX_MSSQL:
@@ -1069,9 +1069,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_MSSQL_COMMENT:
     case SCE_MSSQL_LINE_COMMENT:
     case SCE_MSSQL_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_VERILOG:
     switch (Style) {
@@ -1079,79 +1079,79 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_V_COMMENTLINE:
     case SCE_V_COMMENTLINEBANG:
     case SCE_V_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_KIX:
     switch (Style) {
     case SCE_KIX_COMMENT:
     case SCE_KIX_STRING1:
     case SCE_KIX_STRING2:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_GUI4CLI:
     switch (Style) {
     case SCE_GC_COMMENTLINE:
     case SCE_GC_COMMENTBLOCK:
     case SCE_GC_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_SPECMAN:
     switch (Style) {
     case SCE_SN_COMMENTLINE:
     case SCE_SN_COMMENTLINEBANG:
     case SCE_SN_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_AU3:
     switch (Style) {
     case SCE_AU3_COMMENT:
     case SCE_AU3_COMMENTBLOCK:
     case SCE_AU3_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_APDL:
     switch (Style) {
     case SCE_APDL_COMMENT:
     case SCE_APDL_COMMENTBLOCK:
     case SCE_APDL_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_BASH:
     switch (Style) {
     case SCE_SH_COMMENTLINE:
     case SCE_SH_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_ASN1:
     switch (Style) {
     case SCE_ASN1_COMMENT:
     case SCE_ASN1_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_VHDL:
     switch (Style) {
     case SCE_VHDL_COMMENT:
     case SCE_VHDL_COMMENTLINEBANG:
     case SCE_VHDL_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_CAML:
     switch (Style) {
@@ -1160,9 +1160,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_CAML_COMMENT1:
     case SCE_CAML_COMMENT2:
     case SCE_CAML_COMMENT3:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_VB:
   case SCLEX_VBSCRIPT:
@@ -1173,9 +1173,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     switch (Style) {
     case SCE_B_COMMENT:
     case SCE_B_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_HASKELL:
     switch (Style) {
@@ -1184,9 +1184,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_HA_COMMENTBLOCK:
     case SCE_HA_COMMENTBLOCK2:
     case SCE_HA_COMMENTBLOCK3:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_PHPSCRIPT:
   case SCLEX_TADS3:
@@ -1196,9 +1196,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_T3_S_STRING:
     case SCE_T3_D_STRING:
     case SCE_T3_X_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_REBOL:
     switch (Style) {
@@ -1206,17 +1206,17 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_REBOL_COMMENTBLOCK:
     case SCE_REBOL_QUOTEDSTRING:
     case SCE_REBOL_BRACEDSTRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_SMALLTALK:
     switch (Style) {
     case SCE_ST_STRING:
     case SCE_ST_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_FLAGSHIP:
     switch (Style) {
@@ -1230,17 +1230,17 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_FS_COMMENTDOC_C:
     case SCE_FS_COMMENTLINEDOC_C:
     case SCE_FS_STRING_C:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_CSOUND:
     switch (Style) {
     case SCE_CSOUND_COMMENT:
     case SCE_CSOUND_COMMENTBLOCK:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_INNOSETUP:
     switch (Style) {
@@ -1248,25 +1248,25 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_INNO_COMMENT_PASCAL:
     case SCE_INNO_STRING_DOUBLE:
     case SCE_INNO_STRING_SINGLE:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_OPAL:
     switch (Style) {
     case SCE_OPAL_COMMENT_BLOCK:
     case SCE_OPAL_COMMENT_LINE:
     case SCE_OPAL_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_SPICE:
     switch (Style) {
     case SCE_SPICE_COMMENTLINE:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_D:
     switch (Style) {
@@ -1275,32 +1275,32 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_D_COMMENTDOC:
     case SCE_D_COMMENTNESTED:
     case SCE_D_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_CMAKE:
     switch (Style) {
     case SCE_CMAKE_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_GAP:
     switch (Style) {
     case SCE_GAP_COMMENT:
     case SCE_GAP_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_PLM:
     switch (Style) {
     case SCE_PLM_COMMENT:
     case SCE_PLM_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_PROGRESS:
     switch (Style) {
@@ -1318,53 +1318,53 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_4GL_COMMENT4_:
     case SCE_4GL_COMMENT5_:
     case SCE_4GL_COMMENT6_:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_ABAQUS:
     switch (Style) {
     case SCE_ABAQUS_COMMENT:
     case SCE_ABAQUS_COMMENTBLOCK:
     case SCE_ABAQUS_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_ASYMPTOTE:
     switch (Style) {
     case SCE_ASY_COMMENT:
     case SCE_ASY_COMMENTLINE:
     case SCE_ASY_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_R:
     switch (Style) {
     case SCE_R_COMMENT:
     case SCE_R_STRING:
     case SCE_R_STRING2:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_MAGIK:
     switch (Style) {
     case SCE_MAGIK_COMMENT:
     case SCE_MAGIK_HYPER_COMMENT:
     case SCE_MAGIK_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_POWERSHELL:
     switch (Style) {
     case SCE_POWERSHELL_COMMENT:
     case SCE_POWERSHELL_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_MYSQL:
     switch (Style) {
@@ -1373,16 +1373,16 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_MYSQL_STRING:
     case SCE_MYSQL_SQSTRING:
     case SCE_MYSQL_DQSTRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_PO:
     switch (Style) {
     case SCE_PO_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_TAL:
   case SCLEX_COBOL:
@@ -1390,9 +1390,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
   case SCLEX_SORCUS:
     switch (Style) {
     case SCE_SORCUS_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_POWERPRO:
     switch (Style) {
@@ -1400,9 +1400,9 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_POWERPRO_COMMENTLINE:
     case SCE_POWERPRO_DOUBLEQUOTEDSTRING:
     case SCE_POWERPRO_SINGLEQUOTEDSTRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_NIMROD:
   case SCLEX_SML:
@@ -1412,43 +1412,43 @@ int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
     case SCE_SML_COMMENT1:
     case SCE_SML_COMMENT2:
     case SCE_SML_COMMENT3:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_MARKDOWN:
-    return FALSE;
+    return false;
   case SCLEX_TXT2TAGS:
     switch (Style) {
     case SCE_TXT2TAGS_COMMENT:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_A68K:
     switch (Style) {
     case SCE_A68K_COMMENT:
     case SCE_A68K_STRING1:
     case SCE_A68K_STRING2:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_MODULA:
     switch (Style) {
     case SCE_MODULA_COMMENT:
     case SCE_MODULA_STRING:
-      return TRUE;
+      return true;
     default:
-      return FALSE;
+      return false;
     }
   case SCLEX_SEARCHRESULT:
-    return FALSE;
+    return false;
   };
-  return TRUE;
+  return true;
 }
 
-BOOL SpellChecker::CheckTextNeeded() {
+bool SpellChecker::CheckTextNeeded() {
   return CheckTextEnabled && AutoCheckText;
 }
 
@@ -1475,8 +1475,8 @@ void SpellChecker::FindNextMistake() {
       SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLENGTH);
   auto IteratorPos = LineStartPos;
   Sci_TextRange Range;
-  BOOL Result;
-  BOOL FullCheck = FALSE;
+  bool Result;
+  bool FullCheck = false;
 
   while (1) {
     Range.chrg.cpMin = static_cast<long>(IteratorPos);
@@ -1525,7 +1525,7 @@ void SpellChecker::FindNextMistake() {
       if (!FullCheck) {
         CurrentPosition = 0;
         IteratorPos = 0;
-        FullCheck = TRUE;
+        FullCheck = true;
       } else
         break;
 
@@ -1547,8 +1547,8 @@ void SpellChecker::FindPrevMistake() {
 
   auto IteratorPos = LineEndPos;
   Sci_TextRange Range;
-  BOOL Result;
-  BOOL FullCheck = FALSE;
+  bool Result;
+  bool FullCheck = false;
 
   while (1) {
     Range.chrg.cpMin = static_cast<long>(IteratorPos - BufferSize);
@@ -1595,7 +1595,7 @@ void SpellChecker::FindPrevMistake() {
       if (!FullCheck) {
         CurrentPosition = DocLength + 1;
         IteratorPos = DocLength;
-        FullCheck = TRUE;
+        FullCheck = true;
       } else
         break;
 
@@ -1611,9 +1611,9 @@ void SpellChecker::SetDefaultDelimiters() {
 
 HWND SpellChecker::GetCurrentScintilla() { return CurrentScintilla; }
 
-BOOL SpellChecker::GetWordUnderCursorIsRight(long &Pos, long &Length,
-                                             BOOL UseTextCursor) {
-  BOOL Ret = TRUE;
+bool SpellChecker::GetWordUnderCursorIsRight(long &Pos, long &Length,
+                                             bool UseTextCursor) {
+  bool Ret = true;
   POINT p;
   std::ptrdiff_t iniwchar_tPos;
   LRESULT SelectionStart = 0;
@@ -1621,11 +1621,11 @@ BOOL SpellChecker::GetWordUnderCursorIsRight(long &Pos, long &Length,
 
   if (!UseTextCursor) {
     if (GetCursorPos(&p) == 0)
-      return TRUE;
+      return true;
 
     auto *scintilla = GetScintillaWindow(NppDataInstance);
     if (!scintilla)
-      return TRUE;
+      return true;
     ScreenToClient(scintilla, &p);
 
     iniwchar_tPos = SendMsgToActiveEditor(
@@ -1652,7 +1652,7 @@ BOOL SpellChecker::GetWordUnderCursorIsRight(long &Pos, long &Length,
     char *Word = GetWordAt(static_cast<long>(iniwchar_tPos), Buf,
                            static_cast<long>(Offset));
     if (!Word || !*Word) {
-      Ret = TRUE;
+      Ret = true;
     } else {
       Pos = static_cast<long>(Word - Buf + Offset);
       long PosEnd = Pos + static_cast<long>(strlen(Word));
@@ -1661,12 +1661,12 @@ BOOL SpellChecker::GetWordUnderCursorIsRight(long &Pos, long &Length,
       if (SelectionStart != SelectionEnd &&
           (SelectionStart != Pos || SelectionEnd != Pos + WordLen)) {
         CLEAN_AND_ZERO_ARR(Buf);
-        return TRUE;
+        return true;
       }
       if (CheckWord(Word, Pos, Pos + WordLen - 1)) {
-        Ret = TRUE;
+        Ret = true;
       } else {
-        Ret = FALSE;
+        Ret = false;
         Length = WordLen;
       }
     }
@@ -1787,7 +1787,7 @@ void SpellChecker::InitSuggestionsBox() {
       R.bottom < p.y + TextHeight - 3 + SBSize || R.right < p.x + SBSize)
     return;
   MoveWindow(SuggestionsInstance->getHSelf(), p.x,
-             p.y + static_cast<int>(TextHeight) - 3, SBSize, SBSize, TRUE);
+             p.y + static_cast<int>(TextHeight) - 3, SBSize, SBSize, true);
   SuggestionsInstance->display(true, false);
 }
 
@@ -1857,14 +1857,14 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
       return;
     } else
       LangString = CurrentLangs->at(Result).OrigName;
-    DoPluginMenuInclusion(TRUE);
+    DoPluginMenuInclusion(true);
 
     if (LibMode == 0)
       SetAspellLanguage(LangString);
     else
       SetHunspellLanguage(LangString);
 
-    ReinitLanguageLists(TRUE);
+    ReinitLanguageLists(true);
     UpdateLangsMenu();
     RecheckVisibleBothViews();
     SaveSettings();
@@ -1915,9 +1915,9 @@ void SpellChecker::FillSuggestionsMenu(HMENU Menu) {
 
   if (LastSuggestions->size() > 0) {
     if (SuggestionsMode == SUGGESTIONS_BOX)
-      InsertSuggMenuItem(Menu, L"", 0, 103, TRUE);
+      InsertSuggMenuItem(Menu, L"", 0, 103, true);
     else
-      SuggestionMenuItems->push_back(new SuggestionsMenuItem(L"", 0, TRUE));
+      SuggestionMenuItems->push_back(new SuggestionsMenuItem(L"", 0, true));
   }
 
   wchar_t *MenuString = new wchar_t[WUCLength + 50 + 1]; // Add "" to dictionary
@@ -1942,7 +1942,7 @@ void SpellChecker::FillSuggestionsMenu(HMENU Menu) {
         new SuggestionsMenuItem(MenuString, MID_ADDTODICTIONARY));
 
   if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
-    SuggestionMenuItems->push_back(new SuggestionsMenuItem(L"", 0, TRUE));
+    SuggestionMenuItems->push_back(new SuggestionsMenuItem(L"", 0, true));
 
   CLEAN_AND_ZERO_ARR(Range.lpstrText);
   CLEAN_AND_ZERO_ARR(Buf);
@@ -2000,9 +2000,9 @@ void SpellChecker::SetProxyPassword(wchar_t *Str) {
 
 void SpellChecker::SetProxyPort(int Value) { ProxyPort = Value; }
 
-void SpellChecker::SetUseProxy(BOOL Value) { UseProxy = Value; }
+void SpellChecker::SetUseProxy(bool Value) { UseProxy = Value; }
 
-void SpellChecker::SetProxyAnonymous(BOOL Value) { ProxyAnonymous = Value; }
+void SpellChecker::SetProxyAnonymous(bool Value) { ProxyAnonymous = Value; }
 
 void SpellChecker::SetProxyType(int Value) { ProxyType = Value; }
 
@@ -2014,16 +2014,16 @@ wchar_t *SpellChecker::GetProxyPassword() { return ProxyPassword; }
 
 int SpellChecker::GetProxyPort() { return ProxyPort; }
 
-BOOL SpellChecker::GetUseProxy() { return UseProxy; }
+bool SpellChecker::GetUseProxy() { return UseProxy; }
 
-BOOL SpellChecker::GetProxyAnonymous() { return ProxyAnonymous; }
+bool SpellChecker::GetProxyAnonymous() { return ProxyAnonymous; }
 
 int SpellChecker::GetProxyType() { return ProxyType; }
 
-void SpellChecker::SetIgnore(BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg,
-                             BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg,
-                             BOOL Ignore_Arg, BOOL IgnoreSEApostropheArg,
-                             BOOL IgnoreOneLetterArg) {
+void SpellChecker::SetIgnore(bool IgnoreNumbersArg, bool IgnoreCStartArg,
+                             bool IgnoreCHaveArg, bool IgnoreCAllArg,
+                             bool Ignore_Arg, bool IgnoreSEApostropheArg,
+                             bool IgnoreOneLetterArg) {
   IgnoreNumbers = IgnoreNumbersArg;
   IgnoreCStart = IgnoreCStartArg;
   IgnoreCHave = IgnoreCHaveArg;
@@ -2054,8 +2054,8 @@ void SpellChecker::SaveSettings() {
   SaveToIni(L"Aspell_Language", AspellLanguage, L"en");
   SaveToIni(L"Remove_User_Dics_On_Dic_Remove", RemoveUserDics, 0);
   SaveToIni(L"Remove_Dics_For_All_Users", RemoveSystem, 0);
-  SaveToIni(L"Show_Only_Known", ShowOnlyKnown, TRUE);
-  SaveToIni(L"Install_Dictionaries_For_All_Users", InstallSystem, FALSE);
+  SaveToIni(L"Show_Only_Known", ShowOnlyKnown, true);
+  SaveToIni(L"Install_Dictionaries_For_All_Users", InstallSystem, false);
   wchar_t Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     if (!*ServerNames[i])
@@ -2092,7 +2092,7 @@ void SpellChecker::SaveSettings() {
   SaveToIni(L"Suggestions_Number", SuggestionsNum, 5);
   char *DefaultDelimUtf8 = 0;
   SetStringDUtf8(DefaultDelimUtf8, DEFAULT_DELIMITERS);
-  SaveToIniUtf8(L"Delimiters", DelimUtf8, DefaultDelimUtf8, TRUE);
+  SaveToIniUtf8(L"Delimiters", DelimUtf8, DefaultDelimUtf8, true);
   CLEAN_AND_ZERO_ARR(DefaultDelimUtf8);
   SaveToIni(L"Find_Next_Buffer_Size", BufferSize / 1024, 4);
   SaveToIni(L"Suggestions_Button_Size", SBSize, 15);
@@ -2100,15 +2100,15 @@ void SpellChecker::SaveSettings() {
   SaveToIni(L"Library", LibMode, 1);
   PreserveCurrentAddressIndex();
   SaveToIni(L"Last_Used_Address_Index", LastUsedAddress, 0);
-  SaveToIni(L"Decode_Language_Names", DecodeNames, TRUE);
-  SaveToIni(L"United_User_Dictionary(Hunspell)", OneUserDic, FALSE);
+  SaveToIni(L"Decode_Language_Names", DecodeNames, true);
+  SaveToIni(L"United_User_Dictionary(Hunspell)", OneUserDic, false);
 
-  SaveToIni(L"Use_Proxy", UseProxy, FALSE);
+  SaveToIni(L"Use_Proxy", UseProxy, false);
   SaveToIni(L"Proxy_User_Name", ProxyUserName, L"anonymous");
   SaveToIni(L"Proxy_Host_Name", ProxyHostName, L"");
   SaveToIni(L"Proxy_Password", ProxyPassword, L"");
   SaveToIni(L"Proxy_Port", ProxyPort, 808);
-  SaveToIni(L"Proxy_Is_Anonymous", ProxyAnonymous, TRUE);
+  SaveToIni(L"Proxy_Is_Anonymous", ProxyAnonymous, true);
   SaveToIni(L"Proxy_Type", ProxyType, 0);
   std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)>::iterator it =
       SettingsToSave->begin();
@@ -2117,14 +2117,14 @@ void SpellChecker::SaveSettings() {
   }
 }
 
-void SpellChecker::SetDecodeNames(BOOL Value) { DecodeNames = Value; }
+void SpellChecker::SetDecodeNames(bool Value) { DecodeNames = Value; }
 
-void SpellChecker::SetOneUserDic(BOOL Value) {
+void SpellChecker::SetOneUserDic(bool Value) {
   OneUserDic = Value;
   HunspellSpeller->SetUseOneDic(Value);
 }
 
-BOOL SpellChecker::GetOneUserDic() { return OneUserDic; }
+bool SpellChecker::GetOneUserDic() { return OneUserDic; }
 
 void SpellChecker::SetLibMode(int i) {
   LibMode = i;
@@ -2141,7 +2141,7 @@ void SpellChecker::LoadSettings() {
   char *BufUtf8 = 0;
   wchar_t *Path = 0;
   wchar_t *TBuf = 0;
-  SettingsLoaded = TRUE;
+  SettingsLoaded = true;
   GetDefaultAspellPath(Path);
   LoadFromIni(AspellPath, L"Aspell_Path", Path);
   CLEAN_AND_ZERO_ARR(Path);
@@ -2185,7 +2185,7 @@ void SpellChecker::LoadSettings() {
   LoadFromIni(IgnoreOneLetter, L"Ignore_One_Letter", 0);
   LoadFromIni(Ignore_, L"Ignore_With_", 1);
   int Value;
-  LoadFromIni(Value, L"United_User_Dictionary(Hunspell)", FALSE);
+  LoadFromIni(Value, L"United_User_Dictionary(Hunspell)", false);
   SetOneUserDic(Value);
   LoadFromIni(IgnoreSEApostrophe, L"Ignore_That_Start_or_End_with_'", 0);
 
@@ -2203,8 +2203,8 @@ void SpellChecker::LoadSettings() {
   SetBufferSize(Size);
   RefreshUnderlineStyle();
   CLEAN_AND_ZERO_ARR(BufUtf8);
-  LoadFromIni(ShowOnlyKnown, L"Show_Only_Known", TRUE);
-  LoadFromIni(InstallSystem, L"Install_Dictionaries_For_All_Users", FALSE);
+  LoadFromIni(ShowOnlyKnown, L"Show_Only_Known", true);
+  LoadFromIni(InstallSystem, L"Install_Dictionaries_For_All_Users", false);
   wchar_t Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     swprintf(Buf, L"Server_Address[%d]", i);
@@ -2213,14 +2213,14 @@ void SpellChecker::LoadSettings() {
   LoadFromIni(LastUsedAddress, L"Last_Used_Address_Index", 0);
   LoadFromIni(RemoveUserDics, L"Remove_User_Dics_On_Dic_Remove", 0);
   LoadFromIni(RemoveSystem, L"Remove_Dics_For_All_Users", 0);
-  LoadFromIni(DecodeNames, L"Decode_Language_Names", TRUE);
+  LoadFromIni(DecodeNames, L"Decode_Language_Names", true);
 
-  LoadFromIni(UseProxy, L"Use_Proxy", FALSE);
+  LoadFromIni(UseProxy, L"Use_Proxy", false);
   LoadFromIni(ProxyUserName, L"Proxy_User_Name", L"anonymous");
   LoadFromIni(ProxyHostName, L"Proxy_Host_Name", L"");
   LoadFromIni(ProxyPassword, L"Proxy_Password", L"");
   LoadFromIni(ProxyPort, L"Proxy_Port", 808);
-  LoadFromIni(ProxyAnonymous, L"Proxy_Is_Anonymous", TRUE);
+  LoadFromIni(ProxyAnonymous, L"Proxy_Is_Anonymous", true);
   LoadFromIni(ProxyType, L"Proxy_Type", 0);
 }
 
@@ -2268,7 +2268,7 @@ void SpellChecker::GetVisibleLimits(long &Start, long &Finish) {
   return;
 }
 
-char *SpellChecker::GetVisibleText(long *offset, BOOL NotIntersectionOnly) {
+char *SpellChecker::GetVisibleText(long *offset, bool NotIntersectionOnly) {
   Sci_TextRange range;
   GetVisibleLimits(range.chrg.cpMin, range.chrg.cpMax);
 
@@ -2335,7 +2335,7 @@ void SpellChecker::SetHunspellAdditionalPath(const wchar_t *Path) {
 }
 
 void SpellChecker::SaveToIni(const wchar_t *Name, const wchar_t *Value,
-                             const wchar_t *DefaultValue, BOOL InQuotes) {
+                             const wchar_t *DefaultValue, bool InQuotes) {
   if (!Name || !Value)
     return;
 
@@ -2366,7 +2366,7 @@ void SpellChecker::SaveToIni(const wchar_t *Name, int Value, int DefaultValue) {
 }
 
 void SpellChecker::SaveToIniUtf8(const wchar_t *Name, const char *Value,
-                                 const char *DefaultValue, BOOL InQuotes) {
+                                 const char *DefaultValue, bool InQuotes) {
   if (!Name || !Value)
     return;
 
@@ -2380,7 +2380,7 @@ void SpellChecker::SaveToIniUtf8(const wchar_t *Name, const char *Value,
 }
 
 void SpellChecker::LoadFromIni(wchar_t *&Value, const wchar_t *Name,
-                               const wchar_t *DefaultValue, BOOL InQuotes) {
+                               const wchar_t *DefaultValue, bool InQuotes) {
   if (!Name || !DefaultValue)
     return;
 
@@ -2418,8 +2418,21 @@ void SpellChecker::LoadFromIni(int &Value, const wchar_t *Name,
   CLEAN_AND_ZERO_ARR(Buf);
 }
 
+void SpellChecker::LoadFromIni(bool &Value, const wchar_t *Name,
+                               bool DefaultValue) {
+  if (!Name)
+    return;
+
+  wchar_t BufDefault[DEFAULT_BUF_SIZE];
+  wchar_t *Buf = 0;
+  _itow_s(DefaultValue ? 1 : 0, BufDefault, 10);
+  LoadFromIni(Buf, Name, BufDefault);
+  Value = _wtoi(Buf) != 0;
+  CLEAN_AND_ZERO_ARR(Buf);
+}
+
 void SpellChecker::LoadFromIniUtf8(char *&Value, const wchar_t *Name,
-                                   const char *DefaultValue, BOOL InQuotes) {
+                                   const char *DefaultValue, bool InQuotes) {
   if (!Name || !DefaultValue)
     return;
 
@@ -2504,7 +2517,7 @@ void SpellChecker::SetMultipleLanguages(const wchar_t *MultiString,
   CLEAN_AND_ZERO_STRING_VECTOR(MultiLangList);
 }
 
-BOOL SpellChecker::HunspellReinitSettings(BOOL ResetDirectory) {
+bool SpellChecker::HunspellReinitSettings(bool ResetDirectory) {
   if (ResetDirectory) {
     HunspellSpeller->SetDirectory(HunspellPath);
     HunspellSpeller->SetAdditionalDirectory(AdditionalHunspellPath);
@@ -2516,17 +2529,17 @@ BOOL SpellChecker::HunspellReinitSettings(BOOL ResetDirectory) {
     SetMultipleLanguages(HunspellMultiLanguages, HunspellSpeller);
 
   CLEAN_AND_ZERO_ARR(MultiLanguagesCopy);
-  return TRUE;
+  return true;
 }
 
-BOOL SpellChecker::AspellReinitSettings() {
+bool SpellChecker::AspellReinitSettings() {
   AspellSpeller->Init(AspellPath);
 
   if (wcscmp(AspellLanguage, L"<MULTIPLE>") != 0) {
     AspellSpeller->SetLanguage(AspellLanguage);
   } else
     SetMultipleLanguages(AspellMultiLanguages, AspellSpeller);
-  return TRUE;
+  return true;
 }
 
 void SpellChecker::SetBufferSize(int Size) {
@@ -2614,15 +2627,15 @@ void SpellChecker::ResetHotSpotCache() {
   memset(HotSpotCache, -1, sizeof(HotSpotCache));
 }
 
-BOOL SpellChecker::CheckWord(char *Word, long Start, long /*End*/) {
-  BOOL res;
+bool SpellChecker::CheckWord(char *Word, long Start, long /*End*/) {
+  bool res;
   if (!CurrentSpeller->IsWorking() || !Word || !*Word)
-    return TRUE;
+    return true;
   // Well Numbers have same codes for ANSI and Unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
   auto Style = GetStyle(Start);
   if (CheckComments && !CheckWordInCommentOrString(Style))
-    return TRUE;
+    return true;
 
   if (HotSpotCache[Style] == -1) {
 
@@ -2631,18 +2644,18 @@ BOOL SpellChecker::CheckWord(char *Word, long Start, long /*End*/) {
   }
 
   if (HotSpotCache[Style] == 1)
-    return TRUE;
+    return true;
 
   ApplyConversions(Word);
 
   auto SymbolsNum =
       (CurrentEncoding == ENCODING_UTF8) ? Utf8Length(Word) : strlen(Word);
   if (SymbolsNum == 0) {
-    return TRUE;
+    return true;
   }
 
   if (IgnoreOneLetter && SymbolsNum == 1) {
-    return TRUE;
+    return true;
   }
 
   if (IgnoreNumbers &&
@@ -2650,7 +2663,7 @@ BOOL SpellChecker::CheckWord(char *Word, long Start, long /*End*/) {
            ? Utf8pbrk(Word, "0123456789")
            : strpbrk(Word, "0123456789")) != 0) // Same for UTF-8 and not
   {
-    return TRUE;
+    return true;
   }
 
   if (IgnoreCStart || IgnoreCHave || IgnoreCAll) {
@@ -2660,35 +2673,35 @@ BOOL SpellChecker::CheckWord(char *Word, long Start, long /*End*/) {
     else
       Ts = cpyBuf<wchar_t>(Word);
     if (IgnoreCStart && IsCharUpper(Ts[0])) {
-      return TRUE;
+      return true;
     }
     if (IgnoreCHave || IgnoreCAll) {
-      BOOL AllUpper = IsCharUpper(Ts[0]);
+      bool AllUpper = IsCharUpper(Ts[0]);
       for (unsigned int i = 1; i < wcslen(Ts.get ()); i++) {
         if (IsCharUpper(Ts[i])) {
           if (IgnoreCHave) {
-            return TRUE;
+            return true;
           }
         } else
-          AllUpper = FALSE;
+          AllUpper = false;
       }
 
       if (AllUpper && IgnoreCAll) {
-        return TRUE;
+        return true;
       }
     }
   }
 
   if (Ignore_ && strchr(Word, '_') != 0) // I guess the same for UTF-8 and ANSI
   {
-    return TRUE;
+    return true;
   }
 
   auto Len = strlen(Word);
 
   if (IgnoreSEApostrophe) {
     if (Word[0] == '\'' || Word[Len - 1] == '\'') {
-      return TRUE;
+      return true;
     }
   }
 
@@ -2719,7 +2732,7 @@ int SpellChecker::CheckTextDefaultAnswer(CheckTextMode Mode) {
   case SpellChecker::UNDERLINE_ERRORS:
   case SpellChecker::FIND_FIRST:
   case SpellChecker::FIND_LAST:
-    return FALSE;
+    return false;
   case SpellChecker::GET_FIRST:
     return -1;
   }
@@ -2736,7 +2749,7 @@ int SpellChecker::CheckText(char *TextToCheck, long Offset,
   SendMsgToActiveEditor(ScintillaWindow, SCI_GETINDICATORCURRENT);
   char *Context = 0; // Temporary variable for strtok_s usage
   char *token;
-  BOOL stop = FALSE;
+  bool stop = false;
   long ResultingWordEnd = -1, ResultingWordStart = -1;
   auto TextLen = strlen(TextToCheck);
   std::vector<long> UnderlineBuffer;
@@ -2769,12 +2782,12 @@ int SpellChecker::CheckText(char *TextToCheck, long Offset,
           if (WordEnd > CurrentPosition) {
             SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, WordStart,
                                   WordEnd);
-            stop = TRUE;
+            stop = true;
           }
           break;
         case FIND_LAST: {
           if (WordEnd >= CurrentPosition) {
-            stop = TRUE;
+            stop = true;
             break;
           }
           ResultingWordStart = WordStart;
@@ -2813,21 +2826,21 @@ int SpellChecker::CheckText(char *TextToCheck, long Offset,
 
   switch (Mode) {
   case UNDERLINE_ERRORS:
-    return TRUE;
+    return true;
   case FIND_FIRST:
     return stop;
   case GET_FIRST:
     return -1;
   case FIND_LAST:
     if (ResultingWordStart == -1)
-      return FALSE;
+      return false;
     else {
       SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, ResultingWordStart,
                             ResultingWordEnd);
-      return TRUE;
+      return true;
     }
   };
-  return FALSE;
+  return false;
 }
 
 void SpellChecker::ClearVisibleUnderlines() {
@@ -2841,7 +2854,7 @@ void SpellChecker::ClearVisibleUnderlines() {
   }
 }
 
-void SpellChecker::CheckVisible(BOOL NotIntersectionOnly) {
+void SpellChecker::CheckVisible(bool NotIntersectionOnly) {
   CLEAN_AND_ZERO_ARR(VisibleText);
   VisibleText = GetVisibleText(&VisibleTextOffset, NotIntersectionOnly);
   if (!VisibleText)
@@ -2924,15 +2937,15 @@ void SpellChecker::RecheckModified() {
   CLEAN_AND_ZERO_ARR(Range.lpstrText);
 }
 
-void SpellChecker::SetConversionOptions(BOOL ConvertYo,
-                                        BOOL ConvertSingleQuotesArg,
-                                        BOOL RemoveBoundaryApostrophesArg) {
+void SpellChecker::SetConversionOptions(bool ConvertYo,
+                                        bool ConvertSingleQuotesArg,
+                                        bool RemoveBoundaryApostrophesArg) {
   IgnoreYo = ConvertYo;
   ConvertSingleQuotes = ConvertSingleQuotesArg;
   RemoveBoundaryApostrophes = RemoveBoundaryApostrophesArg;
 }
 
-void SpellChecker::RecheckVisible(BOOL NotIntersectionOnly) {
+void SpellChecker::RecheckVisible(bool NotIntersectionOnly) {
   int CodepageId;
   if (!CurrentSpeller->IsWorking()) {
     ClearAllUnderlines();
@@ -3007,7 +3020,7 @@ void SpellChecker::copyMisspellingsToClipboard() {
 }
 
 SuggestionsMenuItem::SuggestionsMenuItem(const wchar_t *TextArg, BYTE IdArg,
-                                         BOOL SeparatorArg /*= FALSE*/) {
+                                         bool SeparatorArg /*= false*/) {
   Text = 0;
   SetString(Text, TextArg);
   Id = IdArg;

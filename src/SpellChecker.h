@@ -36,18 +36,18 @@ class SelectProxy;
 struct SuggestionsMenuItem {
   wchar_t *Text;
   BYTE Id;
-  BOOL Separator;
-  SuggestionsMenuItem(const wchar_t *TextArg, BYTE IdArg, BOOL SeparatorArg = FALSE);
+  bool Separator;
+  SuggestionsMenuItem(const wchar_t *TextArg, BYTE IdArg, bool SeparatorArg = false);
   ~SuggestionsMenuItem() { CLEAN_AND_ZERO_ARR(Text); };
 };
 
 void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
-                        BOOL Separator = FALSE);
+                        bool Separator = false);
 
 HWND GetScintillaWindow(const NppData *NppDataArg);
 LRESULT SendMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
                               WPARAM wParam = 0, LPARAM lParam = 0);
-BOOL SendMsgToBothEditors(const NppData *NppDataArg, UINT Msg,
+bool SendMsgToBothEditors(const NppData *NppDataArg, UINT Msg,
                           WPARAM wParam = 0, LPARAM lParam = 0);
 LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg, WPARAM wParam = 0,
                               LPARAM lParam = 0);
@@ -72,11 +72,11 @@ public:
   void applyProxySettings();
   void showSuggestionMenu();
   void precalculateMenu();
-  void RecheckVisible(BOOL NotIntersectionOnly = FALSE);
+  void RecheckVisible(bool NotIntersectionOnly = false);
   void RecheckModified();
   void ErrorMsgBox(const wchar_t *message);
 
-  BOOL AspellReinitSettings();
+  bool AspellReinitSettings();
   void SetHunspellLanguage(const wchar_t *Str);
   void SetAspellLanguage(const wchar_t *Str);
   void SetDelimiters(const char *Str);
@@ -86,11 +86,11 @@ public:
                             AbstractSpellerInterface *Speller);
   void SetHunspellPath(const wchar_t *Path);
   void SetHunspellAdditionalPath(const wchar_t *Path);
-  void SetConversionOptions(BOOL ConvertYo, BOOL ConvertSingleQuotesArg,
-                            BOOL RemoveBoundaryApostrophesArg);
+  void SetConversionOptions(bool ConvertYo, bool ConvertSingleQuotesArg,
+                            bool RemoveBoundaryApostrophesArg);
   void SetCheckThose(int CheckThoseArg);
   void SetFileTypes(wchar_t *FileTypesArg);
-  void SetCheckComments(BOOL Value);
+  void SetCheckComments(bool Value);
   void SetHunspellMultipleLanguages(const char *MultiLanguagesArg);
   void SetAspellMultipleLanguages(const char *MultiLanguagesArg);
   void SetUnderlineColor(int Value);
@@ -99,48 +99,48 @@ public:
   void SetProxyHostName(wchar_t *Str);
   void SetProxyPassword(wchar_t *Str);
   void SetProxyPort(int Value);
-  void SetUseProxy(BOOL Value);
-  void SetProxyAnonymous(BOOL Value);
+  void SetUseProxy(bool Value);
+  void SetProxyAnonymous(bool Value);
   void SetProxyType(int Value);
-  void SetIgnore(BOOL IgnoreNumbersArg, BOOL IgnoreCStartArg,
-                 BOOL IgnoreCHaveArg, BOOL IgnoreCAllArg, BOOL Ignore_Arg,
-                 BOOL IgnoreSEApostropheArg, BOOL IgnoreOneLetterArg);
+  void SetIgnore(bool IgnoreNumbersArg, bool IgnoreCStartArg,
+                 bool IgnoreCHaveArg, bool IgnoreCAllArg, bool Ignore_Arg,
+                 bool IgnoreSEApostropheArg, bool IgnoreOneLetterArg);
   void SetSuggBoxSettings(int Size, int Transparency, int SaveIni = 1);
   void SetBufferSize(int Size);
   void SetSuggType(int SuggType);
   void SetLibMode(int i);
-  void SetDecodeNames(BOOL Value);
-  void SetOneUserDic(BOOL Value);
-  BOOL GetOneUserDic();
-  void SetShowOnlyKnow(BOOL Value);
-  void SetInstallSystem(BOOL Value);
-  void FillDialogs(BOOL NoDisplayCall = FALSE);
-  void ReinitLanguageLists(BOOL UpdateDialogs);
+  void SetDecodeNames(bool Value);
+  void SetOneUserDic(bool Value);
+  bool GetOneUserDic();
+  void SetShowOnlyKnow(bool Value);
+  void SetInstallSystem(bool Value);
+  void FillDialogs(bool NoDisplayCall = false);
+  void ReinitLanguageLists(bool UpdateDialogs);
   wchar_t *GetHunspellPath() { return HunspellPath; };
   wchar_t *GetHunspellAdditionalPath() { return AdditionalHunspellPath; };
   wchar_t *GetLangByIndex(int i);
-  BOOL GetShowOnlyKnown();
-  BOOL GetInstallSystem();
-  BOOL GetDecodeNames();
-  void DoPluginMenuInclusion(BOOL Invalidate = FALSE);
+  bool GetShowOnlyKnown();
+  bool GetInstallSystem();
+  bool GetDecodeNames();
+  void DoPluginMenuInclusion(bool Invalidate = false);
   HunspellInterface *GetHunspellSpeller() { return HunspellSpeller; };
   int GetLibMode();
-  BOOL HunspellReinitSettings(BOOL ResetDirectory);
-  void SetRemoveUserDics(BOOL Value);
-  void SetRemoveSystem(BOOL Value);
-  BOOL GetRemoveUserDics();
-  BOOL GetRemoveSystem();
+  bool HunspellReinitSettings(bool ResetDirectory);
+  void SetRemoveUserDics(bool Value);
+  void SetRemoveSystem(bool Value);
+  bool GetRemoveUserDics();
+  bool GetRemoveSystem();
   wchar_t *GetProxyUserName();
   wchar_t *GetProxyHostName();
   wchar_t *GetProxyPassword();
   int GetProxyPort();
-  BOOL GetUseProxy();
-  BOOL GetProxyAnonymous();
+  bool GetUseProxy();
+  bool GetProxyAnonymous();
   int GetProxyType();
   long PreviousA, PreviousB;
   void SetSuggestionsBoxTransparency();
   void addUserServer (std::wstring server);
-  BOOL getAutoCheckText () const { return AutoCheckText; }
+  bool getAutoCheckText () const { return AutoCheckText; }
   void ProcessMenuResult(WPARAM MenuId);
   void WriteSetting(std::pair<wchar_t*, DWORD>& x);
   void copyMisspellingsToClipboard();
@@ -172,19 +172,19 @@ private:
   void Cleanup();
   const char *GetDelimiters();
   void GetDefaultHunspellPath(wchar_t *&Path);
-  BOOL CheckWord(char *Word, long Start, long End);
+  bool CheckWord(char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
-  char *GetVisibleText(long *offset, BOOL NotIntersectionOnly = FALSE);
+  char *GetVisibleText(long *offset, bool NotIntersectionOnly = false);
   int CheckText(char *TextToCheck, long offset, CheckTextMode Mode);
-  void CheckVisible(BOOL NotIntersectionOnly = FALSE);
+  void CheckVisible(bool NotIntersectionOnly = false);
   void setEncodingById(int EncId);
   void SaveSettings();
   void UpdateAutocheckStatus(int SaveSetting = 1);
   void FillSuggestionsMenu(HMENU Menu);
-  BOOL GetWordUnderCursorIsRight(long &Pos, long &Length,
-                                 BOOL UseTextCursor = FALSE);
+  bool GetWordUnderCursorIsRight(long &Pos, long &Length,
+                                 bool UseTextCursor = false);
   char *GetWordAt(long CharPos, char *Text, long Offset);
-  BOOL CheckTextNeeded();
+  bool CheckTextNeeded();
   int CheckWordInCommentOrString(LRESULT Style);
   LRESULT GetStyle(int Pos);
   void RefreshUnderlineStyle();
@@ -197,25 +197,26 @@ private:
                               long &WordStart, long &WordEnd);
 
   void SaveToIni(const wchar_t *Name, const wchar_t *Value,
-                 const wchar_t *DefaultValue, BOOL InQuotes = 0);
+                 const wchar_t *DefaultValue, bool InQuotes = 0);
   void SaveToIni(const wchar_t *Name, int Value, int DefaultValue);
   void SaveToIniUtf8(const wchar_t *Name, const char *Value,
-                     const char *DefaultValue, BOOL InQuotes = 0);
+                     const char *DefaultValue, bool InQuotes = 0);
 
   void LoadFromIni(wchar_t *&Value, const wchar_t *Name,
-                   const wchar_t *DefaultValue, BOOL InQuotes = 0);
+                   const wchar_t *DefaultValue, bool InQuotes = 0);
+  void LoadFromIni(bool &Value, const wchar_t *Name, bool DefaultValue);
   void LoadFromIni(int &Value, const wchar_t *Name, int DefaultValue);
   void LoadFromIniUtf8(char *&Value, const wchar_t *Name,
-                       const char *DefaultValue, BOOL InQuotes = 0);
+                       const char *DefaultValue, bool InQuotes = 0);
   int CheckTextDefaultAnswer(CheckTextMode Mode);
 
 private:
   std::vector<LanguageName> *CurrentLangs;
-  BOOL SettingsLoaded;
-  BOOL OneUserDic;
-  BOOL AutoCheckText;
-  BOOL CheckTextEnabled;
-  BOOL WUCisRight;
+  bool SettingsLoaded;
+  bool OneUserDic;
+  bool AutoCheckText;
+  bool CheckTextEnabled;
+  bool WUCisRight;
   wchar_t *HunspellLanguage;
   wchar_t *HunspellMultiLanguages;
   wchar_t *AspellLanguage;
@@ -239,23 +240,23 @@ private:
   wchar_t *AspellPath;
   wchar_t *HunspellPath;
   wchar_t *AdditionalHunspellPath;
-  BOOL IgnoreYo;
-  BOOL ConvertSingleQuotes;
-  BOOL RemoveBoundaryApostrophes;
-  BOOL CheckThose;
-  BOOL CheckComments;
+  bool IgnoreYo;
+  bool ConvertSingleQuotes;
+  bool RemoveBoundaryApostrophes;
+  bool CheckThose;
+  bool CheckComments;
   int UnderlineColor;
   int UnderlineStyle;
-  BOOL IgnoreNumbers;
-  BOOL IgnoreCStart;
-  BOOL IgnoreCHave;
-  BOOL IgnoreCAll;
-  BOOL Ignore_;
-  BOOL IgnoreSEApostrophe;
-  BOOL IgnoreOneLetter;
-  BOOL DecodeNames;
-  BOOL ShowOnlyKnown;
-  BOOL InstallSystem;
+  bool IgnoreNumbers;
+  bool IgnoreCStart;
+  bool IgnoreCHave;
+  bool IgnoreCAll;
+  bool Ignore_;
+  bool IgnoreSEApostrophe;
+  bool IgnoreOneLetter;
+  bool DecodeNames;
+  bool ShowOnlyKnown;
+  bool InstallSystem;
   int SBSize;
   int SBTrans;
   int BufferSize;
@@ -263,8 +264,8 @@ private:
   HWND CurrentScintilla;
   LRESULT HotSpotCache[256]; // STYLE_MAX = 255
   std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)> *SettingsToSave;
-  BOOL UseProxy;
-  BOOL ProxyAnonymous;
+  bool UseProxy;
+  bool ProxyAnonymous;
   int ProxyType;
   wchar_t *ProxyHostName;
   wchar_t *ProxyUserName;
@@ -290,8 +291,8 @@ private:
   char *VisibleText;
   std::ptrdiff_t VisibleTextLength;
   long VisibleTextOffset;
-  BOOL RemoveUserDics;
-  BOOL RemoveSystem;
+  bool RemoveUserDics;
+  bool RemoveSystem;
 
   AbstractSpellerInterface *CurrentSpeller;
   AspellInterface *AspellSpeller;
