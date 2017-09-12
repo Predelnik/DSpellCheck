@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "MainDef.h"
 #include "unzip.h"
+#include "ProgressData.h"
 #include <variant>
 
 void DownloadDicsDlg::DoDialog() {

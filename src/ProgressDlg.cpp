@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "resource.h"
 #include "CommonFunctions.h"
 #include "DownloadDicsDlg.h"
+#include "ProgressData.h"
 
 void ProgressDlg::DoDialog() {
   if (!isCreated()) {
