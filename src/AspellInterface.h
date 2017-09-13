@@ -24,6 +24,7 @@ struct AspellSpeller;
 #include "AbstractSpellerInterface.h"
 
 class AspellInterface : public AbstractSpellerInterface {
+  using SpellerPtr = std::unique_ptr<AspellSpeller, void (*)(AspellSpeller *)>;
 public:
   AspellInterface(HWND NppWindowArg); // Window for error reporting
   ~AspellInterface();
@@ -46,8 +47,8 @@ private:
 public:
 private:
   AspellSpeller *LastSelectedSpeller;
-  AspellSpeller *SingularSpeller;
-  std::vector<AspellSpeller *> *Spellers;
+  SpellerPtr singleSpeller;
+  std::vector<SpellerPtr> spellers;
   bool AspellLoaded;
   HWND NppWindow; // For message boxes
 };
