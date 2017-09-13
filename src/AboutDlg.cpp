@@ -32,43 +32,38 @@ void AboutDlg::DoDialog() {
   display();
 }
 
-bool GetProductAndVersion(wchar_t *&strProductVersion) {
+std::wstring GetProductAndVersion() {
   // get the filename of the executable containing the version resource
-  wchar_t szFilename[MAX_PATH + 1] = {0};
-  if (GetModuleFileName((HMODULE)getHModule(), szFilename, MAX_PATH) == 0) {
-    return false;
+  std::vector<wchar_t> szFilename (MAX_PATH + 1);
+  if (GetModuleFileName((HMODULE)getHModule(), szFilename.data (), MAX_PATH) == 0) {
+    return {};
   }
 
   // allocate a block of memory for the version info
   DWORD dummy;
-  DWORD dwSize = GetFileVersionInfoSize(szFilename, &dummy);
+  auto dwSize = GetFileVersionInfoSize(szFilename.data (), &dummy);
   if (dwSize == 0) {
-    return false;
+    return {};
   }
   std::vector<BYTE> data(dwSize);
 
   // load the version info
-  if (!GetFileVersionInfo(szFilename, NULL, dwSize, &data[0])) {
-    return false;
+  if (!GetFileVersionInfo(szFilename.data (), NULL, dwSize, &data[0])) {
+    return {};
   }
 
   UINT uiVerLen = 0;
-  VS_FIXEDFILEINFO *pFixedInfo = 0; // pointer to fixed file info structure
+  VS_FIXEDFILEINFO *pFixedInfo = nullptr; // pointer to fixed file info structure
   // get the fixed file info (language-independent)
-  if (VerQueryValue(&data[0], TEXT("\\"), (void **)&pFixedInfo,
-                    (UINT *)&uiVerLen) == 0) {
-    return false;
+  if (VerQueryValue(data.data (), TEXT("\\"), reinterpret_cast<void **>(&pFixedInfo),
+                    static_cast<UINT *>(&uiVerLen)) == 0) {
+    return {};
   }
-
-  CLEAN_AND_ZERO_ARR(strProductVersion);
-  strProductVersion = new wchar_t[DEFAULT_BUF_SIZE];
-  swprintf(strProductVersion, L"Version: %u.%u.%u.%u",
+  return wstring_printf (L"Version: %u.%u.%u.%u",
            HIWORD(pFixedInfo->dwProductVersionMS),
            LOWORD(pFixedInfo->dwProductVersionMS),
            HIWORD(pFixedInfo->dwProductVersionLS),
            LOWORD(pFixedInfo->dwProductVersionLS));
-
-  return true;
 }
 
 void AboutDlg::init(HINSTANCE hInst, HWND Parent) {
@@ -78,10 +73,7 @@ void AboutDlg::init(HINSTANCE hInst, HWND Parent) {
 INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message) {
   case WM_INITDIALOG: {
-    wchar_t *Ver = 0;
-    GetProductAndVersion(Ver);
-    Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), Ver);
-    CLEAN_AND_ZERO_ARR(Ver);
+    Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), GetProductAndVersion ().c_str ());
   }
     return true;
   case WM_NOTIFY: {
