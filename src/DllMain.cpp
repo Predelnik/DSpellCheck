@@ -87,7 +87,7 @@ bool APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID) {
 }
 WPARAM LastHwnd = NULL;
 LPARAM LastCoords = 0;
-std::vector<SuggestionsMenuItem *> *MenuList = NULL;
+std::vector<SuggestionsMenuItem> curMenuList;
 // Ok, trying to use window subclassing to handle messages
 LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
                                    LPARAM lParam) {
@@ -95,26 +95,27 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   switch (Message) {
   case WM_INITMENUPOPUP: {
     // Checking that it isn't system menu and nor any main menu except 0th
-    if (MenuList && LOWORD(lParam) == 0 && HIWORD(lParam) == 0) {
+    if (!curMenuList.empty () && LOWORD(lParam) == 0 && HIWORD(lParam) == 0) {
       // Special check for 0th main menu item
       MENUBARINFO info;
       info.cbSize = sizeof(MENUBARINFO);
       GetMenuBarInfo(nppData._nppHandle, OBJID_MENU, 0, &info);
       HMENU MainMenu = info.hMenu;
-      MENUITEMINFO FileMenuItem;
-      FileMenuItem.cbSize = sizeof(MENUITEMINFO);
-      FileMenuItem.fMask = MIIM_SUBMENU;
-      GetMenuItemInfo(MainMenu, 0, true, &FileMenuItem);
+      MENUITEMINFO fileMenuItem;
+      fileMenuItem.cbSize = sizeof(MENUITEMINFO);
+      fileMenuItem.fMask = MIIM_SUBMENU;
+      GetMenuItemInfo(MainMenu, 0, true, &fileMenuItem);
 
-      HMENU Menu = (HMENU)wParam;
-      if (FileMenuItem.hSubMenu != Menu && GetLangsSubMenu() != Menu) {
-        for (unsigned int i = 0; i < MenuList->size(); i++) {
-          InsertSuggMenuItem(Menu, (*MenuList)[i]->Text, (*MenuList)[i]->Id, i,
-                             (*MenuList)[i]->Separator);
+      const auto menu = reinterpret_cast<HMENU>(wParam);
+      if (fileMenuItem.hSubMenu != menu && GetLangsSubMenu() != menu) {
+        int i = 0;
+        for (auto &item : curMenuList) {
+              InsertSuggMenuItem(menu, item.Text, item.Id, i, item.Separator);
+            ++i;
         }
       }
     }
-    CLEAN_AND_ZERO_POINTER_VECTOR(MenuList);
+    curMenuList.clear ();
   } break;
 
   case WM_COMMAND:
@@ -141,7 +142,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   case WM_NOTIFY:
     // Removing possibility of adding items to tab bar menu.
     if (((LPNMHDR)lParam)->code == NM_RCLICK) {
-      CLEAN_AND_ZERO_POINTER_VECTOR(MenuList);
+      curMenuList.clear ();
     }
     break;
   case WM_CONTEXTMENU:
@@ -168,8 +169,8 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   return ret;
 }
 
-LRESULT showCalculatedMenu(std::vector<SuggestionsMenuItem *>* menuListPtr) {
-    MenuList = menuListPtr;
+LRESULT showCalculatedMenu(const std::vector<SuggestionsMenuItem>&& menuList) {
+    curMenuList = std::move (menuList);
     return ::CallWindowProc(wndProcNotepad, nppData._nppHandle, WM_CONTEXTMENU, LastHwnd, LastCoords);
 }
 

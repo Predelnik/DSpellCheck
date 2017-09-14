@@ -37,7 +37,7 @@ struct SuggestionsMenuItem {
   wchar_t *Text;
   BYTE Id;
   bool Separator;
-  SuggestionsMenuItem(const wchar_t *TextArg, BYTE IdArg, bool SeparatorArg = false);
+  SuggestionsMenuItem(const wchar_t *TextArg, int IdArg, bool SeparatorArg = false);
   ~SuggestionsMenuItem() { CLEAN_AND_ZERO_ARR(Text); };
 };
 
@@ -180,7 +180,7 @@ private:
   void setEncodingById(int EncId);
   void SaveSettings();
   void UpdateAutocheckStatus(int SaveSetting = 1);
-  void FillSuggestionsMenu(HMENU Menu);
+    std::vector<SuggestionsMenuItem> FillSuggestionsMenu(HMENU Menu);
   bool GetWordUnderCursorIsRight(long &Pos, long &Length,
                                  bool UseTextCursor = false);
   char *GetWordAt(long CharPos, char *Text, long Offset);
@@ -273,7 +273,6 @@ private:
   wchar_t *ProxyPassword;
 
   LRESULT Lexer;
-  std::vector<SuggestionsMenuItem *> *SuggestionMenuItems;
   std::vector<char *> *LastSuggestions;
   long ModifiedStart;
   long ModifiedEnd;

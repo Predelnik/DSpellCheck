@@ -74,7 +74,7 @@ void RecheckVisible ();
 void InitClasses ();
 void CreateHooks ();
 void UpdateLangsMenu ();
-LRESULT showCalculatedMenu(std::vector<SuggestionsMenuItem *>* menuListPtr);
+LRESULT showCalculatedMenu(const std::vector<SuggestionsMenuItem>&& menuList);
 void AddIcons ();
 bool GetAutoCheckState ();
 void AutoCheckStateReceived (bool state);

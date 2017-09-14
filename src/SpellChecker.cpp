@@ -146,7 +146,6 @@ SpellChecker::SpellChecker(const wchar_t *IniFilePathArg,
   WUCPosition = 0;
   WUCisRight = true;
   CurrentScintilla = GetScintillaWindow(NppDataInstance);
-  SuggestionMenuItems = 0;
   AspellSpeller = new AspellInterface(NppDataInstance->_nppHandle);
   HunspellSpeller = new HunspellInterface(NppDataInstance->_nppHandle);
   CurrentSpeller = AspellSpeller;
@@ -289,17 +288,17 @@ void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
 }
 
 void SpellChecker::precalculateMenu() {
+    std::vector<SuggestionsMenuItem> suggestionMenuItems;
     if (CheckTextNeeded() && SuggestionsMode == SUGGESTIONS_CONTEXT_MENU) {
         long Pos, Length;
         WUCisRight = GetWordUnderCursorIsRight(Pos, Length, true);
         if (!WUCisRight) {
             WUCPosition = Pos;
             WUCLength = Length;
-            FillSuggestionsMenu(0);
+            suggestionMenuItems = FillSuggestionsMenu(0);
         }
     }
-    showCalculatedMenu (SuggestionMenuItems);
-    SuggestionMenuItems = 0;
+    showCalculatedMenu (std::move (suggestionMenuItems));
 }
 
 void SpellChecker::SetSuggType(int SuggType) {
@@ -1872,9 +1871,9 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
   }
 }
 
-void SpellChecker::FillSuggestionsMenu(HMENU Menu) {
+std::vector<SuggestionsMenuItem> SpellChecker::FillSuggestionsMenu(HMENU Menu) {
   if (!CurrentSpeller->IsWorking())
-    return; // Word is already off-screen
+    return {}; // Word is already off-screen
 
   int Pos = WUCPosition;
   Sci_TextRange Range;
@@ -1887,10 +1886,8 @@ void SpellChecker::FillSuggestionsMenu(HMENU Menu) {
   if (SuggestionsMode == SUGGESTIONS_BOX) {
     // PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL,
     // Pos, Pos + WUCLength);
-  } else {
-    SuggestionMenuItems = new std::vector<SuggestionsMenuItem *>;
   }
-
+  std::vector<SuggestionsMenuItem> SuggestionMenuItems;
   SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTRANGE, 0, (LPARAM)&Range);
 
   SetString(SelectedWord, Range.lpstrText);
@@ -1899,7 +1896,7 @@ void SpellChecker::FillSuggestionsMenu(HMENU Menu) {
   CLEAN_AND_ZERO_STRING_VECTOR(LastSuggestions);
   LastSuggestions = CurrentSpeller->GetSuggestions(SelectedWord);
   if (!LastSuggestions)
-    return;
+    return {};
 
   for (size_t i = 0; i < LastSuggestions->size(); i++) {
     if (i >= (unsigned int)SuggestionsNum)
@@ -1908,15 +1905,14 @@ void SpellChecker::FillSuggestionsMenu(HMENU Menu) {
     if (SuggestionsMode == SUGGESTIONS_BOX)
       InsertSuggMenuItem(Menu, Buf, static_cast<BYTE>(i + 1), -1);
     else
-      SuggestionMenuItems->push_back(
-          new SuggestionsMenuItem(Buf, static_cast<BYTE>(i + 1)));
+      SuggestionMenuItems.emplace_back(Buf, static_cast<BYTE>(i + 1));
   }
 
   if (LastSuggestions->size() > 0) {
     if (SuggestionsMode == SUGGESTIONS_BOX)
       InsertSuggMenuItem(Menu, L"", 0, 103, true);
     else
-      SuggestionMenuItems->push_back(new SuggestionsMenuItem(L"", 0, true));
+      SuggestionMenuItems.emplace_back(L"", 0, true);
   }
 
   wchar_t *MenuString = new wchar_t[WUCLength + 50 + 1]; // Add "" to dictionary
@@ -1931,23 +1927,22 @@ void SpellChecker::FillSuggestionsMenu(HMENU Menu) {
   if (SuggestionsMode == SUGGESTIONS_BOX)
     InsertSuggMenuItem(Menu, MenuString, MID_IGNOREALL, -1);
   else
-    SuggestionMenuItems->push_back(
-        new SuggestionsMenuItem(MenuString, MID_IGNOREALL));
+    SuggestionMenuItems.emplace_back(MenuString, MID_IGNOREALL);
   swprintf(MenuString, L"Add \"%s\" to Dictionary", Buf);
   if (SuggestionsMode == SUGGESTIONS_BOX)
     InsertSuggMenuItem(Menu, MenuString, MID_ADDTODICTIONARY, -1);
   else
-    SuggestionMenuItems->push_back(
-        new SuggestionsMenuItem(MenuString, MID_ADDTODICTIONARY));
+    SuggestionMenuItems.emplace_back(MenuString, MID_ADDTODICTIONARY);
 
   if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
-    SuggestionMenuItems->push_back(new SuggestionsMenuItem(L"", 0, true));
+    SuggestionMenuItems.emplace_back (L"", 0, true);
 
   CLEAN_AND_ZERO_ARR(Range.lpstrText);
   CLEAN_AND_ZERO_ARR(Buf);
   CLEAN_AND_ZERO_ARR(BufUtf8);
 
   CLEAN_AND_ZERO_ARR(MenuString);
+  return SuggestionMenuItems;
 }
 
 void SpellChecker::UpdateAutocheckStatus(int SaveSetting) {
@@ -3018,10 +3013,10 @@ void SpellChecker::copyMisspellingsToClipboard() {
   CLEAN_AND_ZERO_ARR(wchar_str);
 }
 
-SuggestionsMenuItem::SuggestionsMenuItem(const wchar_t *TextArg, BYTE IdArg,
+SuggestionsMenuItem::SuggestionsMenuItem(const wchar_t *TextArg, int IdArg,
                                          bool SeparatorArg /*= false*/) {
   Text = 0;
   SetString(Text, TextArg);
-  Id = IdArg;
+  Id = static_cast<BYTE> (IdArg);
   Separator = SeparatorArg;
 }
