@@ -344,17 +344,17 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
   if (SpellerToUse->IsWorking()) {
     if (UpdateDialogs)
       SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(false);
-    std::vector<wchar_t *> *LangsFromSpeller = SpellerToUse->GetLanguageList();
+    auto LangsFromSpeller = SpellerToUse->GetLanguageList();
     CurrentLangs = new std::vector<LanguageName>();
 
-    if (!LangsFromSpeller || LangsFromSpeller->size() == 0) {
+    if (LangsFromSpeller.empty ()) {
       if (UpdateDialogs)
         SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(true);
       return;
     }
-    for (unsigned int i = 0; i < LangsFromSpeller->size(); i++) {
+    for (auto &lang : LangsFromSpeller) {
       LanguageName Lang(
-          LangsFromSpeller->at(i),
+          lang.c_str (),
           (SpellerId == 1 && DecodeNames)); // Using them only for Hunspell
       CurrentLangs->push_back(
           Lang); // TODO: Add option - use or not use aliases.
@@ -364,7 +364,6 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
     if (wcscmp(CurrentLang, L"<MULTIPLE>") == 0)
       CurrentLangExists = true;
 
-    CLEAN_AND_ZERO_STRING_VECTOR(LangsFromSpeller);
     std::sort(CurrentLangs->begin(), CurrentLangs->end(),
               DecodeNames ? CompareAliases : CompareOriginal);
     if (!CurrentLangExists && CurrentLangs->size() > 0) {

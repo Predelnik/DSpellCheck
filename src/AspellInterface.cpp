@@ -45,45 +45,35 @@ AspellInterface::AspellInterface(HWND NppWindowArg) : singleSpeller(wrapSpeller(
     AspellLoaded = false;
 }
 
-std::vector<wchar_t *>* AspellInterface::GetLanguageList() {
+std::vector<std::wstring> AspellInterface::GetLanguageList() {
     if (!AspellLoaded)
-        return 0;
-    AspellConfig* aspCfg;
-    const AspellDictInfo* entry;
-    AspellDictInfoList* dlist;
-    AspellDictInfoEnumeration* dels;
-    std::vector<wchar_t *>* Names = new std::vector<wchar_t *>;
+        return {};
 
-    aspCfg = new_aspell_config();
-
+    auto aspCfg = wrapConfig(new_aspell_config());
     /* the returned pointer should _not_ need to be deleted */
-    dlist = get_aspell_dict_info_list(aspCfg);
+    auto dlist = get_aspell_dict_info_list(aspCfg.get ());
 
-    /* config is no longer needed */
-    delete_aspell_config(aspCfg);
-
-    dels = aspell_dict_info_list_elements(dlist);
+    auto dels = aspell_dict_info_list_elements(dlist);
 
     if (aspell_dict_info_enumeration_at_end(dels)) {
         delete_aspell_dict_info_enumeration(dels);
-        return 0;
+        return {};
     }
 
-    while ((entry = aspell_dict_info_enumeration_next(dels)) != 0) {
-        wchar_t* TBuf = 0;
-        SetString(TBuf, entry->name);
-        Names->push_back(TBuf);
+    const AspellDictInfo* entry;
+    std::vector<std::wstring> names;
+    while ((entry = aspell_dict_info_enumeration_next(dels)) != nullptr) {
+        names.push_back(to_wstring (entry->name));
     }
-
-    std::sort(Names->begin(), Names->end(), SortCompare);
-    return Names;
+    std::sort(names.begin(), names.end());
+    return names;
 }
 
 bool AspellInterface::IsWorking() {
     return AspellLoaded;
 }
 
-void AspellInterface::SendAspellErorr(AspellCanHaveError* Error) {
+void AspellInterface::SendAspellError(AspellCanHaveError* Error) {
     wchar_t* ErrorMsg = 0;
     SetString(ErrorMsg, aspell_error_message(Error));
     MessageBox(NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
@@ -106,7 +96,7 @@ void AspellInterface::SetMultipleLanguages(std::vector<wchar_t *>* List) {
             spellers.push_back(wrapSpeller(to_aspell_speller(PossibleErr)));
         }
         else
-            SendAspellErorr(PossibleErr);
+            SendAspellError(PossibleErr);
 
         delete_aspell_config(SpellConfig);
     }
@@ -243,7 +233,7 @@ bool AspellInterface::Init(wchar_t* PathArg) {
     return (AspellLoaded = LoadAspell(PathArg));
 }
 
-void AspellInterface::SetLanguage(wchar_t* Lang) {
+void AspellInterface::SetLanguage(const wchar_t* Lang) {
     if (!AspellLoaded)
         return;
 
@@ -258,16 +248,13 @@ void AspellInterface::SetLanguage(wchar_t* Lang) {
     AspellCanHaveError* PossibleErr = new_aspell_speller(spellConfig.get());
 
     if (aspell_error_number(PossibleErr) != 0) {
-        std::vector<wchar_t *>* LangList = GetLanguageList();
-        if (LangList && (!Lang || wcscmp(Lang, LangList->at(0)) != 0)) {
-            SetLanguage(LangList->at(0));
-            CLEAN_AND_ZERO_STRING_VECTOR (LangList);
-            return;
+        auto LangList = GetLanguageList();
+        if (!LangList.empty () && (!Lang || Lang != LangList.front ())) {
+            SetLanguage(LangList.front ().c_str ());
         }
         else {
-            singleSpeller = 0;
-            SendAspellErorr(PossibleErr);
-            return;
+            singleSpeller.reset ();
+            SendAspellError(PossibleErr);
         }
     }
     else

@@ -94,7 +94,7 @@ cleanup:
 
 HunspellInterface::HunspellInterface(HWND NppWindowArg) {
   NppWindow = NppWindowArg;
-  DicList = new std::set<AvailableLangInfo>;
+  dicList = new std::set<AvailableLangInfo>;
   Spellers = new std::vector<DicInfo>;
   memset(&Empty, 0, sizeof(Empty));
   Ignored = new WordSet;
@@ -245,26 +245,22 @@ HunspellInterface::~HunspellInterface() {
   CLEAN_AND_ZERO_ARR(SystemWrongDicPath);
 
   std::set<AvailableLangInfo>::iterator it;
-  it = DicList->begin();
-  for (; it != DicList->end(); ++it) {
-    delete[]((*it).Name);
+  it = dicList->begin();
+  for (; it != dicList->end(); ++it) {
+    delete[]((*it).name);
   }
-  CLEAN_AND_ZERO(DicList);
+  CLEAN_AND_ZERO(dicList);
 }
 
-std::vector<wchar_t *> *HunspellInterface::GetLanguageList() {
-  std::vector<wchar_t *> *List = new std::vector<wchar_t *>;
-  // Just copying vector
-  std::set<AvailableLangInfo>::iterator it = DicList->begin();
-  for (; it != DicList->end(); ++it) {
-    wchar_t *Buf = 0;
-    SetString(Buf, (*it).Name);
-    List->push_back(Buf);
+std::vector<std::wstring> HunspellInterface::GetLanguageList() {
+  std::vector<std::wstring> list;
+  for (auto &dic : *dicList) {
+    list.push_back(dic.name);
   }
-  return List;
+  return list;
 }
 
-DicInfo HunspellInterface::CreateHunspell(wchar_t *Name, int Type) {
+DicInfo HunspellInterface::CreateHunspell(const wchar_t* Name, int Type) {
   auto size = (Type ? wcslen(SysDicDir) : wcslen(DicDir)) + 1 + wcslen(Name) +
               1 + 3 + 1; // + . + aff/dic + /0
   wchar_t *AffBuf = new wchar_t[size];
@@ -341,36 +337,36 @@ DicInfo HunspellInterface::CreateHunspell(wchar_t *Name, int Type) {
   return NewDic;
 }
 
-void HunspellInterface::SetLanguage(wchar_t *Lang) {
-  if (DicList->size() == 0) {
+void HunspellInterface::SetLanguage(const wchar_t* Lang) {
+  if (dicList->size() == 0) {
     SingularSpeller = Empty;
     return;
   }
   AvailableLangInfo Temp;
-  Temp.Name = Lang;
+  Temp.name = Lang;
   Temp.Type = 0;
-  std::set<AvailableLangInfo>::iterator SearchResult = DicList->find(Temp);
-  if (SearchResult == DicList->end()) {
-    SearchResult = DicList->begin();
+  std::set<AvailableLangInfo>::iterator SearchResult = dicList->find(Temp);
+  if (SearchResult == dicList->end()) {
+    SearchResult = dicList->begin();
   }
-  SingularSpeller = CreateHunspell((*SearchResult).Name, (*SearchResult).Type);
+  SingularSpeller = CreateHunspell((*SearchResult).name, (*SearchResult).Type);
 }
 
 void HunspellInterface::SetMultipleLanguages(std::vector<wchar_t *> *List) {
   Spellers->clear();
 
-  if (DicList->size() == 0)
+  if (dicList->size() == 0)
     return;
 
   for (unsigned int i = 0; i < List->size(); i++) {
     AvailableLangInfo Temp;
-    Temp.Name = List->at(i);
+    Temp.name = List->at(i);
     Temp.Type = 0;
-    std::set<AvailableLangInfo>::iterator SearchResult = DicList->find(Temp);
-    if (SearchResult == DicList->end())
+    std::set<AvailableLangInfo>::iterator SearchResult = dicList->find(Temp);
+    if (SearchResult == dicList->end())
       continue;
     DicInfo Instance =
-        CreateHunspell((*SearchResult).Name, (*SearchResult).Type);
+        CreateHunspell((*SearchResult).name, (*SearchResult).Type);
     Spellers->push_back(Instance);
   }
 }
@@ -664,13 +660,13 @@ void HunspellInterface::SetDirectory(wchar_t *Dir) {
   SetString(DicDir, Dir);
 
   std::set<AvailableLangInfo>::iterator it;
-  it = DicList->begin();
-  for (; it != DicList->end(); ++it) {
-    delete[]((*it).Name);
+  it = dicList->begin();
+  for (; it != dicList->end(); ++it) {
+    delete[]((*it).name);
   }
-  CLEAN_AND_ZERO(DicList);
+  CLEAN_AND_ZERO(dicList);
 
-  DicList = new std::set<AvailableLangInfo>;
+  dicList = new std::set<AvailableLangInfo>;
   IsHunspellWorking = true;
 
   bool Res = ListFiles(Dir, L"*.*", *FileList, L"*.aff");
@@ -691,8 +687,8 @@ void HunspellInterface::SetDirectory(wchar_t *Dir) {
       SetString(TBuf, SlashPointer + 1);
       AvailableLangInfo NewX;
       NewX.Type = 0;
-      NewX.Name = TBuf;
-      DicList->insert(NewX);
+      NewX.name = TBuf;
+      dicList->insert(NewX);
     }
     CLEAN_AND_ZERO_ARR(Buf);
   }
@@ -705,7 +701,7 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
   std::vector<wchar_t *> *FileList = new std::vector<wchar_t *>;
   SetString(SysDicDir, Dir);
 
-  if (!DicList)
+  if (!dicList)
     return;
   IsHunspellWorking = true;
 
@@ -727,9 +723,9 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
       SetString(TBuf, SlashPointer + 1);
       AvailableLangInfo NewX;
       NewX.Type = 1;
-      NewX.Name = TBuf;
-      if (DicList->find(NewX) == DicList->end())
-        DicList->insert(NewX);
+      NewX.name = TBuf;
+      if (dicList->find(NewX) == dicList->end())
+        dicList->insert(NewX);
       else
         CLEAN_AND_ZERO_ARR(TBuf);
     }
@@ -754,10 +750,10 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
 
 bool HunspellInterface::GetLangOnlySystem(wchar_t *Lang) {
   AvailableLangInfo Needle;
-  Needle.Name = Lang;
+  Needle.name = Lang;
   Needle.Type = 1;
-  std::set<AvailableLangInfo>::iterator It = DicList->find(Needle);
-  if (It != DicList->end() && (*It).Type == 1)
+  std::set<AvailableLangInfo>::iterator It = dicList->find(Needle);
+  if (It != dicList->end() && (*It).Type == 1)
     return true;
   else
     return false;

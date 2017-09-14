@@ -28,8 +28,8 @@ class AspellInterface : public AbstractSpellerInterface {
 public:
   AspellInterface(HWND NppWindowArg); // Window for error reporting
   ~AspellInterface();
-  std::vector<wchar_t *> *GetLanguageList() override;
-  void SetLanguage(wchar_t *Lang) override;
+    std::vector<std::wstring> GetLanguageList() override;
+  void SetLanguage(const wchar_t* Lang) override;
   void SetMultipleLanguages(
       std::vector<wchar_t *> *List) override; // Languages are from LangList
   bool
@@ -42,7 +42,7 @@ public:
   bool Init(wchar_t *PathArg);
 
 private:
-  void SendAspellErorr(AspellCanHaveError *Error);
+  void SendAspellError(AspellCanHaveError *Error);
 
 public:
 private:

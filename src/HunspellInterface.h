@@ -40,11 +40,11 @@ struct DicInfo {
 };
 
 struct AvailableLangInfo {
-  wchar_t *Name;
+  const wchar_t *name;
   int Type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
 
   bool operator<(const AvailableLangInfo &rhs) const {
-    return (wcscmp(Name, rhs.Name) < 0);
+    return (wcscmp(name, rhs.name) < 0);
   }
 };
 
@@ -52,8 +52,8 @@ class HunspellInterface : public AbstractSpellerInterface {
 public:
   HunspellInterface(HWND NppWindowArg);
   ~HunspellInterface();
-  __override virtual std::vector<wchar_t *> *GetLanguageList();
-  __override virtual void SetLanguage(wchar_t *Lang);
+  __override virtual std::vector<std::wstring> GetLanguageList();
+  __override virtual void SetLanguage(const wchar_t* Lang);
   __override virtual void SetMultipleLanguages(
       std::vector<wchar_t *> *List);             // Languages are from LangList
   __override virtual bool CheckWord(char *Word); // Word in Utf-8 or ANSI
@@ -72,7 +72,7 @@ public:
   bool GetLangOnlySystem(wchar_t *Lang);
 
 private:
-  DicInfo CreateHunspell(wchar_t *Name, int Type);
+  DicInfo CreateHunspell(const wchar_t* Name, int Type);
   bool SpellerCheckWord(DicInfo Dic, char *Word, EncodingType Encoding);
   void MessageBoxWordCannotBeAdded();
 
@@ -82,7 +82,7 @@ private:
   bool UseOneDic;
   wchar_t *DicDir;
   wchar_t *SysDicDir;
-  std::set<AvailableLangInfo> *DicList;
+  std::set<AvailableLangInfo> *dicList;
   std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)> *AllHunspells;
   char *GetConvertedWord(const char *Source, iconv_t Converter);
   DicInfo SingularSpeller;
