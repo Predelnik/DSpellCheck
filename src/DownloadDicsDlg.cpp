@@ -190,7 +190,6 @@ void DownloadDicsDlg::onFileDownloaded() {
     char* DicFileNameANSI = 0;
     std::map<char *, int, bool (*)(char*, char*)>::iterator it;
     wchar_t* DicFileName = 0;
-    wchar_t DicFileLocalPath[MAX_PATH];
     wchar_t HunspellDicPath[MAX_PATH];
     bool IsAffFile = false;
     bool IsDicFile = false;
@@ -224,17 +223,17 @@ void DownloadDicsDlg::onFileDownloaded() {
 
             (*it).second |= (IsAffFile ? 0x01 : 0x02);
             unzOpenCurrentFile(fp);
-            wcscpy(DicFileLocalPath, getTempPath().c_str());
+            auto DicFileLocalPath = getTempPath();
             SetString(DicFileName, DicFileNameANSI);
-            wcscat(DicFileLocalPath, DicFileName);
+            DicFileLocalPath += DicFileName;
             if (IsAffFile)
-                wcscat(DicFileLocalPath, L".aff");
+                DicFileLocalPath += L".aff";
             else
-                wcscat(DicFileLocalPath, L".dic");
+                DicFileLocalPath += L".dic";
 
-            SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
-            int LocalDicFileHandle =
-                _wopen(DicFileLocalPath, _O_CREAT | _O_BINARY | _O_WRONLY);
+            SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+            auto LocalDicFileHandle =
+                _wopen(DicFileLocalPath.c_str (), _O_CREAT | _O_BINARY | _O_WRONLY);
             if (LocalDicFileHandle == -1)
                 continue;
 
@@ -264,25 +263,24 @@ void DownloadDicsDlg::onFileDownloaded() {
     for (; it != FilesFound.end(); ++it) {
         if ((*it).second != 3) // Some of .aff/.dic is missing
         {
-            wcscpy(DicFileLocalPath, getTempPath().c_str());
+            auto DicFileLocalPath = getTempPath();
             SetString(DicFileName, (*it).first);
-            wcscat(DicFileLocalPath, DicFileName);
+            DicFileLocalPath += DicFileName;
             switch ((*it).second) {
             case 1:
-                wcscat(DicFileLocalPath, L".aff");
+                DicFileLocalPath += L".aff";
                 break;
             case 2:
-                wcscat(DicFileLocalPath, L".dic");
+                DicFileLocalPath += L".dic";
                 break;
             }
-            SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
-            DeleteFile(DicFileLocalPath);
+            SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+            DeleteFile(DicFileLocalPath.c_str ());
         }
         else {
-            wcscpy(DicFileLocalPath, getTempPath().c_str());
+            auto DicFileLocalPath = getTempPath();
             SetString(DicFileName, (*it).first);
-            wcscat(DicFileLocalPath, DicFileName);
-            wcscat(DicFileLocalPath, L".aff");
+            (DicFileLocalPath += DicFileName) += L".aff";
             wcscpy(HunspellDicPath,
                    SpellCheckerInstance->GetInstallSystem()
                        ? SpellCheckerInstance->GetHunspellAdditionalPath()
@@ -297,8 +295,8 @@ void DownloadDicsDlg::onFileDownloaded() {
                 ReplaceQuestionWasAsked = true;
                 if (Answer == IDNO) {
                     Confirmation = false;
-                    SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
-                    DeleteFile(DicFileLocalPath);
+                    SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+                    DeleteFile(DicFileLocalPath.c_str ());
                 }
                 else {
                     SetFileAttributes(HunspellDicPath, FILE_ATTRIBUTE_NORMAL);
@@ -306,16 +304,16 @@ void DownloadDicsDlg::onFileDownloaded() {
                 }
             }
 
-            if (Confirmation && !MoveFile(DicFileLocalPath, HunspellDicPath)) {
-                SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
-                DeleteFile(DicFileLocalPath);
+            if (Confirmation && !MoveFile(DicFileLocalPath.c_str (), HunspellDicPath)) {
+                SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+                DeleteFile(DicFileLocalPath.c_str ());
                 Failure = 1;
             }
-            wcscpy(DicFileLocalPath + wcslen(DicFileLocalPath) - 4, L".dic");
+            DicFileLocalPath = DicFileLocalPath.substr(DicFileLocalPath.length () - 4) + L".dic";
             wcscpy(HunspellDicPath + wcslen(HunspellDicPath) - 4, L".dic");
             if (!Confirmation) {
-                SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
-                DeleteFile(DicFileLocalPath);
+                SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+                DeleteFile(DicFileLocalPath.c_str ());
             }
             else if (PathFileExists(HunspellDicPath)) {
                 int Res = 0;
@@ -325,8 +323,8 @@ void DownloadDicsDlg::onFileDownloaded() {
                     Res = (AskReplacementMessage(DicFileName) == IDNO);
                 }
                 if (Res) {
-                    SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
-                    DeleteFile(DicFileLocalPath);
+                    SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+                    DeleteFile(DicFileLocalPath.c_str ());
                     Confirmation = false;
                 }
                 else {
@@ -335,9 +333,9 @@ void DownloadDicsDlg::onFileDownloaded() {
                 }
             }
 
-            if (Confirmation && !MoveFile(DicFileLocalPath, HunspellDicPath)) {
-                SetFileAttributes(DicFileLocalPath, FILE_ATTRIBUTE_NORMAL);
-                DeleteFile(DicFileLocalPath);
+            if (Confirmation && !MoveFile(DicFileLocalPath.c_str (), HunspellDicPath)) {
+                SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+                DeleteFile(DicFileLocalPath.c_str ());
                 Failure = 1;
             }
             SetStringWithAliasApplied(ConvertedDicName, DicFileName);
