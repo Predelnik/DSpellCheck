@@ -104,7 +104,7 @@ public:
     void UpdateOptions(SpellChecker* spellchecker);
     void SetCancelPressed(bool Value);
     void Refresh();
-    LRESULT AskReplacementMessage(wchar_t* DicName);
+    LRESULT AskReplacementMessage(const wchar_t* DicName);
     bool prepareDownloading();
     void finalizeDownloading();
     void onFileDownloaded();
