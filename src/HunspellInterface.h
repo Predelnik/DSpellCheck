@@ -40,11 +40,11 @@ struct DicInfo {
 };
 
 struct AvailableLangInfo {
-  const wchar_t *name;
-  int Type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
+  std::wstring name;
+  int type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
 
   bool operator<(const AvailableLangInfo &rhs) const {
-    return (wcscmp(name, rhs.name) < 0);
+    return name < rhs.name;
   }
 };
 
@@ -82,7 +82,7 @@ private:
   bool UseOneDic;
   wchar_t *DicDir;
   wchar_t *SysDicDir;
-  std::set<AvailableLangInfo> *dicList;
+  std::set<AvailableLangInfo> dicList;
   std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)> *AllHunspells;
   char *GetConvertedWord(const char *Source, iconv_t Converter);
   DicInfo SingularSpeller;

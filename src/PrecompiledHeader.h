@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stack>
 #include <cstring>
 #include <string>
+#include <string_view>
 #include <time.h>
 #include <shlwapi.h>
 #include <windowsx.h>
