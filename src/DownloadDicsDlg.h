@@ -119,8 +119,8 @@ private:
                                         const wchar_t* FileName, const wchar_t* Location);
 
 private:
-    std::vector<LanguageName>* CurrentLangs;
-    std::vector<LanguageName>* CurrentLangsFiltered;
+    std::vector<LanguageName> CurrentLangs;
+    std::vector<LanguageName> CurrentLangsFiltered;
     HBRUSH DefaultBrush;
     COLORREF StatusColor;
     SpellChecker* SpellCheckerInstance;

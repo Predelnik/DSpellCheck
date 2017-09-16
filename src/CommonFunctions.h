@@ -39,6 +39,13 @@ inline std::wstring to_wstring (const CharT* source) {
     return target;
 }
 
+template <typename CharT>
+inline std::string to_string (const CharT* source) {
+    char *target = nullptr;
+    SetString (target, source);
+    return target;
+}
+
 template <typename T, typename V>
 auto cpyBuf (const V *str) {
   T *temp = nullptr;

@@ -60,11 +60,11 @@ struct LanguageName {
   }
 };
 
-inline bool CompareAliases(LanguageName &a, LanguageName &b) {
+inline bool lessAliases(const LanguageName &a, const LanguageName &b) {
   return wcscmp(a.AliasApplied ? a.AliasName.c_str () : a.OrigName,
                 b.AliasApplied ? b.AliasName.c_str () : b.OrigName) < 0;
 }
 
-inline bool CompareOriginal(LanguageName &a, LanguageName &b) {
+inline bool lessOriginal(const LanguageName &a, const LanguageName &b) {
   return wcscmp(a.OrigName, b.OrigName) < 0;
 }

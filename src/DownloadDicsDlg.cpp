@@ -19,7 +19,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <io.h>
 #include <fcntl.h>
-#include <LzExpand.h>
 
 #include "Controls/CheckedList/CheckedList.h"
 #include "CommonFunctions.h"
@@ -28,7 +27,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "FTPClient.h"
 #include "FTPDataTypes.h"
-#include "HunspellInterface.h"
 #include "LanguageName.h"
 #include "Plugin.h"
 #include "ProgressDlg.h"
@@ -63,13 +61,11 @@ DownloadDicsDlg::DownloadDicsDlg() {
     Timer = 0;
     RefreshIcon = 0;
     CheckIfSavingIsNeeded = 0;
-    CurrentLangs = 0;
-    CurrentLangsFiltered = 0;
     HFileList = 0;
 }
 
 void DownloadDicsDlg::initDlg(HINSTANCE hInst, HWND Parent,
-                           SpellChecker* SpellCheckerInstanceArg) {
+                              SpellChecker* SpellCheckerInstanceArg) {
     ftpOperationTask = TaskWrapper{Parent};
     SpellCheckerInstance = SpellCheckerInstanceArg;
     return Window::init(hInst, Parent);
@@ -78,8 +74,6 @@ void DownloadDicsDlg::initDlg(HINSTANCE hInst, HWND Parent,
 DownloadDicsDlg::~DownloadDicsDlg() {
     if (Timer)
         DeleteTimerQueueTimer(0, Timer, 0);
-    CLEAN_AND_ZERO(CurrentLangs);
-    CLEAN_AND_ZERO(CurrentLangsFiltered);
     if (RefreshIcon)
         DestroyIcon(RefreshIcon);
 }
@@ -90,11 +84,11 @@ void DownloadDicsDlg::IndicateThatSavingMightBeNeeded() {
 
 LRESULT DownloadDicsDlg::AskReplacementMessage(const wchar_t* DicName) {
     std::wstring name;
-    std::tie (name, std::ignore) = applyAlias(DicName);
-    return MessageBox(_hParent, wstring_printf (
-        L"Looks like %s dictionary is already present. Do you want to replace it?",
-        name.c_str ()
-    ).c_str (), L"Dictionary already exists", MB_YESNO);
+    std::tie(name, std::ignore) = applyAlias(DicName);
+    return MessageBox(_hParent, wstring_printf(
+                          L"Looks like %s dictionary is already present. Do you want to replace it?",
+                          name.c_str()
+                      ).c_str(), L"Dictionary already exists", MB_YESNO);
 }
 
 static std::wstring getTempPath() {
@@ -142,7 +136,7 @@ bool DownloadDicsDlg::prepareDownloading() {
     for (int i = 0; i < ListBox_GetCount(HFileList); i++) {
         if (CheckedListBox_GetCheckState(HFileList, i) == BST_CHECKED) {
             DownloadRequest req;
-            req.fileName = CurrentLangsFiltered->at(i).OrigName + L".zip"s;
+            req.fileName = CurrentLangsFiltered[i].OrigName + L".zip"s;
             req.targetPath = getTempPath() + req.fileName;
             m_toDownload.push_back(req);
             ++supposedDownloadedCount;
@@ -183,13 +177,12 @@ void DownloadDicsDlg::finalizeDownloading() {
 static const auto bufSizeForCopy = 10240;
 
 void DownloadDicsDlg::onFileDownloaded() {
-    char* LocalPathANSI = 0;
     bool IsAffFile = false;
     bool IsDicFile = false;
     wchar_t ProgMessage[DEFAULT_BUF_SIZE];
     std::map<std::string, int> FilesFound; // 0x01 - .aff found, 0x02 - .dic found
-    SetString(LocalPathANSI, m_cur->targetPath.c_str());
-    unzFile fp = unzOpen(LocalPathANSI);
+    auto LocalPathANSI = to_string (m_cur->targetPath.c_str());
+    unzFile fp = unzOpen(LocalPathANSI.c_str ());
     unz_file_info fInfo;
     if (unzGoToFirstFile(fp) != UNZ_OK)
         goto clean_and_continue;
@@ -197,14 +190,14 @@ void DownloadDicsDlg::onFileDownloaded() {
         std::string DicFileNameANSI;
         {
             unzGetCurrentFileInfo(fp, &fInfo, nullptr, 0, nullptr, 0, nullptr, 0);
-            std::vector<char> buf (fInfo.size_filename + 1);
-            unzGetCurrentFileInfo(fp, &fInfo, buf.data (), static_cast<uLong> (buf.size ()), nullptr, 0, nullptr, 0);
-            DicFileNameANSI = buf.data ();
+            std::vector<char> buf(fInfo.size_filename + 1);
+            unzGetCurrentFileInfo(fp, &fInfo, buf.data(), static_cast<uLong>(buf.size()), nullptr, 0, nullptr, 0);
+            DicFileNameANSI = buf.data();
         }
 
-        if (DicFileNameANSI.length () < 4)
+        if (DicFileNameANSI.length() < 4)
             continue;
-        const auto ext = std::string_view (DicFileNameANSI).substr(DicFileNameANSI.length() - 4);
+        const auto ext = std::string_view(DicFileNameANSI).substr(DicFileNameANSI.length() - 4);
         IsAffFile = ext == ".aff";
         IsDicFile = ext == ".dic";
         if (IsAffFile || IsDicFile) {
@@ -212,27 +205,27 @@ void DownloadDicsDlg::onFileDownloaded() {
             FilesFound[filename] |= (IsAffFile ? 0x01 : 0x02);
             unzOpenCurrentFile(fp);
             auto dicFileLocalPath = getTempPath();
-            auto dicFileName = to_wstring (filename.c_str ());
+            auto dicFileName = to_wstring(filename.c_str());
             dicFileLocalPath += dicFileName;
             if (IsAffFile)
                 dicFileLocalPath += L".aff";
             else
                 dicFileLocalPath += L".dic";
 
-            SetFileAttributes(dicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+            SetFileAttributes(dicFileLocalPath.c_str(), FILE_ATTRIBUTE_NORMAL);
             auto LocalDicFileHandle =
-                _wopen(dicFileLocalPath.c_str (), _O_CREAT | _O_BINARY | _O_WRONLY);
+                _wopen(dicFileLocalPath.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
             if (LocalDicFileHandle == -1)
                 continue;
 
-            swprintf(ProgMessage, L"Extracting %s...", dicFileName.c_str ());
+            swprintf(ProgMessage, L"Extracting %s...", dicFileName.c_str());
             getProgress()->SetTopMessage(ProgMessage);
             DWORD BytesTotal = 0;
             int BytesCopied;
-            std::vector<char> FileCopyBuf (bufSizeForCopy);
-            while ((BytesCopied = unzReadCurrentFile(fp, FileCopyBuf.data (),
-                                                     static_cast<unsigned int> (FileCopyBuf.size ()))) != 0) {
-                _write(LocalDicFileHandle, FileCopyBuf.data (), BytesCopied);
+            std::vector<char> FileCopyBuf(bufSizeForCopy);
+            while ((BytesCopied = unzReadCurrentFile(fp, FileCopyBuf.data(),
+                                                     static_cast<unsigned int>(FileCopyBuf.size()))) != 0) {
+                _write(LocalDicFileHandle, FileCopyBuf.data(), BytesCopied);
                 BytesTotal += BytesCopied;
                 swprintf(ProgMessage, L"%d / %d bytes extracted (%d %%)",
                          BytesTotal, fInfo.uncompressed_size,
@@ -246,10 +239,10 @@ void DownloadDicsDlg::onFileDownloaded() {
     while (unzGoToNextFile(fp) == UNZ_OK);
     // Now we're gonna check what's exactly we extracted with using FilesFound
     // map
-    for (auto &p : FilesFound) {
-        auto &fileNameANSI = p.first; // TODO: change to structured binding when Resharper supports them
+    for (auto& p : FilesFound) {
+        auto& fileNameANSI = p.first; // TODO: change to structured binding when Resharper supports them
         auto mask = p.second;
-        auto fileName = to_wstring (fileNameANSI.c_str ());
+        auto fileName = to_wstring(fileNameANSI.c_str());
         if (mask != 0x03) // Some of .aff/.dic is missing
         {
             auto DicFileLocalPath = getTempPath();
@@ -261,71 +254,71 @@ void DownloadDicsDlg::onFileDownloaded() {
                 DicFileLocalPath += L".dic";
                 break;
             }
-            SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
-            DeleteFile(DicFileLocalPath.c_str ());
+            SetFileAttributes(DicFileLocalPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+            DeleteFile(DicFileLocalPath.c_str());
         }
         else {
             auto DicFileLocalPath = getTempPath();
             (DicFileLocalPath += fileName) += L".aff";
             std::wstring HunspellDicPath =
-                   SpellCheckerInstance->GetInstallSystem()
-                       ? SpellCheckerInstance->GetHunspellAdditionalPath()
-                       : SpellCheckerInstance->GetHunspellPath();
+                SpellCheckerInstance->GetInstallSystem()
+                    ? SpellCheckerInstance->GetHunspellAdditionalPath()
+                    : SpellCheckerInstance->GetHunspellPath();
             HunspellDicPath += L"\\";
             HunspellDicPath += fileName;
             HunspellDicPath += L".aff";
             bool Confirmation = true;
             bool ReplaceQuestionWasAsked = false;
-            if (PathFileExists(HunspellDicPath.c_str ())) {
-                auto Answer = AskReplacementMessage(fileName.c_str ());
+            if (PathFileExists(HunspellDicPath.c_str())) {
+                auto Answer = AskReplacementMessage(fileName.c_str());
                 ReplaceQuestionWasAsked = true;
                 if (Answer == IDNO) {
                     Confirmation = false;
-                    SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
-                    DeleteFile(DicFileLocalPath.c_str ());
+                    SetFileAttributes(DicFileLocalPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+                    DeleteFile(DicFileLocalPath.c_str());
                 }
                 else {
-                    SetFileAttributes(HunspellDicPath.c_str (), FILE_ATTRIBUTE_NORMAL);
-                    DeleteFile(HunspellDicPath.c_str ());
+                    SetFileAttributes(HunspellDicPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+                    DeleteFile(HunspellDicPath.c_str());
                 }
             }
 
-            if (Confirmation && !MoveFile(DicFileLocalPath.c_str (), HunspellDicPath.c_str ())) {
-                SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
-                DeleteFile(DicFileLocalPath.c_str ());
+            if (Confirmation && !MoveFile(DicFileLocalPath.c_str(), HunspellDicPath.c_str())) {
+                SetFileAttributes(DicFileLocalPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+                DeleteFile(DicFileLocalPath.c_str());
                 Failure = 1;
             }
-            DicFileLocalPath = DicFileLocalPath.substr(DicFileLocalPath.length () - 4) + L".dic";
+            DicFileLocalPath = DicFileLocalPath.substr(DicFileLocalPath.length() - 4) + L".dic";
             HunspellDicPath = HunspellDicPath.substr(HunspellDicPath.length() - 4) + L".dic";
             if (!Confirmation) {
-                SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
-                DeleteFile(DicFileLocalPath.c_str ());
+                SetFileAttributes(DicFileLocalPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+                DeleteFile(DicFileLocalPath.c_str());
             }
-            else if (PathFileExists(HunspellDicPath.c_str ())) {
+            else if (PathFileExists(HunspellDicPath.c_str())) {
                 int Res = 0;
                 if (ReplaceQuestionWasAsked)
                     Res = !Confirmation;
                 else {
-                    Res = (AskReplacementMessage(fileName.c_str ()) == IDNO);
+                    Res = (AskReplacementMessage(fileName.c_str()) == IDNO);
                 }
                 if (Res) {
-                    SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
-                    DeleteFile(DicFileLocalPath.c_str ());
+                    SetFileAttributes(DicFileLocalPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+                    DeleteFile(DicFileLocalPath.c_str());
                     Confirmation = false;
                 }
                 else {
-                    SetFileAttributes(HunspellDicPath.c_str (), FILE_ATTRIBUTE_NORMAL);
-                    DeleteFile(HunspellDicPath.c_str ());
+                    SetFileAttributes(HunspellDicPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+                    DeleteFile(HunspellDicPath.c_str());
                 }
             }
 
-            if (Confirmation && !MoveFile(DicFileLocalPath.c_str (), HunspellDicPath.c_str ())) {
-                SetFileAttributes(DicFileLocalPath.c_str (), FILE_ATTRIBUTE_NORMAL);
-                DeleteFile(DicFileLocalPath.c_str ());
+            if (Confirmation && !MoveFile(DicFileLocalPath.c_str(), HunspellDicPath.c_str())) {
+                SetFileAttributes(DicFileLocalPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+                DeleteFile(DicFileLocalPath.c_str());
                 Failure = 1;
             }
             std::wstring ConvertedDicName;
-            std::tie (ConvertedDicName, std::ignore) = applyAlias (fileName);
+            std::tie(ConvertedDicName, std::ignore) = applyAlias(fileName);
             if (Failure)
                 goto clean_and_continue;
 
@@ -338,7 +331,6 @@ void DownloadDicsDlg::onFileDownloaded() {
         }
     }
 clean_and_continue:
-    CLEAN_AND_ZERO_ARR (LocalPathANSI);
     FilesFound.clear();
     unzClose(fp);
     SetFileAttributes(m_cur->targetPath.c_str(), FILE_ATTRIBUTE_NORMAL);
@@ -390,24 +382,22 @@ std::pair<std::wstring, std::wstring> ftpSplit(std::wstring fullPath) {
 }
 
 void DownloadDicsDlg::UpdateListBox() {
-    if (!HFileList || !CurrentLangs)
+    if (!HFileList || CurrentLangs.empty())
         return;
 
-    CLEAN_AND_ZERO(CurrentLangsFiltered);
-    CurrentLangsFiltered = new std::vector<LanguageName>();
-    for (unsigned int i = 0; i < CurrentLangs->size(); i++) {
-        LanguageName Lang(CurrentLangs->at(i));
+    CurrentLangsFiltered.clear();
+    for (auto& lang : CurrentLangs) {
+        const LanguageName Lang(lang);
         if (SpellCheckerInstance->GetShowOnlyKnown() &&
-            !Lang.AliasApplied) // TODO: Add option to ignore/don't ignore non
-            // resolved package names
+            !Lang.AliasApplied)
             continue;
-        CurrentLangsFiltered->push_back(Lang);
+        CurrentLangsFiltered.push_back(Lang);
     }
     ListBox_ResetContent(HFileList);
-    for (unsigned int i = 0; i < CurrentLangsFiltered->size(); i++) {
+    for (auto& lang : CurrentLangsFiltered) {
         ListBox_AddString(HFileList, SpellCheckerInstance->GetDecodeNames()
-            ? CurrentLangsFiltered->at(i).AliasName.c_str ()
-            : CurrentLangsFiltered->at(i).OrigName);
+            ? lang.AliasName.c_str ()
+            : lang.OrigName);
     }
 }
 
@@ -719,19 +709,19 @@ void DownloadDicsDlg::onNewFileList(const std::vector<std::wstring>& list) {
         auto name = list[i];
         name.erase(name.end() - 4, name.end());
         LanguageName Lang(name.c_str());
-        CurrentLangs->push_back(Lang);
+        CurrentLangs.push_back(Lang);
     }
 
     if (count == 0) {
         return updateStatus(L"Status: Directory doesn't contain any zipped files", COLOR_WARN);
     }
 
-    std::sort(CurrentLangs->begin(), CurrentLangs->end(),
-              SpellCheckerInstance->GetDecodeNames()
-                  ? CompareAliases
-                  : CompareOriginal);
-
-    UpdateListBox(); // Used only here and on filter change
+    std::sort(CurrentLangs.begin(), CurrentLangs.end(), [decode = SpellCheckerInstance->GetDecodeNames()]
+          (const auto& lhs, const auto& rhs)
+          {
+              return decode ? lessAliases(lhs, rhs) : lessOriginal(lhs, rhs);
+          });
+        UpdateListBox(); // Used only here and on filter change
     // If it is success when we perhaps should add this address to our list.
     if (CheckIfSavingIsNeeded) {
         SpellCheckerInstance->addUserServer(*currentAddress());
@@ -776,8 +766,7 @@ void DownloadDicsDlg::prepareFileListUpdate() {
     StatusColor = COLOR_NEUTRAL;
     Static_SetText(HStatus, L"Status: Loading...");
     ListBox_ResetContent(HFileList);
-    CLEAN_AND_ZERO(CurrentLangs);
-    CurrentLangs = new std::vector<LanguageName>();
+    CurrentLangs.clear ();;
 }
 
 FtpOperationParams DownloadDicsDlg::spawnFtpOperationParams(const std::wstring& fullPath) {
@@ -904,12 +893,11 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
             RefreshIcon = (HICON)LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH),
                                            IMAGE_ICON, 16, 16, 0);
             SendMessage(HRefresh, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)RefreshIcon);
-            getSpellChecker ()->ResetDownloadCombobox();
-            getSpellChecker ()->fillDownloadDicsDialog();
+            getSpellChecker()->ResetDownloadCombobox();
+            getSpellChecker()->fillDownloadDicsDialog();
             DefaultBrush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-            return true;
         }
-        break;
+        return true;
     case WM_COMMAND:
         {
             switch (LOWORD(wParam)) {
@@ -936,7 +924,7 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
                         CreateTimerQueueTimer(&Timer, 0, ReinitServer, this, 1000, 0, 0);
                 }
                 else if (HIWORD(wParam) == CBN_SELCHANGE) {
-                    getSpellChecker ()->updateFromDownloadDicsOptionsNoUpdate();
+                    getSpellChecker()->updateFromDownloadDicsOptionsNoUpdate();
                     ReinitServer(this, false);
                     CheckIfSavingIsNeeded = 0;
                 }
@@ -948,12 +936,12 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
                 break;
             case IDC_INSTALL_SYSTEM:
                 if (HIWORD(wParam) == BN_CLICKED) {
-                    getSpellChecker ()->updateFromDownloadDicsOptionsNoUpdate();
+                    getSpellChecker()->updateFromDownloadDicsOptionsNoUpdate();
                 }
                 break;
             case IDC_SHOWONLYKNOWN:
                 if (HIWORD(wParam) == BN_CLICKED) {
-                    getSpellChecker()->updateFromDownloadDicsOptions ();
+                    getSpellChecker()->updateFromDownloadDicsOptions();
                 }
                 break;
             case IDC_SELECTPROXY:

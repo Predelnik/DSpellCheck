@@ -364,7 +364,7 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
       CurrentLangExists = true;
 
     std::sort(CurrentLangs->begin(), CurrentLangs->end(),
-              DecodeNames ? CompareAliases : CompareOriginal);
+              DecodeNames ? lessAliases : lessOriginal);
     if (!CurrentLangExists && CurrentLangs->size() > 0) {
       if (SpellerId == 1)
         SetHunspellLanguage(CurrentLangs->at(0).OrigName);
