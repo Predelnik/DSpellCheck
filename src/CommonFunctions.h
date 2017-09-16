@@ -61,7 +61,7 @@ auto cpyBufSUtf8 (const V *str) {
 void SetStringDUtf8(char *&Target, const char *Str);
 void SetStringDUtf8(char *&Target, const wchar_t *Str);
 
-bool SetStringWithAliasApplied(wchar_t *&Target, const wchar_t *OrigName);
+std::pair<std::wstring_view, bool> applyAlias(std::wstring_view str);
 
 void SetParsedString(wchar_t *&Dest, wchar_t *Source);
 

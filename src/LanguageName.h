@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 struct LanguageName {
   wchar_t *OrigName;
-  wchar_t *AliasName;
+  std::wstring AliasName;
   bool AliasApplied;
   LanguageName(const wchar_t *Name, bool UseAlias = true) {
     OrigName = nullptr;
@@ -30,16 +30,16 @@ struct LanguageName {
     AliasApplied = false;
     SetString(OrigName, Name);
     if (UseAlias)
-      AliasApplied = SetStringWithAliasApplied(AliasName, Name);
+      std::tie (AliasName, AliasApplied) = applyAlias(Name);
     else
-      SetString(AliasName, Name);
+      AliasName = Name;
   }
 
   LanguageName(const LanguageName &rhs) {
     OrigName = nullptr;
     AliasName = nullptr;
     SetString(OrigName, rhs.OrigName);
-    SetString(AliasName, rhs.AliasName);
+    AliasName = rhs.AliasName;
     AliasApplied = rhs.AliasApplied;
   }
 
@@ -48,23 +48,21 @@ struct LanguageName {
       return *this;
 
     CLEAN_AND_ZERO_ARR(OrigName);
-    CLEAN_AND_ZERO_ARR(AliasName);
     AliasApplied = rhs.AliasApplied;
     SetString(OrigName, rhs.OrigName);
-    SetString(AliasName, rhs.AliasName);
+    AliasName = rhs.AliasName;
     return *this;
   }
 
   ~LanguageName() {
     CLEAN_AND_ZERO_ARR(OrigName);
-    CLEAN_AND_ZERO_ARR(AliasName);
     AliasApplied = false;
   }
 };
 
 inline bool CompareAliases(LanguageName &a, LanguageName &b) {
-  return wcscmp(a.AliasApplied ? a.AliasName : a.OrigName,
-                b.AliasApplied ? b.AliasName : b.OrigName) < 0;
+  return wcscmp(a.AliasApplied ? a.AliasName.c_str () : a.OrigName,
+                b.AliasApplied ? b.AliasName.c_str () : b.OrigName) < 0;
 }
 
 inline bool CompareOriginal(LanguageName &a, LanguageName &b) {

@@ -89,14 +89,12 @@ void DownloadDicsDlg::IndicateThatSavingMightBeNeeded() {
 }
 
 LRESULT DownloadDicsDlg::AskReplacementMessage(const wchar_t* DicName) {
-    wchar_t ReplaceMessage[DEFAULT_BUF_SIZE];
-    wchar_t* TBuf = 0;
-    SetStringWithAliasApplied(TBuf, DicName);
-    swprintf_s(ReplaceMessage, L"Looks like %s dictionary is already present. Do "
-               L"you want to replace it?",
-               TBuf);
-    CLEAN_AND_ZERO_ARR(TBuf);
-    return MessageBox(_hParent, ReplaceMessage, L"Dictionary already exists", MB_YESNO);
+    std::wstring name;
+    std::tie (name, std::ignore) = applyAlias(DicName);
+    return MessageBox(_hParent, wstring_printf (
+        L"Looks like %s dictionary is already present. Do you want to replace it?",
+        name.c_str ()
+    ).c_str (), L"Dictionary already exists", MB_YESNO);
 }
 
 static std::wstring getTempPath() {
@@ -185,7 +183,6 @@ void DownloadDicsDlg::finalizeDownloading() {
 static const auto bufSizeForCopy = 10240;
 
 void DownloadDicsDlg::onFileDownloaded() {
-    wchar_t* ConvertedDicName = 0;
     char* LocalPathANSI = 0;
     bool IsAffFile = false;
     bool IsDicFile = false;
@@ -327,13 +324,13 @@ void DownloadDicsDlg::onFileDownloaded() {
                 DeleteFile(DicFileLocalPath.c_str ());
                 Failure = 1;
             }
-            SetStringWithAliasApplied(ConvertedDicName, fileName.c_str ());
+            std::wstring ConvertedDicName;
+            std::tie (ConvertedDicName, std::ignore) = applyAlias (fileName);
             if (Failure)
                 goto clean_and_continue;
 
             if (Confirmation) {
-                Message += ConvertedDicName;
-                Message += L"\n";
+                Message += ConvertedDicName + L"\n";
                 DownloadedCount++;
             }
             if (!Confirmation)
@@ -341,7 +338,6 @@ void DownloadDicsDlg::onFileDownloaded() {
         }
     }
 clean_and_continue:
-    CLEAN_AND_ZERO_ARR (ConvertedDicName);
     CLEAN_AND_ZERO_ARR (LocalPathANSI);
     FilesFound.clear();
     unzClose(fp);
@@ -410,7 +406,7 @@ void DownloadDicsDlg::UpdateListBox() {
     ListBox_ResetContent(HFileList);
     for (unsigned int i = 0; i < CurrentLangsFiltered->size(); i++) {
         ListBox_AddString(HFileList, SpellCheckerInstance->GetDecodeNames()
-            ? CurrentLangsFiltered->at(i).AliasName
+            ? CurrentLangsFiltered->at(i).AliasName.c_str ()
             : CurrentLangsFiltered->at(i).OrigName);
     }
 }

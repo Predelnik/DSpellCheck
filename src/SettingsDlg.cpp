@@ -68,12 +68,12 @@ bool SimpleDlg::AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
       if (wcscmp(CurrentLanguage, LangsAvailable->at(i).OrigName) == 0)
         SelectedIndex = i;
 
-      ComboBox_AddString(HComboLanguage, LangsAvailable->at(i).AliasName);
+      ComboBox_AddString(HComboLanguage, LangsAvailable->at(i).AliasName.c_str ());
       ListBox_AddString(GetLangList()->GetListBox(),
-                        LangsAvailable->at(i).AliasName);
+                        LangsAvailable->at(i).AliasName.c_str ());
       if (HunspellSpeller) {
         wchar_t Buf[DEFAULT_BUF_SIZE];
-        wcscpy(Buf, LangsAvailable->at(i).AliasName);
+        wcscpy(Buf, LangsAvailable->at(i).AliasName.c_str ());
         if (HunspellSpeller->GetLangOnlySystem(LangsAvailable->at(i).OrigName))
           wcscat(Buf, L" [!For All Users]");
 

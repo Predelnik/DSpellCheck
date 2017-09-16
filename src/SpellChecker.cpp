@@ -532,7 +532,7 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
           Res = AppendMenu(NewMenu, MF_STRING | Checked,
                            GetUseAllocatedIds() ? i + GetLangsMenuIdStart()
                                                 : MAKEWORD(i, LANGUAGE_MENU_ID),
-                           DecodeNames ? CurrentLangs->at(i).AliasName
+                           DecodeNames ? CurrentLangs->at(i).AliasName.c_str ()
                                        : CurrentLangs->at(i).OrigName);
           if (!Res)
             return;
