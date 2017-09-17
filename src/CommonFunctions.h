@@ -94,7 +94,7 @@ bool SortCompareChars(char *a, char *b);
 
 bool CheckForDirectoryExistence(const wchar_t* PathArg, bool Silent = true,
                                 HWND NppWindow = 0);
-wchar_t *GetLastSlashPosition(wchar_t *Path);
+wchar_t* GetLastSlashPosition(wchar_t* Path);
 
 // trim from start (in place)
 inline void ltrim(std::wstring &s) {

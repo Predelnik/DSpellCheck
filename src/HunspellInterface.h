@@ -26,17 +26,34 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Hunspell;
 
-typedef std::unordered_set<char *, hash_compare_strings> WordSet;
-typedef std::set<char *, bool (*)(char *, char *)> SortedWordSet;
+using WordSet = std::unordered_set<std::string>;
+using SortedWordSet = std::set<std::string>;
+struct iconv_wrapper_t {
+    template <typename... ArgTypes>
+    iconv_wrapper_t (ArgTypes &&... args)
+    {
+        conv = iconv_open (std::forward<ArgTypes> (args)...);
+    }
+    iconv_t get () const { return conv; }
+    iconv_wrapper_t () {}
+
+    ~iconv_wrapper_t () {
+         if (conv != reinterpret_cast<iconv_t>(-1))
+           iconv_close (conv);
+    }
+
+private:
+    iconv_t conv = reinterpret_cast<iconv_t> (-1);
+};
 
 struct DicInfo {
-  Hunspell *Speller;
-  iconv_t Converter;
-  iconv_t BackConverter;
-  iconv_t ConverterANSI;
-  iconv_t BackConverterANSI;
-  wchar_t *LocalDicPath;
-  WordSet *LocalDic; // Stored in Dictionary encoding
+  std::unique_ptr<Hunspell> hunspell;
+  iconv_wrapper_t Converter;
+  iconv_wrapper_t BackConverter;
+  iconv_wrapper_t ConverterANSI;
+  iconv_wrapper_t BackConverterANSI;
+  std::wstring LocalDicPath;
+  WordSet LocalDic; // Stored in Dictionary encoding
 };
 
 struct AvailableLangInfo {
@@ -65,15 +82,15 @@ public:
   void SetDirectory(wchar_t *Dir);
   void SetAdditionalDirectory(wchar_t *Dir);
   void WriteUserDic(WordSet *Target, wchar_t *Path);
-  void ReadUserDic(WordSet *Target, wchar_t *Path);
+  void ReadUserDic(WordSet *Target, const wchar_t* Path);
   void SetUseOneDic(bool Value);
   void UpdateOnDicRemoval(wchar_t *Path, bool &NeedSingleLangReset,
                           bool &NeedMultiLangReset);
   bool GetLangOnlySystem(wchar_t *Lang);
 
 private:
-  DicInfo CreateHunspell(const wchar_t* Name, int Type);
-  bool SpellerCheckWord(DicInfo Dic, char *Word, EncodingType Encoding);
+    DicInfo* CreateHunspell(const wchar_t* Name, int Type);
+  bool SpellerCheckWord(const DicInfo& Dic, char *Word, EncodingType Encoding);
   void MessageBoxWordCannotBeAdded();
 
 public:
@@ -83,14 +100,13 @@ private:
   wchar_t *DicDir;
   wchar_t *SysDicDir;
   std::set<AvailableLangInfo> dicList;
-  std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)> *AllHunspells;
+  std::map<std::wstring, DicInfo> AllHunspells;
   char *GetConvertedWord(const char *Source, iconv_t Converter);
-  DicInfo SingularSpeller;
-  DicInfo LastSelectedSpeller;
-  DicInfo Empty;
-  std::vector<DicInfo> *Spellers;
-  WordSet *Memorized;
-  WordSet *Ignored;
+  DicInfo *SingularSpeller;
+  DicInfo *LastSelectedSpeller;
+  std::vector<DicInfo *> m_spellers;
+  WordSet Memorized;
+  WordSet Ignored;
   bool InitialReadingBeenDone;
   char *TemporaryBuffer;
   wchar_t *UserDicPath;        // For now only default one.
