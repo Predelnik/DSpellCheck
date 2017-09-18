@@ -149,7 +149,6 @@ SpellChecker::SpellChecker(const wchar_t *IniFilePathArg,
   AspellSpeller = new AspellInterface(NppDataInstance->_nppHandle);
   HunspellSpeller = new HunspellInterface(NppDataInstance->_nppHandle);
   CurrentSpeller = AspellSpeller;
-  LastSuggestions = 0;
   PrepareStringForConversion();
   memset(ServerNames, 0, sizeof(ServerNames));
   memset(DefaultServers, 0, sizeof(DefaultServers));
@@ -222,7 +221,6 @@ void SpellChecker::PrepareStringForConversion() {
 }
 
 SpellChecker::~SpellChecker() {
-  CLEAN_AND_ZERO_STRING_VECTOR(LastSuggestions);
   CLEAN_AND_ZERO(AspellSpeller);
   CLEAN_AND_ZERO(HunspellSpeller);
   CLEAN_AND_ZERO_ARR(SelectedWord);
@@ -1827,11 +1825,11 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
         SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, WUCPosition + WUCLength,
                               WUCPosition + WUCLength);
         RecheckVisibleBothViews();
-      } else if ((unsigned int)Result <= LastSuggestions->size()) {
+      } else if ((unsigned int)Result <= LastSuggestions.size()) {
         if (CurrentEncoding == ENCODING_ANSI)
-          SetStringSUtf8(AnsiBuf, LastSuggestions->at(Result - 1));
+          SetStringSUtf8(AnsiBuf, LastSuggestions[Result - 1].c_str ());
         else
-          SetString(AnsiBuf, LastSuggestions->at(Result - 1));
+          SetString(AnsiBuf, LastSuggestions[Result - 1].c_str ());
 
         SendMsgToActiveEditor(GetCurrentScintilla(), SCI_REPLACESEL, 0, (LPARAM)AnsiBuf);
 
@@ -1893,22 +1891,19 @@ std::vector<SuggestionsMenuItem> SpellChecker::FillSuggestionsMenu(HMENU Menu) {
   SetString(SelectedWord, Range.lpstrText);
   ApplyConversions(SelectedWord);
 
-  CLEAN_AND_ZERO_STRING_VECTOR(LastSuggestions);
   LastSuggestions = CurrentSpeller->GetSuggestions(SelectedWord);
-  if (!LastSuggestions)
-    return {};
 
-  for (size_t i = 0; i < LastSuggestions->size(); i++) {
-    if (i >= (unsigned int)SuggestionsNum)
+  for (size_t i = 0; i < LastSuggestions.size(); i++) {
+    if (i >= static_cast<unsigned int>(SuggestionsNum))
       break;
-    SetStringSUtf8(Buf, LastSuggestions->at(i));
+    SetStringSUtf8(Buf, LastSuggestions[i].c_str ());
     if (SuggestionsMode == SUGGESTIONS_BOX)
       InsertSuggMenuItem(Menu, Buf, static_cast<BYTE>(i + 1), -1);
     else
       SuggestionMenuItems.emplace_back(Buf, static_cast<BYTE>(i + 1));
   }
 
-  if (LastSuggestions->size() > 0) {
+  if (!LastSuggestions.empty ()) {
     if (SuggestionsMode == SUGGESTIONS_BOX)
       InsertSuggMenuItem(Menu, L"", 0, 103, true);
     else

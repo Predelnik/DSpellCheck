@@ -273,7 +273,7 @@ private:
   wchar_t *ProxyPassword;
 
   LRESULT Lexer;
-  std::vector<char *> *LastSuggestions;
+  std::vector<std::string> LastSuggestions;
   long ModifiedStart;
   long ModifiedEnd;
   long WUCPosition; // WUC = Word Under Cursor (Position in global doc

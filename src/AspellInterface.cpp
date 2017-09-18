@@ -102,51 +102,42 @@ void AspellInterface::SetMultipleLanguages(std::vector<wchar_t *>* List) {
     }
 }
 
-std::vector<char *>* AspellInterface::GetSuggestions(char* Word) {
+std::vector<std::string> AspellInterface::GetSuggestions(const char* Word) {
     const AspellWordList* wordList = 0;
-
-    char* TargetWord = 0;
+    std::string TargetWord;
 
     if (CurrentEncoding == ENCODING_UTF8)
         TargetWord = Word;
     else
-        SetStringDUtf8(TargetWord, Word);
+        TargetWord = to_utf8_string (Word);
 
-    std::vector<char *>* SuggList = new std::vector<char *>;
+    std::vector<std::string> SuggList;
     if (!MultiMode) {
         LastSelectedSpeller = singleSpeller.get();
-        wordList = aspell_speller_suggest(singleSpeller.get(), TargetWord, -1);
+        wordList = aspell_speller_suggest(singleSpeller.get(), TargetWord.c_str (), -1);
     }
     else {
-        int MaxSize = -1;
-        int size;
+        unsigned int maxSize = 0;
         for (auto& speller : spellers) {
-            const auto curWordList = aspell_speller_suggest(speller.get(), TargetWord, -1);
+            const auto curWordList = aspell_speller_suggest(speller.get(), TargetWord.c_str (), -1);
 
-            size = aspell_word_list_size(curWordList);
-
-            if (size > MaxSize) {
-                MaxSize = size;
+            auto size = aspell_word_list_size(curWordList);
+            if (size > maxSize) {
+                maxSize = size;
                 LastSelectedSpeller = speller.get();
                 wordList = curWordList;
             }
         }
     }
     if (!wordList)
-        return 0;
+        return {};
 
     AspellStringEnumeration* els = aspell_word_list_elements(wordList);
     const char* Suggestion;
 
     while ((Suggestion = aspell_string_enumeration_next(els)) != nullptr) {
-        char* Buf = 0;
-        SetString(Buf, Suggestion);
-        SuggList->push_back(Buf);
+        SuggList.push_back(Suggestion);
     }
-
-    if (CurrentEncoding == ENCODING_ANSI)
-        CLEAN_AND_ZERO_ARR (TargetWord);
-
     return SuggList;
 }
 

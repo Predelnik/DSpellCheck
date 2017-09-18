@@ -75,7 +75,7 @@ public:
       std::vector<wchar_t *> *List);             // Languages are from LangList
   __override virtual bool CheckWord(char *Word); // Word in Utf-8 or ANSI
   __override virtual bool IsWorking();
-  __override virtual std::vector<char *> *GetSuggestions(char *Word);
+  __override virtual std::vector<std::string> GetSuggestions(const char* Word);
   __override virtual void AddToDictionary(char *Word);
   __override virtual void IgnoreAll(char *Word);
 
@@ -108,7 +108,6 @@ private:
   WordSet Memorized;
   WordSet Ignored;
   bool InitialReadingBeenDone;
-  char *TemporaryBuffer;
   wchar_t *UserDicPath;        // For now only default one.
   wchar_t *SystemWrongDicPath; // Only for reading and then removing
   HWND NppWindow;

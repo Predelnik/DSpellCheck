@@ -35,7 +35,7 @@ public:
   bool
   CheckWord(char *Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
   bool IsWorking() override;
-  std::vector<char *> *GetSuggestions(char *Word) override;
+    std::vector<std::string> GetSuggestions(const char* Word) override;
   void AddToDictionary(char *Word) override;
   void IgnoreAll(char *Word) override;
 

@@ -82,7 +82,6 @@ HunspellInterface::HunspellInterface(HWND NppWindowArg) {
     SysDicDir = 0;
     LastSelectedSpeller = {};
     IsHunspellWorking = false;
-    TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
     UserDicPath = 0;
     SystemWrongDicPath = 0;
 }
@@ -98,10 +97,10 @@ void HunspellInterface::UpdateOnDicRemoval(wchar_t* Path,
         if (SingularSpeller && SingularSpeller == &it->second)
             NeedSingleLangReset = true;
 
-            for (auto speller : m_spellers)
-                if (speller == &it->second) {
-                    NeedMultiLangReset = true;
-                }
+        for (auto speller : m_spellers)
+            if (speller == &it->second) {
+                NeedMultiLangReset = true;
+            }
         AllHunspells.erase(it);
     }
 }
@@ -155,7 +154,6 @@ HunspellInterface::~HunspellInterface() {
 
     CLEAN_AND_ZERO_ARR(DicDir);
     CLEAN_AND_ZERO_ARR(SysDicDir);
-    CLEAN_AND_ZERO_ARR(TemporaryBuffer);
     CLEAN_AND_ZERO_ARR(UserDicPath);
     CLEAN_AND_ZERO_ARR(SystemWrongDicPath);
 
@@ -170,35 +168,21 @@ std::vector<std::wstring> HunspellInterface::GetLanguageList() {
 }
 
 DicInfo* HunspellInterface::CreateHunspell(const wchar_t* Name, int Type) {
-    auto size = (Type ? wcslen(SysDicDir) : wcslen(DicDir)) + 1 + wcslen(Name) +
-        1 + 3 + 1; // + . + aff/dic + /0
-    wchar_t* AffBuf = new wchar_t[size];
-    char* AffBufAnsi = 0;
-    char* DicBufAnsi = 0;
-    wcscpy(AffBuf, (Type ? SysDicDir : DicDir));
-    wcscat(AffBuf, L"\\");
-    wcscat(AffBuf, Name);
+    std::wstring AffBuf = (Type ? SysDicDir : DicDir) + L"\\"s + Name;
     {
         auto it =
             AllHunspells.find(AffBuf);
         if (it != AllHunspells.end()) {
-            CLEAN_AND_ZERO_ARR(AffBuf);
             return &it->second;
         }
     }
-    wchar_t* DicBuf = new wchar_t[size];
-    wcscat(AffBuf, L".aff");
-    wcscpy(DicBuf, Type ? SysDicDir : DicDir);
-    wcscat(DicBuf, L"\\");
-    wcscat(DicBuf, Name);
-    wcscat(DicBuf, L".dic");
-    SetString(AffBufAnsi, AffBuf);
-    SetString(DicBufAnsi, DicBuf);
-
-    auto NewHunspell = std::make_unique<Hunspell>(AffBufAnsi, DicBufAnsi);
-    wchar_t* NewName = 0;
-    AffBuf[wcslen(AffBuf) - 4] = L'\0';
-    SetString(NewName, AffBuf); // Without aff and dic
+    std::wstring DicBuf;
+    AffBuf += L".aff";
+    DicBuf = (Type ? SysDicDir : DicDir) + L"\\"s + Name + L".dic";
+    auto AffBufAnsi = to_string(AffBuf.c_str());
+    auto DicBufAnsi = to_string(DicBuf.c_str());
+    auto NewHunspell = std::make_unique<Hunspell>(AffBufAnsi.c_str(), DicBufAnsi.c_str());
+    auto NewName = AffBuf.substr(0, AffBuf.length() - 4);
     DicInfo NewDic;
     const char* DicEnconding = NewHunspell->get_dic_encoding();
     if (stricmp(DicEnconding, "Microsoft-cp1251") == 0)
@@ -228,10 +212,6 @@ DicInfo* HunspellInterface::CreateHunspell(const wchar_t* Name, int Type) {
             // dictionaries are in dictionary encoding
         }
     }
-    CLEAN_AND_ZERO_ARR(AffBuf);
-    CLEAN_AND_ZERO_ARR(DicBuf);
-    CLEAN_AND_ZERO_ARR(AffBufAnsi);
-    CLEAN_AND_ZERO_ARR(DicBufAnsi);
     auto& target = AllHunspells[NewName];
     target = std::move(NewDic);
     return &target;
@@ -273,18 +253,20 @@ void HunspellInterface::SetMultipleLanguages(std::vector<wchar_t *>* List) {
 
 char* HunspellInterface::GetConvertedWord(const char* Source,
                                           iconv_t Converter) {
+    static std::vector<char> buf;
+    buf.resize(strlen(Source) * 6);
     if (Converter == iconv_t(-1)) {
-        *TemporaryBuffer = '\0';
-        return TemporaryBuffer;
+        buf.front() = '\0';
+        return buf.data();
     }
     size_t InSize = strlen(Source) + 1;
     size_t OutSize = DEFAULT_BUF_SIZE;
-    char* OutBuf = TemporaryBuffer;
+    char* OutBuf = buf.data();
     size_t res = iconv(Converter, &Source, &InSize, &OutBuf, &OutSize);
     if (res == (size_t)(-1)) {
-        *TemporaryBuffer = '\0';
+        buf.front() = '\0';
     }
-    return TemporaryBuffer;
+    return buf.data();
 }
 
 bool HunspellInterface::SpellerCheckWord(const DicInfo& Dic, char* Word,
@@ -366,7 +348,7 @@ void HunspellInterface::WriteUserDic(WordSet* Target, wchar_t* Path) {
     }
     SortedWordSet::iterator it = TemporarySortedWordSet.begin();
     for (; it != TemporarySortedWordSet.end(); ++it) {
-        fprintf(Fp, "%s\n", it->c_str ());
+        fprintf(Fp, "%s\n", it->c_str());
     }
 
     fclose(Fp);
@@ -477,7 +459,7 @@ void HunspellInterface::AddToDictionary(char* Word) {
         }
     }
     else {
-        char* ConvWord = GetConvertedWord(Buf, LastSelectedSpeller->Converter.get ());
+        char* ConvWord = GetConvertedWord(Buf, LastSelectedSpeller->Converter.get());
         char* WordCopy = 0;
         SetString(WordCopy, ConvWord);
         LastSelectedSpeller->LocalDic.insert(WordCopy);
@@ -497,58 +479,64 @@ void HunspellInterface::IgnoreAll(char* Word) {
     Ignored.insert(Buf);
 }
 
-std::vector<char *>* HunspellInterface::GetSuggestions(char* Word) {
-    std::vector<char *>* SuggList = new std::vector<char *>;
-    int Num = -1;
-    char** HunspellList = 0;
-    char** CurHunspellList = 0;
-    char* WordUtf8 = 0;
+namespace
+{
+    class HunspellSuggestions {
+    public:
+        HunspellSuggestions(Hunspell* hunspell, const char* word) : m_hunspell(hunspell) {
+            m_count = hunspell->suggest(&m_list, word);
+        }
+
+        HunspellSuggestions() {
+        }
+
+        ~HunspellSuggestions() {
+            if (m_list)
+                m_hunspell->free_list(&m_list, m_count);
+        }
+
+        const char* word(int index) const { return m_list[index]; }
+        int count() const { return m_count; }
+
+    private:
+        char** m_list = nullptr;
+        int m_count = 0;
+        Hunspell* m_hunspell = nullptr;
+    };
+}
+
+std::vector<std::string> HunspellInterface::GetSuggestions(const char* Word) {
+    std::vector<std::string> SuggList;
+    HunspellSuggestions list;
     LastSelectedSpeller = SingularSpeller;
 
     if (!MultiMode) {
-        Num = SingularSpeller->hunspell->suggest(
-            &HunspellList,
-            GetConvertedWord(Word, (CurrentEncoding == ENCODING_UTF8)
-                                       ? SingularSpeller->Converter.get()
-                                       : SingularSpeller->ConverterANSI.get()));
+        list = {
+            SingularSpeller->hunspell.get(), GetConvertedWord(Word, (CurrentEncoding == ENCODING_UTF8)
+                                                                        ? SingularSpeller->Converter.get()
+                                                                        : SingularSpeller->ConverterANSI.get())
+        };
     }
     else {
-        int MaxSize = -1;
         // In this mode we're finding maximum by length list from selected languages
-        CurHunspellList = 0;
+        HunspellSuggestions curList;
         for (auto speller : m_spellers) {
-            int CurNum = speller->hunspell->suggest(
-                &CurHunspellList,
-                GetConvertedWord(Word, (CurrentEncoding == ENCODING_UTF8)
-                                           ? speller->Converter.get ()
-                                           : speller->ConverterANSI.get ()));
+            curList = {
+                speller->hunspell.get(), GetConvertedWord(Word, (CurrentEncoding == ENCODING_UTF8)
+                                                                    ? speller->Converter.get()
+                                                                    : speller->ConverterANSI.get())
+            };
 
-            if (CurNum > MaxSize) {
-                if (Num != -1)
-                    speller->hunspell->free_list(&HunspellList, Num);
-
-                MaxSize = CurNum;
-                LastSelectedSpeller = speller;
-                HunspellList = CurHunspellList;
-                Num = CurNum;
-            }
-            else {
-                speller->hunspell->free_list(&CurHunspellList, CurNum);
+            if (curList.count() > list.count()) {
+                list = std::move(curList);
             }
         }
     }
 
-    for (int i = 0; i < Num; i++) {
-        char* Buf = 0;
-        SetString(Buf, GetConvertedWord(HunspellList[i],
-                                        LastSelectedSpeller->BackConverter.get()));
-        SuggList->push_back(Buf);
+    for (int i = 0; i < list.count(); i++) {
+        SuggList.push_back(GetConvertedWord(list.word(i),
+                                            LastSelectedSpeller->BackConverter.get()));
     }
-
-    LastSelectedSpeller->hunspell->free_list(&HunspellList, Num);
-
-    CLEAN_AND_ZERO_ARR(WordUtf8);
-
     return SuggList;
 }
 
