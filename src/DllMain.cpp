@@ -110,7 +110,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
       if (fileMenuItem.hSubMenu != menu && GetLangsSubMenu() != menu) {
         int i = 0;
         for (auto &item : curMenuList) {
-              InsertSuggMenuItem(menu, item.Text, item.Id, i, item.Separator);
+              InsertSuggMenuItem(menu, item.Text.c_str (), item.Id, i, item.Separator);
             ++i;
         }
       }
@@ -251,10 +251,11 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
   } break;
 
   case NPPN_BUFFERACTIVATED: {
-    getSpellChecker ()->CheckFileName();
-    // SendEvent (EID_HIDE_SUGGESTIONS_BOX);
-    RecheckVisible();
-    restylingCausedRecheckWasDone = false;
+    if (getSpellChecker ()) {
+        getSpellChecker ()->CheckFileName();
+        RecheckVisible();
+        restylingCausedRecheckWasDone = false;
+    }
   } break;
 
   case SCN_UPDATEUI:
@@ -349,7 +350,8 @@ extern "C" __declspec(dllexport) LRESULT
     messageProc(UINT Message, WPARAM wParam, LPARAM /*lParam*/) {
   switch (Message) {
   case WM_MOVE:
-    getSpellChecker()->HideSuggestionBox();
+    if (getSpellChecker())
+      getSpellChecker()->HideSuggestionBox();
     return false;
   case WM_COMMAND: {
     if (HIWORD(wParam) == 0 && GetUseAllocatedIds()) {

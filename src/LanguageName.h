@@ -26,7 +26,6 @@ struct LanguageName {
   bool AliasApplied;
   LanguageName(const wchar_t *Name, bool UseAlias = true) {
     OrigName = nullptr;
-    AliasName = nullptr;
     AliasApplied = false;
     SetString(OrigName, Name);
     if (UseAlias)
@@ -37,7 +36,6 @@ struct LanguageName {
 
   LanguageName(const LanguageName &rhs) {
     OrigName = nullptr;
-    AliasName = nullptr;
     SetString(OrigName, rhs.OrigName);
     AliasName = rhs.AliasName;
     AliasApplied = rhs.AliasApplied;

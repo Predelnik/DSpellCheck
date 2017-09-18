@@ -28,22 +28,29 @@ class Hunspell;
 
 using WordSet = std::unordered_set<std::string>;
 using SortedWordSet = std::set<std::string>;
-struct iconv_wrapper_t {
-    template <typename... ArgTypes>
-    iconv_wrapper_t (ArgTypes &&... args)
+class iconv_wrapper_t {
+    static void close_iconv (iconv_t conv)
     {
-        conv = iconv_open (std::forward<ArgTypes> (args)...);
+      if (conv != reinterpret_cast<iconv_t>(-1))
+        iconv_close (conv);
     }
-    iconv_t get () const { return conv; }
-    iconv_wrapper_t () {}
+
+public:
+    template <typename... ArgTypes>
+    iconv_wrapper_t (ArgTypes &&... args) :
+      conv (iconv_open (std::forward<ArgTypes> (args)...), &close_iconv)
+    {
+    }
+    iconv_t get () const { return conv.get (); }
+    iconv_wrapper_t () : conv (nullptr, &close_iconv) {}
+    iconv_wrapper_t (iconv_wrapper_t &&) = default;
+    iconv_wrapper_t &operator= (iconv_wrapper_t &&) = default;
 
     ~iconv_wrapper_t () {
-         if (conv != reinterpret_cast<iconv_t>(-1))
-           iconv_close (conv);
     }
 
 private:
-    iconv_t conv = reinterpret_cast<iconv_t> (-1);
+    std::unique_ptr<void, void(*)(iconv_t)> conv;
 };
 
 struct DicInfo {

@@ -1605,7 +1605,9 @@ void SpellChecker::SetDefaultDelimiters() {
   SettingsDlgInstance->GetAdvancedDlg()->SetDelimetersEdit(DEFAULT_DELIMITERS);
 }
 
-HWND SpellChecker::GetCurrentScintilla() { return CurrentScintilla; }
+HWND SpellChecker::GetCurrentScintilla() {
+    return GetScintillaWindow(NppDataInstance); // TODO: optimize
+}
 
 bool SpellChecker::GetWordUnderCursorIsRight(long &Pos, long &Length,
                                              bool UseTextCursor) {
@@ -3010,8 +3012,7 @@ void SpellChecker::copyMisspellingsToClipboard() {
 
 SuggestionsMenuItem::SuggestionsMenuItem(const wchar_t *TextArg, int IdArg,
                                          bool SeparatorArg /*= false*/) {
-  Text = 0;
-  SetString(Text, TextArg);
+  Text = TextArg;
   Id = static_cast<BYTE> (IdArg);
   Separator = SeparatorArg;
 }

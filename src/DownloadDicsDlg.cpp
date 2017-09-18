@@ -288,8 +288,8 @@ void DownloadDicsDlg::onFileDownloaded() {
                 DeleteFile(DicFileLocalPath.c_str());
                 Failure = 1;
             }
-            DicFileLocalPath = DicFileLocalPath.substr(DicFileLocalPath.length() - 4) + L".dic";
-            HunspellDicPath = HunspellDicPath.substr(HunspellDicPath.length() - 4) + L".dic";
+            DicFileLocalPath = DicFileLocalPath.substr(0, DicFileLocalPath.length() - 4) + L".dic";
+            HunspellDicPath = HunspellDicPath.substr(0, HunspellDicPath.length() - 4) + L".dic";
             if (!Confirmation) {
                 SetFileAttributes(DicFileLocalPath.c_str(), FILE_ATTRIBUTE_NORMAL);
                 DeleteFile(DicFileLocalPath.c_str());

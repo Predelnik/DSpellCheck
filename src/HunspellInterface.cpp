@@ -196,7 +196,6 @@ DicInfo* HunspellInterface::CreateHunspell(const wchar_t* Name, int Type) {
     NewDic.LocalDicPath += DicDir + L"\\"s + Name + L".usr";
 
     ReadUserDic(&NewDic.LocalDic, NewDic.LocalDicPath.c_str());
-    NewDic.hunspell = std::move(NewHunspell);
     {
         for (auto word : Memorized) {
             char* ConvWord = GetConvertedWord(word.c_str(), NewDic.Converter.get());
@@ -212,6 +211,7 @@ DicInfo* HunspellInterface::CreateHunspell(const wchar_t* Name, int Type) {
             // dictionaries are in dictionary encoding
         }
     }
+    NewDic.hunspell = std::move(NewHunspell);
     auto& target = AllHunspells[NewName];
     target = std::move(NewDic);
     return &target;
@@ -482,16 +482,21 @@ void HunspellInterface::IgnoreAll(char* Word) {
 namespace
 {
     class HunspellSuggestions {
+        using self = HunspellSuggestions;
     public:
-        HunspellSuggestions(Hunspell* hunspell, const char* word) : m_hunspell(hunspell) {
+        HunspellSuggestions(Hunspell* hunspell, const char* word) :
+            m_hunspell(hunspell) {
             m_count = hunspell->suggest(&m_list, word);
+            if (m_list)
+              m_flag.make_valid();
         }
 
         HunspellSuggestions() {
         }
-
+        HunspellSuggestions(self &&) = default;
+        self &operator= (self &&) = default;
         ~HunspellSuggestions() {
-            if (m_list)
+            if (m_flag.is_valid () && m_list)
                 m_hunspell->free_list(&m_list, m_count);
         }
 
@@ -499,8 +504,9 @@ namespace
         int count() const { return m_count; }
 
     private:
-        char** m_list = nullptr;
+        char **m_list = nullptr;
         int m_count = 0;
+        move_only_flag m_flag;
         Hunspell* m_hunspell = nullptr;
     };
 }
@@ -562,9 +568,10 @@ void HunspellInterface::SetDirectory(wchar_t* Dir) {
     }
 
     for (auto& filePath : files) {
-        auto affFilePath = filePath.substr(0, filePath.length() - 4) + L".dic";
-        if (PathFileExists(affFilePath.c_str())) {
-            const auto dicName = filePath.substr(0, affFilePath.rfind(L'\\'));
+        auto dicFilePath = filePath.substr(0, filePath.length() - 4) + L".dic";
+        if (PathFileExists(dicFilePath.c_str())) {
+            auto dicName = filePath.substr(dicFilePath.rfind(L'\\') + 1);
+            dicName = dicName.substr(0, dicName.length() - 4);
             AvailableLangInfo newX;
             newX.type = 0;
             newX.name = dicName;

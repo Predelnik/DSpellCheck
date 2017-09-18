@@ -34,11 +34,11 @@ class HunspellInterface;
 class SelectProxy;
 
 struct SuggestionsMenuItem {
-  wchar_t *Text;
+  std::wstring Text;
   BYTE Id;
   bool Separator;
   SuggestionsMenuItem(const wchar_t *TextArg, int IdArg, bool SeparatorArg = false);
-  ~SuggestionsMenuItem() { CLEAN_AND_ZERO_ARR(Text); };
+  ~SuggestionsMenuItem() { };
 };
 
 void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,

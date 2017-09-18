@@ -134,3 +134,18 @@ std::wstring wstring_printf (const wchar_t *format, ArgTypes &&... args) {
     _snwprintf (buf.data (), size + 1, format, args...);
     return buf.data ();
 }
+
+class move_only_flag {
+    using self = move_only_flag;
+public:
+    move_only_flag () {}
+    static self create_valid () { self out; out.valid = true; return out; }
+    void make_valid () { valid = true; }
+    move_only_flag (self &&other) noexcept : valid (other.valid) { other.valid = false;}
+    self &operator= (self &&other) noexcept { valid = other.valid; other.valid = false; return *this; }
+    move_only_flag (const self &) = delete;
+    self &operator= (const self &other) = delete;
+    bool is_valid () const { return valid; }
+private:
+    bool valid = false;
+};
