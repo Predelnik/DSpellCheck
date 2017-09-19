@@ -88,7 +88,6 @@ public:
 
   void SetDirectory(wchar_t *Dir);
   void SetAdditionalDirectory(wchar_t *Dir);
-  void WriteUserDic(WordSet *Target, wchar_t *Path);
   void ReadUserDic(WordSet *Target, const wchar_t* Path);
   void SetUseOneDic(bool Value);
   void UpdateOnDicRemoval(wchar_t *Path, bool &NeedSingleLangReset,
@@ -104,8 +103,8 @@ public:
 private:
   bool IsHunspellWorking;
   bool UseOneDic;
-  wchar_t *DicDir;
-  wchar_t *SysDicDir;
+  std::wstring DicDir;
+  std::wstring SysDicDir;
   std::set<AvailableLangInfo> dicList;
   std::map<std::wstring, DicInfo> AllHunspells;
   char *GetConvertedWord(const char *Source, iconv_t Converter);
@@ -115,7 +114,7 @@ private:
   WordSet Memorized;
   WordSet Ignored;
   bool InitialReadingBeenDone;
-  wchar_t *UserDicPath;        // For now only default one.
-  wchar_t *SystemWrongDicPath; // Only for reading and then removing
+  std::wstring UserDicPath;        // For now only default one.
+  std::wstring SystemWrongDicPath; // Only for reading and then removing
   HWND NppWindow;
 };

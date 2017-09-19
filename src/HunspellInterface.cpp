@@ -78,12 +78,8 @@ static std::vector<std::wstring> ListFiles(wchar_t* path, const wchar_t* mask,
 HunspellInterface::HunspellInterface(HWND NppWindowArg) {
     NppWindow = NppWindowArg;
     SingularSpeller = {};
-    DicDir = nullptr;
-    SysDicDir = nullptr;
     LastSelectedSpeller = {};
     IsHunspellWorking = false;
-    UserDicPath = nullptr;
-    SystemWrongDicPath = nullptr;
 }
 
 void HunspellInterface::UpdateOnDicRemoval(wchar_t* Path,
@@ -107,7 +103,7 @@ void HunspellInterface::UpdateOnDicRemoval(wchar_t* Path,
 
 void HunspellInterface::SetUseOneDic(bool Value) { UseOneDic = Value; }
 
-bool ArePathsEqual(wchar_t* path1, wchar_t* path2) {
+bool ArePathsEqual(const wchar_t* path1, const wchar_t* path2) {
     BY_HANDLE_FILE_INFORMATION bhfi1, bhfi2;
     HANDLE h1, h2 = nullptr;
     DWORD access = 0;
@@ -140,23 +136,54 @@ bool ArePathsEqual(wchar_t* path1, wchar_t* path2) {
         bhfi1.nFileIndexLow == bhfi2.nFileIndexLow;
 }
 
+static void WriteUserDic(WordSet* Target, std::wstring Path) {
+    FILE* Fp = nullptr;
+
+    if (Target->size() == 0) {
+        SetFileAttributes(Path.c_str(), FILE_ATTRIBUTE_NORMAL);
+        DeleteFile(Path.c_str());
+        return;
+    }
+
+    SortedWordSet TemporarySortedWordSet;
+    // Wordset itself
+    // being removed here as local variable, all strings are not copied
+
+    auto slashPos = Path.rfind(L'\\');
+    if (slashPos == std::string::npos)
+        return;
+    CheckForDirectoryExistence(Path.substr(0, slashPos).c_str());
+
+    SetFileAttributes(Path.c_str(), FILE_ATTRIBUTE_NORMAL);
+
+    Fp = _wfopen(Path.c_str(), L"w");
+    if (!Fp)
+        return;
+    {
+        fprintf(Fp, "%zu\n", Target->size());
+        for (auto word : *Target) {
+            TemporarySortedWordSet.insert(word);
+        }
+    }
+    SortedWordSet::iterator it = TemporarySortedWordSet.begin();
+    for (; it != TemporarySortedWordSet.end(); ++it) {
+        fprintf(Fp, "%s\n", it->c_str());
+    }
+
+    fclose(Fp);
+}
+
 HunspellInterface::~HunspellInterface() {
     IsHunspellWorking = false;
 
-    if (SystemWrongDicPath && UserDicPath &&
-        !ArePathsEqual(SystemWrongDicPath, UserDicPath)) {
-        SetFileAttributes(SystemWrongDicPath, FILE_ATTRIBUTE_NORMAL);
-        DeleteFile(SystemWrongDicPath);
+    if (!SystemWrongDicPath.empty () && !UserDicPath.empty() &&
+        !ArePathsEqual(SystemWrongDicPath.c_str (), UserDicPath.c_str())) {
+        SetFileAttributes(SystemWrongDicPath.c_str (), FILE_ATTRIBUTE_NORMAL);
+        DeleteFile(SystemWrongDicPath.c_str ());
     }
 
-    if (InitialReadingBeenDone && UserDicPath)
-        WriteUserDic(&Memorized, UserDicPath);
-
-    CLEAN_AND_ZERO_ARR(DicDir);
-    CLEAN_AND_ZERO_ARR(SysDicDir);
-    CLEAN_AND_ZERO_ARR(UserDicPath);
-    CLEAN_AND_ZERO_ARR(SystemWrongDicPath);
-
+    if (InitialReadingBeenDone && UserDicPath.c_str())
+        WriteUserDic(&Memorized, UserDicPath.c_str());
 }
 
 std::vector<std::wstring> HunspellInterface::GetLanguageList() {
@@ -313,47 +340,6 @@ bool HunspellInterface::CheckWord(char* Word) {
     return res;
 }
 
-void HunspellInterface::WriteUserDic(WordSet* Target, wchar_t* Path) {
-    FILE* Fp = nullptr;
-
-    if (Target->size() == 0) {
-        SetFileAttributes(Path, FILE_ATTRIBUTE_NORMAL);
-        DeleteFile(Path);
-        return;
-    }
-
-    SortedWordSet TemporarySortedWordSet; // Wordset itself
-    // being removed here
-    // as local variable,
-    // all strings are not
-    // copied
-
-    wchar_t* LastSlashPos = GetLastSlashPosition(Path);
-    if (!LastSlashPos)
-        return;
-    *LastSlashPos = L'\0';
-    CheckForDirectoryExistence(Path);
-    *LastSlashPos = L'\\';
-
-    SetFileAttributes(Path, FILE_ATTRIBUTE_NORMAL);
-
-    Fp = _wfopen(Path, L"w");
-    if (!Fp)
-        return;
-    {
-        fprintf(Fp, "%zu\n", Target->size());
-        for (auto word : *Target) {
-            TemporarySortedWordSet.insert(word);
-        }
-    }
-    SortedWordSet::iterator it = TemporarySortedWordSet.begin();
-    for (; it != TemporarySortedWordSet.end(); ++it) {
-        fprintf(Fp, "%s\n", it->c_str());
-    }
-
-    fclose(Fp);
-}
-
 void HunspellInterface::ReadUserDic(WordSet* Target, const wchar_t* Path) {
     FILE* Fp = nullptr;
     int WordNum = 0;
@@ -488,15 +474,17 @@ namespace
             m_hunspell(hunspell) {
             m_count = hunspell->suggest(&m_list, word);
             if (m_list)
-              m_flag.make_valid();
+                m_flag.make_valid();
         }
 
         HunspellSuggestions() {
         }
-        HunspellSuggestions(self &&) = default;
-        self &operator= (self &&) = default;
+
+        HunspellSuggestions(self&&) = default;
+        self& operator=(self&&) = default;
+
         ~HunspellSuggestions() {
-            if (m_flag.is_valid () && m_list)
+            if (m_flag.is_valid() && m_list)
                 m_hunspell->free_list(&m_list, m_count);
         }
 
@@ -504,7 +492,7 @@ namespace
         int count() const { return m_count; }
 
     private:
-        char **m_list = nullptr;
+        char** m_list = nullptr;
         int m_count = 0;
         move_only_flag m_flag;
         Hunspell* m_hunspell = nullptr;
@@ -547,16 +535,14 @@ std::vector<std::string> HunspellInterface::GetSuggestions(const char* Word) {
 }
 
 void HunspellInterface::SetDirectory(wchar_t* Dir) {
-    CLEAN_AND_ZERO_ARR(UserDicPath);
-    UserDicPath = new wchar_t[DEFAULT_BUF_SIZE];
-    wcscpy(UserDicPath, Dir);
-    if (UserDicPath[wcslen(UserDicPath) - 1] != L'\\')
-        wcscat(UserDicPath, L"\\");
-    wcscat(UserDicPath, L"UserDic.dic"); // Should be tunable really
-    ReadUserDic(&Memorized, UserDicPath); // We should load user dictionary first.
+    UserDicPath = Dir;
+    if (UserDicPath.back() != L'\\')
+        UserDicPath += L"\\";
+    UserDicPath += L"UserDic.dic"; // Should be tunable really
+    ReadUserDic(&Memorized, UserDicPath.c_str()); // We should load user dictionary first.
 
     InitialReadingBeenDone = false;
-    SetString(DicDir, Dir);
+    DicDir = Dir;
 
     std::set<AvailableLangInfo>::iterator it;
     dicList.clear();
@@ -582,7 +568,7 @@ void HunspellInterface::SetDirectory(wchar_t* Dir) {
 
 void HunspellInterface::SetAdditionalDirectory(wchar_t* Dir) {
     InitialReadingBeenDone = false;
-    SetString(SysDicDir, Dir);
+    SysDicDir = Dir;
     IsHunspellWorking = true;
 
     auto files = ListFiles(Dir, L"*.*", L"*.aff");
@@ -590,38 +576,26 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t* Dir) {
         return;
 
     for (auto& file : files) {
-        wchar_t* Buf = nullptr;
-        SetString(Buf, file.c_str());
-        wchar_t* DotPointer = wcsrchr(Buf, L'.');
-        wcscpy(DotPointer, L".dic");
-        if (PathFileExists(Buf)) {
-            *DotPointer = 0;
-            wchar_t* SlashPointer = wcsrchr(Buf, L'\\');
-            wchar_t* TBuf = nullptr;
-            SetString(TBuf, SlashPointer + 1);
+        auto fileNameWithoutExt = file.substr(0, file.rfind (L'.'));
+        if (PathFileExists((fileNameWithoutExt + L".dic").c_str ())) {
             AvailableLangInfo NewX;
             NewX.type = 1;
-            NewX.name = TBuf;
+            NewX.name = fileNameWithoutExt.substr(fileNameWithoutExt.rfind ('L\\') + 1);
             if (dicList.count(NewX) == 0)
                 dicList.insert(NewX);
-            else
-                CLEAN_AND_ZERO_ARR(TBuf);
         }
-        CLEAN_AND_ZERO_ARR(Buf);
     }
     // Now we have 2 dictionaries on our hands
 
     InitialReadingBeenDone = true;
 
-    CLEAN_AND_ZERO_ARR(SystemWrongDicPath);
-    SystemWrongDicPath =
-        new wchar_t[DEFAULT_BUF_SIZE]; // Reading system path unified dic too
-    wcscpy(SystemWrongDicPath, Dir);
-    if (SystemWrongDicPath[wcslen(SystemWrongDicPath) - 1] != L'\\')
-        wcscat(SystemWrongDicPath, L"\\");
-    wcscat(SystemWrongDicPath, L"UserDic.dic"); // Should be tunable really
+    // Reading system path unified dic too
+    SystemWrongDicPath = Dir;
+    if (SystemWrongDicPath.back () != L'\\')
+        SystemWrongDicPath += L"\\";
+    SystemWrongDicPath += L"UserDic.dic"; // Should be tunable really
     ReadUserDic(&Memorized,
-                SystemWrongDicPath); // We should load user dictionary first.
+                SystemWrongDicPath.c_str ()); // We should load user dictionary first.
 }
 
 bool HunspellInterface::GetLangOnlySystem(wchar_t* Lang) {
