@@ -101,7 +101,7 @@ size_t HashCharString(char *a);
 bool SortCompareChars(char *a, char *b);
 
 bool CheckForDirectoryExistence(const wchar_t* PathArg, bool Silent = true,
-                                HWND NppWindow = 0);
+                                HWND NppWindow = nullptr);
 wchar_t* GetLastSlashPosition(wchar_t* Path);
 
 // trim from start (in place)

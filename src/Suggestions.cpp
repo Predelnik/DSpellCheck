@@ -97,7 +97,7 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
   case WM_MOUSEMOVE:
     StateHovered = true;
     RegMsg(_hSelf, MOUSELEAVE);
-    RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
+    RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
     return false;
 
   case WM_MOUSEHOVER:
@@ -105,7 +105,7 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
 
   case WM_LBUTTONDOWN:
     StatePressed = true;
-    RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
+    RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
     return false;
 
   case WM_LBUTTONUP:
@@ -176,7 +176,7 @@ INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
   case WM_MOUSELEAVE:
     StateHovered = false;
     StatePressed = false;
-    RedrawWindow(_hSelf, 0, 0, RDW_UPDATENOW | RDW_INVALIDATE);
+    RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
     return false;
   }
   return false;

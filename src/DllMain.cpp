@@ -40,7 +40,7 @@ std::vector<std::pair<long, long>> CheckQueue;
 UINT_PTR uiTimer = 0u;
 UINT_PTR recheckTimer = 0u;
 bool recheckDone = true;
-WNDPROC wndProcNotepad = NULL;
+WNDPROC wndProcNotepad = nullptr;
 bool restylingCausedRecheckWasDone =
     false; // Hack to avoid eternal cycle in case of scintilla bug
 bool firstRestyle = true; // hack to successfully avoid checking hyperlinks when they appear on program start
@@ -56,7 +56,7 @@ void SetRecheckDelay(int Value, int WriteToIni) {
 
   if (WriteToIni) {
     std::pair<wchar_t *, DWORD> x;
-    x.first = 0;
+    x.first = nullptr;
     SetString(x.first, L"Recheck_Delay");
     x.second = MAKELPARAM(Value, 500);
     getSpellChecker()->WriteSetting(x);
@@ -217,7 +217,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
   switch (notifyCode->nmhdr.code) {
   case NPPN_SHUTDOWN: {
     MSG msg;
-    while (PeekMessage(&msg, NULL, WM_USER, 0xFFFF,
+    while (PeekMessage(&msg, nullptr, WM_USER, 0xFFFF,
                        PM_REMOVE)) // Clearing message queue to make sure that
                                    // we're not stuck in SendMesage somewhere
     {
@@ -228,7 +228,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     commandMenuCleanUp();
 
     pluginCleanUp();
-    if (wndProcNotepad != NULL)
+    if (wndProcNotepad != nullptr)
       // LONG_PTR is more x64 friendly, yet not affecting x86
       ::SetWindowLongPtr(nppData._nppHandle, GWLP_WNDPROC,
                          (LONG_PTR)wndProcNotepad); // Removing subclassing

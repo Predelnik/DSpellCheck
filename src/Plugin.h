@@ -79,7 +79,7 @@ void AddIcons ();
 bool GetAutoCheckState ();
 void AutoCheckStateReceived (bool state);
 HMENU GetDSpellCheckMenu ();
-HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = 0);
+HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = nullptr);
 HANDLE getHModule ();
 LangList *GetLangList ();
 RemoveDics *GetRemoveDics ();

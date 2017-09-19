@@ -38,7 +38,7 @@ void SelectProxy::DoDialog() {
 }
 
 void SelectProxy::ApplyChoice(SpellChecker *SpellCheckerInstance) {
-  wchar_t *TBuf = 0;
+  wchar_t *TBuf = nullptr;
   int BufSize = 0;
   BufSize = Edit_GetTextLength(HUserName) + 1;
   TBuf = new wchar_t[BufSize];
@@ -149,7 +149,7 @@ INT_PTR SelectProxy::run_dlgProc(UINT message, WPARAM wParam,
       break;
     case IDC_PORT:
       if (HIWORD(wParam) == EN_CHANGE) {
-        wchar_t *EndPtr = 0;
+        wchar_t *EndPtr = nullptr;
         int x;
         wchar_t Buf[DEFAULT_BUF_SIZE];
         Edit_GetText(HPort, Buf, DEFAULT_BUF_SIZE);

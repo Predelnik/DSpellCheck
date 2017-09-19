@@ -78,12 +78,12 @@ static std::vector<std::wstring> ListFiles(wchar_t* path, const wchar_t* mask,
 HunspellInterface::HunspellInterface(HWND NppWindowArg) {
     NppWindow = NppWindowArg;
     SingularSpeller = {};
-    DicDir = 0;
-    SysDicDir = 0;
+    DicDir = nullptr;
+    SysDicDir = nullptr;
     LastSelectedSpeller = {};
     IsHunspellWorking = false;
-    UserDicPath = 0;
-    SystemWrongDicPath = 0;
+    UserDicPath = nullptr;
+    SystemWrongDicPath = nullptr;
 }
 
 void HunspellInterface::UpdateOnDicRemoval(wchar_t* Path,
@@ -109,23 +109,23 @@ void HunspellInterface::SetUseOneDic(bool Value) { UseOneDic = Value; }
 
 bool ArePathsEqual(wchar_t* path1, wchar_t* path2) {
     BY_HANDLE_FILE_INFORMATION bhfi1, bhfi2;
-    HANDLE h1, h2 = NULL;
+    HANDLE h1, h2 = nullptr;
     DWORD access = 0;
     DWORD share = FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE;
 
-    h1 = CreateFile(path1, access, share, NULL, OPEN_EXISTING,
+    h1 = CreateFile(path1, access, share, nullptr, OPEN_EXISTING,
                     (GetFileAttributes(path1) & FILE_ATTRIBUTE_DIRECTORY)
                         ? FILE_FLAG_BACKUP_SEMANTICS
                         : 0,
-                    NULL);
+                    nullptr);
     if (INVALID_HANDLE_VALUE != h1) {
         if (!GetFileInformationByHandle(h1, &bhfi1))
             bhfi1.dwVolumeSerialNumber = 0;
-        h2 = CreateFile(path2, access, share, NULL, OPEN_EXISTING,
+        h2 = CreateFile(path2, access, share, nullptr, OPEN_EXISTING,
                         (GetFileAttributes(path2) & FILE_ATTRIBUTE_DIRECTORY)
                             ? FILE_FLAG_BACKUP_SEMANTICS
                             : 0,
-                        NULL);
+                        nullptr);
         if (!GetFileInformationByHandle(h2, &bhfi2))
             bhfi2.dwVolumeSerialNumber = bhfi1.dwVolumeSerialNumber + 1;
     }
@@ -314,7 +314,7 @@ bool HunspellInterface::CheckWord(char* Word) {
 }
 
 void HunspellInterface::WriteUserDic(WordSet* Target, wchar_t* Path) {
-    FILE* Fp = 0;
+    FILE* Fp = nullptr;
 
     if (Target->size() == 0) {
         SetFileAttributes(Path, FILE_ATTRIBUTE_NORMAL);
@@ -355,7 +355,7 @@ void HunspellInterface::WriteUserDic(WordSet* Target, wchar_t* Path) {
 }
 
 void HunspellInterface::ReadUserDic(WordSet* Target, const wchar_t* Path) {
-    FILE* Fp = 0;
+    FILE* Fp = nullptr;
     int WordNum = 0;
     Fp = _wfopen(Path, L"r");
     if (!Fp) {
@@ -370,7 +370,7 @@ void HunspellInterface::ReadUserDic(WordSet* Target, const wchar_t* Path) {
             if (fgets(Buf, DEFAULT_BUF_SIZE, Fp)) {
                 Buf[strlen(Buf) - 1] = 0;
                 if (Target->find(Buf) == Target->end()) {
-                    char* Word = 0;
+                    char* Word = nullptr;
                     SetString(Word, Buf);
                     Target->insert(Word);
                 }
@@ -439,7 +439,7 @@ void HunspellInterface::AddToDictionary(char* Word) {
             _close(LocalDicFileHandle);
     }
 
-    char* Buf = 0;
+    char* Buf = nullptr;
     if (CurrentEncoding == ENCODING_UTF8)
         SetString(Buf, Word);
     else
@@ -460,7 +460,7 @@ void HunspellInterface::AddToDictionary(char* Word) {
     }
     else {
         char* ConvWord = GetConvertedWord(Buf, LastSelectedSpeller->Converter.get());
-        char* WordCopy = 0;
+        char* WordCopy = nullptr;
         SetString(WordCopy, ConvWord);
         LastSelectedSpeller->LocalDic.insert(WordCopy);
         if (*ConvWord)
@@ -474,7 +474,7 @@ void HunspellInterface::IgnoreAll(char* Word) {
     if (!LastSelectedSpeller)
         return;
 
-    char* Buf = 0;
+    char* Buf = nullptr;
     SetString(Buf, Word);
     Ignored.insert(Buf);
 }
@@ -590,14 +590,14 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t* Dir) {
         return;
 
     for (auto& file : files) {
-        wchar_t* Buf = 0;
+        wchar_t* Buf = nullptr;
         SetString(Buf, file.c_str());
         wchar_t* DotPointer = wcsrchr(Buf, L'.');
         wcscpy(DotPointer, L".dic");
         if (PathFileExists(Buf)) {
             *DotPointer = 0;
             wchar_t* SlashPointer = wcsrchr(Buf, L'\\');
-            wchar_t* TBuf = 0;
+            wchar_t* TBuf = nullptr;
             SetString(TBuf, SlashPointer + 1);
             AvailableLangInfo NewX;
             NewX.type = 1;

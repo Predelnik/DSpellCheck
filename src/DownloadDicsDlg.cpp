@@ -58,10 +58,10 @@ void DownloadDicsDlg::OnDisplayAction() {
 }
 
 DownloadDicsDlg::DownloadDicsDlg() {
-    Timer = 0;
-    RefreshIcon = 0;
+    Timer = nullptr;
+    RefreshIcon = nullptr;
     CheckIfSavingIsNeeded = 0;
-    HFileList = 0;
+    HFileList = nullptr;
 }
 
 void DownloadDicsDlg::initDlg(HINSTANCE hInst, HWND Parent,
@@ -73,7 +73,7 @@ void DownloadDicsDlg::initDlg(HINSTANCE hInst, HWND Parent,
 
 DownloadDicsDlg::~DownloadDicsDlg() {
     if (Timer)
-        DeleteTimerQueueTimer(0, Timer, 0);
+        DeleteTimerQueueTimer(nullptr, Timer, nullptr);
     if (RefreshIcon)
         DestroyIcon(RefreshIcon);
 }
@@ -518,7 +518,7 @@ std::optional<FtpOperationErrorType> doDownloadFile(FtpOperationParams params, c
 
 static std::variant<HINTERNET, FtpWebOperationError> openUrl(HINTERNET WinInetHandle, const std::wstring& url,
                                                              const FtpOperationParams& params) {
-    const auto urlHandle = InternetOpenUrl(WinInetHandle, url.c_str(), 0, 0,
+    const auto urlHandle = InternetOpenUrl(WinInetHandle, url.c_str(), nullptr, 0,
                                            INTERNET_FLAG_PASSIVE | INTERNET_FLAG_RELOAD |
                                            INTERNET_FLAG_PRAGMA_NOCACHE, 0);
     if (!urlHandle)
@@ -606,16 +606,16 @@ std::variant<FtpWebOperationError, std::vector<std::wstring>> doDownloadFileList
     while ((size_t)(CurPos - FileBuffer.data()) < BytesReadTotal) {
         char* TempCurPos = CurPos;
         CurPos = strstr(CurPos, "</A>");
-        if (CurPos == 0)
+        if (CurPos == nullptr)
             CurPos = strstr(TempCurPos, "</a>");
 
-        if (CurPos == 0)
+        if (CurPos == nullptr)
             break;
         TempCurPos = CurPos;
         while (*TempCurPos != '>' && TempCurPos > FileBuffer.data())
             TempCurPos--;
 
-        if (TempCurPos == 0)
+        if (TempCurPos == nullptr)
             return FtpWebOperationError{FtpWebOperationErrorType::htmlCannotBeParsed, -1};
         TempCurPos++;
         CurPos--;
@@ -861,8 +861,8 @@ VOID CALLBACK ReinitServer(PVOID lpParameter, BOOLEAN /*TimerOrWaitFired*/
 }
 
 void DownloadDicsDlg::RemoveTimer() {
-    DeleteTimerQueueTimer(0, Timer, 0);
-    Timer = 0;
+    DeleteTimerQueueTimer(nullptr, Timer, nullptr);
+    Timer = nullptr;
 }
 
 void DownloadDicsDlg::SetOptions(bool ShowOnlyKnown, bool InstallSystem) {
@@ -919,9 +919,9 @@ INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
             case IDC_ADDRESS:
                 if (HIWORD(wParam) == CBN_EDITCHANGE) {
                     if (Timer)
-                        ChangeTimerQueueTimer(0, Timer, 1000, 0);
+                        ChangeTimerQueueTimer(nullptr, Timer, 1000, 0);
                     else
-                        CreateTimerQueueTimer(&Timer, 0, ReinitServer, this, 1000, 0, 0);
+                        CreateTimerQueueTimer(&Timer, nullptr, ReinitServer, this, 1000, 0, 0);
                 }
                 else if (HIWORD(wParam) == CBN_SELCHANGE) {
                     getSpellChecker()->updateFromDownloadDicsOptionsNoUpdate();

@@ -270,7 +270,7 @@ bool MatchSpecialChar(wchar_t* Dest, wchar_t*& Source) {
 
             buf[0] = (unsigned char)c;
             n = n << 4;
-            n += (wchar_t)strtol(buf, NULL, 16);
+            n += (wchar_t)strtol(buf, nullptr, 16);
         }
         *Dest = n;
         break;
@@ -285,7 +285,7 @@ bool MatchSpecialChar(wchar_t* Dest, wchar_t*& Source) {
 
 void SetParsedString(wchar_t*& Dest, wchar_t* Source) {
     Dest = new wchar_t[wcslen(Source) + 1];
-    wchar_t* LastPos = 0;
+    wchar_t* LastPos = nullptr;
     wchar_t* ResString = Dest;
     while (*Source) {
         LastPos = Source;
@@ -327,7 +327,7 @@ bool Utf8IsCont(char c) {
 char* Utf8Dec(const char* string, const char* current) {
     const char* temp;
     if (string >= current)
-        return 0;
+        return nullptr;
 
     temp = current - 1;
     while (string <= temp && (!Utf8IsLead(*temp)))
@@ -375,12 +375,12 @@ char* Utf8pbrk(const char* s, const char* set) {
         for (x = set; *x; x = Utf8Inc(x))
             if (Utf8Firswchar_tsAreEqual(s, x))
                 return (char *)s;
-    return NULL;
+    return nullptr;
 }
 
 std::ptrdiff_t Utf8spn(const char* s, const char* set) {
     const char* x;
-    const char* it = 0;
+    const char* it = nullptr;
     it = s;
 
     for (; *it; it = Utf8Inc(it)) {
@@ -402,17 +402,17 @@ char* Utf8chr(const char* s, const char* sfc) // Char is first from the string
             return (char *)s;
         s = Utf8Inc(s);
     }
-    return 0;
+    return nullptr;
 }
 
 char* Utf8strtok(char* s1, const char* Delimit, char** Context) {
     char* tmp;
 
     /* Skip leading delimiters if new string. */
-    if (s1 == NULL) {
+    if (s1 == nullptr) {
         s1 = *Context;
-        if (s1 == NULL) /* End of story? */
-            return NULL;
+        if (s1 == nullptr) /* End of story? */
+            return nullptr;
         else
             s1 += Utf8spn(s1, Delimit);
     }
@@ -435,7 +435,7 @@ char* Utf8strtok(char* s1, const char* Delimit, char** Context) {
     }
     else {
         /* Last segment, remember that. */
-        *Context = NULL;
+        *Context = nullptr;
     }
 
     return s1;
@@ -599,7 +599,7 @@ std::pair<std::wstring_view, bool> applyAlias(std::wstring_view str) {
 }
 
 static bool TryToCreateDir(wchar_t* Path, bool Silent, HWND NppWindow) {
-    if (!CreateDirectory(Path, NULL)) {
+    if (!CreateDirectory(Path, nullptr)) {
         if (!Silent) {
             if (!NppWindow)
                 return false;

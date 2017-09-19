@@ -74,7 +74,7 @@ bool AspellInterface::IsWorking() {
 }
 
 void AspellInterface::SendAspellError(AspellCanHaveError* Error) {
-    wchar_t* ErrorMsg = 0;
+    wchar_t* ErrorMsg = nullptr;
     SetString(ErrorMsg, aspell_error_message(Error));
     MessageBox(NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
 }
@@ -87,7 +87,7 @@ void AspellInterface::SetMultipleLanguages(std::vector<wchar_t *>* List) {
     for (unsigned int i = 0; i < List->size(); i++) {
         AspellConfig* SpellConfig = new_aspell_config();
         aspell_config_replace(SpellConfig, "encoding", "utf-8");
-        char* Buf = 0;
+        char* Buf = nullptr;
         SetString(Buf, List->at(i));
         aspell_config_replace(SpellConfig, "lang", Buf);
         CLEAN_AND_ZERO_ARR (Buf);
@@ -103,7 +103,7 @@ void AspellInterface::SetMultipleLanguages(std::vector<wchar_t *>* List) {
 }
 
 std::vector<std::string> AspellInterface::GetSuggestions(const char* Word) {
-    const AspellWordList* wordList = 0;
+    const AspellWordList* wordList = nullptr;
     std::string TargetWord;
 
     if (CurrentEncoding == ENCODING_UTF8)
@@ -142,7 +142,7 @@ std::vector<std::string> AspellInterface::GetSuggestions(const char* Word) {
 }
 
 void AspellInterface::AddToDictionary(char* Word) {
-    char* TargetWord = 0;
+    char* TargetWord = nullptr;
 
     if (CurrentEncoding == ENCODING_UTF8)
         TargetWord = Word;
@@ -153,13 +153,13 @@ void AspellInterface::AddToDictionary(char* Word) {
         return;
     aspell_speller_add_to_personal(LastSelectedSpeller, Word, static_cast<int>(strlen(Word)) + 1);
     aspell_speller_save_all_word_lists(LastSelectedSpeller);
-    if (aspell_speller_error(LastSelectedSpeller) != 0) {
-        wchar_t* ErrorMsg = 0;
+    if (aspell_speller_error(LastSelectedSpeller) != nullptr) {
+        wchar_t* ErrorMsg = nullptr;
         SetString(ErrorMsg, aspell_speller_error_message(LastSelectedSpeller));
         MessageBox(NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
         CLEAN_AND_ZERO_ARR (ErrorMsg);
     }
-    LastSelectedSpeller = 0;
+    LastSelectedSpeller = nullptr;
 
     if (CurrentEncoding == ENCODING_ANSI)
         CLEAN_AND_ZERO_ARR (TargetWord);
@@ -169,7 +169,7 @@ void AspellInterface::IgnoreAll(char* Word) {
     if (!LastSelectedSpeller)
         return;
 
-    char* TargetWord = 0;
+    char* TargetWord = nullptr;
 
     if (CurrentEncoding == ENCODING_UTF8)
         TargetWord = Word;
@@ -178,10 +178,10 @@ void AspellInterface::IgnoreAll(char* Word) {
 
     aspell_speller_add_to_session(LastSelectedSpeller, TargetWord, static_cast<int>(strlen(TargetWord)) + 1);
     aspell_speller_save_all_word_lists(LastSelectedSpeller);
-    if (aspell_speller_error(LastSelectedSpeller) != 0) {
-        AspellErrorMsgBox(0, aspell_speller_error_message(LastSelectedSpeller));
+    if (aspell_speller_error(LastSelectedSpeller) != nullptr) {
+        AspellErrorMsgBox(nullptr, aspell_speller_error_message(LastSelectedSpeller));
     }
-    LastSelectedSpeller = 0;
+    LastSelectedSpeller = nullptr;
     if (CurrentEncoding == ENCODING_ANSI)
         CLEAN_AND_ZERO_ARR (TargetWord);
 }
@@ -190,7 +190,7 @@ bool AspellInterface::CheckWord(char* Word) {
     if (!AspellLoaded)
         return true;
 
-    char* DstWord = 0;
+    char* DstWord = nullptr;
     bool res = false;
     if (CurrentEncoding == ENCODING_UTF8)
         DstWord = Word;
@@ -230,7 +230,7 @@ void AspellInterface::SetLanguage(const wchar_t* Lang) {
 
     auto spellConfig = wrapConfig(new_aspell_config());
     aspell_config_replace(spellConfig.get(), "encoding", "utf-8");
-    char* Buf = 0;
+    char* Buf = nullptr;
     SetString(Buf, Lang);
     aspell_config_replace(spellConfig.get(), "lang", Buf);
     CLEAN_AND_ZERO_ARR (Buf);

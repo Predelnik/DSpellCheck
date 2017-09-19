@@ -62,23 +62,23 @@ NppData nppData;
 wchar_t IniFilePath[MAX_PATH];
 DWORD CustomGUIMessageIds[static_cast<int> (CustomGUIMessage::MAX)] = {0};
 bool doCloseTag = false;
-SpellChecker *SpellCheckerInstance = 0;
-SettingsDlg *SettingsDlgInstance = 0;
-Suggestions *SuggestionsInstance = 0;
-LangList *LangListInstance = 0;
-RemoveDics *RemoveDicsInstance = 0;
-SelectProxy *SelectProxyInstance = 0;
-ProgressDlg *ProgressInstance = 0;
-DownloadDicsDlg *DownloadDicsDlgInstance = 0;
-AboutDlg *AboutDlgInstance = 0;
+SpellChecker *SpellCheckerInstance = nullptr;
+SettingsDlg *SettingsDlgInstance = nullptr;
+Suggestions *SuggestionsInstance = nullptr;
+LangList *LangListInstance = nullptr;
+RemoveDics *RemoveDicsInstance = nullptr;
+SelectProxy *SelectProxyInstance = nullptr;
+ProgressDlg *ProgressInstance = nullptr;
+DownloadDicsDlg *DownloadDicsDlgInstance = nullptr;
+AboutDlg *AboutDlgInstance = nullptr;
 HMENU LangsMenu;
 int ContextMenuIdStart;
 int LangsMenuIdStart = false;
 bool UseAllocatedIds;
-toolbarIcons *AutoCheckIcon = 0;
+toolbarIcons *AutoCheckIcon = nullptr;
 
-HANDLE hModule = NULL;
-HHOOK HMouseHook = NULL;
+HANDLE hModule = nullptr;
+HHOOK HMouseHook = nullptr;
 // HHOOK HCmHook = NULL;
 
 //
@@ -155,7 +155,7 @@ int filter(unsigned int, struct _EXCEPTION_POINTERS *ep) {
 }
 
 void CreateHooks() {
-  HMouseHook = SetWindowsHookEx(WH_MOUSE, MouseProc, 0, GetCurrentThreadId());
+  HMouseHook = SetWindowsHookEx(WH_MOUSE, MouseProc, nullptr, GetCurrentThreadId());
   // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0,
   // GetCurrentThreadId());
 }
@@ -192,9 +192,9 @@ void GetSuggestions() {
 void StartSettings() { SettingsDlgInstance->DoDialog(); }
 
 void StartManual() {
-  ShellExecute(NULL, L"open",
-               L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", NULL,
-               NULL, SW_SHOW);
+  ShellExecute(nullptr, L"open",
+               L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", nullptr,
+               nullptr, SW_SHOW);
 }
 
 void StartAboutDlg() { AboutDlgInstance->DoDialog(); }
@@ -212,7 +212,7 @@ void FindPrevMistake() { getSpellChecker ()->FindPrevMistake(); }
 void QuickLangChangeContext() {
   POINT Pos;
   GetCursorPos(&Pos);
-  TrackPopupMenu(GetLangsSubMenu(), 0, Pos.x, Pos.y, 0, nppData._nppHandle, 0);
+  TrackPopupMenu(GetLangsSubMenu(), 0, Pos.x, Pos.y, 0, nppData._nppHandle, nullptr);
 }
 
 //
@@ -229,7 +229,7 @@ void commandMenuInit() {
 
   // if config path doesn't exist, we create it
   if (PathFileExists(IniFilePath) == false) {
-    ::CreateDirectory(IniFilePath, NULL);
+    ::CreateDirectory(IniFilePath, nullptr);
   }
 
   // make your plugin config file full file path name
@@ -290,11 +290,11 @@ void commandMenuInit() {
   shKey->_key = 0x41 + 'd' - 'a';
   setNextCommand(TEXT("Change Current Language"), QuickLangChangeContext, shKey,
                  false);
-  setNextCommand(TEXT("---"), NULL, NULL, false);
+  setNextCommand(TEXT("---"), nullptr, nullptr, false);
 
-  setNextCommand(TEXT("Settings..."), StartSettings, NULL, false);
-  setNextCommand(TEXT("Online Manual"), StartManual, NULL, false);
-  setNextCommand(TEXT("About"), StartAboutDlg, NULL, false);
+  setNextCommand(TEXT("Settings..."), StartSettings, nullptr, false);
+  setNextCommand(TEXT("Online Manual"), StartManual, nullptr, false);
+  setNextCommand(TEXT("About"), StartAboutDlg, nullptr, false);
 }
 
 void AddIcons() {
@@ -314,12 +314,12 @@ void UpdateLangsMenu()
 HMENU GetDSpellCheckMenu() {
   HMENU PluginsMenu =
       (HMENU)SendMsgToNpp(&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
-  HMENU DSpellCheckMenu = 0;
+  HMENU DSpellCheckMenu = nullptr;
   int Count = GetMenuItemCount(PluginsMenu);
   int StrLen = 0;
-  wchar_t *Buf = 0;
+  wchar_t *Buf = nullptr;
   for (int i = 0; i < Count; i++) {
-    StrLen = GetMenuString(PluginsMenu, i, 0, 0, MF_BYPOSITION);
+    StrLen = GetMenuString(PluginsMenu, i, nullptr, 0, MF_BYPOSITION);
     Buf = new wchar_t[StrLen + 1];
     GetMenuString(PluginsMenu, i, Buf, StrLen + 1, MF_BYPOSITION);
     if (wcscmp(Buf, NPP_PLUGIN_NAME) == 0) {
@@ -346,7 +346,7 @@ HMENU GetLangsSubMenu(HMENU DSpellCheckMenuArg) {
   else
     DSpellCheckMenu = DSpellCheckMenuArg;
   if (!DSpellCheckMenu)
-    return 0;
+    return nullptr;
 
   MENUITEMINFO Mif;
 
@@ -356,7 +356,7 @@ HMENU GetLangsSubMenu(HMENU DSpellCheckMenuArg) {
   bool Res =
       GetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, true, &Mif);
   if (!Res)
-    return NULL;
+    return nullptr;
 
   return Mif.hSubMenu; // TODO: CHECK IS THIS CORRECT FIX
 }

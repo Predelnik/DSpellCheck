@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "HunspellInterface.h"
 
 SimpleDlg::SimpleDlg() : StaticDialog() {
-  _hUxTheme = 0;
+  _hUxTheme = nullptr;
   _hUxTheme = ::LoadLibrary(TEXT("uxtheme.dll"));
   if (_hUxTheme)
     _OpenThemeData = (OTDProc)::GetProcAddress(_hUxTheme, "OpenThemeData");
@@ -90,9 +90,9 @@ bool SimpleDlg::AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
 
   ComboBox_SetCurSel(HComboLanguage, SelectedIndex);
 
-  wchar_t *Context = 0;
-  wchar_t *MultiLanguagesCopy = 0;
-  wchar_t *Token = 0;
+  wchar_t *Context = nullptr;
+  wchar_t *MultiLanguagesCopy = nullptr;
+  wchar_t *Token = nullptr;
   int Index = 0;
   SetString(MultiLanguagesCopy, MultiLanguages);
   CheckedListBox_EnableCheckAll(GetLangList()->GetListBox(), BST_UNCHECKED);
@@ -108,7 +108,7 @@ bool SimpleDlg::AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
     if (Index != -1)
       CheckedListBox_SetCheckState(GetLangList()->GetListBox(), Index,
                                    BST_CHECKED);
-    Token = wcstok_s(NULL, L"|", &Context);
+    Token = wcstok_s(nullptr, L"|", &Context);
   }
   CLEAN_AND_ZERO_ARR(MultiLanguagesCopy);
   return true;
@@ -116,19 +116,19 @@ bool SimpleDlg::AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
 
 static HWND CreateToolTip(int toolID, HWND hDlg, const wchar_t* pszText) {
   if (!toolID || !hDlg || !pszText) {
-    return false;
+    return nullptr;
   }
   // Get the window of the tool.
   HWND hwndTool = GetDlgItem(hDlg, toolID);
 
   // Create the tooltip. g_hInst is the global instance handle.
   HWND hwndTip =
-      CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_ALWAYSTIP,
+      CreateWindowEx(NULL, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_ALWAYSTIP,
                      CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                     hDlg, NULL, (HINSTANCE)getHModule(), NULL);
+                     hDlg, nullptr, (HINSTANCE)getHModule(), nullptr);
 
   if (!hwndTool || !hwndTip) {
-    return (HWND)NULL;
+    return (HWND)nullptr;
   }
 
   // Associate the tooltip with the tool.
@@ -156,7 +156,7 @@ void SimpleDlg::ApplyLibChange(SpellChecker *SpellCheckerInstance) {
 }
 // Called from main thread, beware!
 void SimpleDlg::ApplySettings(SpellChecker *SpellCheckerInstance) {
-  wchar_t *Buf = 0;
+  wchar_t *Buf = nullptr;
   int LangCount = ComboBox_GetCount(HComboLanguage);
   int CurSel = ComboBox_GetCurSel(HComboLanguage);
 
@@ -223,7 +223,7 @@ void SimpleDlg::FillLibInfo(int Status, wchar_t *AspellPath,
       AspellStatusColor = COLOR_FAIL;
       Static_SetText(HAspellStatus, L"Aspell Status: Fail");
     }
-    wchar_t *Path = 0;
+    wchar_t *Path = nullptr;
     GetActualAspellPath(Path, AspellPath);
     Edit_SetText(HLibPath, Path);
 
@@ -421,7 +421,7 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
     case IDC_RESETASPELLPATH:
     case IDC_RESETHUNSPELLPATH: {
       if (HIWORD(wParam) == BN_CLICKED) {
-        wchar_t *Path = 0;
+        wchar_t *Path = nullptr;
         if (GetSelectedLib() == 0)
           GetDefaultAspellPath(Path);
         else
@@ -456,9 +456,9 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
         ofn.nMaxFile = DEFAULT_BUF_SIZE;
         ofn.lpstrFilter = L"Aspell Library (*.dll)\0*.dll\0";
         ofn.nFilterIndex = 1;
-        ofn.lpstrFileTitle = NULL;
+        ofn.lpstrFileTitle = nullptr;
         ofn.nMaxFileTitle = 0;
-        ofn.lpstrInitialDir = NULL;
+        ofn.lpstrInitialDir = nullptr;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
         if (GetOpenFileName(&ofn))
           Edit_SetText(HLibPath, ofn.lpstrFile);
@@ -468,8 +468,8 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
         memset (&bi, 0, sizeof(bi));
         wchar_t path[MAX_PATH];
 
-        LPITEMIDLIST pidlRoot = NULL;
-        SHGetFolderLocation(_hSelf, 0, NULL, NULL, &pidlRoot);
+        LPITEMIDLIST pidlRoot = nullptr;
+        SHGetFolderLocation(_hSelf, 0, nullptr, NULL, &pidlRoot);
 
         bi.pidlRoot = pidlRoot;
         bi.lpszTitle = L"Pick a Directory";
@@ -484,7 +484,7 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
         PathCombine(FinalPath, NppPath, Buf);
         bi.lParam = (LPARAM)FinalPath;
         LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-        if (pidl != 0) {
+        if (pidl != nullptr) {
           // get the name of the folder
           wchar_t *szPath = new wchar_t[MAX_PATH];
           SHGetPathFromIDList(pidl, szPath);
@@ -507,7 +507,7 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
       LITEM item = pNMLink->item;
 
       if ((((LPNMHDR)lParam)->hwndFrom == HLibLink) && (item.iLink == 0)) {
-        ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
+        ShellExecute(nullptr, L"open", item.szUrl, nullptr, nullptr, SW_SHOW);
       }
 
       break;
@@ -522,7 +522,7 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
       if (_OpenThemeData)
         hTheme = _OpenThemeData(_hSelf, L"TAB");
       else
-        hTheme = 0;
+        hTheme = nullptr;
 
       SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
       SetBkMode(hDC, TRANSPARENT);
@@ -543,7 +543,7 @@ void AdvancedDlg::SetUnderlineSettings(int Color, int Style) {
 }
 
 void AdvancedDlg::FillDelimiters(const char *Delimiters) {
-  wchar_t *TBuf = 0;
+  wchar_t *TBuf = nullptr;
   SetStringSUtf8(TBuf, Delimiters);
   Edit_SetText(HEditDelimiters, TBuf);
   CLEAN_AND_ZERO_ARR(TBuf);
@@ -591,7 +591,7 @@ const wchar_t *const IndicNames[] = {
     L"Straight Box", L"Dash",     L"Dots", L"Squiggle Low"};
 
 INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
-  wchar_t *EndPtr = 0;
+  wchar_t *EndPtr = nullptr;
   wchar_t Buf[DEFAULT_BUF_SIZE];
   int x;
   switch (message) {
@@ -620,7 +620,7 @@ INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
     SendMessage(HSliderSize, TBM_SETRANGE, true, MAKELPARAM(5, 22));
     SendMessage(HSliderTransparency, TBM_SETRANGE, true, MAKELPARAM(5, 100));
 
-    Brush = 0;
+    Brush = nullptr;
 
     SetWindowText(HIgnoreYo, L"Cyrillic: Count io (\u0451) as e");
     CreateToolTip(IDC_DELIMETERS, _hSelf,
@@ -737,7 +737,7 @@ INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
         Cc.Flags = CC_FULLOPEN | CC_RGBINIT;
         if (ChooseColor(&Cc)) {
           UnderlineColorBtn = Cc.rgbResult;
-          RedrawWindow(HUnderlineColor, 0, 0,
+          RedrawWindow(HUnderlineColor, nullptr, nullptr,
                        RDW_UPDATENOW | RDW_INVALIDATE | RDW_ERASE);
         }
       }
@@ -767,11 +767,11 @@ int AdvancedDlg::GetRecheckDelay() {
 
 // Called from main thread, beware!
 void AdvancedDlg::ApplySettings(SpellChecker *SpellCheckerInstance) {
-  wchar_t *TBuf = 0;
+  wchar_t *TBuf = nullptr;
   int Length = Edit_GetTextLength(HEditDelimiters);
   TBuf = new wchar_t[Length + 1];
   Edit_GetText(HEditDelimiters, TBuf, Length + 1);
-  char *BufUtf8 = 0;
+  char *BufUtf8 = nullptr;
   SetStringDUtf8(BufUtf8, TBuf);
   CLEAN_AND_ZERO_ARR(TBuf);
   SpellCheckerInstance->SetDelimiters(BufUtf8);
@@ -868,7 +868,7 @@ INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
     AppendMenu(menu, MF_STRING, 0,
                L"Copy All Misspelled Words in Current Document to Clipboard");
     TrackPopupMenuEx(menu, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
-                     _hSelf, NULL);
+                     _hSelf, nullptr);
   } break;
   case WM_NOTIFY: {
     NMHDR *nmhdr = (NMHDR *)lParam;

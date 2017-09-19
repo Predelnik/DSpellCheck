@@ -32,171 +32,171 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 HANDLE g_hModule;
 
-HINSTANCE hInstLib = NULL;
+HINSTANCE hInstLib = nullptr;
 
-PFUNC_aspell_mutable_container_add aspell_mutable_container_add = NULL;
-PFUNC_aspell_mutable_container_remove aspell_mutable_container_remove = NULL;
-PFUNC_aspell_mutable_container_clear aspell_mutable_container_clear = NULL;
+PFUNC_aspell_mutable_container_add aspell_mutable_container_add = nullptr;
+PFUNC_aspell_mutable_container_remove aspell_mutable_container_remove = nullptr;
+PFUNC_aspell_mutable_container_clear aspell_mutable_container_clear = nullptr;
 PFUNC_aspell_mutable_container_to_mutable_container
-    aspell_mutable_container_to_mutable_container = NULL;
+    aspell_mutable_container_to_mutable_container = nullptr;
 PFUNC_aspell_key_info_enumeration_at_end aspell_key_info_enumeration_at_end =
-    NULL;
-PFUNC_aspell_key_info_enumeration_next aspell_key_info_enumeration_next = NULL;
+    nullptr;
+PFUNC_aspell_key_info_enumeration_next aspell_key_info_enumeration_next = nullptr;
 PFUNC_delete_aspell_key_info_enumeration delete_aspell_key_info_enumeration =
-    NULL;
+    nullptr;
 PFUNC_aspell_key_info_enumeration_clone aspell_key_info_enumeration_clone =
-    NULL;
+    nullptr;
 PFUNC_aspell_key_info_enumeration_assign aspell_key_info_enumeration_assign =
-    NULL;
-PFUNC_new_aspell_config new_aspell_config = NULL;
-PFUNC_delete_aspell_config delete_aspell_config = NULL;
-PFUNC_aspell_config_clone aspell_config_clone = NULL;
-PFUNC_aspell_config_assign aspell_config_assign = NULL;
-PFUNC_aspell_config_error_number aspell_config_error_number = NULL;
-PFUNC_aspell_config_error_message aspell_config_error_message = NULL;
-PFUNC_aspell_config_error aspell_config_error = NULL;
-PFUNC_aspell_config_set_extra aspell_config_set_extra = NULL;
-PFUNC_aspell_config_keyinfo aspell_config_keyinfo = NULL;
-PFUNC_aspell_config_possible_elements aspell_config_possible_elements = NULL;
-PFUNC_aspell_config_get_default aspell_config_get_default = NULL;
-PFUNC_aspell_config_elements aspell_config_elements = NULL;
-PFUNC_aspell_config_replace aspell_config_replace = NULL;
-PFUNC_aspell_config_remove aspell_config_remove = NULL;
-PFUNC_aspell_config_have aspell_config_have = NULL;
-PFUNC_aspell_config_retrieve aspell_config_retrieve = NULL;
-PFUNC_aspell_config_retrieve_list aspell_config_retrieve_list = NULL;
-PFUNC_aspell_config_retrieve_bool aspell_config_retrieve_bool = NULL;
-PFUNC_aspell_config_retrieve_int aspell_config_retrieve_int = NULL;
-PFUNC_aspell_error_number aspell_error_number = NULL;
-PFUNC_aspell_error_message aspell_error_message = NULL;
-PFUNC_aspell_error aspell_error = NULL;
-PFUNC_delete_aspell_can_have_error delete_aspell_can_have_error = NULL;
-PFUNC_new_aspell_speller new_aspell_speller = NULL;
-PFUNC_to_aspell_speller to_aspell_speller = NULL;
-PFUNC_delete_aspell_speller delete_aspell_speller = NULL;
-PFUNC_aspell_speller_error_number aspell_speller_error_number = NULL;
-PFUNC_aspell_speller_error_message aspell_speller_error_message = NULL;
-PFUNC_aspell_speller_error aspell_speller_error = NULL;
-PFUNC_aspell_speller_config aspell_speller_config = NULL;
-PFUNC_aspell_speller_check aspell_speller_check = NULL;
-PFUNC_aspell_speller_add_to_personal aspell_speller_add_to_personal = NULL;
-PFUNC_aspell_speller_add_to_session aspell_speller_add_to_session = NULL;
+    nullptr;
+PFUNC_new_aspell_config new_aspell_config = nullptr;
+PFUNC_delete_aspell_config delete_aspell_config = nullptr;
+PFUNC_aspell_config_clone aspell_config_clone = nullptr;
+PFUNC_aspell_config_assign aspell_config_assign = nullptr;
+PFUNC_aspell_config_error_number aspell_config_error_number = nullptr;
+PFUNC_aspell_config_error_message aspell_config_error_message = nullptr;
+PFUNC_aspell_config_error aspell_config_error = nullptr;
+PFUNC_aspell_config_set_extra aspell_config_set_extra = nullptr;
+PFUNC_aspell_config_keyinfo aspell_config_keyinfo = nullptr;
+PFUNC_aspell_config_possible_elements aspell_config_possible_elements = nullptr;
+PFUNC_aspell_config_get_default aspell_config_get_default = nullptr;
+PFUNC_aspell_config_elements aspell_config_elements = nullptr;
+PFUNC_aspell_config_replace aspell_config_replace = nullptr;
+PFUNC_aspell_config_remove aspell_config_remove = nullptr;
+PFUNC_aspell_config_have aspell_config_have = nullptr;
+PFUNC_aspell_config_retrieve aspell_config_retrieve = nullptr;
+PFUNC_aspell_config_retrieve_list aspell_config_retrieve_list = nullptr;
+PFUNC_aspell_config_retrieve_bool aspell_config_retrieve_bool = nullptr;
+PFUNC_aspell_config_retrieve_int aspell_config_retrieve_int = nullptr;
+PFUNC_aspell_error_number aspell_error_number = nullptr;
+PFUNC_aspell_error_message aspell_error_message = nullptr;
+PFUNC_aspell_error aspell_error = nullptr;
+PFUNC_delete_aspell_can_have_error delete_aspell_can_have_error = nullptr;
+PFUNC_new_aspell_speller new_aspell_speller = nullptr;
+PFUNC_to_aspell_speller to_aspell_speller = nullptr;
+PFUNC_delete_aspell_speller delete_aspell_speller = nullptr;
+PFUNC_aspell_speller_error_number aspell_speller_error_number = nullptr;
+PFUNC_aspell_speller_error_message aspell_speller_error_message = nullptr;
+PFUNC_aspell_speller_error aspell_speller_error = nullptr;
+PFUNC_aspell_speller_config aspell_speller_config = nullptr;
+PFUNC_aspell_speller_check aspell_speller_check = nullptr;
+PFUNC_aspell_speller_add_to_personal aspell_speller_add_to_personal = nullptr;
+PFUNC_aspell_speller_add_to_session aspell_speller_add_to_session = nullptr;
 PFUNC_aspell_speller_personal_word_list aspell_speller_personal_word_list =
-    NULL;
-PFUNC_aspell_speller_session_word_list aspell_speller_session_word_list = NULL;
-PFUNC_aspell_speller_main_word_list aspell_speller_main_word_list = NULL;
+    nullptr;
+PFUNC_aspell_speller_session_word_list aspell_speller_session_word_list = nullptr;
+PFUNC_aspell_speller_main_word_list aspell_speller_main_word_list = nullptr;
 PFUNC_aspell_speller_save_all_word_lists aspell_speller_save_all_word_lists =
-    NULL;
-PFUNC_aspell_speller_clear_session aspell_speller_clear_session = NULL;
-PFUNC_aspell_speller_suggest aspell_speller_suggest = NULL;
-PFUNC_aspell_speller_store_replacement aspell_speller_store_replacement = NULL;
-PFUNC_delete_aspell_filter delete_aspell_filter = NULL;
-PFUNC_aspell_filter_error_number aspell_filter_error_number = NULL;
-PFUNC_aspell_filter_error_message aspell_filter_error_message = NULL;
-PFUNC_aspell_filter_error aspell_filter_error = NULL;
-PFUNC_to_aspell_filter to_aspell_filter = NULL;
-PFUNC_delete_aspell_document_checker delete_aspell_document_checker = NULL;
+    nullptr;
+PFUNC_aspell_speller_clear_session aspell_speller_clear_session = nullptr;
+PFUNC_aspell_speller_suggest aspell_speller_suggest = nullptr;
+PFUNC_aspell_speller_store_replacement aspell_speller_store_replacement = nullptr;
+PFUNC_delete_aspell_filter delete_aspell_filter = nullptr;
+PFUNC_aspell_filter_error_number aspell_filter_error_number = nullptr;
+PFUNC_aspell_filter_error_message aspell_filter_error_message = nullptr;
+PFUNC_aspell_filter_error aspell_filter_error = nullptr;
+PFUNC_to_aspell_filter to_aspell_filter = nullptr;
+PFUNC_delete_aspell_document_checker delete_aspell_document_checker = nullptr;
 PFUNC_aspell_document_checker_error_number
-    aspell_document_checker_error_number = NULL;
+    aspell_document_checker_error_number = nullptr;
 PFUNC_aspell_document_checker_error_message
-    aspell_document_checker_error_message = NULL;
-PFUNC_aspell_document_checker_error aspell_document_checker_error = NULL;
-PFUNC_new_aspell_document_checker new_aspell_document_checker = NULL;
-PFUNC_to_aspell_document_checker to_aspell_document_checker = NULL;
-PFUNC_aspell_document_checker_reset aspell_document_checker_reset = NULL;
-PFUNC_aspell_document_checker_process aspell_document_checker_process = NULL;
+    aspell_document_checker_error_message = nullptr;
+PFUNC_aspell_document_checker_error aspell_document_checker_error = nullptr;
+PFUNC_new_aspell_document_checker new_aspell_document_checker = nullptr;
+PFUNC_to_aspell_document_checker to_aspell_document_checker = nullptr;
+PFUNC_aspell_document_checker_reset aspell_document_checker_reset = nullptr;
+PFUNC_aspell_document_checker_process aspell_document_checker_process = nullptr;
 PFUNC_aspell_document_checker_next_misspelling
-    aspell_document_checker_next_misspelling = NULL;
-PFUNC_aspell_document_checker_filter aspell_document_checker_filter = NULL;
-PFUNC_aspell_word_list_empty aspell_word_list_empty = NULL;
-PFUNC_aspell_word_list_size aspell_word_list_size = NULL;
-PFUNC_aspell_word_list_elements aspell_word_list_elements = NULL;
-PFUNC_delete_aspell_string_enumeration delete_aspell_string_enumeration = NULL;
-PFUNC_aspell_string_enumeration_clone aspell_string_enumeration_clone = NULL;
-PFUNC_aspell_string_enumeration_assign aspell_string_enumeration_assign = NULL;
-PFUNC_aspell_string_enumeration_at_end aspell_string_enumeration_at_end = NULL;
-PFUNC_aspell_string_enumeration_next aspell_string_enumeration_next = NULL;
-PFUNC_get_aspell_module_info_list get_aspell_module_info_list = NULL;
-PFUNC_aspell_module_info_list_empty aspell_module_info_list_empty = NULL;
-PFUNC_aspell_module_info_list_size aspell_module_info_list_size = NULL;
-PFUNC_aspell_module_info_list_elements aspell_module_info_list_elements = NULL;
-PFUNC_get_aspell_dict_info_list get_aspell_dict_info_list = NULL;
-PFUNC_aspell_dict_info_list_empty aspell_dict_info_list_empty = NULL;
-PFUNC_aspell_dict_info_list_size aspell_dict_info_list_size = NULL;
-PFUNC_aspell_dict_info_list_elements aspell_dict_info_list_elements = NULL;
+    aspell_document_checker_next_misspelling = nullptr;
+PFUNC_aspell_document_checker_filter aspell_document_checker_filter = nullptr;
+PFUNC_aspell_word_list_empty aspell_word_list_empty = nullptr;
+PFUNC_aspell_word_list_size aspell_word_list_size = nullptr;
+PFUNC_aspell_word_list_elements aspell_word_list_elements = nullptr;
+PFUNC_delete_aspell_string_enumeration delete_aspell_string_enumeration = nullptr;
+PFUNC_aspell_string_enumeration_clone aspell_string_enumeration_clone = nullptr;
+PFUNC_aspell_string_enumeration_assign aspell_string_enumeration_assign = nullptr;
+PFUNC_aspell_string_enumeration_at_end aspell_string_enumeration_at_end = nullptr;
+PFUNC_aspell_string_enumeration_next aspell_string_enumeration_next = nullptr;
+PFUNC_get_aspell_module_info_list get_aspell_module_info_list = nullptr;
+PFUNC_aspell_module_info_list_empty aspell_module_info_list_empty = nullptr;
+PFUNC_aspell_module_info_list_size aspell_module_info_list_size = nullptr;
+PFUNC_aspell_module_info_list_elements aspell_module_info_list_elements = nullptr;
+PFUNC_get_aspell_dict_info_list get_aspell_dict_info_list = nullptr;
+PFUNC_aspell_dict_info_list_empty aspell_dict_info_list_empty = nullptr;
+PFUNC_aspell_dict_info_list_size aspell_dict_info_list_size = nullptr;
+PFUNC_aspell_dict_info_list_elements aspell_dict_info_list_elements = nullptr;
 PFUNC_aspell_module_info_enumeration_at_end
-    aspell_module_info_enumeration_at_end = NULL;
+    aspell_module_info_enumeration_at_end = nullptr;
 PFUNC_aspell_module_info_enumeration_next aspell_module_info_enumeration_next =
-    NULL;
+    nullptr;
 PFUNC_delete_aspell_module_info_enumeration
-    delete_aspell_module_info_enumeration = NULL;
+    delete_aspell_module_info_enumeration = nullptr;
 PFUNC_aspell_module_info_enumeration_clone
-    aspell_module_info_enumeration_clone = NULL;
+    aspell_module_info_enumeration_clone = nullptr;
 PFUNC_aspell_module_info_enumeration_assign
-    aspell_module_info_enumeration_assign = NULL;
+    aspell_module_info_enumeration_assign = nullptr;
 PFUNC_aspell_dict_info_enumeration_at_end aspell_dict_info_enumeration_at_end =
-    NULL;
+    nullptr;
 PFUNC_aspell_dict_info_enumeration_next aspell_dict_info_enumeration_next =
-    NULL;
+    nullptr;
 PFUNC_delete_aspell_dict_info_enumeration delete_aspell_dict_info_enumeration =
-    NULL;
+    nullptr;
 PFUNC_aspell_dict_info_enumeration_clone aspell_dict_info_enumeration_clone =
-    NULL;
+    nullptr;
 PFUNC_aspell_dict_info_enumeration_assign aspell_dict_info_enumeration_assign =
-    NULL;
-PFUNC_new_aspell_string_list new_aspell_string_list = NULL;
-PFUNC_aspell_string_list_empty aspell_string_list_empty = NULL;
-PFUNC_aspell_string_list_size aspell_string_list_size = NULL;
-PFUNC_aspell_string_list_elements aspell_string_list_elements = NULL;
-PFUNC_aspell_string_list_add aspell_string_list_add = NULL;
-PFUNC_aspell_string_list_remove aspell_string_list_remove = NULL;
-PFUNC_aspell_string_list_clear aspell_string_list_clear = NULL;
+    nullptr;
+PFUNC_new_aspell_string_list new_aspell_string_list = nullptr;
+PFUNC_aspell_string_list_empty aspell_string_list_empty = nullptr;
+PFUNC_aspell_string_list_size aspell_string_list_size = nullptr;
+PFUNC_aspell_string_list_elements aspell_string_list_elements = nullptr;
+PFUNC_aspell_string_list_add aspell_string_list_add = nullptr;
+PFUNC_aspell_string_list_remove aspell_string_list_remove = nullptr;
+PFUNC_aspell_string_list_clear aspell_string_list_clear = nullptr;
 PFUNC_aspell_string_list_to_mutable_container
-    aspell_string_list_to_mutable_container = NULL;
-PFUNC_delete_aspell_string_list delete_aspell_string_list = NULL;
-PFUNC_aspell_string_list_clone aspell_string_list_clone = NULL;
-PFUNC_aspell_string_list_assign aspell_string_list_assign = NULL;
-PFUNC_new_aspell_string_map new_aspell_string_map = NULL;
-PFUNC_aspell_string_map_add aspell_string_map_add = NULL;
-PFUNC_aspell_string_map_remove aspell_string_map_remove = NULL;
-PFUNC_aspell_string_map_clear aspell_string_map_clear = NULL;
+    aspell_string_list_to_mutable_container = nullptr;
+PFUNC_delete_aspell_string_list delete_aspell_string_list = nullptr;
+PFUNC_aspell_string_list_clone aspell_string_list_clone = nullptr;
+PFUNC_aspell_string_list_assign aspell_string_list_assign = nullptr;
+PFUNC_new_aspell_string_map new_aspell_string_map = nullptr;
+PFUNC_aspell_string_map_add aspell_string_map_add = nullptr;
+PFUNC_aspell_string_map_remove aspell_string_map_remove = nullptr;
+PFUNC_aspell_string_map_clear aspell_string_map_clear = nullptr;
 PFUNC_aspell_string_map_to_mutable_container
-    aspell_string_map_to_mutable_container = NULL;
-PFUNC_delete_aspell_string_map delete_aspell_string_map = NULL;
-PFUNC_aspell_string_map_clone aspell_string_map_clone = NULL;
-PFUNC_aspell_string_map_assign aspell_string_map_assign = NULL;
-PFUNC_aspell_string_map_empty aspell_string_map_empty = NULL;
-PFUNC_aspell_string_map_size aspell_string_map_size = NULL;
-PFUNC_aspell_string_map_elements aspell_string_map_elements = NULL;
-PFUNC_aspell_string_map_insert aspell_string_map_insert = NULL;
-PFUNC_aspell_string_map_replace aspell_string_map_replace = NULL;
-PFUNC_aspell_string_map_lookup aspell_string_map_lookup = NULL;
+    aspell_string_map_to_mutable_container = nullptr;
+PFUNC_delete_aspell_string_map delete_aspell_string_map = nullptr;
+PFUNC_aspell_string_map_clone aspell_string_map_clone = nullptr;
+PFUNC_aspell_string_map_assign aspell_string_map_assign = nullptr;
+PFUNC_aspell_string_map_empty aspell_string_map_empty = nullptr;
+PFUNC_aspell_string_map_size aspell_string_map_size = nullptr;
+PFUNC_aspell_string_map_elements aspell_string_map_elements = nullptr;
+PFUNC_aspell_string_map_insert aspell_string_map_insert = nullptr;
+PFUNC_aspell_string_map_replace aspell_string_map_replace = nullptr;
+PFUNC_aspell_string_map_lookup aspell_string_map_lookup = nullptr;
 PFUNC_aspell_string_pair_enumeration_at_end
-    aspell_string_pair_enumeration_at_end = NULL;
+    aspell_string_pair_enumeration_at_end = nullptr;
 PFUNC_aspell_string_pair_enumeration_next aspell_string_pair_enumeration_next =
-    NULL;
+    nullptr;
 PFUNC_delete_aspell_string_pair_enumeration
-    delete_aspell_string_pair_enumeration = NULL;
+    delete_aspell_string_pair_enumeration = nullptr;
 PFUNC_aspell_string_pair_enumeration_clone
-    aspell_string_pair_enumeration_clone = NULL;
+    aspell_string_pair_enumeration_clone = nullptr;
 PFUNC_aspell_string_pair_enumeration_assign
-    aspell_string_pair_enumeration_assign = NULL;
+    aspell_string_pair_enumeration_assign = nullptr;
 
 void GetDefaultAspellPath(wchar_t *&Path) {
   wchar_t pszPath[MAX_PATH];
   pszPath[0] = '\0';
-  HKEY hKey = NULL;
+  HKEY hKey = nullptr;
   DWORD size = MAX_PATH;
 
   if (ERROR_SUCCESS == ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Aspell",
                                       0, KEY_READ, &hKey)) {
     if (ERROR_SUCCESS ==
-        ::RegQueryValueEx(hKey, L"Path", NULL, NULL, (LPBYTE)pszPath, &size))
+        ::RegQueryValueEx(hKey, L"Path", nullptr, nullptr, (LPBYTE)pszPath, &size))
       wcscat(pszPath, L"\\aspell-15.dll");
     ::RegCloseKey(hKey);
   } else {
     wchar_t Pf[MAX_PATH];
-    SHGetSpecialFolderPath(0, Pf, CSIDL_PROGRAM_FILES, FALSE);
+    SHGetSpecialFolderPath(nullptr, Pf, CSIDL_PROGRAM_FILES, FALSE);
     PathAppend(pszPath, Pf);
     PathAppend(pszPath, L"\\Aspell\\bin\\aspell-15.dll");
   }
@@ -212,7 +212,7 @@ void GetActualAspellPath(wchar_t *&Path, wchar_t *&PathArg) {
 }
 
 BOOL LoadAspell(wchar_t *PathArg) {
-  wchar_t *Path = 0;
+  wchar_t *Path = nullptr;
   GetActualAspellPath(Path, PathArg);
   /*
   if (hInstLib)
@@ -226,7 +226,7 @@ BOOL LoadAspell(wchar_t *PathArg) {
   CLEAN_AND_ZERO_ARR(Path);
   BOOL bRet = FALSE;
 
-  if (hInstLib != NULL) {
+  if (hInstLib != nullptr) {
     aspell_mutable_container_add =
         (PFUNC_aspell_mutable_container_add)GetProcAddress(
             hInstLib, "aspell_mutable_container_add");
@@ -546,7 +546,7 @@ BOOL LoadAspell(wchar_t *PathArg) {
 }
 
 void UnloadAspell(void) {
-  if (hInstLib != NULL)
+  if (hInstLib != nullptr)
     FreeLibrary(hInstLib);
 }
 
