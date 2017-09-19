@@ -748,7 +748,7 @@ BOOL CheckForDirectoryExistence(const wchar_t* PathArg, BOOL Silent, HWND NppWin
   for (unsigned int i = 0; i < wcslen(PathArg); i++) {
     if (Path[i] == L'\\') {
       Path[i] = L'\0';
-      if (!PathFileExists(PathArg)) {
+      if (!PathFileExists(Path.get ())) {
         if (!TryToCreateDir(Path.get (), Silent, NppWindow))
           return FALSE;
       }
