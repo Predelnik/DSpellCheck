@@ -54,7 +54,7 @@ public:
   void ApplyLibChange(SpellChecker *SpellCheckerInstance);
 
 protected:
-  __override virtual INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+    INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 
 private:
   /* NppData struct instance */
@@ -106,7 +106,7 @@ public:
   void SetBufferSize(int Size);
 
 protected:
-  __override virtual INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+    INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 
 private:
   HWND HEditDelimiters = nullptr;

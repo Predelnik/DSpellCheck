@@ -76,15 +76,15 @@ class HunspellInterface : public AbstractSpellerInterface {
 public:
   HunspellInterface(HWND NppWindowArg);
   ~HunspellInterface();
-  __override virtual std::vector<std::wstring> GetLanguageList();
-  __override virtual void SetLanguage(const wchar_t* Lang);
-  __override virtual void SetMultipleLanguages(
-      std::vector<wchar_t *> *List);             // Languages are from LangList
-  __override virtual bool CheckWord(char *Word); // Word in Utf-8 or ANSI
-  __override virtual bool IsWorking();
-  __override virtual std::vector<std::string> GetSuggestions(const char* Word);
-  __override virtual void AddToDictionary(char *Word);
-  __override virtual void IgnoreAll(char *Word);
+  std::vector<std::wstring> GetLanguageList() override;
+  void SetLanguage(const wchar_t* Lang) override;
+  void SetMultipleLanguages(
+      std::vector<wchar_t *> *List) override;             // Languages are from LangList
+  bool CheckWord(char *Word) override; // Word in Utf-8 or ANSI
+  bool IsWorking() override;
+  std::vector<std::string> GetSuggestions(const char* Word) override;
+  void AddToDictionary(char *Word) override;
+  void IgnoreAll(char *Word) override;
 
   void SetDirectory(wchar_t *Dir);
   void SetAdditionalDirectory(wchar_t *Dir);
