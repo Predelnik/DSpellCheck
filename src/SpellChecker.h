@@ -105,6 +105,7 @@ public:
   void SetIgnore(bool IgnoreNumbersArg, bool IgnoreCStartArg,
                  bool IgnoreCHaveArg, bool IgnoreCAllArg, bool Ignore_Arg,
                  bool IgnoreSEApostropheArg, bool IgnoreOneLetterArg);
+    std::wstring GetDefaultHunspellPath();
   void SetSuggBoxSettings(int Size, int Transparency, int SaveIni = 1);
   void SetBufferSize(int Size);
   void SetSuggType(int SuggType);
@@ -171,7 +172,6 @@ private:
   void ClearVisibleUnderlines();
   void Cleanup();
   const char *GetDelimiters();
-  void GetDefaultHunspellPath(wchar_t *&Path);
   bool CheckWord(char *Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
   char *GetVisibleText(long *offset, bool NotIntersectionOnly = false);

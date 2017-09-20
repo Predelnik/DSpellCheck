@@ -64,7 +64,7 @@ void commandMenuCleanUp();
 //
 // Function which sets your command
 //
-bool setNextCommand(const wchar_t* cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = nullptr, bool check0nInit = false);
+bool setNextCommand(const wchar_t* cmdName, PFUNCPLUGINCMD pFunc, std::unique_ptr<ShortcutKey> sk = nullptr, bool check0nInit = false);
 
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
@@ -90,7 +90,7 @@ FuncItem *get_funcItem ();
 void SetModifiedZoneShared (long Start, long End);
 void GetModifiedZoneShared (long &Start, long &End);
 void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam);
-void GetDefaultHunspellPath_ (wchar_t *&Path);
+std::wstring GetDefaultHunspellPath ();
 HANDLE *GethEvent ();
 void SetContextMenuIdStart (int Id);
 void SetLangsMenuIdStart (int Id);

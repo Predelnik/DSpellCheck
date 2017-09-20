@@ -10,8 +10,8 @@
 #define ASPELL_ASPELL__H
 
 BOOL LoadAspell(wchar_t *PathArg);
-void GetActualAspellPath (wchar_t *&Path, wchar_t *&PathArg);
-void GetDefaultAspellPath (wchar_t *&Path);
+std::wstring GetActualAspellPath(const std::wstring& supposedPath);
+std::wstring GetDefaultAspellPath ();
 void UnloadAspell(void);
 void AspellErrorMsgBox(HWND hWnd, LPCSTR error);
 

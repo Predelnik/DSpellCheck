@@ -182,7 +182,7 @@ PFUNC_aspell_string_pair_enumeration_clone
 PFUNC_aspell_string_pair_enumeration_assign
     aspell_string_pair_enumeration_assign = nullptr;
 
-void GetDefaultAspellPath(wchar_t *&Path) {
+std::wstring GetDefaultAspellPath() {
   wchar_t pszPath[MAX_PATH];
   pszPath[0] = '\0';
   HKEY hKey = nullptr;
@@ -200,20 +200,20 @@ void GetDefaultAspellPath(wchar_t *&Path) {
     PathAppend(pszPath, Pf);
     PathAppend(pszPath, L"\\Aspell\\bin\\aspell-15.dll");
   }
-  SetString(Path, pszPath);
+  return pszPath;
 }
 
-void GetActualAspellPath(wchar_t *&Path, wchar_t *&PathArg) {
-  if (!PathArg || !*PathArg) {
-    GetDefaultAspellPath(Path);
+std::wstring GetActualAspellPath(const std::wstring& supposedPath) {
+  if (supposedPath.empty ()) {
+    return GetDefaultAspellPath();
   } else {
-    SetString(Path, PathArg);
+    return supposedPath;
   }
 }
 
 BOOL LoadAspell(wchar_t *PathArg) {
   wchar_t *Path = nullptr;
-  GetActualAspellPath(Path, PathArg);
+  GetActualAspellPath(PathArg);
   /*
   if (hInstLib)
   {

@@ -38,6 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Suggestions.h"
 
 #include "StackWalker/StackWalker.h"
+#include "utils/raii.h"
 
 const wchar_t configFileName[] = L"DSpellCheck.ini";
 
@@ -50,9 +51,9 @@ const wchar_t configFileName[] = L"DSpellCheck.ini";
 FuncItem funcItem[nbFunc];
 bool ResourcesInited = false;
 
-FuncItem *get_funcItem() {
-  // Well maybe we should lock mutex here
-  return funcItem;
+FuncItem* get_funcItem() {
+    // Well maybe we should lock mutex here
+    return funcItem;
 }
 
 //
@@ -60,22 +61,21 @@ FuncItem *get_funcItem() {
 //
 NppData nppData;
 wchar_t IniFilePath[MAX_PATH];
-DWORD CustomGUIMessageIds[static_cast<int> (CustomGUIMessage::MAX)] = {0};
+DWORD CustomGUIMessageIds[static_cast<int>(CustomGUIMessage::MAX)] = {0};
 bool doCloseTag = false;
-SpellChecker *SpellCheckerInstance = nullptr;
-SettingsDlg *SettingsDlgInstance = nullptr;
-Suggestions *SuggestionsInstance = nullptr;
-LangList *LangListInstance = nullptr;
-RemoveDics *RemoveDicsInstance = nullptr;
-SelectProxy *SelectProxyInstance = nullptr;
-ProgressDlg *ProgressInstance = nullptr;
-DownloadDicsDlg *DownloadDicsDlgInstance = nullptr;
-AboutDlg *AboutDlgInstance = nullptr;
+SpellChecker* SpellCheckerInstance = nullptr;
+SettingsDlg* SettingsDlgInstance = nullptr;
+Suggestions* SuggestionsInstance = nullptr;
+LangList* LangListInstance = nullptr;
+RemoveDics* RemoveDicsInstance = nullptr;
+SelectProxy* SelectProxyInstance = nullptr;
+ProgressDlg* ProgressInstance = nullptr;
+DownloadDicsDlg* DownloadDicsDlgInstance = nullptr;
+AboutDlg* AboutDlgInstance = nullptr;
 HMENU LangsMenu;
 int ContextMenuIdStart;
 int LangsMenuIdStart = false;
 bool UseAllocatedIds;
-toolbarIcons *AutoCheckIcon = nullptr;
 
 HANDLE hModule = nullptr;
 HHOOK HMouseHook = nullptr;
@@ -85,13 +85,12 @@ HHOOK HMouseHook = nullptr;
 // Initialize your plug-in data here
 // It will be called while plug-in loading
 LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
-  switch (wParam) {
-  case WM_MOUSEMOVE:
-    getSpellChecker()->InitSuggestionsBox();
-    break;
-  }
-  return CallNextHookEx(HMouseHook, nCode, wParam, lParam);
-  ;
+    switch (wParam) {
+    case WM_MOUSEMOVE:
+        getSpellChecker()->InitSuggestionsBox();
+        break;
+    }
+    return CallNextHookEx(HMouseHook, nCode, wParam, lParam);;
 }
 
 void SetContextMenuIdStart(int Id) { ContextMenuIdStart = Id; }
@@ -106,334 +105,334 @@ int GetLangsMenuIdStart() { return LangsMenuIdStart; }
 
 bool GetUseAllocatedIds() { return UseAllocatedIds; }
 
-SpellChecker *getSpellChecker() { return SpellCheckerInstance; }
+SpellChecker* getSpellChecker() { return SpellCheckerInstance; }
 
 
-void GetDefaultHunspellPath_(wchar_t *&Path) {
-  Path = new wchar_t[MAX_PATH];
-  wcscpy(Path, IniFilePath);
-  wchar_t *Pointer = wcsrchr(Path, L'\\');
-  *Pointer = 0;
-  wcscat(Path, L"\\Hunspell");
+std::wstring GetDefaultHunspellPath() {
+    std::wstring path = IniFilePath;
+    return path.substr(0, path.rfind(L'\\')) + L"\\Hunspell";
 }
 
 void pluginInit(HANDLE hModuleArg) {
-  hModule = hModuleArg;
-  // Init it all dialog classes:
+    hModule = hModuleArg;
+    // Init it all dialog classes:
 }
 
-LangList *GetLangList() { return LangListInstance; }
+LangList* GetLangList() { return LangListInstance; }
 
-RemoveDics *GetRemoveDics() { return RemoveDicsInstance; }
+RemoveDics* GetRemoveDics() { return RemoveDicsInstance; }
 
-SelectProxy *GetSelectProxy() { return SelectProxyInstance; }
+SelectProxy* GetSelectProxy() { return SelectProxyInstance; }
 
-ProgressDlg *getProgress() { return ProgressInstance; }
+ProgressDlg* getProgress() { return ProgressInstance; }
 
-DownloadDicsDlg *GetDownloadDics() { return DownloadDicsDlgInstance; }
+DownloadDicsDlg* GetDownloadDics() { return DownloadDicsDlgInstance; }
 
 HANDLE getHModule() { return hModule; }
 
 
 class MyStackWalker : public StackWalker {
 public:
-  MyStackWalker() : StackWalker() {}
+    MyStackWalker() : StackWalker() {
+    }
 
 protected:
-  virtual void OnOutput(LPCSTR szText) {
-    FILE *fp = _wfopen(L"DSpellCheck_Debug.log", L"a");
-    fprintf(fp, "%s", szText);
-    fclose(fp);
-    StackWalker::OnOutput(szText);
-  }
+    virtual void OnOutput(LPCSTR szText) {
+        FILE* fp = _wfopen(L"DSpellCheck_Debug.log", L"a");
+        fprintf(fp, "%s", szText);
+        fclose(fp);
+        StackWalker::OnOutput(szText);
+    }
 };
 
-int filter(unsigned int, struct _EXCEPTION_POINTERS *ep) {
-  MyStackWalker sw;
-  sw.ShowCallstack(GetCurrentThread(), ep->ContextRecord);
-  return EXCEPTION_CONTINUE_SEARCH;
+int filter(unsigned int, struct _EXCEPTION_POINTERS* ep) {
+    MyStackWalker sw;
+    sw.ShowCallstack(GetCurrentThread(), ep->ContextRecord);
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 
 void CreateHooks() {
-  HMouseHook = SetWindowsHookEx(WH_MOUSE, MouseProc, nullptr, GetCurrentThreadId());
-  // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0,
-  // GetCurrentThreadId());
+    HMouseHook = SetWindowsHookEx(WH_MOUSE, MouseProc, nullptr, GetCurrentThreadId());
+    // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0,
+    // GetCurrentThreadId());
 }
 
 void pluginCleanUp() {
-  UnhookWindowsHookEx(HMouseHook);
-  CLEAN_AND_ZERO(SpellCheckerInstance);
-  CLEAN_AND_ZERO(SettingsDlgInstance);
-  CLEAN_AND_ZERO(AboutDlgInstance);
-  CLEAN_AND_ZERO(SuggestionsInstance);
-  CLEAN_AND_ZERO(LangListInstance);
-  CLEAN_AND_ZERO(SelectProxyInstance);
-  CLEAN_AND_ZERO(RemoveDicsInstance);
-  CLEAN_AND_ZERO(DownloadDicsDlgInstance);
-  CLEAN_AND_ZERO(ProgressInstance);
+    UnhookWindowsHookEx(HMouseHook);
+    CLEAN_AND_ZERO(SpellCheckerInstance);
+    CLEAN_AND_ZERO(SettingsDlgInstance);
+    CLEAN_AND_ZERO(AboutDlgInstance);
+    CLEAN_AND_ZERO(SuggestionsInstance);
+    CLEAN_AND_ZERO(LangListInstance);
+    CLEAN_AND_ZERO(SelectProxyInstance);
+    CLEAN_AND_ZERO(RemoveDicsInstance);
+    CLEAN_AND_ZERO(DownloadDicsDlgInstance);
+    CLEAN_AND_ZERO(ProgressInstance);
 }
 
 void RegisterCustomMessages() {
-  for (int i = 0; i < static_cast<int>(CustomGUIMessage::MAX); i++) {
-    CustomGUIMessageIds[i] = RegisterWindowMessage(CustomGUIMesssagesNames[i]);
-  }
+    for (int i = 0; i < static_cast<int>(CustomGUIMessage::MAX); i++) {
+        CustomGUIMessageIds[i] = RegisterWindowMessage(CustomGUIMesssagesNames[i]);
+    }
 }
 
 DWORD GetCustomGUIMessageId(CustomGUIMessage MessageId) {
-  return CustomGUIMessageIds[static_cast<int>(MessageId)];
+    return CustomGUIMessageIds[static_cast<int>(MessageId)];
 }
 
 void SwitchAutoCheckText() { getSpellChecker()->SwitchAutoCheck(); }
 
 void GetSuggestions() {
-  // SendEvent (EID_INITSUGGESTIONS);
+    // SendEvent (EID_INITSUGGESTIONS);
 }
 
 void StartSettings() { SettingsDlgInstance->DoDialog(); }
 
 void StartManual() {
-  ShellExecute(nullptr, L"open",
-               L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", nullptr,
-               nullptr, SW_SHOW);
+    ShellExecute(nullptr, L"open",
+                 L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", nullptr,
+                 nullptr, SW_SHOW);
 }
 
 void StartAboutDlg() { AboutDlgInstance->DoDialog(); }
 
 void StartLanguageList() { LangListInstance->DoDialog(); }
 
-void LoadSettings() { getSpellChecker()->LoadSettings (); }
+void LoadSettings() { getSpellChecker()->LoadSettings(); }
 
 void RecheckVisible() { getSpellChecker()->RecheckVisible(); }
 
-void FindNextMistake() { getSpellChecker ()->FindNextMistake(); }
+void FindNextMistake() { getSpellChecker()->FindNextMistake(); }
 
-void FindPrevMistake() { getSpellChecker ()->FindPrevMistake(); }
+void FindPrevMistake() { getSpellChecker()->FindPrevMistake(); }
 
 void QuickLangChangeContext() {
-  POINT Pos;
-  GetCursorPos(&Pos);
-  TrackPopupMenu(GetLangsSubMenu(), 0, Pos.x, Pos.y, 0, nppData._nppHandle, nullptr);
+    POINT Pos;
+    GetCursorPos(&Pos);
+    TrackPopupMenu(GetLangsSubMenu(), 0, Pos.x, Pos.y, 0, nppData._nppHandle, nullptr);
 }
 
 //
 // Initialization of your plug-in commands
 // You should fill your plug-ins commands here
 void commandMenuInit() {
-  //
-  // Firstly we get the parameters from your plugin config file (if any)
-  //
+    //
+    // Firstly we get the parameters from your plugin config file (if any)
+    //
 
-  // get path of plugin configuration
-  ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH,
-                (LPARAM)IniFilePath);
+    // get path of plugin configuration
+    ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH,
+                  (LPARAM)IniFilePath);
 
-  // if config path doesn't exist, we create it
-  if (PathFileExists(IniFilePath) == false) {
-    ::CreateDirectory(IniFilePath, nullptr);
-  }
+    // if config path doesn't exist, we create it
+    if (PathFileExists(IniFilePath) == false) {
+        ::CreateDirectory(IniFilePath, nullptr);
+    }
 
-  // make your plugin config file full file path name
-  PathAppend(IniFilePath, configFileName);
+    // make your plugin config file full file path name
+    PathAppend(IniFilePath, configFileName);
 
-  wchar_t Buf[DEFAULT_BUF_SIZE];
-  wchar_t *EndPtr;
-  int x;
-  GetPrivateProfileString(L"SpellCheck", L"Recheck_Delay", L"500", Buf,
-                          DEFAULT_BUF_SIZE, IniFilePath);
-  x = wcstol(Buf, &EndPtr, 10);
-  if (*EndPtr)
-    SetRecheckDelay(500, 0);
-  else
-    SetRecheckDelay(x, 0);
+    wchar_t Buf[DEFAULT_BUF_SIZE];
+    wchar_t* EndPtr;
+    int x;
+    GetPrivateProfileString(L"SpellCheck", L"Recheck_Delay", L"500", Buf,
+                            DEFAULT_BUF_SIZE, IniFilePath);
+    x = wcstol(Buf, &EndPtr, 10);
+    if (*EndPtr)
+        SetRecheckDelay(500, 0);
+    else
+        SetRecheckDelay(x, 0);
 
-  //--------------------------------------------//
-  //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
-  //--------------------------------------------//
-  // with function :
-  // setCommand(int index,                      // zero based number to indicate
-  // the order of command
-  //            wchar_t *commandName,             // the command name that you
-  //            want to see in plugin menu
-  //            PFUNCPLUGINCMD functionPointer, // the symbol of function
-  //            (function pointer) associated with this command. The body should
-  //            be defined below. See Step 4.
-  //            ShortcutKey *shortcut,          // optional. Define a shortcut
-  //            to trigger this command
-  //            bool check0nInit                // optional. Make this menu item
-  //            be checked visually
-  //            );
-  ShortcutKey *shKey = new ShortcutKey;
-  shKey->_isAlt = true;
-  shKey->_isCtrl = false;
-  shKey->_isShift = false;
-  shKey->_key = 0x41 + 'a' - 'a';
-  setNextCommand(TEXT("Spell Check Document Automatically"),
-                 SwitchAutoCheckText, shKey, false);
-  shKey = new ShortcutKey;
-  shKey->_isAlt = true;
-  shKey->_isCtrl = false;
-  shKey->_isShift = false;
-  shKey->_key = 0x41 + 'n' - 'a';
-  setNextCommand(TEXT("Find Next Misspelling"), FindNextMistake, shKey, false);
-  shKey = new ShortcutKey;
-  shKey->_isAlt = true;
-  shKey->_isCtrl = false;
-  shKey->_isShift = false;
-  shKey->_key = 0x41 + 'b' - 'a';
-  setNextCommand(TEXT("Find Previous Misspelling"), FindPrevMistake, shKey,
-                 false);
+    //--------------------------------------------//
+    //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
+    //--------------------------------------------//
+    // with function :
+    // setCommand(int index,                      // zero based number to indicate
+    // the order of command
+    //            wchar_t *commandName,             // the command name that you
+    //            want to see in plugin menu
+    //            PFUNCPLUGINCMD functionPointer, // the symbol of function
+    //            (function pointer) associated with this command. The body should
+    //            be defined below. See Step 4.
+    //            ShortcutKey *shortcut,          // optional. Define a shortcut
+    //            to trigger this command
+    //            bool check0nInit                // optional. Make this menu item
+    //            be checked visually
+    //            );
+    {
+        auto shKey = std::make_unique<ShortcutKey>();
+        shKey->_isAlt = true;
+        shKey->_isCtrl = false;
+        shKey->_isShift = false;
+        shKey->_key = 0x41 + 'a' - 'a';
+        setNextCommand(TEXT("Spell Check Document Automatically"),
+                       SwitchAutoCheckText, std::move(shKey), false);
+    }
+    {
+        auto shKey = std::make_unique<ShortcutKey>();
+        shKey->_isAlt = true;
+        shKey->_isCtrl = false;
+        shKey->_isShift = false;
+        shKey->_key = 0x41 + 'n' - 'a';
+        setNextCommand(TEXT("Find Next Misspelling"), FindNextMistake, std::move(shKey), false);
+    }
+    {
+        auto shKey = std::make_unique<ShortcutKey>();
+        shKey->_isAlt = true;
+        shKey->_isCtrl = false;
+        shKey->_isShift = false;
+        shKey->_key = 0x41 + 'b' - 'a';
+        setNextCommand(TEXT("Find Previous Misspelling"), FindPrevMistake, std::move(shKey),
+                       false);
+    }
 
-  shKey = new ShortcutKey;
-  shKey->_isAlt = true;
-  shKey->_isCtrl = false;
-  shKey->_isShift = false;
-  shKey->_key = 0x41 + 'd' - 'a';
-  setNextCommand(TEXT("Change Current Language"), QuickLangChangeContext, shKey,
-                 false);
-  setNextCommand(TEXT("---"), nullptr, nullptr, false);
+    {
+        auto shKey = std::make_unique<ShortcutKey>();
+        shKey->_isAlt = true;
+        shKey->_isCtrl = false;
+        shKey->_isShift = false;
+        shKey->_key = 0x41 + 'd' - 'a';
+        setNextCommand(TEXT("Change Current Language"), QuickLangChangeContext, std::move(shKey),
+                       false);
+    }
+    setNextCommand(TEXT("---"), nullptr, nullptr, false);
 
-  setNextCommand(TEXT("Settings..."), StartSettings, nullptr, false);
-  setNextCommand(TEXT("Online Manual"), StartManual, nullptr, false);
-  setNextCommand(TEXT("About"), StartAboutDlg, nullptr, false);
+    setNextCommand(TEXT("Settings..."), StartSettings, nullptr, false);
+    setNextCommand(TEXT("Online Manual"), StartManual, nullptr, false);
+    setNextCommand(TEXT("About"), StartAboutDlg, nullptr, false);
 }
 
 void AddIcons() {
-  AutoCheckIcon = new toolbarIcons;
-  AutoCheckIcon->hToolbarBmp =
-      (HBITMAP)::LoadImage((HINSTANCE)hModule, MAKEINTRESOURCE(IDB_AUTOCHECK2),
-                           IMAGE_BITMAP, 16, 16, LR_LOADMAP3DCOLORS);
-  ::SendMessage(nppData._nppHandle, NPPM_ADDTOOLBARICON,
-                (WPARAM)funcItem[0]._cmdID, (LPARAM)AutoCheckIcon);
+    static ToolbarIconsWrapper AutoCheckIcon{
+        static_cast<HINSTANCE>(hModule), MAKEINTRESOURCE(IDB_AUTOCHECK2),
+        IMAGE_BITMAP, 16, 16, LR_LOADMAP3DCOLORS
+    };
+    ::SendMessage(nppData._nppHandle, NPPM_ADDTOOLBARICON,
+                  static_cast<WPARAM>(funcItem[0]._cmdID), reinterpret_cast<LPARAM>(AutoCheckIcon.get()));
 }
 
-void UpdateLangsMenu()
-{
-  getSpellChecker ()->DoPluginMenuInclusion();
+void UpdateLangsMenu() {
+    getSpellChecker()->DoPluginMenuInclusion();
 }
 
 HMENU GetDSpellCheckMenu() {
-  HMENU PluginsMenu =
-      (HMENU)SendMsgToNpp(&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
-  HMENU DSpellCheckMenu = nullptr;
-  int Count = GetMenuItemCount(PluginsMenu);
-  int StrLen = 0;
-  wchar_t *Buf = nullptr;
-  for (int i = 0; i < Count; i++) {
-    StrLen = GetMenuString(PluginsMenu, i, nullptr, 0, MF_BYPOSITION);
-    Buf = new wchar_t[StrLen + 1];
-    GetMenuString(PluginsMenu, i, Buf, StrLen + 1, MF_BYPOSITION);
-    if (wcscmp(Buf, NPP_PLUGIN_NAME) == 0) {
-      MENUITEMINFO Mif;
-      Mif.fMask = MIIM_SUBMENU;
-      Mif.cbSize = sizeof(MENUITEMINFO);
-      bool Res = GetMenuItemInfo(PluginsMenu, i, true, &Mif);
+    HMENU PluginsMenu =
+        (HMENU)SendMsgToNpp(&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
+    HMENU DSpellCheckMenu = nullptr;
+    int Count = GetMenuItemCount(PluginsMenu);
+    int StrLen = 0;
+    wchar_t* Buf = nullptr;
+    for (int i = 0; i < Count; i++) {
+        StrLen = GetMenuString(PluginsMenu, i, nullptr, 0, MF_BYPOSITION);
+        Buf = new wchar_t[StrLen + 1];
+        GetMenuString(PluginsMenu, i, Buf, StrLen + 1, MF_BYPOSITION);
+        if (wcscmp(Buf, NPP_PLUGIN_NAME) == 0) {
+            MENUITEMINFO Mif;
+            Mif.fMask = MIIM_SUBMENU;
+            Mif.cbSize = sizeof(MENUITEMINFO);
+            bool Res = GetMenuItemInfo(PluginsMenu, i, true, &Mif);
 
-      if (Res)
-        DSpellCheckMenu = (HMENU)Mif.hSubMenu;
+            if (Res)
+                DSpellCheckMenu = (HMENU)Mif.hSubMenu;
 
-      CLEAN_AND_ZERO_ARR(Buf);
-      break;
+            CLEAN_AND_ZERO_ARR(Buf);
+            break;
+        }
+        CLEAN_AND_ZERO_ARR(Buf);
     }
-    CLEAN_AND_ZERO_ARR(Buf);
-  }
-  return DSpellCheckMenu;
+    return DSpellCheckMenu;
 }
 
 HMENU GetLangsSubMenu(HMENU DSpellCheckMenuArg) {
-  HMENU DSpellCheckMenu;
-  if (!DSpellCheckMenuArg)
-    DSpellCheckMenu = GetDSpellCheckMenu();
-  else
-    DSpellCheckMenu = DSpellCheckMenuArg;
-  if (!DSpellCheckMenu)
-    return nullptr;
+    HMENU DSpellCheckMenu;
+    if (!DSpellCheckMenuArg)
+        DSpellCheckMenu = GetDSpellCheckMenu();
+    else
+        DSpellCheckMenu = DSpellCheckMenuArg;
+    if (!DSpellCheckMenu)
+        return nullptr;
 
-  MENUITEMINFO Mif;
+    MENUITEMINFO Mif;
 
-  Mif.fMask = MIIM_SUBMENU;
-  Mif.cbSize = sizeof(MENUITEMINFO);
+    Mif.fMask = MIIM_SUBMENU;
+    Mif.cbSize = sizeof(MENUITEMINFO);
 
-  bool Res =
-      GetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, true, &Mif);
-  if (!Res)
-    return nullptr;
+    bool Res =
+        GetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, true, &Mif);
+    if (!Res)
+        return nullptr;
 
-  return Mif.hSubMenu; // TODO: CHECK IS THIS CORRECT FIX
+    return Mif.hSubMenu; // TODO: CHECK IS THIS CORRECT FIX
 }
 
 void InitClasses() {
-  INITCOMMONCONTROLSEX icc;
+    INITCOMMONCONTROLSEX icc;
 
-  icc.dwSize = sizeof(icc);
-  icc.dwICC = ICC_WIN95_CLASSES;
-  InitCommonControlsEx(&icc);
+    icc.dwSize = sizeof(icc);
+    icc.dwICC = ICC_WIN95_CLASSES;
+    InitCommonControlsEx(&icc);
 
-  InitCheckedListBox((HINSTANCE)hModule);
+    InitCheckedListBox((HINSTANCE)hModule);
 
-  SuggestionsInstance = new Suggestions;
-  SuggestionsInstance->initDlg((HINSTANCE)hModule, nppData._nppHandle, nppData);
-  SuggestionsInstance->DoDialog();
+    SuggestionsInstance = new Suggestions;
+    SuggestionsInstance->initDlg((HINSTANCE)hModule, nppData._nppHandle, nppData);
+    SuggestionsInstance->DoDialog();
 
-  SettingsDlgInstance = new SettingsDlg;
-  SettingsDlgInstance->initSettings((HINSTANCE)hModule, nppData._nppHandle, nppData);
+    SettingsDlgInstance = new SettingsDlg;
+    SettingsDlgInstance->initSettings((HINSTANCE)hModule, nppData._nppHandle, nppData);
 
-  AboutDlgInstance = new AboutDlg;
-  AboutDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    AboutDlgInstance = new AboutDlg;
+    AboutDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
-  ProgressInstance = new ProgressDlg;
-  ProgressInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    ProgressInstance = new ProgressDlg;
+    ProgressInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
-  LangListInstance = new LangList;
-  LangListInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    LangListInstance = new LangList;
+    LangListInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
-  SelectProxyInstance = new SelectProxy;
-  SelectProxyInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    SelectProxyInstance = new SelectProxy;
+    SelectProxyInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
-  RemoveDicsInstance = new RemoveDics;
-  RemoveDicsInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    RemoveDicsInstance = new RemoveDics;
+    RemoveDicsInstance->init((HINSTANCE)hModule, nppData._nppHandle);
 
-  SpellCheckerInstance =
-      new SpellChecker(IniFilePath, SettingsDlgInstance, &nppData,
-                       SuggestionsInstance, LangListInstance);
+    SpellCheckerInstance =
+        new SpellChecker(IniFilePath, SettingsDlgInstance, &nppData,
+                         SuggestionsInstance, LangListInstance);
 
-  DownloadDicsDlgInstance = new DownloadDicsDlg;
-  DownloadDicsDlgInstance->initDlg((HINSTANCE)hModule, nppData._nppHandle,
-                                SpellCheckerInstance);
+    DownloadDicsDlgInstance = new DownloadDicsDlg;
+    DownloadDicsDlgInstance->initDlg((HINSTANCE)hModule, nppData._nppHandle,
+                                     SpellCheckerInstance);
 
-  ResourcesInited = true;
+    ResourcesInited = true;
 }
 
 void commandMenuCleanUp() {
-  CLEAN_AND_ZERO(funcItem[0]._pShKey);
-  CLEAN_AND_ZERO(funcItem[1]._pShKey);
-  CLEAN_AND_ZERO(funcItem[2]._pShKey);
-  CLEAN_AND_ZERO(funcItem[3]._pShKey);
-  if (AutoCheckIcon)
-    DeleteObject(AutoCheckIcon->hToolbarBmp);
-  CLEAN_AND_ZERO(AutoCheckIcon);
-  // We should deallocate shortcuts here
 }
+
 //
 // Function that initializes plug-in commands
 //
 static int counter = 0;
 
-bool setNextCommand(const wchar_t* cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk,
+std::vector<std::unique_ptr<ShortcutKey>> shortcutStorage;
+
+bool setNextCommand(const wchar_t* cmdName, PFUNCPLUGINCMD pFunc, std::unique_ptr<ShortcutKey> sk,
                     bool check0nInit) {
-  if (counter >= nbFunc)
-    return false;
+    if (counter >= nbFunc)
+        return false;
 
-  if (!pFunc) {
+    if (!pFunc) {
+        counter++;
+        return false;
+    }
+
+    lstrcpy(funcItem[counter]._itemName, cmdName);
+    funcItem[counter]._pFunc = pFunc;
+    funcItem[counter]._init2Check = check0nInit;
+    shortcutStorage.push_back(std::move(sk));
+    funcItem[counter]._pShKey = shortcutStorage.back().get();
     counter++;
-    return false;
-  }
 
-  lstrcpy(funcItem[counter]._itemName, cmdName);
-  funcItem[counter]._pFunc = pFunc;
-  funcItem[counter]._init2Check = check0nInit;
-  funcItem[counter]._pShKey = sk;
-  counter++;
-
-  return true;
+    return true;
 }
-

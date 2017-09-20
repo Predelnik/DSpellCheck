@@ -224,7 +224,7 @@ void SimpleDlg::FillLibInfo(int Status, wchar_t *AspellPath,
       Static_SetText(HAspellStatus, L"Aspell Status: Fail");
     }
     wchar_t *Path = nullptr;
-    GetActualAspellPath(Path, AspellPath);
+    GetActualAspellPath(AspellPath);
     Edit_SetText(HLibPath, Path);
 
     Static_SetText(HLibGroupBox, L"Aspell Location");
@@ -421,18 +421,16 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
     case IDC_RESETASPELLPATH:
     case IDC_RESETHUNSPELLPATH: {
       if (HIWORD(wParam) == BN_CLICKED) {
-        wchar_t *Path = nullptr;
+        std::wstring Path;
         if (GetSelectedLib() == 0)
-          GetDefaultAspellPath(Path);
+          Path = GetDefaultAspellPath();
         else
-          GetDefaultHunspellPath_(Path);
+          Path = GetDefaultHunspellPath();
 
         if (GetSelectedLib() == 0 || ComboBox_GetCurSel(HHunspellPathType) == 0)
-          Edit_SetText(HLibPath, Path);
+          Edit_SetText(HLibPath, Path.c_str ());
         else
           Edit_SetText(HSystemPath, L".\\plugins\\config\\Hunspell");
-
-        CLEAN_AND_ZERO_ARR(Path);
         return true;
       }
     } break;

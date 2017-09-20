@@ -2024,12 +2024,9 @@ void SpellChecker::SetIgnore(bool IgnoreNumbersArg, bool IgnoreCStartArg,
   IgnoreOneLetter = IgnoreOneLetterArg;
 }
 
-void SpellChecker::GetDefaultHunspellPath(wchar_t *&Path) {
-  Path = new wchar_t[MAX_PATH];
-  wcscpy(Path, IniFilePath);
-  wchar_t *Pointer = wcsrchr(Path, L'\\');
-  *Pointer = 0;
-  wcscat(Path, L"\\Hunspell");
+std::wstring SpellChecker::GetDefaultHunspellPath() {
+  std::wstring path = IniFilePath;
+  return path.substr (0, path.rfind (L'\\')) + L"\\Hunspell";
 }
 
 void SpellChecker::SaveSettings() {
@@ -2071,15 +2068,12 @@ void SpellChecker::SaveSettings() {
   SaveToIni(L"Ignore_One_Letter", IgnoreOneLetter, 0);
   SaveToIni(L"Underline_Color", UnderlineColor, 0x0000ff);
   SaveToIni(L"Underline_Style", UnderlineStyle, INDIC_SQUIGGLE);
-  wchar_t *Path = nullptr;
-  GetDefaultAspellPath(Path);
-  SaveToIni(L"Aspell_Path", AspellPath, Path);
-  CLEAN_AND_ZERO_ARR(Path);
-  GetDefaultHunspellPath(Path);
-  SaveToIni(L"User_Hunspell_Path", HunspellPath, Path);
+  auto path = GetDefaultAspellPath();
+  SaveToIni(L"Aspell_Path", AspellPath, path.c_str ());
+  path = GetDefaultHunspellPath();
+  SaveToIni(L"User_Hunspell_Path", HunspellPath, path.c_str ());
   SaveToIni(L"System_Hunspell_Path", AdditionalHunspellPath,
             L".\\plugins\\config\\Hunspell");
-  CLEAN_AND_ZERO_ARR(Path);
   SaveToIni(L"Suggestions_Number", SuggestionsNum, 5);
   char *DefaultDelimUtf8 = nullptr;
   SetStringDUtf8(DefaultDelimUtf8, DEFAULT_DELIMITERS);
@@ -2130,15 +2124,12 @@ void SpellChecker::SetLibMode(int i) {
 
 void SpellChecker::LoadSettings() {
   char *BufUtf8 = nullptr;
-  wchar_t *Path = nullptr;
   wchar_t *TBuf = nullptr;
   SettingsLoaded = true;
-  GetDefaultAspellPath(Path);
-  LoadFromIni(AspellPath, L"Aspell_Path", Path);
-  CLEAN_AND_ZERO_ARR(Path);
-  GetDefaultHunspellPath(Path);
-  LoadFromIni(HunspellPath, L"User_Hunspell_Path", Path);
-  CLEAN_AND_ZERO_ARR(Path);
+  auto Path = GetDefaultAspellPath();
+  LoadFromIni(AspellPath, L"Aspell_Path", Path.c_str ());
+  Path = GetDefaultHunspellPath();
+  LoadFromIni(HunspellPath, L"User_Hunspell_Path", Path.c_str ());
 
   AdditionalHunspellPath = nullptr;
   LoadFromIni(AdditionalHunspellPath, L"System_Hunspell_Path",
