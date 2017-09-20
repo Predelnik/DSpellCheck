@@ -63,15 +63,15 @@ NppData nppData;
 wchar_t IniFilePath[MAX_PATH];
 DWORD CustomGUIMessageIds[static_cast<int>(CustomGUIMessage::MAX)] = {0};
 bool doCloseTag = false;
-SpellChecker* SpellCheckerInstance = nullptr;
-SettingsDlg* SettingsDlgInstance = nullptr;
-Suggestions* SuggestionsInstance = nullptr;
-LangList* LangListInstance = nullptr;
-RemoveDics* RemoveDicsInstance = nullptr;
-SelectProxy* SelectProxyInstance = nullptr;
-ProgressDlg* ProgressInstance = nullptr;
-DownloadDicsDlg* DownloadDicsDlgInstance = nullptr;
-AboutDlg* AboutDlgInstance = nullptr;
+std::unique_ptr<SpellChecker> spellChecker;
+std::unique_ptr<SettingsDlg> settingsDlg;
+std::unique_ptr<Suggestions> suggestionsButton;
+std::unique_ptr<LangList> langListInstance;
+std::unique_ptr<RemoveDics> removeDicsDlg;
+std::unique_ptr<SelectProxy> selectProxyDlg;
+std::unique_ptr<ProgressDlg> progressDlg;
+std::unique_ptr<DownloadDicsDlg> downloadDicsDlg;
+std::unique_ptr<AboutDlg> aboutDlg;
 HMENU LangsMenu;
 int ContextMenuIdStart;
 int LangsMenuIdStart = false;
@@ -105,7 +105,7 @@ int GetLangsMenuIdStart() { return LangsMenuIdStart; }
 
 bool GetUseAllocatedIds() { return UseAllocatedIds; }
 
-SpellChecker* getSpellChecker() { return SpellCheckerInstance; }
+SpellChecker* getSpellChecker() { return spellChecker.get(); }
 
 
 std::wstring GetDefaultHunspellPath() {
@@ -118,15 +118,15 @@ void pluginInit(HANDLE hModuleArg) {
     // Init it all dialog classes:
 }
 
-LangList* GetLangList() { return LangListInstance; }
+LangList* GetLangList() { return langListInstance.get(); }
 
-RemoveDics* GetRemoveDics() { return RemoveDicsInstance; }
+RemoveDics* GetRemoveDics() { return removeDicsDlg.get(); }
 
-SelectProxy* GetSelectProxy() { return SelectProxyInstance; }
+SelectProxy* GetSelectProxy() { return selectProxyDlg.get(); }
 
-ProgressDlg* getProgress() { return ProgressInstance; }
+ProgressDlg* getProgress() { return progressDlg.get(); }
 
-DownloadDicsDlg* GetDownloadDics() { return DownloadDicsDlgInstance; }
+DownloadDicsDlg* GetDownloadDics() { return downloadDicsDlg.get(); }
 
 HANDLE getHModule() { return hModule; }
 
@@ -159,15 +159,6 @@ void CreateHooks() {
 
 void pluginCleanUp() {
     UnhookWindowsHookEx(HMouseHook);
-    CLEAN_AND_ZERO(SpellCheckerInstance);
-    CLEAN_AND_ZERO(SettingsDlgInstance);
-    CLEAN_AND_ZERO(AboutDlgInstance);
-    CLEAN_AND_ZERO(SuggestionsInstance);
-    CLEAN_AND_ZERO(LangListInstance);
-    CLEAN_AND_ZERO(SelectProxyInstance);
-    CLEAN_AND_ZERO(RemoveDicsInstance);
-    CLEAN_AND_ZERO(DownloadDicsDlgInstance);
-    CLEAN_AND_ZERO(ProgressInstance);
 }
 
 void RegisterCustomMessages() {
@@ -186,7 +177,7 @@ void GetSuggestions() {
     // SendEvent (EID_INITSUGGESTIONS);
 }
 
-void StartSettings() { SettingsDlgInstance->DoDialog(); }
+void StartSettings() { settingsDlg->DoDialog(); }
 
 void StartManual() {
     ShellExecute(nullptr, L"open",
@@ -194,9 +185,9 @@ void StartManual() {
                  nullptr, SW_SHOW);
 }
 
-void StartAboutDlg() { AboutDlgInstance->DoDialog(); }
+void StartAboutDlg() { aboutDlg->DoDialog(); }
 
-void StartLanguageList() { LangListInstance->DoDialog(); }
+void StartLanguageList() { langListInstance->DoDialog(); }
 
 void LoadSettings() { getSpellChecker()->LoadSettings(); }
 
@@ -315,30 +306,30 @@ void UpdateLangsMenu() {
     getSpellChecker()->DoPluginMenuInclusion();
 }
 
+static std::wstring getMenuItemText(HMENU menu, UINT index) {
+    auto strLen = GetMenuString(menu, index, nullptr, 0, MF_BYPOSITION);
+    std::vector<wchar_t> buf(strLen + 1);
+    GetMenuString(menu, index, buf.data(), static_cast<int> (buf.size()), MF_BYPOSITION);
+    return buf.data();
+}
+
 HMENU GetDSpellCheckMenu() {
     HMENU PluginsMenu =
-        (HMENU)SendMsgToNpp(&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU);
+        reinterpret_cast<HMENU>(SendMsgToNpp(&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU));
     HMENU DSpellCheckMenu = nullptr;
     int Count = GetMenuItemCount(PluginsMenu);
-    int StrLen = 0;
-    wchar_t* Buf = nullptr;
     for (int i = 0; i < Count; i++) {
-        StrLen = GetMenuString(PluginsMenu, i, nullptr, 0, MF_BYPOSITION);
-        Buf = new wchar_t[StrLen + 1];
-        GetMenuString(PluginsMenu, i, Buf, StrLen + 1, MF_BYPOSITION);
-        if (wcscmp(Buf, NPP_PLUGIN_NAME) == 0) {
+        auto str = getMenuItemText(PluginsMenu, i);
+        if (str == NPP_PLUGIN_NAME) {
             MENUITEMINFO Mif;
             Mif.fMask = MIIM_SUBMENU;
             Mif.cbSize = sizeof(MENUITEMINFO);
             bool Res = GetMenuItemInfo(PluginsMenu, i, true, &Mif);
 
             if (Res)
-                DSpellCheckMenu = (HMENU)Mif.hSubMenu;
-
-            CLEAN_AND_ZERO_ARR(Buf);
+                DSpellCheckMenu = static_cast<HMENU>(Mif.hSubMenu);
             break;
         }
-        CLEAN_AND_ZERO_ARR(Buf);
     }
     return DSpellCheckMenu;
 }
@@ -372,37 +363,37 @@ void InitClasses() {
     icc.dwICC = ICC_WIN95_CLASSES;
     InitCommonControlsEx(&icc);
 
-    InitCheckedListBox((HINSTANCE)hModule);
+    InitCheckedListBox(static_cast<HINSTANCE>(hModule));
 
-    SuggestionsInstance = new Suggestions;
-    SuggestionsInstance->initDlg((HINSTANCE)hModule, nppData._nppHandle, nppData);
-    SuggestionsInstance->DoDialog();
+    suggestionsButton = std::make_unique<Suggestions>();
+    suggestionsButton->initDlg(static_cast<HINSTANCE>(hModule), nppData._nppHandle, nppData);
+    suggestionsButton->DoDialog();
 
-    SettingsDlgInstance = new SettingsDlg;
-    SettingsDlgInstance->initSettings((HINSTANCE)hModule, nppData._nppHandle, nppData);
+    settingsDlg = std::make_unique<SettingsDlg>();
+    settingsDlg->initSettings(static_cast<HINSTANCE>(hModule), nppData._nppHandle, nppData);
 
-    AboutDlgInstance = new AboutDlg;
-    AboutDlgInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    aboutDlg = std::make_unique<AboutDlg>();
+    aboutDlg->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
-    ProgressInstance = new ProgressDlg;
-    ProgressInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    progressDlg = std::make_unique<ProgressDlg>();
+    progressDlg->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
-    LangListInstance = new LangList;
-    LangListInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    langListInstance = std::make_unique<LangList>();
+    langListInstance->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
-    SelectProxyInstance = new SelectProxy;
-    SelectProxyInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    selectProxyDlg = std::make_unique<SelectProxy>();
+    selectProxyDlg->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
-    RemoveDicsInstance = new RemoveDics;
-    RemoveDicsInstance->init((HINSTANCE)hModule, nppData._nppHandle);
+    removeDicsDlg = std::make_unique<RemoveDics>();
+    removeDicsDlg->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
-    SpellCheckerInstance =
-        new SpellChecker(IniFilePath, SettingsDlgInstance, &nppData,
-                         SuggestionsInstance, LangListInstance);
+    spellChecker =
+        std::make_unique<SpellChecker>(IniFilePath, settingsDlg.get(), &nppData,
+                                       suggestionsButton.get(), langListInstance.get());
 
-    DownloadDicsDlgInstance = new DownloadDicsDlg;
-    DownloadDicsDlgInstance->initDlg((HINSTANCE)hModule, nppData._nppHandle,
-                                     SpellCheckerInstance);
+    downloadDicsDlg = std::make_unique<DownloadDicsDlg>();
+    downloadDicsDlg->initDlg(static_cast<HINSTANCE>(hModule), nppData._nppHandle,
+                             spellChecker.get());
 
     ResourcesInited = true;
 }
