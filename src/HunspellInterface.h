@@ -99,7 +99,6 @@ private:
   bool SpellerCheckWord(const DicInfo& Dic, char *Word, EncodingType Encoding);
   void MessageBoxWordCannotBeAdded();
 
-public:
 private:
   bool IsHunspellWorking;
   bool UseOneDic;

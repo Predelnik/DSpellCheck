@@ -45,32 +45,24 @@ HWND LangList::GetListBox() { return HLangList; }
 
 void LangList::ApplyChoice(SpellChecker *SpellCheckerInstance) {
   int count = ListBox_GetCount(HLangList);
-  wchar_t Buf[DEFAULT_BUF_SIZE];
-  wchar_t *ItemBuf = nullptr;
-  char *ConvertedBuf = nullptr;
-  bool FirstOne = true;
-  Buf[0] = L'\0';
+  std::wstring buf;
   for (int i = 0; i < count; i++) {
     if (CheckedListBox_GetCheckState(HLangList, i)) {
-      SetString(ItemBuf, SpellCheckerInstance->GetLangByIndex(i));
-      if (!FirstOne)
-        wcscat(Buf, L"|");
+      if (i > 0)
+        buf += L"|";
 
-      wcscat_s(Buf, ItemBuf);
-      FirstOne = false;
+      buf += SpellCheckerInstance->GetLangByIndex(i);
     }
   }
-  SetStringDUtf8(ConvertedBuf, Buf);
+  auto convertedBuf = to_utf8_string(buf.c_str ());
   if (SpellCheckerInstance->GetLibMode() == 1) {
-    SpellCheckerInstance->SetHunspellMultipleLanguages(ConvertedBuf);
+    SpellCheckerInstance->SetHunspellMultipleLanguages(convertedBuf.c_str ());
     SpellCheckerInstance->HunspellReinitSettings(false);
   } else {
-    SpellCheckerInstance->SetAspellMultipleLanguages(ConvertedBuf);
+    SpellCheckerInstance->SetAspellMultipleLanguages(convertedBuf.c_str ());
     SpellCheckerInstance->AspellReinitSettings();
   }
   SpellCheckerInstance->RecheckVisible();
-  CLEAN_AND_ZERO_ARR(ConvertedBuf);
-  CLEAN_AND_ZERO_ARR(ItemBuf);
 }
 
 INT_PTR LangList::run_dlgProc(UINT message, WPARAM wParam, LPARAM) {
@@ -79,7 +71,7 @@ INT_PTR LangList::run_dlgProc(UINT message, WPARAM wParam, LPARAM) {
     HLangList = ::GetDlgItem(_hSelf, IDC_LANGLIST);
     getSpellChecker ()->ReinitLanguageLists(true);
     return true;
-  } break;
+  }
   case WM_COMMAND: {
     switch (LOWORD(wParam)) {
     case IDOK:
