@@ -1977,15 +1977,15 @@ void SpellChecker::SetUnderlineColor(int Value) { UnderlineColor = Value; }
 
 void SpellChecker::SetUnderlineStyle(int Value) { UnderlineStyle = Value; }
 
-void SpellChecker::SetProxyUserName(wchar_t *Str) {
+void SpellChecker::SetProxyUserName(const wchar_t* Str) {
   SetString(ProxyUserName, Str);
 }
 
-void SpellChecker::SetProxyHostName(wchar_t *Str) {
+void SpellChecker::SetProxyHostName(const wchar_t* Str) {
   SetString(ProxyHostName, Str);
 }
 
-void SpellChecker::SetProxyPassword(wchar_t *Str) {
+void SpellChecker::SetProxyPassword(const wchar_t* Str) {
   SetString(ProxyPassword, Str);
 }
 

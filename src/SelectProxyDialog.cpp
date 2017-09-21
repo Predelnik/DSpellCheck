@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <CommCtrl.h>
 
-#include "SelectProxy.h"
+#include "SelectProxyDialog.h"
 
 #include "DownloadDicsDlg.h"
 #include "Controls/CheckedList/CheckedList.h"
@@ -30,44 +30,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "resource.h"
 
-void SelectProxy::DoDialog() {
+void SelectProxyDialog::DoDialog() {
   if (!isCreated()) {
     create(IDD_DIALOG_SELECT_PROXY);
   }
   goToCenter();
 }
 
-void SelectProxy::ApplyChoice(SpellChecker *SpellCheckerInstance) {
-  wchar_t *TBuf = nullptr;
-  int BufSize = 0;
-  BufSize = Edit_GetTextLength(HUserName) + 1;
-  TBuf = new wchar_t[BufSize];
-  Edit_GetText(HUserName, TBuf, BufSize);
-  SpellCheckerInstance->SetProxyUserName(TBuf);
-  CLEAN_AND_ZERO_ARR(TBuf);
-  BufSize = Edit_GetTextLength(HHostName) + 1;
-  TBuf = new wchar_t[BufSize];
-  Edit_GetText(HHostName, TBuf, BufSize);
-  SpellCheckerInstance->SetProxyHostName(TBuf);
-  CLEAN_AND_ZERO_ARR(TBuf);
-  BufSize = Edit_GetTextLength(HPassword) + 1;
-  TBuf = new wchar_t[BufSize];
-  Edit_GetText(HPassword, TBuf, BufSize);
-  SpellCheckerInstance->SetProxyPassword(TBuf);
-  CLEAN_AND_ZERO_ARR(TBuf);
-  SpellCheckerInstance->SetUseProxy(Button_GetCheck(HUseProxy));
-  SpellCheckerInstance->SetProxyAnonymous(Button_GetCheck(HProxyAnonymous));
+static std::wstring getEditText (HWND edit) {
+  auto length = Edit_GetTextLength (edit);
+  std::vector<wchar_t> buf (length + 1);
+  Edit_GetText(edit, buf.data (), buf.size ());
+  return buf.data ();
+}
+
+void SelectProxyDialog::ApplyChoice(SpellChecker *SpellCheckerInstance) {
+  SpellCheckerInstance->SetProxyUserName (getEditText(HUserName).c_str ());
+  SpellCheckerInstance->SetProxyHostName (getEditText (HHostName).c_str ());
+  SpellCheckerInstance->SetProxyPassword (getEditText (HPassword).c_str ());
+  SpellCheckerInstance->SetUseProxy(Button_GetCheck(HUseProxy) == BST_CHECKED);
+  SpellCheckerInstance->SetProxyAnonymous(Button_GetCheck(HProxyAnonymous) == BST_CHECKED);
   SpellCheckerInstance->SetProxyType(ComboBox_GetCurSel(HProxyType));
-  TBuf = new wchar_t[DEFAULT_BUF_SIZE];
-  Edit_GetText(HPort, TBuf, DEFAULT_BUF_SIZE);
+  auto text = getEditText (HPort);
   wchar_t *EndPtr;
-  int x = wcstol(TBuf, &EndPtr, 10);
+  int x = wcstol(text.c_str(), &EndPtr, 10);
   SpellCheckerInstance->SetProxyPort(x);
-  CLEAN_AND_ZERO_ARR(TBuf);
   GetDownloadDics()->Refresh();
 }
 
-void SelectProxy::DisableControls() {
+void SelectProxyDialog::DisableControls() {
   bool ProxyIsUsed = Button_GetCheck(HUseProxy);
   EnableWindow(HProxyAnonymous, ProxyIsUsed);
   EnableWindow(HUserName, ProxyIsUsed);
@@ -88,7 +79,7 @@ void SelectProxy::DisableControls() {
   }
 }
 
-void SelectProxy::SetOptions(bool UseProxy, wchar_t *HostName,
+void SelectProxyDialog::SetOptions(bool UseProxy, wchar_t *HostName,
                              wchar_t *UserName, wchar_t *Password, int Port,
                              bool ProxyAnonymous, int ProxyType) {
   Button_SetCheck(HUseProxy, UseProxy ? BST_CHECKED : BST_UNCHECKED);
@@ -108,7 +99,7 @@ void SelectProxy::SetOptions(bool UseProxy, wchar_t *HostName,
   ComboBox_SetCurSel(HProxyType, ProxyType);
 }
 
-INT_PTR SelectProxy::run_dlgProc(UINT message, WPARAM wParam,
+INT_PTR SelectProxyDialog::run_dlgProc(UINT message, WPARAM wParam,
                                  LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {
@@ -123,7 +114,7 @@ INT_PTR SelectProxy::run_dlgProc(UINT message, WPARAM wParam,
     ComboBox_AddString(HProxyType, L"FTP Gateway");
     getSpellChecker ()->updateSelectProxy();
     return true;
-  } break;
+  }
   case WM_COMMAND: {
     switch (LOWORD(wParam)) {
     case IDOK:
