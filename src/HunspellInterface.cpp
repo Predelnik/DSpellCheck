@@ -182,7 +182,7 @@ HunspellInterface::~HunspellInterface() {
         DeleteFile(SystemWrongDicPath.c_str ());
     }
 
-    if (InitialReadingBeenDone && UserDicPath.c_str())
+    if (UserDicPath.c_str())
         WriteUserDic(&Memorized, UserDicPath.c_str());
 }
 
@@ -540,7 +540,6 @@ void HunspellInterface::SetDirectory(wchar_t* Dir) {
     UserDicPath += L"UserDic.dic"; // Should be tunable really
     ReadUserDic(&Memorized, UserDicPath.c_str()); // We should load user dictionary first.
 
-    InitialReadingBeenDone = false;
     DicDir = Dir;
 
     std::set<AvailableLangInfo>::iterator it;
@@ -566,7 +565,6 @@ void HunspellInterface::SetDirectory(wchar_t* Dir) {
 }
 
 void HunspellInterface::SetAdditionalDirectory(wchar_t* Dir) {
-    InitialReadingBeenDone = false;
     SysDicDir = Dir;
     IsHunspellWorking = true;
 
@@ -585,8 +583,6 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t* Dir) {
         }
     }
     // Now we have 2 dictionaries on our hands
-
-    InitialReadingBeenDone = true;
 
     // Reading system path unified dic too
     SystemWrongDicPath = Dir;
