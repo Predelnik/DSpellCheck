@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class SpellChecker;
 
-class RemoveDics : public StaticDialog {
+class RemoveDictionariesDialog : public StaticDialog {
 public:
   void init(HINSTANCE hInst, HWND Parent) override;
   void DoDialog();

@@ -37,7 +37,7 @@ class DownloadDicsDlg;
 class SelectProxy;
 class SpellChecker;
 class ProgressDlg;
-class RemoveDics;
+class RemoveDictionariesDialog;
 
 //
 // Initialization of your plugin data
@@ -82,7 +82,7 @@ HMENU GetDSpellCheckMenu ();
 HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = nullptr);
 HANDLE getHModule ();
 LangList *GetLangList ();
-RemoveDics *GetRemoveDics ();
+RemoveDictionariesDialog *GetRemoveDics ();
 SelectProxy *GetSelectProxy ();
 ProgressDlg *getProgress ();
 DownloadDicsDlg *GetDownloadDics ();

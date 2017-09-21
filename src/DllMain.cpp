@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
 #include "Plugin.h"
-#include "RemoveDics.h"
+#include "RemoveDictionariesDialog.h"
 #include "MainDef.h"
 #include "SpellChecker.h"
 

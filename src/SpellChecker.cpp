@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "MainDef.h"
 #include "PluginInterface.h"
 #include "Plugin.h"
-#include "RemoveDics.h"
+#include "RemoveDictionariesDialog.h"
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "SciLexer.h"

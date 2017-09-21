@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <CommCtrl.h>
 
-#include "RemoveDics.h"
+#include "RemoveDictionariesDialog.h"
 
 #include "Controls/CheckedList/CheckedList.h"
 #include "MainDef.h"
@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "resource.h"
 
-void RemoveDics::DoDialog() {
+void RemoveDictionariesDialog::DoDialog() {
   if (!isCreated()) {
     create(IDD_REMOVE_DICS);
   } else {
@@ -40,13 +40,13 @@ void RemoveDics::DoDialog() {
   SetFocus(HLangList);
 }
 
-void RemoveDics::init(HINSTANCE hInst, HWND Parent) {
+void RemoveDictionariesDialog::init(HINSTANCE hInst, HWND Parent) {
   return Window::init(hInst, Parent);
 }
 
-HWND RemoveDics::GetListBox() { return HLangList; }
+HWND RemoveDictionariesDialog::GetListBox() { return HLangList; }
 
-void RemoveDics::RemoveSelected(SpellChecker *SpellCheckerInstance) {
+void RemoveDictionariesDialog::RemoveSelected(SpellChecker *SpellCheckerInstance) {
   int Count = 0;
   bool Success = false;
   bool NeedSingleReset = false;
@@ -105,20 +105,20 @@ void RemoveDics::RemoveSelected(SpellChecker *SpellCheckerInstance) {
   }
 }
 
-void RemoveDics::UpdateOptions(SpellChecker *SpellCheckerInstance) {
+void RemoveDictionariesDialog::UpdateOptions(SpellChecker *SpellCheckerInstance) {
   SpellCheckerInstance->SetRemoveUserDics(Button_GetCheck(HRemoveUserDics) ==
                                           BST_CHECKED);
   SpellCheckerInstance->SetRemoveSystem(Button_GetCheck(HRemoveSystem) ==
                                         BST_CHECKED);
 }
 
-void RemoveDics::SetCheckBoxes(bool RemoveUserDics, bool RemoveSystem) {
+void RemoveDictionariesDialog::SetCheckBoxes(bool RemoveUserDics, bool RemoveSystem) {
   Button_SetCheck(HRemoveUserDics,
                   RemoveUserDics ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
-INT_PTR RemoveDics::run_dlgProc(UINT message, WPARAM wParam,
+INT_PTR RemoveDictionariesDialog::run_dlgProc(UINT message, WPARAM wParam,
                                 LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {

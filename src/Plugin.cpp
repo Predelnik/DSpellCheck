@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
 #include "ProgressDlg.h"
-#include "RemoveDics.h"
+#include "RemoveDictionariesDialog.h"
 #include "SelectProxy.h"
 #include "SpellChecker.h"
 #include "Suggestions.h"
@@ -67,7 +67,7 @@ std::unique_ptr<SpellChecker> spellChecker;
 std::unique_ptr<SettingsDlg> settingsDlg;
 std::unique_ptr<Suggestions> suggestionsButton;
 std::unique_ptr<LangList> langListInstance;
-std::unique_ptr<RemoveDics> removeDicsDlg;
+std::unique_ptr<RemoveDictionariesDialog> removeDicsDlg;
 std::unique_ptr<SelectProxy> selectProxyDlg;
 std::unique_ptr<ProgressDlg> progressDlg;
 std::unique_ptr<DownloadDicsDlg> downloadDicsDlg;
@@ -120,7 +120,7 @@ void pluginInit(HANDLE hModuleArg) {
 
 LangList* GetLangList() { return langListInstance.get(); }
 
-RemoveDics* GetRemoveDics() { return removeDicsDlg.get(); }
+RemoveDictionariesDialog* GetRemoveDics() { return removeDicsDlg.get(); }
 
 SelectProxy* GetSelectProxy() { return selectProxyDlg.get(); }
 
@@ -384,7 +384,7 @@ void InitClasses() {
     selectProxyDlg = std::make_unique<SelectProxy>();
     selectProxyDlg->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
-    removeDicsDlg = std::make_unique<RemoveDics>();
+    removeDicsDlg = std::make_unique<RemoveDictionariesDialog>();
     removeDicsDlg->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
     spellChecker =
