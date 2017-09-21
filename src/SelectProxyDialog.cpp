@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "Plugin.h"
 
+#include "utils/winapi.h"
 #include "resource.h"
 
 void SelectProxyDialog::DoDialog() {
@@ -35,13 +36,6 @@ void SelectProxyDialog::DoDialog() {
     create(IDD_DIALOG_SELECT_PROXY);
   }
   goToCenter();
-}
-
-static std::wstring getEditText (HWND edit) {
-  auto length = Edit_GetTextLength (edit);
-  std::vector<wchar_t> buf (length + 1);
-  Edit_GetText(edit, buf.data (), buf.size ());
-  return buf.data ();
 }
 
 void SelectProxyDialog::ApplyChoice(SpellChecker *SpellCheckerInstance) {

@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class SpellChecker;
 
-class SelectProxy : public StaticDialog {
+class SelectProxyDialog : public StaticDialog {
 public:
   void DoDialog();
   void ApplyChoice(SpellChecker *SpellCheckerInstance);

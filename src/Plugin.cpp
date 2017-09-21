@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "LangList.h"
 #include "ProgressDlg.h"
 #include "RemoveDictionariesDialog.h"
-#include "SelectProxy.h"
+#include "SelectProxyDialog.h"
 #include "SpellChecker.h"
 #include "Suggestions.h"
 
@@ -68,7 +68,7 @@ std::unique_ptr<SettingsDlg> settingsDlg;
 std::unique_ptr<Suggestions> suggestionsButton;
 std::unique_ptr<LangList> langListInstance;
 std::unique_ptr<RemoveDictionariesDialog> removeDicsDlg;
-std::unique_ptr<SelectProxy> selectProxyDlg;
+std::unique_ptr<SelectProxyDialog> selectProxyDlg;
 std::unique_ptr<ProgressDlg> progressDlg;
 std::unique_ptr<DownloadDicsDlg> downloadDicsDlg;
 std::unique_ptr<AboutDlg> aboutDlg;
@@ -122,7 +122,7 @@ LangList* GetLangList() { return langListInstance.get(); }
 
 RemoveDictionariesDialog* GetRemoveDics() { return removeDicsDlg.get(); }
 
-SelectProxy* GetSelectProxy() { return selectProxyDlg.get(); }
+SelectProxyDialog* GetSelectProxy() { return selectProxyDlg.get(); }
 
 ProgressDlg* getProgress() { return progressDlg.get(); }
 
@@ -381,7 +381,7 @@ void InitClasses() {
     langListInstance = std::make_unique<LangList>();
     langListInstance->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
-    selectProxyDlg = std::make_unique<SelectProxy>();
+    selectProxyDlg = std::make_unique<SelectProxyDialog>();
     selectProxyDlg->init(static_cast<HINSTANCE>(hModule), nppData._nppHandle);
 
     removeDicsDlg = std::make_unique<RemoveDictionariesDialog>();

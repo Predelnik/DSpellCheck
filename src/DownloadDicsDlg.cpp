@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Plugin.h"
 #include "ProgressDlg.h"
 #include "resource.h"
-#include "SelectProxy.h"
+#include "SelectProxyDialog.h"
 #include "SpellChecker.h"
 #include "MainDef.h"
 #include "unzip.h"

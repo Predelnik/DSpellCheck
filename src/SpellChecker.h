@@ -95,9 +95,9 @@ public:
   void SetAspellMultipleLanguages(const char *MultiLanguagesArg);
   void SetUnderlineColor(int Value);
   void SetUnderlineStyle(int Value);
-  void SetProxyUserName(wchar_t *Str);
-  void SetProxyHostName(wchar_t *Str);
-  void SetProxyPassword(wchar_t *Str);
+  void SetProxyUserName(const wchar_t* Str);
+  void SetProxyHostName(const wchar_t* Str);
+  void SetProxyPassword(const wchar_t* Str);
   void SetProxyPort(int Value);
   void SetUseProxy(bool Value);
   void SetProxyAnonymous(bool Value);

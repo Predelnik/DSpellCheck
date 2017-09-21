@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "SciLexer.h"
 #include "Scintilla.h"
-#include "SelectProxy.h"
+#include "SelectProxyDialog.h"
 #include "Suggestions.h"
 
 #ifdef UNICODE
