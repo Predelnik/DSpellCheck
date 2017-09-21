@@ -432,13 +432,12 @@ void HunspellInterface::AddToDictionary(char* Word) {
         SetStringDUtf8(Buf, Word);
 
     if (UseOneDic) {
-        std::map<wchar_t *, DicInfo, bool (*)(wchar_t*, wchar_t*)>::iterator it;
         Memorized.insert(Buf);
         for (auto& p : AllHunspells) {
             char* ConvWord = GetConvertedWord(Buf, p.second.Converter.get());
             if (*ConvWord)
-                (*it).second.hunspell->add(ConvWord);
-            else if ((*it).second.hunspell == LastSelectedSpeller->hunspell)
+                p.second.hunspell->add(ConvWord);
+            else if (p.second.hunspell == LastSelectedSpeller->hunspell)
                 MessageBoxWordCannotBeAdded();
             // Adding word to all currently loaded dictionaries and in memorized list
             // to save it.
