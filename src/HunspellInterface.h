@@ -91,7 +91,6 @@ private:
   std::vector<DicInfo> *Spellers;
   WordSet *Memorized;
   WordSet *Ignored;
-  BOOL InitialReadingBeenDone;
   char *TemporaryBuffer;
   wchar_t *UserDicPath;        // For now only default one.
   wchar_t *SystemWrongDicPath; // Only for reading and then removing

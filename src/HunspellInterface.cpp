@@ -231,7 +231,7 @@ HunspellInterface::~HunspellInterface() {
     DeleteFile(SystemWrongDicPath);
   }
 
-  if (InitialReadingBeenDone && UserDicPath)
+  if (UserDicPath)
     WriteUserDic(Memorized, UserDicPath);
 
   CleanAndZeroWordList(Memorized);
@@ -659,7 +659,6 @@ void HunspellInterface::SetDirectory(wchar_t *Dir) {
   wcscat(UserDicPath, L"UserDic.dic"); // Should be tunable really
   ReadUserDic(Memorized, UserDicPath); // We should load user dictionary first.
 
-  InitialReadingBeenDone = FALSE;
   std::vector<wchar_t *> *FileList = new std::vector<wchar_t *>;
   SetString(DicDir, Dir);
 
@@ -701,7 +700,6 @@ void HunspellInterface::SetDirectory(wchar_t *Dir) {
 }
 
 void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
-  InitialReadingBeenDone = FALSE;
   std::vector<wchar_t *> *FileList = new std::vector<wchar_t *>;
   SetString(SysDicDir, Dir);
 
@@ -736,8 +734,6 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
     CLEAN_AND_ZERO_ARR(Buf);
   }
   // Now we have 2 dictionaries on our hands
-
-  InitialReadingBeenDone = TRUE;
 
   CLEAN_AND_ZERO_ARR(SystemWrongDicPath);
   SystemWrongDicPath =
