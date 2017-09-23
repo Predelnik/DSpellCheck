@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "RemoveDictionariesDialog.h"
 #include "SelectProxyDialog.h"
 #include "SpellChecker.h"
-#include "Suggestions.h"
+#include "SuggestionsButton.h"
 
 #include "StackWalker/StackWalker.h"
 #include "utils/raii.h"
@@ -65,7 +65,7 @@ DWORD CustomGUIMessageIds[static_cast<int>(CustomGUIMessage::MAX)] = {0};
 bool doCloseTag = false;
 std::unique_ptr<SpellChecker> spellChecker;
 std::unique_ptr<SettingsDlg> settingsDlg;
-std::unique_ptr<Suggestions> suggestionsButton;
+std::unique_ptr<SuggestionsButton> suggestionsButton;
 std::unique_ptr<LangList> langListInstance;
 std::unique_ptr<RemoveDictionariesDialog> removeDicsDlg;
 std::unique_ptr<SelectProxyDialog> selectProxyDlg;
@@ -365,7 +365,7 @@ void InitClasses() {
 
     InitCheckedListBox(static_cast<HINSTANCE>(hModule));
 
-    suggestionsButton = std::make_unique<Suggestions>();
+    suggestionsButton = std::make_unique<SuggestionsButton>();
     suggestionsButton->initDlg(static_cast<HINSTANCE>(hModule), nppData._nppHandle, nppData);
     suggestionsButton->DoDialog();
 

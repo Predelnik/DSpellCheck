@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SciLexer.h"
 #include "Scintilla.h"
 #include "SelectProxyDialog.h"
-#include "Suggestions.h"
+#include "SuggestionsButton.h"
 
 #ifdef UNICODE
 #define DEFAULT_DELIMITERS                                                     \
@@ -113,7 +113,7 @@ void SpellChecker::addUserServer(std::wstring server) {
 SpellChecker::SpellChecker(const wchar_t *IniFilePathArg,
                            SettingsDlg *SettingsDlgInstanceArg,
                            NppData *NppDataInstanceArg,
-                           Suggestions *SuggestionsInstanceArg,
+                           SuggestionsButton *SuggestionsInstanceArg,
                            LangList *LangListInstanceArg) {
   CurrentPosition = 0;
   DelimUtf8 = nullptr;

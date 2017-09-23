@@ -22,9 +22,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
 
-class Suggestions : public StaticDialog {
+class SuggestionsButton : public StaticDialog {
 public:
-  Suggestions();
+  SuggestionsButton();
   void DoDialog();
   HMENU GetPopupMenu();
   int GetResult();

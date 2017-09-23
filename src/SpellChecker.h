@@ -27,7 +27,7 @@ struct LanguageName;
 struct AspellWordList;
 class SettingsDlg;
 class LangList;
-class Suggestions;
+class SuggestionsButton;
 class AbstractSpellerInterface;
 class AspellInterface;
 class HunspellInterface;
@@ -63,7 +63,7 @@ class SpellChecker {
 public:
   SpellChecker(const wchar_t *IniFilePathArg,
                SettingsDlg *SettingsDlgInstanceArg, NppData *NppDataInstanceArg,
-               Suggestions *SuggestionsInstanceArg,
+               SuggestionsButton *SuggestionsInstanceArg,
                LangList *LangListInstanceArg);
   ~SpellChecker();
   void RecheckVisibleBothViews();
@@ -285,7 +285,7 @@ private:
   wchar_t *IniFilePath;
   char *SelectedWord;
   SettingsDlg *SettingsDlgInstance;
-  Suggestions *SuggestionsInstance;
+  SuggestionsButton *SuggestionsInstance;
   LangList *LangListInstance;
   char *VisibleText;
   std::ptrdiff_t VisibleTextLength;

@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "Suggestions.h"
+#include "SuggestionsButton.h"
 
 #include "MainDef.h"
 #include "Plugin.h"
@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MOUSELEAVE 0x0001
 #define MOUSEHOVER 0x0002
 
-void Suggestions::DoDialog() {
+void SuggestionsButton::DoDialog() {
   HWND Temp = GetFocus();
   create(IDD_SUGGESTIONS);
   SetFocus(Temp);
@@ -62,22 +62,22 @@ bool RegMsg(HWND hWnd, DWORD dwMsgType) {
   return true;
 }
 
-HMENU Suggestions::GetPopupMenu() { return PopupMenu; }
+HMENU SuggestionsButton::GetPopupMenu() { return PopupMenu; }
 
-int Suggestions::GetResult() { return MenuResult; }
+int SuggestionsButton::GetResult() { return MenuResult; }
 
-Suggestions::Suggestions() {
+SuggestionsButton::SuggestionsButton() {
   StatePressed = false;
   StateHovered = false;
   StateMenu = false;
 }
 
-void Suggestions::initDlg(HINSTANCE hInst, HWND Parent, NppData nppData) {
+void SuggestionsButton::initDlg(HINSTANCE hInst, HWND Parent, NppData nppData) {
   NppDataInstance = nppData;
   return Window::init(hInst, Parent);
 }
 
-INT_PTR Suggestions::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
+INT_PTR SuggestionsButton::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
   POINT p;
   HDC Dc;
   HBITMAP hBmp;
