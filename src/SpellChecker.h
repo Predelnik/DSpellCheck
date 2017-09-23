@@ -89,7 +89,7 @@ public:
   void SetConversionOptions(bool ConvertYo, bool ConvertSingleQuotesArg,
                             bool RemoveBoundaryApostrophesArg);
   void SetCheckThose(int CheckThoseArg);
-  void SetFileTypes(wchar_t *FileTypesArg);
+  void SetFileTypes(const wchar_t* FileTypesArg);
   void SetCheckComments(bool Value);
   void SetHunspellMultipleLanguages(const char *MultiLanguagesArg);
   void SetAspellMultipleLanguages(const char *MultiLanguagesArg);

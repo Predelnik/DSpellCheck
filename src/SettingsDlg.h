@@ -36,10 +36,10 @@ public:
   ~SimpleDlg();
   void initSettings(HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings(SpellChecker *SpellCheckerInstance);
-  bool AddAvailableLanguages(std::vector<LanguageName> *LangsAvailable,
-                             const wchar_t *CurrentLanguage,
-                             const wchar_t *MultiLanguages,
-                             HunspellInterface *HunspellSpeller);
+  bool AddAvailableLanguages(std::vector<LanguageName> *langsAvailable,
+                             const wchar_t *currentLanguage,
+                             std::wstring_view multiLanguages,
+                             HunspellInterface *hunspellSpeller);
   void FillSugestionsNum(int SuggestionsNum);
   void FillLibInfo(int Status, wchar_t *AspellPath, wchar_t *HunspellPath,
                    wchar_t *HunspellAdditionalPath);

@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <wchar.h>
 #include <vector>
 #include <ppltasks.h>
+#include <regex>
 #pragma warning(push)
 #pragma warning(disable: 4091)
 #include <Shlobj.h>

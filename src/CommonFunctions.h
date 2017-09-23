@@ -33,7 +33,7 @@ void SetString(char *&Target, const wchar_t *Str);
 void SetString(wchar_t *&Target, const char *Str);
 
 template <typename CharT>
-inline std::wstring to_wstring (const CharT* source) {
+inline std::wstring to_wstring (const CharT *source) {
     wchar_t *target = nullptr;
     SetString (target, source);
     return target;
@@ -64,6 +64,12 @@ auto cpyBuf (const V *str) {
 // In case source is in UTF-8
 void SetStringSUtf8(char *&Target, const char *Str);
 void SetStringSUtf8(wchar_t *&Target, const char *Str);
+
+inline std::wstring utf8_to_wstring (const char *source) {
+    wchar_t *target = nullptr;
+    SetStringSUtf8 (target, source);
+    return target;
+}
 
 template <typename T, typename V>
 auto cpyBufSUtf8 (const V *str) {

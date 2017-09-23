@@ -522,6 +522,7 @@ std::vector<std::string> HunspellInterface::GetSuggestions(const char* Word) {
 
             if (curList.count() > list.count()) {
                 list = std::move(curList);
+                LastSelectedSpeller = speller;
             }
         }
     }

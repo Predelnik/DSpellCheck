@@ -1954,7 +1954,7 @@ void SpellChecker::SetCheckThose(int CheckThoseArg) {
   CheckThose = CheckThoseArg;
 }
 
-void SpellChecker::SetFileTypes(wchar_t *FileTypesArg) {
+void SpellChecker::SetFileTypes(const wchar_t* FileTypesArg) {
   SetString(FileTypes, FileTypesArg);
 }
 
