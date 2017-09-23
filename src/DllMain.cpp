@@ -35,7 +35,6 @@ extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
 extern bool doCloseTag;
 HANDLE HModule;
-int RecheckDelay;
 std::vector<std::pair<long, long>> CheckQueue;
 UINT_PTR uiTimer = 0u;
 UINT_PTR recheckTimer = 0u;
@@ -44,25 +43,6 @@ WNDPROC wndProcNotepad = nullptr;
 bool restylingCausedRecheckWasDone =
     false; // Hack to avoid eternal cycle in case of scintilla bug
 bool firstRestyle = true; // hack to successfully avoid checking hyperlinks when they appear on program start
-
-int GetRecheckDelay() { return RecheckDelay; }
-
-void SetRecheckDelay(int Value, int WriteToIni) {
-  if (Value < 0)
-    Value = 0;
-
-  if (Value > 20000)
-    Value = 20000;
-
-  if (WriteToIni) {
-    std::pair<wchar_t *, DWORD> x;
-    x.first = nullptr;
-    SetString(x.first, L"Recheck_Delay");
-    x.second = MAKELPARAM(Value, 500);
-    getSpellChecker()->WriteSetting(x);
-  }
-  RecheckDelay = Value;
-}
 
 bool APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID) {
   HModule = hModule;
@@ -289,7 +269,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
 
       if (recheckTimer)
           {
-              SetTimer (nppData._nppHandle,  recheckTimer, RecheckDelay, doRecheck);
+              SetTimer (nppData._nppHandle,  recheckTimer, getSpellChecker ()->getRecheckDelay(), doRecheck);
               recheckDone = false;
           }
     }

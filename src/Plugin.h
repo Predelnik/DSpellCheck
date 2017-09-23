@@ -102,6 +102,3 @@ SpellChecker *getSpellChecker ();
 DWORD GetCustomGUIMessageId (CustomGUIMessage MessageId);
 void RegisterCustomMessages ();
 
-// From DllMain, possibly move to DllMain.h
-void SetRecheckDelay (int Value, int WriteToIni = 1);
-int GetRecheckDelay ();

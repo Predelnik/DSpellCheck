@@ -95,9 +95,9 @@ public:
   void FillDelimiters(const char *Delimiters);
   void SetDelimetersEdit(const wchar_t* Delimiters);
   void SetConversionOpts(bool ConvertYo, bool ConvertSingleQuotesArg,
-                         bool RemoveSingleApostrophe);
-  void SetRecheckDelay(int Delay);
+                         bool RemoveSingleApostrophe);  
   int GetRecheckDelay();
+  void SetRecheckDelay(int Delay);
   void SetSuggBoxSettings(LRESULT Size, LRESULT Trans);
   void SetUnderlineSettings(int Color, int Style);
   void SetIgnore(bool IgnoreNumbersArg, bool IgnoreCStartArg,

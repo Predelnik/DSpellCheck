@@ -124,7 +124,7 @@ public:
   bool GetInstallSystem();
   bool GetDecodeNames();
   void DoPluginMenuInclusion(bool Invalidate = false);
-  HunspellInterface *GetHunspellSpeller() { return HunspellSpeller; };
+  HunspellInterface *GetHunspellSpeller() { return HunspellSpeller.get (); };
   int GetLibMode();
   bool HunspellReinitSettings(bool ResetDirectory);
   void SetRemoveUserDics(bool Value);
@@ -143,7 +143,6 @@ public:
   void addUserServer (std::wstring server);
   bool getAutoCheckText () const { return AutoCheckText; }
   void ProcessMenuResult(WPARAM MenuId);
-  void WriteSetting(std::pair<wchar_t*, DWORD>& x);
   void copyMisspellingsToClipboard();
   void LoadSettings();
   void SwitchAutoCheck();
@@ -162,6 +161,8 @@ public:
   void libChange();
   void langChange();
   void ResetDownloadCombobox();
+  void setRecheckDelay (int value);
+  int getRecheckDelay ();
 
 private:
   void GetLimitsAndRecheckModified();
@@ -185,7 +186,7 @@ private:
                                  bool UseTextCursor = false);
   char *GetWordAt(long CharPos, char *Text, long Offset);
   bool CheckTextNeeded();
-  int CheckWordInCommentOrString(LRESULT Style);
+  int CheckWordInCommentOrString(LRESULT Style) const;
   LRESULT GetStyle(int Pos);
   void RefreshUnderlineStyle();
   void ApplyConversions(char *Word);
@@ -263,7 +264,6 @@ private:
   const AspellWordList *CurWordList;
   HWND CurrentScintilla;
   LRESULT HotSpotCache[256]; // STYLE_MAX = 255
-  std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)> *SettingsToSave;
   bool UseProxy;
   bool ProxyAnonymous;
   int ProxyType;
@@ -271,6 +271,7 @@ private:
   wchar_t *ProxyUserName;
   int ProxyPort;
   wchar_t *ProxyPassword;
+  int m_recheckDelay;
 
   LRESULT Lexer;
   std::vector<std::string> LastSuggestions;
@@ -294,8 +295,8 @@ private:
   bool RemoveSystem;
 
   AbstractSpellerInterface *CurrentSpeller;
-  AspellInterface *AspellSpeller;
-  HunspellInterface *HunspellSpeller;
+  std::unique_ptr<AspellInterface> AspellSpeller;
+  std::unique_ptr<HunspellInterface> HunspellSpeller;
 
   // 6 - is arbitrary maximum size, actually almost everywhere it's 1
   char *YoANSI;

@@ -146,9 +146,9 @@ SpellChecker::SpellChecker(const wchar_t *IniFilePathArg,
   WUCPosition = 0;
   WUCisRight = true;
   CurrentScintilla = GetScintillaWindow(NppDataInstance);
-  AspellSpeller = new AspellInterface(NppDataInstance->_nppHandle);
-  HunspellSpeller = new HunspellInterface(NppDataInstance->_nppHandle);
-  CurrentSpeller = AspellSpeller;
+  AspellSpeller = std::make_unique<AspellInterface> (NppDataInstance->_nppHandle);
+  HunspellSpeller = std::make_unique<HunspellInterface> (NppDataInstance->_nppHandle);
+  CurrentSpeller = AspellSpeller.get ();
   PrepareStringForConversion();
   memset(ServerNames, 0, sizeof(ServerNames));
   memset(DefaultServers, 0, sizeof(DefaultServers));
@@ -170,9 +170,6 @@ SpellChecker::SpellChecker(const wchar_t *IniFilePathArg,
   ProxyPort = 0;
   SettingsLoaded = false;
   UseProxy = false;
-  SettingsToSave =
-      new std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)>(
-          SortCompare);
   bool res =
       (SendMsgToNpp(NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
 
@@ -221,8 +218,6 @@ void SpellChecker::PrepareStringForConversion() {
 }
 
 SpellChecker::~SpellChecker() {
-  CLEAN_AND_ZERO(AspellSpeller);
-  CLEAN_AND_ZERO(HunspellSpeller);
   CLEAN_AND_ZERO_ARR(SelectedWord);
   CLEAN_AND_ZERO_ARR(DelimConverted);
   CLEAN_AND_ZERO_ARR(DelimUtf8Converted);
@@ -250,13 +245,6 @@ SpellChecker::~SpellChecker() {
     CLEAN_AND_ZERO_ARR(ServerNames[i]);
   for (int i = 0; i < static_cast<int> (countof(DefaultServers)); i++)
     CLEAN_AND_ZERO_ARR(DefaultServers[i]);
-
-  std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)>::iterator it =
-      SettingsToSave->begin();
-  for (; it != SettingsToSave->end(); ++it) {
-    delete ((*it).first);
-  }
-  CLEAN_AND_ZERO(SettingsToSave);
 
   CLEAN_AND_ZERO(CurrentLangs);
 }
@@ -323,9 +311,9 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
   bool CurrentLangExists = false;
   wchar_t *CurrentLang;
 
-  AbstractSpellerInterface *SpellerToUse =
-      (SpellerId == 1 ? (AbstractSpellerInterface *)HunspellSpeller
-                      : (AbstractSpellerInterface *)AspellSpeller);
+  auto SpellerToUse =
+      (SpellerId == 1 ? static_cast<AbstractSpellerInterface *> (HunspellSpeller.get ())
+                      : AspellSpeller.get ());
 
   if (SpellerId == 0) {
     GetDownloadDics()->display(false);
@@ -374,7 +362,7 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
       SettingsDlgInstance->GetSimpleDlg()->AddAvailableLanguages(
           CurrentLangs, SpellerId == 1 ? HunspellLanguage : AspellLanguage,
           SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
-          SpellerId == 1 ? HunspellSpeller : 0);
+          SpellerId == 1 ? HunspellSpeller.get () : 0);
   } else {
     if (UpdateDialogs)
       SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(true);
@@ -398,6 +386,7 @@ void SpellChecker::FillDialogs(bool NoDisplayCall) {
   SettingsDlgInstance->GetSimpleDlg()->SetSuggType(SuggestionsMode);
   SettingsDlgInstance->GetSimpleDlg()->SetOneUserDic(OneUserDic);
   SettingsDlgInstance->GetAdvancedDlg()->FillDelimiters(DelimUtf8);
+  SettingsDlgInstance->GetAdvancedDlg()->SetRecheckDelay(m_recheckDelay);
   SettingsDlgInstance->GetAdvancedDlg()->SetConversionOpts(
       IgnoreYo, ConvertSingleQuotes, RemoveBoundaryApostrophes);
   SettingsDlgInstance->GetAdvancedDlg()->SetUnderlineSettings(UnderlineColor,
@@ -631,14 +620,6 @@ void SpellChecker::PreserveCurrentAddressIndex() {
   LastUsedAddress = 0;
 }
 
-// For now just int option, later maybe choose option type in wParam
-void SpellChecker::WriteSetting(std::pair<wchar_t*, DWORD>& x) {
-  if (SettingsToSave->find(x.first) == SettingsToSave->end())
-    (*SettingsToSave)[x.first] = x.second;
-  else {
-    CLEAN_AND_ZERO_ARR(x.first);
-  }
-}
 
 void SpellChecker::SetCheckComments(bool Value) { CheckComments = Value; }
 
@@ -672,10 +653,26 @@ void SpellChecker::CheckFileName() {
 LRESULT SpellChecker::GetStyle(int Pos) {
   return SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETSTYLEAT, Pos);
 }
+
+void SpellChecker::setRecheckDelay(int value) {
+  if (value < 0)
+    value = 0;
+
+  if (value > 20000)
+    value = 20000;
+  m_recheckDelay = value;
+}
+
+int SpellChecker::getRecheckDelay()
+{
+    return m_recheckDelay;
+}
+
 // Actually for all languages which operate mostly in strings it's better to
 // check only comments
 // TODO: Fix it
-int SpellChecker::CheckWordInCommentOrString(LRESULT Style) {
+int SpellChecker::CheckWordInCommentOrString(LRESULT Style) const
+{
   switch (Lexer) {
   case SCLEX_CONTAINER:
   case SCLEX_NULL:
@@ -1868,6 +1865,8 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
     SaveSettings();
     break;
   }
+  default: 
+      break;
   }
 }
 
@@ -2044,6 +2043,7 @@ void SpellChecker::SaveSettings() {
   SaveToIni(L"Remove_Dics_For_All_Users", RemoveSystem, 0);
   SaveToIni(L"Show_Only_Known", ShowOnlyKnown, true);
   SaveToIni(L"Install_Dictionaries_For_All_Users", InstallSystem, false);
+  SaveToIni(L"Recheck_Delay", m_recheckDelay, 500);
   wchar_t Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     if (!*ServerNames[i])
@@ -2095,11 +2095,6 @@ void SpellChecker::SaveSettings() {
   SaveToIni(L"Proxy_Port", ProxyPort, 808);
   SaveToIni(L"Proxy_Is_Anonymous", ProxyAnonymous, true);
   SaveToIni(L"Proxy_Type", ProxyType, 0);
-  std::map<wchar_t *, DWORD, bool (*)(wchar_t *, wchar_t *)>::iterator it =
-      SettingsToSave->begin();
-  for (; it != SettingsToSave->end(); ++it) {
-    SaveToIni((*it).first, LOWORD((*it).second), HIWORD((*it).second));
-  }
 }
 
 void SpellChecker::SetDecodeNames(bool Value) { DecodeNames = Value; }
@@ -2115,10 +2110,10 @@ void SpellChecker::SetLibMode(int i) {
   LibMode = i;
   if (i == 0) {
     AspellReinitSettings();
-    CurrentSpeller = AspellSpeller;
+    CurrentSpeller = AspellSpeller.get ();
   } else {
-    CurrentSpeller = HunspellSpeller;
-    HunspellReinitSettings(0);
+    CurrentSpeller = HunspellSpeller.get ();
+    HunspellReinitSettings(false);
   }
 }
 
@@ -2187,6 +2182,7 @@ void SpellChecker::LoadSettings() {
   CLEAN_AND_ZERO_ARR(BufUtf8);
   LoadFromIni(ShowOnlyKnown, L"Show_Only_Known", true);
   LoadFromIni(InstallSystem, L"Install_Dictionaries_For_All_Users", false);
+  LoadFromIni (m_recheckDelay, L"Recheck_Delay", 500);
   wchar_t Buf[DEFAULT_BUF_SIZE];
   for (int i = 0; i < static_cast<int> (countof(ServerNames)); i++) {
     swprintf(Buf, L"Server_Address[%d]", i);
@@ -2432,7 +2428,7 @@ void SpellChecker::SetAspellLanguage(const wchar_t *Str) {
   SetString(AspellLanguage, Str);
 
   if (wcscmp(Str, L"<MULTIPLE>") == 0) {
-    SetMultipleLanguages(AspellMultiLanguages, AspellSpeller);
+    SetMultipleLanguages(AspellMultiLanguages, AspellSpeller.get ());
     AspellSpeller->SetMode(1);
   } else {
     wchar_t *TBuf = nullptr;
@@ -2447,7 +2443,7 @@ void SpellChecker::SetHunspellLanguage(const wchar_t *Str) {
   SetString(HunspellLanguage, Str);
 
   if (wcscmp(Str, L"<MULTIPLE>") == 0) {
-    SetMultipleLanguages(HunspellMultiLanguages, HunspellSpeller);
+    SetMultipleLanguages(HunspellMultiLanguages, HunspellSpeller.get ());
     HunspellSpeller->SetMode(1);
   } else {
     HunspellSpeller->SetLanguage(HunspellLanguage);
@@ -2508,7 +2504,7 @@ bool SpellChecker::HunspellReinitSettings(bool ResetDirectory) {
   if (wcscmp(HunspellLanguage, L"<MULTIPLE>") != 0)
     HunspellSpeller->SetLanguage(HunspellLanguage);
   else
-    SetMultipleLanguages(HunspellMultiLanguages, HunspellSpeller);
+    SetMultipleLanguages(HunspellMultiLanguages, HunspellSpeller.get ());
 
   CLEAN_AND_ZERO_ARR(MultiLanguagesCopy);
   return true;
@@ -2520,7 +2516,7 @@ bool SpellChecker::AspellReinitSettings() {
   if (wcscmp(AspellLanguage, L"<MULTIPLE>") != 0) {
     AspellSpeller->SetLanguage(AspellLanguage);
   } else
-    SetMultipleLanguages(AspellMultiLanguages, AspellSpeller);
+    SetMultipleLanguages(AspellMultiLanguages, AspellSpeller.get ());
   return true;
 }
 

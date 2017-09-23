@@ -223,17 +223,6 @@ void commandMenuInit() {
     // make your plugin config file full file path name
     PathAppend(IniFilePath, configFileName);
 
-    wchar_t Buf[DEFAULT_BUF_SIZE];
-    wchar_t* EndPtr;
-    int x;
-    GetPrivateProfileString(L"SpellCheck", L"Recheck_Delay", L"500", Buf,
-                            DEFAULT_BUF_SIZE, IniFilePath);
-    x = wcstol(Buf, &EndPtr, 10);
-    if (*EndPtr)
-        SetRecheckDelay(500, 0);
-    else
-        SetRecheckDelay(x, 0);
-
     //--------------------------------------------//
     //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
     //--------------------------------------------//

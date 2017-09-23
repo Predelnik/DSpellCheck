@@ -872,6 +872,7 @@ void AdvancedDlg::ApplySettings(SpellChecker* SpellCheckerInstance)
             : false);
     SpellCheckerInstance->SetUnderlineColor(UnderlineColorBtn);
     SpellCheckerInstance->SetUnderlineStyle(ComboBox_GetCurSel(HUnderlineStyle));
+    SpellCheckerInstance->setRecheckDelay(GetRecheckDelay());
     SpellCheckerInstance->SetIgnore(
         Button_GetCheck(HIgnoreNumbers) == BST_CHECKED,
         Button_GetCheck(HIgnoreCStart) == BST_CHECKED,
@@ -910,7 +911,6 @@ void SettingsDlg::destroy()
 void SettingsDlg::ApplySettings()
 {
     getSpellChecker()->applySettings();
-    SetRecheckDelay(AdvancedDlgInstance.GetRecheckDelay());
 }
 
 INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
@@ -927,7 +927,6 @@ INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
             SimpleDlgInstance.display();
             AdvancedDlgInstance.init(_hInst, _hSelf);
             AdvancedDlgInstance.create(IDD_ADVANCED, false, false);
-            AdvancedDlgInstance.SetRecheckDelay(GetRecheckDelay());
 
             WindowVectorInstance.push_back(
                 DlgInfo(&SimpleDlgInstance, TEXT("Simple"), TEXT("Simple Options")));
