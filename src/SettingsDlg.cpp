@@ -56,7 +56,7 @@ void SimpleDlg::DisableLanguageCombo(bool Disable)
 }
 
 // Called from main thread, beware!
-bool SimpleDlg::AddAvailableLanguages(std::vector<LanguageName>* langsAvailable,
+bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvailable,
                                       const wchar_t* currentLanguage,
                                       std::wstring_view multiLanguages,
                                       HunspellInterface* hunspellSpeller)
@@ -69,19 +69,19 @@ bool SimpleDlg::AddAvailableLanguages(std::vector<LanguageName>* langsAvailable,
 
     {
         unsigned int i = 0;
-        for (i = 0; i < langsAvailable->size(); i++)
+        for (auto &lang : langsAvailable)
         {
-            if (wcscmp(currentLanguage, langsAvailable->at(i).OrigName) == 0)
+            if (wcscmp(currentLanguage, lang.OrigName) == 0)
                 SelectedIndex = i;
 
-            ComboBox_AddString(HComboLanguage, langsAvailable->at(i).AliasName.c_str ());
+            ComboBox_AddString(HComboLanguage, lang.AliasName.c_str ());
             ListBox_AddString(GetLangList()->GetListBox(),
-                langsAvailable->at(i).AliasName.c_str ());
+                lang.AliasName.c_str ());
             if (hunspellSpeller)
             {
                 wchar_t Buf[DEFAULT_BUF_SIZE];
-                wcscpy(Buf, langsAvailable->at(i).AliasName.c_str());
-                if (hunspellSpeller->GetLangOnlySystem(langsAvailable->at(i).OrigName))
+                wcscpy(Buf, lang.AliasName.c_str());
+                if (hunspellSpeller->GetLangOnlySystem(lang.OrigName))
                     wcscat(Buf, L" [!For All Users]");
 
                 ListBox_AddString(GetRemoveDics()->GetListBox(), Buf);
@@ -92,7 +92,7 @@ bool SimpleDlg::AddAvailableLanguages(std::vector<LanguageName>* langsAvailable,
             SelectedIndex = i;
     }
 
-    if (langsAvailable->size() != 0)
+    if (!langsAvailable.empty ())
         ComboBox_AddString(HComboLanguage, L"Multiple Languages...");
 
     ComboBox_SetCurSel(HComboLanguage, SelectedIndex);
@@ -104,18 +104,20 @@ bool SimpleDlg::AddAvailableLanguages(std::vector<LanguageName>* langsAvailable,
          it != ti {}; ++it)
     {
         int index = -1;
-        for (unsigned int i = 0; i < langsAvailable->size(); i++)
+        int i = 0;
+        for (auto &lang : langsAvailable)
         {
-            if (*it == langsAvailable->at(i).OrigName)
+            if (*it == lang.OrigName)
             {
                 index = i;
                 break;
             }
+            ++i;
         }
         if (index != -1)
             CheckedListBox_SetCheckState(GetLangList()->GetListBox(), index,
             BST_CHECKED);
-    }   
+    }
     return true;
 }
 
@@ -348,7 +350,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lParam*/,
                 SendMessage(hwnd, BFFM_SETSELECTION, true, lpData);
             }
         }
-    default: 
+    default:
         break;
     }
 
@@ -601,7 +603,7 @@ INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
                 return reinterpret_cast<INT_PTR>(DefaultBrush);
         }
         break;
-    default: 
+    default:
         break;
     }
     return false;
@@ -833,7 +835,7 @@ INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-    default: 
+    default:
         break;
     }
     return false;

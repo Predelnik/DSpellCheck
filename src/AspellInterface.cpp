@@ -141,13 +141,13 @@ std::vector<std::string> AspellInterface::GetSuggestions(const char* Word) {
     return SuggList;
 }
 
-void AspellInterface::AddToDictionary(char* Word) {
-    char* TargetWord = nullptr;
+void AspellInterface::AddToDictionary(const char* Word) {
+    std::string TargetWord;
 
     if (CurrentEncoding == ENCODING_UTF8)
         TargetWord = Word;
     else
-        SetStringDUtf8(TargetWord, Word);
+        TargetWord = to_utf8_string (Word);
 
     if (!LastSelectedSpeller)
         return;
@@ -161,62 +161,55 @@ void AspellInterface::AddToDictionary(char* Word) {
     }
     LastSelectedSpeller = nullptr;
 
-    if (CurrentEncoding == ENCODING_ANSI)
-        CLEAN_AND_ZERO_ARR (TargetWord);
 }
 
-void AspellInterface::IgnoreAll(char* Word) {
+void AspellInterface::IgnoreAll(const char* Word) {
     if (!LastSelectedSpeller)
         return;
 
-    char* TargetWord = nullptr;
+    std::string TargetWord;
 
     if (CurrentEncoding == ENCODING_UTF8)
         TargetWord = Word;
     else
-        SetStringDUtf8(TargetWord, Word);
+        TargetWord = to_utf8_string(Word);
 
-    aspell_speller_add_to_session(LastSelectedSpeller, TargetWord, static_cast<int>(strlen(TargetWord)) + 1);
+    aspell_speller_add_to_session(LastSelectedSpeller, TargetWord.c_str (), static_cast<int> (TargetWord.length ()) + 1);
     aspell_speller_save_all_word_lists(LastSelectedSpeller);
     if (aspell_speller_error(LastSelectedSpeller) != nullptr) {
         AspellErrorMsgBox(nullptr, aspell_speller_error_message(LastSelectedSpeller));
     }
     LastSelectedSpeller = nullptr;
-    if (CurrentEncoding == ENCODING_ANSI)
-        CLEAN_AND_ZERO_ARR (TargetWord);
 }
 
-bool AspellInterface::CheckWord(char* Word) {
+bool AspellInterface::CheckWord(const char* Word) {
     if (!AspellLoaded)
         return true;
 
-    char* DstWord = nullptr;
+    std::string DstWord = nullptr;
     bool res = false;
     if (CurrentEncoding == ENCODING_UTF8)
         DstWord = Word;
     else
-        SetStringDUtf8(DstWord, Word);
+        DstWord = to_utf8_string(Word);
 
-    auto Len = static_cast<int>(strlen(DstWord));
+    auto Len = static_cast<int> (DstWord.length());
     if (!MultiMode) {
         if (!singleSpeller)
             return true;
 
-        res = aspell_speller_check(singleSpeller.get(), DstWord, Len);
+        res = aspell_speller_check(singleSpeller.get(), DstWord.c_str (), Len);
     }
     else {
         if (spellers.empty())
             return true;
 
         for (auto& speller : spellers) {
-            res = res || aspell_speller_check(speller.get(), DstWord, Len);
+            res = res || aspell_speller_check(speller.get(), DstWord.c_str (), Len);
             if (res)
                 break;
         }
     }
-    if (CurrentEncoding != ENCODING_UTF8)
-        CLEAN_AND_ZERO_ARR (DstWord);
-
     return res;
 }
 

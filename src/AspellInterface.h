@@ -33,11 +33,11 @@ public:
   void SetMultipleLanguages(
       std::vector<wchar_t *> *List) override; // Languages are from LangList
   bool
-  CheckWord(char *Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
+  CheckWord(const char* Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
   bool IsWorking() override;
     std::vector<std::string> GetSuggestions(const char* Word) override;
-  void AddToDictionary(char *Word) override;
-  void IgnoreAll(char *Word) override;
+  void AddToDictionary(const char* Word) override;
+  void IgnoreAll(const char* Word) override;
 
   bool Init(wchar_t *PathArg);
 

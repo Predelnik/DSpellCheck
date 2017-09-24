@@ -29,10 +29,10 @@ public:
       std::vector<wchar_t *> *List) = 0;         // Languages are from LangList
   void SetMode(int Multi) { MultiMode = Multi; } // Multi - 1, Single - 0
   void SetEncoding(EncodingType Encoding) { CurrentEncoding = Encoding; }
-  virtual bool CheckWord(char *Word) = 0; // Word in Utf-8 or ANSI
+  virtual bool CheckWord(const char* Word) = 0; // Word in Utf-8 or ANSI
   virtual std::vector<std::string> GetSuggestions(const char* Word) = 0;
-  virtual void AddToDictionary(char *Word) = 0;
-  virtual void IgnoreAll(char *Word) = 0;
+  virtual void AddToDictionary(const char* Word) = 0;
+  virtual void IgnoreAll(const char* Word) = 0;
   virtual bool IsWorking() = 0;
 
 private:

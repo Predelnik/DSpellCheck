@@ -36,7 +36,7 @@ public:
   ~SimpleDlg();
   void initSettings(HINSTANCE hInst, HWND Parent, NppData nppData);
   void ApplySettings(SpellChecker *SpellCheckerInstance);
-  bool AddAvailableLanguages(std::vector<LanguageName> *langsAvailable,
+  bool AddAvailableLanguages(const std::vector<LanguageName>& langsAvailable,
                              const wchar_t *currentLanguage,
                              std::wstring_view multiLanguages,
                              HunspellInterface *hunspellSpeller);

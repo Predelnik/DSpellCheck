@@ -296,7 +296,7 @@ char* HunspellInterface::GetConvertedWord(const char* Source,
     return buf.data();
 }
 
-bool HunspellInterface::SpellerCheckWord(const DicInfo& Dic, char* Word,
+bool HunspellInterface::SpellerCheckWord(const DicInfo& Dic, const char* Word,
                                          EncodingType Encoding) {
     char* WordToCheck = GetConvertedWord(
         Word, Encoding == (ENCODING_UTF8) ? Dic.Converter.get() : Dic.ConverterANSI.get());
@@ -309,7 +309,7 @@ bool HunspellInterface::SpellerCheckWord(const DicInfo& Dic, char* Word,
     return Dic.hunspell->spell(WordToCheck);
 }
 
-bool HunspellInterface::CheckWord(char* Word) {
+bool HunspellInterface::CheckWord(const char* Word) {
     /*
     if (Memorized->find (Word) != Memorized->end ()) // This check is for
     dictionaries which are in other than utf-8 encoding
@@ -378,7 +378,7 @@ void HunspellInterface::MessageBoxWordCannotBeAdded() {
         L"Word cannot be added", MB_OK | MB_ICONWARNING);
 }
 
-void HunspellInterface::AddToDictionary(char* Word) {
+void HunspellInterface::AddToDictionary(const char* Word) {
     if (!LastSelectedSpeller)
         return;
 
@@ -455,7 +455,7 @@ void HunspellInterface::AddToDictionary(char* Word) {
     }
 }
 
-void HunspellInterface::IgnoreAll(char* Word) {
+void HunspellInterface::IgnoreAll(const char* Word) {
     if (!LastSelectedSpeller)
         return;
 

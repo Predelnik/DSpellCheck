@@ -80,11 +80,11 @@ public:
   void SetLanguage(const wchar_t* Lang) override;
   void SetMultipleLanguages(
       std::vector<wchar_t *> *List) override;             // Languages are from LangList
-  bool CheckWord(char *Word) override; // Word in Utf-8 or ANSI
+  bool CheckWord(const char* Word) override; // Word in Utf-8 or ANSI
   bool IsWorking() override;
   std::vector<std::string> GetSuggestions(const char* Word) override;
-  void AddToDictionary(char *Word) override;
-  void IgnoreAll(char *Word) override;
+  void AddToDictionary(const char* Word) override;
+  void IgnoreAll(const char* Word) override;
 
   void SetDirectory(wchar_t *Dir);
   void SetAdditionalDirectory(wchar_t *Dir);
@@ -96,7 +96,7 @@ public:
 
 private:
     DicInfo* CreateHunspell(const wchar_t* Name, int Type);
-  bool SpellerCheckWord(const DicInfo& Dic, char *Word, EncodingType Encoding);
+  bool SpellerCheckWord(const DicInfo& Dic, const char* Word, EncodingType Encoding);
   void MessageBoxWordCannotBeAdded();
 
 private:

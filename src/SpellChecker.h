@@ -173,7 +173,7 @@ private:
   void ClearVisibleUnderlines();
   void Cleanup();
   const char *GetDelimiters();
-  bool CheckWord(char *Word, long Start, long End);
+  bool CheckWord(std::string Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
   char *GetVisibleText(long *offset, bool NotIntersectionOnly = false);
   int CheckText(char *TextToCheck, long offset, CheckTextMode Mode);
@@ -189,7 +189,7 @@ private:
   int CheckWordInCommentOrString(LRESULT Style) const;
   LRESULT GetStyle(int Pos);
   void RefreshUnderlineStyle();
-  void ApplyConversions(char *Word);
+  void ApplyConversions(std::string& Word);
   void PrepareStringForConversion();
   void PreserveCurrentAddressIndex();
   void FillDownloadDics();
@@ -212,7 +212,7 @@ private:
   int CheckTextDefaultAnswer(CheckTextMode Mode);
 
 private:
-  std::vector<LanguageName> *CurrentLangs;
+  std::vector<LanguageName> CurrentLangs;
   bool SettingsLoaded;
   bool OneUserDic;
   bool AutoCheckText;
@@ -284,7 +284,7 @@ private:
   NppData *NppDataInstance;
   EncodingType CurrentEncoding;
   wchar_t *IniFilePath;
-  char *SelectedWord;
+  std::string SelectedWord;
   SettingsDlg *SettingsDlgInstance;
   SuggestionsButton *SuggestionsInstance;
   LangList *LangListInstance;
@@ -299,9 +299,9 @@ private:
   std::unique_ptr<HunspellInterface> HunspellSpeller;
 
   // 6 - is arbitrary maximum size, actually almost everywhere it's 1
-  char *YoANSI;
-  char *YeANSI;
-  char *yoANSI;
-  char *yeANSI;
-  char *PunctuationApostropheANSI;
+  std::string YoANSI;
+  std::string YeANSI;
+  std::string yoANSI;
+  std::string yeANSI;
+  std::string PunctuationApostropheANSI;
 };

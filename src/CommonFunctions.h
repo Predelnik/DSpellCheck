@@ -141,6 +141,8 @@ std::wstring wstring_printf (const wchar_t *format, ArgTypes &&... args) {
     return buf.data ();
 }
 
+void replaceAll(std::string& str, const std::string& from, const std::string& to);
+
 class move_only_flag {
     using self = move_only_flag;
 public:
