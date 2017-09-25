@@ -39,7 +39,7 @@ public:
   void AddToDictionary(const char* Word) override;
   void IgnoreAll(const char* Word) override;
 
-  bool Init(wchar_t *PathArg);
+  bool Init(const wchar_t* PathArg);
 
 private:
   void SendAspellError(AspellCanHaveError *Error);

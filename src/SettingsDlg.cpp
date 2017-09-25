@@ -86,6 +86,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
 
                 ListBox_AddString(GetRemoveDics()->GetListBox(), Buf);
             }
+            ++i;
         }
 
         if (wcscmp(currentLanguage, L"<MULTIPLE>") == 0)
@@ -220,9 +221,9 @@ void SimpleDlg::SetLibMode(int LibMode)
     ComboBox_SetCurSel(HLibrary, LibMode);
 }
 
-void SimpleDlg::FillLibInfo(int Status, wchar_t* AspellPath,
-                            wchar_t* HunspellPath,
-                            wchar_t* HunspellAdditionalPath)
+void SimpleDlg::FillLibInfo(int Status, const wchar_t* AspellPath,
+                            const wchar_t* HunspellPath,
+                            const wchar_t* HunspellAdditionalPath)
 {
     if (GetSelectedLib() == 0)
     {

@@ -213,7 +213,7 @@ bool AspellInterface::CheckWord(const char* Word) {
     return res;
 }
 
-bool AspellInterface::Init(wchar_t* PathArg) {
+bool AspellInterface::Init(const wchar_t* PathArg) {
     return (AspellLoaded = LoadAspell(PathArg));
 }
 

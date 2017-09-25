@@ -41,8 +41,8 @@ public:
                              std::wstring_view multiLanguages,
                              HunspellInterface *hunspellSpeller);
   void FillSugestionsNum(int SuggestionsNum);
-  void FillLibInfo(int Status, wchar_t *AspellPath, wchar_t *HunspellPath,
-                   wchar_t *HunspellAdditionalPath);
+  void FillLibInfo(int Status, const wchar_t* AspellPath, const wchar_t* HunspellPath,
+                   const wchar_t* HunspellAdditionalPath);
   void DisableLanguageCombo(bool Disable);
   void SetFileTypes(bool CheckThose, const wchar_t *FileTypes);
   void SetSuggType(int SuggType);

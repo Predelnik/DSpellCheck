@@ -117,8 +117,8 @@ public:
   void SetInstallSystem(bool Value);
   void FillDialogs(bool NoDisplayCall = false);
   void ReinitLanguageLists(bool UpdateDialogs);
-  wchar_t *GetHunspellPath() { return HunspellPath; };
-  wchar_t *GetHunspellAdditionalPath() { return AdditionalHunspellPath; };
+  const wchar_t *GetHunspellPath() const { return HunspellPath.c_str (); };
+  const wchar_t* GetHunspellAdditionalPath() const { return AdditionalHunspellPath.c_str (); };
   wchar_t *GetLangByIndex(int i);
   bool GetShowOnlyKnown();
   bool GetInstallSystem();
@@ -131,9 +131,9 @@ public:
   void SetRemoveSystem(bool Value);
   bool GetRemoveUserDics();
   bool GetRemoveSystem();
-  wchar_t *GetProxyUserName();
-  wchar_t *GetProxyHostName();
-  wchar_t *GetProxyPassword();
+  const wchar_t *GetProxyUserName() const;
+  const wchar_t *GetProxyHostName() const;
+  const wchar_t *GetProxyPassword() const;
   int GetProxyPort();
   bool GetUseProxy();
   bool GetProxyAnonymous();
@@ -175,7 +175,7 @@ private:
   const char *GetDelimiters();
   bool CheckWord(std::string Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
-  char *GetVisibleText(long *offset, bool NotIntersectionOnly = false);
+    std::vector<char> GetVisibleText(long* offset, bool NotIntersectionOnly = false);
   int CheckText(char *TextToCheck, long offset, CheckTextMode Mode);
   void CheckVisible(bool NotIntersectionOnly = false);
   void setEncodingById(int EncId);
@@ -203,12 +203,12 @@ private:
   void SaveToIniUtf8(const wchar_t *Name, const char *Value,
                      const char *DefaultValue, bool InQuotes = 0);
 
-  void LoadFromIni(wchar_t *&Value, const wchar_t *Name,
-                   const wchar_t *DefaultValue, bool InQuotes = 0);
+    std::wstring LoadFromIni(const wchar_t *Name,
+                             const wchar_t *defaultValue, bool InQuotes = false);
   void LoadFromIni(bool &Value, const wchar_t *Name, bool DefaultValue);
-  void LoadFromIni(int &Value, const wchar_t *Name, int DefaultValue);
-  void LoadFromIniUtf8(char *&Value, const wchar_t *Name,
-                       const char *DefaultValue, bool InQuotes = 0);
+  void LoadFromIni(int &Value, const wchar_t *Name, int defaultValue);
+    std::string LoadFromIniUtf8(const wchar_t *Name,
+                                const char *defaultValue, bool InQuotes = 0);
   int CheckTextDefaultAnswer(CheckTextMode Mode);
 
 private:
@@ -218,10 +218,10 @@ private:
   bool AutoCheckText;
   bool CheckTextEnabled;
   bool WUCisRight;
-  wchar_t *HunspellLanguage;
-  wchar_t *HunspellMultiLanguages;
-  wchar_t *AspellLanguage;
-  wchar_t *AspellMultiLanguages;
+  std::wstring HunspellLanguage;
+  std::wstring HunspellMultiLanguages;
+  std::wstring AspellLanguage;
+  std::wstring AspellMultiLanguages;
   int LibMode; // 0 - Aspell, 1 - Hunspell
   int MultiLangMode;
   int SuggestionsNum;
@@ -231,16 +231,16 @@ private:
   char *DelimUtf8Converted; // String where escape characters are properly
                             // converted to corresponding symbols
   char *DelimConverted;     // Same but in ANSI encoding
-  wchar_t *ServerNames[3];  // Only user ones, there'll also be bunch of
+  std::wstring ServerNames[3];  // Only user ones, there'll also be bunch of
                             // predetermined ones
-  wchar_t *DefaultServers[3];
+  std::wstring DefaultServers[3];
   int LastUsedAddress; // equals USER_SERVER_CONST + num if user address is
                        // used, otherwise equals number of default server
   int AddressIsSet;
-  wchar_t *FileTypes;
-  wchar_t *AspellPath;
-  wchar_t *HunspellPath;
-  wchar_t *AdditionalHunspellPath;
+  std::wstring FileTypes;
+  std::wstring AspellPath;
+  std::wstring HunspellPath;
+  std::wstring AdditionalHunspellPath;
   bool IgnoreYo;
   bool ConvertSingleQuotes;
   bool RemoveBoundaryApostrophes;
@@ -267,10 +267,10 @@ private:
   bool UseProxy;
   bool ProxyAnonymous;
   int ProxyType;
-  wchar_t *ProxyHostName;
-  wchar_t *ProxyUserName;
+  std::wstring ProxyHostName;
+  std::wstring ProxyUserName;
   int ProxyPort;
-  wchar_t *ProxyPassword;
+  std::wstring ProxyPassword;
   int m_recheckDelay;
 
   LRESULT Lexer;
@@ -288,8 +288,7 @@ private:
   SettingsDlg *SettingsDlgInstance;
   SuggestionsButton *SuggestionsInstance;
   LangList *LangListInstance;
-  char *VisibleText;
-  std::ptrdiff_t VisibleTextLength;
+  std::vector<char> VisibleText;
   long VisibleTextOffset;
   bool RemoveUserDics;
   bool RemoveSystem;

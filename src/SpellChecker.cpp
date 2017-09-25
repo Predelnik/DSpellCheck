@@ -102,12 +102,12 @@ void SpellChecker::addUserServer(std::wstring server) {
             goto add_user_server_cleanup; // Nothing is done in this case
     }
     // Then we're adding finally
-    CLEAN_AND_ZERO_ARR(ServerNames[countof(ServerNames) - 1]);
+    ServerNames[countof(ServerNames) - 1].clear ();
     for (int i = countof(ServerNames) - 1; i > 0; i--) {
         ServerNames[i] = ServerNames[i - 1];
     }
     ServerNames[0] = nullptr;
-    SetString(ServerNames[0], server.c_str());
+    ServerNames[0] = server;
 add_user_server_cleanup:
     ResetDownloadCombobox();
     SaveSettings();
@@ -122,13 +122,7 @@ SpellChecker::SpellChecker(const wchar_t* IniFilePathArg,
     DelimUtf8 = nullptr;
     DelimUtf8Converted = nullptr;
     IniFilePath = nullptr;
-    AspellLanguage = nullptr;
-    AspellMultiLanguages = nullptr;
-    HunspellLanguage = nullptr;
-    HunspellMultiLanguages = nullptr;
-    VisibleText = nullptr;
     DelimConverted = nullptr;
-    VisibleTextLength = -1;
     SetString(IniFilePath, IniFilePathArg);
     SettingsDlgInstance = SettingsDlgInstanceArg;
     SuggestionsInstance = SuggestionsInstanceArg;
@@ -136,9 +130,6 @@ SpellChecker::SpellChecker(const wchar_t* IniFilePathArg,
     LangListInstance = LangListInstanceArg;
     AutoCheckText = 0;
     MultiLangMode = 0;
-    AspellPath = nullptr;
-    HunspellPath = nullptr;
-    FileTypes = nullptr;
     CheckThose = 0;
     SBTrans = 0;
     SBSize = 0;
@@ -155,17 +146,11 @@ SpellChecker::SpellChecker(const wchar_t* IniFilePathArg,
     memset(ServerNames, 0, sizeof(ServerNames));
     memset(DefaultServers, 0, sizeof(DefaultServers));
     AddressIsSet = 0;
-    SetString(DefaultServers[0], L"ftp://ftp.snt.utwente.nl/pub/software/"
-              L"openoffice/contrib/dictionaries/");
-    SetString(DefaultServers[1], L"ftp://sunsite.informatik.rwth-aachen.de/pub/"
-              L"mirror/OpenOffice/contrib/dictionaries/");
-    SetString(DefaultServers[2],
-              L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/");
+    DefaultServers[0] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
+    DefaultServers[1] = L"ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/";
+    DefaultServers[2] = L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/";
     DecodeNames = false;
     ResetHotSpotCache();
-    ProxyUserName = nullptr;
-    ProxyHostName = nullptr;
-    ProxyPassword = nullptr;
     ProxyAnonymous = true;
     ProxyType = 0;
     ProxyPort = 0;
@@ -218,24 +203,7 @@ SpellChecker::~SpellChecker() {
     CLEAN_AND_ZERO_ARR(DelimConverted);
     CLEAN_AND_ZERO_ARR(DelimUtf8Converted);
     CLEAN_AND_ZERO_ARR(DelimUtf8);
-    CLEAN_AND_ZERO_ARR(AspellLanguage);
-    CLEAN_AND_ZERO_ARR(AspellMultiLanguages);
-    CLEAN_AND_ZERO_ARR(HunspellLanguage);
-    CLEAN_AND_ZERO_ARR(HunspellMultiLanguages);
     CLEAN_AND_ZERO_ARR(IniFilePath);
-    CLEAN_AND_ZERO_ARR(AspellPath);
-    CLEAN_AND_ZERO_ARR(HunspellPath);
-    CLEAN_AND_ZERO_ARR(VisibleText);
-    CLEAN_AND_ZERO_ARR(FileTypes);
-    CLEAN_AND_ZERO_ARR(AdditionalHunspellPath);
-
-    CLEAN_AND_ZERO_ARR(ProxyHostName);
-    CLEAN_AND_ZERO_ARR(ProxyUserName);
-    CLEAN_AND_ZERO_ARR(ProxyPassword);
-    for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++)
-        CLEAN_AND_ZERO_ARR(ServerNames[i]);
-    for (int i = 0; i < static_cast<int>(countof(DefaultServers)); i++)
-        CLEAN_AND_ZERO_ARR(DefaultServers[i]);
 }
 
 void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
@@ -299,7 +267,7 @@ wchar_t* SpellChecker::GetLangByIndex(int i) {
 void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
     int SpellerId = LibMode;
     bool CurrentLangExists = false;
-    wchar_t* CurrentLang;
+    const wchar_t* CurrentLang;
 
     auto SpellerToUse =
     (SpellerId == 1
@@ -312,9 +280,9 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
     }
 
     if (SpellerId == 1)
-        CurrentLang = HunspellLanguage;
+        CurrentLang = HunspellLanguage.c_str ();
     else
-        CurrentLang = AspellLanguage;
+        CurrentLang = AspellLanguage.c_str ();
 
     if (SpellerToUse->IsWorking()) {
         if (UpdateDialogs)
@@ -350,7 +318,7 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
         }
         if (UpdateDialogs)
             SettingsDlgInstance->GetSimpleDlg()->AddAvailableLanguages(
-                CurrentLangs, SpellerId == 1 ? HunspellLanguage : AspellLanguage,
+                CurrentLangs, SpellerId == 1 ? HunspellLanguage.c_str () : AspellLanguage.c_str (),
                 SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
                 SpellerId == 1 ? HunspellSpeller.get() : 0);
     }
@@ -369,9 +337,9 @@ void SpellChecker::FillDialogs(bool NoDisplayCall) {
         AspellSpeller->IsWorking()
             ? 2 - (CurrentLangs.empty() ? 0 : 1)
             : 0,
-        AspellPath, HunspellPath, AdditionalHunspellPath);
+        AspellPath.c_str (), HunspellPath.c_str (), AdditionalHunspellPath.c_str ());
     SettingsDlgInstance->GetSimpleDlg()->FillSugestionsNum(SuggestionsNum);
-    SettingsDlgInstance->GetSimpleDlg()->SetFileTypes(CheckThose, FileTypes);
+    SettingsDlgInstance->GetSimpleDlg()->SetFileTypes(CheckThose, FileTypes.c_str ());
     SettingsDlgInstance->GetSimpleDlg()->SetCheckComments(CheckComments);
     SettingsDlgInstance->GetSimpleDlg()->SetDecodeNames(DecodeNames);
     SettingsDlgInstance->GetSimpleDlg()->SetSuggType(SuggestionsMode);
@@ -439,8 +407,8 @@ void SpellChecker::fillDownloadDicsDialog() {
 }
 
 void SpellChecker::updateSelectProxy() {
-    GetSelectProxy()->SetOptions(UseProxy, ProxyHostName, ProxyUserName,
-                                 ProxyPassword, ProxyPort, ProxyAnonymous,
+    GetSelectProxy()->SetOptions(UseProxy, ProxyHostName.c_str (), ProxyUserName.c_str (),
+                                 ProxyPassword.c_str (), ProxyPort, ProxyAnonymous,
                                  ProxyType);
 }
 
@@ -470,7 +438,7 @@ void SpellChecker::libChange() {
         AspellSpeller->IsWorking()
             ? 2 - (CurrentLangs.empty() ? 1 : 0)
             : 0,
-        AspellPath, HunspellPath, AdditionalHunspellPath);
+        AspellPath.c_str (), HunspellPath.c_str (), AdditionalHunspellPath.c_str ());
     RecheckVisibleBothViews();
     SaveSettings();
 }
@@ -497,7 +465,7 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
     HMENU LangsSubMenu = GetLangsSubMenu(DSpellCheckMenu);
     if (LangsSubMenu)
         DestroyMenu(LangsSubMenu);
-    wchar_t* CurLang = (LibMode == 1) ? HunspellLanguage : AspellLanguage;
+    const wchar_t* CurLang = (LibMode == 1) ? HunspellLanguage.c_str () : AspellLanguage.c_str ();
     HMENU NewMenu = CreatePopupMenu();
     if (!Invalidate) {
         if (!CurrentLangs.empty()) {
@@ -574,11 +542,11 @@ void SpellChecker::ResetDownloadCombobox() {
     }
     ComboBox_ResetContent(TargetCombobox);
     for (int i = 0; i < static_cast<int>(countof(DefaultServers)); i++) {
-        ComboBox_AddString(TargetCombobox, DefaultServers[i]);
+        ComboBox_AddString(TargetCombobox, DefaultServers[i].c_str ());
     }
     for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
-        if (*ServerNames[i])
-            ComboBox_AddString(TargetCombobox, ServerNames[i]);
+        if (!ServerNames[i].empty ())
+            ComboBox_AddString(TargetCombobox, ServerNames[i].c_str ());
     }
     if (LastUsedAddress < USER_SERVER_CONST)
         ComboBox_SetCurSel(TargetCombobox, LastUsedAddress);
@@ -620,7 +588,7 @@ void SpellChecker::CheckFileName() {
     wchar_t* Token;
     wchar_t* FileTypesCopy = nullptr;
     wchar_t FullPath[MAX_PATH];
-    SetString(FileTypesCopy, FileTypes);
+    SetString(FileTypesCopy, FileTypes.c_str ());
     Token = wcstok_s(FileTypesCopy, L";", &Context);
     CheckTextEnabled = !CheckThose;
     SendMsgToNpp(NppDataInstance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)FullPath);
@@ -1956,15 +1924,15 @@ void SpellChecker::SetCheckThose(int CheckThoseArg) {
 }
 
 void SpellChecker::SetFileTypes(const wchar_t* FileTypesArg) {
-    SetString(FileTypes, FileTypesArg);
+    FileTypes = FileTypesArg;
 }
 
 void SpellChecker::SetHunspellMultipleLanguages(const char* MultiLanguagesArg) {
-    SetString(HunspellMultiLanguages, MultiLanguagesArg);
+    HunspellMultiLanguages = to_wstring (MultiLanguagesArg);
 }
 
 void SpellChecker::SetAspellMultipleLanguages(const char* MultiLanguagesArg) {
-    SetString(AspellMultiLanguages, MultiLanguagesArg);
+    AspellMultiLanguages = to_wstring (MultiLanguagesArg);
 }
 
 void SpellChecker::RefreshUnderlineStyle() {
@@ -1979,15 +1947,15 @@ void SpellChecker::SetUnderlineColor(int Value) { UnderlineColor = Value; }
 void SpellChecker::SetUnderlineStyle(int Value) { UnderlineStyle = Value; }
 
 void SpellChecker::SetProxyUserName(const wchar_t* Str) {
-    SetString(ProxyUserName, Str);
+    ProxyUserName = Str;
 }
 
 void SpellChecker::SetProxyHostName(const wchar_t* Str) {
-    SetString(ProxyHostName, Str);
+    ProxyHostName = Str;
 }
 
 void SpellChecker::SetProxyPassword(const wchar_t* Str) {
-    SetString(ProxyPassword, Str);
+    ProxyPassword = Str;
 }
 
 void SpellChecker::SetProxyPort(int Value) { ProxyPort = Value; }
@@ -1998,11 +1966,11 @@ void SpellChecker::SetProxyAnonymous(bool Value) { ProxyAnonymous = Value; }
 
 void SpellChecker::SetProxyType(int Value) { ProxyType = Value; }
 
-wchar_t* SpellChecker::GetProxyUserName() { return ProxyUserName; }
+const wchar_t* SpellChecker::GetProxyUserName() const { return ProxyUserName.c_str (); }
 
-wchar_t* SpellChecker::GetProxyHostName() { return ProxyHostName; }
+const wchar_t* SpellChecker::GetProxyHostName() const { return ProxyHostName.c_str (); }
 
-wchar_t* SpellChecker::GetProxyPassword() { return ProxyPassword; }
+const wchar_t* SpellChecker::GetProxyPassword() const { return ProxyPassword.c_str (); }
 
 int SpellChecker::GetProxyPort() { return ProxyPort; }
 
@@ -2037,10 +2005,10 @@ void SpellChecker::SaveSettings() {
     if (!SettingsLoaded)
         return;
     SaveToIni(L"Autocheck", AutoCheckText, 1);
-    SaveToIni(L"Hunspell_Multiple_Languages", HunspellMultiLanguages, L"");
-    SaveToIni(L"Aspell_Multiple_Languages", AspellMultiLanguages, L"");
-    SaveToIni(L"Hunspell_Language", HunspellLanguage, L"en_GB");
-    SaveToIni(L"Aspell_Language", AspellLanguage, L"en");
+    SaveToIni(L"Hunspell_Multiple_Languages", HunspellMultiLanguages.c_str (), L"");
+    SaveToIni(L"Aspell_Multiple_Languages", AspellMultiLanguages.c_str (), L"");
+    SaveToIni(L"Hunspell_Language", HunspellLanguage.c_str (), L"en_GB");
+    SaveToIni(L"Aspell_Language", AspellLanguage.c_str (), L"en");
     SaveToIni(L"Remove_User_Dics_On_Dic_Remove", RemoveUserDics, 0);
     SaveToIni(L"Remove_Dics_For_All_Users", RemoveSystem, 0);
     SaveToIni(L"Show_Only_Known", ShowOnlyKnown, true);
@@ -2048,10 +2016,10 @@ void SpellChecker::SaveSettings() {
     SaveToIni(L"Recheck_Delay", m_recheckDelay, 500);
     wchar_t Buf[DEFAULT_BUF_SIZE];
     for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
-        if (!*ServerNames[i])
+        if (ServerNames[i].empty ())
             continue;
         swprintf(Buf, L"Server_Address[%d]", i);
-        SaveToIni(Buf, ServerNames[i], L"");
+        SaveToIni(Buf, ServerNames[i].c_str (), L"");
     }
     SaveToIni(L"Suggestions_Control", SuggestionsMode, 1);
     SaveToIni(L"Ignore_Yo", IgnoreYo, 0);
@@ -2060,7 +2028,7 @@ void SpellChecker::SaveSettings() {
               RemoveBoundaryApostrophes, 1);
     SaveToIni(L"Check_Only_Comments_And_Strings", CheckComments, 1);
     SaveToIni(L"Check_Those_\\_Not_Those", CheckThose, 1);
-    SaveToIni(L"File_Types", FileTypes, L"*.*");
+    SaveToIni(L"File_Types", FileTypes.c_str (), L"*.*");
     SaveToIni(L"Ignore_Having_Number", IgnoreNumbers, 1);
     SaveToIni(L"Ignore_Start_Capital", IgnoreCStart, 0);
     SaveToIni(L"Ignore_Have_Capital", IgnoreCHave, 1);
@@ -2071,10 +2039,10 @@ void SpellChecker::SaveSettings() {
     SaveToIni(L"Underline_Color", UnderlineColor, 0x0000ff);
     SaveToIni(L"Underline_Style", UnderlineStyle, INDIC_SQUIGGLE);
     auto path = GetDefaultAspellPath();
-    SaveToIni(L"Aspell_Path", AspellPath, path.c_str());
+    SaveToIni(L"Aspell_Path", AspellPath.c_str (), path.c_str());
     path = GetDefaultHunspellPath();
-    SaveToIni(L"User_Hunspell_Path", HunspellPath, path.c_str());
-    SaveToIni(L"System_Hunspell_Path", AdditionalHunspellPath,
+    SaveToIni(L"User_Hunspell_Path", HunspellPath.c_str (), path.c_str());
+    SaveToIni(L"System_Hunspell_Path", AdditionalHunspellPath.c_str (),
               L".\\plugins\\config\\Hunspell");
     SaveToIni(L"Suggestions_Number", SuggestionsNum, 5);
     char* DefaultDelimUtf8 = nullptr;
@@ -2091,9 +2059,9 @@ void SpellChecker::SaveSettings() {
     SaveToIni(L"United_User_Dictionary(Hunspell)", OneUserDic, false);
 
     SaveToIni(L"Use_Proxy", UseProxy, false);
-    SaveToIni(L"Proxy_User_Name", ProxyUserName, L"anonymous");
-    SaveToIni(L"Proxy_Host_Name", ProxyHostName, L"");
-    SaveToIni(L"Proxy_Password", ProxyPassword, L"");
+    SaveToIni(L"Proxy_User_Name", ProxyUserName.c_str (), L"anonymous");
+    SaveToIni(L"Proxy_Host_Name", ProxyHostName.c_str (), L"");
+    SaveToIni(L"Proxy_Password", ProxyPassword.c_str (), L"");
     SaveToIni(L"Proxy_Port", ProxyPort, 808);
     SaveToIni(L"Proxy_Is_Anonymous", ProxyAnonymous, true);
     SaveToIni(L"Proxy_Type", ProxyType, 0);
@@ -2121,40 +2089,32 @@ void SpellChecker::SetLibMode(int i) {
 }
 
 void SpellChecker::LoadSettings() {
-    char* BufUtf8 = nullptr;
-    wchar_t* TBuf = nullptr;
+    char* BufUtf8 = nullptr;    
     SettingsLoaded = true;
     auto Path = GetDefaultAspellPath();
-    LoadFromIni(AspellPath, L"Aspell_Path", Path.c_str());
+    AspellPath = LoadFromIni(L"Aspell_Path", Path.c_str());
     Path = GetDefaultHunspellPath();
-    LoadFromIni(HunspellPath, L"User_Hunspell_Path", Path.c_str());
+    HunspellPath = LoadFromIni (L"User_Hunspell_Path", Path.c_str());
 
-    AdditionalHunspellPath = nullptr;
-    LoadFromIni(AdditionalHunspellPath, L"System_Hunspell_Path",
+    AdditionalHunspellPath = LoadFromIni (L"System_Hunspell_Path",
                 L".\\plugins\\config\\Hunspell");
 
     LoadFromIni(SuggestionsMode, L"Suggestions_Control", 1);
-    LoadFromIni(AutoCheckText, L"Autocheck", 1);
+    LoadFromIni(AutoCheckText, L"Autocheck", true);
     UpdateAutocheckStatus(0);
-    LoadFromIni(AspellMultiLanguages, L"Aspell_Multiple_Languages", L"");
-    LoadFromIni(HunspellMultiLanguages, L"Hunspell_Multiple_Languages", L"");
-    LoadFromIni(TBuf, L"Aspell_Language", L"en");
-    SetAspellLanguage(TBuf);
-    CLEAN_AND_ZERO_ARR(TBuf);
-    LoadFromIni(TBuf, L"Hunspell_Language", L"en_GB");
-    SetHunspellLanguage(TBuf);
-    CLEAN_AND_ZERO_ARR(TBuf);
+    AspellMultiLanguages = LoadFromIni (L"Aspell_Multiple_Languages", L"");
+    HunspellMultiLanguages = LoadFromIni (L"Hunspell_Multiple_Languages", L"");
+    SetAspellLanguage(LoadFromIni(L"Aspell_Language", L"en").c_str ());
+    SetHunspellLanguage(LoadFromIni(L"Hunspell_Language", L"en_GB").c_str ());
 
-    SetStringDUtf8(BufUtf8, DEFAULT_DELIMITERS);
-    LoadFromIniUtf8(BufUtf8, L"Delimiters", BufUtf8);
-    SetDelimiters(BufUtf8);
+    SetDelimiters(LoadFromIniUtf8(L"Delimiters", to_utf8_string(DEFAULT_DELIMITERS).c_str ()).c_str ());
     LoadFromIni(SuggestionsNum, L"Suggestions_Number", 5);
     LoadFromIni(IgnoreYo, L"Ignore_Yo", 0);
     LoadFromIni(ConvertSingleQuotes, L"Convert_Single_Quotes_To_Apostrophe", 1);
     LoadFromIni(RemoveBoundaryApostrophes,
                 L"Remove_Ending_And_Beginning_Apostrophe", 1);
     LoadFromIni(CheckThose, L"Check_Those_\\_Not_Those", 1);
-    LoadFromIni(FileTypes, L"File_Types", L"*.*");
+    FileTypes = LoadFromIni(L"File_Types", L"*.*");
     LoadFromIni(CheckComments, L"Check_Only_Comments_And_Strings", 1);
     LoadFromIni(UnderlineColor, L"Underline_Color", 0x0000ff);
     LoadFromIni(UnderlineStyle, L"Underline_Style", INDIC_SQUIGGLE);
@@ -2169,9 +2129,9 @@ void SpellChecker::LoadSettings() {
     SetOneUserDic(Value);
     LoadFromIni(IgnoreSEApostrophe, L"Ignore_That_Start_or_End_with_'", 0);
 
-    HunspellSpeller->SetDirectory(HunspellPath);
-    HunspellSpeller->SetAdditionalDirectory(AdditionalHunspellPath);
-    AspellSpeller->Init(AspellPath);
+    HunspellSpeller->SetDirectory(HunspellPath.c_str ());
+    HunspellSpeller->SetAdditionalDirectory(AdditionalHunspellPath.c_str ());
+    AspellSpeller->Init(AspellPath.c_str ());
     int x;
     LoadFromIni(x, L"Library", 1);
     SetLibMode(x);
@@ -2189,7 +2149,7 @@ void SpellChecker::LoadSettings() {
     wchar_t Buf[DEFAULT_BUF_SIZE];
     for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
         swprintf(Buf, L"Server_Address[%d]", i);
-        LoadFromIni(ServerNames[i], Buf, L"");
+        ServerNames[i] = LoadFromIni(Buf, L"");
     }
     LoadFromIni(LastUsedAddress, L"Last_Used_Address_Index", 0);
     LoadFromIni(RemoveUserDics, L"Remove_User_Dics_On_Dic_Remove", 0);
@@ -2197,9 +2157,9 @@ void SpellChecker::LoadSettings() {
     LoadFromIni(DecodeNames, L"Decode_Language_Names", true);
 
     LoadFromIni(UseProxy, L"Use_Proxy", false);
-    LoadFromIni(ProxyUserName, L"Proxy_User_Name", L"anonymous");
-    LoadFromIni(ProxyHostName, L"Proxy_Host_Name", L"");
-    LoadFromIni(ProxyPassword, L"Proxy_Password", L"");
+    LoadFromIni(ProxyUserName.c_str (), L"Proxy_User_Name", L"anonymous");
+    LoadFromIni(ProxyHostName.c_str (), L"Proxy_Host_Name", L"");
+    LoadFromIni(ProxyPassword.c_str (), L"Proxy_Password", L"");
     LoadFromIni(ProxyPort, L"Proxy_Port", 808);
     LoadFromIni(ProxyAnonymous, L"Proxy_Is_Anonymous", true);
     LoadFromIni(ProxyType, L"Proxy_Type", 0);
@@ -2250,12 +2210,12 @@ void SpellChecker::GetVisibleLimits(long& Start, long& Finish) {
     return;
 }
 
-char* SpellChecker::GetVisibleText(long* offset, bool NotIntersectionOnly) {
+std::vector<char> SpellChecker::GetVisibleText(long* offset, bool NotIntersectionOnly) {
     Sci_TextRange range;
     GetVisibleLimits(range.chrg.cpMin, range.chrg.cpMax);
 
     if (range.chrg.cpMax < 0 || range.chrg.cpMin > range.chrg.cpMax)
-        return nullptr;
+        return {};
 
     PreviousA = range.chrg.cpMin;
     PreviousB = range.chrg.cpMax;
@@ -2267,13 +2227,12 @@ char* SpellChecker::GetVisibleText(long* offset, bool NotIntersectionOnly) {
             range.chrg.cpMin = PreviousB + 1;
     }
 
-    char* Buf = new char[range.chrg.cpMax - range.chrg.cpMin +
-        1]; // + one byte for terminating zero
-    range.lpstrText = Buf;
-    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTRANGE, NULL, (LPARAM)&range);
+    std::vector<char> buf (range.chrg.cpMax - range.chrg.cpMin + 1);
+    range.lpstrText = buf.data ();
+    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTRANGE, NULL, reinterpret_cast<LPARAM>(&range));
     *offset = range.chrg.cpMin;
-    Buf[range.chrg.cpMax - range.chrg.cpMin] = 0;
-    return Buf;
+    buf[range.chrg.cpMax - range.chrg.cpMin] = 0;
+    return buf;
 }
 
 void SpellChecker::ClearAllUnderlines() {
@@ -2289,30 +2248,25 @@ void SpellChecker::ClearAllUnderlines() {
 }
 
 void SpellChecker::Cleanup() {
-    CLEAN_AND_ZERO_ARR(AspellLanguage);
-    CLEAN_AND_ZERO_ARR(HunspellLanguage);
-    CLEAN_AND_ZERO_ARR(AspellMultiLanguages);
-    CLEAN_AND_ZERO_ARR(HunspellMultiLanguages);
     CLEAN_AND_ZERO_ARR(DelimUtf8);
     CLEAN_AND_ZERO_ARR(DelimUtf8Converted);
-    CLEAN_AND_ZERO_ARR(DelimConverted);
-    CLEAN_AND_ZERO_ARR(AspellPath);
+    CLEAN_AND_ZERO_ARR(DelimConverted);    
 }
 
 void SpellChecker::SetAspellPath(const wchar_t* Path) {
-    SetString(AspellPath, Path);
+    AspellPath = Path;
     AspellReinitSettings();
 }
 
 void SpellChecker::SetHunspellPath(const wchar_t* Path) {
-    SetString(HunspellPath, Path);
+    HunspellPath = Path;
     HunspellReinitSettings(1);
 }
 
 void SpellChecker::SetHunspellAdditionalPath(const wchar_t* Path) {
     if (!*Path)
         return;
-    SetString(AdditionalHunspellPath, Path);
+    AdditionalHunspellPath = Path;
     HunspellReinitSettings(1);
 }
 
@@ -2325,11 +2279,7 @@ void SpellChecker::SaveToIni(const wchar_t* Name, const wchar_t* Value,
         return;
 
     if (InQuotes) {
-        auto Len = 1 + wcslen(Value) + 1 + 1;
-        wchar_t* Buf = new wchar_t[Len];
-        swprintf(Buf, L"\"%s\"", Value);
-        WritePrivateProfileString(L"SpellCheck", Name, Buf, IniFilePath);
-        CLEAN_AND_ZERO_ARR(Buf);
+        WritePrivateProfileString(L"SpellCheck", Name, wstring_printf (LR"("%s")", Value).c_str (), IniFilePath);
     }
     else {
         WritePrivateProfileString(L"SpellCheck", Name, Value, IniFilePath);
@@ -2362,78 +2312,54 @@ void SpellChecker::SaveToIniUtf8(const wchar_t* Name, const char* Value,
     CLEAN_AND_ZERO_ARR(Buf);
 }
 
-void SpellChecker::LoadFromIni(wchar_t*& Value, const wchar_t* Name,
-                               const wchar_t* DefaultValue, bool InQuotes) {
-    if (!Name || !DefaultValue)
-        return;
+std::wstring SpellChecker::LoadFromIni(const wchar_t* Name,
+                                       const wchar_t* defaultValue, bool InQuotes) {
+    assert (Name && defaultValue);
 
-    CLEAN_AND_ZERO_ARR(Value);
-    Value = new wchar_t[DEFAULT_BUF_SIZE];
-
-    GetPrivateProfileString(L"SpellCheck", Name, DefaultValue, Value,
-                            DEFAULT_BUF_SIZE, IniFilePath);
+    auto value = readIniValue (L"Spellcheck", Name, defaultValue, IniFilePath);
 
     if (InQuotes) {
-        auto Len = wcslen(Value);
         // Proof check for quotes
-        if (Value[0] != '\"' || Value[Len] != '\"') {
-            wcscpy_s(Value, DEFAULT_BUF_SIZE, DefaultValue);
-            return;
+        if (value.front () != '\"' || value.back () != '\"' || value.length () < 2) {
+            return defaultValue;
         }
 
-        for (size_t i = 0; i < Len; i++)
-            Value[i] = Value[i + 1];
-
-        Value[Len - 1] = 0;
+        return value.substr (1, value.length () - 2);
     }
+    return value;
 }
 
 void SpellChecker::LoadFromIni(int& Value, const wchar_t* Name,
-                               int DefaultValue) {
+                               int defaultValue) {
     if (!Name)
         return;
 
-    wchar_t BufDefault[DEFAULT_BUF_SIZE];
-    wchar_t* Buf = nullptr;
-    _itow_s(DefaultValue, BufDefault, 10);
-    LoadFromIni(Buf, Name, BufDefault);
-    Value = _wtoi(Buf);
-    CLEAN_AND_ZERO_ARR(Buf);
+    auto buf = LoadFromIni(Name, std::to_wstring (defaultValue).c_str ());
+    Value = _wtoi(buf.c_str ());
 }
 
 void SpellChecker::LoadFromIni(bool& Value, const wchar_t* Name,
                                bool DefaultValue) {
-    if (!Name)
+   if (!Name)
         return;
 
-    wchar_t BufDefault[DEFAULT_BUF_SIZE];
-    wchar_t* Buf = nullptr;
-    _itow_s(DefaultValue ? 1 : 0, BufDefault, 10);
-    LoadFromIni(Buf, Name, BufDefault);
-    Value = _wtoi(Buf) != 0;
-    CLEAN_AND_ZERO_ARR(Buf);
+    auto buf = LoadFromIni(Name, std::to_wstring (DefaultValue).c_str ());
+    Value = _wtoi(buf.c_str ()) != 0;
 }
 
-void SpellChecker::LoadFromIniUtf8(char*& Value, const wchar_t* Name,
-                                   const char* DefaultValue, bool InQuotes) {
-    if (!Name || !DefaultValue)
-        return;
-
-    wchar_t* BufDefault = nullptr;
-    wchar_t* Buf = nullptr;
-    SetStringSUtf8(BufDefault, DefaultValue);
-    LoadFromIni(Buf, Name, BufDefault, InQuotes);
-    SetStringDUtf8(Value, Buf);
-    CLEAN_AND_ZERO_ARR(Buf);
-    CLEAN_AND_ZERO_ARR(BufDefault);
+std::string SpellChecker::LoadFromIniUtf8(const wchar_t* Name,
+                                          const char* defaultValue, bool InQuotes) {
+    if (!Name || !defaultValue)
+        return defaultValue;
+    return to_utf8_string(LoadFromIni(Name, utf8_to_wstring (defaultValue).c_str (), InQuotes).c_str ());
 }
 
 // Here parameter is in ANSI (may as well be utf-8 cause only English I guess)
 void SpellChecker::SetAspellLanguage(const wchar_t* Str) {
-    SetString(AspellLanguage, Str);
+    AspellLanguage = Str;
 
     if (wcscmp(Str, L"<MULTIPLE>") == 0) {
-        SetMultipleLanguages(AspellMultiLanguages, AspellSpeller.get());
+        SetMultipleLanguages(AspellMultiLanguages.c_str (), AspellSpeller.get());
         AspellSpeller->SetMode(1);
     }
     else {
@@ -2446,14 +2372,14 @@ void SpellChecker::SetAspellLanguage(const wchar_t* Str) {
 }
 
 void SpellChecker::SetHunspellLanguage(const wchar_t* Str) {
-    SetString(HunspellLanguage, Str);
+    HunspellLanguage = Str;
 
     if (wcscmp(Str, L"<MULTIPLE>") == 0) {
-        SetMultipleLanguages(HunspellMultiLanguages, HunspellSpeller.get());
+        SetMultipleLanguages(HunspellMultiLanguages.c_str (), HunspellSpeller.get());
         HunspellSpeller->SetMode(1);
     }
     else {
-        HunspellSpeller->SetLanguage(HunspellLanguage);
+        HunspellSpeller->SetLanguage(HunspellLanguage.c_str ());
         HunspellSpeller->SetMode(0);
     }
 }
@@ -2504,27 +2430,27 @@ void SpellChecker::SetMultipleLanguages(const wchar_t* MultiString,
 
 bool SpellChecker::HunspellReinitSettings(bool ResetDirectory) {
     if (ResetDirectory) {
-        HunspellSpeller->SetDirectory(HunspellPath);
-        HunspellSpeller->SetAdditionalDirectory(AdditionalHunspellPath);
+        HunspellSpeller->SetDirectory(HunspellPath.c_str ());
+        HunspellSpeller->SetAdditionalDirectory(AdditionalHunspellPath.c_str ());
     }
     char* MultiLanguagesCopy = nullptr;
-    if (wcscmp(HunspellLanguage, L"<MULTIPLE>") != 0)
-        HunspellSpeller->SetLanguage(HunspellLanguage);
+    if (wcscmp(HunspellLanguage.c_str (), L"<MULTIPLE>") != 0)
+        HunspellSpeller->SetLanguage(HunspellLanguage.c_str ());
     else
-        SetMultipleLanguages(HunspellMultiLanguages, HunspellSpeller.get());
+        SetMultipleLanguages(HunspellMultiLanguages.c_str (), HunspellSpeller.get());
 
     CLEAN_AND_ZERO_ARR(MultiLanguagesCopy);
     return true;
 }
 
 bool SpellChecker::AspellReinitSettings() {
-    AspellSpeller->Init(AspellPath);
+    AspellSpeller->Init(AspellPath.c_str ());
 
-    if (wcscmp(AspellLanguage, L"<MULTIPLE>") != 0) {
-        AspellSpeller->SetLanguage(AspellLanguage);
+    if (AspellLanguage == L"<MULTIPLE>") {
+        AspellSpeller->SetLanguage(AspellLanguage.c_str ());
     }
     else
-        SetMultipleLanguages(AspellMultiLanguages, AspellSpeller.get());
+        SetMultipleLanguages(AspellMultiLanguages.c_str (), AspellSpeller.get());
     return true;
 }
 
@@ -2821,12 +2747,8 @@ void SpellChecker::ClearVisibleUnderlines() {
 }
 
 void SpellChecker::CheckVisible(bool NotIntersectionOnly) {
-    CLEAN_AND_ZERO_ARR(VisibleText);
     VisibleText = GetVisibleText(&VisibleTextOffset, NotIntersectionOnly);
-    if (!VisibleText)
-        return;
-    VisibleTextLength = strlen(VisibleText);
-    CheckText(VisibleText, VisibleTextOffset, UNDERLINE_ERRORS);
+    CheckText(VisibleText.data (), VisibleTextOffset, UNDERLINE_ERRORS);
 }
 
 void SpellChecker::setEncodingById(int EncId) {

@@ -211,7 +211,7 @@ std::wstring GetActualAspellPath(const std::wstring& supposedPath) {
   }
 }
 
-BOOL LoadAspell(wchar_t *PathArg) {
+BOOL LoadAspell(const wchar_t* PathArg) {
   wchar_t *Path = nullptr;
   GetActualAspellPath(PathArg);
   /*

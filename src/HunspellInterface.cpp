@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <io.h>
 #include <fcntl.h>
 
-static std::vector<std::wstring> ListFiles(wchar_t* path, const wchar_t* mask,
+static std::vector<std::wstring> ListFiles(const wchar_t* path, const wchar_t* mask,
                                            const wchar_t* Filter) {
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATA ffd;
@@ -534,7 +534,7 @@ std::vector<std::string> HunspellInterface::GetSuggestions(const char* Word) {
     return SuggList;
 }
 
-void HunspellInterface::SetDirectory(wchar_t* Dir) {
+void HunspellInterface::SetDirectory(const wchar_t* Dir) {
     UserDicPath = Dir;
     if (UserDicPath.back() != L'\\')
         UserDicPath += L"\\";
@@ -565,7 +565,7 @@ void HunspellInterface::SetDirectory(wchar_t* Dir) {
     }
 }
 
-void HunspellInterface::SetAdditionalDirectory(wchar_t* Dir) {
+void HunspellInterface::SetAdditionalDirectory(const wchar_t* Dir) {
     SysDicDir = Dir;
     IsHunspellWorking = true;
 

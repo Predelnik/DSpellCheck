@@ -46,11 +46,16 @@ HWND LangList::GetListBox() { return HLangList; }
 void LangList::ApplyChoice(SpellChecker *SpellCheckerInstance) {
   int count = ListBox_GetCount(HLangList);
   std::wstring buf;
+  bool first = true;
   for (int i = 0; i < count; i++) {
     if (CheckedListBox_GetCheckState(HLangList, i)) {
-      if (i > 0)
+      if (!first)
+      {
         buf += L"|";
-
+      }
+      else
+          first = false;
+        
       buf += SpellCheckerInstance->GetLangByIndex(i);
     }
   }

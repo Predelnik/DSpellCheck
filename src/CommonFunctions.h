@@ -142,6 +142,8 @@ std::wstring wstring_printf (const wchar_t *format, ArgTypes &&... args) {
 }
 
 void replaceAll(std::string& str, const std::string& from, const std::string& to);
+std::wstring readIniValue(const wchar_t* appName, const wchar_t* keyName, const wchar_t* defaultValue,
+                          const wchar_t* fileName);
 
 class move_only_flag {
     using self = move_only_flag;

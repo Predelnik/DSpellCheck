@@ -73,9 +73,9 @@ void SelectProxyDialog::DisableControls() {
   }
 }
 
-void SelectProxyDialog::SetOptions(bool UseProxy, wchar_t *HostName,
-                             wchar_t *UserName, wchar_t *Password, int Port,
-                             bool ProxyAnonymous, int ProxyType) {
+void SelectProxyDialog::SetOptions(bool UseProxy, const wchar_t* HostName,
+                                   const wchar_t* UserName, const wchar_t* Password, int Port,
+                                   bool ProxyAnonymous, int ProxyType) {
   Button_SetCheck(HUseProxy, UseProxy ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(HProxyAnonymous,
                   ProxyAnonymous ? BST_CHECKED : BST_UNCHECKED);

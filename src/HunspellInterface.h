@@ -86,8 +86,8 @@ public:
   void AddToDictionary(const char* Word) override;
   void IgnoreAll(const char* Word) override;
 
-  void SetDirectory(wchar_t *Dir);
-  void SetAdditionalDirectory(wchar_t *Dir);
+  void SetDirectory(const wchar_t* Dir);
+  void SetAdditionalDirectory(const wchar_t* Dir);
   void ReadUserDic(WordSet *Target, const wchar_t* Path);
   void SetUseOneDic(bool Value);
   void UpdateOnDicRemoval(wchar_t *Path, bool &NeedSingleLangReset,

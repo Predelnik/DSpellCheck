@@ -9,7 +9,7 @@
 #ifndef ASPELL_ASPELL__H
 #define ASPELL_ASPELL__H
 
-BOOL LoadAspell(wchar_t *PathArg);
+BOOL LoadAspell(const wchar_t* PathArg);
 std::wstring GetActualAspellPath(const std::wstring& supposedPath);
 std::wstring GetDefaultAspellPath ();
 void UnloadAspell(void);

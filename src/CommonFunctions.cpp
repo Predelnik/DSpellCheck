@@ -651,3 +651,17 @@ void replaceAll(std::string& str, const std::string& from, const std::string& to
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }
 }
+
+std::wstring readIniValue(const wchar_t* appName, const wchar_t* keyName, const wchar_t* defaultValue,
+                          const wchar_t* fileName)
+{
+    constexpr int initialBufferSize = 64; 
+    std::vector<wchar_t> buffer (initialBufferSize);
+    while (true)
+    {
+        auto sizeWritten = GetPrivateProfileString(appName, keyName, defaultValue, buffer.data (), static_cast<DWORD> (buffer.size ()), fileName);
+        if (sizeWritten < buffer.size () - 1)
+            return buffer.data ();
+        buffer.resize (buffer.size () * 2);
+    }
+}
