@@ -59,7 +59,7 @@ void LangList::ApplyChoice(SpellChecker *SpellCheckerInstance) {
       buf += SpellCheckerInstance->GetLangByIndex(i);
     }
   }
-  auto convertedBuf = to_utf8_string(buf.c_str ());
+  auto convertedBuf = toUtf8String(buf.c_str ());
   if (SpellCheckerInstance->GetLibMode() == 1) {
     SpellCheckerInstance->SetHunspellMultipleLanguages(convertedBuf.c_str ());
     SpellCheckerInstance->HunspellReinitSettings(false);

@@ -866,7 +866,7 @@ int AdvancedDlg::GetRecheckDelay()
 // Called from main thread, beware!
 void AdvancedDlg::ApplySettings(SpellChecker* SpellCheckerInstance)
 {
-    SpellCheckerInstance->SetDelimiters(to_utf8_string(getEditText (HEditDelimiters).c_str ()).c_str ());
+    SpellCheckerInstance->SetDelimiters(toUtf8String(getEditText (HEditDelimiters).c_str ()).c_str ());
     SpellCheckerInstance->SetConversionOptions(
         Button_GetCheck(HIgnoreYo) == BST_CHECKED ? true : false,
         Button_GetCheck(HConvertSingleQuotes) == BST_CHECKED ? true : false,

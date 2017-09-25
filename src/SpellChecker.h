@@ -82,7 +82,7 @@ public:
   void SetDelimiters(const char *Str);
   void SetSuggestionsNum(int Num);
   void SetAspellPath(const wchar_t *Path);
-  void SetMultipleLanguages(const wchar_t *MultiString,
+  void SetMultipleLanguages(std::wstring_view MultiString,
                             AbstractSpellerInterface *Speller);
   void SetHunspellPath(const wchar_t *Path);
   void SetHunspellAdditionalPath(const wchar_t *Path);
@@ -165,13 +165,11 @@ public:
   int getRecheckDelay ();
 
 private:
-  void GetLimitsAndRecheckModified();
   HWND GetCurrentScintilla();
   void CreateWordUnderline(HWND ScintillaWindow, long start, long end);
   void RemoveUnderline(HWND ScintillaWindow, long start, long end);
   void ClearAllUnderlines();
   void ClearVisibleUnderlines();
-  void Cleanup();
   const char *GetDelimiters();
   bool CheckWord(std::string Word, long Start, long End);
   void GetVisibleLimits(long &Start, long &Finish);
@@ -226,11 +224,11 @@ private:
   int MultiLangMode;
   int SuggestionsNum;
   int SuggestionsMode;
-  char *DelimUtf8; // String without special characters but maybe with escape
+  std::string DelimUtf8; // String without special characters but maybe with escape
                    // characters (like '\n' and stuff)
-  char *DelimUtf8Converted; // String where escape characters are properly
+  std::string DelimUtf8Converted; // String where escape characters are properly
                             // converted to corresponding symbols
-  char *DelimConverted;     // Same but in ANSI encoding
+  std::string DelimConverted;     // Same but in ANSI encoding
   std::wstring ServerNames[3];  // Only user ones, there'll also be bunch of
                             // predetermined ones
   std::wstring DefaultServers[3];
@@ -283,7 +281,7 @@ private:
   LRESULT CurrentPosition;
   NppData *NppDataInstance;
   EncodingType CurrentEncoding;
-  wchar_t *IniFilePath;
+  std::wstring IniFilePath;
   std::string SelectedWord;
   SettingsDlg *SettingsDlgInstance;
   SuggestionsButton *SuggestionsInstance;

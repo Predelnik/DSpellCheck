@@ -26,7 +26,7 @@ public:
   virtual std::vector<std::wstring> GetLanguageList() = 0;
   virtual void SetLanguage(const wchar_t* Lang) = 0;
   virtual void SetMultipleLanguages(
-      std::vector<wchar_t *> *List) = 0;         // Languages are from LangList
+      const std::vector<std::wstring>& List) = 0;         // Languages are from LangList
   void SetMode(int Multi) { MultiMode = Multi; } // Multi - 1, Single - 0
   void SetEncoding(EncodingType Encoding) { CurrentEncoding = Encoding; }
   virtual bool CheckWord(const char* Word) = 0; // Word in Utf-8 or ANSI

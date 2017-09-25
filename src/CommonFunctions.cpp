@@ -214,7 +214,7 @@ void SetStringDUtf8(char*& Target, const char* Str) {
 }
 
 // This function is more or less transferred from gcc source
-bool MatchSpecialChar(wchar_t* Dest, wchar_t*& Source) {
+bool MatchSpecialChar(wchar_t* Dest, const wchar_t*& Source) {
     int len, i;
     wchar_t c, n;
     bool m;
@@ -283,9 +283,9 @@ bool MatchSpecialChar(wchar_t* Dest, wchar_t*& Source) {
     return m;
 }
 
-void SetParsedString(wchar_t*& Dest, wchar_t* Source) {
+void SetParsedString(wchar_t*& Dest, const wchar_t* Source) {
     Dest = new wchar_t[wcslen(Source) + 1];
-    wchar_t* LastPos = nullptr;
+    const wchar_t* LastPos = nullptr;
     wchar_t* ResString = Dest;
     while (*Source) {
         LastPos = Source;
@@ -307,6 +307,15 @@ void SetParsedString(wchar_t*& Dest, wchar_t* Source) {
     }
     *Dest = 0;
     Dest = ResString;
+}
+
+std::wstring parseString(const wchar_t* source)
+{
+  wchar_t *str = nullptr;
+  SetParsedString(str, source);
+  std::wstring ret = str;
+  delete str;
+  return ret;
 }
 
 // These functions are mostly taken from http://research.microsoft.com

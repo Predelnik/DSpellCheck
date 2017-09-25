@@ -259,15 +259,15 @@ void HunspellInterface::SetLanguage(const wchar_t* Lang) {
     SingularSpeller = CreateHunspell(it->name.c_str(), it->type);
 }
 
-void HunspellInterface::SetMultipleLanguages(std::vector<wchar_t *>* List) {
+void HunspellInterface::SetMultipleLanguages(const std::vector<std::wstring>& List) {
     m_spellers.clear();
 
     if (dicList.empty())
         return;
 
-    for (unsigned int i = 0; i < List->size(); i++) {
+    for (auto &lang : List) {
         AvailableLangInfo Temp;
-        Temp.name = List->at(i);
+        Temp.name = lang;
         Temp.type = 0;
         auto it = dicList.find(Temp);
         if (it == dicList.end())

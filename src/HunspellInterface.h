@@ -79,7 +79,7 @@ public:
   std::vector<std::wstring> GetLanguageList() override;
   void SetLanguage(const wchar_t* Lang) override;
   void SetMultipleLanguages(
-      std::vector<wchar_t *> *List) override;             // Languages are from LangList
+      const std::vector<std::wstring>& List) override;             // Languages are from LangList
   bool CheckWord(const char* Word) override; // Word in Utf-8 or ANSI
   bool IsWorking() override;
   std::vector<std::string> GetSuggestions(const char* Word) override;

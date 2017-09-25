@@ -639,7 +639,7 @@ int  HashMgr::load_config(const char * affpath, const char * key)
         }
         if (strncmp(line,"FORBIDDENWORD",13) == 0) {
           char * st = NULL;
-          if (parse_string(line, &st, afflst->getlinenum())) {
+          if (parseString(line, &st, afflst->getlinenum())) {
              delete afflst;
              return 1;
           }
@@ -647,7 +647,7 @@ int  HashMgr::load_config(const char * affpath, const char * key)
           free(st);
         }
         if (strncmp(line, "SET", 3) == 0) {
-    	  if (parse_string(line, &enc, afflst->getlinenum())) {
+    	  if (parseString(line, &enc, afflst->getlinenum())) {
              delete afflst;
              return 1;
           }    	    
@@ -661,7 +661,7 @@ int  HashMgr::load_config(const char * affpath, const char * key)
     	  } else csconv = get_current_cs(enc);
     	}
         if (strncmp(line, "LANG", 4) == 0) {
-    	  if (parse_string(line, &lang, afflst->getlinenum())) {
+    	  if (parseString(line, &lang, afflst->getlinenum())) {
              delete afflst;
              return 1;
           }    	    

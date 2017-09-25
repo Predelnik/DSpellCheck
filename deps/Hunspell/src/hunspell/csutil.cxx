@@ -5781,7 +5781,7 @@ void remove_ignored_chars(char * word, char * ignored_chars)
    *word = '\0';
 }
 
-int parse_string(char * line, char ** out, int ln)
+int parseString(char * line, char ** out, int ln)
 {
    char * tp = line;
    char * piece;
@@ -5818,7 +5818,7 @@ int parse_string(char * line, char ** out, int ln)
 
 int parse_array(char * line, char ** out, unsigned short ** out_utf16,
        int * out_utf16_len, int utf8, int ln) {
-   if (parse_string(line, out, ln)) return 1;
+   if (parseString(line, out, ln)) return 1;
    if (utf8) {
         w_char w[MAXWORDLEN];
         int n = u8_u16(w, MAXWORDLEN, *out);

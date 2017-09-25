@@ -36,21 +36,27 @@ template <typename CharT>
 inline std::wstring to_wstring (const CharT *source) {
     wchar_t *target = nullptr;
     SetString (target, source);
-    return target;
+    std::wstring ret = target;
+    delete target;
+    return ret;
 }
 
 template <typename CharT>
 inline std::string to_string (const CharT* source) {
     char *target = nullptr;
     SetString (target, source);
-    return target;
+    std::string ret = target;
+    delete target;
+    return ret;
 }
 
 template <typename CharT>
-inline std::string to_utf8_string (const CharT* source) {
+inline std::string toUtf8String (const CharT* source) {
     char *target = nullptr;
     SetStringDUtf8 (target, source);
-    return target;
+    std::string ret = target;
+    delete target;
+    return ret;
 }
 
 
@@ -68,7 +74,17 @@ void SetStringSUtf8(wchar_t *&Target, const char *Str);
 inline std::wstring utf8_to_wstring (const char *source) {
     wchar_t *target = nullptr;
     SetStringSUtf8 (target, source);
-    return target;
+    std::wstring ret = target;
+    delete target;
+    return ret;
+}
+
+inline std::string utf8_to_string (const char *source) {
+    char *target = nullptr;
+    SetStringSUtf8 (target, source);
+    std::string ret = target;
+    delete target;
+    return ret;
 }
 
 template <typename T, typename V>
@@ -84,7 +100,8 @@ void SetStringDUtf8(char *&Target, const wchar_t *Str);
 
 std::pair<std::wstring_view, bool> applyAlias(std::wstring_view str);
 
-void SetParsedString(wchar_t *&Dest, wchar_t *Source);
+void SetParsedString(wchar_t *&Dest, const wchar_t* Source);
+std::wstring parseString(const wchar_t* source);
 
 LRESULT SendMsgToNpp(const NppData *NppDataArg, UINT Msg,
                      WPARAM wParam = 0, LPARAM lParam = 0);

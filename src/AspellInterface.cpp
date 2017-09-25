@@ -79,18 +79,15 @@ void AspellInterface::SendAspellError(AspellCanHaveError* Error) {
     MessageBox(NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
 }
 
-void AspellInterface::SetMultipleLanguages(std::vector<wchar_t *>* List) {
+void AspellInterface::SetMultipleLanguages(const std::vector<std::wstring>& List) {
     if (!AspellLoaded)
         return;
 
     spellers.clear();
-    for (unsigned int i = 0; i < List->size(); i++) {
+    for (auto &lang : List) {
         AspellConfig* SpellConfig = new_aspell_config();
         aspell_config_replace(SpellConfig, "encoding", "utf-8");
-        char* Buf = nullptr;
-        SetString(Buf, List->at(i));
-        aspell_config_replace(SpellConfig, "lang", Buf);
-        CLEAN_AND_ZERO_ARR (Buf);
+        aspell_config_replace(SpellConfig, "lang", to_string (lang.c_str ()).c_str ());
         AspellCanHaveError* PossibleErr = new_aspell_speller(SpellConfig);
         if (aspell_error_number(PossibleErr) == 0) {
             spellers.push_back(wrapSpeller(to_aspell_speller(PossibleErr)));
@@ -109,7 +106,7 @@ std::vector<std::string> AspellInterface::GetSuggestions(const char* Word) {
     if (CurrentEncoding == ENCODING_UTF8)
         TargetWord = Word;
     else
-        TargetWord = to_utf8_string (Word);
+        TargetWord = toUtf8String (Word);
 
     std::vector<std::string> SuggList;
     if (!MultiMode) {
@@ -147,7 +144,7 @@ void AspellInterface::AddToDictionary(const char* Word) {
     if (CurrentEncoding == ENCODING_UTF8)
         TargetWord = Word;
     else
-        TargetWord = to_utf8_string (Word);
+        TargetWord = toUtf8String (Word);
 
     if (!LastSelectedSpeller)
         return;
@@ -172,7 +169,7 @@ void AspellInterface::IgnoreAll(const char* Word) {
     if (CurrentEncoding == ENCODING_UTF8)
         TargetWord = Word;
     else
-        TargetWord = to_utf8_string(Word);
+        TargetWord = toUtf8String(Word);
 
     aspell_speller_add_to_session(LastSelectedSpeller, TargetWord.c_str (), static_cast<int> (TargetWord.length ()) + 1);
     aspell_speller_save_all_word_lists(LastSelectedSpeller);
@@ -191,7 +188,7 @@ bool AspellInterface::CheckWord(const char* Word) {
     if (CurrentEncoding == ENCODING_UTF8)
         DstWord = Word;
     else
-        DstWord = to_utf8_string(Word);
+        DstWord = toUtf8String(Word);
 
     auto Len = static_cast<int> (DstWord.length());
     if (!MultiMode) {

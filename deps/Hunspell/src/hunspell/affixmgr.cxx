@@ -293,7 +293,7 @@ int  AffixMgr::parse_file(const char * affpath, const char * key)
 
        /* parse in the keyboard string */
        if (strncmp(line,"KEY",3) == 0) {
-          if (parse_string(line, &keystring, afflst->getlinenum())) {
+          if (parseString(line, &keystring, afflst->getlinenum())) {
              delete afflst;
              return 1;
           }
@@ -301,7 +301,7 @@ int  AffixMgr::parse_file(const char * affpath, const char * key)
 
        /* parse in the try string */
        if (strncmp(line,"TRY",3) == 0) {
-          if (parse_string(line, &trystring, afflst->getlinenum())) {
+          if (parseString(line, &trystring, afflst->getlinenum())) {
              delete afflst;
              return 1;
           }
@@ -309,7 +309,7 @@ int  AffixMgr::parse_file(const char * affpath, const char * key)
 
        /* parse in the name of the character set used by the .dict and .aff */
        if (strncmp(line,"SET",3) == 0) {
-          if (parse_string(line, &encoding, afflst->getlinenum())) {
+          if (parseString(line, &encoding, afflst->getlinenum())) {
              delete afflst;
              return 1;
           }
@@ -505,7 +505,7 @@ int  AffixMgr::parse_file(const char * affpath, const char * key)
 
        /* parse in the flag used by compound_check() method */
        if (strncmp(line,"SYLLABLENUM",11) == 0) {
-          if (parse_string(line, &cpdsyllablenum, afflst->getlinenum())) {
+          if (parseString(line, &cpdsyllablenum, afflst->getlinenum())) {
              delete afflst;
              return 1;
           }
@@ -598,7 +598,7 @@ int  AffixMgr::parse_file(const char * affpath, const char * key)
 
        /* parse in the language for language specific codes */
        if (strncmp(line,"LANG",4) == 0) {
-          if (parse_string(line, &lang, afflst->getlinenum())) {
+          if (parseString(line, &lang, afflst->getlinenum())) {
              delete afflst;
              return 1;
           }
@@ -3450,7 +3450,7 @@ int AffixMgr::parse_flag(char * line, unsigned short * out, FileMgr * af) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple definitions of an affix file parameter\n", af->getlinenum());
       return 1;
    }
-   if (parse_string(line, &s, af->getlinenum())) return 1;
+   if (parseString(line, &s, af->getlinenum())) return 1;
    *out = pHMgr->decode_flag(s);
    free(s);
    return 0;
@@ -3463,7 +3463,7 @@ int AffixMgr::parse_num(char * line, int * out, FileMgr * af) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple definitions of an affix file parameter\n", af->getlinenum());
       return 1;
    }
-   if (parse_string(line, &s, af->getlinenum())) return 1;
+   if (parseString(line, &s, af->getlinenum())) return 1;
    *out = atoi(s);
    free(s);
    return 0;
