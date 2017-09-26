@@ -22,6 +22,7 @@
 #endif
 
 #ifdef WIN32
+   #include <winsock2.h>
    #include <windows.h>
    #if _MSC_VER < 1500
       #define override
