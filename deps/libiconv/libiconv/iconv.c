@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 1999-2008, 2011, 2016 Free Software Foundation, Inc.
  * This file is part of the GNU LIBICONV Library.
  *
@@ -247,9 +247,15 @@ invalid:
   return (iconv_t)(-1);
 }
 
+///////////////////////// 삭제 / DELETE / УДАЛИТЬ ///////////////////////
+//size_t iconv (iconv_t icd,
+//              ICONV_CONST char* * inbuf, size_t *inbytesleft,
+//              char* * outbuf, size_t *outbytesleft)
+///////////////////////// 추가 / ADD / ДОВАВЛЯТЬ //////////////////////
 size_t iconv (iconv_t icd,
-              ICONV_CONST char* * inbuf, size_t *inbytesleft,
+              const char* * inbuf, size_t *inbytesleft,
               char* * outbuf, size_t *outbytesleft)
+////////////////////////////////////////////////////////////////////////////////
 {
   conv_t cd = (conv_t) icd;
   if (inbuf == NULL || *inbuf == NULL)

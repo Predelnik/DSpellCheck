@@ -1,4 +1,4 @@
-/* Determine a canonical name for the current locale's character encoding.
+﻿/* Determine a canonical name for the current locale's character encoding.
 
    Copyright (C) 2000-2006, 2008-2012 Free Software Foundation, Inc.
 
@@ -77,10 +77,12 @@
 # define relocate(pathname) (pathname)
 #endif
 
-/* Get LIBDIR.  */
-#ifndef LIBDIR
-# include "configmake.h"
-#endif
+///////////////////////// 삭제 / DELETE / УДАЛИТЬ ///////////////////////
+///* Get LIBDIR.  */
+//#ifndef LIBDIR
+//# include "configmake.h"
+//#endif
+////////////////////////////////////////////////////////////////////////////////
 
 /* Define O_NOFOLLOW to 0 on platforms where it does not exist.  */
 #ifndef O_NOFOLLOW
