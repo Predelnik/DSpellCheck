@@ -1,5 +1,5 @@
-﻿/*
- * Copyright (C) 1999-2008, 2011 Free Software Foundation, Inc.
+/*
+ * Copyright (C) 1999-2008, 2011, 2016 Free Software Foundation, Inc.
  * This file is part of the GNU LIBICONV Library.
  *
  * The GNU LIBICONV Library is free software; you can redistribute it
@@ -14,12 +14,12 @@
  *
  * You should have received a copy of the GNU Library General Public
  * License along with the GNU LIBICONV Library; see the file COPYING.LIB.
- * If not, write to the Free Software Foundation, Inc., 51 Franklin Street,
- * Fifth Floor, Boston, MA 02110-1301, USA.
+ * If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <iconv.h>
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include "config.h"
@@ -178,8 +178,12 @@ static const struct alias sysdep_aliases[] = {
 };
 #ifdef __GNUC__
 __inline
+#else
+#ifdef __cplusplus
+inline
 #endif
-const struct alias *
+#endif
+static const struct alias *
 aliases2_lookup (register const char *str)
 {
   const struct alias * ptr;
@@ -243,15 +247,9 @@ invalid:
   return (iconv_t)(-1);
 }
 
-///////////////////////// 삭제 / DELETE / УДАЛИТЬ ///////////////////////
-//size_t iconv (iconv_t icd,
-//              ICONV_CONST char* * inbuf, size_t *inbytesleft,
-//              char* * outbuf, size_t *outbytesleft)
-///////////////////////// 추가 / ADD / ДОВАВЛЯТЬ //////////////////////
 size_t iconv (iconv_t icd,
-              const char* * inbuf, size_t *inbytesleft,
+              ICONV_CONST char* * inbuf, size_t *inbytesleft,
               char* * outbuf, size_t *outbytesleft)
-////////////////////////////////////////////////////////////////////////////////
 {
   conv_t cd = (conv_t) icd;
   if (inbuf == NULL || *inbuf == NULL)
