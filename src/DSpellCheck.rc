@@ -49,13 +49,13 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 {
     DEFPUSHBUTTON   "OK", IDOK, 40, 157, 50, 14, 0, WS_EX_LEFT
     LTEXT           "DSpellCheck", IDC_STATIC, 43, 4, 42, 9, SS_LEFT, WS_EX_LEFT
-    LTEXT           "(Hopefully) Decent Spell-Checking Plug-in  for Notepad++", IDC_STATIC, 7, 34, 115, 19, SS_LEFT, WS_EX_LEFT
+    CTEXT           "Version: X.X.X.X", IDC_VERSION, 21, 19, 87, 8, SS_CENTER, WS_EX_LEFT
+    LTEXT           "(Hopefully) Decent Spell-Checking Plug-in for Notepad++", IDC_STATIC, 7, 34, 115, 19, SS_LEFT, WS_EX_LEFT
     CONTROL         "Created by: Sergey Semushin <a href=""mailto:predelnik@gmail.com"">[predelnik@gmail.com]</a>", IDC_SYSLINK1, "SysLink", 0x50010000, 7, 60, 119, 21, 0x00000000
     LTEXT           "License: GPL", IDC_STATIC, 7, 88, 41, 8, SS_LEFT, WS_EX_LEFT
-    CONTROL         "Plug-in uses <a href=""http://aspell.net"">Aspell Library</a> and <a href=""http://hunspell.sourceforge.net"">Hunspell Library</a>", IDC_SYSLINK2, "SysLink", 0x50010000, 7, 131, 108, 19, 0x00000000
-    CTEXT           "Version: X.X.X.X", IDC_VERSION, 21, 19, 87, 8, SS_CENTER, WS_EX_LEFT
-    LTEXT           "", IDC_STATIC, 11, 110, 8, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "Source code could be found here: <a href=""https://github.com/Predelnik/DSpellCheck"">GitHub page</a>", IDC_SYSLINK3, "SysLink", 0x50010000, 6, 103, 119, 21, 0x00000000
+    LTEXT           "", IDC_STATIC, 11, 110, 8, 8, SS_LEFT, WS_EX_LEFT
+    CONTROL         "Plug-in uses <a href=""http://aspell.net"">Aspell Library</a> and <a href=""http://hunspell.sourceforge.net"">Hunspell Library</a>", IDC_SYSLINK2, "SysLink", 0x50010000, 7, 131, 108, 19, 0x00000000
 }
 
 
@@ -68,7 +68,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
     LTEXT           "Delimiters:", IDC_STATIC, 5, 7, 37, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        IDC_DELIMETERS, 45, 5, 116, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     PUSHBUTTON      "Reset", IDC_DEFAULT_DELIMITERS, 165, 4, 28, 14, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "Cyrillic: Count io (\u0451) as e", IDC_COUNT_YO_AS_YE, 12, 165, 91, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Starting and finishing apostrophes belong to delimiters", IDC_REMOVE_ENDING_APOSTROPHE, 5, 24, 184, 8, 0, WS_EX_LEFT
     LTEXT           "Typing Recheck Delay (ms):", IDC_STATIC, 5, 39, 90, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        IDC_RECHECK_DELAY, 153, 37, 40, 12, ES_AUTOHSCROLL | ES_NUMBER, WS_EX_LEFT
     LTEXT           "Buffer Size for Find Next/Prev. Mistake (Kb):", IDC_STATIC, 5, 55, 156, 8, SS_LEFT, WS_EX_LEFT
@@ -78,20 +78,20 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
     AUTOCHECKBOX    "Starting with Capital Letter", IDC_IGNORE_CSTART, 92, 79, 98, 10, 0, WS_EX_LEFT
     AUTOCHECKBOX    "Having not First Capital Letter ", IDC_IGNORE_CHAVE, 8, 92, 108, 10, 0, WS_EX_LEFT
     AUTOCHECKBOX    "All Letters Capital", IDC_IGNORE_CALL, 121, 92, 69, 10, 0, WS_EX_LEFT
-    CONTROL         "", IDC_UNDERLINE_COLOR, WC_BUTTON, WS_TABSTOP | WS_TABSTOP | BS_OWNERDRAW | BS_FLAT, 13, 130, 20, 15, WS_EX_LEFT
+    AUTOCHECKBOX    "Having _", IDC_IGNORE_, 8, 106, 44, 10, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "That Start or End with '", IDC_IGNORE_SE_APOSTROPHE, 52, 106, 86, 10, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "One Letter", IDC_IGNORE_ONE_LETTER, 142, 106, 46, 8, 0, WS_EX_LEFT
     GROUPBOX        "Underline Style", IDC_STATIC, 3, 121, 118, 29, 0, WS_EX_LEFT
+    CONTROL         "", IDC_UNDERLINE_COLOR, WC_BUTTON, WS_TABSTOP | WS_TABSTOP | BS_OWNERDRAW | BS_FLAT, 13, 130, 20, 15, WS_EX_LEFT
     COMBOBOX        IDC_UNDERLINE_STYLE, 47, 131, 66, 15, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_LEFT
-    LTEXT           "Size:", IDC_STATIC, 131, 133, 16, 8, SS_LEFT, WS_EX_LEFT
     GROUPBOX        "Suggestion Button", IDC_STATIC, 128, 121, 65, 70, 0, WS_EX_LEFT
+    LTEXT           "Size:", IDC_STATIC, 131, 133, 16, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SLIDER_SIZE, TRACKBAR_CLASS, WS_TABSTOP | TBS_BOTH | TBS_NOTICKS, 131, 142, 53, 12, WS_EX_LEFT
     LTEXT           "Opacity:", IDC_STATIC, 131, 155, 27, 8, SS_LEFT, WS_EX_LEFT
     CONTROL         "", IDC_SLIDER_TRANSPARENCY, TRACKBAR_CLASS, WS_TABSTOP | TBS_BOTH | TBS_NOTICKS, 131, 164, 53, 12, WS_EX_LEFT
-    AUTOCHECKBOX    "Having _", IDC_IGNORE_, 8, 106, 44, 10, 0, WS_EX_LEFT
     GROUPBOX        "Conversion Settings", IDC_STATIC, 5, 154, 114, 38, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "That Start or End with '", IDC_IGNORE_SE_APOSTROPHE, 52, 106, 86, 10, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "Count  ’  as '", IDC_COUNT_SINGLE_QUOTES_AS_APOSTROPHE, 12, 178, 55, 10, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "One Letter", IDC_IGNORE_ONE_LETTER, 142, 106, 46, 8, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "Starting and finishing apostrophes belong to delimiters", IDC_REMOVE_ENDING_APOSTROPHE, 5, 24, 184, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Cyrillic: Count io (\u0451) as e", IDC_COUNT_YO_AS_YE, 12, 165, 91, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Count ’ as '", IDC_COUNT_SINGLE_QUOTES_AS_APOSTROPHE, 12, 178, 55, 10, 0, WS_EX_LEFT
 }
 
 
@@ -102,9 +102,9 @@ STYLE DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYS
 CAPTION "Choose Languages"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 {
-    DEFPUSHBUTTON   "OK", IDOK, 28, 218, 50, 14, 0, WS_EX_LEFT
-    CONTROL         "", IDC_LANGLIST, "CheckedListBox", 0x50220000, 11, 45, 156, 162, 0x00000000
     LTEXT           "Warning: Selecting too many languages may rise CPU usage. \nAlso language guessing for suggestions is not working very good when multiple languages are selected.", IDC_STATIC, 9, 2, 159, 43, SS_LEFT, WS_EX_LEFT
+    CONTROL         "", IDC_LANGLIST, "CheckedListBox", 0x50220000, 11, 45, 156, 162, 0x00000000
+    DEFPUSHBUTTON   "OK", IDOK, 28, 218, 50, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "Cancel", IDCANCEL, 99, 218, 50, 14, 0, WS_EX_LEFT
 }
 
@@ -116,21 +116,21 @@ STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_POP
 CAPTION "Proxy Settings"
 FONT 8, "Ms Shell Dlg"
 {
-    DEFPUSHBUTTON   "OK", IDOK, 70, 114, 50, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "Cancel", IDCANCEL, 129, 114, 50, 14, 0, WS_EX_LEFT
-    EDITTEXT        IDC_HOSTNAME, 49, 32, 136, 12, ES_AUTOHSCROLL, WS_EX_LEFT
-    EDITTEXT        IDC_USERNAME, 60, 73, 100, 12, ES_AUTOHSCROLL, WS_EX_LEFT
+    AUTOCHECKBOX    "Use Proxy", IDC_USEPROXY, 12, 8, 48, 8, 0, WS_EX_LEFT
+    COMBOBOX        IDC_PROXY_TYPE, 82, 8, 109, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
+    GROUPBOX        "Proxy Settings", IDC_STATIC, 3, 22, 192, 88, 0, WS_EX_LEFT
     LTEXT           "Host Name:", IDC_STATIC, 8, 35, 38, 8, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Username:", IDC_STATIC, 22, 74, 35, 8, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Password:", IDC_STATIC, 22, 90, 34, 8, SS_LEFT, WS_EX_LEFT
-    EDITTEXT        IDC_PASSWORD, 60, 89, 100, 12, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    EDITTEXT        IDC_HOSTNAME, 49, 32, 136, 12, ES_AUTOHSCROLL, WS_EX_LEFT
+    AUTOCHECKBOX    "Anonymous Login", IDC_ANONYMOUS_LOGIN, 14, 51, 72, 8, 0, WS_EX_LEFT
     LTEXT           "Port:", IDC_STATIC, 132, 52, 16, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        IDC_PORT, 153, 50, 32, 12, ES_AUTOHSCROLL, WS_EX_LEFT
-    GROUPBOX        "Proxy Settings", IDC_STATIC, 3, 22, 192, 88, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "Use Proxy", IDC_USEPROXY, 12, 8, 48, 8, 0, WS_EX_LEFT
     GROUPBOX        "Login Info", IDC_STATIC, 12, 64, 163, 41, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "Anonymous Login", IDC_ANONYMOUS_LOGIN, 14, 51, 72, 8, 0, WS_EX_LEFT
-    COMBOBOX        IDC_PROXY_TYPE, 82, 8, 109, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
+    LTEXT           "Username:", IDC_STATIC, 22, 74, 35, 8, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        IDC_USERNAME, 60, 73, 100, 12, ES_AUTOHSCROLL, WS_EX_LEFT
+    LTEXT           "Password:", IDC_STATIC, 22, 90, 34, 8, SS_LEFT, WS_EX_LEFT
+    EDITTEXT        IDC_PASSWORD, 60, 89, 100, 12, ES_AUTOHSCROLL | ES_PASSWORD, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 70, 114, 50, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "Cancel", IDCANCEL, 129, 114, 50, 14, 0, WS_EX_LEFT  
 }
 
 
@@ -140,9 +140,9 @@ IDD_DIALOGPROGRESS DIALOG 0, 0, 223, 76
 STYLE DS_3DLOOK | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_POPUP | WS_SYSMENU
 FONT 8, "Ms Shell Dlg"
 {
+    CTEXT           "What's happening now", IDC_DESCTOP, 21, 4, 178, 17, SS_CENTER, WS_EX_LEFT
     CONTROL         "", IDC_PROGRESSBAR, PROGRESS_CLASS, 0, 12, 24, 196, 15, WS_EX_LEFT
     CTEXT           "Please wait........", IDC_DESCBOTTOM, 19, 46, 183, 9, SS_CENTER, WS_EX_LEFT
-    CTEXT           "What's happening now", IDC_DESCTOP, 21, 4, 178, 17, SS_CENTER, WS_EX_LEFT
     PUSHBUTTON      "Cancel", IDC_STOP, 85, 59, 53, 14, 0, WS_EX_LEFT
 }
 
@@ -154,15 +154,15 @@ STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VIS
 CAPTION "Download Dictionaries Dialog"
 FONT 8, "Ms Shell Dlg"
 {
-    DEFPUSHBUTTON   "Install Selected", IDOK, 134, 206, 53, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "Exit", IDCANCEL, 193, 206, 30, 14, 0, WS_EX_LEFT
-    CONTROL         "1", IDC_FILE_LIST, "CheckedListBox", 0x50220000, 7, 30, 216, 160, 0x00000000
     COMBOBOX        IDC_ADDRESS, 7, 7, 216, 30, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_HASSTRINGS, WS_EX_LEFT
     LTEXT           "Status", IDC_SERVER_STATUS, 11, 20, 199, 8, SS_LEFT, WS_EX_LEFT
-    AUTOCHECKBOX    "Show Only Recognized Ones", IDC_SHOWONLYKNOWN, 7, 206, 106, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "", IDC_REFRESH, 115, 206, 16, 14, BS_ICON, WS_EX_LEFT
+    CONTROL         "1", IDC_FILE_LIST, "CheckedListBox", 0x50220000, 7, 30, 216, 160, 0x00000000
     AUTOCHECKBOX    "Install for All Users", IDC_INSTALL_SYSTEM, 7, 195, 73, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Show Only Recognized Ones", IDC_SHOWONLYKNOWN, 7, 206, 106, 14, 0, WS_EX_LEFT
     PUSHBUTTON      "Proxy Settings...", IDC_SELECTPROXY, 167, 191, 56, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "", IDC_REFRESH, 115, 206, 16, 14, BS_ICON, WS_EX_LEFT
+    DEFPUSHBUTTON   "Install Selected", IDOK, 134, 206, 53, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "Exit", IDCANCEL, 193, 206, 30, 14, 0, WS_EX_LEFT
 }
 
 
@@ -173,12 +173,12 @@ STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VIS
 CAPTION "Remove Dictionaries"
 FONT 8, "Ms Shell Dlg"
 {
-    DEFPUSHBUTTON   "OK", IDOK, 73, 255, 50, 14, 0, WS_EX_LEFT
-    PUSHBUTTON      "Cancel", IDCANCEL, 129, 255, 50, 14, 0, WS_EX_LEFT
-    CONTROL         "1", IDC_REMOVE_LANGLIST, "CheckedListBox", 0x50220000, 8, 15, 177, 204, 0x00000000
     LTEXT           "Select Dictionaries for Removal:", IDC_STATIC, 8, 2, 102, 8, SS_LEFT, WS_EX_LEFT
+    CONTROL         "1", IDC_REMOVE_LANGLIST, "CheckedListBox", 0x50220000, 8, 15, 177, 204, 0x00000000
     AUTOCHECKBOX    "Remove Corresponding User Dictionaries", IDC_REMOVE_USER_DICS, 8, 225, 145, 8, 0, WS_EX_LEFT
     AUTOCHECKBOX    "Remove Dictionaries installed for All Users", IDC_REMOVE_SYSTEM, 8, 240, 148, 8, 0, WS_EX_LEFT
+    DEFPUSHBUTTON   "OK", IDOK, 73, 255, 50, 14, 0, WS_EX_LEFT
+    PUSHBUTTON      "Cancel", IDCANCEL, 129, 255, 50, 14, 0, WS_EX_LEFT
 }
 
 
@@ -202,33 +202,33 @@ IDD_SIMPLE DIALOGEX 0, 0, 205, 234
 STYLE DS_SHELLFONT | WS_CHILDWINDOW
 FONT 8, "MS Shell Dlg", 400, 0, 1
 {
+    LTEXT           "Library:", IDC_STATIC, 1, 5, 24, 8, SS_LEFT, WS_EX_LEFT
+    COMBOBOX        IDC_LIBRARY, 40, 2, 63, 15, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
+    GROUPBOX        "Path to Aspell Library", IDC_LIB_GROUPBOX, 1, 21, 191, 84, 0, WS_EX_LEFT
+    GROUPBOX        "Hunspell Dictionaries Path", IDC_HUNSPELL_PATH_GROUPBOX, 5, 31, 184, 41, 0, WS_EX_LEFT
+    CONTROL         "<A HREF=""http://aspell.net/win32/"">Aspell Library and Dictionaries for Win32</A>", IDC_LIB_LINK, "SysLink", 0x50010000, 9, 31, 163, 9, 0x00000000
+    EDITTEXT        IDC_ASPELLPATH, 9, 42, 155, 12, ES_AUTOHSCROLL, WS_EX_ACCEPTFILES
+    EDITTEXT        IDC_SYSTEMPATH, 9, 42, 155, 12, ES_AUTOHSCROLL, WS_EX_ACCEPTFILES
+    PUSHBUTTON      "...", IDC_BROWSEASPELLPATH, 170, 42, 18, 12, 0, WS_EX_LEFT
+    LTEXT           "Static", IDC_ASPELL_STATUS, 9, 58, 94, 9, SS_LEFT, WS_EX_LEFT
+    COMBOBOX        IDC_HUNSPELL_PATH_TYPE, 9, 56, 86, 15, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
+    PUSHBUTTON      "Reset to Default", IDC_RESETASPELLPATH, 104, 56, 84, 13, 0, WS_EX_LEFT
+    PUSHBUTTON      "Reset to Default", IDC_RESETHUNSPELLPATH, 104, 56, 84, 13, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Decode Lang. Names", IDC_DECODE_NAMES, 9, 79, 80, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Unified User Dictionary", IDC_ONE_USER_DIC, 9, 93, 88, 8, 0, WS_EX_LEFT
+    PUSHBUTTON      "Download Dictionaries...", IDC_DOWNLOADDICS, 104, 74, 86, 13, 0, WS_EX_LEFT
+    PUSHBUTTON      "Remove Dictionaries...", IDC_REMOVE_DICS, 104, 88, 86, 13, 0, WS_EX_LEFT
     LTEXT           "Language:", IDC_STATIC, 1, 112, 35, 8, SS_LEFT, WS_EX_LEFT
     COMBOBOX        IDC_COMBO_LANGUAGE, 98, 110, 94, 30, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_LEFT
     LTEXT           "Max Number of Suggestions:", IDC_STATIC, 1, 130, 93, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        IDC_SUGGESTIONS_NUM, 173, 128, 19, 12, ES_AUTOHSCROLL | ES_NUMBER, WS_EX_LEFT
-    GROUPBOX        "Path to Aspell Library", IDC_LIB_GROUPBOX, 1, 21, 191, 84, 0, WS_EX_LEFT
-    EDITTEXT        IDC_ASPELLPATH, 9, 42, 155, 12, ES_AUTOHSCROLL, WS_EX_ACCEPTFILES
-    PUSHBUTTON      "...", IDC_BROWSEASPELLPATH, 170, 42, 18, 12, 0, WS_EX_LEFT
-    PUSHBUTTON      "Reset to Default", IDC_RESETHUNSPELLPATH, 103, 56, 69, 13, 0, WS_EX_LEFT
-    LTEXT           "Static", IDC_ASPELL_STATUS, 93, 58, 95, 9, SS_LEFT, WS_EX_LEFT
     GROUPBOX        "File Types (Separate with semicolon ("";"") )", IDC_STATIC, 1, 145, 191, 40, 0, WS_EX_LEFT
-    EDITTEXT        IDC_FILETYPES, 14, 168, 167, 12, ES_AUTOHSCROLL, WS_EX_LEFT
     AUTORADIOBUTTON "Check only those:", IDC_FILETYPES_CHECKTHOSE, 16, 155, 73, 10, 0, WS_EX_LEFT
     AUTORADIOBUTTON "Check only NOT those:", IDC_FILETYPES_CHECKNOTTHOSE, 91, 155, 89, 10, 0, WS_EX_LEFT
-    CONTROL         "<A HREF=""http://aspell.net/win32/"">Aspell Library and Dictionaries for Win32</A>", IDC_LIB_LINK, "SysLink", 0x50010000, 13, 31, 163, 9, 0x00000000
+    EDITTEXT        IDC_FILETYPES, 14, 168, 167, 12, ES_AUTOHSCROLL, WS_EX_LEFT
     AUTOCHECKBOX    "Check Only Comments and Strings if Possible", IDC_CHECKCOMMENTS, 1, 190, 156, 10, 0, WS_EX_LEFT
-    COMBOBOX        IDC_SUGG_TYPE, 94, 204, 98, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
     LTEXT           "Suggestions Control:", IDC_STATIC, 1, 204, 75, 9, SS_LEFT, WS_EX_LEFT
-    LTEXT           "Library:", IDC_STATIC, 1, 5, 24, 8, SS_LEFT, WS_EX_LEFT
-    COMBOBOX        IDC_LIBRARY, 40, 2, 63, 15, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
-    PUSHBUTTON      "Download Dictionaries...", IDC_DOWNLOADDICS, 104, 74, 86, 13, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "Decode Lang. Names", IDC_DECODE_NAMES, 9, 79, 80, 8, 0, WS_EX_LEFT
-    PUSHBUTTON      "Remove Dictionaries...", IDC_REMOVE_DICS, 104, 88, 86, 13, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "Unified User Dictionary", IDC_ONE_USER_DIC, 9, 93, 88, 8, 0, WS_EX_LEFT
-    COMBOBOX        IDC_HUNSPELL_PATH_TYPE, 9, 56, 86, 15, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
-    GROUPBOX        "Hunspell Dictionaries Path", IDC_HUNSPELL_PATH_GROUPBOX, 5, 31, 184, 41, 0, WS_EX_LEFT
-    PUSHBUTTON      "Reset to Default", IDC_RESETASPELLPATH, 9, 55, 69, 13, 0, WS_EX_LEFT
-    EDITTEXT        IDC_SYSTEMPATH, 9, 42, 155, 12, ES_AUTOHSCROLL, WS_EX_ACCEPTFILES
+    COMBOBOX        IDC_SUGG_TYPE, 94, 204, 98, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
 }
 
 
