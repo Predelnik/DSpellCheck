@@ -106,7 +106,7 @@ private:
   std::wstring SysDicDir;
   std::set<AvailableLangInfo> dicList;
   std::map<std::wstring, DicInfo> AllHunspells;
-  char *GetConvertedWord(const char *Source, iconv_t Converter);
+    std::string GetConvertedWord(const char* Source, iconv_t Converter);
   DicInfo *SingularSpeller;
   DicInfo *LastSelectedSpeller;
   std::vector<DicInfo *> m_spellers;

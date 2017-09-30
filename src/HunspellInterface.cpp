@@ -180,10 +180,16 @@ HunspellInterface::~HunspellInterface() {
         !ArePathsEqual(SystemWrongDicPath.c_str (), UserDicPath.c_str())) {
         SetFileAttributes(SystemWrongDicPath.c_str (), FILE_ATTRIBUTE_NORMAL);
         DeleteFile(SystemWrongDicPath.c_str ());
-    }
+    } 
 
-    if (UserDicPath.c_str())
+    if (!UserDicPath.empty ())
         WriteUserDic(&Memorized, UserDicPath.c_str());
+    for (auto &p : AllHunspells)
+        {
+            auto &hs = p.second;
+            if (!hs.LocalDicPath.empty ())
+                WriteUserDic (&hs.LocalDic, hs.LocalDicPath);
+        }
 }
 
 std::vector<std::wstring> HunspellInterface::GetLanguageList() {
@@ -225,9 +231,9 @@ DicInfo* HunspellInterface::CreateHunspell(const wchar_t* Name, int Type) {
     ReadUserDic(&NewDic.LocalDic, NewDic.LocalDicPath.c_str());
     {
         for (auto word : Memorized) {
-            char* ConvWord = GetConvertedWord(word.c_str(), NewDic.Converter.get());
-            if (*ConvWord)
-                NewHunspell->add(ConvWord); // Adding all already memorized words to
+            auto ConvWord = GetConvertedWord(word.c_str(), NewDic.Converter.get());
+            if (!ConvWord.empty ())
+                NewHunspell->add(ConvWord.c_str ()); // Adding all already memorized words to
             // newly loaded Hunspell instance
         }
     }
@@ -278,13 +284,13 @@ void HunspellInterface::SetMultipleLanguages(const std::vector<std::wstring>& Li
     }
 }
 
-char* HunspellInterface::GetConvertedWord(const char* Source,
-                                          iconv_t Converter) {
+std::string HunspellInterface::GetConvertedWord(const char* Source,
+                                                iconv_t Converter) {
     static std::vector<char> buf;
     buf.resize(strlen(Source) * 6);
     if (Converter == iconv_t(-1)) {
         buf.front() = '\0';
-        return buf.data();
+        return {};
     }
     size_t InSize = strlen(Source) + 1;
     size_t OutSize = DEFAULT_BUF_SIZE;
@@ -298,15 +304,14 @@ char* HunspellInterface::GetConvertedWord(const char* Source,
 
 bool HunspellInterface::SpellerCheckWord(const DicInfo& Dic, const char* Word,
                                          EncodingType Encoding) {
-    char* WordToCheck = GetConvertedWord(
+    auto WordToCheck = GetConvertedWord(
         Word, Encoding == (ENCODING_UTF8) ? Dic.Converter.get() : Dic.ConverterANSI.get());
-    if (!*WordToCheck)
-        return false;
-
+    if (WordToCheck.empty ())
+      return true;
     // No additional check for memorized is needed since all words are already in
     // dictionary
 
-    return Dic.hunspell->spell(WordToCheck);
+    return Dic.hunspell->spell(WordToCheck.c_str ());
 }
 
 bool HunspellInterface::CheckWord(const char* Word) {
@@ -356,9 +361,7 @@ void HunspellInterface::ReadUserDic(WordSet* Target, const wchar_t* Path) {
             if (fgets(Buf, DEFAULT_BUF_SIZE, Fp)) {
                 Buf[strlen(Buf) - 1] = 0;
                 if (Target->find(Buf) == Target->end()) {
-                    char* Word = nullptr;
-                    SetString(Word, Buf);
-                    Target->insert(Word);
+                    Target->insert(Buf);
                 }
             }
             else
@@ -425,18 +428,18 @@ void HunspellInterface::AddToDictionary(const char* Word) {
             _close(LocalDicFileHandle);
     }
 
-    char* Buf = nullptr;
+   std::string buf;
     if (CurrentEncoding == ENCODING_UTF8)
-        SetString(Buf, Word);
+        buf = Word;
     else
-        SetStringDUtf8(Buf, Word);
+        buf = utf8_to_string(Word);
 
     if (UseOneDic) {
-        Memorized.insert(Buf);
+        Memorized.insert(buf);
         for (auto& p : AllHunspells) {
-            char* ConvWord = GetConvertedWord(Buf, p.second.Converter.get());
-            if (*ConvWord)
-                p.second.hunspell->add(ConvWord);
+            auto ConvWord = GetConvertedWord(buf.c_str (), p.second.Converter.get());
+            if (!ConvWord.empty ())
+                p.second.hunspell->add(ConvWord.c_str ());
             else if (p.second.hunspell == LastSelectedSpeller->hunspell)
                 MessageBoxWordCannotBeAdded();
             // Adding word to all currently loaded dictionaries and in memorized list
@@ -444,12 +447,10 @@ void HunspellInterface::AddToDictionary(const char* Word) {
         }
     }
     else {
-        char* ConvWord = GetConvertedWord(Buf, LastSelectedSpeller->Converter.get());
-        char* WordCopy = nullptr;
-        SetString(WordCopy, ConvWord);
-        LastSelectedSpeller->LocalDic.insert(WordCopy);
-        if (*ConvWord)
-            LastSelectedSpeller->hunspell->add(ConvWord);
+        auto ConvWord = GetConvertedWord(buf.c_str (), LastSelectedSpeller->Converter.get());
+        LastSelectedSpeller->LocalDic.insert(ConvWord);
+        if (!ConvWord.empty ())
+            LastSelectedSpeller->hunspell->add(ConvWord.c_str ());
         else
             MessageBoxWordCannotBeAdded();
     }
@@ -459,9 +460,7 @@ void HunspellInterface::IgnoreAll(const char* Word) {
     if (!LastSelectedSpeller)
         return;
 
-    char* Buf = nullptr;
-    SetString(Buf, Word);
-    Ignored.insert(Buf);
+    Ignored.insert(Word);
 }
 
 namespace
@@ -507,7 +506,7 @@ std::vector<std::string> HunspellInterface::GetSuggestions(const char* Word) {
         list = {
             SingularSpeller->hunspell.get(), GetConvertedWord(Word, (CurrentEncoding == ENCODING_UTF8)
                                                                         ? SingularSpeller->Converter.get()
-                                                                        : SingularSpeller->ConverterANSI.get())
+                                                                        : SingularSpeller->ConverterANSI.get()).c_str ()
         };
     }
     else {
@@ -517,7 +516,7 @@ std::vector<std::string> HunspellInterface::GetSuggestions(const char* Word) {
             curList = {
                 speller->hunspell.get(), GetConvertedWord(Word, (CurrentEncoding == ENCODING_UTF8)
                                                                     ? speller->Converter.get()
-                                                                    : speller->ConverterANSI.get())
+                                                                    : speller->ConverterANSI.get()).c_str ()
             };
 
             if (curList.count() > list.count()) {

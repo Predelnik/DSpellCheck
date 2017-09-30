@@ -74,9 +74,7 @@ bool AspellInterface::IsWorking() {
 }
 
 void AspellInterface::SendAspellError(AspellCanHaveError* Error) {
-    wchar_t* ErrorMsg = nullptr;
-    SetString(ErrorMsg, aspell_error_message(Error));
-    MessageBox(NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(NppWindow, to_wstring (aspell_error_message(Error)).c_str (), L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
 }
 
 void AspellInterface::SetMultipleLanguages(const std::vector<std::wstring>& List) {
