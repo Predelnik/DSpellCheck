@@ -20,13 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 
 #define SCE_ERROR_UNDERLINE (19) // Only index from 8 to 21 are free
-#define CLEAN_AND_ZERO_ARR(x)                                                  \
-  do {                                                                         \
-    if (x) {                                                                   \
-      delete[] x;                                                              \
-      x = 0;                                                                   \
-    }                                                                          \
-  } while (0);
 #define countof(A) sizeof(A) / sizeof((A)[0])
 #define DEFAULT_BUF_SIZE 4096
 

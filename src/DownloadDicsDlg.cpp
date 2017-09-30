@@ -631,7 +631,7 @@ std::variant<FtpWebOperationError, std::vector<std::wstring>> doDownloadFileList
             continue;
 
         count++;
-        out.push_back(cpyBuf<wchar_t>(TempBuf.data()).get());
+        out.push_back(to_wstring (TempBuf.data()));
     }
     return out;
 }

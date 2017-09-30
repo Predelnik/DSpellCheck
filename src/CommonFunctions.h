@@ -24,79 +24,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 struct NppData;
 
-void SetString(char *&Target, const char *Str);
-
-void SetString(wchar_t *&Target, const wchar_t *Str);
-
-void SetString(char *&Target, const wchar_t *Str);
-
-void SetString(wchar_t *&Target, const char *Str);
-
-template <typename CharT>
-inline std::wstring to_wstring (const CharT *source) {
-    wchar_t *target = nullptr;
-    SetString (target, source);
-    std::wstring ret = target;
-    delete target;
-    return ret;
-}
-
-template <typename CharT>
-inline std::string to_string (const CharT* source) {
-    char *target = nullptr;
-    SetString (target, source);
-    std::string ret = target;
-    delete target;
-    return ret;
-}
-
-template <typename CharT>
-inline std::string toUtf8String (const CharT* source) {
-    char *target = nullptr;
-    SetStringDUtf8 (target, source);
-    std::string ret = target;
-    delete target;
-    return ret;
-}
-
-
-template <typename T, typename V>
-auto cpyBuf (const V *str) {
-  T *temp = nullptr;
-  SetString (temp, str);
-  return std::unique_ptr<T []> {temp};
-}
-
-// In case source is in UTF-8
-void SetStringSUtf8(char *&Target, const char *Str);
-void SetStringSUtf8(wchar_t *&Target, const char *Str);
-
-inline std::wstring utf8_to_wstring (const char *source) {
-    wchar_t *target = nullptr;
-    SetStringSUtf8 (target, source);
-    std::wstring ret = target;
-    delete target;
-    return ret;
-}
-
-inline std::string utf8_to_string (const char *source) {
-    char *target = nullptr;
-    SetStringSUtf8 (target, source);
-    std::string ret = target;
-    delete target;
-    return ret;
-}
-
-template <typename T, typename V>
-auto cpyBufSUtf8 (const V *str) {
-  T *temp = nullptr;
-  SetStringSUtf8 (temp, str);
-  return std::unique_ptr<T []> {temp};
-}
-
-// In case destination is in UTF-8
-void SetStringDUtf8(char *&Target, const char *Str);
-void SetStringDUtf8(char *&Target, const wchar_t *Str);
+std::wstring to_wstring (std::string_view source);
+std::string to_string (std::wstring_view source);
+std::string toUtf8String (std::string_view source);
+std::string toUtf8String (std::wstring_view source);
+std::wstring utf8_to_wstring (const char *source);
+std::string utf8_to_string (const char *source);
 
 std::pair<std::wstring_view, bool> applyAlias(std::wstring_view str);
 
@@ -123,7 +56,7 @@ bool EquivCharStrings(char *a, char *b);
 size_t HashCharString(char *a);
 bool SortCompareChars(char *a, char *b);
 
-bool CheckForDirectoryExistence(const wchar_t* PathArg, bool Silent = true,
+bool CheckForDirectoryExistence(std::wstring path, bool Silent = true,
                                 HWND NppWindow = nullptr);
 wchar_t* GetLastSlashPosition(wchar_t* Path);
 

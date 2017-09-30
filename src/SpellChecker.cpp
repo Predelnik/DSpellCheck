@@ -2743,11 +2743,11 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/)
 
     if (IgnoreCStart || IgnoreCHave || IgnoreCAll)
     {
-        std::unique_ptr<wchar_t []> Ts;
+        std::wstring Ts;
         if (CurrentEncoding == ENCODING_UTF8)
-            Ts = cpyBufSUtf8<wchar_t>(Word.c_str());
+            Ts = utf8_to_wstring (Word.c_str());
         else
-            Ts = cpyBuf<wchar_t>(Word.c_str());
+            Ts = to_wstring (Word.c_str());
         if (IgnoreCStart && IsCharUpper(Ts[0]))
         {
             return true;
@@ -2755,9 +2755,9 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/)
         if (IgnoreCHave || IgnoreCAll)
         {
             bool AllUpper = IsCharUpper(Ts[0]);
-            for (unsigned int i = 1; i < wcslen(Ts.get()); i++)
+            for (auto c : Ts)
             {
-                if (IsCharUpper(Ts[i]))
+                if (IsCharUpper(c))
                 {
                     if (IgnoreCHave)
                     {
