@@ -198,7 +198,7 @@ std::wstring parseString(const wchar_t* source)
     wchar_t* str = nullptr;
     SetParsedString(str, source);
     std::wstring ret = str;
-    delete str;
+    delete[] str;
     return ret;
 }
 

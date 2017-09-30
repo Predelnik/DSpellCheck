@@ -48,7 +48,7 @@ typedef std::vector<DlgInfo> WindowVector;
 class ControlsTab : public TabBar
 {
 public :
-  ControlsTab() : TabBar(), _pWinVector(NULL), _current(0), _isVertical(false) {};
+  ControlsTab() : TabBar(), _pWinVector(NULL), _current(0){};
   ~ControlsTab(){};
 
   void initTabBar(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isTraditional = false, bool isMultiLine = false) override {
@@ -75,7 +75,6 @@ public :
 private :
   WindowVector *_pWinVector;
   int _current;
-  bool _isVertical;
 };
 
 #endif //CONTROLS_TAB_H
