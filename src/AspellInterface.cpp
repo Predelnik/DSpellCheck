@@ -151,10 +151,9 @@ void AspellInterface::AddToDictionary(const char* Word) {
     aspell_speller_add_to_personal(LastSelectedSpeller, Word, static_cast<int>(strlen(Word)) + 1);
     aspell_speller_save_all_word_lists(LastSelectedSpeller);
     if (aspell_speller_error(LastSelectedSpeller) != nullptr) {
-        wchar_t* ErrorMsg = nullptr;
-        SetString(ErrorMsg, aspell_speller_error_message(LastSelectedSpeller));
-        MessageBox(NppWindow, ErrorMsg, L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
-        CLEAN_AND_ZERO_ARR (ErrorMsg);
+        MessageBox(NppWindow, to_wstring (aspell_speller_error_message(LastSelectedSpeller)).c_str (), 
+          L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
+      
     }
     LastSelectedSpeller = nullptr;
 
@@ -220,10 +219,7 @@ void AspellInterface::SetLanguage(const wchar_t* Lang) {
 
     auto spellConfig = wrapConfig(new_aspell_config());
     aspell_config_replace(spellConfig.get(), "encoding", "utf-8");
-    char* Buf = nullptr;
-    SetString(Buf, Lang);
-    aspell_config_replace(spellConfig.get(), "lang", Buf);
-    CLEAN_AND_ZERO_ARR (Buf);
+    aspell_config_replace(spellConfig.get(), "lang", to_string (Lang).c_str ());
     singleSpeller.reset();
 
     AspellCanHaveError* PossibleErr = new_aspell_speller(spellConfig.get());

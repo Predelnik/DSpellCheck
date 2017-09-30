@@ -71,7 +71,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
         unsigned int i = 0;
         for (auto &lang : langsAvailable)
         {
-            if (wcscmp(currentLanguage, lang.OrigName) == 0)
+            if (currentLanguage == lang.OrigName)
                 SelectedIndex = i;
 
             ComboBox_AddString(HComboLanguage, lang.AliasName.c_str ());
@@ -81,7 +81,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
             {
                 wchar_t Buf[DEFAULT_BUF_SIZE];
                 wcscpy(Buf, lang.AliasName.c_str());
-                if (hunspellSpeller->GetLangOnlySystem(lang.OrigName))
+                if (hunspellSpeller->GetLangOnlySystem(lang.OrigName.c_str ()))
                     wcscat(Buf, L" [!For All Users]");
 
                 ListBox_AddString(GetRemoveDics()->GetListBox(), Buf);

@@ -21,48 +21,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 
 struct LanguageName {
-  wchar_t *OrigName;
+  std::wstring OrigName;
   std::wstring AliasName;
   bool AliasApplied;
   LanguageName(const wchar_t *Name, bool UseAlias = true) {
-    OrigName = nullptr;
     AliasApplied = false;
-    SetString(OrigName, Name);
+    OrigName = Name;
     if (UseAlias)
       std::tie (AliasName, AliasApplied) = applyAlias(Name);
     else
       AliasName = Name;
   }
-
-  LanguageName(const LanguageName &rhs) {
-    OrigName = nullptr;
-    SetString(OrigName, rhs.OrigName);
-    AliasName = rhs.AliasName;
-    AliasApplied = rhs.AliasApplied;
-  }
-
-  LanguageName &operator=(const LanguageName &rhs) {
-    if (&rhs == this)
-      return *this;
-
-    CLEAN_AND_ZERO_ARR(OrigName);
-    AliasApplied = rhs.AliasApplied;
-    SetString(OrigName, rhs.OrigName);
-    AliasName = rhs.AliasName;
-    return *this;
-  }
-
-  ~LanguageName() {
-    CLEAN_AND_ZERO_ARR(OrigName);
-    AliasApplied = false;
-  }
 };
 
 inline bool lessAliases(const LanguageName &a, const LanguageName &b) {
-  return wcscmp(a.AliasApplied ? a.AliasName.c_str () : a.OrigName,
-                b.AliasApplied ? b.AliasName.c_str () : b.OrigName) < 0;
+  return (a.AliasApplied ? a.AliasName : a.OrigName) <
+         (b.AliasApplied ? b.AliasName : b.OrigName);
 }
 
 inline bool lessOriginal(const LanguageName &a, const LanguageName &b) {
-  return wcscmp(a.OrigName, b.OrigName) < 0;
+  return a.OrigName < b.OrigName;
 }

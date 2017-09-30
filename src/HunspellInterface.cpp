@@ -594,7 +594,7 @@ void HunspellInterface::SetAdditionalDirectory(const wchar_t* Dir) {
                 SystemWrongDicPath.c_str ()); // We should load user dictionary first.
 }
 
-bool HunspellInterface::GetLangOnlySystem(wchar_t* Lang) {
+bool HunspellInterface::GetLangOnlySystem(const wchar_t* Lang) {
     AvailableLangInfo Needle;
     Needle.name = Lang;
     Needle.type = 1;

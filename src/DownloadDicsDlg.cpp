@@ -397,7 +397,7 @@ void DownloadDicsDlg::UpdateListBox() {
     for (auto& lang : CurrentLangsFiltered) {
         ListBox_AddString(HFileList, SpellCheckerInstance->GetDecodeNames()
             ? lang.AliasName.c_str ()
-            : lang.OrigName);
+            : lang.OrigName.c_str ());
     }
 }
 

@@ -119,7 +119,7 @@ public:
   void ReinitLanguageLists(bool UpdateDialogs);
   const wchar_t *GetHunspellPath() const { return HunspellPath.c_str (); };
   const wchar_t* GetHunspellAdditionalPath() const { return AdditionalHunspellPath.c_str (); };
-  wchar_t *GetLangByIndex(int i);
+    const wchar_t* GetLangByIndex(int i);
   bool GetShowOnlyKnown();
   bool GetInstallSystem();
   bool GetDecodeNames();

@@ -92,7 +92,7 @@ public:
   void SetUseOneDic(bool Value);
   void UpdateOnDicRemoval(wchar_t *Path, bool &NeedSingleLangReset,
                           bool &NeedMultiLangReset);
-  bool GetLangOnlySystem(wchar_t *Lang);
+  bool GetLangOnlySystem(const wchar_t* Lang);
 
 private:
     DicInfo* CreateHunspell(const wchar_t* Name, int Type);

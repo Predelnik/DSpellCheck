@@ -212,18 +212,8 @@ std::wstring GetActualAspellPath(const std::wstring& supposedPath) {
 }
 
 BOOL LoadAspell(const wchar_t* PathArg) {
-  wchar_t *Path = nullptr;
-  GetActualAspellPath(PathArg);
-  /*
-  if (hInstLib)
-  {
-    FreeLibrary (hInstLib);
-    hInstLib = 0;
-  }
-  */
-
-  hInstLib = LoadLibrary(Path);
-  CLEAN_AND_ZERO_ARR(Path);
+  auto path = GetActualAspellPath(PathArg);
+  hInstLib = LoadLibrary(path.c_str ());
   BOOL bRet = FALSE;
 
   if (hInstLib != nullptr) {

@@ -274,9 +274,9 @@ bool SpellChecker::GetInstallSystem() { return InstallSystem; }
 
 bool SpellChecker::GetDecodeNames() { return DecodeNames; }
 
-wchar_t* SpellChecker::GetLangByIndex(int i)
+const wchar_t* SpellChecker::GetLangByIndex(int i)
 {
-    return CurrentLangs[i].OrigName;
+    return CurrentLangs[i].OrigName.c_str ();
 }
 
 void SpellChecker::ReinitLanguageLists(bool UpdateDialogs)
@@ -321,7 +321,7 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs)
                 (SpellerId == 1 && DecodeNames)); // Using them only for Hunspell
             CurrentLangs.push_back(
                 Lang);
-            if (wcscmp(Lang.OrigName, CurrentLang) == 0)
+            if (Lang.OrigName == CurrentLang)
                 CurrentLangExists = true;
         }
         if (wcscmp(CurrentLang, L"<MULTIPLE>") == 0)
@@ -332,9 +332,9 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs)
         if (!CurrentLangExists && !CurrentLangs.empty())
         {
             if (SpellerId == 1)
-                SetHunspellLanguage(CurrentLangs.front().OrigName);
+                SetHunspellLanguage(CurrentLangs.front().OrigName.c_str ());
             else
-                SetAspellLanguage(CurrentLangs.front().OrigName);
+                SetAspellLanguage(CurrentLangs.front().OrigName.c_str ());
             RecheckVisibleBothViews();
         }
         if (UpdateDialogs)
@@ -494,7 +494,6 @@ bool SpellChecker::GetRemoveSystem() { return RemoveSystem; }
 
 void SpellChecker::DoPluginMenuInclusion(bool Invalidate)
 {
-    bool Res;
     MENUITEMINFO Mif;
     HMENU DSpellCheckMenu = GetDSpellCheckMenu();
     if (!DSpellCheckMenu)
@@ -511,16 +510,16 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate)
             int i = 0;
             for (auto& lang : CurrentLangs)
             {
-                int Checked = (wcscmp(CurLang, lang.OrigName) == 0)
+                int Checked = (CurLang == lang.OrigName)
                                   ? (MFT_RADIOCHECK | MF_CHECKED)
                                   : MF_UNCHECKED;
-                Res = AppendMenu(NewMenu, MF_STRING | Checked,
-                                 GetUseAllocatedIds()
-                                     ? i + GetLangsMenuIdStart()
-                                     : MAKEWORD(i, LANGUAGE_MENU_ID),
-                                 DecodeNames
-                                     ? lang.AliasName.c_str()
-                                     : lang.OrigName);
+                bool Res = AppendMenu(NewMenu, MF_STRING | Checked,
+                                      GetUseAllocatedIds()
+                                          ? i + GetLangsMenuIdStart()
+                                          : MAKEWORD(i, LANGUAGE_MENU_ID),
+                                      DecodeNames
+                                          ? lang.AliasName.c_str()
+                                          : lang.OrigName.c_str ());
                 if (!Res)
                     return;
                 ++i;
@@ -1989,7 +1988,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId)
                 return;
             }
             else
-                LangString = CurrentLangs[Result].OrigName;
+                LangString = CurrentLangs[Result].OrigName.c_str ();
             DoPluginMenuInclusion(true);
 
             if (LibMode == 0)
