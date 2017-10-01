@@ -33,7 +33,6 @@ std::string utf8_to_string (const char *source);
 
 std::pair<std::wstring_view, bool> applyAlias(std::wstring_view str);
 
-void SetParsedString(wchar_t *&Dest, const wchar_t* Source);
 std::wstring parseString(const wchar_t* source);
 
 LRESULT SendMsgToNpp(const NppData *NppDataArg, UINT Msg,

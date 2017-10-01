@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "MainDef.h"
 #include "Plugin.h"
 #include "PluginInterface.h"
+#include <cassert>
 
 static std::vector<char> convert(const char* sourceEnc, const char* targetEnc, const void* sourceDataPtr,
                                  size_t sourceLen, size_t maxDestLen)
@@ -96,61 +97,62 @@ bool MatchSpecialChar(wchar_t* Dest, const wchar_t*& Source)
     bool m;
 
     m = true;
+    auto assign = [Dest](wchar_t c){ if (Dest) *Dest = c; };
 
     switch (c = *(Source++))
     {
-    case 'a':
-        *Dest = '\a';
+    case L'a':
+        assign (L'\a');
         break;
-    case 'b':
-        *Dest = '\b';
+    case L'b':
+        assign (L'\b');
         break;
-    case 't':
-        *Dest = '\t';
+    case L't':
+        assign (L'\t');
         break;
-    case 'f':
-        *Dest = '\f';
+    case L'f':
+        assign (L'\f');
         break;
-    case 'n':
-        *Dest = '\n';
+    case L'n':
+        assign (L'\n');
         break;
-    case 'r':
-        *Dest = '\r';
+    case L'r':
+        assign (L'\r');
         break;
-    case 'v':
-        *Dest = '\v';
+    case L'v':
+        assign (L'\v');
         break;
-    case '\\':
-        *Dest = '\\';
+    case L'\\':
+        assign (L'\\');
         break;
-    case '0':
-        *Dest = '\0';
+    case L'0':
+        assign (L'\0');
         break;
 
-    case 'x':
-    case 'u':
-    case 'U':
+    case L'x':
+    case L'u':
+    case L'U':
         /* Hexadecimal form of wide characters.  */
-        len = (c == 'x' ? 2 : (c == 'u' ? 4 : 8));
+        len = (c == L'x' ? 2 : (c == L'u' ? 4 : 8));
         n = 0;
 #ifndef UNICODE
     len = 2;
 #endif
         for (i = 0; i < len; i++)
         {
-            char buf[2] = {'\0', '\0'};
+            wchar_t buf[2] = {L'\0', L'\0'};
 
             c = *(Source++);
             if (c > UCHAR_MAX ||
-                !(('0' <= c && c <= '9') || ('a' <= c && c <= 'f') ||
-                    ('A' <= c && c <= 'F')))
+                !((L'0' <= c && c <= L'9') || (L'a' <= c && c <= L'f') ||
+                    (L'A' <= c && c <= L'F')))
                 return false;
 
-            buf[0] = (unsigned char)c;
+            buf[0] = static_cast<wchar_t>(c);
             n = n << 4;
-            n += (wchar_t)strtol(buf, nullptr, 16);
+            n += static_cast<wchar_t>(wcstol(buf, nullptr, 16));
         }
-        *Dest = n;
+        assign (n);
         break;
 
     default:
@@ -161,45 +163,49 @@ bool MatchSpecialChar(wchar_t* Dest, const wchar_t*& Source)
     return m;
 }
 
-void SetParsedString(wchar_t*& Dest, const wchar_t* Source)
+static size_t doParseString(wchar_t *Dest, const wchar_t* Source)
 {
-    Dest = new wchar_t[wcslen(Source) + 1];
     const wchar_t* LastPos = nullptr;
+    bool dryRun = Dest == nullptr;
     wchar_t* ResString = Dest;
     while (*Source)
     {
         LastPos = Source;
         if (*Source == '\\')
         {
-            Source++;
-            if (!MatchSpecialChar(Dest, Source))
+            ++Source;
+            if (!MatchSpecialChar(!dryRun ? Dest : nullptr, Source))
             {
                 Source = LastPos;
-                *Dest = *(Source++);
-                Dest++;
+                if (!dryRun)
+                    *Dest = *Source;
+                ++Source;
+                ++Dest;
             }
             else
             {
-                Dest++;
+                ++Dest;
             }
         }
         else
         {
-            *Dest = *(Source++);
-            Dest++;
+            if (!dryRun)
+                *Dest = *Source;
+            ++Source;
+            ++Dest;
         }
     }
-    *Dest = 0;
-    Dest = ResString;
+    if (!dryRun)
+        *Dest = L'\0';
+    return Dest - ResString + 1;
 }
 
 std::wstring parseString(const wchar_t* source)
 {
-    wchar_t* str = nullptr;
-    SetParsedString(str, source);
-    std::wstring ret = str;
-    delete[] str;
-    return ret;
+    auto size = doParseString(nullptr, source);
+    std::vector<wchar_t> buf (size);
+    assert (doParseString (buf.data (), source) == buf.size ());
+    return buf.data ();
 }
 
 // These functions are mostly taken from http://research.microsoft.com
