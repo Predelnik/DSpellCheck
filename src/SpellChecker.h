@@ -243,7 +243,7 @@ private:
   bool ConvertSingleQuotes;
   bool RemoveBoundaryApostrophes;
   bool CheckThose;
-  bool CheckComments;
+  bool checkOnlyCommentsAndString;
   int UnderlineColor;
   int UnderlineStyle;
   bool IgnoreNumbers;
