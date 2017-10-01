@@ -146,7 +146,7 @@ void AspellInterface::AddToDictionary(const char* Word) {
 
     if (!LastSelectedSpeller)
         return;
-    aspell_speller_add_to_personal(LastSelectedSpeller, Word, static_cast<int>(strlen(Word)) + 1);
+    aspell_speller_add_to_personal(LastSelectedSpeller, TargetWord.c_str(), static_cast<int>(TargetWord.length()) + 1);
     aspell_speller_save_all_word_lists(LastSelectedSpeller);
     if (aspell_speller_error(LastSelectedSpeller) != nullptr) {
         MessageBox(NppWindow, to_wstring (aspell_speller_error_message(LastSelectedSpeller)).c_str (), 
@@ -180,7 +180,7 @@ bool AspellInterface::CheckWord(const char* Word) {
     if (!AspellLoaded)
         return true;
 
-    std::string DstWord = nullptr;
+    std::string DstWord;
     bool res = false;
     if (CurrentEncoding == ENCODING_UTF8)
         DstWord = Word;

@@ -542,7 +542,6 @@ void HunspellInterface::SetDirectory(const wchar_t* Dir) {
 
     DicDir = Dir;
 
-    std::set<AvailableLangInfo>::iterator it;
     dicList.clear();
     IsHunspellWorking = true;
 
