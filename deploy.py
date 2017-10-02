@@ -16,7 +16,7 @@ def zip(src, dst):
 	zf.close()
 
 for arch in ['x64', 'x86']:
-	dir = 'build-msvc2017-{}'.format (arch)
+	dir = 'build-deploy-msvc2017-{}'.format (arch)
 	build_args = ['cmake', '--build', dir, '--config', 'Release']
 	FNULL = open(os.devnull, 'w')
 	print ('Building {} version...'.format (arch))
