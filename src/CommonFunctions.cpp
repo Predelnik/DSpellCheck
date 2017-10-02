@@ -41,7 +41,7 @@ static std::vector<char> convert(const char* sourceEnc, const char* targetEnc, c
 
 std::wstring to_wstring(std::string_view source)
 {
-    auto bytes = convert("CHAR", "UCS-2LE//IGNORE", source.data(), source.length() + 1,
+    auto bytes = convert("CHAR", "UCS-2LE//IGNORE", source.data(), source.length(),
                          sizeof(wchar_t) * (source.length() + 1));
     if (bytes.empty()) return {};
     return reinterpret_cast<wchar_t *>(bytes.data());
@@ -49,7 +49,7 @@ std::wstring to_wstring(std::string_view source)
 
 std::string to_string(std::wstring_view source)
 {
-    auto bytes = convert("UCS-2LE", "CHAR//IGNORE", source.data(), (source.length() + 1) * sizeof(wchar_t),
+    auto bytes = convert("UCS-2LE", "CHAR//IGNORE", source.data(), (source.length()) * sizeof(wchar_t),
                          sizeof(wchar_t) * (source.length() + 1));
     if (bytes.empty()) return {};
     return bytes.data();
@@ -59,7 +59,7 @@ constexpr size_t maxUtf8CharLength = 6;
 
 std::string toUtf8String(std::string_view source)
 {
-    auto bytes = convert("CHAR", "UTF-8//IGNORE", source.data(), source.length() + 1,
+    auto bytes = convert("CHAR", "UTF-8//IGNORE", source.data(), source.length(),
                          maxUtf8CharLength * (source.length() + 1));
     if (bytes.empty()) return {};
     return bytes.data();
@@ -67,7 +67,7 @@ std::string toUtf8String(std::string_view source)
 
 std::string toUtf8String(std::wstring_view source)
 {
-    auto bytes = convert("UCS-2LE", "UTF-8//IGNORE", source.data(), (source.length() + 1) * sizeof (wchar_t),
+    auto bytes = convert("UCS-2LE", "UTF-8//IGNORE", source.data(), source.length() * sizeof (wchar_t),
                          maxUtf8CharLength * (source.length() + 1));
     if (bytes.empty()) return {};
     return bytes.data();
@@ -75,7 +75,7 @@ std::string toUtf8String(std::wstring_view source)
 
 std::wstring utf8_to_wstring(const char* source)
 {
-    auto bytes = convert("UTF-8", "UCS-2LE//IGNORE", source, strlen (source) + 1,
+    auto bytes = convert("UTF-8", "UCS-2LE//IGNORE", source, strlen (source),
                          (Utf8Length(source) + 1) * sizeof (wchar_t));
     if (bytes.empty()) return {};
     return reinterpret_cast<const wchar_t *> (bytes.data());
@@ -83,7 +83,7 @@ std::wstring utf8_to_wstring(const char* source)
 
 std::string utf8_to_string(const char* source)
 {
-    auto bytes = convert("UTF-8", "CHAR//IGNORE", source, strlen (source) + 1,
+    auto bytes = convert("UTF-8", "CHAR//IGNORE", source, strlen (source),
                          Utf8Length(source) + 1);
     if (bytes.empty()) return {};
     return bytes.data();
@@ -204,7 +204,8 @@ std::wstring parseString(const wchar_t* source)
 {
     auto size = doParseString(nullptr, source);
     std::vector<wchar_t> buf (size);
-    assert (doParseString (buf.data (), source) == buf.size ());
+    size = doParseString (buf.data (), source);
+    assert (size == buf.size ());
     return buf.data ();
 }
 
