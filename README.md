@@ -17,7 +17,12 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
-v1.3
+v1.3.1
+* Restore correct work of plugin on systems missing Visual Studio redistributable package (#103)
+* Fix creation of directory for dictionaries (#94)
+* Restore work of unified user dictionary (#87)
+
+v1.3.0
 * Simplify plugin interaction with worker threads. Now most of the job is done in the main thread, it should increase plugin stability on exit.
 
 v1.2.14.2
