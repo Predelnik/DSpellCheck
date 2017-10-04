@@ -98,13 +98,8 @@ struct MessageBoxInfo {
   }
 };
 
-class hash_compare_strings {
+class hash_str {
 public:
-  enum {
-    min_buckets = 1,
-    bucket_size = 1,
-  };
-
   size_t operator()(const char *a) const {
     size_t Hash = 7;
     for (unsigned int i = 0; i < strlen(a); i++) {
@@ -112,9 +107,12 @@ public:
     }
     return Hash;
   }
+};
 
+class str_equal {
+public:
   bool operator()(const char *a, const char *b) const {
-    return strcmp(a, b) < 0;
+    return strcmp(a, b) == 0;
   }
 };
 
