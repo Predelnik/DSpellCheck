@@ -55,13 +55,13 @@ int utf8_symbol_len(char c)
     return 0;
 }
 
-bool Utf8Firswchar_tsAreEqual(const char* Str1, const char* Str2)
+bool utf8_first_chars_equal(const char* Str1, const char* Str2)
 {
-    int Firswchar_tSize1 = utf8_symbol_len(*Str1);
-    int Firswchar_tSize2 = utf8_symbol_len(*Str2);
-    if (Firswchar_tSize1 != Firswchar_tSize2)
+    int char1_size = utf8_symbol_len(*Str1);
+    int char2_size = utf8_symbol_len(*Str2);
+    if (char1_size != char2_size)
         return false;
-    return (strncmp(Str1, Str2, Firswchar_tSize1) == 0);
+    return (strncmp(Str1, Str2, char1_size) == 0);
 }
 
 char* utf8_pbrk(const char* s, const char* set)
@@ -69,7 +69,7 @@ char* utf8_pbrk(const char* s, const char* set)
     const char* x;
     for (; *s; s = utf8_inc(s))
         for (x = set; *x; x = utf8_inc(x))
-            if (Utf8Firswchar_tsAreEqual(s, x))
+            if (utf8_first_chars_equal(s, x))
                 return (char *)s;
     return nullptr;
 }
@@ -84,7 +84,7 @@ std::ptrdiff_t Utf8spn(const char* s, const char* set)
     {
         for (x = set; *x; x = utf8_inc(x))
         {
-            if (Utf8Firswchar_tsAreEqual(it, x))
+            if (utf8_first_chars_equal(it, x))
                 goto continue_outer;
         }
         break;
@@ -98,7 +98,7 @@ char* utf8_chr(const char* s, const char* sfc) // Char is first from the string
 {
     while (*s)
     {
-        if (s && Utf8Firswchar_tsAreEqual(s, sfc))
+        if (s && utf8_first_chars_equal(s, sfc))
             return (char *)s;
         s = utf8_inc(s);
     }

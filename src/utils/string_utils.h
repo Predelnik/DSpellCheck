@@ -24,6 +24,9 @@ std::vector<std::basic_string_view<CharType>> tokenize(std::basic_string_view<Ch
             on_delim();
         }
     }
-    on_delim ();
+    on_delim();
     return ret;
 }
+
+std::vector<std::string_view> tokenize_utf8(std::string_view target,
+                                            std::string_view delim);

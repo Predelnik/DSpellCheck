@@ -192,8 +192,7 @@ private:
   void PreserveCurrentAddressIndex();
   void FillDownloadDics();
   void ResetHotSpotCache();
-  void CheckSpecialDelimeters(char *&Word, const char *TextStart,
-                              long &WordStart, long &WordEnd);
+  void CutApostrophes(std::string_view& Word);
 
   void SaveToIni(const wchar_t *Name, const wchar_t *Value,
                  const wchar_t *DefaultValue, bool InQuotes = 0);
