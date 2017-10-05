@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "LanguageName.h"
 #include "HunspellInterface.h"
 #include "utils/winapi.h"
+#include "utils/string_utils.h"
 
 SimpleDlg::SimpleDlg() : StaticDialog()
 {
@@ -99,16 +100,13 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
     ComboBox_SetCurSel(HComboLanguage, SelectedIndex);
 
     CheckedListBox_EnableCheckAll(GetLangList()->GetListBox(), BST_UNCHECKED);
-    std::wregex separator(LR"(\|)");
-    using ti = std::regex_token_iterator<std::wstring_view::const_iterator>;
-    for (auto it = ti (multiLanguages.begin (), multiLanguages.end (), separator, -1);
-         it != ti {}; ++it)
+    for (auto &token : tokenize<wchar_t> (multiLanguages, LR"(\|)"))
     {
         int index = -1;
         int i = 0;
         for (auto &lang : langsAvailable)
         {
-            if (*it == lang.OrigName)
+            if (token == lang.OrigName)
             {
                 index = i;
                 break;

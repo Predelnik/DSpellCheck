@@ -38,6 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SelectProxyDialog.h"
 #include "SuggestionsButton.h"
 #include "SciUtils.h"
+#include "utils/string_utils.h"
 
 #ifdef UNICODE
 #define DEFAULT_DELIMITERS                                                     \
@@ -638,20 +639,17 @@ void SpellChecker::CheckFileName()
     wchar_t FullPath[MAX_PATH];
     CheckTextEnabled = !CheckThose;
     SendMsgToNpp(NppDataInstance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)FullPath);
-
-    std::wregex separator(LR"(;)");
-    using ti = std::wsregex_token_iterator;
-    for (auto it = ti(std::begin(FileTypes), std::end(FileTypes), separator, -1); it != ti{}; ++it)
+    for (auto token : tokenize<wchar_t> (FileTypes, LR"(;)"))
     {
         if (CheckThose)
         {
-            CheckTextEnabled = CheckTextEnabled || PathMatchSpec(FullPath, std::wstring (*it).c_str ());
+            CheckTextEnabled = CheckTextEnabled || PathMatchSpec(FullPath, std::wstring (token).c_str ());
             if (CheckTextEnabled)
                 break;
         }
         else
         {
-            CheckTextEnabled &= CheckTextEnabled && (!PathMatchSpec(FullPath, std::wstring (*it).c_str ()));
+            CheckTextEnabled &= CheckTextEnabled && (!PathMatchSpec(FullPath, std::wstring (token).c_str ()));
             if (!CheckTextEnabled)
                 break;
         }
@@ -1745,10 +1743,8 @@ void SpellChecker::SetMultipleLanguages(std::wstring_view MultiString,
                                         AbstractSpellerInterface* Speller)
 {
     std::vector<std::wstring> MultiLangList;
-    std::wregex separator(LR"(\|)");
-    using ti = std::regex_token_iterator<std::wstring_view::const_iterator>;
-    for (auto it = ti(std::begin(MultiString), std::end(MultiString), separator, -1); it != ti{}; ++it)
-        MultiLangList.push_back(*it);
+    for (auto token : tokenize<wchar_t> (MultiString, LR"(\|)"))
+        MultiLangList.push_back(std::wstring {token});
 
     Speller->SetMultipleLanguages(MultiLangList);
 }
