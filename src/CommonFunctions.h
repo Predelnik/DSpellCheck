@@ -38,16 +38,6 @@ std::wstring parseString(const wchar_t* source);
 LRESULT SendMsgToNpp(const NppData *NppDataArg, UINT Msg,
                      WPARAM wParam = 0, LPARAM lParam = 0);
 
-char *Utf8Dec(const char *string, const char *current);
-char *Utf8chr(const char *s, const char *sfc);
-int Utf8Gewchar_tSize(char c);
-char *Utf8strtok(char *s1, const char *Delimit, char **Context);
-char *Utf8Inc(const char *string);
-char *Utf8pbrk(const char *s, const char *set);
-size_t Utf8Length(const char *String);
-bool Utf8IsLead(char c);
-bool Utf8IsCont(char c);
-
 bool SortCompare(wchar_t *a, wchar_t *b);
 bool Equivwchar_tStrings(wchar_t *a, wchar_t *b);
 size_t Hashwchar_tString(wchar_t *a);

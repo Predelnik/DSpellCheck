@@ -39,6 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SuggestionsButton.h"
 #include "SciUtils.h"
 #include "utils/string_utils.h"
+#include "utils/utf8.h"
 
 #ifdef UNICODE
 #define DEFAULT_DELIMITERS                                                     \
@@ -198,7 +199,7 @@ void SpellChecker::PrepareStringForConversion()
         InSize = strlen(str) + 1;
         std::string inBuf = str;
         auto inBufPtr = inBuf.c_str();
-        OutSize = Utf8Length(str) + 1;
+        OutSize = utf8_length(str) + 1;
         std::vector<char> OutBuf(OutSize);
         auto outBufPtr = OutBuf.data();
         Res = iconv(Conv, &inBufPtr, &InSize, &outBufPtr, &OutSize);
@@ -719,13 +720,13 @@ void SpellChecker::FindNextMistake()
         {
             if (CurrentEncoding == ENCODING_UTF8)
             {
-                while (Utf8IsCont(*IteratingChar) && Range.lpstrText < IteratingChar)
+                while (utf8_is_cont(*IteratingChar) && Range.lpstrText < IteratingChar)
                     IteratingChar--;
 
-                while ((!Utf8chr(DelimUtf8Converted.c_str(), IteratingChar)) &&
+                while ((!utf8_chr(DelimUtf8Converted.c_str(), IteratingChar)) &&
                     Range.lpstrText < IteratingChar)
                 {
-                    IteratingChar = Utf8Dec(Range.lpstrText, IteratingChar);
+                    IteratingChar = utf8_dec(Range.lpstrText, IteratingChar);
                 }
             }
             else
@@ -800,13 +801,13 @@ void SpellChecker::FindPrevMistake()
         {
             if (CurrentEncoding == ENCODING_UTF8)
             {
-                while (Utf8IsCont(*IteratingChar) && *IteratingChar)
+                while (utf8_is_cont(*IteratingChar) && *IteratingChar)
                     IteratingChar++;
 
-                while ((!Utf8chr(DelimUtf8Converted.c_str(), IteratingChar)) &&
+                while ((!utf8_chr(DelimUtf8Converted.c_str(), IteratingChar)) &&
                     *IteratingChar)
                 {
-                    IteratingChar = Utf8Inc(IteratingChar);
+                    IteratingChar = utf8_inc(IteratingChar);
                 }
             }
             else
@@ -937,14 +938,14 @@ char* SpellChecker::GetWordAt(long CharPos, char* Text, long Offset)
 
     if (CurrentEncoding == ENCODING_UTF8)
     {
-        if (Utf8chr(DelimUtf8Converted.c_str(), Iterator))
-            Iterator = Utf8Dec(Text, Iterator);
+        if (utf8_chr(DelimUtf8Converted.c_str(), Iterator))
+            Iterator = utf8_dec(Text, Iterator);
 
         if (Iterator == nullptr)
             return nullptr;
 
-        while ((!Utf8chr(DelimUtf8Converted.c_str(), Iterator)) && Text < Iterator)
-            Iterator = (char *)Utf8Dec(Text, Iterator);
+        while ((!utf8_chr(DelimUtf8Converted.c_str(), Iterator)) && Text < Iterator)
+            Iterator = (char *)utf8_dec(Text, Iterator);
     }
     else
     {
@@ -964,8 +965,8 @@ char* SpellChecker::GetWordAt(long CharPos, char* Text, long Offset)
 
     if (CurrentEncoding == ENCODING_UTF8)
     {
-        if (Utf8chr(DelimUtf8Converted.c_str(), UsedText))
-            UsedText = Utf8Inc(UsedText); // Then find first token after this zero
+        if (utf8_chr(DelimUtf8Converted.c_str(), UsedText))
+            UsedText = utf8_inc(UsedText); // Then find first token after this zero
     }
     else
     {
@@ -979,7 +980,7 @@ char* SpellChecker::GetWordAt(long CharPos, char* Text, long Offset)
 
     char* Res;
     if (CurrentEncoding == ENCODING_UTF8)
-        Res = (char *)Utf8strtok(UsedText, DelimUtf8Converted.c_str(), &Context);
+        Res = (char *)utf8_strtok(UsedText, DelimUtf8Converted.c_str(), &Context);
     else
         Res = strtok_s(UsedText, DelimConverted.c_str(), &Context);
     if (Res - Text + Offset > CharPos)
@@ -1868,7 +1869,7 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/)
     ApplyConversions(Word);
 
     auto SymbolsNum =
-        (CurrentEncoding == ENCODING_UTF8) ? Utf8Length(Word.c_str()) : Word.length();
+        (CurrentEncoding == ENCODING_UTF8) ? utf8_length(Word.c_str()) : Word.length();
     if (SymbolsNum == 0)
     {
         return true;
@@ -1881,7 +1882,7 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/)
 
     if (IgnoreNumbers &&
         (CurrentEncoding == ENCODING_UTF8
-             ? Utf8pbrk(Word.c_str(), "0123456789")
+             ? utf8_pbrk(Word.c_str(), "0123456789")
              : strpbrk(Word.c_str(), "0123456789")) != nullptr) // Same for UTF-8 and not
     {
         return true;
@@ -1996,7 +1997,7 @@ int SpellChecker::CheckText(char* TextToCheck, long Offset,
     long WordEnd = 0;
 
     if (CurrentEncoding == ENCODING_UTF8)
-        token = Utf8strtok(TextToCheck, DelimUtf8Converted.c_str(), &Context);
+        token = utf8_strtok(TextToCheck, DelimUtf8Converted.c_str(), &Context);
     else
         token = strtok_s(TextToCheck, DelimConverted.c_str(), &Context);
 
@@ -2050,7 +2051,7 @@ int SpellChecker::CheckText(char* TextToCheck, long Offset,
 
     newtoken:
         if (CurrentEncoding == ENCODING_UTF8)
-            token = Utf8strtok(nullptr, DelimUtf8Converted.c_str(), &Context);
+            token = utf8_strtok(nullptr, DelimUtf8Converted.c_str(), &Context);
         else
             token = strtok_s(nullptr, DelimConverted.c_str(), &Context);
     }
