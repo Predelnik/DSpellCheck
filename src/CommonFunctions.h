@@ -80,7 +80,7 @@ std::wstring wstring_printf (const wchar_t *format, ArgTypes &&... args) {
     return buf.data ();
 }
 
-void replaceAll(std::string& str, const std::string& from, const std::string& to);
+void replaceAll(std::string& str, std::string_view from, std::string_view to);
 std::wstring readIniValue(const wchar_t* appName, const wchar_t* keyName, const wchar_t* defaultValue,
                           const wchar_t* fileName);
 

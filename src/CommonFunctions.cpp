@@ -408,7 +408,7 @@ bool CheckForDirectoryExistence(std::wstring path, bool Silent, HWND NppWindow)
 
 wchar_t* GetLastSlashPosition(wchar_t* Path) { return wcsrchr(Path, L'\\'); }
 
-void replaceAll(std::string& str, const std::string& from, const std::string& to)
+void replaceAll(std::string& str, std::string_view from, std::string_view to)
 {
     if (from.empty())
         return;
