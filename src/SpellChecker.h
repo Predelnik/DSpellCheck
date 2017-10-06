@@ -182,7 +182,7 @@ private:
     std::vector<SuggestionsMenuItem> FillSuggestionsMenu(HMENU Menu);
   bool GetWordUnderCursorIsRight(long &Pos, long &Length,
                                  bool UseTextCursor = false);
-  char *GetWordAt(long CharPos, char *Text, long Offset);
+  std::string_view GetWordAt(long CharPos, char* Text, long Offset) const;
   bool CheckTextNeeded();
   int CheckWordInCommentOrString(LRESULT Style) const;
   LRESULT GetStyle(int Pos);

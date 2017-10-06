@@ -798,9 +798,9 @@ bool SpellChecker::GetWordUnderCursorIsRight(long& Pos, long& Length,
         Buf[LineLength] = 0;
         auto Offset = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_POSITIONFROMLINE,
                                             Line);
-        char* Word = GetWordAt(static_cast<long>(initCharPos), Buf.data(),
-                               static_cast<long>(Offset));
-        if (!Word || !*Word) {
+        auto Word = GetWordAt(static_cast<long>(initCharPos), Buf.data(),
+                              static_cast<long>(Offset));
+        if (Word.empty()) {
             Ret = true;
         }
         else {
@@ -825,7 +825,7 @@ bool SpellChecker::GetWordUnderCursorIsRight(long& Pos, long& Length,
     return Ret;
 }
 
-char* SpellChecker::GetWordAt(long CharPos, char* Text, long Offset) {
+std::string_view SpellChecker::GetWordAt(long CharPos, char* Text, long Offset) const {
     char* UsedText;
     char* Iterator = Text + CharPos - Offset;
 
@@ -863,17 +863,24 @@ char* SpellChecker::GetWordAt(long CharPos, char* Text, long Offset) {
             UsedText++;
     }
 
-    char* Context = nullptr;
     // We're just taking the first token (basically repeating the same code as an
     // in CheckVisible
 
-    char* Res;
+    std::string_view Res;
     if (CurrentEncoding == ENCODING_UTF8)
-        Res = (char *)utf8_strtok(UsedText, DelimUtf8Converted.c_str(), &Context);
+        {
+          auto end = utf8_pbrk(UsedText, DelimUtf8Converted.c_str());
+          if (!end) return {};
+          Res = {UsedText, static_cast<size_t> (end - UsedText)};
+        }
     else
-        Res = strtok_s(UsedText, DelimConverted.c_str(), &Context);
-    if (Res - Text + Offset > CharPos)
-        return nullptr;
+        {
+          auto end = strpbrk (UsedText, DelimConverted.c_str());
+          if (!end) return {};
+          Res = {UsedText, static_cast<size_t> (end - UsedText)};
+        }
+    if (Res.data () - Text + Offset > CharPos)
+        return {};
     else
         return Res;
 }

@@ -64,13 +64,12 @@ bool utf8_first_chars_equal(const char* Str1, const char* Str2)
     return (strncmp(Str1, Str2, char1_size) == 0);
 }
 
-char* utf8_pbrk(const char* s, const char* set)
+const char* utf8_pbrk(const char* s, const char* set)
 {
-    const char* x;
     for (; *s; s = utf8_inc(s))
-        for (x = set; *x; x = utf8_inc(x))
+        for (auto x = set; *x; x = utf8_inc(x))
             if (utf8_first_chars_equal(s, x))
-                return (char *)s;
+                return s;
     return nullptr;
 }
 
@@ -103,48 +102,6 @@ char* utf8_chr(const char* s, const char* sfc) // Char is first from the string
         s = utf8_inc(s);
     }
     return nullptr;
-}
-
-char* utf8_strtok(char* s1, const char* Delimit, char** Context)
-{
-    char* tmp;
-
-    /* Skip leading delimiters if new string. */
-    if (s1 == nullptr)
-    {
-        s1 = *Context;
-        if (s1 == nullptr) /* End of story? */
-            return nullptr;
-        else
-            s1 += Utf8spn(s1, Delimit);
-    }
-    else
-    {
-        s1 += Utf8spn(s1, Delimit);
-    }
-
-    /* Find end of segment */
-    tmp = utf8_pbrk(s1, Delimit);
-    if (tmp)
-    {
-        /* Found another delimiter, split string and save state. */
-        *tmp = '\0';
-        tmp++;
-        while (!utf8_is_lead(*(tmp)))
-        {
-            *tmp = '\0';
-            tmp++;
-        }
-
-        *Context = tmp;
-    }
-    else
-    {
-        /* Last segment, remember that. */
-        *Context = nullptr;
-    }
-
-    return s1;
 }
 
 size_t utf8_length(const char* String)
