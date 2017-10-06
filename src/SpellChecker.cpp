@@ -177,22 +177,10 @@ void SpellChecker::PrepareStringForConversion() {
     iconv_t Conv = iconv_open("CHAR", "UTF-8");
     const char* InString[] = {Yo, yo, Ye, ye, PunctuationApostrophe};
     std::string* OutString[] = {&YoANSI, &yoANSI, &YeANSI, &yeANSI, &PunctuationApostropheANSI};
-    size_t InSize = 0;
-    size_t OutSize = 0;
-    size_t Res;
 
     int i = 0;
     for (auto str : InString) {
-        InSize = strlen(str) + 1;
-        std::string inBuf = str;
-        auto inBufPtr = inBuf.c_str();
-        OutSize = utf8_length(str) + 1;
-        std::vector<char> OutBuf(OutSize);
-        auto outBufPtr = OutBuf.data();
-        Res = iconv(Conv, &inBufPtr, &InSize, &outBufPtr, &OutSize);
-        if (Res != static_cast<size_t>(-1)) {
-            *OutString[i] = OutBuf.data();
-        }
+        *OutString[i] = toUtf8String(str);
         ++i;
     }
     iconv_close(Conv);
