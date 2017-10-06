@@ -28,14 +28,14 @@ char* utf8_dec(const char* string, const char* current)
     return (char *)temp;
 }
 
-char* utf8_inc(const char* string)
+const char* utf8_inc(const char* string)
 {
-    const char* temp;
-    temp = string + 1;
-    while (*temp && !utf8_is_lead(*temp))
-        temp++;
+  return string + utf8_symbol_len (*string);
+}
 
-    return (char *)temp;
+char* utf8_inc(char* string)
+{
+  return string + utf8_symbol_len (*string);
 }
 
 int utf8_symbol_len(char c)
@@ -149,12 +149,12 @@ char* utf8_strtok(char* s1, const char* Delimit, char** Context)
 
 size_t utf8_length(const char* String)
 {
-    char* It = const_cast<char *>(String);
-    size_t Size = 0;
-    while (*It)
+    auto it = String;
+    size_t size = 0;
+    while (*it)
     {
-        Size++;
-        It = utf8_inc(It);
+        size++;
+        it = utf8_inc(it);
     }
-    return Size;
+    return size;
 }
