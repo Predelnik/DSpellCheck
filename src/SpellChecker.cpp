@@ -775,7 +775,7 @@ bool SpellChecker::GetWordUnderCursorIsRight(long& Pos, long& Length,
                                              bool UseTextCursor) {
     bool Ret = true;
     POINT p;
-    std::ptrdiff_t iniwchar_tPos;
+    std::ptrdiff_t initCharPos;
     LRESULT SelectionStart = 0;
     LRESULT SelectionEnd = 0;
 
@@ -788,7 +788,7 @@ bool SpellChecker::GetWordUnderCursorIsRight(long& Pos, long& Length,
             return true;
         ScreenToClient(scintilla, &p);
 
-        iniwchar_tPos = SendMsgToActiveEditor(
+        initCharPos = SendMsgToActiveEditor(
             GetCurrentScintilla(), SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
     }
     else {
@@ -796,13 +796,13 @@ bool SpellChecker::GetWordUnderCursorIsRight(long& Pos, long& Length,
         );
         SelectionEnd =
             SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETSELECTIONEND);
-        iniwchar_tPos =
+        initCharPos =
             SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETCURRENTPOS);
     }
 
-    if (iniwchar_tPos != -1) {
+    if (initCharPos != -1) {
         auto Line = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_LINEFROMPOSITION,
-                                          iniwchar_tPos);
+                                          initCharPos);
         auto LineLength =
             SendMsgToActiveEditor(GetCurrentScintilla(), SCI_LINELENGTH, Line);
         std::vector<char> Buf(LineLength + 1);
@@ -810,22 +810,22 @@ bool SpellChecker::GetWordUnderCursorIsRight(long& Pos, long& Length,
         Buf[LineLength] = 0;
         auto Offset = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_POSITIONFROMLINE,
                                             Line);
-        char* Word = GetWordAt(static_cast<long>(iniwchar_tPos), Buf.data(),
+        char* Word = GetWordAt(static_cast<long>(initCharPos), Buf.data(),
                                static_cast<long>(Offset));
         if (!Word || !*Word) {
             Ret = true;
         }
         else {
-            Pos = static_cast<long>(Word - Buf.data() + Offset);
-            long PosEnd = Pos + static_cast<long>(strlen(Word));
-            // TODO: restore CutApostrophes
-            // CutApostrophes(Word, Buf.data(), Pos, PosEnd);
+            std::string_view sv = Word;
+            CutApostrophes(sv);
+            Pos = static_cast<long>(sv.data () - Buf.data() + Offset);
+            long PosEnd = Pos + static_cast<long> (sv.length ());
             long WordLen = PosEnd - Pos;
             if (SelectionStart != SelectionEnd &&
                 (SelectionStart != Pos || SelectionEnd != Pos + WordLen)) {
                 return true;
             }
-            if (CheckWord(Word, Pos, Pos + WordLen - 1)) {
+            if (CheckWord(std::string (sv), Pos, Pos + WordLen - 1)) {
                 Ret = true;
             }
             else {
