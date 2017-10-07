@@ -180,7 +180,7 @@ HunspellInterface::~HunspellInterface() {
         !ArePathsEqual(SystemWrongDicPath.c_str (), UserDicPath.c_str())) {
         SetFileAttributes(SystemWrongDicPath.c_str (), FILE_ATTRIBUTE_NORMAL);
         DeleteFile(SystemWrongDicPath.c_str ());
-    } 
+    }
 
     if (!UserDicPath.empty ())
         WriteUserDic(&Memorized, UserDicPath.c_str());
@@ -576,7 +576,7 @@ void HunspellInterface::SetAdditionalDirectory(const wchar_t* Dir) {
         if (PathFileExists((fileNameWithoutExt + L".dic").c_str ())) {
             AvailableLangInfo NewX;
             NewX.type = 1;
-            NewX.name = fileNameWithoutExt.substr(fileNameWithoutExt.rfind ('L\\') + 1);
+            NewX.name = fileNameWithoutExt.substr(fileNameWithoutExt.rfind (L'\\') + 1);
             if (dicList.count(NewX) == 0)
                 dicList.insert(NewX);
         }

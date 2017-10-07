@@ -112,7 +112,6 @@ private:
   std::vector<DicInfo *> m_spellers;
   WordSet Memorized;
   WordSet Ignored;
-  bool InitialReadingBeenDone;
   std::wstring UserDicPath;        // For now only default one.
   std::wstring SystemWrongDicPath; // Only for reading and then removing
   HWND NppWindow;

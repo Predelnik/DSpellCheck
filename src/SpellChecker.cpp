@@ -898,7 +898,7 @@ void SpellChecker::SetSuggestionsBoxTransparency() {
 }
 
 void SpellChecker::InitSuggestionsBox() {
-    if (!SuggestionsMode == SUGGESTIONS_BOX)
+    if (SuggestionsMode != SUGGESTIONS_BOX)
         return;
     if (!CurrentSpeller->IsWorking())
         return;
@@ -1652,7 +1652,7 @@ void SpellChecker::ApplyConversions(
     }
 
     static_assert (countof (ConvertFrom) == countof (ConvertTo));
-    for (int i = 0; i < countof (ConvertFrom); ++i) {
+    for (int i = 0; i < static_cast<int> (countof (ConvertFrom)); ++i) {
         if (!Apply[i])
             continue;
         replaceAll(Word, ConvertFrom[i], ConvertTo[i]);

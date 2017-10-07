@@ -235,7 +235,7 @@ public:
 
    bool Attach(T p)
    {
-      if (find(p)!=base_type::end())
+      if (this->find(p)!=base_type::end())
          return false;
       this->insert(p);
       p->Attach(static_cast<T2>(this));
