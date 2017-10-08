@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "RemoveDictionariesDialog.h"
 
-#include "Controls/CheckedList/CheckedList.h"
+#include "CheckedList/CheckedList.h"
 #include "MainDef.h"
 #include "HunspellInterface.h"
 #include "CommonFunctions.h"

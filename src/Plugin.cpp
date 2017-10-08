@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "aspell.h"
 #include "CommonFunctions.h"
-#include "Controls/CheckedList/CheckedList.h"
+#include "CheckedList/CheckedList.h"
 #include "MainDef.h"
 #include "AboutDlg.h"
 #include "DownloadDicsDlg.h"
@@ -37,8 +37,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "SuggestionsButton.h"
 
-#include "StackWalker/StackWalker.h"
+#include "StackWalker.h"
 #include "utils/raii.h"
+#include "resource.h"
 
 const wchar_t configFileName[] = L"DSpellCheck.ini";
 

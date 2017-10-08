@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SciUtils.h"
 #include "utils/string_utils.h"
 #include "utils/utf8.h"
+#include "resource.h"
 
 #ifdef UNICODE
 #define DEFAULT_DELIMITERS                                                     \

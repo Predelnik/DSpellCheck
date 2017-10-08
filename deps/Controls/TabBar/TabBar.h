@@ -32,16 +32,9 @@
 #define _WIN32_IE	0x0600
 #endif //_WIN32_IE
 
+#include <windows.h>
 #include <commctrl.h>
 #include "Window.h"
-
-#ifndef MENUCMDID_H
-#include "menuCmdID.h"
-#endif //MENUCMDID_H
-
-#ifndef RESOURCE_H
-#include "resource.h"
-#endif //RESOURCE_H
 
 //Notification message
 #define TCN_TABDROPPED (TCN_FIRST - 10)

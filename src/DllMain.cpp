@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "RemoveDictionariesDialog.h"
 #include "MainDef.h"
 #include "SpellChecker.h"
+#include "menuCmdID.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>

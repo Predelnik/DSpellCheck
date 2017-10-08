@@ -28,6 +28,7 @@
 #include "TabBar.h"
 #include <stdexcept>
 #include <Notepad_plus_msgs.h>
+#include "menuCmdID.h"
 
 const COLORREF grey      	            = RGB(128,   128,  128);
 

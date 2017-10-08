@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <io.h>
 #include <fcntl.h>
 
-#include "Controls/CheckedList/CheckedList.h"
+#include "CheckedList/CheckedList.h"
 #include "CommonFunctions.h"
 #include "Definements.h"
 #include "DownloadDicsDlg.h"

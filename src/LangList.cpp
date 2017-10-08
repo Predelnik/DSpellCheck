@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <CommCtrl.h>
 
 #include "LangList.h"
-#include "Controls/CheckedList/CheckedList.h"
+#include "CheckedList/CheckedList.h"
 #include "MainDef.h"
 #include "CommonFunctions.h"
 #include "SpellChecker.h"
@@ -55,7 +55,7 @@ void LangList::ApplyChoice(SpellChecker *SpellCheckerInstance) {
       }
       else
           first = false;
-        
+
       buf += SpellCheckerInstance->GetLangByIndex(i);
     }
   }

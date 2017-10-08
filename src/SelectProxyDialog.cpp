@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SelectProxyDialog.h"
 
 #include "DownloadDicsDlg.h"
-#include "Controls/CheckedList/CheckedList.h"
+#include "CheckedList/CheckedList.h"
 #include "MainDef.h"
 #include "CommonFunctions.h"
 #include "SpellChecker.h"
