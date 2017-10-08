@@ -23,22 +23,22 @@ private:
 protected:
 public:
   virtual ~AbstractSpellerInterface() = default;
-  virtual std::vector<std::wstring> GetLanguageList() = 0;
-  virtual void SetLanguage(const wchar_t* Lang) = 0;
-  virtual void SetMultipleLanguages(
-      const std::vector<std::wstring>& List) = 0;         // Languages are from LangList
-  void SetMode(int Multi) { MultiMode = Multi; } // Multi - 1, Single - 0
-  void SetEncoding(EncodingType Encoding) { CurrentEncoding = Encoding; }
-  virtual bool CheckWord(const char* Word) = 0; // Word in Utf-8 or ANSI
-  virtual std::vector<std::string> GetSuggestions(const char* Word) = 0;
-  virtual void AddToDictionary(const char* Word) = 0;
-  virtual void IgnoreAll(const char* Word) = 0;
-  virtual bool IsWorking() = 0;
+  virtual std::vector<std::wstring> get_language_list() = 0;
+  virtual void set_language(const wchar_t* Lang) = 0;
+  virtual void set_multiple_languages(
+  const std::vector<std::wstring>& List) = 0;         // Languages are from LangList
+  void set_mode(int Multi) { m_multi_mode = Multi; } // Multi - 1, Single - 0
+  void set_encoding(EncodingType Encoding) { m_current_encoding = Encoding; }
+  virtual bool check_word(const char* Word) = 0; // Word in Utf-8 or ANSI
+  virtual std::vector<std::string> get_suggestions(const char* Word) = 0;
+  virtual void add_to_dictionary(const char* Word) = 0;
+  virtual void ignore_all(const char* Word) = 0;
+  virtual bool is_working() = 0;
 
 private:
 protected:
-  int MultiMode = 0;
-  EncodingType CurrentEncoding = ENCODING_UTF8;
+  int m_multi_mode = 0;
+  EncodingType m_current_encoding = ENCODING_UTF8;
 
 public:
 };

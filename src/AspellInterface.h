@@ -28,16 +28,16 @@ class AspellInterface : public AbstractSpellerInterface {
 public:
   AspellInterface(HWND NppWindowArg); // Window for error reporting
   ~AspellInterface();
-    std::vector<std::wstring> GetLanguageList() override;
-  void SetLanguage(const wchar_t* Lang) override;
-  void SetMultipleLanguages(
+    std::vector<std::wstring> get_language_list() override;
+  void set_language(const wchar_t* Lang) override;
+  void set_multiple_languages(
       const std::vector<std::wstring>& List) override; // Languages are from LangList
   bool
-  CheckWord(const char* Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
-  bool IsWorking() override;
-    std::vector<std::string> GetSuggestions(const char* Word) override;
-  void AddToDictionary(const char* Word) override;
-  void IgnoreAll(const char* Word) override;
+  check_word(const char* Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
+  bool is_working() override;
+    std::vector<std::string> get_suggestions(const char* Word) override;
+  void add_to_dictionary(const char* Word) override;
+  void ignore_all(const char* Word) override;
 
   bool Init(const wchar_t* PathArg);
 
@@ -46,9 +46,9 @@ private:
 
 public:
 private:
-  AspellSpeller *LastSelectedSpeller;
-  SpellerPtr singleSpeller;
-  std::vector<SpellerPtr> spellers;
-  bool AspellLoaded;
-  HWND NppWindow; // For message boxes
+  AspellSpeller *m_last_selected_speller;
+  SpellerPtr m_single_speller;
+  std::vector<SpellerPtr> m_spellers;
+  bool m_aspell_loaded;
+  HWND m_npp_window; // For message boxes
 };

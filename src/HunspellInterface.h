@@ -76,15 +76,15 @@ class HunspellInterface : public AbstractSpellerInterface {
 public:
   HunspellInterface(HWND NppWindowArg);
   ~HunspellInterface();
-  std::vector<std::wstring> GetLanguageList() override;
-  void SetLanguage(const wchar_t* Lang) override;
-  void SetMultipleLanguages(
+  std::vector<std::wstring> get_language_list() override;
+  void set_language(const wchar_t* Lang) override;
+  void set_multiple_languages(
       const std::vector<std::wstring>& List) override;             // Languages are from LangList
-  bool CheckWord(const char* Word) override; // Word in Utf-8 or ANSI
-  bool IsWorking() override;
-  std::vector<std::string> GetSuggestions(const char* Word) override;
-  void AddToDictionary(const char* Word) override;
-  void IgnoreAll(const char* Word) override;
+  bool check_word(const char* Word) override; // Word in Utf-8 or ANSI
+  bool is_working() override;
+  std::vector<std::string> get_suggestions(const char* Word) override;
+  void add_to_dictionary(const char* Word) override;
+  void ignore_all(const char* Word) override;
 
   void SetDirectory(const wchar_t* Dir);
   void SetAdditionalDirectory(const wchar_t* Dir);
@@ -100,8 +100,8 @@ private:
   void MessageBoxWordCannotBeAdded();
 
 private:
-  bool IsHunspellWorking;
-  bool UseOneDic;
+  bool m_is_hunspell_working;
+  bool m_use_one_dic;
   std::wstring DicDir;
   std::wstring SysDicDir;
   std::set<AvailableLangInfo> dicList;

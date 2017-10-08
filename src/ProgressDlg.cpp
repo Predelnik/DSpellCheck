@@ -38,7 +38,7 @@ void ProgressDlg::init(HINSTANCE hInst, HWND Parent) {
   return Window::init(hInst, Parent);
 }
 
-INT_PTR ProgressDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM /*lParam*/) {
+INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {
     HDescTop = GetDlgItem(_hSelf, IDC_DESCTOP);

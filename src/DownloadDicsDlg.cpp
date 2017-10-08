@@ -878,7 +878,7 @@ void DownloadDicsDlg::UpdateOptions(SpellChecker* spellchecker) {
 
 void DownloadDicsDlg::Refresh() { ReinitServer(this, false); }
 
-INT_PTR DownloadDicsDlg::run_dlgProc(UINT message, WPARAM wParam,
+INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM wParam,
                                      LPARAM lParam) {
     switch (message) {
     case WM_INITDIALOG:

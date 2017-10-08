@@ -356,7 +356,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lParam*/,
     return 0; // The function should always return 0.
 }
 
-INT_PTR SimpleDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     int x;
     wchar_t* EndPtr;
@@ -665,7 +665,7 @@ const wchar_t*const IndicNames[] = {
     L"Straight Box", L"Dash", L"Dots", L"Squiggle Low"
 };
 
-INT_PTR AdvancedDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     wchar_t* EndPtr = nullptr;
     wchar_t Buf[DEFAULT_BUF_SIZE];
@@ -914,7 +914,7 @@ void SettingsDlg::ApplySettings()
     getSpellChecker()->applySettings();
 }
 
-INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR SettingsDlg::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
     switch (Message)
     {

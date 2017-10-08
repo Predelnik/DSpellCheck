@@ -94,7 +94,7 @@ public :
 protected :
   RECT _rc;
   static INT_PTR WINAPI dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-  virtual INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) = 0;
+  virtual INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) = 0;
 
   void alignWith(HWND handle, HWND handle2Align, PosAlign pos, POINT & point);
   HGLOBAL makeRTLResource(int dialogID, DLGTEMPLATE **ppMyDlgTemplate);

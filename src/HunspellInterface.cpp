@@ -79,7 +79,7 @@ HunspellInterface::HunspellInterface(HWND NppWindowArg) {
     NppWindow = NppWindowArg;
     SingularSpeller = {};
     LastSelectedSpeller = {};
-    IsHunspellWorking = false;
+    m_is_hunspell_working = false;
 }
 
 void HunspellInterface::UpdateOnDicRemoval(wchar_t* Path,
@@ -101,7 +101,7 @@ void HunspellInterface::UpdateOnDicRemoval(wchar_t* Path,
     }
 }
 
-void HunspellInterface::SetUseOneDic(bool Value) { UseOneDic = Value; }
+void HunspellInterface::SetUseOneDic(bool Value) { m_use_one_dic = Value; }
 
 bool ArePathsEqual(const wchar_t* path1, const wchar_t* path2) {
     BY_HANDLE_FILE_INFORMATION bhfi1, bhfi2;
@@ -174,7 +174,7 @@ static void WriteUserDic(WordSet* Target, std::wstring Path) {
 }
 
 HunspellInterface::~HunspellInterface() {
-    IsHunspellWorking = false;
+    m_is_hunspell_working = false;
 
     if (!SystemWrongDicPath.empty () && !UserDicPath.empty() &&
         !ArePathsEqual(SystemWrongDicPath.c_str (), UserDicPath.c_str())) {
@@ -192,7 +192,7 @@ HunspellInterface::~HunspellInterface() {
         }
 }
 
-std::vector<std::wstring> HunspellInterface::GetLanguageList() {
+std::vector<std::wstring> HunspellInterface::get_language_list() {
     std::vector<std::wstring> list;
     for (auto& dic : dicList) {
         list.push_back(dic.name);
@@ -250,7 +250,7 @@ DicInfo* HunspellInterface::CreateHunspell(const wchar_t* Name, int Type) {
     return &target;
 }
 
-void HunspellInterface::SetLanguage(const wchar_t* Lang) {
+void HunspellInterface::set_language(const wchar_t* Lang) {
     if (dicList.empty()) {
         SingularSpeller = nullptr;
         return;
@@ -265,7 +265,7 @@ void HunspellInterface::SetLanguage(const wchar_t* Lang) {
     SingularSpeller = CreateHunspell(it->name.c_str(), it->type);
 }
 
-void HunspellInterface::SetMultipleLanguages(const std::vector<std::wstring>& List) {
+void HunspellInterface::set_multiple_languages(const std::vector<std::wstring>& List) {
     m_spellers.clear();
 
     if (dicList.empty())
@@ -314,7 +314,7 @@ bool HunspellInterface::SpellerCheckWord(const DicInfo& Dic, const char* Word,
     return Dic.hunspell->spell(WordToCheck.c_str ());
 }
 
-bool HunspellInterface::CheckWord(const char* Word) {
+bool HunspellInterface::check_word(const char* Word) {
     /*
     if (Memorized->find (Word) != Memorized->end ()) // This check is for
     dictionaries which are in other than utf-8 encoding
@@ -326,9 +326,9 @@ bool HunspellInterface::CheckWord(const char* Word) {
         return true;
 
     bool res = false;
-    if (!MultiMode) {
+    if (!m_multi_mode) {
         if (SingularSpeller)
-            res = SpellerCheckWord(*SingularSpeller, Word, CurrentEncoding);
+            res = SpellerCheckWord(*SingularSpeller, Word, m_current_encoding);
         else
             res = true;
     }
@@ -337,7 +337,7 @@ bool HunspellInterface::CheckWord(const char* Word) {
             return true;
 
         for (auto& speller : m_spellers) {
-            res = res || SpellerCheckWord(*speller, Word, CurrentEncoding);
+            res = res || SpellerCheckWord(*speller, Word, m_current_encoding);
             if (res)
                 break;
         }
@@ -381,12 +381,12 @@ void HunspellInterface::MessageBoxWordCannotBeAdded() {
         L"Word cannot be added", MB_OK | MB_ICONWARNING);
 }
 
-void HunspellInterface::AddToDictionary(const char* Word) {
+void HunspellInterface::add_to_dictionary(const char* Word) {
     if (!LastSelectedSpeller)
         return;
 
     std::wstring DicPath;
-    if (UseOneDic)
+    if (m_use_one_dic)
         DicPath = UserDicPath;
     else
         DicPath = LastSelectedSpeller->LocalDicPath;
@@ -429,12 +429,12 @@ void HunspellInterface::AddToDictionary(const char* Word) {
     }
 
    std::string buf;
-    if (CurrentEncoding == ENCODING_UTF8)
+    if (m_current_encoding == ENCODING_UTF8)
         buf = Word;
     else
         buf = utf8_to_string(Word);
 
-    if (UseOneDic) {
+    if (m_use_one_dic) {
         Memorized.insert(buf);
         for (auto& p : AllHunspells) {
             auto ConvWord = GetConvertedWord(buf.c_str (), p.second.Converter.get());
@@ -456,7 +456,7 @@ void HunspellInterface::AddToDictionary(const char* Word) {
     }
 }
 
-void HunspellInterface::IgnoreAll(const char* Word) {
+void HunspellInterface::ignore_all(const char* Word) {
     if (!LastSelectedSpeller)
         return;
 
@@ -497,14 +497,14 @@ namespace
     };
 }
 
-std::vector<std::string> HunspellInterface::GetSuggestions(const char* Word) {
+std::vector<std::string> HunspellInterface::get_suggestions(const char* Word) {
     std::vector<std::string> SuggList;
     HunspellSuggestions list;
     LastSelectedSpeller = SingularSpeller;
 
-    if (!MultiMode) {
+    if (!m_multi_mode) {
         list = {
-            SingularSpeller->hunspell.get(), GetConvertedWord(Word, (CurrentEncoding == ENCODING_UTF8)
+            SingularSpeller->hunspell.get(), GetConvertedWord(Word, (m_current_encoding == ENCODING_UTF8)
                                                                         ? SingularSpeller->Converter.get()
                                                                         : SingularSpeller->ConverterANSI.get()).c_str ()
         };
@@ -514,7 +514,7 @@ std::vector<std::string> HunspellInterface::GetSuggestions(const char* Word) {
         HunspellSuggestions curList;
         for (auto speller : m_spellers) {
             curList = {
-                speller->hunspell.get(), GetConvertedWord(Word, (CurrentEncoding == ENCODING_UTF8)
+                speller->hunspell.get(), GetConvertedWord(Word, (m_current_encoding == ENCODING_UTF8)
                                                                     ? speller->Converter.get()
                                                                     : speller->ConverterANSI.get()).c_str ()
             };
@@ -543,7 +543,7 @@ void HunspellInterface::SetDirectory(const wchar_t* Dir) {
     DicDir = Dir;
 
     dicList.clear();
-    IsHunspellWorking = true;
+    m_is_hunspell_working = true;
 
     auto files = ListFiles(Dir, L"*.*", L"*.aff");
     if (files.empty()) {
@@ -565,7 +565,7 @@ void HunspellInterface::SetDirectory(const wchar_t* Dir) {
 
 void HunspellInterface::SetAdditionalDirectory(const wchar_t* Dir) {
     SysDicDir = Dir;
-    IsHunspellWorking = true;
+    m_is_hunspell_working = true;
 
     auto files = ListFiles(Dir, L"*.*", L"*.aff");
     if (files.empty())
@@ -603,4 +603,4 @@ bool HunspellInterface::GetLangOnlySystem(const wchar_t* Lang) {
         return false;
 }
 
-bool HunspellInterface::IsWorking() { return IsHunspellWorking; }
+bool HunspellInterface::is_working() { return m_is_hunspell_working; }

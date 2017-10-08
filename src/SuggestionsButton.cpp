@@ -77,7 +77,7 @@ void SuggestionsButton::initDlg(HINSTANCE hInst, HWND Parent, NppData nppData) {
   return Window::init(hInst, Parent);
 }
 
-INT_PTR SuggestionsButton::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam) {
+INT_PTR SuggestionsButton::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lParam) {
   POINT p;
   HDC Dc;
   HBITMAP hBmp;

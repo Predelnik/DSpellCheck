@@ -32,9 +32,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <vld.h>
 #endif // VLD_BUILD
 
-extern FuncItem funcItem[nbFunc];
-extern NppData nppData;
-extern bool doCloseTag;
+extern FuncItem funcItem[nbFunc]; // NOLINT
+extern NppData nppData; // NOLINT
+extern bool doCloseTag; // NOLINT
 HANDLE HModule;
 std::vector<std::pair<long, long>> CheckQueue;
 UINT_PTR uiTimer = 0u;
@@ -155,18 +155,18 @@ LRESULT showCalculatedMenu(const std::vector<SuggestionsMenuItem>&& menuList) {
     return ::CallWindowProc(wndProcNotepad, nppData._nppHandle, WM_CONTEXTMENU, LastHwnd, LastCoords);
 }
 
-extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) {
+extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) { // NOLINT
   nppData = notpadPlusData;
   commandMenuInit();
   wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWLP_WNDPROC,
                                                (LPARAM)SubWndProcNotepad);
 }
 
-extern "C" __declspec(dllexport) const wchar_t *getName() {
+extern "C" __declspec(dllexport) const wchar_t *getName() { // NOLINT
   return NPP_PLUGIN_NAME;
 }
 
-extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
+extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) { // NOLINT
   *nbF = nbFunc;
   return funcItem;
 }
@@ -189,7 +189,7 @@ void WINAPI uiUpdate (HWND, UINT, UINT_PTR, DWORD)  {
     GetDownloadDics()->uiUpdate ();
 }
 
-extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
+extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { // NOLINT
   /*
   // DEBUG_CODE:
   long CurPos = SendMsgToEditor(&nppData, SCI_GETCURRENTPOS);
@@ -328,7 +328,7 @@ void InitNeededDialogs(WPARAM wParam) {
 }
 
 extern "C" __declspec(dllexport) LRESULT
-    messageProc(UINT Message, WPARAM wParam, LPARAM /*lParam*/) {
+    messageProc(UINT Message, WPARAM wParam, LPARAM /*lParam*/) { // NOLINT
   switch (Message) {
   case WM_MOVE:
     if (getSpellChecker())
@@ -346,5 +346,5 @@ extern "C" __declspec(dllexport) LRESULT
 }
 
 #ifdef UNICODE
-extern "C" __declspec(dllexport) BOOL isUnicode() { return TRUE; }
+extern "C" __declspec(dllexport) BOOL isUnicode() { return TRUE; } // NOLINT
 #endif // UNICODE

@@ -37,42 +37,6 @@ struct CallbackData {
   std::function<void ()> callback;
 };
 
-struct MessageBoxInfo {
-  HWND hWnd;
-  wchar_t *Title;
-  wchar_t *Message;
-  DWORD Flags;
-  DWORD Answer;
-  MessageBoxInfo(HWND hWndArg, wchar_t *MessageArg, wchar_t *TitleArg,
-                 DWORD FlagsArg) {
-    hWnd = hWndArg;
-    Title = TitleArg;
-    Message = MessageArg;
-    Flags = FlagsArg;
-    Answer = 0;
-  }
-};
-
-class hash_compare_strings {
-public:
-  enum {
-    min_buckets = 1,
-    bucket_size = 1,
-  };
-
-  size_t operator()(const char *a) const {
-    size_t Hash = 7;
-    for (unsigned int i = 0; i < strlen(a); i++) {
-      Hash = Hash * 31 + a[i];
-    }
-    return Hash;
-  }
-
-  bool operator()(const char *a, const char *b) const {
-    return strcmp(a, b) < 0;
-  }
-};
-
 #define SUGGESTIONS_BOX 0
 #define SUGGESTIONS_CONTEXT_MENU 1
 

@@ -30,7 +30,7 @@ public:
   void ApplyChoice(SpellChecker *SpellCheckerInstance);
 
 protected:
-  INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) override;  // NOLINT
 
 protected:
   HWND HLangList = nullptr;

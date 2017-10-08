@@ -54,7 +54,7 @@ public:
   void ApplyLibChange(SpellChecker *SpellCheckerInstance);
 
 protected:
-    INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+    INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) override;
 
 private:
   /* NppData struct instance */
@@ -95,7 +95,7 @@ public:
   void FillDelimiters(const char *Delimiters);
   void SetDelimetersEdit(const wchar_t* Delimiters);
   void SetConversionOpts(bool ConvertYo, bool ConvertSingleQuotesArg,
-                         bool RemoveSingleApostrophe);  
+                         bool RemoveSingleApostrophe);
   int GetRecheckDelay();
   void SetRecheckDelay(int Delay);
   void SetSuggBoxSettings(LRESULT Size, LRESULT Trans);
@@ -106,7 +106,7 @@ public:
   void SetBufferSize(int Size);
 
 protected:
-    INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+    INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) override;
 
 private:
   HWND HEditDelimiters = nullptr;
@@ -140,7 +140,7 @@ public:
   AdvancedDlg *GetAdvancedDlg();
 
 protected:
-  INT_PTR WINAPI run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) override;
   void destroy() override;
   void ApplySettings();
 

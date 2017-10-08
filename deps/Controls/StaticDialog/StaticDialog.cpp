@@ -129,7 +129,7 @@ INT_PTR StaticDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
       pStaticDlg->_hSelf = hwnd;
       ::SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)lParam);
       ::GetWindowRect(hwnd, &(pStaticDlg->_rc));
-      pStaticDlg->run_dlgProc(message, wParam, lParam);
+      pStaticDlg->run_dlg_proc(message, wParam, lParam);
 
       return TRUE;
     }
@@ -139,7 +139,7 @@ INT_PTR StaticDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
       StaticDialog *pStaticDlg = reinterpret_cast<StaticDialog *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
       if (!pStaticDlg)
         return FALSE;
-      return pStaticDlg->run_dlgProc(message, wParam, lParam);
+      return pStaticDlg->run_dlg_proc(message, wParam, lParam);
     }
   }
 }

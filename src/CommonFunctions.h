@@ -88,13 +88,13 @@ class move_only_flag {
     using self = move_only_flag;
 public:
     move_only_flag () {}
-    static self create_valid () { self out; out.valid = true; return out; }
-    void make_valid () { valid = true; }
-    move_only_flag (self &&other) noexcept : valid (other.valid) { other.valid = false;}
-    self &operator= (self &&other) noexcept { valid = other.valid; other.valid = false; return *this; }
+    static self create_valid () { self out; out.m_valid = true; return out; }
+    void make_valid () { m_valid = true; }
+    move_only_flag (self &&other) noexcept : m_valid (other.m_valid) { other.m_valid = false;}
+    self &operator= (self &&other) noexcept { m_valid = other.m_valid; other.m_valid = false; return *this; }
     move_only_flag (const self &) = delete;
     self &operator= (const self &other) = delete;
-    bool is_valid () const { return valid; }
+    bool is_valid () const { return m_valid; }
 private:
-    bool valid = false;
+    bool m_valid = false;
 };

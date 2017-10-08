@@ -70,7 +70,7 @@ void AboutDlg::init(HINSTANCE hInst, HWND Parent) {
   return Window::init(hInst, Parent);
 }
 
-INT_PTR AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) {
+INT_PTR AboutDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message) {
   case WM_INITDIALOG: {
     Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), GetProductAndVersion ().c_str ());

@@ -93,7 +93,7 @@ void SelectProxyDialog::SetOptions(bool UseProxy, const wchar_t* HostName,
   ComboBox_SetCurSel(HProxyType, ProxyType);
 }
 
-INT_PTR SelectProxyDialog::run_dlgProc(UINT message, WPARAM wParam,
+INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM wParam,
                                  LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {

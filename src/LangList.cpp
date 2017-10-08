@@ -70,7 +70,7 @@ void LangList::ApplyChoice(SpellChecker *SpellCheckerInstance) {
   SpellCheckerInstance->RecheckVisible();
 }
 
-INT_PTR LangList::run_dlgProc(UINT message, WPARAM wParam, LPARAM) {
+INT_PTR LangList::run_dlg_proc(UINT message, WPARAM wParam, LPARAM) {
   switch (message) {
   case WM_INITDIALOG: {
     HLangList = ::GetDlgItem(_hSelf, IDC_LANGLIST);

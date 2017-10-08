@@ -268,10 +268,10 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
     else
         CurrentLang = AspellLanguage.c_str();
 
-    if (SpellerToUse->IsWorking()) {
+    if (SpellerToUse->is_working()) {
         if (UpdateDialogs)
             SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(false);
-        auto LangsFromSpeller = SpellerToUse->GetLanguageList();
+        auto LangsFromSpeller = SpellerToUse->get_language_list();
         CurrentLangs.clear();
 
         if (LangsFromSpeller.empty()) {
@@ -318,7 +318,7 @@ void SpellChecker::FillDialogs(bool NoDisplayCall) {
     ReinitLanguageLists(true);
     SettingsDlgInstance->GetSimpleDlg()->SetLibMode(LibMode);
     SettingsDlgInstance->GetSimpleDlg()->FillLibInfo(
-        AspellSpeller->IsWorking()
+        AspellSpeller->is_working()
             ? 2 - (CurrentLangs.empty() ? 0 : 1)
             : 0,
         AspellPath.c_str(), HunspellPath.c_str(), AdditionalHunspellPath.c_str());
@@ -355,8 +355,8 @@ void SpellChecker::RecheckVisibleBothViews() {
     RecheckVisible();
     Lexer = OldLexer;
     CurrentEncoding = OldEncoding;
-    AspellSpeller->SetEncoding(CurrentEncoding);
-    HunspellSpeller->SetEncoding(CurrentEncoding);
+    AspellSpeller->set_encoding(CurrentEncoding);
+    HunspellSpeller->set_encoding(CurrentEncoding);
 }
 
 void SpellChecker::applySettings() {
@@ -419,7 +419,7 @@ void SpellChecker::updateFromDownloadDicsOptionsNoUpdate() {
 void SpellChecker::libChange() {
     SettingsDlgInstance->GetSimpleDlg()->ApplyLibChange(this);
     SettingsDlgInstance->GetSimpleDlg()->FillLibInfo(
-        AspellSpeller->IsWorking()
+        AspellSpeller->is_working()
             ? 2 - (CurrentLangs.empty() ? 1 : 0)
             : 0,
         AspellPath.c_str(), HunspellPath.c_str(), AdditionalHunspellPath.c_str());
@@ -901,7 +901,7 @@ void SpellChecker::SetSuggestionsBoxTransparency() {
 void SpellChecker::InitSuggestionsBox() {
     if (SuggestionsMode != SUGGESTIONS_BOX)
         return;
-    if (!CurrentSpeller->IsWorking())
+    if (!CurrentSpeller->is_working())
         return;
     POINT p;
     if (!CheckTextNeeded()) // If there's no red underline let's do nothing
@@ -976,7 +976,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
             if (Result != 0) {
                 if (Result == MID_IGNOREALL) {
                     ApplyConversions(SelectedWord);
-                    CurrentSpeller->IgnoreAll(SelectedWord.c_str());
+                    CurrentSpeller->ignore_all(SelectedWord.c_str());
                     WUCLength = SelectedWord.length();
                     SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, WUCPosition + WUCLength,
                                           WUCPosition + WUCLength);
@@ -984,7 +984,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
                 }
                 else if (Result == MID_ADDTODICTIONARY) {
                     ApplyConversions(SelectedWord);
-                    CurrentSpeller->AddToDictionary(SelectedWord.c_str());
+                    CurrentSpeller->add_to_dictionary(SelectedWord.c_str());
                     WUCLength = SelectedWord.length();
                     SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, WUCPosition + WUCLength,
                                           WUCPosition + WUCLength);
@@ -1041,7 +1041,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
 }
 
 std::vector<SuggestionsMenuItem> SpellChecker::FillSuggestionsMenu(HMENU Menu) {
-    if (!CurrentSpeller->IsWorking())
+    if (!CurrentSpeller->is_working())
         return {}; // Word is already off-screen
 
     int Pos = WUCPosition;
@@ -1062,7 +1062,7 @@ std::vector<SuggestionsMenuItem> SpellChecker::FillSuggestionsMenu(HMENU Menu) {
     SelectedWord = Range.lpstrText;
     ApplyConversions(SelectedWord);
 
-    LastSuggestions = CurrentSpeller->GetSuggestions(SelectedWord.c_str());
+    LastSuggestions = CurrentSpeller->get_suggestions(SelectedWord.c_str());
 
     for (size_t i = 0; i < LastSuggestions.size(); i++) {
         if (i >= static_cast<unsigned int>(SuggestionsNum))
@@ -1539,11 +1539,11 @@ void SpellChecker::SetAspellLanguage(const wchar_t* Str) {
 
     if (wcscmp(Str, L"<MULTIPLE>") == 0) {
         SetMultipleLanguages(AspellMultiLanguages.c_str(), AspellSpeller.get());
-        AspellSpeller->SetMode(1);
+        AspellSpeller->set_mode(1);
     }
     else {
-        AspellSpeller->SetLanguage(Str);
-        CurrentSpeller->SetMode(0);
+        AspellSpeller->set_language(Str);
+        CurrentSpeller->set_mode(0);
     }
 }
 
@@ -1552,11 +1552,11 @@ void SpellChecker::SetHunspellLanguage(const wchar_t* Str) {
 
     if (wcscmp(Str, L"<MULTIPLE>") == 0) {
         SetMultipleLanguages(HunspellMultiLanguages.c_str(), HunspellSpeller.get());
-        HunspellSpeller->SetMode(1);
+        HunspellSpeller->set_mode(1);
     }
     else {
-        HunspellSpeller->SetLanguage(HunspellLanguage.c_str());
-        HunspellSpeller->SetMode(0);
+        HunspellSpeller->set_language(HunspellLanguage.c_str());
+        HunspellSpeller->set_mode(0);
     }
 }
 
@@ -1577,7 +1577,7 @@ void SpellChecker::SetMultipleLanguages(std::wstring_view MultiString,
     for (auto token : tokenize<wchar_t>(MultiString, LR"(\|)"))
         MultiLangList.push_back(std::wstring{token});
 
-    Speller->SetMultipleLanguages(MultiLangList);
+    Speller->set_multiple_languages(MultiLangList);
 }
 
 bool SpellChecker::HunspellReinitSettings(bool ResetDirectory) {
@@ -1586,7 +1586,7 @@ bool SpellChecker::HunspellReinitSettings(bool ResetDirectory) {
         HunspellSpeller->SetAdditionalDirectory(AdditionalHunspellPath.c_str());
     }
     if (wcscmp(HunspellLanguage.c_str(), L"<MULTIPLE>") != 0)
-        HunspellSpeller->SetLanguage(HunspellLanguage.c_str());
+        HunspellSpeller->set_language(HunspellLanguage.c_str());
     else
         SetMultipleLanguages(HunspellMultiLanguages.c_str(), HunspellSpeller.get());
     return true;
@@ -1596,7 +1596,7 @@ bool SpellChecker::AspellReinitSettings() {
     AspellSpeller->Init(AspellPath.c_str());
 
     if (AspellLanguage == L"<MULTIPLE>") {
-        AspellSpeller->SetLanguage(AspellLanguage.c_str());
+        AspellSpeller->set_language(AspellLanguage.c_str());
     }
     else
         SetMultipleLanguages(AspellMultiLanguages.c_str(), AspellSpeller.get());
@@ -1666,7 +1666,7 @@ void SpellChecker::ResetHotSpotCache() {
 
 bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/) {
     bool res;
-    if (!CurrentSpeller->IsWorking() || Word.empty())
+    if (!CurrentSpeller->is_working() || Word.empty())
         return true;
     // Well Numbers have same codes for ANSI and Unicode I guess, so
     // If word contains number then it's probably just a number or some crazy name
@@ -1742,7 +1742,7 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/) {
         }
     }
 
-    res = CurrentSpeller->CheckWord(Word.c_str());
+    res = CurrentSpeller->check_word(Word.c_str());
     return res;
 }
 
@@ -1896,8 +1896,8 @@ void SpellChecker::setEncodingById(int EncId) {
             CurrentEncoding = ENCODING_ANSI;
         }
     }
-    HunspellSpeller->SetEncoding(CurrentEncoding);
-    AspellSpeller->SetEncoding(CurrentEncoding);
+    HunspellSpeller->set_encoding(CurrentEncoding);
+    AspellSpeller->set_encoding(CurrentEncoding);
 }
 
 void SpellChecker::SwitchAutoCheck() {
@@ -1909,7 +1909,7 @@ void SpellChecker::SwitchAutoCheck() {
 }
 
 void SpellChecker::RecheckModified() {
-    if (!CurrentSpeller->IsWorking()) {
+    if (!CurrentSpeller->is_working()) {
         ClearAllUnderlines();
         return;
     }
@@ -1954,7 +1954,7 @@ void SpellChecker::SetConversionOptions(bool ConvertYo,
 
 void SpellChecker::RecheckVisible(bool NotIntersectionOnly) {
     int CodepageId;
-    if (!CurrentSpeller->IsWorking()) {
+    if (!CurrentSpeller->is_working()) {
         ClearAllUnderlines();
         return;
     }

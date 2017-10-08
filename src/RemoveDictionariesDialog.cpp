@@ -118,7 +118,7 @@ void RemoveDictionariesDialog::SetCheckBoxes(bool RemoveUserDics, bool RemoveSys
   Button_SetCheck(HRemoveSystem, RemoveSystem ? BST_CHECKED : BST_UNCHECKED);
 }
 
-INT_PTR RemoveDictionariesDialog::run_dlgProc(UINT message, WPARAM wParam,
+INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM wParam,
                                 LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {
