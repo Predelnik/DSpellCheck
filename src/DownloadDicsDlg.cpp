@@ -84,7 +84,7 @@ void DownloadDicsDlg::IndicateThatSavingMightBeNeeded() {
 
 LRESULT DownloadDicsDlg::AskReplacementMessage(const wchar_t* DicName) {
     std::wstring name;
-    std::tie(name, std::ignore) = applyAlias(DicName);
+    std::tie(name, std::ignore) = apply_alias(DicName);
     return MessageBox(_hParent, wstring_printf(
                           L"Looks like %s dictionary is already present. Do you want to replace it?",
                           name.c_str()
@@ -105,7 +105,7 @@ bool DownloadDicsDlg::prepareDownloading() {
     m_toDownload.clear();
 
     // If path isn't exist we're gonna try to create it else it's finish
-    if (!CheckForDirectoryExistence(getTempPath().c_str(), false, _hParent)) {
+    if (!check_for_directory_existence(getTempPath().c_str(), false, _hParent)) {
         MessageBox(
             _hParent, L"Path defined as temporary dir doesn't exist and couldn't "
             L"be created, probably one of subdirectories have limited "
@@ -118,7 +118,7 @@ bool DownloadDicsDlg::prepareDownloading() {
     p->getProgressData()->set(0, L"");
     getProgress()->update();
     p->SetTopMessage(L"");
-    if (!CheckForDirectoryExistence(
+    if (!check_for_directory_existence(
         SpellCheckerInstance->GetInstallSystem()
             ? SpellCheckerInstance->GetHunspellAdditionalPath()
             : SpellCheckerInstance->GetHunspellPath(),
@@ -318,7 +318,7 @@ void DownloadDicsDlg::onFileDownloaded() {
                 Failure = 1;
             }
             std::wstring ConvertedDicName;
-            std::tie(ConvertedDicName, std::ignore) = applyAlias(fileName);
+            std::tie(ConvertedDicName, std::ignore) = apply_alias(fileName);
             if (Failure)
                 goto clean_and_continue;
 

@@ -28,7 +28,7 @@ struct LanguageName {
     AliasApplied = false;
     OrigName = Name;
     if (UseAlias)
-      std::tie (AliasName, AliasApplied) = applyAlias(Name);
+      std::tie (AliasName, AliasApplied) = apply_alias(Name);
     else
       AliasName = Name;
   }

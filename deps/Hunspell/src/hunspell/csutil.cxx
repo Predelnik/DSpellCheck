@@ -1,9 +1,9 @@
 #include "license.hunspell"
 #include "license.myspell"
 
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <string.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include <ctype.h>
 
 #include "csutil.hxx"
@@ -99,7 +99,7 @@ int u8_u16(w_char * dest, int size, const char * src) {
     const signed char * u8 = (const signed char *)src;
     w_char * u2 = dest;
     w_char * u2_max = u2 + size;
-    
+
     while ((u2 < u2_max) && *u8) {
     switch ((*u8) & 0xf0) {
         case 0x00:
@@ -118,7 +118,7 @@ int u8_u16(w_char * dest, int size, const char * src) {
         case 0x90:
         case 0xa0:
         case 0xb0: {
-            HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Unexpected continuation bytes in %ld. character position\n%s\n", static_cast<long>(u8 - (signed char *)src), src);    
+            HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Unexpected continuation bytes in %ld. character position\n%s\n", static_cast<long>(u8 - (signed char *)src), src);
             u2->h = 0xff;
             u2->l = 0xfd;
             break;
@@ -211,7 +211,7 @@ int flag_bsearch(unsigned short flags[], unsigned short flag, int length) {
  // acts like strsep() but only uses a delim char and not
  // a delim string
  // default delimiter: white space characters
- 
+
  char * mystrsep(char ** stringp, const char delim)
  {
    char * mp = *stringp;
@@ -271,8 +271,8 @@ int flag_bsearch(unsigned short flags[], unsigned short flag, int length) {
    if ((k > 0) && ((*(s+k-1)=='\r') || (*(s+k-1)=='\n'))) *(s+k-1) = '\0';
    if ((k > 1) && (*(s+k-2) == '\r')) *(s+k-2) = '\0';
  }
- 
- 
+
+
  //  does an ansi strdup of the reverse of a string
  char * myrevstrdup(const char * s)
  {
@@ -363,7 +363,7 @@ char * line_uniq_app(char ** text, char breakchar) {
     if (!strchr(*text, breakchar)) {
         return *text;
     }
-    
+
     char ** lines;
     int i;
     int linenum = line_tok(*text, &lines, breakchar);
@@ -389,7 +389,7 @@ char * line_uniq_app(char ** text, char breakchar) {
     } else {
         freelist(&lines, linenum);
         return *text;
-    }    
+    }
     strcpy(*text," ( ");
     for (i = 0; i < linenum; i++) if (*(lines[i])) {
         sprintf(*text + strlen(*text), "%s%s", lines[i], " | ");
@@ -436,7 +436,7 @@ int morphcmp(const char * s, const char * t)
     int se = 0;
     int te = 0;
     const char * sl;
-    const char * tl;    
+    const char * tl;
     const char * olds;
     const char * oldt;
     if (!s || !t) return 1;
@@ -571,7 +571,7 @@ char * mystrrep(char * word, const char * pat, const char * rep) {
     return word;
 }
 
- // reverse word 
+ // reverse word
  int reverseword(char * word) {
    char r;
    for (char * dest = word + strlen(word) - 1; word < dest; word++, dest--) {
@@ -610,15 +610,15 @@ char * mystrrep(char * word, const char * pat, const char * rep) {
             break;
         }
      }
-   } 
-   int m = 1;  
+   }
+   int m = 1;
    for (i = 1; i < n; i++) if (list[i]) {
         list[m] = list[i];
         m++;
     }
    return m;
  }
- 
+
  void freelist(char *** list, int n) {
    if (list && *list && n > 0) {
      for (int i = 0; i < n; i++) if ((*list)[i]) free((*list)[i]);
@@ -626,7 +626,7 @@ char * mystrrep(char * word, const char * pat, const char * rep) {
      *list = NULL;
    }
  }
- 
+
  // convert null terminated string to all caps
  void mkallcap(char * p, const struct cs_info * csconv)
  {
@@ -635,7 +635,7 @@ char * mystrrep(char * word, const char * pat, const char * rep) {
      p++;
    }
  }
-  
+
  // convert null terminated string to all little
  void mkallsmall(char * p, const struct cs_info * csconv)
  {
@@ -664,7 +664,7 @@ void mkallcap_utf(w_char * u, int nc, int langnum) {
         }
     }
 }
- 
+
  // convert null terminated string to have initial capital
  void mkinitcap(char * p, const struct cs_info * csconv)
  {
@@ -688,7 +688,7 @@ void mkallcap_utf(w_char * u, int nc, int langnum) {
 #ifndef MOZILLA_CLIENT
  // convert null terminated string to all caps using encoding
  void enmkallcap(char * d, const char * p, const char * encoding)
- 
+
  {
    struct cs_info * csconv = get_current_cs(encoding);
    while (*p != '\0') {
@@ -717,7 +717,7 @@ void mkallcap_utf(w_char * u, int nc, int langnum) {
    if (*p != '\0') *d= csconv[((unsigned char)*p)].cupper;
  }
 
-// these are simple character mappings for the 
+// these are simple character mappings for the
 // encodings supported
 // supplying isupper, tolower, and toupper
 
@@ -5470,8 +5470,8 @@ struct cs_info * get_current_cs(const char * es) {
 struct cs_info * get_current_cs(const char * es) {
   struct cs_info *ccs;
 
-  nsCOMPtr<nsIUnicodeEncoder> encoder; 
-  nsCOMPtr<nsIUnicodeDecoder> decoder; 
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  nsCOMPtr<nsIUnicodeDecoder> decoder;
 
   nsresult rv;
   nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
@@ -5649,7 +5649,7 @@ unsigned short unicodetoupper(unsigned short c, int langnum)
 {
   // In Azeri and Turkish, I and i dictinct letters:
   // There are a dotless lower case i pair of upper `I',
-  // and an upper I with dot pair of lower `i'. 
+  // and an upper I with dot pair of lower `i'.
   if (c == 0x0069 && ((langnum == LANG_az) || (langnum == LANG_tr)))
     return 0x0130;
 #ifdef OPENOFFICEORG
@@ -5667,7 +5667,7 @@ unsigned short unicodetolower(unsigned short c, int langnum)
 {
   // In Azeri and Turkish, I and i dictinct letters:
   // There are a dotless lower case i pair of upper `I',
-  // and an upper I with dot pair of lower `i'. 
+  // and an upper I with dot pair of lower `i'.
   if (c == 0x0049 && ((langnum == LANG_az) || (langnum == LANG_tr)))
     return 0x0131;
 #ifdef OPENOFFICEORG
@@ -5781,7 +5781,7 @@ void remove_ignored_chars(char * word, char * ignored_chars)
    *word = '\0';
 }
 
-int parseString(char * line, char ** out, int ln)
+int parse_string(char * line, char ** out, int ln)
 {
    char * tp = line;
    char * piece;
@@ -5796,7 +5796,7 @@ int parseString(char * line, char ** out, int ln)
       if (*piece != '\0') {
           switch(i) {
               case 0: { np++; break; }
-              case 1: { 
+              case 1: {
                 *out = mystrdup(piece);
                 if (!*out) return 1;
                 np++;
@@ -5812,13 +5812,13 @@ int parseString(char * line, char ** out, int ln)
    if (np != 2) {
       HUNSPELL_WARNING(stderr, "error: line %d: missing data\n", ln);
       return 1;
-   } 
+   }
    return 0;
 }
 
 int parse_array(char * line, char ** out, unsigned short ** out_utf16,
        int * out_utf16_len, int utf8, int ln) {
-   if (parseString(line, out, ln)) return 1;
+   if (parse_string(line, out, ln)) return 1;
    if (utf8) {
         w_char w[MAXWORDLEN];
         int n = u8_u16(w, MAXWORDLEN, *out);

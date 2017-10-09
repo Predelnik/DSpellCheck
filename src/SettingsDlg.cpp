@@ -242,7 +242,7 @@ void SimpleDlg::FillLibInfo(int Status, const wchar_t* AspellPath,
             AspellStatusColor = COLOR_FAIL;
             Static_SetText(HAspellStatus, L"Aspell Status: Fail");
         }
-        Edit_SetText(HLibPath, GetActualAspellPath(AspellPath).c_str ());
+        Edit_SetText(HLibPath, get_actual_aspell_path(AspellPath).c_str ());
 
         Static_SetText(HLibGroupBox, L"Aspell Location");
         ShowWindow(HLibLink, 1);
@@ -480,7 +480,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
                     {
                         std::wstring Path;
                         if (GetSelectedLib() == 0)
-                            Path = GetDefaultAspellPath();
+                            Path = get_default_aspell_path();
                         else
                             Path = GetDefaultHunspellPath();
 
@@ -540,7 +540,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
                     auto libPath = getEditText(HLibPath);
                     std::vector<wchar_t> nppPath(MAX_PATH);
                     std::vector<wchar_t> finalPath (MAX_PATH);
-                    SendMsgToNpp(&NppDataInstance, NPPM_GETNPPDIRECTORY, MAX_PATH,
+                    send_msg_to_npp(&NppDataInstance, NPPM_GETNPPDIRECTORY, MAX_PATH,
                                  reinterpret_cast<LPARAM>(nppPath.data()));
                     PathCombine(finalPath.data (), nppPath.data (), libPath.c_str());
                     bi.lParam = reinterpret_cast<LPARAM>(finalPath.data ());
@@ -864,7 +864,7 @@ int AdvancedDlg::GetRecheckDelay()
 // Called from main thread, beware!
 void AdvancedDlg::ApplySettings(SpellChecker* SpellCheckerInstance)
 {
-    SpellCheckerInstance->SetDelimiters(toUtf8String(getEditText (HEditDelimiters).c_str ()).c_str ());
+    SpellCheckerInstance->SetDelimiters(to_utf8_string(getEditText (HEditDelimiters).c_str ()).c_str ());
     SpellCheckerInstance->SetConversionOptions(
         Button_GetCheck(HIgnoreYo) == BST_CHECKED ? true : false,
         Button_GetCheck(HConvertSingleQuotes) == BST_CHECKED ? true : false,

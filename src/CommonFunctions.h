@@ -18,36 +18,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #pragma once
-#include <locale>
-#include "MainDef.h"
 #include "Plugin.h"
 
 struct NppData;
 
 std::wstring to_wstring (std::string_view source);
 std::string to_string (std::wstring_view source);
-std::string toUtf8String (std::string_view source);
-std::string toUtf8String (std::wstring_view source);
+std::string to_utf8_string (std::string_view source);
+std::string to_utf8_string (std::wstring_view source);
 std::wstring utf8_to_wstring (const char *source);
 std::string utf8_to_string (const char *source);
 
-std::pair<std::wstring_view, bool> applyAlias(std::wstring_view str);
+std::pair<std::wstring_view, bool> apply_alias(std::wstring_view str);
 
-std::wstring parseString(const wchar_t* source);
+std::wstring parse_string(const wchar_t* source);
 
-LRESULT SendMsgToNpp(const NppData *NppDataArg, UINT Msg,
-                     WPARAM wParam = 0, LPARAM lParam = 0);
+LRESULT send_msg_to_npp(const NppData *npp_data_arg, UINT msg,
+                     WPARAM w_param = 0, LPARAM l_param = 0);
 
-bool SortCompare(wchar_t *a, wchar_t *b);
-bool Equivwchar_tStrings(wchar_t *a, wchar_t *b);
-size_t Hashwchar_tString(wchar_t *a);
-bool EquivCharStrings(char *a, char *b);
-size_t HashCharString(char *a);
-bool SortCompareChars(char *a, char *b);
+bool sort_compare(wchar_t *a, wchar_t *b);
 
-bool CheckForDirectoryExistence(std::wstring path, bool Silent = true,
-                                HWND NppWindow = nullptr);
-wchar_t* GetLastSlashPosition(wchar_t* Path);
+bool check_for_directory_existence(std::wstring path, bool silent = true,
+                                HWND npp_window = nullptr);
 
 // trim from start (in place)
 inline void ltrim(std::wstring &s) {
@@ -80,19 +72,19 @@ std::wstring wstring_printf (const wchar_t *format, ArgTypes &&... args) {
     return buf.data ();
 }
 
-void replaceAll(std::string& str, std::string_view from, std::string_view to);
-std::wstring readIniValue(const wchar_t* appName, const wchar_t* keyName, const wchar_t* defaultValue,
-                          const wchar_t* fileName);
+void replace_all(std::string& str, std::string_view from, std::string_view to);
+std::wstring read_ini_value(const wchar_t* app_name, const wchar_t* key_name, const wchar_t* default_value,
+                          const wchar_t* file_name);
 
-class move_only_flag {
-    using self = move_only_flag;
+class MoveOnlyFlag {
+    using self = MoveOnlyFlag;
 public:
-    move_only_flag () {}
+    MoveOnlyFlag () {}
     static self create_valid () { self out; out.m_valid = true; return out; }
     void make_valid () { m_valid = true; }
-    move_only_flag (self &&other) noexcept : m_valid (other.m_valid) { other.m_valid = false;}
+    MoveOnlyFlag (self &&other) noexcept : m_valid (other.m_valid) { other.m_valid = false;}
     self &operator= (self &&other) noexcept { m_valid = other.m_valid; other.m_valid = false; return *this; }
-    move_only_flag (const self &) = delete;
+    MoveOnlyFlag (const self &) = delete;
     self &operator= (const self &other) = delete;
     bool is_valid () const { return m_valid; }
 private:

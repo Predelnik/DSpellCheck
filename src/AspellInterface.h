@@ -44,7 +44,6 @@ public:
 private:
   void send_aspell_error(AspellCanHaveError *error);
 
-public:
 private:
   AspellSpeller *m_last_selected_speller;
   speller_ptr m_single_speller;

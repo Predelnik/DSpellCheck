@@ -148,7 +148,7 @@ static void write_user_dic(word_set* target, std::wstring path) {
     auto slash_pos = path.rfind(L'\\');
     if (slash_pos == std::string::npos)
         return;
-    CheckForDirectoryExistence(path.substr(0, slash_pos).c_str());
+    check_for_directory_existence(path.substr(0, slash_pos).c_str());
 
     SetFileAttributes(path.c_str(), FILE_ATTRIBUTE_NORMAL);
 
@@ -390,7 +390,7 @@ void HunspellInterface::add_to_dictionary(const char* word) {
         if (last_slash_pos == std::wstring::npos)
             return;
         auto dir = dic_path.substr(0, last_slash_pos);
-        CheckForDirectoryExistence(dir.c_str());
+        check_for_directory_existence(dir.c_str());
         // If there's no file then we're checking if we can create it, there's no
         // harm in it
         int local_dic_file_handle = _wopen(dic_path.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);

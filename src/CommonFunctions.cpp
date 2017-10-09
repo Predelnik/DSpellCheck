@@ -20,20 +20,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "iconv.h"
 #include "MainDef.h"
 #include "Plugin.h"
-#include "PluginInterface.h"
 #include <cassert>
 #include "utils/utf8.h"
 
-static std::vector<char> convert(const char* sourceEnc, const char* targetEnc, const void* sourceDataPtr,
-                                 size_t sourceLen, size_t maxDestLen)
+static std::vector<char> convert(const char* source_enc, const char* target_enc, const void* source_data_ptr,
+                                 size_t source_len, size_t max_dest_len)
 {
-    std::vector<char> buf(maxDestLen);
-    char* OutBuf = reinterpret_cast<char *>(buf.data());
-    iconv_t Converter = iconv_open(targetEnc, sourceEnc);
-    auto charPtr = static_cast<const char *>(sourceDataPtr);
+    std::vector<char> buf(max_dest_len);
+    char* out_buf = reinterpret_cast<char *>(buf.data());
+    iconv_t converter = iconv_open(target_enc, source_enc);
+    auto char_ptr = static_cast<const char *>(source_data_ptr);
     size_t res =
-        iconv(Converter, static_cast<const char **>(&charPtr), &sourceLen, &OutBuf, &maxDestLen);
-    iconv_close(Converter);
+        iconv(converter, static_cast<const char **>(&char_ptr), &source_len, &out_buf, &max_dest_len);
+    iconv_close(converter);
 
     if (res == static_cast<size_t>(-1))
         return {};
@@ -56,20 +55,20 @@ std::string to_string(std::wstring_view source)
     return bytes.data();
 }
 
-constexpr size_t maxUtf8CharLength = 6;
+constexpr size_t max_utf8_char_length = 6;
 
-std::string toUtf8String(std::string_view source)
+std::string to_utf8_string(std::string_view source)
 {
     auto bytes = convert("CHAR", "UTF-8//IGNORE", source.data(), source.length(),
-                         maxUtf8CharLength * (source.length() + 1));
+                         max_utf8_char_length * (source.length() + 1));
     if (bytes.empty()) return {};
     return bytes.data();
 }
 
-std::string toUtf8String(std::wstring_view source)
+std::string to_utf8_string(std::wstring_view source)
 {
     auto bytes = convert("UCS-2LE", "UTF-8//IGNORE", source.data(), source.length() * sizeof (wchar_t),
-                         maxUtf8CharLength * (source.length() + 1));
+                         max_utf8_char_length * (source.length() + 1));
     if (bytes.empty()) return {};
     return bytes.data();
 }
@@ -91,16 +90,14 @@ std::string utf8_to_string(const char* source)
 }
 
 // This function is more or less transferred from gcc source
-bool MatchSpecialChar(wchar_t* Dest, const wchar_t*& Source)
+bool match_special_char(wchar_t* dest, const wchar_t*& source)
 {
-    int len, i;
-    wchar_t c, n;
-    bool m;
+    wchar_t c;
 
-    m = true;
-    auto assign = [Dest](wchar_t c){ if (Dest) *Dest = c; };
+    bool m = true;
+    auto assign = [dest](wchar_t c){ if (dest) *dest = c; };
 
-    switch (c = *(Source++))
+    switch (c = *(source++))
     {
     case L'a':
         assign (L'\a');
@@ -134,16 +131,16 @@ bool MatchSpecialChar(wchar_t* Dest, const wchar_t*& Source)
     case L'u':
     case L'U':
         /* Hexadecimal form of wide characters.  */
-        len = (c == L'x' ? 2 : (c == L'u' ? 4 : 8));
-        n = 0;
+        int len = (c == L'x' ? 2 : (c == L'u' ? 4 : 8));
+        wchar_t n = 0;
 #ifndef UNICODE
     len = 2;
 #endif
-        for (i = 0; i < len; i++)
+        for (int i = 0; i < len; i++)
         {
             wchar_t buf[2] = {L'\0', L'\0'};
 
-            c = *(Source++);
+            c = *(source++);
             if (c > UCHAR_MAX ||
                 !((L'0' <= c && c <= L'9') || (L'a' <= c && c <= L'f') ||
                     (L'A' <= c && c <= L'F')))
@@ -164,83 +161,54 @@ bool MatchSpecialChar(wchar_t* Dest, const wchar_t*& Source)
     return m;
 }
 
-static size_t doParseString(wchar_t *Dest, const wchar_t* Source)
+static size_t do_parse_string(wchar_t *dest, const wchar_t* source)
 {
-    const wchar_t* LastPos = nullptr;
-    bool dryRun = Dest == nullptr;
-    wchar_t* ResString = Dest;
-    while (*Source)
+    bool dry_run = dest == nullptr;
+    wchar_t* res_string = dest;
+    while (*source)
     {
-        LastPos = Source;
-        if (*Source == '\\')
+        const wchar_t * last_pos = source;
+        if (*source == '\\')
         {
-            ++Source;
-            if (!MatchSpecialChar(!dryRun ? Dest : nullptr, Source))
+            ++source;
+            if (!match_special_char(!dry_run ? dest : nullptr, source))
             {
-                Source = LastPos;
-                if (!dryRun)
-                    *Dest = *Source;
-                ++Source;
-                ++Dest;
+                source = last_pos;
+                if (!dry_run)
+                    *dest = *source;
+                ++source;
+                ++dest;
             }
             else
             {
-                ++Dest;
+                ++dest;
             }
         }
         else
         {
-            if (!dryRun)
-                *Dest = *Source;
-            ++Source;
-            ++Dest;
+            if (!dry_run)
+                *dest = *source;
+            ++source;
+            ++dest;
         }
     }
-    if (!dryRun)
-        *Dest = L'\0';
-    return Dest - ResString + 1;
+    if (!dry_run)
+        *dest = L'\0';
+    return dest - res_string + 1;
 }
 
-std::wstring parseString(const wchar_t* source)
+std::wstring parse_string(const wchar_t* source)
 {
-    auto size = doParseString(nullptr, source);
+    auto size = do_parse_string(nullptr, source);
     std::vector<wchar_t> buf (size);
-    size = doParseString (buf.data (), source);
+    do_parse_string (buf.data (), source);
     assert (size == buf.size ());
     return buf.data ();
 }
 
 // These functions are mostly taken from http://research.microsoft.com
 
-bool SortCompare(wchar_t* a, wchar_t* b) { return wcscmp(a, b) < 0; }
-
-bool EquivCharStrings(char* a, char* b) { return (strcmp(a, b) == 0); }
-
-size_t HashCharString(char* a)
-{
-    size_t Hash = 7;
-    for (unsigned int i = 0; i < strlen(a); i++)
-    {
-        Hash = Hash * 31 + a[i];
-    }
-    return Hash;
-}
-
-bool Equivwchar_tStrings(wchar_t* a, wchar_t* b) { return (wcscmp(a, b) == 0); }
-
-size_t Hashwchar_tString(wchar_t* a)
-{
-    size_t Hash = 7;
-    for (unsigned int i = 0; i < wcslen(a); i++)
-    {
-        Hash = Hash * 31 + a[i];
-    }
-    return Hash;
-}
-
-bool SortCompareChars(char* a, char* b) { return strcmp(a, b) < 0; }
-
-static const std::unordered_map<std::wstring_view, std::wstring_view> aliasMap = {
+static const std::unordered_map<std::wstring_view, std::wstring_view> alias_map = {
     {L"af_Za", L"Afrikaans"},
     {L"ak_GH", L"Akan"},
     {L"bg_BG", L"Bulgarian"},
@@ -355,27 +323,27 @@ static const std::unordered_map<std::wstring_view, std::wstring_view> aliasMap =
     {L"zu_ZA", L"isiZulu"}
 };
 // Language Aliases
-std::pair<std::wstring_view, bool> applyAlias(std::wstring_view str)
+std::pair<std::wstring_view, bool> apply_alias(std::wstring_view str)
 {
-    auto it = aliasMap.find(str);
-    if (it != aliasMap.end())
+    auto it = alias_map.find(str);
+    if (it != alias_map.end())
         return {it->second, true};
     else
         return {str, false};
 }
 
-static bool TryToCreateDir(const wchar_t* Path, bool Silent, HWND NppWindow)
+static bool try_to_create_dir(const wchar_t* path, bool silent, HWND npp_window)
 {
-    if (!CreateDirectory(Path, nullptr))
+    if (!CreateDirectory(path, nullptr))
     {
-        if (!Silent)
+        if (!silent)
         {
-            if (!NppWindow)
+            if (!npp_window)
                 return false;
 
-            wchar_t Message[DEFAULT_BUF_SIZE];
-            swprintf(Message, L"Can't create directory %s", Path);
-            MessageBox(NppWindow, Message, L"Error in directory creation",
+            wchar_t message[DEFAULT_BUF_SIZE];
+            swprintf(message, L"Can't create directory %s", path);
+            MessageBox(npp_window, message, L"Error in directory creation",
                        MB_OK | MB_ICONERROR);
         }
         return false;
@@ -383,7 +351,7 @@ static bool TryToCreateDir(const wchar_t* Path, bool Silent, HWND NppWindow)
     return true;
 }
 
-bool CheckForDirectoryExistence(std::wstring path, bool Silent, HWND NppWindow)
+bool check_for_directory_existence(std::wstring path, bool silent, HWND npp_window)
 {
     for (auto &c : path)
     {
@@ -392,7 +360,7 @@ bool CheckForDirectoryExistence(std::wstring path, bool Silent, HWND NppWindow)
             c = L'\0';
             if (!PathFileExists(path.c_str ()))
             {
-                if (!TryToCreateDir(path.c_str (), Silent, NppWindow))
+                if (!try_to_create_dir(path.c_str (), silent, npp_window))
                     return false;
             }
             c = L'\\';
@@ -400,15 +368,13 @@ bool CheckForDirectoryExistence(std::wstring path, bool Silent, HWND NppWindow)
     }
     if (!PathFileExists(path.c_str ()))
     {
-        if (!TryToCreateDir(path.c_str (), Silent, NppWindow))
+        if (!try_to_create_dir(path.c_str (), silent, npp_window))
             return false;
     }
     return true;
 }
 
-wchar_t* GetLastSlashPosition(wchar_t* Path) { return wcsrchr(Path, L'\\'); }
-
-void replaceAll(std::string& str, std::string_view from, std::string_view to)
+void replace_all(std::string& str, std::string_view from, std::string_view to)
 {
     if (from.empty())
         return;
@@ -420,16 +386,16 @@ void replaceAll(std::string& str, std::string_view from, std::string_view to)
     }
 }
 
-std::wstring readIniValue(const wchar_t* appName, const wchar_t* keyName, const wchar_t* defaultValue,
-                          const wchar_t* fileName)
+std::wstring read_ini_value(const wchar_t* app_name, const wchar_t* key_name, const wchar_t* default_value,
+                          const wchar_t* file_name)
 {
-    constexpr int initialBufferSize = 64;
-    std::vector<wchar_t> buffer(initialBufferSize);
+    constexpr int initial_buffer_size = 64;
+    std::vector<wchar_t> buffer(initial_buffer_size);
     while (true)
     {
-        auto sizeWritten = GetPrivateProfileString(appName, keyName, defaultValue, buffer.data(),
-                                                   static_cast<DWORD>(buffer.size()), fileName);
-        if (sizeWritten < buffer.size() - 1)
+        auto size_written = GetPrivateProfileString(app_name, key_name, default_value, buffer.data(),
+                                                   static_cast<DWORD>(buffer.size()), file_name);
+        if (size_written < buffer.size() - 1)
             return buffer.data();
         buffer.resize(buffer.size() * 2);
     }

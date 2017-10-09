@@ -77,7 +77,7 @@ LRESULT SendMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
     return SendMessage(ScintillaWindow, Msg, wParam, lParam);
 }
 
-LRESULT SendMsgToNpp(const NppData* NppDataArg, UINT Msg,
+LRESULT send_msg_to_npp(const NppData* NppDataArg, UINT Msg,
                      WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/) {
     return SendMessage(NppDataArg->_nppHandle, Msg, wParam, lParam);
 }
@@ -157,12 +157,12 @@ SpellChecker::SpellChecker(const wchar_t* IniFilePathArg,
     SettingsLoaded = false;
     UseProxy = false;
     bool res =
-        (SendMsgToNpp(NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
+        (send_msg_to_npp(NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
 
     if (res) {
         SetUseAllocatedIds(true);
         int Id;
-        SendMsgToNpp(NppDataInstance, NPPM_ALLOCATECMDID, 350, (LPARAM)&Id);
+        send_msg_to_npp(NppDataInstance, NPPM_ALLOCATECMDID, 350, (LPARAM)&Id);
         SetContextMenuIdStart(Id);
         SetLangsMenuIdStart(Id + 103);
     }
@@ -181,7 +181,7 @@ void SpellChecker::PrepareStringForConversion() {
 
     int i = 0;
     for (auto str : InString) {
-        *OutString[i] = toUtf8String(str);
+        *OutString[i] = to_utf8_string(str);
         ++i;
     }
     iconv_close(Conv);
@@ -569,7 +569,7 @@ void SpellChecker::SetCheckComments(bool Value) { checkOnlyCommentsAndString = V
 void SpellChecker::CheckFileName() {
     wchar_t FullPath[MAX_PATH];
     CheckTextEnabled = !CheckThose;
-    SendMsgToNpp(NppDataInstance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)FullPath);
+    send_msg_to_npp(NppDataInstance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)FullPath);
     for (auto token : tokenize<wchar_t>(FileTypes, LR"(;)")) {
         if (CheckThose) {
             CheckTextEnabled = CheckTextEnabled || PathMatchSpec(FullPath, std::wstring(token).c_str());
@@ -658,7 +658,7 @@ void SpellChecker::FindNextMistake() {
                               Range.chrg.cpMax);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
-        SendMsgToNpp(NppDataInstance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
+        send_msg_to_npp(NppDataInstance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
         // To fix bug with hotspots being removed
         bool Result = CheckText(Range.lpstrText, static_cast<long>(IteratorPos), FIND_FIRST);
         if (Result)
@@ -728,7 +728,7 @@ void SpellChecker::FindPrevMistake() {
                               Range.chrg.cpMax);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
-        SendMsgToNpp(NppDataInstance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
+        send_msg_to_npp(NppDataInstance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
 
         bool Result = CheckText(Range.lpstrText + offset,
                                 static_cast<long>(Range.chrg.cpMin + offset), FIND_LAST);
@@ -1086,7 +1086,7 @@ std::vector<SuggestionsMenuItem> SpellChecker::FillSuggestionsMenu(HMENU Menu) {
     if (CurrentEncoding == ENCODING_UTF8)
         BufUtf8 = Range.lpstrText;
     else
-        BufUtf8 = toUtf8String(Range.lpstrText);
+        BufUtf8 = to_utf8_string(Range.lpstrText);
     ApplyConversions(BufUtf8);
     auto item = utf8_to_wstring(BufUtf8.c_str());
     auto menuString = wstring_printf(L"Ignore \"%s\" for Current Session", item.c_str());
@@ -1110,7 +1110,7 @@ void SpellChecker::UpdateAutocheckStatus(int SaveSetting) {
     if (SaveSetting)
         SaveSettings();
 
-    SendMsgToNpp(NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem()[0]._cmdID,
+    send_msg_to_npp(NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem()[0]._cmdID,
                  AutoCheckText);
 }
 
@@ -1232,14 +1232,14 @@ void SpellChecker::SaveSettings() {
     SaveToIni(L"Ignore_One_Letter", IgnoreOneLetter, 0);
     SaveToIni(L"Underline_Color", UnderlineColor, 0x0000ff);
     SaveToIni(L"Underline_Style", UnderlineStyle, INDIC_SQUIGGLE);
-    auto path = GetDefaultAspellPath();
+    auto path = get_default_aspell_path();
     SaveToIni(L"Aspell_Path", AspellPath.c_str(), path.c_str());
     path = GetDefaultHunspellPath();
     SaveToIni(L"User_Hunspell_Path", HunspellPath.c_str(), path.c_str());
     SaveToIni(L"System_Hunspell_Path", AdditionalHunspellPath.c_str(),
               L".\\plugins\\config\\Hunspell");
     SaveToIni(L"Suggestions_Number", SuggestionsNum, 5);
-    SaveToIniUtf8(L"Delimiters", DelimUtf8.c_str(), toUtf8String(DEFAULT_DELIMITERS).c_str(), true);
+    SaveToIniUtf8(L"Delimiters", DelimUtf8.c_str(), to_utf8_string(DEFAULT_DELIMITERS).c_str(), true);
     SaveToIni(L"Find_Next_Buffer_Size", BufferSize / 1024, 4);
     SaveToIni(L"Suggestions_Button_Size", SBSize, 15);
     SaveToIni(L"Suggestions_Button_Opacity", SBTrans, 70);
@@ -1281,7 +1281,7 @@ void SpellChecker::SetLibMode(int i) {
 
 void SpellChecker::LoadSettings() {
     SettingsLoaded = true;
-    auto Path = GetDefaultAspellPath();
+    auto Path = get_default_aspell_path();
     AspellPath = LoadFromIni(L"Aspell_Path", Path.c_str());
     Path = GetDefaultHunspellPath();
     HunspellPath = LoadFromIni(L"User_Hunspell_Path", Path.c_str());
@@ -1297,7 +1297,7 @@ void SpellChecker::LoadSettings() {
     SetAspellLanguage(LoadFromIni(L"Aspell_Language", L"en").c_str());
     SetHunspellLanguage(LoadFromIni(L"Hunspell_Language", L"en_GB").c_str());
 
-    SetDelimiters(LoadFromIniUtf8(L"Delimiters", toUtf8String(DEFAULT_DELIMITERS).c_str()).c_str());
+    SetDelimiters(LoadFromIniUtf8(L"Delimiters", to_utf8_string(DEFAULT_DELIMITERS).c_str()).c_str());
     LoadFromIni(SuggestionsNum, L"Suggestions_Number", 5);
     LoadFromIni(IgnoreYo, L"Ignore_Yo", 0);
     LoadFromIni(ConvertSingleQuotes, L"Convert_Single_Quotes_To_Apostrophe", 1);
@@ -1530,7 +1530,7 @@ std::string SpellChecker::LoadFromIniUtf8(const wchar_t* Name,
                                           const char* defaultValue, bool InQuotes) {
     if (!Name || !defaultValue)
         return defaultValue;
-    return toUtf8String(LoadFromIni(Name, utf8_to_wstring(defaultValue).c_str(), InQuotes).c_str());
+    return to_utf8_string(LoadFromIni(Name, utf8_to_wstring(defaultValue).c_str(), InQuotes).c_str());
 }
 
 // Here parameter is in ANSI (may as well be utf-8 cause only English I guess)
@@ -1567,7 +1567,7 @@ void SpellChecker::SetSuggestionsNum(int Num) { SuggestionsNum = Num; }
 // Here parameter is in UTF-8
 void SpellChecker::SetDelimiters(const char* Str) {
     DelimUtf8 = Str;
-    DelimUtf8Converted = toUtf8String((parseString(utf8_to_wstring(DelimUtf8.c_str()).c_str()) + L" \n\r\t\v").c_str());
+    DelimUtf8Converted = to_utf8_string((parse_string(utf8_to_wstring(DelimUtf8.c_str()).c_str()) + L" \n\r\t\v").c_str());
     DelimConverted = utf8_to_string(DelimUtf8Converted.c_str());
 }
 
@@ -1656,7 +1656,7 @@ void SpellChecker::ApplyConversions(
     for (int i = 0; i < static_cast<int> (countof (ConvertFrom)); ++i) {
         if (!Apply[i])
             continue;
-        replaceAll(Word, ConvertFrom[i], ConvertTo[i]);
+        replace_all(Word, ConvertFrom[i], ConvertTo[i]);
     }
 }
 

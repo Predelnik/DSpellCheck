@@ -186,7 +186,7 @@ void StartManual() {
                  nullptr, SW_SHOW);
 }
 
-void StartAboutDlg() { aboutDlg->DoDialog(); }
+void StartAboutDlg() { aboutDlg->do_dialog(); }
 
 void StartLanguageList() { langListInstance->DoDialog(); }
 
@@ -305,7 +305,7 @@ static std::wstring getMenuItemText(HMENU menu, UINT index) {
 
 HMENU GetDSpellCheckMenu() {
     HMENU PluginsMenu =
-        reinterpret_cast<HMENU>(SendMsgToNpp(&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU));
+        reinterpret_cast<HMENU>(send_msg_to_npp(&nppData, NPPM_GETMENUHANDLE, NPPPLUGINMENU));
     HMENU DSpellCheckMenu = nullptr;
     int Count = GetMenuItemCount(PluginsMenu);
     for (int i = 0; i < Count; i++) {

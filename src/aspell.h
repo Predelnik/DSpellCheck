@@ -6,14 +6,13 @@
 * LGPL license along with this library if you did not you can find it
 * at http://www.gnu.org/.                                              */
 
-#ifndef ASPELL_ASPELL__H
-#define ASPELL_ASPELL__H
+#pragma once
 
-BOOL LoadAspell(const wchar_t* PathArg);
-std::wstring GetActualAspellPath(const std::wstring& supposedPath);
-std::wstring GetDefaultAspellPath ();
-void UnloadAspell(void);
-void AspellErrorMsgBox(HWND hWnd, LPCSTR error);
+BOOL load_aspell(const wchar_t* path_arg);
+std::wstring get_actual_aspell_path(const std::wstring& supposed_path);
+std::wstring get_default_aspell_path ();
+void unload_aspell(void);
+void aspell_error_msg_box(HWND h_wnd, LPCSTR error);
 
 #ifdef __cplusplus
 extern "C" {
@@ -665,5 +664,4 @@ extern PFUNC_delete_aspell_string_pair_enumeration         delete_aspell_string_
 extern PFUNC_aspell_string_pair_enumeration_clone          aspell_string_pair_enumeration_clone;
 extern PFUNC_aspell_string_pair_enumeration_assign         aspell_string_pair_enumeration_assign;
 
-#endif /* ASPELL_ASPELL__H */
 

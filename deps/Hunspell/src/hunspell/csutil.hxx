@@ -166,7 +166,7 @@ LIBHUNSPELL_DLL_EXPORTED void remove_ignored_chars_utf(char * word, unsigned sho
 // strip all ignored characters in the string
 LIBHUNSPELL_DLL_EXPORTED void remove_ignored_chars(char * word, char * ignored_chars);
 
-LIBHUNSPELL_DLL_EXPORTED int parseString(char * line, char ** out, int ln);
+LIBHUNSPELL_DLL_EXPORTED int parse_string(char * line, char ** out, int ln);
 
 LIBHUNSPELL_DLL_EXPORTED int parse_array(char * line, char ** out, unsigned short ** out_utf16,
     int * out_utf16_len, int utf8, int ln);
