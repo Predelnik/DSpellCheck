@@ -382,7 +382,7 @@ void InitClasses() {
                                        suggestionsButton.get(), langListInstance.get());
 
     downloadDicsDlg = std::make_unique<DownloadDicsDlg>();
-    downloadDicsDlg->initDlg(static_cast<HINSTANCE>(hModule), nppData._nppHandle,
+    downloadDicsDlg->init_dlg(static_cast<HINSTANCE>(hModule), nppData._nppHandle,
                              spellChecker.get());
 
     ResourcesInited = true;

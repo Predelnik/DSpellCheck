@@ -51,7 +51,7 @@ INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM /*lParam*/
     switch (LOWORD(wParam)) {
     case IDC_STOP:
       if (HIWORD(wParam) == BN_CLICKED) {
-        GetDownloadDics()->SetCancelPressed(true);
+        GetDownloadDics()->set_cancel_pressed(true);
       }
       break;
     };

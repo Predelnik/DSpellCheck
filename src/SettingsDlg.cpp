@@ -496,7 +496,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        GetDownloadDics()->DoDialog();
+                        GetDownloadDics()->do_dialog();
                     }
                 }
                 break;
@@ -889,7 +889,7 @@ void AdvancedDlg::ApplySettings(SpellChecker* SpellCheckerInstance)
     auto text = getEditText (HBufferSize);
     int x = wcstol(text.c_str (), &EndPtr, 10);
     SpellCheckerInstance->SetBufferSize(x);
-    GetDownloadDics()->UpdateListBox();
+    GetDownloadDics()->update_list_box();
 }
 
 SimpleDlg* SettingsDlg::GetSimpleDlg() { return &SimpleDlgInstance; }

@@ -92,16 +92,16 @@ LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
 }
 
 void SpellChecker::addUserServer(std::wstring server) {
-    ftpTrim(server);
+    ftp_trim(server);
     for (int i = 0; i < static_cast<int>(countof(DefaultServers)); i++) {
         std::wstring defServer = DefaultServers[i];
-        ftpTrim(defServer);
+        ftp_trim(defServer);
         if (server == defServer)
             goto add_user_server_cleanup; // Nothing is done in this case
     }
     for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
         std::wstring addedServer = ServerNames[i];
-        ftpTrim(addedServer);
+        ftp_trim(addedServer);
         if (server == addedServer)
             goto add_user_server_cleanup; // Nothing is done in this case
     }
@@ -387,7 +387,7 @@ void SpellChecker::showSuggestionMenu() {
 
 void SpellChecker::fillDownloadDicsDialog() {
     FillDownloadDics();
-    GetDownloadDics()->FillFileList();
+    GetDownloadDics()->fill_file_list();
 }
 
 void SpellChecker::updateSelectProxy() {
@@ -406,13 +406,13 @@ void SpellChecker::updateRemoveDicsOptions() {
 }
 
 void SpellChecker::updateFromDownloadDicsOptions() {
-    GetDownloadDics()->UpdateOptions(this);
-    GetDownloadDics()->UpdateListBox();
+    GetDownloadDics()->update_options(this);
+    GetDownloadDics()->update_list_box();
     SaveSettings();
 }
 
 void SpellChecker::updateFromDownloadDicsOptionsNoUpdate() {
-    GetDownloadDics()->UpdateOptions(this);
+    GetDownloadDics()->update_options(this);
     SaveSettings();
 }
 
@@ -513,7 +513,7 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
 }
 
 void SpellChecker::FillDownloadDics() {
-    GetDownloadDics()->SetOptions(ShowOnlyKnown, InstallSystem);
+    GetDownloadDics()->set_options(ShowOnlyKnown, InstallSystem);
 }
 
 void SpellChecker::ResetDownloadCombobox() {
@@ -540,14 +540,14 @@ void SpellChecker::ResetDownloadCombobox() {
 }
 
 void SpellChecker::PreserveCurrentAddressIndex() {
-    auto mb_address = GetDownloadDics()->currentAddress();
+    auto mb_address = GetDownloadDics()->current_address();
     if (!mb_address)
         return;
     auto address = *mb_address;
-    ftpTrim(address);
+    ftp_trim(address);
     for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
         std::wstring defServer = DefaultServers[i];
-        ftpTrim(defServer);
+        ftp_trim(defServer);
         if (address == defServer) {
             LastUsedAddress = i;
             return;
@@ -1495,7 +1495,7 @@ std::wstring SpellChecker::LoadFromIni(const wchar_t* Name,
                                        const wchar_t* defaultValue, bool InQuotes) {
     assert (Name && defaultValue);
 
-    auto value = readIniValue(L"Spellcheck", Name, defaultValue, IniFilePath.c_str());
+    auto value = read_ini_value(L"Spellcheck", Name, defaultValue, IniFilePath.c_str());
 
     if (InQuotes) {
         // Proof check for quotes

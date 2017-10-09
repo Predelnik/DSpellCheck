@@ -212,7 +212,7 @@ DicInfo* HunspellInterface::create_hunspell(const wchar_t* name, int type) {
     auto new_hunspell = std::make_unique<Hunspell>(aff_buf_ansi.c_str(), dic_buf_ansi.c_str());
     auto new_name = aff_buf.substr(0, aff_buf.length() - 4);
     DicInfo new_dic;
-    auto dic_enconding = new_hunspell->get_dic_encoding();
+    const char *dic_enconding = new_hunspell->get_dic_encoding();
     if (stricmp(dic_enconding, "Microsoft-cp1251") == 0)
         dic_enconding = "cp1251"; // Queer fix for encoding which isn't being guessed
     // correctly by libiconv TODO: Find other possible
@@ -486,7 +486,7 @@ namespace
     private:
         char** m_list = nullptr;
         int m_count = 0;
-        move_only_flag m_flag;
+        MoveOnlyFlag m_flag;
         Hunspell* m_hunspell = nullptr;
     };
 }

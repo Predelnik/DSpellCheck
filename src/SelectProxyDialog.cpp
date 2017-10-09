@@ -49,7 +49,7 @@ void SelectProxyDialog::ApplyChoice(SpellChecker *SpellCheckerInstance) {
   wchar_t *EndPtr;
   int x = wcstol(text.c_str(), &EndPtr, 10);
   SpellCheckerInstance->SetProxyPort(x);
-  GetDownloadDics()->Refresh();
+  GetDownloadDics()->refresh();
 }
 
 void SelectProxyDialog::DisableControls() {

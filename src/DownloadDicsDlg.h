@@ -20,44 +20,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 
 #include "StaticDialog\StaticDialog.h"
-#include <Wininet.h>
 #include <optional>
 #include "FTPFileStatus.h"
-#include <variant>
 #include "CommonFunctions.h"
 #include "TaskWrapper.h"
 
 struct LanguageName;
 
-void ftpTrim(std::wstring& FtpAddress);
+void ftp_trim(std::wstring& ftp_address);
 
-enum FtpOperationType {
-    fillFileList = 0,
-    downloadFile,
+enum class FtpOperationType {
+    fill_file_list = 0,
+    download_file,
 };
 
 enum class FtpWebOperationErrorType {
     none,
-    httpClientCannotBeInitialized,
-    urlCannotBeOpened,
-    queryingStatusCodeFailed,
-    proxyAuthorizationRequired,
-    httpError,
-    htmlCannotBeParsed,
-    FileIsNotWriteable,
-    DownloadCancelled,
+    http_client_cannot_be_initialized,
+    url_cannot_be_opened,
+    querying_status_code_failed,
+    proxy_authorization_required,
+    http_error,
+    html_cannot_be_parsed,
+    file_is_not_writeable,
+    download_cancelled,
 };
 
 struct FtpWebOperationError {
     FtpWebOperationErrorType type;
-    int statusCode;
+    int status_code;
 };
 
 enum class FtpOperationErrorType {
     none,
-    loginFailed,
-    downloadFailed,
-    downloadCancelled,
+    login_failed,
+    download_failed,
+    download_cancelled,
 };
 
 class SpellChecker;
@@ -65,90 +63,82 @@ class SpellChecker;
 struct FtpOperationParams {
     std::wstring address;
     std::wstring path;
-    bool useProxy;
-    std::wstring proxyAddress;
-    int proxyPort;
+    bool use_proxy;
+    std::wstring proxy_address;
+    int proxy_port;
     bool anonymous;
-    std::wstring proxyUsername;
-    std::wstring proxyPassword;
+    std::wstring proxy_username;
+    std::wstring proxy_password;
 };
 
 class DownloadDicsDlg : public StaticDialog {
 public:
     ~DownloadDicsDlg();
     DownloadDicsDlg();
-    void DoDialog();
+    void do_dialog();
     // Maybe hunspell interface should be passed here
-    void initDlg(HINSTANCE hInst, HWND Parent,
-              SpellChecker* SpellCheckerInstanceArg);
-    INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam);
-    void UpdateListBox();
-    void onNewFileList(const std::vector<std::wstring>& list);
-    void prepareFileListUpdate();
-    FtpOperationParams spawnFtpOperationParams(const std::wstring& fullPath);
-    void updateFileListAsyncWebProxy(const std::wstring& fullPath);
-    void updateFileListAsync(const std::wstring& fullPath);
-    void downloadFileAsync(const std::wstring& fullPath, const std::wstring& targetLocation);
-    void prepareDictionariesDownload();
-    void downloadFilesAsync(const std::wstring& fullPath);
-    void downloadFileAsyncWebPRoxy(const std::wstring& fullPath, const std::wstring& targetLocation);
-    void DoFtpOperation(FtpOperationType Type, const std::wstring& fullPath,
-                        const std::wstring& FileName = L"", const std::wstring& Location = L"");
-    void startNextDownload();
-    void DownloadSelected();
-    void FillFileList();
-    void RemoveTimer();
-    void OnDisplayAction();
-    void IndicateThatSavingMightBeNeeded();
-    void SetOptions(bool ShowOnlyKnown, bool InstallSystem);
-    void UpdateOptions(SpellChecker* spellchecker);
-    void SetCancelPressed(bool Value);
-    void Refresh();
-    LRESULT AskReplacementMessage(const wchar_t* DicName);
-    bool prepareDownloading();
-    void finalizeDownloading();
-    void onFileDownloaded();
-    std::optional<std::wstring> currentAddress() const;
-    void updateStatus(const wchar_t* text, COLORREF statusColor);
-    void uiUpdate();
-    void processFileListError(FtpOperationErrorType error);
-    void processFileListError(const FtpWebOperationError& error);
-
+    void init_dlg(HINSTANCE h_inst, HWND parent,
+              SpellChecker* spell_checker_instance_arg);
+    INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
+    void update_list_box();
+    void on_new_file_list(const std::vector<std::wstring>& list);
+    void prepare_file_list_update();
+    FtpOperationParams spawn_ftp_operation_params(const std::wstring& full_path);
+    void update_file_list_async_web_proxy(const std::wstring& full_path);
+    void update_file_list_async(const std::wstring& full_path);
+    void download_file_async(const std::wstring& full_path, const std::wstring& target_location);
+    void download_file_async_web_proxy(const std::wstring& full_path, const std::wstring& target_location);
+    void do_ftp_operation(FtpOperationType type, const std::wstring& full_path,
+                        const std::wstring& file_name = L"", const std::wstring& location = L"");
+    void start_next_download();
+    void download_selected();
+    void fill_file_list();
+    void remove_timer();
+    void on_display_action();
+    void indicate_that_saving_might_be_needed();
+    void set_options(bool show_only_known, bool install_system);
+    void update_options(SpellChecker* spellchecker);
+    void set_cancel_pressed(bool value);
+    void refresh();
+    LRESULT ask_replacement_message(const wchar_t* dic_name);
+    bool prepare_downloading();
+    void finalize_downloading();
+    void on_file_downloaded();
+    std::optional<std::wstring> current_address() const;
+    void update_status(const wchar_t* text, COLORREF status_color);
+    static void ui_update();
+    void process_file_list_error(FtpOperationErrorType error);
+    void process_file_list_error(const FtpWebOperationError& error);
 private:
-    void DoFtpOperationThroughHttpProxy(FtpOperationType Type, std::wstring Address,
-                                        const wchar_t* FileName, const wchar_t* Location);
-
-private:
-    std::vector<LanguageName> CurrentLangs;
-    std::vector<LanguageName> CurrentLangsFiltered;
-    HBRUSH DefaultBrush;
-    COLORREF StatusColor;
-    SpellChecker* SpellCheckerInstance;
-    HWND LibCombo;
-    HWND HFileList;
-    HWND HAddress = nullptr
-    ;
-    HWND HStatus;
-    HWND HInstallSelected;
-    HWND HShowOnlyKnown;
-    HWND HRefresh;
-    HWND HInstallSystem;
-    HICON RefreshIcon;
-    HANDLE Timer;
-    bool CancelPressed;
-    int CheckIfSavingIsNeeded;
-    std::optional<TaskWrapper> ftpOperationTask;
+    std::vector<LanguageName> m_current_langs;
+    std::vector<LanguageName> m_current_langs_filtered;
+    HBRUSH m_default_brush;
+    COLORREF m_status_color;
+    SpellChecker* m_spell_checker_instance;
+    HWND m_lib_combo;
+    HWND m_h_file_list;
+    HWND m_h_address = nullptr;
+    HWND m_h_status;
+    HWND m_h_install_selected;
+    HWND m_h_show_only_known;
+    HWND m_h_refresh;
+    HWND m_h_install_system;
+    HICON m_refresh_icon;
+    HANDLE m_timer;
+    bool m_cancel_pressed;
+    int m_check_if_saving_is_needed;
+    std::optional<TaskWrapper> m_ftp_operation_task;
 
     // Download State:
     struct DownloadRequest {
-        std::wstring targetPath;
-        std::wstring fileName;
+        std::wstring target_path;
+        std::wstring file_name;
     };
 
-    int Failure;
-    int DownloadedCount;
-    int supposedDownloadedCount;
-    std::wstring Message;
-    std::vector<DownloadRequest> m_toDownload;
-    decltype (m_toDownload)::iterator m_cur;
+    int m_failure;
+    int m_downloaded_count;
+    int m_supposed_downloaded_count;
+    std::wstring m_message;
+    std::vector<DownloadRequest> m_to_download;
+    decltype (m_to_download)::iterator m_cur;
 };

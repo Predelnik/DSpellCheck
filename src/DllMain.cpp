@@ -186,7 +186,7 @@ void WINAPI doRecheck(HWND, UINT, UINT_PTR, DWORD) {
 
 // (PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/)
 void WINAPI uiUpdate (HWND, UINT, UINT_PTR, DWORD)  {
-    GetDownloadDics()->uiUpdate ();
+    GetDownloadDics()->ui_update ();
 }
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { // NOLINT
@@ -317,7 +317,7 @@ void InitNeededDialogs(WPARAM wParam) {
     else
       Result = MenuId - GetLangsMenuIdStart();
     if (Result == DOWNLOAD_DICS)
-      GetDownloadDics()->DoDialog();
+      GetDownloadDics()->do_dialog();
     else if (Result == CUSTOMIZE_MULTIPLE_DICS) {
       GetLangList()->DoDialog();
     } else if (Result == REMOVE_DICS) {
