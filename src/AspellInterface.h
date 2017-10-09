@@ -24,31 +24,31 @@ struct AspellSpeller;
 #include "AbstractSpellerInterface.h"
 
 class AspellInterface : public AbstractSpellerInterface {
-  using SpellerPtr = std::unique_ptr<AspellSpeller, void (*)(AspellSpeller *)>;
+  using speller_ptr = std::unique_ptr<AspellSpeller, void (*)(AspellSpeller *)>;
 public:
-  AspellInterface(HWND NppWindowArg); // Window for error reporting
+  AspellInterface(HWND npp_window_arg); // Window for error reporting
   ~AspellInterface();
     std::vector<std::wstring> get_language_list() override;
-  void set_language(const wchar_t* Lang) override;
+  void set_language(const wchar_t* lang) override;
   void set_multiple_languages(
-      const std::vector<std::wstring>& List) override; // Languages are from LangList
+      const std::vector<std::wstring>& list) override; // Languages are from LangList
   bool
-  check_word(const char* Word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
+  check_word(const char* word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
   bool is_working() override;
-    std::vector<std::string> get_suggestions(const char* Word) override;
-  void add_to_dictionary(const char* Word) override;
-  void ignore_all(const char* Word) override;
+    std::vector<std::string> get_suggestions(const char* word) override;
+  void add_to_dictionary(const char* word) override;
+  void ignore_all(const char* word) override;
 
-  bool Init(const wchar_t* PathArg);
+  bool init(const wchar_t* path_arg);
 
 private:
-  void SendAspellError(AspellCanHaveError *Error);
+  void send_aspell_error(AspellCanHaveError *error);
 
 public:
 private:
   AspellSpeller *m_last_selected_speller;
-  SpellerPtr m_single_speller;
-  std::vector<SpellerPtr> m_spellers;
+  speller_ptr m_single_speller;
+  std::vector<speller_ptr> m_spellers;
   bool m_aspell_loaded;
   HWND m_npp_window; // For message boxes
 };

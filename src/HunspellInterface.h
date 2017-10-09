@@ -26,9 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Hunspell;
 
-using WordSet = std::unordered_set<std::string>;
-using SortedWordSet = std::set<std::string>;
-class iconv_wrapper_t {
+using word_set = std::unordered_set<std::string>;
+using sorted_word_set = std::set<std::string>;
+class IconvWrapperT {
     static void close_iconv (iconv_t conv)
     {
       if (conv != reinterpret_cast<iconv_t>(-1))
@@ -37,30 +37,30 @@ class iconv_wrapper_t {
 
 public:
     template <typename... ArgTypes>
-    iconv_wrapper_t (ArgTypes &&... args) :
-      conv (iconv_open (std::forward<ArgTypes> (args)...), &close_iconv)
+    IconvWrapperT (ArgTypes &&... args) :
+      m_conv (iconv_open (std::forward<ArgTypes> (args)...), &close_iconv)
     {
     }
-    iconv_t get () const { return conv.get (); }
-    iconv_wrapper_t () : conv (nullptr, &close_iconv) {}
-    iconv_wrapper_t (iconv_wrapper_t &&) = default;
-    iconv_wrapper_t &operator= (iconv_wrapper_t &&) = default;
+    iconv_t get () const { return m_conv.get (); }
+    IconvWrapperT () : m_conv (nullptr, &close_iconv) {}
+    IconvWrapperT (IconvWrapperT &&) = default;
+    IconvWrapperT &operator= (IconvWrapperT &&) = default;
 
-    ~iconv_wrapper_t () {
+    ~IconvWrapperT () {
     }
 
 private:
-    std::unique_ptr<void, void(*)(iconv_t)> conv;
+    std::unique_ptr<void, void(*)(iconv_t)> m_conv;
 };
 
 struct DicInfo {
   std::unique_ptr<Hunspell> hunspell;
-  iconv_wrapper_t Converter;
-  iconv_wrapper_t BackConverter;
-  iconv_wrapper_t ConverterANSI;
-  iconv_wrapper_t BackConverterANSI;
-  std::wstring LocalDicPath;
-  WordSet LocalDic; // Stored in Dictionary encoding
+  IconvWrapperT converter;
+  IconvWrapperT back_converter;
+  IconvWrapperT converter_ansi;
+  IconvWrapperT back_converter_ansi;
+  std::wstring local_dic_path;
+  word_set local_dic; // Stored in Dictionary encoding
 };
 
 struct AvailableLangInfo {
@@ -74,45 +74,45 @@ struct AvailableLangInfo {
 
 class HunspellInterface : public AbstractSpellerInterface {
 public:
-  HunspellInterface(HWND NppWindowArg);
+  HunspellInterface(HWND npp_window_arg);
   ~HunspellInterface();
   std::vector<std::wstring> get_language_list() override;
-  void set_language(const wchar_t* Lang) override;
+  void set_language(const wchar_t* lang) override;
   void set_multiple_languages(
-      const std::vector<std::wstring>& List) override;             // Languages are from LangList
-  bool check_word(const char* Word) override; // Word in Utf-8 or ANSI
+      const std::vector<std::wstring>& list) override;             // Languages are from LangList
+  bool check_word(const char* word) override; // Word in Utf-8 or ANSI
   bool is_working() override;
-  std::vector<std::string> get_suggestions(const char* Word) override;
-  void add_to_dictionary(const char* Word) override;
-  void ignore_all(const char* Word) override;
+  std::vector<std::string> get_suggestions(const char* word) override;
+  void add_to_dictionary(const char* word) override;
+  void ignore_all(const char* word) override;
 
-  void SetDirectory(const wchar_t* Dir);
-  void SetAdditionalDirectory(const wchar_t* Dir);
-  void ReadUserDic(WordSet *Target, const wchar_t* Path);
-  void SetUseOneDic(bool Value);
-  void UpdateOnDicRemoval(wchar_t *Path, bool &NeedSingleLangReset,
-                          bool &NeedMultiLangReset);
-  bool GetLangOnlySystem(const wchar_t* Lang);
+  void set_directory(const wchar_t* dir);
+  void set_additional_directory(const wchar_t* dir);
+    static void read_user_dic(word_set *target, const wchar_t* path);
+  void set_use_one_dic(bool value);
+  void update_on_dic_removal(wchar_t *path, bool &need_single_lang_reset,
+                          bool &need_multi_lang_reset);
+  bool get_lang_only_system(const wchar_t* lang);
 
 private:
-    DicInfo* CreateHunspell(const wchar_t* Name, int Type);
-  bool SpellerCheckWord(const DicInfo& Dic, const char* Word, EncodingType Encoding);
-  void MessageBoxWordCannotBeAdded();
+  DicInfo* create_hunspell(const wchar_t* name, int type);
+    static bool speller_check_word(const DicInfo& dic, const char* word, EncodingType encoding);
+  void message_box_word_cannot_be_added();
 
 private:
   bool m_is_hunspell_working;
   bool m_use_one_dic;
-  std::wstring DicDir;
-  std::wstring SysDicDir;
-  std::set<AvailableLangInfo> dicList;
-  std::map<std::wstring, DicInfo> AllHunspells;
-    std::string GetConvertedWord(const char* Source, iconv_t Converter);
-  DicInfo *SingularSpeller;
-  DicInfo *LastSelectedSpeller;
+  std::wstring m_dic_dir;
+  std::wstring m_sys_dic_dir;
+  std::set<AvailableLangInfo> m_dic_list;
+  std::map<std::wstring, DicInfo> m_all_hunspells;
+    static std::string get_converted_word(const char* source, iconv_t converter);
+  DicInfo *m_singular_speller;
+  DicInfo *m_last_selected_speller;
   std::vector<DicInfo *> m_spellers;
-  WordSet Memorized;
-  WordSet Ignored;
-  std::wstring UserDicPath;        // For now only default one.
-  std::wstring SystemWrongDicPath; // Only for reading and then removing
-  HWND NppWindow;
+  word_set m_memorized;
+  word_set m_ignored;
+  std::wstring m_user_dic_path;        // For now only default one.
+  std::wstring m_system_wrong_dic_path; // Only for reading and then removing
+  HWND m_npp_window;
 };

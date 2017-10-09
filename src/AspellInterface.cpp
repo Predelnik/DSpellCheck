@@ -28,19 +28,19 @@ AspellInterface::~AspellInterface() {
 
 namespace
 {
-    auto wrapSpeller(AspellSpeller* rawPtr) {
+    auto wrap_speller(AspellSpeller* raw_ptr) {
         return std::unique_ptr<AspellSpeller, void (*)(AspellSpeller*)>
-            {rawPtr, [](auto ptr) { delete_aspell_speller(ptr); }};
+            {raw_ptr, [](auto ptr) { delete_aspell_speller(ptr); }};
     }
 
-    auto wrapConfig(AspellConfig* rawPtr) {
+    auto wrap_config(AspellConfig* raw_ptr) {
         return std::unique_ptr<AspellConfig, void (*)(AspellConfig*)>
-            {rawPtr, [](auto ptr) { delete_aspell_config(ptr); }};
+            {raw_ptr, [](auto ptr) { delete_aspell_config(ptr); }};
     }
 }
 
-AspellInterface::AspellInterface(HWND NppWindowArg) : m_single_speller(wrapSpeller(nullptr)) {
-    m_npp_window = NppWindowArg;
+AspellInterface::AspellInterface(HWND npp_window_arg) : m_single_speller(wrap_speller(nullptr)) {
+    m_npp_window = npp_window_arg;
     m_last_selected_speller = nullptr;
     m_aspell_loaded = false;
 }
@@ -49,9 +49,9 @@ std::vector<std::wstring> AspellInterface::get_language_list() {
     if (!m_aspell_loaded)
         return {};
 
-    auto aspCfg = wrapConfig(new_aspell_config());
+    auto asp_cfg = wrap_config(new_aspell_config());
     /* the returned pointer should _not_ need to be deleted */
-    auto dlist = get_aspell_dict_info_list(aspCfg.get ());
+    auto dlist = get_aspell_dict_info_list(asp_cfg.get ());
 
     auto dels = aspell_dict_info_list_elements(dlist);
 
@@ -73,80 +73,80 @@ bool AspellInterface::is_working() {
     return m_aspell_loaded;
 }
 
-void AspellInterface::SendAspellError(AspellCanHaveError* Error) {
-    MessageBox(m_npp_window, to_wstring (aspell_error_message(Error)).c_str (), L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
+void AspellInterface::send_aspell_error(AspellCanHaveError* error) {
+    MessageBox(m_npp_window, to_wstring (aspell_error_message(error)).c_str (), L"Aspell Error", MB_OK | MB_ICONEXCLAMATION);
 }
 
-void AspellInterface::set_multiple_languages(const std::vector<std::wstring>& List) {
+void AspellInterface::set_multiple_languages(const std::vector<std::wstring>& list) {
     if (!m_aspell_loaded)
         return;
 
     m_spellers.clear();
-    for (auto &lang : List) {
-        AspellConfig* SpellConfig = new_aspell_config();
-        aspell_config_replace(SpellConfig, "encoding", "utf-8");
-        aspell_config_replace(SpellConfig, "lang", to_string (lang.c_str ()).c_str ());
-        AspellCanHaveError* PossibleErr = new_aspell_speller(SpellConfig);
-        if (aspell_error_number(PossibleErr) == 0) {
-            m_spellers.push_back(wrapSpeller(to_aspell_speller(PossibleErr)));
+    for (auto &lang : list) {
+        AspellConfig* spell_config = new_aspell_config();
+        aspell_config_replace(spell_config, "encoding", "utf-8");
+        aspell_config_replace(spell_config, "lang", to_string (lang.c_str ()).c_str ());
+        AspellCanHaveError* possible_err = new_aspell_speller(spell_config);
+        if (aspell_error_number(possible_err) == 0) {
+            m_spellers.push_back(wrap_speller(to_aspell_speller(possible_err)));
         }
         else
-            SendAspellError(PossibleErr);
+            send_aspell_error(possible_err);
 
-        delete_aspell_config(SpellConfig);
+        delete_aspell_config(spell_config);
     }
 }
 
-std::vector<std::string> AspellInterface::get_suggestions(const char* Word) {
-    const AspellWordList* wordList = nullptr;
-    std::string TargetWord;
+std::vector<std::string> AspellInterface::get_suggestions(const char* word) {
+    const AspellWordList* word_list = nullptr;
+    std::string target_word;
 
     if (m_current_encoding == ENCODING_UTF8)
-        TargetWord = Word;
+        target_word = word;
     else
-        TargetWord = toUtf8String (Word);
+        target_word = toUtf8String (word);
 
-    std::vector<std::string> SuggList;
+    std::vector<std::string> sugg_list;
     if (!m_multi_mode) {
         m_last_selected_speller = m_single_speller.get();
-        wordList = aspell_speller_suggest(m_single_speller.get(), TargetWord.c_str (), -1);
+        word_list = aspell_speller_suggest(m_single_speller.get(), target_word.c_str (), -1);
     }
     else {
-        unsigned int maxSize = 0;
+        unsigned int max_size = 0;
         for (auto& speller : m_spellers) {
-            const auto curWordList = aspell_speller_suggest(speller.get(), TargetWord.c_str (), -1);
+            const auto cur_word_list = aspell_speller_suggest(speller.get(), target_word.c_str (), -1);
 
-            auto size = aspell_word_list_size(curWordList);
-            if (size > maxSize) {
-                maxSize = size;
+            auto size = aspell_word_list_size(cur_word_list);
+            if (size > max_size) {
+                max_size = size;
                 m_last_selected_speller = speller.get();
-                wordList = curWordList;
+                word_list = cur_word_list;
             }
         }
     }
-    if (!wordList)
+    if (!word_list)
         return {};
 
-    AspellStringEnumeration* els = aspell_word_list_elements(wordList);
-    const char* Suggestion;
+    AspellStringEnumeration* els = aspell_word_list_elements(word_list);
+    const char* suggestion;
 
-    while ((Suggestion = aspell_string_enumeration_next(els)) != nullptr) {
-        SuggList.push_back(Suggestion);
+    while ((suggestion = aspell_string_enumeration_next(els)) != nullptr) {
+        sugg_list.push_back(suggestion);
     }
-    return SuggList;
+    return sugg_list;
 }
 
-void AspellInterface::add_to_dictionary(const char* Word) {
-    std::string TargetWord;
+void AspellInterface::add_to_dictionary(const char* word) {
+    std::string target_word;
 
     if (m_current_encoding == ENCODING_UTF8)
-        TargetWord = Word;
+        target_word = word;
     else
-        TargetWord = toUtf8String (Word);
+        target_word = toUtf8String (word);
 
     if (!m_last_selected_speller)
         return;
-    aspell_speller_add_to_personal(m_last_selected_speller, TargetWord.c_str(), static_cast<int>(TargetWord.length()) + 1);
+    aspell_speller_add_to_personal(m_last_selected_speller, target_word.c_str(), static_cast<int>(target_word.length()) + 1);
     aspell_speller_save_all_word_lists(m_last_selected_speller);
     if (aspell_speller_error(m_last_selected_speller) != nullptr) {
         MessageBox(m_npp_window, to_wstring (aspell_speller_error_message(m_last_selected_speller)).c_str (),
@@ -157,18 +157,18 @@ void AspellInterface::add_to_dictionary(const char* Word) {
 
 }
 
-void AspellInterface::ignore_all(const char* Word) {
+void AspellInterface::ignore_all(const char* word) {
     if (!m_last_selected_speller)
         return;
 
-    std::string TargetWord;
+    std::string target_word;
 
     if (m_current_encoding == ENCODING_UTF8)
-        TargetWord = Word;
+        target_word = word;
     else
-        TargetWord = toUtf8String(Word);
+        target_word = toUtf8String(word);
 
-    aspell_speller_add_to_session(m_last_selected_speller, TargetWord.c_str (), static_cast<int> (TargetWord.length ()) + 1);
+    aspell_speller_add_to_session(m_last_selected_speller, target_word.c_str (), static_cast<int> (target_word.length ()) + 1);
     aspell_speller_save_all_word_lists(m_last_selected_speller);
     if (aspell_speller_error(m_last_selected_speller) != nullptr) {
         AspellErrorMsgBox(nullptr, aspell_speller_error_message(m_last_selected_speller));
@@ -176,30 +176,30 @@ void AspellInterface::ignore_all(const char* Word) {
     m_last_selected_speller = nullptr;
 }
 
-bool AspellInterface::check_word(const char* Word) {
+bool AspellInterface::check_word(const char* word) {
     if (!m_aspell_loaded)
         return true;
 
-    std::string DstWord;
+    std::string dst_word;
     bool res = false;
     if (m_current_encoding == ENCODING_UTF8)
-        DstWord = Word;
+        dst_word = word;
     else
-        DstWord = toUtf8String(Word);
+        dst_word = toUtf8String(word);
 
-    auto Len = static_cast<int> (DstWord.length());
+    auto len = static_cast<int> (dst_word.length());
     if (!m_multi_mode) {
         if (!m_single_speller)
             return true;
 
-        res = aspell_speller_check(m_single_speller.get(), DstWord.c_str (), Len);
+        res = aspell_speller_check(m_single_speller.get(), dst_word.c_str (), len);
     }
     else {
         if (m_spellers.empty())
             return true;
 
         for (auto& speller : m_spellers) {
-            res = res || aspell_speller_check(speller.get(), DstWord.c_str (), Len);
+            res = res || aspell_speller_check(speller.get(), dst_word.c_str (), len);
             if (res)
                 break;
         }
@@ -207,31 +207,31 @@ bool AspellInterface::check_word(const char* Word) {
     return res;
 }
 
-bool AspellInterface::Init(const wchar_t* PathArg) {
-    return (m_aspell_loaded = LoadAspell(PathArg));
+bool AspellInterface::init(const wchar_t* path_arg) {
+    return (m_aspell_loaded = LoadAspell(path_arg));
 }
 
-void AspellInterface::set_language(const wchar_t* Lang) {
+void AspellInterface::set_language(const wchar_t* lang) {
     if (!m_aspell_loaded)
         return;
 
-    auto spellConfig = wrapConfig(new_aspell_config());
-    aspell_config_replace(spellConfig.get(), "encoding", "utf-8");
-    aspell_config_replace(spellConfig.get(), "lang", to_string (Lang).c_str ());
+    auto spell_config = wrap_config(new_aspell_config());
+    aspell_config_replace(spell_config.get(), "encoding", "utf-8");
+    aspell_config_replace(spell_config.get(), "lang", to_string (lang).c_str ());
     m_single_speller.reset();
 
-    AspellCanHaveError* PossibleErr = new_aspell_speller(spellConfig.get());
+    AspellCanHaveError* possible_err = new_aspell_speller(spell_config.get());
 
-    if (aspell_error_number(PossibleErr) != 0) {
-        auto LangList = get_language_list();
-        if (!LangList.empty () && (!Lang || Lang != LangList.front ())) {
-            set_language(LangList.front ().c_str ());
+    if (aspell_error_number(possible_err) != 0) {
+        auto lang_list = get_language_list();
+        if (!lang_list.empty () && (!lang || lang != lang_list.front ())) {
+            set_language(lang_list.front ().c_str ());
         }
         else {
             m_single_speller.reset ();
-            SendAspellError(PossibleErr);
+            send_aspell_error(possible_err);
         }
     }
     else
-        m_single_speller = wrapSpeller(to_aspell_speller(PossibleErr));
+        m_single_speller = wrap_speller(to_aspell_speller(possible_err));
 }

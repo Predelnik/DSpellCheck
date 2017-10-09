@@ -77,7 +77,7 @@ void RemoveDictionariesDialog::RemoveSelected(SpellChecker *SpellCheckerInstance
         }
         if (Success) {
           FileName[wcslen(FileName) - 4] = L'\0';
-          SpellCheckerInstance->GetHunspellSpeller()->UpdateOnDicRemoval(
+          SpellCheckerInstance->GetHunspellSpeller()->update_on_dic_removal(
               FileName, SingleTemp, MultiTemp);
           NeedSingleReset |= SingleTemp;
           NeedMultiReset |= MultiTemp;

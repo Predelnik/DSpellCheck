@@ -82,7 +82,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
             {
                 wchar_t Buf[DEFAULT_BUF_SIZE];
                 wcscpy(Buf, lang.AliasName.c_str());
-                if (hunspellSpeller->GetLangOnlySystem(lang.OrigName.c_str ()))
+                if (hunspellSpeller->get_lang_only_system(lang.OrigName.c_str ()))
                     wcscat(Buf, L" [!For All Users]");
 
                 ListBox_AddString(GetRemoveDics()->GetListBox(), Buf);

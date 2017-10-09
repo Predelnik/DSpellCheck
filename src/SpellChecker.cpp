@@ -1262,7 +1262,7 @@ void SpellChecker::SetDecodeNames(bool Value) { DecodeNames = Value; }
 
 void SpellChecker::SetOneUserDic(bool Value) {
     OneUserDic = Value;
-    HunspellSpeller->SetUseOneDic(Value);
+    HunspellSpeller->set_use_one_dic(Value);
 }
 
 bool SpellChecker::GetOneUserDic() { return OneUserDic; }
@@ -1319,9 +1319,9 @@ void SpellChecker::LoadSettings() {
     SetOneUserDic(Value);
     LoadFromIni(IgnoreSEApostrophe, L"Ignore_That_Start_or_End_with_'", 0);
 
-    HunspellSpeller->SetDirectory(HunspellPath.c_str());
-    HunspellSpeller->SetAdditionalDirectory(AdditionalHunspellPath.c_str());
-    AspellSpeller->Init(AspellPath.c_str());
+    HunspellSpeller->set_directory(HunspellPath.c_str());
+    HunspellSpeller->set_additional_directory(AdditionalHunspellPath.c_str());
+    AspellSpeller->init(AspellPath.c_str());
     int x;
     LoadFromIni(x, L"Library", 1);
     SetLibMode(x);
@@ -1582,8 +1582,8 @@ void SpellChecker::SetMultipleLanguages(std::wstring_view MultiString,
 
 bool SpellChecker::HunspellReinitSettings(bool ResetDirectory) {
     if (ResetDirectory) {
-        HunspellSpeller->SetDirectory(HunspellPath.c_str());
-        HunspellSpeller->SetAdditionalDirectory(AdditionalHunspellPath.c_str());
+        HunspellSpeller->set_directory(HunspellPath.c_str());
+        HunspellSpeller->set_additional_directory(AdditionalHunspellPath.c_str());
     }
     if (wcscmp(HunspellLanguage.c_str(), L"<MULTIPLE>") != 0)
         HunspellSpeller->set_language(HunspellLanguage.c_str());
@@ -1593,7 +1593,7 @@ bool SpellChecker::HunspellReinitSettings(bool ResetDirectory) {
 }
 
 bool SpellChecker::AspellReinitSettings() {
-    AspellSpeller->Init(AspellPath.c_str());
+    AspellSpeller->init(AspellPath.c_str());
 
     if (AspellLanguage == L"<MULTIPLE>") {
         AspellSpeller->set_language(AspellLanguage.c_str());
