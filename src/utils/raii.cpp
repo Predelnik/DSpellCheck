@@ -1,5 +1,6 @@
 #include "raii.h"
 #include "PluginInterface.h"
+#include "Notepad_plus_msgs.h"
 
 ToolbarIconsWrapper::ToolbarIconsWrapper() : m_icons{std::make_unique<toolbarIcons>()} {
     m_icons->hToolbarBmp = nullptr;

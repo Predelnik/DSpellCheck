@@ -63,7 +63,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
                                       HunspellInterface* hunspellSpeller)
 {
     ComboBox_ResetContent(HComboLanguage);
-    ListBox_ResetContent(GetLangList()->GetListBox());
+    ListBox_ResetContent(GetLangList()->get_list_box());
     ListBox_ResetContent(GetRemoveDics()->GetListBox());
 
     int SelectedIndex = 0;
@@ -72,17 +72,17 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
         unsigned int i = 0;
         for (auto &lang : langsAvailable)
         {
-            if (currentLanguage == lang.OrigName)
+            if (currentLanguage == lang.orig_name)
                 SelectedIndex = i;
 
-            ComboBox_AddString(HComboLanguage, lang.AliasName.c_str ());
-            ListBox_AddString(GetLangList()->GetListBox(),
-                lang.AliasName.c_str ());
+            ComboBox_AddString(HComboLanguage, lang.alias_name.c_str ());
+            ListBox_AddString(GetLangList()->get_list_box(),
+                lang.alias_name.c_str ());
             if (hunspellSpeller)
             {
                 wchar_t Buf[DEFAULT_BUF_SIZE];
-                wcscpy(Buf, lang.AliasName.c_str());
-                if (hunspellSpeller->get_lang_only_system(lang.OrigName.c_str ()))
+                wcscpy(Buf, lang.alias_name.c_str());
+                if (hunspellSpeller->get_lang_only_system(lang.orig_name.c_str ()))
                     wcscat(Buf, L" [!For All Users]");
 
                 ListBox_AddString(GetRemoveDics()->GetListBox(), Buf);
@@ -99,14 +99,14 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
 
     ComboBox_SetCurSel(HComboLanguage, SelectedIndex);
 
-    CheckedListBox_EnableCheckAll(GetLangList()->GetListBox(), BST_UNCHECKED);
+    CheckedListBox_EnableCheckAll(GetLangList()->get_list_box(), BST_UNCHECKED);
     for (auto &token : tokenize<wchar_t> (multiLanguages, LR"(\|)"))
     {
         int index = -1;
         int i = 0;
         for (auto &lang : langsAvailable)
         {
-            if (token == lang.OrigName)
+            if (token == lang.orig_name)
             {
                 index = i;
                 break;
@@ -114,7 +114,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
             ++i;
         }
         if (index != -1)
-            CheckedListBox_SetCheckState(GetLangList()->GetListBox(), index,
+            CheckedListBox_SetCheckState(GetLangList()->get_list_box(), index,
             BST_CHECKED);
     }
     return true;
@@ -420,7 +420,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
                     if (ComboBox_GetCurSel(HComboLanguage) ==
                         ComboBox_GetCount(HComboLanguage) - 1)
                     {
-                        GetLangList()->DoDialog();
+                        GetLangList()->do_dialog();
                     }
                 }
                 break;
@@ -720,7 +720,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
                           L"dictionary manually, please uncheck");
 
             ComboBox_ResetContent(HUnderlineStyle);
-            for (int i = 0; i < static_cast<int>(countof(IndicNames)); i++)
+            for (int i = 0; i < static_cast<int>(COUNTOF(IndicNames)); i++)
                 ComboBox_AddString(HUnderlineStyle, IndicNames[i]);
             return true;
         }

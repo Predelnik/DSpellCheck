@@ -54,21 +54,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 HWND GetScintillaWindow(const NppData* NppDataArg) {
     int which = -1;
-    SendMessage(NppDataArg->_nppHandle, NPPM_GETCURRENTSCINTILLA, 0,
+    SendMessage(NppDataArg->npp_handle, NPPM_GETCURRENTSCINTILLA, 0,
                 (LPARAM)&which);
     if (which == -1)
         return nullptr;
     if (which == 1)
-        return NppDataArg->_scintillaSecondHandle;
+        return NppDataArg->scintilla_second_handle;
     return (which == 0)
-               ? NppDataArg->_scintillaMainHandle
-               : NppDataArg->_scintillaSecondHandle;
+               ? NppDataArg->scintilla_main_handle
+               : NppDataArg->scintilla_second_handle;
 }
 
 bool SendMsgToBothEditors(const NppData* NppDataArg, UINT Msg, WPARAM wParam,
                           LPARAM lParam) {
-    SendMessage(NppDataArg->_scintillaMainHandle, Msg, wParam, lParam);
-    SendMessage(NppDataArg->_scintillaSecondHandle, Msg, wParam, lParam);
+    SendMessage(NppDataArg->scintilla_main_handle, Msg, wParam, lParam);
+    SendMessage(NppDataArg->scintilla_second_handle, Msg, wParam, lParam);
     return true;
 }
 
@@ -79,7 +79,7 @@ LRESULT SendMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
 
 LRESULT send_msg_to_npp(const NppData* NppDataArg, UINT Msg,
                      WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/) {
-    return SendMessage(NppDataArg->_nppHandle, Msg, wParam, lParam);
+    return SendMessage(NppDataArg->npp_handle, Msg, wParam, lParam);
 }
 
 // Remember: it's better to use PostMsg wherever possible, to avoid gui update
@@ -93,21 +93,21 @@ LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
 
 void SpellChecker::addUserServer(std::wstring server) {
     ftp_trim(server);
-    for (int i = 0; i < static_cast<int>(countof(DefaultServers)); i++) {
+    for (int i = 0; i < static_cast<int>(COUNTOF(DefaultServers)); i++) {
         std::wstring defServer = DefaultServers[i];
         ftp_trim(defServer);
         if (server == defServer)
             goto add_user_server_cleanup; // Nothing is done in this case
     }
-    for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
+    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
         std::wstring addedServer = ServerNames[i];
         ftp_trim(addedServer);
         if (server == addedServer)
             goto add_user_server_cleanup; // Nothing is done in this case
     }
     // Then we're adding finally
-    ServerNames[countof(ServerNames) - 1].clear();
-    for (int i = countof(ServerNames) - 1; i > 0; i--) {
+    ServerNames[COUNTOF(ServerNames) - 1].clear();
+    for (int i = COUNTOF(ServerNames) - 1; i > 0; i--) {
         ServerNames[i] = ServerNames[i - 1];
     }
     ServerNames[0] = nullptr;
@@ -139,8 +139,8 @@ SpellChecker::SpellChecker(const wchar_t* IniFilePathArg,
     WUCPosition = 0;
     WUCisRight = true;
     CurrentScintilla = GetScintillaWindow(NppDataInstance);
-    AspellSpeller = std::make_unique<AspellInterface>(NppDataInstance->_nppHandle);
-    HunspellSpeller = std::make_unique<HunspellInterface>(NppDataInstance->_nppHandle);
+    AspellSpeller = std::make_unique<AspellInterface>(NppDataInstance->npp_handle);
+    HunspellSpeller = std::make_unique<HunspellInterface>(NppDataInstance->npp_handle);
     CurrentSpeller = AspellSpeller.get();
     PrepareStringForConversion();
     memset(ServerNames, 0, sizeof(ServerNames));
@@ -245,7 +245,7 @@ bool SpellChecker::GetInstallSystem() { return InstallSystem; }
 bool SpellChecker::GetDecodeNames() { return DecodeNames; }
 
 const wchar_t* SpellChecker::GetLangByIndex(int i) {
-    return CurrentLangs[i].OrigName.c_str();
+    return CurrentLangs[i].orig_name.c_str();
 }
 
 void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
@@ -285,19 +285,19 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
                 (SpellerId == 1 && DecodeNames)); // Using them only for Hunspell
             CurrentLangs.push_back(
                 Lang);
-            if (Lang.OrigName == CurrentLang)
+            if (Lang.orig_name == CurrentLang)
                 CurrentLangExists = true;
         }
         if (wcscmp(CurrentLang, L"<MULTIPLE>") == 0)
             CurrentLangExists = true;
 
         std::sort(CurrentLangs.begin(), CurrentLangs.end(),
-                  DecodeNames ? lessAliases : lessOriginal);
+                  DecodeNames ? less_aliases : less_original);
         if (!CurrentLangExists && !CurrentLangs.empty()) {
             if (SpellerId == 1)
-                SetHunspellLanguage(CurrentLangs.front().OrigName.c_str());
+                SetHunspellLanguage(CurrentLangs.front().orig_name.c_str());
             else
-                SetAspellLanguage(CurrentLangs.front().OrigName.c_str());
+                SetAspellLanguage(CurrentLangs.front().orig_name.c_str());
             RecheckVisibleBothViews();
         }
         if (UpdateDialogs)
@@ -346,12 +346,12 @@ void SpellChecker::FillDialogs(bool NoDisplayCall) {
 void SpellChecker::RecheckVisibleBothViews() {
     LRESULT OldLexer = Lexer;
     EncodingType OldEncoding = CurrentEncoding;
-    Lexer = SendMsgToActiveEditor(NppDataInstance->_scintillaMainHandle, SCI_GETLEXER);
-    CurrentScintilla = NppDataInstance->_scintillaMainHandle;
+    Lexer = SendMsgToActiveEditor(NppDataInstance->scintilla_main_handle, SCI_GETLEXER);
+    CurrentScintilla = NppDataInstance->scintilla_main_handle;
     RecheckVisible();
 
-    CurrentScintilla = NppDataInstance->_scintillaSecondHandle;
-    Lexer = SendMsgToActiveEditor(NppDataInstance->_scintillaSecondHandle, SCI_GETLEXER);
+    CurrentScintilla = NppDataInstance->scintilla_second_handle;
+    Lexer = SendMsgToActiveEditor(NppDataInstance->scintilla_second_handle, SCI_GETLEXER);
     RecheckVisible();
     Lexer = OldLexer;
     CurrentEncoding = OldEncoding;
@@ -370,7 +370,7 @@ void SpellChecker::applySettings() {
 }
 
 void SpellChecker::applyMultiLangSettings() {
-    LangListInstance->ApplyChoice(this);
+    LangListInstance->apply_choice(this);
     SaveSettings();
 }
 
@@ -454,7 +454,7 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
         if (!CurrentLangs.empty()) {
             int i = 0;
             for (auto& lang : CurrentLangs) {
-                int Checked = (CurLang == lang.OrigName)
+                int Checked = (CurLang == lang.orig_name)
                                   ? (MFT_RADIOCHECK | MF_CHECKED)
                                   : MF_UNCHECKED;
                 bool Res = AppendMenu(NewMenu, MF_STRING | Checked,
@@ -462,8 +462,8 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
                                           ? i + GetLangsMenuIdStart()
                                           : MAKEWORD(i, LANGUAGE_MENU_ID),
                                       DecodeNames
-                                          ? lang.AliasName.c_str()
-                                          : lang.OrigName.c_str());
+                                          ? lang.alias_name.c_str()
+                                          : lang.orig_name.c_str());
                 if (!Res)
                     return;
                 ++i;
@@ -524,10 +524,10 @@ void SpellChecker::ResetDownloadCombobox() {
         PreserveCurrentAddressIndex();
     }
     ComboBox_ResetContent(TargetCombobox);
-    for (int i = 0; i < static_cast<int>(countof(DefaultServers)); i++) {
+    for (int i = 0; i < static_cast<int>(COUNTOF(DefaultServers)); i++) {
         ComboBox_AddString(TargetCombobox, DefaultServers[i].c_str ());
     }
-    for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
+    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
         if (!ServerNames[i].empty())
             ComboBox_AddString(TargetCombobox, ServerNames[i].c_str ());
     }
@@ -535,7 +535,7 @@ void SpellChecker::ResetDownloadCombobox() {
         ComboBox_SetCurSel(TargetCombobox, LastUsedAddress);
     else
         ComboBox_SetCurSel(TargetCombobox, LastUsedAddress - USER_SERVER_CONST +
-        countof(DefaultServers));
+        COUNTOF(DefaultServers));
     AddressIsSet = 1;
 }
 
@@ -545,7 +545,7 @@ void SpellChecker::PreserveCurrentAddressIndex() {
         return;
     auto address = *mb_address;
     ftp_trim(address);
-    for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
+    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
         std::wstring defServer = DefaultServers[i];
         ftp_trim(defServer);
         if (address == defServer) {
@@ -553,7 +553,7 @@ void SpellChecker::PreserveCurrentAddressIndex() {
             return;
         }
     };
-    for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
+    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
         std::wstring server = ServerNames[i];
         if (address == server) {
             LastUsedAddress = USER_SERVER_CONST + i;
@@ -637,7 +637,7 @@ void SpellChecker::FindNextMistake() {
             Range.lpstrText + Range.chrg.cpMax - Range.chrg.cpMin - 1;
         char* IteratingChar = IteratingStart;
         if (!IgnoreOffsetting) {
-            if (CurrentEncoding == ENCODING_UTF8) {
+            if (CurrentEncoding == EncodingType::utf8) {
                 while (utf8_is_cont(*IteratingChar) && Range.lpstrText < IteratingChar)
                     IteratingChar--;
 
@@ -709,7 +709,7 @@ void SpellChecker::FindPrevMistake() {
         char* IteratingStart = Range.lpstrText;
         char* IteratingChar = IteratingStart;
         if (!IgnoreOffsetting) {
-            if (CurrentEncoding == ENCODING_UTF8) {
+            if (CurrentEncoding == EncodingType::utf8) {
                 while (utf8_is_cont(*IteratingChar) && *IteratingChar)
                     IteratingChar++;
 
@@ -830,7 +830,7 @@ std::string_view SpellChecker::GetWordAt(long CharPos, char* Text, long Offset) 
     char* UsedText;
     char* Iterator = Text + CharPos - Offset;
 
-    if (CurrentEncoding == ENCODING_UTF8) {
+    if (CurrentEncoding == EncodingType::utf8) {
         if (utf8_chr(DelimUtf8Converted.c_str(), Iterator))
             Iterator = utf8_dec(Text, Iterator);
 
@@ -855,7 +855,7 @@ std::string_view SpellChecker::GetWordAt(long CharPos, char* Text, long Offset) 
 
     UsedText = Iterator;
 
-    if (CurrentEncoding == ENCODING_UTF8) {
+    if (CurrentEncoding == EncodingType::utf8) {
         if (utf8_chr(DelimUtf8Converted.c_str(), UsedText))
             UsedText = utf8_inc(UsedText); // Then find first token after this zero
     }
@@ -868,7 +868,7 @@ std::string_view SpellChecker::GetWordAt(long CharPos, char* Text, long Offset) 
     // in CheckVisible
 
     std::string_view Res;
-    if (CurrentEncoding == ENCODING_UTF8)
+    if (CurrentEncoding == EncodingType::utf8)
         {
           auto end = utf8_pbrk(UsedText, DelimUtf8Converted.c_str());
           if (!end) return {};
@@ -992,7 +992,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
                 }
                 else if ((unsigned int)Result <= LastSuggestions.size()) {
                     std::string ansiStr;
-                    if (CurrentEncoding == ENCODING_ANSI)
+                    if (CurrentEncoding == EncodingType::ansi)
                         ansiStr = utf8_to_string(LastSuggestions[Result - 1].c_str());
                     else
                         ansiStr = LastSuggestions[Result - 1];
@@ -1021,7 +1021,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
                 return;
             }
             else
-                LangString = CurrentLangs[Result].OrigName.c_str();
+                LangString = CurrentLangs[Result].orig_name.c_str();
             DoPluginMenuInclusion(true);
 
             if (LibMode == 0)
@@ -1083,7 +1083,7 @@ std::vector<SuggestionsMenuItem> SpellChecker::FillSuggestionsMenu(HMENU Menu) {
     }
 
     std::string BufUtf8;
-    if (CurrentEncoding == ENCODING_UTF8)
+    if (CurrentEncoding == EncodingType::utf8)
         BufUtf8 = Range.lpstrText;
     else
         BufUtf8 = to_utf8_string(Range.lpstrText);
@@ -1110,7 +1110,7 @@ void SpellChecker::UpdateAutocheckStatus(int SaveSetting) {
     if (SaveSetting)
         SaveSettings();
 
-    send_msg_to_npp(NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem()[0]._cmdID,
+    send_msg_to_npp(NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem()[0].cmd_id,
                  AutoCheckText);
 }
 
@@ -1209,7 +1209,7 @@ void SpellChecker::SaveSettings() {
     SaveToIni(L"Install_Dictionaries_For_All_Users", InstallSystem, false);
     SaveToIni(L"Recheck_Delay", m_recheckDelay, 500);
     wchar_t Buf[DEFAULT_BUF_SIZE];
-    for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
+    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
         if (ServerNames[i].empty())
             continue;
         swprintf(Buf, L"Server_Address[%d]", i);
@@ -1336,7 +1336,7 @@ void SpellChecker::LoadSettings() {
     LoadFromIni(InstallSystem, L"Install_Dictionaries_For_All_Users", false);
     LoadFromIni(m_recheckDelay, L"Recheck_Delay", 500);
     wchar_t Buf[DEFAULT_BUF_SIZE];
-    for (int i = 0; i < static_cast<int>(countof(ServerNames)); i++) {
+    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
         swprintf(Buf, L"Server_Address[%d]", i);
         ServerNames[i] = LoadFromIni(Buf, L"");
     }
@@ -1635,7 +1635,7 @@ void SpellChecker::ApplyConversions(
     const char* ConvertTo[3];
     int Apply[3] = {IgnoreYo, IgnoreYo, ConvertSingleQuotes};
 
-    if (CurrentEncoding == ENCODING_ANSI) {
+    if (CurrentEncoding == EncodingType::ansi) {
         ConvertFrom[0] = YoANSI.c_str();
         ConvertFrom[1] = yoANSI.c_str();
         ConvertFrom[2] = PunctuationApostropheANSI.c_str();
@@ -1652,8 +1652,8 @@ void SpellChecker::ApplyConversions(
         ConvertTo[2] = "\'";
     }
 
-    static_assert (countof (ConvertFrom) == countof (ConvertTo));
-    for (int i = 0; i < static_cast<int> (countof (ConvertFrom)); ++i) {
+    static_assert (COUNTOF (ConvertFrom) == COUNTOF (ConvertTo));
+    for (int i = 0; i < static_cast<int> (COUNTOF (ConvertFrom)); ++i) {
         if (!Apply[i])
             continue;
         replace_all(Word, ConvertFrom[i], ConvertTo[i]);
@@ -1685,7 +1685,7 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/) {
     ApplyConversions(Word);
 
     auto SymbolsNum =
-        (CurrentEncoding == ENCODING_UTF8) ? utf8_length(Word.c_str()) : Word.length();
+        (CurrentEncoding == EncodingType::utf8) ? utf8_length(Word.c_str()) : Word.length();
     if (SymbolsNum == 0) {
         return true;
     }
@@ -1695,7 +1695,7 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/) {
     }
 
     if (IgnoreNumbers &&
-        (CurrentEncoding == ENCODING_UTF8
+        (CurrentEncoding == EncodingType::utf8
              ? utf8_pbrk(Word.c_str(), "0123456789")
              : strpbrk(Word.c_str(), "0123456789")) != nullptr) // Same for UTF-8 and not
     {
@@ -1704,7 +1704,7 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/) {
 
     if (IgnoreCStart || IgnoreCHave || IgnoreCAll) {
         std::wstring Ts;
-        if (CurrentEncoding == ENCODING_UTF8)
+        if (CurrentEncoding == EncodingType::utf8)
             Ts = utf8_to_wstring(Word.c_str());
         else
             Ts = to_wstring(Word.c_str());
@@ -1784,7 +1784,7 @@ int SpellChecker::CheckText(char* TextToCheck, long Offset,
     long WordEnd = 0;
 
     std::vector<std::string_view> tokens;
-    if (CurrentEncoding == ENCODING_UTF8)
+    if (CurrentEncoding == EncodingType::utf8)
         tokens = tokenize_utf8(TextToCheck, DelimUtf8Converted);
     else
         tokens = tokenize<char>(TextToCheck, DelimConverted);
@@ -1888,12 +1888,12 @@ void SpellChecker::setEncodingById(int EncId) {
     */
     switch (EncId) {
     case SC_CP_UTF8:
-        CurrentEncoding = ENCODING_UTF8;
+        CurrentEncoding = EncodingType::utf8;
         // SetEncoding ("utf-8");
         break;
     default:
         {
-            CurrentEncoding = ENCODING_ANSI;
+            CurrentEncoding = EncodingType::ansi;
         }
     }
     HunspellSpeller->set_encoding(CurrentEncoding);
@@ -1972,7 +1972,7 @@ void SpellChecker::RecheckVisible(bool NotIntersectionOnly) {
 void SpellChecker::ErrorMsgBox(const wchar_t* message) {
     wchar_t buf[DEFAULT_BUF_SIZE];
     swprintf_s(buf, L"DSpellCheck Error: %ws", message);
-    MessageBox(NppDataInstance->_nppHandle, message, L"Error Happened!",
+    MessageBox(NppDataInstance->npp_handle, message, L"Error Happened!",
                MB_OK | MB_ICONSTOP);
 }
 
@@ -2008,10 +2008,10 @@ void SpellChecker::copyMisspellingsToClipboard() {
     std::wstring wchar_str;
 
     switch (CurrentEncoding) {
-    case ENCODING_UTF8:
+    case EncodingType::utf8:
         wchar_str = utf8_to_wstring(str.c_str());
         break;
-    case ENCODING_ANSI:
+    case EncodingType::ansi:
         wchar_str = to_wstring(str.c_str());
         break;
     }

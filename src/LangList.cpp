@@ -17,18 +17,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include <CommCtrl.h>
-
 #include "LangList.h"
 #include "CheckedList/CheckedList.h"
-#include "MainDef.h"
 #include "CommonFunctions.h"
 #include "SpellChecker.h"
 #include "Plugin.h"
 
 #include "resource.h"
 
-void LangList::DoDialog() {
+void LangList::do_dialog() {
   if (!isCreated()) {
     create(IDD_CHOOSE_MULTIPLE_LANGUAGES);
   }
@@ -37,13 +34,13 @@ void LangList::DoDialog() {
   SetFocus(HLangList);
 }
 
-void LangList::init(HINSTANCE hInst, HWND Parent) {
-  return Window::init(hInst, Parent);
+void LangList::init(HINSTANCE h_inst, HWND parent) {
+  return Window::init(h_inst, parent);
 }
 
-HWND LangList::GetListBox() { return HLangList; }
+HWND LangList::get_list_box() { return HLangList; }
 
-void LangList::ApplyChoice(SpellChecker *SpellCheckerInstance) {
+void LangList::apply_choice(SpellChecker *spell_checker_instance) {
   int count = ListBox_GetCount(HLangList);
   std::wstring buf;
   bool first = true;
@@ -56,21 +53,21 @@ void LangList::ApplyChoice(SpellChecker *SpellCheckerInstance) {
       else
           first = false;
 
-      buf += SpellCheckerInstance->GetLangByIndex(i);
+      buf += spell_checker_instance->GetLangByIndex(i);
     }
   }
-  auto convertedBuf = to_utf8_string(buf.c_str ());
-  if (SpellCheckerInstance->GetLibMode() == 1) {
-    SpellCheckerInstance->SetHunspellMultipleLanguages(convertedBuf.c_str ());
-    SpellCheckerInstance->HunspellReinitSettings(false);
+  auto converted_buf = to_utf8_string(buf.c_str ());
+  if (spell_checker_instance->GetLibMode() == 1) {
+    spell_checker_instance->SetHunspellMultipleLanguages(converted_buf.c_str ());
+    spell_checker_instance->HunspellReinitSettings(false);
   } else {
-    SpellCheckerInstance->SetAspellMultipleLanguages(convertedBuf.c_str ());
-    SpellCheckerInstance->AspellReinitSettings();
+    spell_checker_instance->SetAspellMultipleLanguages(converted_buf.c_str ());
+    spell_checker_instance->AspellReinitSettings();
   }
-  SpellCheckerInstance->RecheckVisible();
+  spell_checker_instance->RecheckVisible();
 }
 
-INT_PTR LangList::run_dlg_proc(UINT message, WPARAM wParam, LPARAM) {
+INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param, LPARAM) {
   switch (message) {
   case WM_INITDIALOG: {
     HLangList = ::GetDlgItem(_hSelf, IDC_LANGLIST);
@@ -78,15 +75,15 @@ INT_PTR LangList::run_dlg_proc(UINT message, WPARAM wParam, LPARAM) {
     return true;
   }
   case WM_COMMAND: {
-    switch (LOWORD(wParam)) {
+    switch (LOWORD(w_param)) {
     case IDOK:
-      if (HIWORD(wParam) == BN_CLICKED) {
+      if (HIWORD(w_param) == BN_CLICKED) {
         getSpellChecker ()->applyMultiLangSettings ();
         display(false);
       }
       break;
     case IDCANCEL:
-      if (HIWORD(wParam) == BN_CLICKED) {
+      if (HIWORD(w_param) == BN_CLICKED) {
         getSpellChecker ()->ReinitLanguageLists(true); // Reset all settings
         display(false);
       }

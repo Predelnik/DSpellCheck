@@ -80,7 +80,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
       // Special check for 0th main menu item
       MENUBARINFO info;
       info.cbSize = sizeof(MENUBARINFO);
-      GetMenuBarInfo(nppData._nppHandle, OBJID_MENU, 0, &info);
+      GetMenuBarInfo(nppData.npp_handle, OBJID_MENU, 0, &info);
       HMENU MainMenu = info.hMenu;
       MENUITEMINFO fileMenuItem;
       fileMenuItem.cbSize = sizeof(MENUITEMINFO);
@@ -137,9 +137,9 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   }
 
   if (Message != 0) {
-    if (Message == GetCustomGUIMessageId (CustomGUIMessage::GENERIC_CALLBACK)) {
+    if (Message == GetCustomGUIMessageId (CustomGuiMessage::generic_callback)) {
         const auto callbackPtr = std::unique_ptr<CallbackData> (reinterpret_cast<CallbackData *> (wParam));
-        if (callbackPtr->aliveStatus.expired())
+        if (callbackPtr->alive_status.expired())
             return false;
 
        callbackPtr->callback ();
@@ -152,13 +152,13 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
 
 LRESULT showCalculatedMenu(const std::vector<SuggestionsMenuItem>&& menuList) {
     curMenuList = std::move (menuList);
-    return ::CallWindowProc(wndProcNotepad, nppData._nppHandle, WM_CONTEXTMENU, LastHwnd, LastCoords);
+    return ::CallWindowProc(wndProcNotepad, nppData.npp_handle, WM_CONTEXTMENU, LastHwnd, LastCoords);
 }
 
 extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) { // NOLINT
   nppData = notpadPlusData;
   commandMenuInit();
-  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData._nppHandle, GWLP_WNDPROC,
+  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData.npp_handle, GWLP_WNDPROC,
                                                (LPARAM)SubWndProcNotepad);
 }
 
@@ -175,7 +175,7 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) { // NOLINT
 // stays until thorough testing
 void WINAPI doRecheck(HWND, UINT, UINT_PTR, DWORD) {
   if (recheckTimer)
-    SetTimer (nppData._nppHandle,  recheckTimer, USER_TIMER_MAXIMUM, doRecheck);
+    SetTimer (nppData.npp_handle,  recheckTimer, USER_TIMER_MAXIMUM, doRecheck);
   recheckDone = true;
 
   getSpellChecker()->RecheckVisible();
@@ -211,7 +211,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { /
     pluginCleanUp();
     if (wndProcNotepad != nullptr)
       // LONG_PTR is more x64 friendly, yet not affecting x86
-      ::SetWindowLongPtr(nppData._nppHandle, GWLP_WNDPROC,
+      ::SetWindowLongPtr(nppData.npp_handle, GWLP_WNDPROC,
                          (LONG_PTR)wndProcNotepad); // Removing subclassing
   } break;
 
@@ -222,8 +222,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { /
     LoadSettings();
     getSpellChecker ()->CheckFileName();
     CreateHooks();
-    recheckTimer = SetTimer (nppData._nppHandle, 0, USER_TIMER_MAXIMUM , doRecheck);
-    uiTimer = SetTimer (nppData._nppHandle,  0, 100, uiUpdate);
+    recheckTimer = SetTimer (nppData.npp_handle, 0, USER_TIMER_MAXIMUM , doRecheck);
+    uiTimer = SetTimer (nppData.npp_handle,  0, 100, uiUpdate);
     getSpellChecker()->RecheckVisibleBothViews();
     restylingCausedRecheckWasDone = false;
     getSpellChecker()->SetSuggestionsBoxTransparency();
@@ -270,7 +270,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { /
 
       if (recheckTimer)
           {
-              SetTimer (nppData._nppHandle,  recheckTimer, getSpellChecker ()->getRecheckDelay(), doRecheck);
+              SetTimer (nppData.npp_handle,  recheckTimer, getSpellChecker ()->getRecheckDelay(), doRecheck);
               recheckDone = false;
           }
     }
@@ -319,7 +319,7 @@ void InitNeededDialogs(WPARAM wParam) {
     if (Result == DOWNLOAD_DICS)
       GetDownloadDics()->do_dialog();
     else if (Result == CUSTOMIZE_MULTIPLE_DICS) {
-      GetLangList()->DoDialog();
+      GetLangList()->do_dialog();
     } else if (Result == REMOVE_DICS) {
       GetRemoveDics()->DoDialog();
     }

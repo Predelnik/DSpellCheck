@@ -300,7 +300,7 @@ std::string HunspellInterface::get_converted_word(const char* source,
 bool HunspellInterface::speller_check_word(const DicInfo& dic, const char* word,
                                          EncodingType encoding) {
     auto word_to_check = get_converted_word(
-        word, encoding == (ENCODING_UTF8) ? dic.converter.get() : dic.converter_ansi.get());
+        word, encoding == (EncodingType::utf8) ? dic.converter.get() : dic.converter_ansi.get());
     if (word_to_check.empty ())
       return true;
     // No additional check for memorized is needed since all words are already in
@@ -423,7 +423,7 @@ void HunspellInterface::add_to_dictionary(const char* word) {
     }
 
    std::string buf;
-    if (m_current_encoding == ENCODING_UTF8)
+    if (m_current_encoding == EncodingType::utf8)
         buf = word;
     else
         buf = utf8_to_string(word);
@@ -498,7 +498,7 @@ std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
 
     if (!m_multi_mode) {
         list = {
-            m_singular_speller->hunspell.get(), get_converted_word(word, (m_current_encoding == ENCODING_UTF8)
+            m_singular_speller->hunspell.get(), get_converted_word(word, (m_current_encoding == EncodingType::utf8)
                                                                         ? m_singular_speller->converter.get()
                                                                         : m_singular_speller->converter_ansi.get()).c_str ()
         };
@@ -506,7 +506,7 @@ std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
     else {
         for (auto speller : m_spellers) {
             HunspellSuggestions cur_list = {
-                speller->hunspell.get(), get_converted_word(word, (m_current_encoding == ENCODING_UTF8)
+                speller->hunspell.get(), get_converted_word(word, (m_current_encoding == EncodingType::utf8)
                                                                       ? speller->converter.get()
                                                                       : speller->converter_ansi.get()).c_str ()
             };

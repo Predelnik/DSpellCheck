@@ -20,20 +20,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 
 #define SCE_ERROR_UNDERLINE (19) // Only index from 8 to 21 are free
-#define countof(A) sizeof(A) / sizeof((A)[0])
+#define COUNTOF(A) sizeof(A) / sizeof((A)[0])
 #define DEFAULT_BUF_SIZE 4096
 
-enum EncodingType { ENCODING_UTF8 = 0, ENCODING_ANSI };
+enum class EncodingType { utf8 = 0, ansi };
 
-enum class CustomGUIMessage {
-  GENERIC_CALLBACK,
-  MAX,
+enum class CustomGuiMessage {
+  generic_callback,
+  max,
 };
 
-const wchar_t *const CustomGUIMesssagesNames[] = {L"DSpellCheck_GenericCallback" };
+const wchar_t *const custom_gui_messsages_names[] = {L"DSpellCheck_GenericCallback" };
 
 struct CallbackData {
-  std::weak_ptr<void> aliveStatus;
+  std::weak_ptr<void> alive_status;
   std::function<void ()> callback;
 };
 

@@ -24,13 +24,13 @@ class SpellChecker;
 
 class LangList : public StaticDialog {
 public:
-  void init(HINSTANCE hInst, HWND Parent) override;
-  void DoDialog();
-  HWND GetListBox();
-  void ApplyChoice(SpellChecker *SpellCheckerInstance);
+  void init(HINSTANCE h_inst, HWND parent) override;
+  void do_dialog();
+  HWND get_list_box();
+  void apply_choice(SpellChecker *spell_checker_instance);
 
 protected:
-  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) override;  // NOLINT
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;  // NOLINT
 
 protected:
   HWND HLangList = nullptr;

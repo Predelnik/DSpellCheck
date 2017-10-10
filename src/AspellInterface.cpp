@@ -101,7 +101,7 @@ std::vector<std::string> AspellInterface::get_suggestions(const char* word) {
     const AspellWordList* word_list = nullptr;
     std::string target_word;
 
-    if (m_current_encoding == ENCODING_UTF8)
+    if (m_current_encoding == EncodingType::utf8)
         target_word = word;
     else
         target_word = to_utf8_string (word);
@@ -139,7 +139,7 @@ std::vector<std::string> AspellInterface::get_suggestions(const char* word) {
 void AspellInterface::add_to_dictionary(const char* word) {
     std::string target_word;
 
-    if (m_current_encoding == ENCODING_UTF8)
+    if (m_current_encoding == EncodingType::utf8)
         target_word = word;
     else
         target_word = to_utf8_string (word);
@@ -163,7 +163,7 @@ void AspellInterface::ignore_all(const char* word) {
 
     std::string target_word;
 
-    if (m_current_encoding == ENCODING_UTF8)
+    if (m_current_encoding == EncodingType::utf8)
         target_word = word;
     else
         target_word = to_utf8_string(word);
@@ -182,7 +182,7 @@ bool AspellInterface::check_word(const char* word) {
 
     std::string dst_word;
     bool res = false;
-    if (m_current_encoding == ENCODING_UTF8)
+    if (m_current_encoding == EncodingType::utf8)
         dst_word = word;
     else
         dst_word = to_utf8_string(word);

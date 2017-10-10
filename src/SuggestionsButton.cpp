@@ -157,10 +157,10 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lPar
     p.y = 0;
     ClientToScreen(_hSelf, &p);
     StateMenu = true;
-    SetForegroundWindow(NppDataInstance._nppHandle);
+    SetForegroundWindow(NppDataInstance.npp_handle);
     MenuResult = TrackPopupMenuEx(PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
                                   p.x, p.y, _hSelf, &TPMParams);
-    PostMessage(NppDataInstance._nppHandle, WM_NULL, 0, 0);
+    PostMessage(NppDataInstance.npp_handle, WM_NULL, 0, 0);
     SetFocus(GetScintillaWindow(&NppDataInstance));
     StateMenu = false;
     DestroyMenu(PopupMenu);

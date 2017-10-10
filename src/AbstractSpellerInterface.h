@@ -38,7 +38,7 @@ public:
 private:
 protected:
   int m_multi_mode = 0;
-  EncodingType m_current_encoding = ENCODING_UTF8;
+  EncodingType m_current_encoding = EncodingType::utf8;
 
 public:
 };

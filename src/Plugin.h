@@ -31,7 +31,7 @@ const wchar_t NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
 const int nbFunc = 8;
 #define QUICK_LANG_CHANGE_ITEM 3
 
-enum class CustomGUIMessage;
+enum class CustomGuiMessage;
 class LangList;
 class DownloadDicsDlg;
 class SelectProxyDialog;
@@ -64,7 +64,7 @@ void commandMenuCleanUp();
 //
 // Function which sets your command
 //
-bool setNextCommand(const wchar_t* cmdName, PFUNCPLUGINCMD pFunc, std::unique_ptr<ShortcutKey> sk = nullptr, bool check0nInit = false);
+bool setNextCommand(const wchar_t* cmdName, pfuncplugincmd pFunc, std::unique_ptr<ShortcutKey> sk = nullptr, bool check0nInit = false);
 
 void SetDelimiters (const char *Str);
 const char *GetDelimiters ();
@@ -99,6 +99,6 @@ int GetContextMenuIdStart ();
 int GetLangsMenuIdStart ();
 bool GetUseAllocatedIds ();
 SpellChecker *getSpellChecker ();
-DWORD GetCustomGUIMessageId (CustomGUIMessage MessageId);
+DWORD GetCustomGUIMessageId (CustomGuiMessage MessageId);
 void RegisterCustomMessages ();
 

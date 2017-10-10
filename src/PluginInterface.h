@@ -22,51 +22,43 @@
 #include "Scintilla.h"
 #endif //SCINTILLA_H
 
-#ifndef NOTEPAD_PLUS_MSGS_H
-#include "Notepad_plus_msgs.h"
-#endif //NOTEPAD_PLUS_MSGS_H
 
-const int nbChar = 64;
-
-typedef const wchar_t * (__cdecl * PFUNCGETNAME)();
+const int nb_char = 64;
 
 struct NppData {
-  HWND _nppHandle;
-  HWND _scintillaMainHandle;
-  HWND _scintillaSecondHandle;
+    HWND npp_handle;
+    HWND scintilla_main_handle;
+    HWND scintilla_second_handle;
 };
 
-typedef void (__cdecl * PFUNCSETINFO)(NppData);
-typedef void (__cdecl * PFUNCPLUGINCMD)();
-typedef void (__cdecl * PBENOTIFIED)(SCNotification *);
-typedef LRESULT (__cdecl * PMESSAGEPROC)(UINT Message, WPARAM wParam, LPARAM lParam);
+typedef void (__cdecl * pfuncplugincmd)();
 
 struct ShortcutKey {
-  bool _isCtrl;
-  bool _isAlt;
-  bool _isShift;
-  UCHAR _key;
+    bool is_ctrl;
+    bool is_alt;
+    bool is_shift;
+    UCHAR key;
 };
 
 struct FuncItem {
-  wchar_t _itemName[nbChar];
-  PFUNCPLUGINCMD _pFunc;
-  int _cmdID;
-  bool _init2Check;
-  ShortcutKey *_pShKey;
+    wchar_t item_name[nb_char];
+    pfuncplugincmd p_func;
+    int cmd_id;
+    bool init2_check;
+    ShortcutKey* p_sh_key;
 };
 
-typedef FuncItem * (__cdecl * PFUNCGETFUNCSARRAY)(int *);
-
 // You should implement (or define an empty function body) those functions which are called by Notepad++ plugin manager
-extern "C" __declspec(dllexport) void setInfo(NppData);                                           // NOLINT
-extern "C" __declspec(dllexport) const wchar_t * getName();                                       // NOLINT
-extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *);                                 // NOLINT
-extern "C" __declspec(dllexport) void beNotified(SCNotification *);                               // NOLINT
-extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam); // NOLINT
+// ReSharper disable CppInconsistentNaming
+extern "C" __declspec(dllexport) void setInfo(NppData);
+extern "C" __declspec(dllexport) const wchar_t* getName();
+extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int*);
+extern "C" __declspec(dllexport) void beNotified(SCNotification*);
+extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam);
 
 #ifdef UNICODE
 extern "C" __declspec(dllexport) BOOL isUnicode();
 #endif //UNICODE
+// ReSharper restore CppInconsistentNaming
 
 #endif //PLUGININTERFACE_H

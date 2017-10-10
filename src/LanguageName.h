@@ -21,24 +21,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 
 struct LanguageName {
-  std::wstring OrigName;
-  std::wstring AliasName;
-  bool AliasApplied;
-  LanguageName(const wchar_t *Name, bool UseAlias = true) {
-    AliasApplied = false;
-    OrigName = Name;
-    if (UseAlias)
-      std::tie (AliasName, AliasApplied) = apply_alias(Name);
+  std::wstring orig_name;
+  std::wstring alias_name;
+  bool alias_applied;
+  LanguageName(const wchar_t *name, bool use_alias = true) {
+    alias_applied = false;
+    orig_name = name;
+    if (use_alias)
+      std::tie (alias_name, alias_applied) = apply_alias(name);
     else
-      AliasName = Name;
+      alias_name = name;
   }
 };
 
-inline bool lessAliases(const LanguageName &a, const LanguageName &b) {
-  return (a.AliasApplied ? a.AliasName : a.OrigName) <
-         (b.AliasApplied ? b.AliasName : b.OrigName);
+inline bool less_aliases(const LanguageName &a, const LanguageName &b) {
+  return (a.alias_applied ? a.alias_name : a.orig_name) <
+         (b.alias_applied ? b.alias_name : b.orig_name);
 }
 
-inline bool lessOriginal(const LanguageName &a, const LanguageName &b) {
-  return a.OrigName < b.OrigName;
+inline bool less_original(const LanguageName &a, const LanguageName &b) {
+  return a.orig_name < b.orig_name;
 }

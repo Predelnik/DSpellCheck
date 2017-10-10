@@ -141,7 +141,7 @@ bool DownloadDicsDlg::prepare_downloading() {
     for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++) {
         if (CheckedListBox_GetCheckState(m_h_file_list, i) == BST_CHECKED) {
             DownloadRequest req;
-            req.file_name = m_current_langs_filtered[i].OrigName + L".zip"s;
+            req.file_name = m_current_langs_filtered[i].orig_name + L".zip"s;
             req.target_path = get_temp_path() + req.file_name;
             m_to_download.push_back(req);
             ++m_supposed_downloaded_count;
@@ -391,15 +391,15 @@ void DownloadDicsDlg::update_list_box() {
     m_current_langs_filtered.clear();
     for (auto& lang : m_current_langs) {
         if (m_spell_checker_instance->GetShowOnlyKnown() &&
-            !lang.AliasApplied)
+            !lang.alias_applied)
             continue;
         m_current_langs_filtered.push_back(lang);
     }
     ListBox_ResetContent(m_h_file_list);
     for (auto& lang : m_current_langs_filtered) {
         ListBox_AddString(m_h_file_list, m_spell_checker_instance->GetDecodeNames()
-            ? lang.AliasName.c_str ()
-            : lang.OrigName.c_str ());
+            ? lang.alias_name.c_str ()
+            : lang.orig_name.c_str ());
     }
 }
 
@@ -724,7 +724,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring>& list) {
     std::sort(m_current_langs.begin(), m_current_langs.end(), [decode = m_spell_checker_instance->GetDecodeNames()]
           (const auto& lhs, const auto& rhs)
               {
-                  return decode ? lessAliases(lhs, rhs) : lessOriginal(lhs, rhs);
+                  return decode ? less_aliases(lhs, rhs) : less_original(lhs, rhs);
               });
     update_list_box(); // Used only here and on filter change
     // If it is success when we perhaps should add this address to our list.

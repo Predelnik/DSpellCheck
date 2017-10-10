@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommonFunctions.h"
+#include "MainDef.h"
 
 struct TaskWrapper {
 private:
@@ -27,11 +28,11 @@ public:
         if (as.expired() || ctoken.is_canceled())
             return;
 
-        auto cbData = std::make_unique<CallbackData>();
-        cbData->callback = [guiCallback = std::move (guiCallback), ret = std::move (ret)](){ guiCallback (ret); };
-        cbData->aliveStatus = as;
+        auto cb_data = std::make_unique<CallbackData>();
+        cb_data->callback = [guiCallback = std::move (guiCallback), ret = std::move (ret)](){ guiCallback (ret); };
+        cb_data->alive_status = as;
          PostMessage(hwnd,
-            GetCustomGUIMessageId(CustomGUIMessage::GENERIC_CALLBACK), reinterpret_cast<WPARAM> (cbData.release ())
+            GetCustomGUIMessageId(CustomGuiMessage::generic_callback), reinterpret_cast<WPARAM> (cb_data.release ())
             , 0);
     });
 }
