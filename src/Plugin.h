@@ -26,9 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SettingsDlg.h"
 
 struct SuggestionsMenuItem;
-const wchar_t NPP_PLUGIN_NAME[] = TEXT("DSpellCheck");
+const wchar_t npp_plugin_name[] = TEXT("DSpellCheck");
 
-const int nbFunc = 8;
+const int nb_func = 8;
 #define QUICK_LANG_CHANGE_ITEM 3
 
 enum class CustomGuiMessage;
@@ -43,62 +43,58 @@ class RemoveDictionariesDialog;
 // Initialization of your plugin data
 // It will be called while plugin loading
 //
-void pluginInit(HANDLE hModuleArg);
+void plugin_init(HANDLE h_module_arg);
 
 //
 // Cleaning of your plugin
 // It will be called while plugin unloading
 //
-void pluginCleanUp();
+void plugin_clean_up();
 
 //
 //Initialization of your plugin commands
 //
-void commandMenuInit();
+void command_menu_init();
 
 //
 //Clean up your plugin commands allocation (if any)
 //
-void commandMenuCleanUp();
+void command_menu_clean_up();
 
 //
 // Function which sets your command
 //
-bool setNextCommand(const wchar_t* cmdName, pfuncplugincmd pFunc, std::unique_ptr<ShortcutKey> sk = nullptr, bool check0nInit = false);
+bool set_next_command(const wchar_t* cmd_name, pfuncplugincmd p_func, std::unique_ptr<ShortcutKey> sk = nullptr, bool check0_n_init = false);
 
-void SetDelimiters (const char *Str);
-const char *GetDelimiters ();
-void setEncodingById (int EncId);
-void LoadSettings ();
-void RecheckVisible ();
-void InitClasses ();
-void CreateHooks ();
-void UpdateLangsMenu ();
-LRESULT showCalculatedMenu(const std::vector<SuggestionsMenuItem>&& menuList);
-void AddIcons ();
-bool GetAutoCheckState ();
-void AutoCheckStateReceived (bool state);
-HMENU GetDSpellCheckMenu ();
-HMENU GetLangsSubMenu (HMENU DSpellCheckMenuArg = nullptr);
-HANDLE getHModule ();
-LangList *GetLangList ();
-RemoveDictionariesDialog *GetRemoveDics ();
-SelectProxyDialog *GetSelectProxy ();
-ProgressDlg *getProgress ();
-DownloadDicsDlg *GetDownloadDics ();
-FuncItem *get_funcItem ();
-void SetModifiedZoneShared (long Start, long End);
-void GetModifiedZoneShared (long &Start, long &End);
-void PostMessageToMainThread (UINT Msg, WPARAM WParam, LPARAM LParam);
-std::wstring GetDefaultHunspellPath ();
-HANDLE *GethEvent ();
-void SetContextMenuIdStart (int Id);
-void SetLangsMenuIdStart (int Id);
-void SetUseAllocatedIds (bool Id);
-int GetContextMenuIdStart ();
-int GetLangsMenuIdStart ();
-bool GetUseAllocatedIds ();
-SpellChecker *getSpellChecker ();
-DWORD GetCustomGUIMessageId (CustomGuiMessage MessageId);
-void RegisterCustomMessages ();
+void set_delimiters (const char *str);
+const char *get_delimiters ();
+void set_encoding_by_id (int enc_id);
+void load_settings ();
+void recheck_visible ();
+void init_classes ();
+void create_hooks ();
+void update_langs_menu ();
+LRESULT show_calculated_menu(const std::vector<SuggestionsMenuItem>&& menu_list);
+void add_icons ();
+bool get_auto_check_state ();
+void auto_check_state_received (bool state);
+HMENU get_dspellcheck_menu ();
+HMENU get_langs_sub_menu (HMENU dspellcheck_menu_arg = nullptr);
+HANDLE get_h_module ();
+LangList *get_lang_list ();
+RemoveDictionariesDialog *get_remove_dics ();
+SelectProxyDialog *get_select_proxy ();
+ProgressDlg *get_progress ();
+DownloadDicsDlg *get_download_dics ();
+FuncItem *get_func_item ();
+std::wstring get_default_hunspell_path ();
+void set_context_menu_id_start (int id);
+void set_langs_menu_id_start (int id);
+void set_use_allocated_ids (bool id);
+int get_context_menu_id_start ();
+int get_langs_menu_id_start ();
+bool get_use_allocated_ids ();
+SpellChecker *get_spell_checker ();
+DWORD get_custom_gui_message_id (CustomGuiMessage message_id);
+void register_custom_messages ();
 

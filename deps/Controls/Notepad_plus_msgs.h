@@ -7,10 +7,10 @@
 // version 2 of the License, or (at your option) any later version.
 //
 // Note that the GPL places important restrictions on "derived works", yet
-// it does not provide a detailed definition of that term.  To avoid      
-// misunderstandings, we consider an application to constitute a          
+// it does not provide a detailed definition of that term.  To avoid
+// misunderstandings, we consider an application to constitute a
 // "derivative work" for the purpose of this license if it does any of the
-// following:                                                             
+// following:
 // 1. Integrates source code from Notepad++.
 // 2. Integrates/includes/aggregates Notepad++ into a proprietary executable
 //    installer, such as those produced by InstallShield.
@@ -43,7 +43,7 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 
 
 
-//Here you can find how to use these messages : http://notepad-plus.sourceforge.net/uk/plugins-HOWTO.php 
+//Here you can find how to use these messages : http://notepad-plus.sourceforge.net/uk/plugins-HOWTO.php
 #define NPPMSG  (WM_USER + 1000)
 
 	#define NPPM_GETCURRENTSCINTILLA  (NPPMSG + 4)
@@ -75,7 +75,7 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 
 	#define NPPM_GETOPENFILENAMESPRIMARY (NPPMSG + 17)
 	#define NPPM_GETOPENFILENAMESSECOND (NPPMSG + 18)
-	
+
 	#define NPPM_CREATESCINTILLAHANDLE (NPPMSG + 20)
 	#define NPPM_DESTROYSCINTILLAHANDLE (NPPMSG + 21)
 	#define NPPM_GETNBUSERLANG (NPPMSG + 22)
@@ -102,7 +102,7 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 	//ascii file to unicode
 	//int NPPM_ENCODESCI(MAIN_VIEW/SUB_VIEW, 0)
 	//return new unicodeMode
-	
+
 	#define NPPM_DECODESCI (NPPMSG + 27)
 	//unicode file to ascii
 	//int NPPM_DECODESCI(MAIN_VIEW/SUB_VIEW, 0)
@@ -149,7 +149,7 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 
 	#define NPPM_ADDTOOLBARICON (NPPMSG + 41)
 	//void WM_ADDTOOLBARICON(UINT funcItem[X]._cmdID, toolbarIcons icon)
-		struct toolbarIcons {
+		struct ToolbarIcons {
 			HBITMAP	hToolbarBmp;
 			HICON	hToolbarIcon;
 		};
@@ -161,7 +161,7 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 	//HWND WM_DMM_GETPLUGINHWNDBYNAME(const wchar_t *windowName, const wchar_t *moduleName)
 	// if moduleName is NULL, then return value is NULL
 	// if windowName is NULL, then the first found window handle which matches with the moduleName will be returned
-	
+
 	#define NPPM_MAKECURRENTBUFFERDIRTY (NPPMSG + 44)
 	//BOOL NPPM_MAKECURRENTBUFFERDIRTY(0, 0)
 
@@ -186,13 +186,13 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 	// uncomment //#include "menuCmdID.h"
 	// in the beginning of this file then use the command symbols defined in "menuCmdID.h" file
 	// to access all the Notepad++ menu command items
-	
+
 	#define NPPM_TRIGGERTABBARCONTEXTMENU (NPPMSG + 49)
 	//void NPPM_TRIGGERTABBARCONTEXTMENU(int view, int index2Activate)
 
 	#define NPPM_GETNPPVERSION (NPPMSG + 50)
 	// int NPPM_GETNPPVERSION(0, 0)
-	// return version 
+	// return version
 	// ex : v4.6
 	// HIWORD(version) == 4
 	// LOWORD(version) == 6
@@ -212,14 +212,14 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 	// Return VIEW|INDEX from a buffer ID. -1 if the bufferID non existing
 	// if priorityView set to SUB_VIEW, then SUB_VIEW will be search firstly
 	//
-	// VIEW takes 2 highest bits and INDEX (0 based) takes the rest (30 bits) 
+	// VIEW takes 2 highest bits and INDEX (0 based) takes the rest (30 bits)
 	// Here's the values for the view :
 	//  MAIN_VIEW 0
 	//  SUB_VIEW  1
 
 	#define NPPM_GETFULLPATHFROMBUFFERID (NPPMSG + 58)
 	// INT NPPM_GETFULLPATHFROMBUFFERID(INT bufferID, wchar_t *fullFilePath)
-	// Get full path file name from a bufferID. 
+	// Get full path file name from a bufferID.
 	// Return -1 if the bufferID non existing, otherwise the number of wchar_t copied/to copy
 	// User should call it with fullFilePath be NULL to get the number of wchar_t (not including the nul character),
 	// allocate fullFilePath with the return values + 1, then call it again to get  full path file name
@@ -362,7 +362,7 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 	// Get programing language name from the given language type (LangType)
 	// Return value is the number of copied character / number of character to copy (\0 is not included)
 	// You should call this function 2 times - the first time you pass langName as NULL to get the number of characters to copy.
-    // You allocate a buffer of the length of (the number of characters + 1) then call NPPM_GETLANGUAGENAME function the 2nd time 
+    // You allocate a buffer of the length of (the number of characters + 1) then call NPPM_GETLANGUAGENAME function the 2nd time
 	// by passing allocated buffer as argument langName
 
 	#define NPPM_GETLANGUAGEDESC  (NPPMSG + 84)
@@ -370,7 +370,7 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 	// Get programing language short description from the given language type (LangType)
 	// Return value is the number of copied character / number of character to copy (\0 is not included)
 	// You should call this function 2 times - the first time you pass langDesc as NULL to get the number of characters to copy.
-    // You allocate a buffer of the length of (the number of characters + 1) then call NPPM_GETLANGUAGEDESC function the 2nd time 
+    // You allocate a buffer of the length of (the number of characters + 1) then call NPPM_GETLANGUAGEDESC function the 2nd time
 	// by passing allocated buffer as argument langDesc
 
 	#define NPPM_SHOWDOCSWITCHER    (NPPMSG + 85)
@@ -454,12 +454,12 @@ enum winVer{WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV
 	//scnNotification->nmhdr.code = NPPN_FILEBEFOREOPEN;
 	//scnNotification->nmhdr.hwndFrom = hwndNpp;
 	//scnNotification->nmhdr.idFrom = BufferID;
-	
+
 	#define NPPN_FILEBEFORESAVE (NPPN_FIRST + 7) // To notify plugins that the current file is about to be saved
 	//scnNotification->nmhdr.code = NPPN_FILEBEFOREOPEN;
 	//scnNotification->nmhdr.hwndFrom = hwndNpp;
 	//scnNotification->nmhdr.idFrom = BufferID;
-	
+
 	#define NPPN_FILESAVED (NPPN_FIRST + 8) // To notify plugins that the current file is just saved
 	//scnNotification->nmhdr.code = NPPN_FILESAVED;
 	//scnNotification->nmhdr.hwndFrom = hwndNpp;

@@ -49,7 +49,7 @@ void SelectProxyDialog::ApplyChoice(SpellChecker *SpellCheckerInstance) {
   wchar_t *EndPtr;
   int x = wcstol(text.c_str(), &EndPtr, 10);
   SpellCheckerInstance->SetProxyPort(x);
-  GetDownloadDics()->refresh();
+  get_download_dics()->refresh();
 }
 
 void SelectProxyDialog::DisableControls() {
@@ -106,20 +106,20 @@ INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM wParam,
     HProxyType = ::GetDlgItem(_hSelf, IDC_PROXY_TYPE);
     ComboBox_AddString(HProxyType, L"FTP Web Proxy");
     ComboBox_AddString(HProxyType, L"FTP Gateway");
-    getSpellChecker ()->updateSelectProxy();
+    get_spell_checker ()->updateSelectProxy();
     return true;
   }
   case WM_COMMAND: {
     switch (LOWORD(wParam)) {
     case IDOK:
       if (HIWORD(wParam) == BN_CLICKED) {
-        getSpellChecker()->applyProxySettings ();
+        get_spell_checker()->applyProxySettings ();
         display(false);
       }
       break;
     case IDCANCEL:
       if (HIWORD(wParam) == BN_CLICKED) {
-        getSpellChecker ()->updateSelectProxy(); // Reset all settings
+        get_spell_checker ()->updateSelectProxy(); // Reset all settings
         display(false);
       }
       break;

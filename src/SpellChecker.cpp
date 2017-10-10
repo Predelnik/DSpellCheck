@@ -160,11 +160,11 @@ SpellChecker::SpellChecker(const wchar_t* IniFilePathArg,
         (send_msg_to_npp(NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
 
     if (res) {
-        SetUseAllocatedIds(true);
+        set_use_allocated_ids(true);
         int Id;
         send_msg_to_npp(NppDataInstance, NPPM_ALLOCATECMDID, 350, (LPARAM)&Id);
-        SetContextMenuIdStart(Id);
-        SetLangsMenuIdStart(Id + 103);
+        set_context_menu_id_start(Id);
+        set_langs_menu_id_start(Id + 103);
     }
 }
 
@@ -201,10 +201,10 @@ void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
     else {
         mi.fType = MFT_STRING;
         mi.fMask = MIIM_ID | MIIM_TYPE;
-        if (!GetUseAllocatedIds())
+        if (!get_use_allocated_ids())
             mi.wID = MAKEWORD(Id, DSPELLCHECK_MENU_ID);
         else
-            mi.wID = GetContextMenuIdStart() + Id;
+            mi.wID = get_context_menu_id_start() + Id;
 
         mi.dwTypeData = const_cast<wchar_t *>(Text);
         mi.cch = static_cast<int>(wcslen(Text)) + 1;
@@ -226,7 +226,7 @@ void SpellChecker::precalculateMenu() {
             suggestionMenuItems = FillSuggestionsMenu(nullptr);
         }
     }
-    showCalculatedMenu(std::move(suggestionMenuItems));
+    show_calculated_menu(std::move(suggestionMenuItems));
 }
 
 void SpellChecker::SetSuggType(int SuggType) {
@@ -259,8 +259,8 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
          : AspellSpeller.get());
 
     if (SpellerId == 0) {
-        GetDownloadDics()->display(false);
-        GetRemoveDics()->display(false);
+        get_download_dics()->display(false);
+        get_remove_dics()->display(false);
     }
 
     if (SpellerId == 1)
@@ -375,7 +375,7 @@ void SpellChecker::applyMultiLangSettings() {
 }
 
 void SpellChecker::applyProxySettings() {
-    GetSelectProxy()->ApplyChoice(this);
+    get_select_proxy()->ApplyChoice(this);
     SaveSettings();
 }
 
@@ -387,32 +387,32 @@ void SpellChecker::showSuggestionMenu() {
 
 void SpellChecker::fillDownloadDicsDialog() {
     FillDownloadDics();
-    GetDownloadDics()->fill_file_list();
+    get_download_dics()->fill_file_list();
 }
 
 void SpellChecker::updateSelectProxy() {
-    GetSelectProxy()->SetOptions(UseProxy, ProxyHostName.c_str(), ProxyUserName.c_str(),
+    get_select_proxy()->SetOptions(UseProxy, ProxyHostName.c_str(), ProxyUserName.c_str(),
                                  ProxyPassword.c_str(), ProxyPort, ProxyAnonymous,
                                  ProxyType);
 }
 
 void SpellChecker::updateFromRemoveDicsOptions() {
-    GetRemoveDics()->UpdateOptions(this);
+    get_remove_dics()->update_options(this);
     SaveSettings();
 }
 
 void SpellChecker::updateRemoveDicsOptions() {
-    GetRemoveDics()->SetCheckBoxes(RemoveUserDics, RemoveSystem);
+    get_remove_dics()->set_check_boxes(RemoveUserDics, RemoveSystem);
 }
 
 void SpellChecker::updateFromDownloadDicsOptions() {
-    GetDownloadDics()->update_options(this);
-    GetDownloadDics()->update_list_box();
+    get_download_dics()->update_options(this);
+    get_download_dics()->update_list_box();
     SaveSettings();
 }
 
 void SpellChecker::updateFromDownloadDicsOptionsNoUpdate() {
-    GetDownloadDics()->update_options(this);
+    get_download_dics()->update_options(this);
     SaveSettings();
 }
 
@@ -442,10 +442,10 @@ bool SpellChecker::GetRemoveSystem() { return RemoveSystem; }
 
 void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
     MENUITEMINFO Mif;
-    HMENU DSpellCheckMenu = GetDSpellCheckMenu();
+    HMENU DSpellCheckMenu = get_dspellcheck_menu();
     if (!DSpellCheckMenu)
         return;
-    HMENU LangsSubMenu = GetLangsSubMenu(DSpellCheckMenu);
+    HMENU LangsSubMenu = get_langs_sub_menu(DSpellCheckMenu);
     if (LangsSubMenu)
         DestroyMenu(LangsSubMenu);
     const wchar_t* CurLang = (LibMode == 1) ? HunspellLanguage.c_str() : AspellLanguage.c_str();
@@ -458,8 +458,8 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
                                   ? (MFT_RADIOCHECK | MF_CHECKED)
                                   : MF_UNCHECKED;
                 bool Res = AppendMenu(NewMenu, MF_STRING | Checked,
-                                      GetUseAllocatedIds()
-                                          ? i + GetLangsMenuIdStart()
+                                      get_use_allocated_ids()
+                                          ? i + get_langs_menu_id_start()
                                           : MAKEWORD(i, LANGUAGE_MENU_ID),
                                       DecodeNames
                                           ? lang.alias_name.c_str()
@@ -472,34 +472,34 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
                               ? (MFT_RADIOCHECK | MF_CHECKED)
                               : MF_UNCHECKED;
             AppendMenu(NewMenu, MF_STRING | Checked,
-                       GetUseAllocatedIds()
-                           ? MULTIPLE_LANGS + GetLangsMenuIdStart()
+                       get_use_allocated_ids()
+                           ? MULTIPLE_LANGS + get_langs_menu_id_start()
                            : MAKEWORD(MULTIPLE_LANGS, LANGUAGE_MENU_ID),
                        L"Multiple Languages");
             AppendMenu(NewMenu, MF_SEPARATOR, 0, nullptr);
             AppendMenu(NewMenu, MF_STRING,
-                       GetUseAllocatedIds()
-                           ? CUSTOMIZE_MULTIPLE_DICS + GetLangsMenuIdStart()
+                       get_use_allocated_ids()
+                           ? CUSTOMIZE_MULTIPLE_DICS + get_langs_menu_id_start()
                            : MAKEWORD(CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID),
                        L"Set Multiple Languages...");
             if (LibMode == 1) // Only Hunspell supported
             {
                 AppendMenu(NewMenu, MF_STRING,
-                           GetUseAllocatedIds()
-                               ? DOWNLOAD_DICS + GetLangsMenuIdStart()
+                           get_use_allocated_ids()
+                               ? DOWNLOAD_DICS + get_langs_menu_id_start()
                                : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
                            L"Download More Languages...");
                 AppendMenu(NewMenu, MF_STRING,
-                           GetUseAllocatedIds()
-                               ? REMOVE_DICS + GetLangsMenuIdStart()
+                           get_use_allocated_ids()
+                               ? REMOVE_DICS + get_langs_menu_id_start()
                                : MAKEWORD(REMOVE_DICS, LANGUAGE_MENU_ID),
                            L"Remove Unneeded Languages...");
             }
         }
         else if (LibMode == 1)
             AppendMenu(NewMenu, MF_STRING,
-                       GetUseAllocatedIds()
-                           ? DOWNLOAD_DICS + GetLangsMenuIdStart()
+                       get_use_allocated_ids()
+                           ? DOWNLOAD_DICS + get_langs_menu_id_start()
                            : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
                        L"Download Languages...");
     }
@@ -513,11 +513,11 @@ void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
 }
 
 void SpellChecker::FillDownloadDics() {
-    GetDownloadDics()->set_options(ShowOnlyKnown, InstallSystem);
+    get_download_dics()->set_options(ShowOnlyKnown, InstallSystem);
 }
 
 void SpellChecker::ResetDownloadCombobox() {
-    HWND TargetCombobox = GetDlgItem(GetDownloadDics()->getHSelf(), IDC_ADDRESS);
+    HWND TargetCombobox = GetDlgItem(get_download_dics()->getHSelf(), IDC_ADDRESS);
     wchar_t Buf[DEFAULT_BUF_SIZE];
     ComboBox_GetText(TargetCombobox, Buf, DEFAULT_BUF_SIZE);
     if (AddressIsSet) {
@@ -540,7 +540,7 @@ void SpellChecker::ResetDownloadCombobox() {
 }
 
 void SpellChecker::PreserveCurrentAddressIndex() {
-    auto mb_address = GetDownloadDics()->current_address();
+    auto mb_address = get_download_dics()->current_address();
     if (!mb_address)
         return;
     auto address = *mb_address;
@@ -949,14 +949,14 @@ void SpellChecker::InitSuggestionsBox() {
 }
 
 void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
-    if ((!GetUseAllocatedIds() && HIBYTE(MenuId) != DSPELLCHECK_MENU_ID &&
+    if ((!get_use_allocated_ids() && HIBYTE(MenuId) != DSPELLCHECK_MENU_ID &&
             HIBYTE(MenuId) != LANGUAGE_MENU_ID) ||
-        (GetUseAllocatedIds() && ((int)MenuId < GetContextMenuIdStart() ||
-            (int)MenuId > GetContextMenuIdStart() + 350)))
+        (get_use_allocated_ids() && ((int)MenuId < get_context_menu_id_start() ||
+            (int)MenuId > get_context_menu_id_start() + 350)))
         return;
     int UsedMenuId;
-    if (GetUseAllocatedIds()) {
-        UsedMenuId = ((int)MenuId < GetLangsMenuIdStart()
+    if (get_use_allocated_ids()) {
+        UsedMenuId = ((int)MenuId < get_langs_menu_id_start()
                           ? DSPELLCHECK_MENU_ID
                           : LANGUAGE_MENU_ID);
     }
@@ -968,10 +968,10 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
     case DSPELLCHECK_MENU_ID:
         {
             WPARAM Result;
-            if (!GetUseAllocatedIds())
+            if (!get_use_allocated_ids())
                 Result = LOBYTE(MenuId);
             else
-                Result = MenuId - GetContextMenuIdStart();
+                Result = MenuId - get_context_menu_id_start();
 
             if (Result != 0) {
                 if (Result == MID_IGNOREALL) {
@@ -1006,10 +1006,10 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
     case LANGUAGE_MENU_ID:
         {
             WPARAM Result;
-            if (!GetUseAllocatedIds())
+            if (!get_use_allocated_ids())
                 Result = LOBYTE(MenuId);
             else
-                Result = MenuId - GetLangsMenuIdStart();
+                Result = MenuId - get_langs_menu_id_start();
 
             const wchar_t* LangString;
             if (Result == MULTIPLE_LANGS) {
@@ -1030,7 +1030,7 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
                 SetHunspellLanguage(LangString);
 
             ReinitLanguageLists(true);
-            UpdateLangsMenu();
+            update_langs_menu();
             RecheckVisibleBothViews();
             SaveSettings();
             break;
@@ -1110,7 +1110,7 @@ void SpellChecker::UpdateAutocheckStatus(int SaveSetting) {
     if (SaveSetting)
         SaveSettings();
 
-    send_msg_to_npp(NppDataInstance, NPPM_SETMENUITEMCHECK, get_funcItem()[0].cmd_id,
+    send_msg_to_npp(NppDataInstance, NPPM_SETMENUITEMCHECK, get_func_item()[0].cmd_id,
                  AutoCheckText);
 }
 

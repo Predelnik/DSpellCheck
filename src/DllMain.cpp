@@ -32,9 +32,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <vld.h>
 #endif // VLD_BUILD
 
-extern FuncItem funcItem[nbFunc]; // NOLINT
-extern NppData nppData; // NOLINT
-extern bool doCloseTag; // NOLINT
+extern FuncItem func_item[nb_func]; // NOLINT
+extern NppData npp_data; // NOLINT
+extern bool do_close_tag; // NOLINT
 HANDLE HModule;
 std::vector<std::pair<long, long>> CheckQueue;
 UINT_PTR uiTimer = 0u;
@@ -50,7 +50,7 @@ bool APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID) {
 
   switch (reasonForCall) {
   case DLL_PROCESS_ATTACH:
-    pluginInit(hModule);
+    plugin_init(hModule);
     break;
 
   case DLL_PROCESS_DETACH:
@@ -80,7 +80,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
       // Special check for 0th main menu item
       MENUBARINFO info;
       info.cbSize = sizeof(MENUBARINFO);
-      GetMenuBarInfo(nppData.npp_handle, OBJID_MENU, 0, &info);
+      GetMenuBarInfo(npp_data.npp_handle, OBJID_MENU, 0, &info);
       HMENU MainMenu = info.hMenu;
       MENUITEMINFO fileMenuItem;
       fileMenuItem.cbSize = sizeof(MENUITEMINFO);
@@ -88,7 +88,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
       GetMenuItemInfo(MainMenu, 0, true, &fileMenuItem);
 
       const auto menu = reinterpret_cast<HMENU>(wParam);
-      if (fileMenuItem.hSubMenu != menu && GetLangsSubMenu() != menu) {
+      if (fileMenuItem.hSubMenu != menu && get_langs_sub_menu() != menu) {
         int i = 0;
         for (auto &item : curMenuList) {
               InsertSuggMenuItem(menu, item.Text.c_str (), item.Id, i, item.Separator);
@@ -101,20 +101,20 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
 
   case WM_COMMAND:
     if (HIWORD(wParam) == 0) {
-      if (!GetUseAllocatedIds())
-        getSpellChecker()->ProcessMenuResult (wParam);
+      if (!get_use_allocated_ids())
+        get_spell_checker()->ProcessMenuResult (wParam);
 
       if (LOWORD(wParam) == IDM_FILE_PRINTNOW ||
           LOWORD(wParam) == IDM_FILE_PRINT) {
-        bool AutoCheckDisabledWhilePrinting = getSpellChecker()->getAutoCheckText ();
+        bool AutoCheckDisabledWhilePrinting = get_spell_checker()->getAutoCheckText ();
 
         if (AutoCheckDisabledWhilePrinting)
-          getSpellChecker()->SwitchAutoCheck();
+          get_spell_checker()->SwitchAutoCheck();
 
         ret = ::CallWindowProc(wndProcNotepad, hWnd, Message, wParam, lParam);
 
         if (AutoCheckDisabledWhilePrinting)
-          getSpellChecker()->SwitchAutoCheck();
+          get_spell_checker()->SwitchAutoCheck();
 
         return ret;
       }
@@ -129,15 +129,15 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   case WM_CONTEXTMENU:
     LastHwnd = wParam;
     LastCoords = lParam;
-    getSpellChecker()->precalculateMenu();
+    get_spell_checker()->precalculateMenu();
     return true;
   case WM_DISPLAYCHANGE: {
-    getSpellChecker()->HideSuggestionBox();
+    get_spell_checker()->HideSuggestionBox();
   } break;
   }
 
   if (Message != 0) {
-    if (Message == GetCustomGUIMessageId (CustomGuiMessage::generic_callback)) {
+    if (Message == get_custom_gui_message_id (CustomGuiMessage::generic_callback)) {
         const auto callbackPtr = std::unique_ptr<CallbackData> (reinterpret_cast<CallbackData *> (wParam));
         if (callbackPtr->alive_status.expired())
             return false;
@@ -150,35 +150,35 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT Message, WPARAM wParam,
   return ret;
 }
 
-LRESULT showCalculatedMenu(const std::vector<SuggestionsMenuItem>&& menuList) {
+LRESULT show_calculated_menu(const std::vector<SuggestionsMenuItem>&& menuList) {
     curMenuList = std::move (menuList);
-    return ::CallWindowProc(wndProcNotepad, nppData.npp_handle, WM_CONTEXTMENU, LastHwnd, LastCoords);
+    return ::CallWindowProc(wndProcNotepad, npp_data.npp_handle, WM_CONTEXTMENU, LastHwnd, LastCoords);
 }
 
 extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) { // NOLINT
-  nppData = notpadPlusData;
-  commandMenuInit();
-  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(nppData.npp_handle, GWLP_WNDPROC,
+  npp_data = notpadPlusData;
+  command_menu_init();
+  wndProcNotepad = (WNDPROC)::SetWindowLongPtr(npp_data.npp_handle, GWLP_WNDPROC,
                                                (LPARAM)SubWndProcNotepad);
 }
 
 extern "C" __declspec(dllexport) const wchar_t *getName() { // NOLINT
-  return NPP_PLUGIN_NAME;
+  return npp_plugin_name;
 }
 
 extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) { // NOLINT
-  *nbF = nbFunc;
-  return funcItem;
+  *nbF = nb_func;
+  return func_item;
 }
 
 // For now doesn't look like there is such a need in check modified, but code
 // stays until thorough testing
 void WINAPI doRecheck(HWND, UINT, UINT_PTR, DWORD) {
   if (recheckTimer)
-    SetTimer (nppData.npp_handle,  recheckTimer, USER_TIMER_MAXIMUM, doRecheck);
+    SetTimer (npp_data.npp_handle,  recheckTimer, USER_TIMER_MAXIMUM, doRecheck);
   recheckDone = true;
 
-  getSpellChecker()->RecheckVisible();
+  get_spell_checker()->RecheckVisible();
   if (!firstRestyle)
     restylingCausedRecheckWasDone = true;
   firstRestyle = false;
@@ -186,7 +186,7 @@ void WINAPI doRecheck(HWND, UINT, UINT_PTR, DWORD) {
 
 // (PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/)
 void WINAPI uiUpdate (HWND, UINT, UINT_PTR, DWORD)  {
-    GetDownloadDics()->ui_update ();
+    get_download_dics()->ui_update ();
 }
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { // NOLINT
@@ -206,35 +206,35 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { /
 
     if (recheckTimer) KillTimer (nullptr, recheckTimer);
     if (uiTimer) KillTimer (nullptr, uiTimer);
-    commandMenuCleanUp();
+    command_menu_clean_up();
 
-    pluginCleanUp();
+    plugin_clean_up();
     if (wndProcNotepad != nullptr)
       // LONG_PTR is more x64 friendly, yet not affecting x86
-      ::SetWindowLongPtr(nppData.npp_handle, GWLP_WNDPROC,
+      ::SetWindowLongPtr(npp_data.npp_handle, GWLP_WNDPROC,
                          (LONG_PTR)wndProcNotepad); // Removing subclassing
   } break;
 
   case NPPN_READY: {
-    RegisterCustomMessages();
-    InitClasses();
+    register_custom_messages();
+    init_classes();
     CheckQueue.clear();
-    LoadSettings();
-    getSpellChecker ()->CheckFileName();
-    CreateHooks();
-    recheckTimer = SetTimer (nppData.npp_handle, 0, USER_TIMER_MAXIMUM , doRecheck);
-    uiTimer = SetTimer (nppData.npp_handle,  0, 100, uiUpdate);
-    getSpellChecker()->RecheckVisibleBothViews();
+    load_settings();
+    get_spell_checker ()->CheckFileName();
+    create_hooks();
+    recheckTimer = SetTimer (npp_data.npp_handle, 0, USER_TIMER_MAXIMUM , doRecheck);
+    uiTimer = SetTimer (npp_data.npp_handle,  0, 100, uiUpdate);
+    get_spell_checker()->RecheckVisibleBothViews();
     restylingCausedRecheckWasDone = false;
-    getSpellChecker()->SetSuggestionsBoxTransparency();
-    getSpellChecker()->ReinitLanguageLists(false); // To update quick lang change menu
-    UpdateLangsMenu();
+    get_spell_checker()->SetSuggestionsBoxTransparency();
+    get_spell_checker()->ReinitLanguageLists(false); // To update quick lang change menu
+    update_langs_menu();
   } break;
 
   case NPPN_BUFFERACTIVATED: {
-    if (getSpellChecker ()) {
-        getSpellChecker ()->CheckFileName();
-        RecheckVisible();
+    if (get_spell_checker ()) {
+        get_spell_checker ()->CheckFileName();
+        recheck_visible();
         restylingCausedRecheckWasDone = false;
     }
   } break;
@@ -243,17 +243,17 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { /
     if (notifyCode->updated & (SC_UPDATE_CONTENT) && (recheckDone || firstRestyle) &&
         !restylingCausedRecheckWasDone ) // If restyling wasn't caused by user input...
     {
-      getSpellChecker()->RecheckVisible();
+      get_spell_checker()->RecheckVisible();
       if (!firstRestyle)
         restylingCausedRecheckWasDone = true;
     } else if (notifyCode->updated &
                    (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) &&
                recheckDone) // If scroll wasn't caused by user input...
     {
-      getSpellChecker()->RecheckVisible(true);
+      get_spell_checker()->RecheckVisible(true);
       restylingCausedRecheckWasDone = false;
     }
-    getSpellChecker()->HideSuggestionBox();
+    get_spell_checker()->HideSuggestionBox();
     break;
 
   case SCN_MODIFIED:
@@ -270,18 +270,18 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { /
 
       if (recheckTimer)
           {
-              SetTimer (nppData.npp_handle,  recheckTimer, getSpellChecker ()->getRecheckDelay(), doRecheck);
+              SetTimer (npp_data.npp_handle,  recheckTimer, get_spell_checker ()->getRecheckDelay(), doRecheck);
               recheckDone = false;
           }
     }
     break;
 
   case NPPN_LANGCHANGED: {
-    getSpellChecker()->langChange();
+    get_spell_checker()->langChange();
   } break;
 
   case NPPN_TBMODIFICATION: {
-    AddIcons();
+    add_icons();
   }
 
   default:
@@ -297,14 +297,14 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) { /
 void InitNeededDialogs(WPARAM wParam) {
   // A little bit of code duplication here :(
   auto MenuId = wParam;
-  if ((!GetUseAllocatedIds() && HIBYTE(MenuId) != DSPELLCHECK_MENU_ID &&
+  if ((!get_use_allocated_ids() && HIBYTE(MenuId) != DSPELLCHECK_MENU_ID &&
        HIBYTE(MenuId) != LANGUAGE_MENU_ID) ||
-      (GetUseAllocatedIds() && ((int)MenuId < GetContextMenuIdStart() ||
-                                (int)MenuId > GetContextMenuIdStart() + 350)))
+      (get_use_allocated_ids() && ((int)MenuId < get_context_menu_id_start() ||
+                                (int)MenuId > get_context_menu_id_start() + 350)))
     return;
   int UsedMenuId = 0;
-  if (GetUseAllocatedIds()) {
-    UsedMenuId = ((int)MenuId < GetLangsMenuIdStart() ? DSPELLCHECK_MENU_ID
+  if (get_use_allocated_ids()) {
+    UsedMenuId = ((int)MenuId < get_langs_menu_id_start() ? DSPELLCHECK_MENU_ID
                                                       : LANGUAGE_MENU_ID);
   } else {
     UsedMenuId = HIBYTE(MenuId);
@@ -312,16 +312,16 @@ void InitNeededDialogs(WPARAM wParam) {
   switch (UsedMenuId) {
   case LANGUAGE_MENU_ID:
     WPARAM Result = 0;
-    if (!GetUseAllocatedIds())
+    if (!get_use_allocated_ids())
       Result = LOBYTE(MenuId);
     else
-      Result = MenuId - GetLangsMenuIdStart();
+      Result = MenuId - get_langs_menu_id_start();
     if (Result == DOWNLOAD_DICS)
-      GetDownloadDics()->do_dialog();
+      get_download_dics()->do_dialog();
     else if (Result == CUSTOMIZE_MULTIPLE_DICS) {
-      GetLangList()->do_dialog();
+      get_lang_list()->do_dialog();
     } else if (Result == REMOVE_DICS) {
-      GetRemoveDics()->DoDialog();
+      get_remove_dics()->do_dialog();
     }
     break;
   }
@@ -331,13 +331,13 @@ extern "C" __declspec(dllexport) LRESULT
     messageProc(UINT Message, WPARAM wParam, LPARAM /*lParam*/) { // NOLINT
   switch (Message) {
   case WM_MOVE:
-    if (getSpellChecker())
-      getSpellChecker()->HideSuggestionBox();
+    if (get_spell_checker())
+      get_spell_checker()->HideSuggestionBox();
     return false;
   case WM_COMMAND: {
-    if (HIWORD(wParam) == 0 && GetUseAllocatedIds()) {
+    if (HIWORD(wParam) == 0 && get_use_allocated_ids()) {
       InitNeededDialogs(wParam);
-      getSpellChecker()->ProcessMenuResult (wParam);
+      get_spell_checker()->ProcessMenuResult (wParam);
     }
   } break;
   }

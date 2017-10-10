@@ -25,18 +25,18 @@ class SpellChecker;
 
 class RemoveDictionariesDialog : public StaticDialog {
 public:
-  void init(HINSTANCE hInst, HWND Parent) override;
-  void DoDialog();
-  void RemoveSelected(SpellChecker *SpellCheckerInstance);
-  HWND GetListBox();
-  void UpdateOptions(SpellChecker *SpellCheckerInstance);
-  void SetCheckBoxes(bool RemoveUserDics, bool RemoveSystem);
+  void init(HINSTANCE h_inst, HWND parent) override;
+  void do_dialog();
+  void remove_selected(SpellChecker *spell_checker_instance);
+  HWND get_list_box();
+  void update_options(SpellChecker *spell_checker_instance);
+  void set_check_boxes(bool remove_user_dics, bool remove_system);
 
 protected:
-  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 
 protected:
-  HWND HLangList = nullptr;
-  HWND HRemoveUserDics = nullptr;
-  HWND HRemoveSystem = nullptr;
+  HWND m_lang_list = nullptr;
+  HWND m_remove_user_dics = nullptr;
+  HWND m_remove_system = nullptr;
 };

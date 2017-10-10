@@ -7,17 +7,17 @@ void ProgressData::set(int progress, const std::wstring& status, bool marquee) {
     m_marquee = marquee;
 }
 
-bool ProgressData::getMarquee() const {
+bool ProgressData::get_marquee() const {
     std::lock_guard<std::mutex> lg (m_mutex);
     return m_marquee;
 }
 
-int ProgressData::getProgress() const {
+int ProgressData::get_progress() const {
     std::lock_guard<std::mutex> lg (m_mutex);
     return m_progress;
 }
 
-std::wstring ProgressData::getStatus()const{
+std::wstring ProgressData::get_status()const{
     std::lock_guard<std::mutex> lg (m_mutex);
     return m_status;
 }

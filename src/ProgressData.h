@@ -3,9 +3,9 @@
 struct ProgressData {
 public:
     void set (int progress, const std::wstring &status, bool marquee = false);
-    bool getMarquee() const;
-    int getProgress() const;
-    std::wstring getStatus () const;
+    bool get_marquee() const;
+    int get_progress() const;
+    std::wstring get_status () const;
 
 private:
     int m_progress = 0;

@@ -34,7 +34,7 @@ void AboutDlg::do_dialog() {
 std::wstring get_product_and_version() {
   // get the filename of the executable containing the version resource
   std::vector<wchar_t> sz_filename (MAX_PATH + 1);
-  if (GetModuleFileName((HMODULE)getHModule(), sz_filename.data (), MAX_PATH) == 0) {
+  if (GetModuleFileName((HMODULE)get_h_module(), sz_filename.data (), MAX_PATH) == 0) {
     return {};
   }
 

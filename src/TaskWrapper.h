@@ -32,7 +32,7 @@ public:
         cb_data->callback = [guiCallback = std::move (guiCallback), ret = std::move (ret)](){ guiCallback (ret); };
         cb_data->alive_status = as;
          PostMessage(hwnd,
-            GetCustomGUIMessageId(CustomGuiMessage::generic_callback), reinterpret_cast<WPARAM> (cb_data.release ())
+            get_custom_gui_message_id(CustomGuiMessage::generic_callback), reinterpret_cast<WPARAM> (cb_data.release ())
             , 0);
     });
 }

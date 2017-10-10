@@ -52,7 +52,7 @@ void SimpleDlg::DisableLanguageCombo(bool Disable)
 {
     ComboBox_ResetContent(HComboLanguage);
     EnableWindow(HComboLanguage, !Disable);
-    ListBox_ResetContent(GetRemoveDics()->GetListBox());
+    ListBox_ResetContent(get_remove_dics()->get_list_box());
     EnableWindow(HRemoveDics, !Disable);
 }
 
@@ -63,8 +63,8 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
                                       HunspellInterface* hunspellSpeller)
 {
     ComboBox_ResetContent(HComboLanguage);
-    ListBox_ResetContent(GetLangList()->get_list_box());
-    ListBox_ResetContent(GetRemoveDics()->GetListBox());
+    ListBox_ResetContent(get_lang_list()->get_list_box());
+    ListBox_ResetContent(get_remove_dics()->get_list_box());
 
     int SelectedIndex = 0;
 
@@ -76,7 +76,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
                 SelectedIndex = i;
 
             ComboBox_AddString(HComboLanguage, lang.alias_name.c_str ());
-            ListBox_AddString(GetLangList()->get_list_box(),
+            ListBox_AddString(get_lang_list()->get_list_box(),
                 lang.alias_name.c_str ());
             if (hunspellSpeller)
             {
@@ -85,7 +85,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
                 if (hunspellSpeller->get_lang_only_system(lang.orig_name.c_str ()))
                     wcscat(Buf, L" [!For All Users]");
 
-                ListBox_AddString(GetRemoveDics()->GetListBox(), Buf);
+                ListBox_AddString(get_remove_dics()->get_list_box(), Buf);
             }
             ++i;
         }
@@ -99,7 +99,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
 
     ComboBox_SetCurSel(HComboLanguage, SelectedIndex);
 
-    CheckedListBox_EnableCheckAll(GetLangList()->get_list_box(), BST_UNCHECKED);
+    CheckedListBox_EnableCheckAll(get_lang_list()->get_list_box(), BST_UNCHECKED);
     for (auto &token : tokenize<wchar_t> (multiLanguages, LR"(\|)"))
     {
         int index = -1;
@@ -114,7 +114,7 @@ bool SimpleDlg::AddAvailableLanguages(const std::vector<LanguageName>& langsAvai
             ++i;
         }
         if (index != -1)
-            CheckedListBox_SetCheckState(GetLangList()->get_list_box(), index,
+            CheckedListBox_SetCheckState(get_lang_list()->get_list_box(), index,
             BST_CHECKED);
     }
     return true;
@@ -133,7 +133,7 @@ static HWND CreateToolTip(int toolID, HWND hDlg, const wchar_t* pszText)
     HWND hwndTip =
         CreateWindowEx(NULL, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_ALWAYSTIP,
                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                       hDlg, nullptr, (HINSTANCE)getHModule(), nullptr);
+                       hDlg, nullptr, (HINSTANCE)get_h_module(), nullptr);
 
     if (!hwndTool || !hwndTip)
     {
@@ -211,7 +211,7 @@ void SimpleDlg::ApplySettings(SpellChecker* SpellCheckerInstance)
         BST_CHECKED);
     SpellCheckerInstance->SetOneUserDic(Button_GetCheck(HOneUserDic) ==
         BST_CHECKED);
-    UpdateLangsMenu();
+    update_langs_menu();
 }
 
 void SimpleDlg::SetLibMode(int LibMode)
@@ -420,14 +420,14 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
                     if (ComboBox_GetCurSel(HComboLanguage) ==
                         ComboBox_GetCount(HComboLanguage) - 1)
                     {
-                        GetLangList()->do_dialog();
+                        get_lang_list()->do_dialog();
                     }
                 }
                 break;
             case IDC_LIBRARY:
                 if (HIWORD(wParam) == CBN_SELCHANGE)
                 {
-                    getSpellChecker()->libChange();
+                    get_spell_checker()->libChange();
                 }
                 break;
             case IDC_HUNSPELL_PATH_TYPE:
@@ -470,7 +470,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
             case IDC_REMOVE_DICS:
                 if (HIWORD(wParam) == BN_CLICKED)
                 {
-                    GetRemoveDics()->DoDialog();
+                    get_remove_dics()->do_dialog();
                 }
                 break;
             case IDC_RESETASPELLPATH:
@@ -482,7 +482,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
                         if (GetSelectedLib() == 0)
                             Path = get_default_aspell_path();
                         else
-                            Path = GetDefaultHunspellPath();
+                            Path = get_default_hunspell_path();
 
                         if (GetSelectedLib() == 0 || ComboBox_GetCurSel(HHunspellPathType) == 0)
                             Edit_SetText(HLibPath, Path.c_str ());
@@ -496,7 +496,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        GetDownloadDics()->do_dialog();
+                        get_download_dics()->do_dialog();
                     }
                 }
                 break;
@@ -776,7 +776,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam)
         {
         case IDC_DEFAULT_DELIMITERS:
             if (HIWORD(wParam) == BN_CLICKED)
-                getSpellChecker()->SetDefaultDelimiters();
+                get_spell_checker()->SetDefaultDelimiters();
             return true;
         case IDC_RECHECK_DELAY:
             if (HIWORD(wParam) == EN_CHANGE)
@@ -889,7 +889,7 @@ void AdvancedDlg::ApplySettings(SpellChecker* SpellCheckerInstance)
     auto text = getEditText (HBufferSize);
     int x = wcstol(text.c_str (), &EndPtr, 10);
     SpellCheckerInstance->SetBufferSize(x);
-    GetDownloadDics()->update_list_box();
+    get_download_dics()->update_list_box();
 }
 
 SimpleDlg* SettingsDlg::GetSimpleDlg() { return &SimpleDlgInstance; }
@@ -911,7 +911,7 @@ void SettingsDlg::destroy()
 // Send appropriate event and set some npp thread properties
 void SettingsDlg::ApplySettings()
 {
-    getSpellChecker()->applySettings();
+    get_spell_checker()->applySettings();
 }
 
 INT_PTR SettingsDlg::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lParam)
@@ -950,7 +950,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lParam)
             if (enableDlgTheme)
                 enableDlgTheme(_hSelf, ETDT_ENABLETAB);
 
-            getSpellChecker()->FillDialogs();
+            get_spell_checker()->FillDialogs();
 
             return true;
         }
@@ -984,7 +984,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lParam)
             {
             case 0: // Menu
                 {
-                    getSpellChecker()->copyMisspellingsToClipboard();
+                    get_spell_checker()->copyMisspellingsToClipboard();
                 }
                 break;
             case IDAPPLY:
@@ -1026,7 +1026,7 @@ UINT SettingsDlg::DoDialog(void)
     else
     {
         goToCenter();
-        getSpellChecker()->FillDialogs();
+        get_spell_checker()->FillDialogs();
     }
 
     return true;

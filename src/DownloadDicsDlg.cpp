@@ -51,7 +51,7 @@ void DownloadDicsDlg::do_dialog() {
 }
 
 void DownloadDicsDlg::fill_file_list() {
-    GetDownloadDics()->do_ftp_operation(FtpOperationType::fill_file_list, current_address()->c_str());
+    get_download_dics()->do_ftp_operation(FtpOperationType::fill_file_list, current_address()->c_str());
 }
 
 void DownloadDicsDlg::on_display_action() {
@@ -119,9 +119,9 @@ bool DownloadDicsDlg::prepare_downloading() {
         return false;
     }
     m_cancel_pressed = false;
-    ProgressDlg* p = getProgress();
+    ProgressDlg* p = get_progress();
     p->getProgressData()->set(0, L"");
-    getProgress()->update();
+    get_progress()->update();
     p->SetTopMessage(L"");
     if (!check_for_directory_existence(
         m_spell_checker_instance->GetInstallSystem()
@@ -152,7 +152,7 @@ bool DownloadDicsDlg::prepare_downloading() {
 }
 
 void DownloadDicsDlg::finalize_downloading() {
-    getProgress()->display(false);
+    get_progress()->display(false);
     if (m_failure == 1) {
         MessageBox(
             _hParent, L"Access denied to dictionaries directory, either try to run "
@@ -222,7 +222,7 @@ void DownloadDicsDlg::on_file_downloaded() {
                 continue;
 
             swprintf(prog_message, L"Extracting %s...", dic_file_name.c_str());
-            getProgress()->SetTopMessage(prog_message);
+            get_progress()->SetTopMessage(prog_message);
             DWORD bytes_total = 0;
             int bytes_copied;
             std::vector<char> file_copy_buf(buf_size_for_copy);
@@ -233,7 +233,7 @@ void DownloadDicsDlg::on_file_downloaded() {
                 swprintf(prog_message, L"%d / %d bytes extracted (%d %%)",
                          bytes_total, f_info.uncompressed_size,
                          bytes_total * 100 / f_info.uncompressed_size);
-                getProgress()->getProgressData()->set(bytes_total * 100 / f_info.uncompressed_size, prog_message);
+                get_progress()->getProgressData()->set(bytes_total * 100 / f_info.uncompressed_size, prog_message);
             }
             unzCloseCurrentFile(fp);
             _close(local_dic_file_handle);
@@ -349,7 +349,7 @@ void DownloadDicsDlg::start_next_download() {
     if (m_cur == m_to_download.end() || m_cancel_pressed)
         return finalize_downloading();
 
-    getProgress()->SetTopMessage(wstring_printf(L"Downloading %s...", m_cur->file_name.c_str()).c_str());
+    get_progress()->SetTopMessage(wstring_printf(L"Downloading %s...", m_cur->file_name.c_str()).c_str());
     if (PathFileExists(m_cur->target_path.c_str())) {
         SetFileAttributes(m_cur->target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
         DeleteFile(m_cur->target_path.c_str());
@@ -663,7 +663,7 @@ std::optional<FtpWebOperationError> do_download_file_web_proxy(FtpOperationParam
     if (!file_handle)
         return FtpWebOperationError{FtpWebOperationErrorType::file_is_not_writeable, -1};
 
-    getProgress()->SetMarquee(true);
+    get_progress()->SetMarquee(true);
     while (true) {
         if (token.is_canceled()) {
             _close(file_handle);
@@ -700,7 +700,7 @@ void DownloadDicsDlg::update_status(const wchar_t* text, COLORREF status_color) 
 }
 
 void DownloadDicsDlg::ui_update() {
-    getProgress()->update();
+    get_progress()->update();
 }
 
 void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring>& list) {
@@ -822,7 +822,7 @@ void DownloadDicsDlg::update_file_list_async(const std::wstring& full_path) {
 
 void DownloadDicsDlg::download_file_async(const std::wstring& full_path, const std::wstring& target_location) {
     m_ftp_operation_task->doDeferred([params = spawn_ftp_operation_params(full_path), target_location,
-                                         progressData = getProgress()->getProgressData()](auto token)
+                                         progressData = get_progress()->getProgressData()](auto token)
                                      {
                                          return do_download_file(params, target_location, progressData, token);
                                      }, [this](std::optional<FtpOperationErrorType>)
@@ -835,7 +835,7 @@ void DownloadDicsDlg::download_file_async(const std::wstring& full_path, const s
 void DownloadDicsDlg::
 download_file_async_web_proxy(const std::wstring& full_path, const std::wstring& target_location) {
     m_ftp_operation_task->doDeferred([params = spawn_ftp_operation_params(full_path), target_location,
-                                         progressData = getProgress()->getProgressData()](auto token)
+                                         progressData = get_progress()->getProgressData()](auto token)
                                      {
                                          return do_download_file_web_proxy(
                                              params, target_location, progressData, token);
@@ -902,8 +902,8 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
             m_refresh_icon = (HICON)LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH),
                                               IMAGE_ICON, 16, 16, 0);
             SendMessage(m_h_refresh, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)m_refresh_icon);
-            getSpellChecker()->ResetDownloadCombobox();
-            getSpellChecker()->fillDownloadDicsDialog();
+            get_spell_checker()->ResetDownloadCombobox();
+            get_spell_checker()->fillDownloadDicsDialog();
             m_default_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
         }
         return true;
@@ -913,7 +913,7 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
             case IDOK:
                 if (HIWORD(w_param) == BN_CLICKED) {
                     download_selected();
-                    getProgress()->DoDialog();
+                    get_progress()->DoDialog();
                     display(false);
                 }
                 break;
@@ -933,7 +933,7 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                         CreateTimerQueueTimer(&m_timer, nullptr, reinit_server, this, 1000, 0, 0);
                 }
                 else if (HIWORD(w_param) == CBN_SELCHANGE) {
-                    getSpellChecker()->updateFromDownloadDicsOptionsNoUpdate();
+                    get_spell_checker()->updateFromDownloadDicsOptionsNoUpdate();
                     reinit_server(this, false);
                     m_check_if_saving_is_needed = 0;
                 }
@@ -945,18 +945,18 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                 break;
             case IDC_INSTALL_SYSTEM:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    getSpellChecker()->updateFromDownloadDicsOptionsNoUpdate();
+                    get_spell_checker()->updateFromDownloadDicsOptionsNoUpdate();
                 }
                 break;
             case IDC_SHOWONLYKNOWN:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    getSpellChecker()->updateFromDownloadDicsOptions();
+                    get_spell_checker()->updateFromDownloadDicsOptions();
                 }
                 break;
             case IDC_SELECTPROXY:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    GetSelectProxy()->DoDialog();
-                    GetSelectProxy()->display();
+                    get_select_proxy()->DoDialog();
+                    get_select_proxy()->display();
                 }
             }
         }

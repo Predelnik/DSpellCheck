@@ -1,8 +1,7 @@
 #include "raii.h"
-#include "PluginInterface.h"
 #include "Notepad_plus_msgs.h"
 
-ToolbarIconsWrapper::ToolbarIconsWrapper() : m_icons{std::make_unique<toolbarIcons>()} {
+ToolbarIconsWrapper::ToolbarIconsWrapper() : m_icons{std::make_unique<ToolbarIcons>()} {
     m_icons->hToolbarBmp = nullptr;
     m_icons->hToolbarIcon = nullptr;
 }
@@ -16,10 +15,10 @@ ToolbarIconsWrapper::~ToolbarIconsWrapper() {
 }
 
 ToolbarIconsWrapper::
-ToolbarIconsWrapper(HINSTANCE hInst, LPCWSTR name, UINT type, int cx, int cy, UINT fuLoad) : ToolbarIconsWrapper() {
-    m_icons->hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)hInst, name, type, cx, cy, fuLoad);
+ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR name, UINT type, int cx, int cy, UINT fu_load) : ToolbarIconsWrapper() {
+    m_icons->hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)h_inst, name, type, cx, cy, fu_load);
 }
 
-const toolbarIcons* ToolbarIconsWrapper::get() {
+const ToolbarIcons* ToolbarIconsWrapper::get() {
     return m_icons.get();
 }

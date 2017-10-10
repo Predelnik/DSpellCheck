@@ -51,7 +51,7 @@ INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM /*lParam*/
     switch (LOWORD(wParam)) {
     case IDC_STOP:
       if (HIWORD(wParam) == BN_CLICKED) {
-        GetDownloadDics()->set_cancel_pressed(true);
+        get_download_dics()->set_cancel_pressed(true);
       }
       break;
     };
@@ -76,9 +76,9 @@ void ProgressDlg::SetMarquee(bool animated) {
 }
 
 void ProgressDlg::update() {
-    SendMessage(HProgressBar, PBM_SETPOS, m_progressData->getProgress(), 0);
-    Static_SetText(HDescBottom, m_progressData->getStatus().c_str ());
-    SetMarquee (m_progressData->getMarquee());
+    SendMessage(HProgressBar, PBM_SETPOS, m_progressData->get_progress(), 0);
+    Static_SetText(HDescBottom, m_progressData->get_status().c_str ());
+    SetMarquee (m_progressData->get_marquee());
     Static_SetText (HDescTop, m_topMessage.c_str ());
 }
 

@@ -111,7 +111,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lPar
   case WM_LBUTTONUP:
     if (!StatePressed)
       return false;
-    getSpellChecker()->showSuggestionMenu();
+    get_spell_checker()->showSuggestionMenu();
     return false;
 
   case WM_MOUSEWHEEL:
@@ -169,7 +169,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lPar
 
   case WM_COMMAND:
     if (HIWORD(wParam) == 0)
-      getSpellChecker()->ProcessMenuResult(wParam);
+      get_spell_checker()->ProcessMenuResult(wParam);
 
     return false;
 
