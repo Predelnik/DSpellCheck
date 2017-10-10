@@ -1,7 +1,7 @@
 #include "SciUtils.h"
 #include "SciLexer.h"
 
-bool SciUtils::isCommentOrString(LRESULT lexer, LRESULT style)
+bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
 {
     switch (lexer)
     {

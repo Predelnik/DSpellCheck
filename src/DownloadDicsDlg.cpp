@@ -792,7 +792,7 @@ void DownloadDicsDlg::update_file_list_async_web_proxy(const std::wstring& full_
     // temporary workaround for xsmf_control.h bug
     static_assert(std::is_copy_constructible_v<std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
     prepare_file_list_update();
-    m_ftp_operation_task->doDeferred([params = spawn_ftp_operation_params(full_path)](auto)
+    m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path)](auto)
                                      {
                                          return do_download_file_list_ftp_web_proxy(params);
                                      }, [this](std::variant<FtpWebOperationError, std::vector<std::wstring>> res)
@@ -808,7 +808,7 @@ void DownloadDicsDlg::update_file_list_async(const std::wstring& full_path) {
     // temporary workaround for xsmf_control.h bug
     static_assert(std::is_copy_constructible_v<std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
     prepare_file_list_update();
-    m_ftp_operation_task->doDeferred([params = spawn_ftp_operation_params(full_path)](auto)
+    m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path)](auto)
                                      {
                                          return do_download_file_list_ftp(params);
                                      }, [this](std::variant<FtpOperationErrorType, std::vector<std::wstring>> res)
@@ -821,7 +821,7 @@ void DownloadDicsDlg::update_file_list_async(const std::wstring& full_path) {
 }
 
 void DownloadDicsDlg::download_file_async(const std::wstring& full_path, const std::wstring& target_location) {
-    m_ftp_operation_task->doDeferred([params = spawn_ftp_operation_params(full_path), target_location,
+    m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location,
                                          progressData = get_progress()->getProgressData()](auto token)
                                      {
                                          return do_download_file(params, target_location, progressData, token);
@@ -834,7 +834,7 @@ void DownloadDicsDlg::download_file_async(const std::wstring& full_path, const s
 
 void DownloadDicsDlg::
 download_file_async_web_proxy(const std::wstring& full_path, const std::wstring& target_location) {
-    m_ftp_operation_task->doDeferred([params = spawn_ftp_operation_params(full_path), target_location,
+    m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location,
                                          progressData = get_progress()->getProgressData()](auto token)
                                      {
                                          return do_download_file_web_proxy(
@@ -955,7 +955,7 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                 break;
             case IDC_SELECTPROXY:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    get_select_proxy()->DoDialog();
+                    get_select_proxy()->do_dialog();
                     get_select_proxy()->display();
                 }
             }

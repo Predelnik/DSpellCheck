@@ -25,19 +25,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class SuggestionsButton : public StaticDialog {
 public:
   SuggestionsButton();
-  void DoDialog();
-  HMENU GetPopupMenu();
-  int GetResult();
-  void initDlg(HINSTANCE hInst, HWND Parent, NppData nppData);
+  void do_dialog();
+  HMENU get_popup_menu();
+  int get_result();
+  void init_dlg(HINSTANCE h_inst, HWND parent, NppData npp_data);
 
 protected:
-  INT_PTR WINAPI run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lParam) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 
 private:
-  int MenuResult;
-  bool StatePressed;
-  bool StateHovered;
-  bool StateMenu;
-  HMENU PopupMenu;
-  NppData NppDataInstance;
+  int m_menu_result;
+  bool m_state_pressed;
+  bool m_state_hovered;
+  bool m_state_menu;
+  HMENU m_popup_menu;
+  NppData m_npp_data_instance;
 };

@@ -17,137 +17,132 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include <CommCtrl.h>
-
 #include "SelectProxyDialog.h"
 
 #include "DownloadDicsDlg.h"
-#include "CheckedList/CheckedList.h"
 #include "MainDef.h"
-#include "CommonFunctions.h"
 #include "SpellChecker.h"
 #include "Plugin.h"
 
 #include "utils/winapi.h"
 #include "resource.h"
 
-void SelectProxyDialog::DoDialog() {
+void SelectProxyDialog::do_dialog() {
   if (!isCreated()) {
     create(IDD_DIALOG_SELECT_PROXY);
   }
   goToCenter();
 }
 
-void SelectProxyDialog::ApplyChoice(SpellChecker *SpellCheckerInstance) {
-  SpellCheckerInstance->SetProxyUserName (getEditText(HUserName).c_str ());
-  SpellCheckerInstance->SetProxyHostName (getEditText (HHostName).c_str ());
-  SpellCheckerInstance->SetProxyPassword (getEditText (HPassword).c_str ());
-  SpellCheckerInstance->SetUseProxy(Button_GetCheck(HUseProxy) == BST_CHECKED);
-  SpellCheckerInstance->SetProxyAnonymous(Button_GetCheck(HProxyAnonymous) == BST_CHECKED);
-  SpellCheckerInstance->SetProxyType(ComboBox_GetCurSel(HProxyType));
-  auto text = getEditText (HPort);
-  wchar_t *EndPtr;
-  int x = wcstol(text.c_str(), &EndPtr, 10);
-  SpellCheckerInstance->SetProxyPort(x);
+void SelectProxyDialog::apply_choice(SpellChecker *spell_checker_instance) {
+  spell_checker_instance->SetProxyUserName (getEditText(m_user_name).c_str ());
+  spell_checker_instance->SetProxyHostName (getEditText (m_host_name).c_str ());
+  spell_checker_instance->SetProxyPassword (getEditText (m_password).c_str ());
+  spell_checker_instance->SetUseProxy(Button_GetCheck(m_use_proxy) == BST_CHECKED);
+  spell_checker_instance->SetProxyAnonymous(Button_GetCheck(m_proxy_anonymous) == BST_CHECKED);
+  spell_checker_instance->SetProxyType(ComboBox_GetCurSel(m_proxy_type));
+  auto text = getEditText (m_port);
+  wchar_t *end_ptr;
+  int x = wcstol(text.c_str(), &end_ptr, 10);
+  spell_checker_instance->SetProxyPort(x);
   get_download_dics()->refresh();
 }
 
-void SelectProxyDialog::DisableControls() {
-  bool ProxyIsUsed = Button_GetCheck(HUseProxy);
-  EnableWindow(HProxyAnonymous, ProxyIsUsed);
-  EnableWindow(HUserName, ProxyIsUsed);
-  EnableWindow(HHostName, ProxyIsUsed);
-  EnableWindow(HPassword, ProxyIsUsed);
-  EnableWindow(HPort, ProxyIsUsed);
-  EnableWindow(HProxyType, ProxyIsUsed);
+void SelectProxyDialog::disable_controls() {
+  bool proxy_is_used = Button_GetCheck(m_use_proxy);
+  EnableWindow(m_proxy_anonymous, proxy_is_used);
+  EnableWindow(m_user_name, proxy_is_used);
+  EnableWindow(m_host_name, proxy_is_used);
+  EnableWindow(m_password, proxy_is_used);
+  EnableWindow(m_port, proxy_is_used);
+  EnableWindow(m_proxy_type, proxy_is_used);
 
-  if (ProxyIsUsed) {
-    bool LoginUsed = !Button_GetCheck(HProxyAnonymous);
-    bool AnonymousType = (ComboBox_GetCurSel(HProxyType) == 1);
-    if (AnonymousType) {
-      LoginUsed = false;
-      EnableWindow(HProxyAnonymous, false);
+  if (proxy_is_used) {
+    bool login_used = !Button_GetCheck(m_proxy_anonymous);
+    bool anonymous_type = (ComboBox_GetCurSel(m_proxy_type) == 1);
+    if (anonymous_type) {
+      login_used = false;
+      EnableWindow(m_proxy_anonymous, false);
     }
-    EnableWindow(HUserName, LoginUsed);
-    EnableWindow(HPassword, LoginUsed);
+    EnableWindow(m_user_name, login_used);
+    EnableWindow(m_password, login_used);
   }
 }
 
-void SelectProxyDialog::SetOptions(bool UseProxy, const wchar_t* HostName,
-                                   const wchar_t* UserName, const wchar_t* Password, int Port,
-                                   bool ProxyAnonymous, int ProxyType) {
-  Button_SetCheck(HUseProxy, UseProxy ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(HProxyAnonymous,
-                  ProxyAnonymous ? BST_CHECKED : BST_UNCHECKED);
-  Edit_SetText(HUserName, UserName);
-  Edit_SetText(HHostName, HostName);
-  Edit_SetText(HPassword, Password);
-  if (Port < 0)
-    Port = 0;
-  if (Port > 65535)
-    Port = 65535;
-  wchar_t Buf[DEFAULT_BUF_SIZE];
-  _itow(Port, Buf, 10);
-  Edit_SetText(HPort, Buf);
-  DisableControls();
-  ComboBox_SetCurSel(HProxyType, ProxyType);
+void SelectProxyDialog::set_options(bool use_proxy, const wchar_t* host_name,
+                                   const wchar_t* user_name, const wchar_t* password, int port,
+                                   bool proxy_anonymous, int proxy_type) {
+  Button_SetCheck(m_use_proxy, use_proxy ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_proxy_anonymous,
+                  proxy_anonymous ? BST_CHECKED : BST_UNCHECKED);
+  Edit_SetText(m_user_name, user_name);
+  Edit_SetText(m_host_name, host_name);
+  Edit_SetText(m_password, password);
+  if (port < 0)
+    port = 0;
+  if (port > 65535)
+    port = 65535;
+  wchar_t buf[DEFAULT_BUF_SIZE];
+  _itow(port, buf, 10);
+  Edit_SetText(m_port, buf);
+  disable_controls();
+  ComboBox_SetCurSel(m_proxy_type, proxy_type);
 }
 
-INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM wParam,
+INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
                                  LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {
-    HPort = ::GetDlgItem(_hSelf, IDC_PORT);
-    HUserName = ::GetDlgItem(_hSelf, IDC_USERNAME);
-    HHostName = ::GetDlgItem(_hSelf, IDC_HOSTNAME);
-    HPassword = ::GetDlgItem(_hSelf, IDC_PASSWORD);
-    HUseProxy = ::GetDlgItem(_hSelf, IDC_USEPROXY);
-    HProxyAnonymous = ::GetDlgItem(_hSelf, IDC_ANONYMOUS_LOGIN);
-    HProxyType = ::GetDlgItem(_hSelf, IDC_PROXY_TYPE);
-    ComboBox_AddString(HProxyType, L"FTP Web Proxy");
-    ComboBox_AddString(HProxyType, L"FTP Gateway");
+    m_port = ::GetDlgItem(_hSelf, IDC_PORT);
+    m_user_name = ::GetDlgItem(_hSelf, IDC_USERNAME);
+    m_host_name = ::GetDlgItem(_hSelf, IDC_HOSTNAME);
+    m_password = ::GetDlgItem(_hSelf, IDC_PASSWORD);
+    m_use_proxy = ::GetDlgItem(_hSelf, IDC_USEPROXY);
+    m_proxy_anonymous = ::GetDlgItem(_hSelf, IDC_ANONYMOUS_LOGIN);
+    m_proxy_type = ::GetDlgItem(_hSelf, IDC_PROXY_TYPE);
+    ComboBox_AddString(m_proxy_type, L"FTP Web Proxy");
+    ComboBox_AddString(m_proxy_type, L"FTP Gateway");
     get_spell_checker ()->updateSelectProxy();
     return true;
   }
   case WM_COMMAND: {
-    switch (LOWORD(wParam)) {
+    switch (LOWORD(w_param)) {
     case IDOK:
-      if (HIWORD(wParam) == BN_CLICKED) {
+      if (HIWORD(w_param) == BN_CLICKED) {
         get_spell_checker()->applyProxySettings ();
         display(false);
       }
       break;
     case IDCANCEL:
-      if (HIWORD(wParam) == BN_CLICKED) {
+      if (HIWORD(w_param) == BN_CLICKED) {
         get_spell_checker ()->updateSelectProxy(); // Reset all settings
         display(false);
       }
       break;
     case IDC_USEPROXY:
     case IDC_ANONYMOUS_LOGIN: {
-      if (HIWORD(wParam) == BN_CLICKED)
-        DisableControls();
+      if (HIWORD(w_param) == BN_CLICKED)
+        disable_controls();
     } break;
     case IDC_PROXY_TYPE:
-      if (HIWORD(wParam) == CBN_SELCHANGE)
-        DisableControls();
+      if (HIWORD(w_param) == CBN_SELCHANGE)
+        disable_controls();
       break;
     case IDC_PORT:
-      if (HIWORD(wParam) == EN_CHANGE) {
-        wchar_t *EndPtr = nullptr;
-        int x;
-        wchar_t Buf[DEFAULT_BUF_SIZE];
-        Edit_GetText(HPort, Buf, DEFAULT_BUF_SIZE);
-        if (!*Buf)
+      if (HIWORD(w_param) == EN_CHANGE) {
+        wchar_t *end_ptr = nullptr;
+          wchar_t buf[DEFAULT_BUF_SIZE];
+        Edit_GetText(m_port, buf, DEFAULT_BUF_SIZE);
+        if (!*buf)
           return false;
 
-        x = wcstol(Buf, &EndPtr, 10);
-        if (*EndPtr)
-          Edit_SetText(HPort, L"0");
+        int x = wcstol(buf, &end_ptr, 10);
+        if (*end_ptr)
+          Edit_SetText(m_port, L"0");
         else if (x > 65535)
-          Edit_SetText(HPort, L"65535");
+          Edit_SetText(m_port, L"65535");
         else if (x < 0)
-          Edit_SetText(HPort, L"0");
+          Edit_SetText(m_port, L"0");
 
         return false;
       }

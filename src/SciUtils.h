@@ -2,5 +2,5 @@
 
 namespace SciUtils
 {
-    bool isCommentOrString(LRESULT lexer, LRESULT style);
+    bool is_comment_or_string(LRESULT lexer, LRESULT style);
 }

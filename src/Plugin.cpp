@@ -170,7 +170,7 @@ void get_suggestions() {
     // SendEvent (EID_INITSUGGESTIONS);
 }
 
-void start_settings() { settings_dlg->DoDialog(); }
+void start_settings() { settings_dlg->do_dialog(); }
 
 void start_manual() {
     ShellExecute(nullptr, L"open",
@@ -348,11 +348,11 @@ void init_classes() {
     InitCheckedListBox(static_cast<HINSTANCE>(h_module));
 
     suggestions_button = std::make_unique<SuggestionsButton>();
-    suggestions_button->initDlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
-    suggestions_button->DoDialog();
+    suggestions_button->init_dlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
+    suggestions_button->do_dialog();
 
     settings_dlg = std::make_unique<SettingsDlg>();
-    settings_dlg->initSettings(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
+    settings_dlg->init_settings(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
 
     about_dlg = std::make_unique<AboutDlg>();
     about_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);

@@ -24,23 +24,23 @@ class SpellChecker;
 
 class SelectProxyDialog : public StaticDialog {
 public:
-  void DoDialog();
-  void ApplyChoice(SpellChecker *SpellCheckerInstance);
-  void SetOptions(bool UseProxy, const wchar_t* HostName, const wchar_t* UserName,
-                  const wchar_t* Password, int Port, bool ProxyAnonymous,
-                  int ProxyType);
+  void do_dialog();
+  void apply_choice(SpellChecker *spell_checker_instance);
+  void set_options(bool use_proxy, const wchar_t* host_name, const wchar_t* user_name,
+                  const wchar_t* password, int port, bool proxy_anonymous,
+                  int proxy_type);
 
 protected:
-  virtual INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam,
-                              LPARAM lParam) override;
-  void DisableControls();
+  virtual INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
+                              LPARAM l_param) override;
+  void disable_controls();
 
 protected:
-  HWND HPort = nullptr;
-  HWND HUserName = nullptr;
-  HWND HHostName = nullptr;
-  HWND HPassword = nullptr;
-  HWND HUseProxy = nullptr;
-  HWND HProxyAnonymous = nullptr;
-  HWND HProxyType = nullptr;
+  HWND m_port = nullptr;
+  HWND m_user_name = nullptr;
+  HWND m_host_name = nullptr;
+  HWND m_password = nullptr;
+  HWND m_use_proxy = nullptr;
+  HWND m_proxy_anonymous = nullptr;
+  HWND m_proxy_type = nullptr;
 };

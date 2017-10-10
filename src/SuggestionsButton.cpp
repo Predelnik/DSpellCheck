@@ -24,160 +24,154 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "resource.h"
 #include "SpellChecker.h"
 
-#include "CommonFunctions.h"
-
 #define MOUSELEAVE 0x0001
 #define MOUSEHOVER 0x0002
 
-void SuggestionsButton::DoDialog() {
-  HWND Temp = GetFocus();
-  create(IDD_SUGGESTIONS);
-  SetFocus(Temp);
+void SuggestionsButton::do_dialog() {
+    HWND temp = GetFocus();
+    create(IDD_SUGGESTIONS);
+    SetFocus(temp);
 }
 
-bool RegMsg(HWND hWnd, DWORD dwMsgType) {
-  TRACKMOUSEEVENT tmeEventTrack; // tracking information
+bool reg_msg(HWND h_wnd, DWORD dw_msg_type) {
+    TRACKMOUSEEVENT tme_event_track; // tracking information
 
-  tmeEventTrack.cbSize = sizeof(TRACKMOUSEEVENT);
-  tmeEventTrack.dwFlags = 0;
+    tme_event_track.cbSize = sizeof(TRACKMOUSEEVENT);
+    tme_event_track.dwFlags = 0;
 
-  if (dwMsgType & MOUSELEAVE)
-    tmeEventTrack.dwFlags |= TME_LEAVE;
-  if (dwMsgType & MOUSEHOVER)
-    tmeEventTrack.dwFlags |= TME_HOVER;
+    if (dw_msg_type & MOUSELEAVE)
+        tme_event_track.dwFlags |= TME_LEAVE;
+    if (dw_msg_type & MOUSEHOVER)
+        tme_event_track.dwFlags |= TME_HOVER;
 
-  tmeEventTrack.hwndTrack = hWnd;
-  tmeEventTrack.dwHoverTime = HOVER_DEFAULT;
-  //      tmeEventTrack.dwHoverTime = 10;
+    tme_event_track.hwndTrack = h_wnd;
+    tme_event_track.dwHoverTime = HOVER_DEFAULT;
+    //      tmeEventTrack.dwHoverTime = 10;
 
-  if (!TrackMouseEvent(&tmeEventTrack)) {
-    wchar_t szError[64];
+    if (!TrackMouseEvent(&tme_event_track)) {
+        wchar_t sz_error[64];
 
-    swprintf(szError, L"Can't TrackMouseEvent ! ErrorId: %d", GetLastError());
-    MessageBox(hWnd, szError, L"Error", MB_OK | MB_ICONSTOP);
+        swprintf(sz_error, L"Can't TrackMouseEvent ! ErrorId: %d", GetLastError());
+        MessageBox(h_wnd, sz_error, L"Error", MB_OK | MB_ICONSTOP);
 
-    return false;
-  }
+        return false;
+    }
 
-  return true;
+    return true;
 }
 
-HMENU SuggestionsButton::GetPopupMenu() { return PopupMenu; }
+HMENU SuggestionsButton::get_popup_menu() { return m_popup_menu; }
 
-int SuggestionsButton::GetResult() { return MenuResult; }
+int SuggestionsButton::get_result() { return m_menu_result; }
 
-SuggestionsButton::SuggestionsButton() {
-  StatePressed = false;
-  StateHovered = false;
-  StateMenu = false;
+SuggestionsButton::SuggestionsButton(): m_menu_result(0), m_popup_menu(nullptr) {
+    m_state_pressed = false;
+    m_state_hovered = false;
+    m_state_menu = false;
 }
 
-void SuggestionsButton::initDlg(HINSTANCE hInst, HWND Parent, NppData nppData) {
-  NppDataInstance = nppData;
-  return Window::init(hInst, Parent);
+void SuggestionsButton::init_dlg(HINSTANCE h_inst, HWND parent, NppData npp_data) {
+    m_npp_data_instance = npp_data;
+    return Window::init(h_inst, parent);
 }
 
-INT_PTR SuggestionsButton::run_dlg_proc(UINT Message, WPARAM wParam, LPARAM lParam) {
-  POINT p;
-  HDC Dc;
-  HBITMAP hBmp;
-  HBITMAP hOldBitmap;
-  BITMAP Bmp;
-  int idImg = 0;
-  PAINTSTRUCT ps;
+INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
+    POINT p;
+    BITMAP bmp;
+    int id_img;
+    PAINTSTRUCT ps;
 
-  switch (Message) {
-  case WM_INITDIALOG:
+    switch (message) {
+    case WM_INITDIALOG:
 
-    display(false);
-    PopupMenu = CreatePopupMenu();
+        display(false);
+        m_popup_menu = CreatePopupMenu();
 
+        return false;
+
+    case WM_MOUSEMOVE:
+        m_state_hovered = true;
+        reg_msg(_hSelf, MOUSELEAVE);
+        RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
+        return false;
+
+    case WM_MOUSEHOVER:
+        return false;
+
+    case WM_LBUTTONDOWN:
+        m_state_pressed = true;
+        RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
+        return false;
+
+    case WM_LBUTTONUP:
+        if (!m_state_pressed)
+            return false;
+        get_spell_checker()->showSuggestionMenu();
+        return false;
+
+    case WM_MOUSEWHEEL:
+        ShowWindow(_hSelf, SW_HIDE);
+        PostMessage(GetScintillaWindow(&m_npp_data_instance), message, w_param, l_param);
+        return false;
+
+    case WM_PAINT:
+        if (!isVisible())
+            return false;
+
+        id_img = IDR_DOWNARROW;
+        if (m_state_pressed || m_state_menu)
+            id_img = IDR_DOWNARROW_PUSH;
+        else if (m_state_hovered)
+            id_img = IDR_DOWNARROW_HOVER;
+
+        HDC dc = BeginPaint(_hSelf, &ps);
+        HDC hdc_memory = ::CreateCompatibleDC(dc);
+        HBITMAP h_bmp = LoadBitmap(_hInst, MAKEINTRESOURCE(id_img));
+        GetObject(h_bmp, sizeof(bmp), &bmp);
+        HBITMAP h_old_bitmap = (HBITMAP)SelectObject(hdc_memory, h_bmp);
+        SetStretchBltMode(dc, HALFTONE);
+        RECT r;
+        GetWindowRect(_hSelf, &r);
+        StretchBlt(dc, 0, 0, r.right - r.left, r.bottom - r.top, hdc_memory, 0, 0,
+                   bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+        SelectObject(hdc_memory, h_old_bitmap);
+        DeleteDC(hdc_memory);
+        DeleteObject(h_bmp);
+        EndPaint(_hSelf, &ps);
+        RECT rect;
+        GetWindowRect(_hSelf, &rect);
+        ValidateRect(_hSelf, &rect);
+        return false;
+
+    case WM_SHOWANDRECREATEMENU:
+        tagTPMPARAMS tpm_params;
+        tpm_params.cbSize = sizeof(tagTPMPARAMS);
+        GetWindowRect(_hSelf, &tpm_params.rcExclude);
+        p.x = 0;
+        p.y = 0;
+        ClientToScreen(_hSelf, &p);
+        m_state_menu = true;
+        SetForegroundWindow(m_npp_data_instance.npp_handle);
+        m_menu_result = TrackPopupMenuEx(m_popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
+                                         p.x, p.y, _hSelf, &tpm_params);
+        PostMessage(m_npp_data_instance.npp_handle, WM_NULL, 0, 0);
+        SetFocus(GetScintillaWindow(&m_npp_data_instance));
+        m_state_menu = false;
+        DestroyMenu(m_popup_menu);
+        m_popup_menu = CreatePopupMenu();
+        return false;
+
+    case WM_COMMAND:
+        if (HIWORD(w_param) == 0)
+            get_spell_checker()->ProcessMenuResult(w_param);
+
+        return false;
+
+    case WM_MOUSELEAVE:
+        m_state_hovered = false;
+        m_state_pressed = false;
+        RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
+        return false;
+    }
     return false;
-
-  case WM_MOUSEMOVE:
-    StateHovered = true;
-    RegMsg(_hSelf, MOUSELEAVE);
-    RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
-    return false;
-
-  case WM_MOUSEHOVER:
-    return false;
-
-  case WM_LBUTTONDOWN:
-    StatePressed = true;
-    RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
-    return false;
-
-  case WM_LBUTTONUP:
-    if (!StatePressed)
-      return false;
-    get_spell_checker()->showSuggestionMenu();
-    return false;
-
-  case WM_MOUSEWHEEL:
-    ShowWindow(_hSelf, SW_HIDE);
-    PostMessage(GetScintillaWindow(&NppDataInstance), Message, wParam, lParam);
-    return false;
-
-  case WM_PAINT:
-    if (!isVisible())
-      return false;
-
-    idImg = IDR_DOWNARROW;
-    if (StatePressed || StateMenu)
-      idImg = IDR_DOWNARROW_PUSH;
-    else if (StateHovered)
-      idImg = IDR_DOWNARROW_HOVER;
-
-    HDC hdcMemory;
-    Dc = BeginPaint(_hSelf, &ps);
-    hdcMemory = ::CreateCompatibleDC(Dc);
-    hBmp = LoadBitmap(_hInst, MAKEINTRESOURCE(idImg));
-    GetObject(hBmp, sizeof(Bmp), &Bmp);
-    hOldBitmap = (HBITMAP)SelectObject(hdcMemory, hBmp);
-    SetStretchBltMode(Dc, HALFTONE);
-    RECT R;
-    GetWindowRect(_hSelf, &R);
-    StretchBlt(Dc, 0, 0, R.right - R.left, R.bottom - R.top, hdcMemory, 0, 0,
-               Bmp.bmWidth, Bmp.bmHeight, SRCCOPY);
-    SelectObject(hdcMemory, hOldBitmap);
-    DeleteDC(hdcMemory);
-    DeleteObject(hBmp);
-    EndPaint(_hSelf, &ps);
-    RECT Rect;
-    GetWindowRect(_hSelf, &Rect);
-    ValidateRect(_hSelf, &Rect);
-    return false;
-
-  case WM_SHOWANDRECREATEMENU:
-    tagTPMPARAMS TPMParams;
-    TPMParams.cbSize = sizeof(tagTPMPARAMS);
-    GetWindowRect(_hSelf, &TPMParams.rcExclude);
-    p.x = 0;
-    p.y = 0;
-    ClientToScreen(_hSelf, &p);
-    StateMenu = true;
-    SetForegroundWindow(NppDataInstance.npp_handle);
-    MenuResult = TrackPopupMenuEx(PopupMenu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
-                                  p.x, p.y, _hSelf, &TPMParams);
-    PostMessage(NppDataInstance.npp_handle, WM_NULL, 0, 0);
-    SetFocus(GetScintillaWindow(&NppDataInstance));
-    StateMenu = false;
-    DestroyMenu(PopupMenu);
-    PopupMenu = CreatePopupMenu();
-    return false;
-
-  case WM_COMMAND:
-    if (HIWORD(wParam) == 0)
-      get_spell_checker()->ProcessMenuResult(wParam);
-
-    return false;
-
-  case WM_MOUSELEAVE:
-    StateHovered = false;
-    StatePressed = false;
-    RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
-    return false;
-  }
-  return false;
 }

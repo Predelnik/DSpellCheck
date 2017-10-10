@@ -270,13 +270,13 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
 
     if (SpellerToUse->is_working()) {
         if (UpdateDialogs)
-            SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(false);
+            SettingsDlgInstance->get_simple_dlg()->disable_language_combo(false);
         auto LangsFromSpeller = SpellerToUse->get_language_list();
         CurrentLangs.clear();
 
         if (LangsFromSpeller.empty()) {
             if (UpdateDialogs)
-                SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(true);
+                SettingsDlgInstance->get_simple_dlg()->disable_language_combo(true);
             return;
         }
         for (auto& lang : LangsFromSpeller) {
@@ -301,14 +301,14 @@ void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
             RecheckVisibleBothViews();
         }
         if (UpdateDialogs)
-            SettingsDlgInstance->GetSimpleDlg()->AddAvailableLanguages(
+            SettingsDlgInstance->get_simple_dlg()->add_available_languages(
                 CurrentLangs, SpellerId == 1 ? HunspellLanguage.c_str() : AspellLanguage.c_str(),
                 SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
                 SpellerId == 1 ? HunspellSpeller.get() : 0);
     }
     else {
         if (UpdateDialogs)
-            SettingsDlgInstance->GetSimpleDlg()->DisableLanguageCombo(true);
+            SettingsDlgInstance->get_simple_dlg()->disable_language_combo(true);
     }
 }
 
@@ -316,29 +316,29 @@ int SpellChecker::GetLibMode() { return LibMode; }
 
 void SpellChecker::FillDialogs(bool NoDisplayCall) {
     ReinitLanguageLists(true);
-    SettingsDlgInstance->GetSimpleDlg()->SetLibMode(LibMode);
-    SettingsDlgInstance->GetSimpleDlg()->FillLibInfo(
+    SettingsDlgInstance->get_simple_dlg()->set_lib_mode(LibMode);
+    SettingsDlgInstance->get_simple_dlg()->fill_lib_info(
         AspellSpeller->is_working()
             ? 2 - (CurrentLangs.empty() ? 0 : 1)
             : 0,
         AspellPath.c_str(), HunspellPath.c_str(), AdditionalHunspellPath.c_str());
-    SettingsDlgInstance->GetSimpleDlg()->FillSugestionsNum(SuggestionsNum);
-    SettingsDlgInstance->GetSimpleDlg()->SetFileTypes(CheckThose, FileTypes.c_str());
-    SettingsDlgInstance->GetSimpleDlg()->SetCheckComments(checkOnlyCommentsAndString);
-    SettingsDlgInstance->GetSimpleDlg()->SetDecodeNames(DecodeNames);
-    SettingsDlgInstance->GetSimpleDlg()->SetSuggType(SuggestionsMode);
-    SettingsDlgInstance->GetSimpleDlg()->SetOneUserDic(OneUserDic);
-    SettingsDlgInstance->GetAdvancedDlg()->FillDelimiters(DelimUtf8.c_str());
-    SettingsDlgInstance->GetAdvancedDlg()->SetRecheckDelay(m_recheckDelay);
-    SettingsDlgInstance->GetAdvancedDlg()->SetConversionOpts(
+    SettingsDlgInstance->get_simple_dlg()->fill_sugestions_num(SuggestionsNum);
+    SettingsDlgInstance->get_simple_dlg()->set_file_types(CheckThose, FileTypes.c_str());
+    SettingsDlgInstance->get_simple_dlg()->set_check_comments(checkOnlyCommentsAndString);
+    SettingsDlgInstance->get_simple_dlg()->set_decode_names(DecodeNames);
+    SettingsDlgInstance->get_simple_dlg()->set_sugg_type(SuggestionsMode);
+    SettingsDlgInstance->get_simple_dlg()->set_one_user_dic(OneUserDic);
+    SettingsDlgInstance->get_advanced_dlg()->fill_delimiters(DelimUtf8.c_str());
+    SettingsDlgInstance->get_advanced_dlg()->set_recheck_delay(m_recheckDelay);
+    SettingsDlgInstance->get_advanced_dlg()->set_conversion_opts(
         IgnoreYo, ConvertSingleQuotes, RemoveBoundaryApostrophes);
-    SettingsDlgInstance->GetAdvancedDlg()->SetUnderlineSettings(UnderlineColor,
+    SettingsDlgInstance->get_advanced_dlg()->set_underline_settings(UnderlineColor,
                                                                 UnderlineStyle);
-    SettingsDlgInstance->GetAdvancedDlg()->SetIgnore(
+    SettingsDlgInstance->get_advanced_dlg()->set_ignore(
         IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_,
         IgnoreSEApostrophe, IgnoreOneLetter);
-    SettingsDlgInstance->GetAdvancedDlg()->SetSuggBoxSettings(SBSize, SBTrans);
-    SettingsDlgInstance->GetAdvancedDlg()->SetBufferSize(BufferSize / 1024);
+    SettingsDlgInstance->get_advanced_dlg()->set_sugg_box_settings(SBSize, SBTrans);
+    SettingsDlgInstance->get_advanced_dlg()->set_buffer_size(BufferSize / 1024);
     if (!NoDisplayCall)
         SettingsDlgInstance->display();
 }
@@ -360,8 +360,8 @@ void SpellChecker::RecheckVisibleBothViews() {
 }
 
 void SpellChecker::applySettings() {
-    SettingsDlgInstance->GetSimpleDlg()->ApplySettings(this);
-    SettingsDlgInstance->GetAdvancedDlg()->ApplySettings(this);
+    SettingsDlgInstance->get_simple_dlg()->apply_settings(this);
+    SettingsDlgInstance->get_advanced_dlg()->apply_settings(this);
     FillDialogs(true);
     SaveSettings();
     CheckFileName(); // Cause filters may change
@@ -375,12 +375,12 @@ void SpellChecker::applyMultiLangSettings() {
 }
 
 void SpellChecker::applyProxySettings() {
-    get_select_proxy()->ApplyChoice(this);
+    get_select_proxy()->apply_choice(this);
     SaveSettings();
 }
 
 void SpellChecker::showSuggestionMenu() {
-    FillSuggestionsMenu(SuggestionsInstance->GetPopupMenu());
+    FillSuggestionsMenu(SuggestionsInstance->get_popup_menu());
     SendMessage(SuggestionsInstance->getHSelf(), WM_SHOWANDRECREATEMENU, 0, 0);
 }
 
@@ -391,7 +391,7 @@ void SpellChecker::fillDownloadDicsDialog() {
 }
 
 void SpellChecker::updateSelectProxy() {
-    get_select_proxy()->SetOptions(UseProxy, ProxyHostName.c_str(), ProxyUserName.c_str(),
+    get_select_proxy()->set_options(UseProxy, ProxyHostName.c_str(), ProxyUserName.c_str(),
                                  ProxyPassword.c_str(), ProxyPort, ProxyAnonymous,
                                  ProxyType);
 }
@@ -417,8 +417,8 @@ void SpellChecker::updateFromDownloadDicsOptionsNoUpdate() {
 }
 
 void SpellChecker::libChange() {
-    SettingsDlgInstance->GetSimpleDlg()->ApplyLibChange(this);
-    SettingsDlgInstance->GetSimpleDlg()->FillLibInfo(
+    SettingsDlgInstance->get_simple_dlg()->apply_lib_change(this);
+    SettingsDlgInstance->get_simple_dlg()->fill_lib_info(
         AspellSpeller->is_working()
             ? 2 - (CurrentLangs.empty() ? 1 : 0)
             : 0,
@@ -753,7 +753,7 @@ void SpellChecker::FindPrevMistake() {
 }
 
 void SpellChecker::SetDefaultDelimiters() {
-    SettingsDlgInstance->GetAdvancedDlg()->SetDelimetersEdit(DEFAULT_DELIMITERS);
+    SettingsDlgInstance->get_advanced_dlg()->set_delimeters_edit(DEFAULT_DELIMITERS);
 }
 
 HWND SpellChecker::GetCurrentScintilla() {
@@ -1671,7 +1671,7 @@ bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/) {
     // Well Numbers have same codes for ANSI and Unicode I guess, so
     // If word contains number then it's probably just a number or some crazy name
     auto Style = GetStyle(Start);
-    if (checkOnlyCommentsAndString && !SciUtils::isCommentOrString(Lexer, Style))
+    if (checkOnlyCommentsAndString && !SciUtils::is_comment_or_string(Lexer, Style))
         return true;
 
     if (HotSpotCache[Style] == -1) {

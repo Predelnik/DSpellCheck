@@ -8,20 +8,20 @@ private:
     using AliveStatusType = std::shared_ptr<concurrency::cancellation_token_source>;
 
 public:
-    explicit TaskWrapper(HWND targetHwnd);
+    explicit TaskWrapper(HWND target_hwnd);
     ~TaskWrapper ();
-    void resetAliveStatus ();
+    void reset_alive_status ();
     void cancel ();
     template <typename ActionType, typename GuiCallbackType>
-     void doDeferred (ActionType action, GuiCallbackType guiCallback) {
-     resetAliveStatus ();
+     void do_deferred (ActionType action, GuiCallbackType gui_callback) {
+     reset_alive_status ();
     concurrency::create_task(
         [
             action = std::move (action),
-            guiCallback = std::move(guiCallback),
-            as = weaken (m_aliveStatus),
-            ctoken = m_aliveStatus->get_token(),
-            hwnd = m_targetHwnd
+            guiCallback = std::move(gui_callback),
+            as = weaken (m_alive_status),
+            ctoken = m_alive_status->get_token(),
+            hwnd = m_target_hwnd
         ]()
     {
         auto ret = action (ctoken);
@@ -38,6 +38,6 @@ public:
 }
 
 private:
-    HWND m_targetHwnd;
-    AliveStatusType m_aliveStatus;
+    HWND m_target_hwnd;
+    AliveStatusType m_alive_status;
 };
