@@ -31,7 +31,7 @@ struct NppData {
     HWND scintilla_second_handle;
 };
 
-typedef void (__cdecl * pfuncplugincmd)();
+typedef void (__cdecl * Pfuncplugincmd)();
 
 struct ShortcutKey {
     bool is_ctrl;
@@ -42,7 +42,7 @@ struct ShortcutKey {
 
 struct FuncItem {
     wchar_t item_name[nb_char];
-    pfuncplugincmd p_func;
+    Pfuncplugincmd p_func;
     int cmd_id;
     bool init2_check;
     ShortcutKey* p_sh_key;

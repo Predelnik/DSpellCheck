@@ -21,9 +21,9 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
         case SCE_USER_STYLE_DELIMITER6:
         case SCE_USER_STYLE_DELIMITER7:
         case SCE_USER_STYLE_DELIMITER8:
-            return TRUE;
+            return true;
         default:
-            return FALSE;
+            return false;
         };
     case SCLEX_PYTHON:
         switch (style)

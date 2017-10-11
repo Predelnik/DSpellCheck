@@ -26,8 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Hunspell;
 
-using word_set = std::unordered_set<std::string>;
-using sorted_word_set = std::set<std::string>;
+using WordSet = std::unordered_set<std::string>;
+using SortedWordSet = std::set<std::string>;
 class IconvWrapperT {
     static void close_iconv (iconv_t conv)
     {
@@ -60,7 +60,7 @@ struct DicInfo {
   IconvWrapperT converter_ansi;
   IconvWrapperT back_converter_ansi;
   std::wstring local_dic_path;
-  word_set local_dic; // Stored in Dictionary encoding
+  WordSet local_dic; // Stored in Dictionary encoding
 };
 
 struct AvailableLangInfo {
@@ -88,7 +88,7 @@ public:
 
   void set_directory(const wchar_t* dir);
   void set_additional_directory(const wchar_t* dir);
-    static void read_user_dic(word_set *target, const wchar_t* path);
+    static void read_user_dic(WordSet *target, const wchar_t* path);
   void set_use_one_dic(bool value);
   void update_on_dic_removal(wchar_t *path, bool &need_single_lang_reset,
                           bool &need_multi_lang_reset);
@@ -110,8 +110,8 @@ private:
   DicInfo *m_singular_speller;
   DicInfo *m_last_selected_speller;
   std::vector<DicInfo *> m_spellers;
-  word_set m_memorized;
-  word_set m_ignored;
+  WordSet m_memorized;
+  WordSet m_ignored;
   std::wstring m_user_dic_path;        // For now only default one.
   std::wstring m_system_wrong_dic_path; // Only for reading and then removing
   HWND m_npp_window;

@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "RemoveDictionariesDialog.h"
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
-#include "SciLexer.h"
 #include "Scintilla.h"
 #include "SelectProxyDialog.h"
 #include "SuggestionsButton.h"
@@ -52,987 +51,989 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define DEFAULT_DELIMITERS L",.!?\":;{}()[]\\/=+-^$*<>|#$@%&~"
 #endif
 
-HWND GetScintillaWindow(const NppData* NppDataArg) {
+HWND get_scintilla_window(const NppData* npp_data_arg) {
     int which = -1;
-    SendMessage(NppDataArg->npp_handle, NPPM_GETCURRENTSCINTILLA, 0,
+    SendMessage(npp_data_arg->npp_handle, NPPM_GETCURRENTSCINTILLA, 0,
                 (LPARAM)&which);
     if (which == -1)
         return nullptr;
     if (which == 1)
-        return NppDataArg->scintilla_second_handle;
+        return npp_data_arg->scintilla_second_handle;
     return (which == 0)
-               ? NppDataArg->scintilla_main_handle
-               : NppDataArg->scintilla_second_handle;
+               ? npp_data_arg->scintilla_main_handle
+               : npp_data_arg->scintilla_second_handle;
 }
 
-bool SendMsgToBothEditors(const NppData* NppDataArg, UINT Msg, WPARAM wParam,
-                          LPARAM lParam) {
-    SendMessage(NppDataArg->scintilla_main_handle, Msg, wParam, lParam);
-    SendMessage(NppDataArg->scintilla_second_handle, Msg, wParam, lParam);
+bool send_msg_to_both_editors(const NppData* npp_data_arg, UINT msg, WPARAM w_param,
+                              LPARAM l_param) {
+    SendMessage(npp_data_arg->scintilla_main_handle, msg, w_param, l_param);
+    SendMessage(npp_data_arg->scintilla_second_handle, msg, w_param, l_param);
     return true;
 }
 
-LRESULT SendMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
-                              WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/) {
-    return SendMessage(ScintillaWindow, Msg, wParam, lParam);
+LRESULT send_msg_to_active_editor(HWND scintilla_window, UINT msg,
+                                  WPARAM w_param /*= 0*/, LPARAM l_param /*= 0*/) {
+    return SendMessage(scintilla_window, msg, w_param, l_param);
 }
 
-LRESULT send_msg_to_npp(const NppData* NppDataArg, UINT Msg,
-                     WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/) {
-    return SendMessage(NppDataArg->npp_handle, Msg, wParam, lParam);
+LRESULT send_msg_to_npp(const NppData* npp_data_arg, UINT msg,
+                        WPARAM w_param /*= 0*/, LPARAM l_param /*= 0*/) {
+    return SendMessage(npp_data_arg->npp_handle, msg, w_param, l_param);
 }
 
 // Remember: it's better to use PostMsg wherever possible, to avoid gui update
 // on each message send etc etc
 // Also it's better to avoid get current scintilla window too much times, since
 // it's obviously uses 1 SendMsg call
-LRESULT PostMsgToActiveEditor(HWND ScintillaWindow, UINT Msg,
-                              WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/) {
-    return PostMessage(ScintillaWindow, Msg, wParam, lParam);
+LRESULT post_msg_to_active_editor(HWND scintilla_window, UINT msg,
+                                  WPARAM w_param /*= 0*/, LPARAM l_param /*= 0*/) {
+    return PostMessage(scintilla_window, msg, w_param, l_param);
 }
 
-void SpellChecker::addUserServer(std::wstring server) {
+void SpellChecker::add_user_server(std::wstring server) {
     ftp_trim(server);
-    for (int i = 0; i < static_cast<int>(COUNTOF(DefaultServers)); i++) {
-        std::wstring defServer = DefaultServers[i];
-        ftp_trim(defServer);
-        if (server == defServer)
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_default_server_names)); i++) {
+        std::wstring def_server = m_default_server_names[i];
+        ftp_trim(def_server);
+        if (server == def_server)
             goto add_user_server_cleanup; // Nothing is done in this case
     }
-    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
-        std::wstring addedServer = ServerNames[i];
-        ftp_trim(addedServer);
-        if (server == addedServer)
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
+        std::wstring added_server = m_server_names[i];
+        ftp_trim(added_server);
+        if (server == added_server)
             goto add_user_server_cleanup; // Nothing is done in this case
     }
     // Then we're adding finally
-    ServerNames[COUNTOF(ServerNames) - 1].clear();
-    for (int i = COUNTOF(ServerNames) - 1; i > 0; i--) {
-        ServerNames[i] = ServerNames[i - 1];
+    m_server_names[COUNTOF(m_server_names) - 1].clear();
+    for (int i = COUNTOF(m_server_names) - 1; i > 0; i--) {
+        m_server_names[i] = m_server_names[i - 1];
     }
-    ServerNames[0] = nullptr;
-    ServerNames[0] = server;
+    m_server_names[0] = nullptr;
+    m_server_names[0] = server;
 add_user_server_cleanup:
-    ResetDownloadCombobox();
-    SaveSettings();
+    reset_download_combobox();
+    save_settings();
 }
 
-SpellChecker::SpellChecker(const wchar_t* IniFilePathArg,
-                           SettingsDlg* SettingsDlgInstanceArg,
-                           NppData* NppDataInstanceArg,
-                           SuggestionsButton* SuggestionsInstanceArg,
-                           LangList* LangListInstanceArg) {
-    CurrentPosition = 0;
-    IniFilePath = IniFilePathArg;
-    SettingsDlgInstance = SettingsDlgInstanceArg;
-    SuggestionsInstance = SuggestionsInstanceArg;
-    NppDataInstance = NppDataInstanceArg;
-    LangListInstance = LangListInstanceArg;
-    AutoCheckText = 0;
-    MultiLangMode = 0;
-    CheckThose = 0;
-    SBTrans = 0;
-    SBSize = 0;
-    CurWordList = nullptr;
-    SuggestionsMode = 1;
-    WUCLength = 0;
-    WUCPosition = 0;
-    WUCisRight = true;
-    CurrentScintilla = GetScintillaWindow(NppDataInstance);
-    AspellSpeller = std::make_unique<AspellInterface>(NppDataInstance->npp_handle);
-    HunspellSpeller = std::make_unique<HunspellInterface>(NppDataInstance->npp_handle);
-    CurrentSpeller = AspellSpeller.get();
-    PrepareStringForConversion();
-    memset(ServerNames, 0, sizeof(ServerNames));
-    memset(DefaultServers, 0, sizeof(DefaultServers));
-    AddressIsSet = 0;
-    DefaultServers[0] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
-    DefaultServers[1] = L"ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/";
-    DefaultServers[2] = L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/";
-    DecodeNames = false;
-    ResetHotSpotCache();
-    ProxyAnonymous = true;
-    ProxyType = 0;
-    ProxyPort = 0;
-    SettingsLoaded = false;
-    UseProxy = false;
+SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
+                           SettingsDlg* settings_dlg_instance_arg,
+                           NppData* npp_data_instance_arg,
+                           SuggestionsButton* suggestions_instance_arg,
+                           LangList* lang_list_instance_arg) {
+    m_current_position = 0;
+    m_ini_file_path = ini_file_path_arg;
+    m_settings_dlg_instance = settings_dlg_instance_arg;
+    m_suggestions_instance = suggestions_instance_arg;
+    m_npp_data_instance = npp_data_instance_arg;
+    m_lang_list_instance = lang_list_instance_arg;
+    m_auto_check_text = false;
+    m_multi_lang_mode = 0;
+    m_check_those = false;
+    m_sb_trans = 0;
+    m_sb_size = 0;
+    m_cur_word_list = nullptr;
+    m_suggestions_mode = 1;
+    m_word_under_cursor_length = 0;
+    m_word_under_cursor_pos = 0;
+    m_word_under_cursor_is_correct = true;
+    m_current_scintilla = get_scintilla_window(m_npp_data_instance);
+    m_aspell_speller = std::make_unique<AspellInterface>(m_npp_data_instance->npp_handle);
+    m_hunspell_speller = std::make_unique<HunspellInterface>(m_npp_data_instance->npp_handle);
+    m_current_speller = m_aspell_speller.get();
+    prepare_string_for_conversion();
+    memset(m_server_names, 0, sizeof(m_server_names));
+    memset(m_default_server_names, 0, sizeof(m_default_server_names));
+    m_address_is_set = 0;
+    m_default_server_names[0] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
+    m_default_server_names[1] = L"ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/";
+    m_default_server_names[2] = L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/";
+    m_decode_names = false;
+    reset_hot_spot_cache();
+    m_proxy_anonymous = true;
+    m_proxy_type = 0;
+    m_proxy_port = 0;
+    m_settings_loaded = false;
+    m_use_proxy = false;
     bool res =
-        (send_msg_to_npp(NppDataInstance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
+        (send_msg_to_npp(m_npp_data_instance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
 
     if (res) {
         set_use_allocated_ids(true);
-        int Id;
-        send_msg_to_npp(NppDataInstance, NPPM_ALLOCATECMDID, 350, (LPARAM)&Id);
-        set_context_menu_id_start(Id);
-        set_langs_menu_id_start(Id + 103);
+        int id;
+        send_msg_to_npp(m_npp_data_instance, NPPM_ALLOCATECMDID, 350, (LPARAM)&id);
+        set_context_menu_id_start(id);
+        set_langs_menu_id_start(id + 103);
     }
 }
 
-static const char Yo[] = "\xd0\x81";
-static const char Ye[] = "\xd0\x95";
+static const char yo_capital[] = "\xd0\x81";
+static const char ye_capital[] = "\xd0\x95";
 static const char yo[] = "\xd1\x91";
 static const char ye[] = "\xd0\xb5";
-static const char PunctuationApostrophe[] = "\xe2\x80\x99";
+static const char punctuation_apostrophe[] = "\xe2\x80\x99";
 
-void SpellChecker::PrepareStringForConversion() {
-    iconv_t Conv = iconv_open("CHAR", "UTF-8");
-    const char* InString[] = {Yo, yo, Ye, ye, PunctuationApostrophe};
-    std::string* OutString[] = {&YoANSI, &yoANSI, &YeANSI, &yeANSI, &PunctuationApostropheANSI};
+void SpellChecker::prepare_string_for_conversion() {
+    iconv_t conv = iconv_open("CHAR", "UTF-8");
+    const char* in_string[] = {yo_capital, yo, ye_capital, ye, punctuation_apostrophe};
+    std::string* out_string[] = {
+        &m_yo_capital_ansi, &m_yo_ansi, &m_ye_capital_ansi, &m_ye_ansi, &m_punctuation_apostrophe_ansi
+    };
 
     int i = 0;
-    for (auto str : InString) {
-        *OutString[i] = to_utf8_string(str);
+    for (auto str : in_string) {
+        *out_string[i] = to_utf8_string(str);
         ++i;
     }
-    iconv_close(Conv);
+    iconv_close(conv);
 }
 
 SpellChecker::~SpellChecker() {
 }
 
-void InsertSuggMenuItem(HMENU Menu, const wchar_t* Text, BYTE Id, int InsertPos,
-                        bool Separator) {
+void insert_sugg_menu_item(HMENU menu, const wchar_t* text, BYTE id, int insert_pos,
+                           bool separator) {
     MENUITEMINFO mi;
     memset(&mi, 0, sizeof(mi));
     mi.cbSize = sizeof(MENUITEMINFO);
-    if (Separator) {
+    if (separator) {
         mi.fType = MFT_SEPARATOR;
     }
     else {
         mi.fType = MFT_STRING;
         mi.fMask = MIIM_ID | MIIM_TYPE;
         if (!get_use_allocated_ids())
-            mi.wID = MAKEWORD(Id, DSPELLCHECK_MENU_ID);
+            mi.wID = MAKEWORD(id, DSPELLCHECK_MENU_ID);
         else
-            mi.wID = get_context_menu_id_start() + Id;
+            mi.wID = get_context_menu_id_start() + id;
 
-        mi.dwTypeData = const_cast<wchar_t *>(Text);
-        mi.cch = static_cast<int>(wcslen(Text)) + 1;
+        mi.dwTypeData = const_cast<wchar_t *>(text);
+        mi.cch = static_cast<int>(wcslen(text)) + 1;
     }
-    if (InsertPos == -1)
-        InsertMenuItem(Menu, GetMenuItemCount(Menu), true, &mi);
+    if (insert_pos == -1)
+        InsertMenuItem(menu, GetMenuItemCount(menu), true, &mi);
     else
-        InsertMenuItem(Menu, InsertPos, true, &mi);
+        InsertMenuItem(menu, insert_pos, true, &mi);
 }
 
-void SpellChecker::precalculateMenu() {
-    std::vector<SuggestionsMenuItem> suggestionMenuItems;
-    if (CheckTextNeeded() && SuggestionsMode == SUGGESTIONS_CONTEXT_MENU) {
-        long Pos, Length;
-        WUCisRight = GetWordUnderCursorIsRight(Pos, Length, true);
-        if (!WUCisRight) {
-            WUCPosition = Pos;
-            WUCLength = Length;
-            suggestionMenuItems = FillSuggestionsMenu(nullptr);
+void SpellChecker::precalculate_menu() {
+    std::vector<SuggestionsMenuItem> suggestion_menu_items;
+    if (check_text_needed() && m_suggestions_mode == SUGGESTIONS_CONTEXT_MENU) {
+        long pos, length;
+        m_word_under_cursor_is_correct = get_word_under_cursor_is_right(pos, length, true);
+        if (!m_word_under_cursor_is_correct) {
+            m_word_under_cursor_pos = pos;
+            m_word_under_cursor_length = length;
+            suggestion_menu_items = fill_suggestions_menu(nullptr);
         }
     }
-    show_calculated_menu(std::move(suggestionMenuItems));
+    show_calculated_menu(std::move(suggestion_menu_items));
 }
 
-void SpellChecker::SetSuggType(int SuggType) {
-    SuggestionsMode = SuggType;
-    HideSuggestionBox();
+void SpellChecker::set_sugg_type(int sugg_type) {
+    m_suggestions_mode = sugg_type;
+    hide_suggestion_box();
 }
 
-void SpellChecker::SetShowOnlyKnow(bool Value) { ShowOnlyKnown = Value; }
+void SpellChecker::set_show_only_know(bool value) { m_show_only_known = value; }
 
-void SpellChecker::SetInstallSystem(bool Value) { InstallSystem = Value; }
+void SpellChecker::set_install_system(bool value) { m_install_system = value; }
 
-bool SpellChecker::GetShowOnlyKnown() { return ShowOnlyKnown; }
+bool SpellChecker::get_show_only_known() { return m_show_only_known; }
 
-bool SpellChecker::GetInstallSystem() { return InstallSystem; }
+bool SpellChecker::get_install_system() { return m_install_system; }
 
-bool SpellChecker::GetDecodeNames() { return DecodeNames; }
+bool SpellChecker::get_decode_names() { return m_decode_names; }
 
-const wchar_t* SpellChecker::GetLangByIndex(int i) {
-    return CurrentLangs[i].orig_name.c_str();
+const wchar_t* SpellChecker::get_lang_by_index(int i) {
+    return m_current_langs[i].orig_name.c_str();
 }
 
-void SpellChecker::ReinitLanguageLists(bool UpdateDialogs) {
-    int SpellerId = LibMode;
-    bool CurrentLangExists = false;
-    const wchar_t* CurrentLang;
+void SpellChecker::reinit_language_lists(bool update_dialogs) {
+    int speller_id = m_lib_mode;
+    bool current_lang_exists = false;
+    const wchar_t* current_lang;
 
-    auto SpellerToUse =
-    (SpellerId == 1
-         ? static_cast<AbstractSpellerInterface *>(HunspellSpeller.get())
-         : AspellSpeller.get());
+    auto speller_to_use =
+    (speller_id == 1
+         ? static_cast<AbstractSpellerInterface *>(m_hunspell_speller.get())
+         : m_aspell_speller.get());
 
-    if (SpellerId == 0) {
+    if (speller_id == 0) {
         get_download_dics()->display(false);
         get_remove_dics()->display(false);
     }
 
-    if (SpellerId == 1)
-        CurrentLang = HunspellLanguage.c_str();
+    if (speller_id == 1)
+        current_lang = m_hunspell_language.c_str();
     else
-        CurrentLang = AspellLanguage.c_str();
+        current_lang = m_aspell_language.c_str();
 
-    if (SpellerToUse->is_working()) {
-        if (UpdateDialogs)
-            SettingsDlgInstance->get_simple_dlg()->disable_language_combo(false);
-        auto LangsFromSpeller = SpellerToUse->get_language_list();
-        CurrentLangs.clear();
+    if (speller_to_use->is_working()) {
+        if (update_dialogs)
+            m_settings_dlg_instance->get_simple_dlg()->disable_language_combo(false);
+        auto langs_from_speller = speller_to_use->get_language_list();
+        m_current_langs.clear();
 
-        if (LangsFromSpeller.empty()) {
-            if (UpdateDialogs)
-                SettingsDlgInstance->get_simple_dlg()->disable_language_combo(true);
+        if (langs_from_speller.empty()) {
+            if (update_dialogs)
+                m_settings_dlg_instance->get_simple_dlg()->disable_language_combo(true);
             return;
         }
-        for (auto& lang : LangsFromSpeller) {
-            LanguageName Lang(
+        for (auto& lang : langs_from_speller) {
+            LanguageName lang_name(
                 lang.c_str(),
-                (SpellerId == 1 && DecodeNames)); // Using them only for Hunspell
-            CurrentLangs.push_back(
-                Lang);
-            if (Lang.orig_name == CurrentLang)
-                CurrentLangExists = true;
+                (speller_id == 1 && m_decode_names)); // Using them only for Hunspell
+            m_current_langs.push_back(
+                lang_name);
+            if (lang_name.orig_name == current_lang)
+                current_lang_exists = true;
         }
-        if (wcscmp(CurrentLang, L"<MULTIPLE>") == 0)
-            CurrentLangExists = true;
+        if (wcscmp(current_lang, L"<MULTIPLE>") == 0)
+            current_lang_exists = true;
 
-        std::sort(CurrentLangs.begin(), CurrentLangs.end(),
-                  DecodeNames ? less_aliases : less_original);
-        if (!CurrentLangExists && !CurrentLangs.empty()) {
-            if (SpellerId == 1)
-                SetHunspellLanguage(CurrentLangs.front().orig_name.c_str());
+        std::sort(m_current_langs.begin(), m_current_langs.end(),
+                  m_decode_names ? less_aliases : less_original);
+        if (!current_lang_exists && !m_current_langs.empty()) {
+            if (speller_id == 1)
+                set_hunspell_language(m_current_langs.front().orig_name.c_str());
             else
-                SetAspellLanguage(CurrentLangs.front().orig_name.c_str());
-            RecheckVisibleBothViews();
+                set_aspell_language(m_current_langs.front().orig_name.c_str());
+            recheck_visible_both_views();
         }
-        if (UpdateDialogs)
-            SettingsDlgInstance->get_simple_dlg()->add_available_languages(
-                CurrentLangs, SpellerId == 1 ? HunspellLanguage.c_str() : AspellLanguage.c_str(),
-                SpellerId == 1 ? HunspellMultiLanguages : AspellMultiLanguages,
-                SpellerId == 1 ? HunspellSpeller.get() : 0);
+        if (update_dialogs)
+            m_settings_dlg_instance->get_simple_dlg()->add_available_languages(
+                m_current_langs, speller_id == 1 ? m_hunspell_language.c_str() : m_aspell_language.c_str(),
+                speller_id == 1 ? m_hunspell_multi_languages : m_aspell_multi_languages,
+                speller_id == 1 ? m_hunspell_speller.get() : 0);
     }
     else {
-        if (UpdateDialogs)
-            SettingsDlgInstance->get_simple_dlg()->disable_language_combo(true);
+        if (update_dialogs)
+            m_settings_dlg_instance->get_simple_dlg()->disable_language_combo(true);
     }
 }
 
-int SpellChecker::GetLibMode() { return LibMode; }
+int SpellChecker::get_lib_mode() { return m_lib_mode; }
 
-void SpellChecker::FillDialogs(bool NoDisplayCall) {
-    ReinitLanguageLists(true);
-    SettingsDlgInstance->get_simple_dlg()->set_lib_mode(LibMode);
-    SettingsDlgInstance->get_simple_dlg()->fill_lib_info(
-        AspellSpeller->is_working()
-            ? 2 - (CurrentLangs.empty() ? 0 : 1)
+void SpellChecker::fill_dialogs(bool no_display_call) {
+    reinit_language_lists(true);
+    m_settings_dlg_instance->get_simple_dlg()->set_lib_mode(m_lib_mode);
+    m_settings_dlg_instance->get_simple_dlg()->fill_lib_info(
+        m_aspell_speller->is_working()
+            ? 2 - (m_current_langs.empty() ? 0 : 1)
             : 0,
-        AspellPath.c_str(), HunspellPath.c_str(), AdditionalHunspellPath.c_str());
-    SettingsDlgInstance->get_simple_dlg()->fill_sugestions_num(SuggestionsNum);
-    SettingsDlgInstance->get_simple_dlg()->set_file_types(CheckThose, FileTypes.c_str());
-    SettingsDlgInstance->get_simple_dlg()->set_check_comments(checkOnlyCommentsAndString);
-    SettingsDlgInstance->get_simple_dlg()->set_decode_names(DecodeNames);
-    SettingsDlgInstance->get_simple_dlg()->set_sugg_type(SuggestionsMode);
-    SettingsDlgInstance->get_simple_dlg()->set_one_user_dic(OneUserDic);
-    SettingsDlgInstance->get_advanced_dlg()->fill_delimiters(DelimUtf8.c_str());
-    SettingsDlgInstance->get_advanced_dlg()->set_recheck_delay(m_recheckDelay);
-    SettingsDlgInstance->get_advanced_dlg()->set_conversion_opts(
-        IgnoreYo, ConvertSingleQuotes, RemoveBoundaryApostrophes);
-    SettingsDlgInstance->get_advanced_dlg()->set_underline_settings(UnderlineColor,
-                                                                UnderlineStyle);
-    SettingsDlgInstance->get_advanced_dlg()->set_ignore(
-        IgnoreNumbers, IgnoreCStart, IgnoreCHave, IgnoreCAll, Ignore_,
-        IgnoreSEApostrophe, IgnoreOneLetter);
-    SettingsDlgInstance->get_advanced_dlg()->set_sugg_box_settings(SBSize, SBTrans);
-    SettingsDlgInstance->get_advanced_dlg()->set_buffer_size(BufferSize / 1024);
-    if (!NoDisplayCall)
-        SettingsDlgInstance->display();
+        m_aspell_path.c_str(), m_hunspell_path.c_str(), m_additional_hunspell_path.c_str());
+    m_settings_dlg_instance->get_simple_dlg()->fill_sugestions_num(m_suggestions_num);
+    m_settings_dlg_instance->get_simple_dlg()->set_file_types(m_check_those, m_file_types.c_str());
+    m_settings_dlg_instance->get_simple_dlg()->set_check_comments(m_check_only_comments_and_string);
+    m_settings_dlg_instance->get_simple_dlg()->set_decode_names(m_decode_names);
+    m_settings_dlg_instance->get_simple_dlg()->set_sugg_type(m_suggestions_mode);
+    m_settings_dlg_instance->get_simple_dlg()->set_one_user_dic(m_one_user_dic);
+    m_settings_dlg_instance->get_advanced_dlg()->fill_delimiters(m_delim_utf8.c_str());
+    m_settings_dlg_instance->get_advanced_dlg()->set_recheck_delay(m_recheck_delay);
+    m_settings_dlg_instance->get_advanced_dlg()->set_conversion_opts(
+        m_ignore_yo, m_convert_single_quotes, m_remove_boundary_apostrophes);
+    m_settings_dlg_instance->get_advanced_dlg()->set_underline_settings(m_underline_color,
+                                                                        m_underline_style);
+    m_settings_dlg_instance->get_advanced_dlg()->set_ignore(
+        m_ignore_numbers, m_ignore_starting_with_capital, m_ignore_having_a_capital, m_ignore_all_capital,
+        m_ignore_having_underscore,
+        m_ignore_starting_or_ending_with_apostrophe, m_ignore_one_letter);
+    m_settings_dlg_instance->get_advanced_dlg()->set_sugg_box_settings(m_sb_size, m_sb_trans);
+    m_settings_dlg_instance->get_advanced_dlg()->set_buffer_size(m_buffer_size / 1024);
+    if (!no_display_call)
+        m_settings_dlg_instance->display();
 }
 
-void SpellChecker::RecheckVisibleBothViews() {
-    LRESULT OldLexer = Lexer;
-    EncodingType OldEncoding = CurrentEncoding;
-    Lexer = SendMsgToActiveEditor(NppDataInstance->scintilla_main_handle, SCI_GETLEXER);
-    CurrentScintilla = NppDataInstance->scintilla_main_handle;
-    RecheckVisible();
+void SpellChecker::recheck_visible_both_views() {
+    LRESULT old_lexer = m_lexer;
+    EncodingType old_encoding = m_current_encoding;
+    m_lexer = send_msg_to_active_editor(m_npp_data_instance->scintilla_main_handle, SCI_GETLEXER);
+    m_current_scintilla = m_npp_data_instance->scintilla_main_handle;
+    recheck_visible();
 
-    CurrentScintilla = NppDataInstance->scintilla_second_handle;
-    Lexer = SendMsgToActiveEditor(NppDataInstance->scintilla_second_handle, SCI_GETLEXER);
-    RecheckVisible();
-    Lexer = OldLexer;
-    CurrentEncoding = OldEncoding;
-    AspellSpeller->set_encoding(CurrentEncoding);
-    HunspellSpeller->set_encoding(CurrentEncoding);
+    m_current_scintilla = m_npp_data_instance->scintilla_second_handle;
+    m_lexer = send_msg_to_active_editor(m_npp_data_instance->scintilla_second_handle, SCI_GETLEXER);
+    recheck_visible();
+    m_lexer = old_lexer;
+    m_current_encoding = old_encoding;
+    m_aspell_speller->set_encoding(m_current_encoding);
+    m_hunspell_speller->set_encoding(m_current_encoding);
 }
 
-void SpellChecker::applySettings() {
-    SettingsDlgInstance->get_simple_dlg()->apply_settings(this);
-    SettingsDlgInstance->get_advanced_dlg()->apply_settings(this);
-    FillDialogs(true);
-    SaveSettings();
-    CheckFileName(); // Cause filters may change
-    RefreshUnderlineStyle();
-    RecheckVisibleBothViews();
+void SpellChecker::apply_settings() {
+    m_settings_dlg_instance->get_simple_dlg()->apply_settings(this);
+    m_settings_dlg_instance->get_advanced_dlg()->apply_settings(this);
+    fill_dialogs(true);
+    save_settings();
+    check_file_name(); // Cause filters may change
+    refresh_underline_style();
+    recheck_visible_both_views();
 }
 
-void SpellChecker::applyMultiLangSettings() {
-    LangListInstance->apply_choice(this);
-    SaveSettings();
+void SpellChecker::apply_multi_lang_settings() {
+    m_lang_list_instance->apply_choice(this);
+    save_settings();
 }
 
-void SpellChecker::applyProxySettings() {
+void SpellChecker::apply_proxy_settings() {
     get_select_proxy()->apply_choice(this);
-    SaveSettings();
+    save_settings();
 }
 
-void SpellChecker::showSuggestionMenu() {
-    FillSuggestionsMenu(SuggestionsInstance->get_popup_menu());
-    SendMessage(SuggestionsInstance->getHSelf(), WM_SHOWANDRECREATEMENU, 0, 0);
+void SpellChecker::show_suggestion_menu() {
+    fill_suggestions_menu(m_suggestions_instance->get_popup_menu());
+    SendMessage(m_suggestions_instance->getHSelf(), WM_SHOWANDRECREATEMENU, 0, 0);
 }
 
 
-void SpellChecker::fillDownloadDicsDialog() {
-    FillDownloadDics();
+void SpellChecker::fill_download_dics_dialog() {
+    fill_download_dics();
     get_download_dics()->fill_file_list();
 }
 
-void SpellChecker::updateSelectProxy() {
-    get_select_proxy()->set_options(UseProxy, ProxyHostName.c_str(), ProxyUserName.c_str(),
-                                 ProxyPassword.c_str(), ProxyPort, ProxyAnonymous,
-                                 ProxyType);
+void SpellChecker::update_select_proxy() {
+    get_select_proxy()->set_options(m_use_proxy, m_proxy_host_name.c_str(), m_proxy_user_name.c_str(),
+                                    m_proxy_password.c_str(), m_proxy_port, m_proxy_anonymous,
+                                    m_proxy_type);
 }
 
-void SpellChecker::updateFromRemoveDicsOptions() {
+void SpellChecker::update_from_remove_dics_options() {
     get_remove_dics()->update_options(this);
-    SaveSettings();
+    save_settings();
 }
 
-void SpellChecker::updateRemoveDicsOptions() {
-    get_remove_dics()->set_check_boxes(RemoveUserDics, RemoveSystem);
+void SpellChecker::update_remove_dics_options() {
+    get_remove_dics()->set_check_boxes(m_remove_user_dics, m_remove_system);
 }
 
-void SpellChecker::updateFromDownloadDicsOptions() {
+void SpellChecker::update_from_download_dics_options() {
     get_download_dics()->update_options(this);
     get_download_dics()->update_list_box();
-    SaveSettings();
+    save_settings();
 }
 
-void SpellChecker::updateFromDownloadDicsOptionsNoUpdate() {
+void SpellChecker::update_from_download_dics_options_no_update() {
     get_download_dics()->update_options(this);
-    SaveSettings();
+    save_settings();
 }
 
-void SpellChecker::libChange() {
-    SettingsDlgInstance->get_simple_dlg()->apply_lib_change(this);
-    SettingsDlgInstance->get_simple_dlg()->fill_lib_info(
-        AspellSpeller->is_working()
-            ? 2 - (CurrentLangs.empty() ? 1 : 0)
+void SpellChecker::lib_change() {
+    m_settings_dlg_instance->get_simple_dlg()->apply_lib_change(this);
+    m_settings_dlg_instance->get_simple_dlg()->fill_lib_info(
+        m_aspell_speller->is_working()
+            ? 2 - (m_current_langs.empty() ? 1 : 0)
             : 0,
-        AspellPath.c_str(), HunspellPath.c_str(), AdditionalHunspellPath.c_str());
-    RecheckVisibleBothViews();
-    SaveSettings();
+        m_aspell_path.c_str(), m_hunspell_path.c_str(), m_additional_hunspell_path.c_str());
+    recheck_visible_both_views();
+    save_settings();
 }
 
-void SpellChecker::langChange() {
-    Lexer = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLEXER);
-    RecheckVisible();
+void SpellChecker::lang_change() {
+    m_lexer = send_msg_to_active_editor(get_current_scintilla(), SCI_GETLEXER);
+    recheck_visible();
 }
 
-void SpellChecker::SetRemoveUserDics(bool Value) { RemoveUserDics = Value; }
+void SpellChecker::set_remove_user_dics(bool value) { m_remove_user_dics = value; }
 
-void SpellChecker::SetRemoveSystem(bool Value) { RemoveSystem = Value; }
+void SpellChecker::set_remove_system(bool value) { m_remove_system = value; }
 
-bool SpellChecker::GetRemoveUserDics() { return RemoveUserDics; }
+bool SpellChecker::get_remove_user_dics() { return m_remove_user_dics; }
 
-bool SpellChecker::GetRemoveSystem() { return RemoveSystem; }
+bool SpellChecker::get_remove_system() { return m_remove_system; }
 
-void SpellChecker::DoPluginMenuInclusion(bool Invalidate) {
-    MENUITEMINFO Mif;
-    HMENU DSpellCheckMenu = get_dspellcheck_menu();
-    if (!DSpellCheckMenu)
+void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
+    MENUITEMINFO mif;
+    HMENU dspellcheck_menu = get_dspellcheck_menu();
+    if (!dspellcheck_menu)
         return;
-    HMENU LangsSubMenu = get_langs_sub_menu(DSpellCheckMenu);
-    if (LangsSubMenu)
-        DestroyMenu(LangsSubMenu);
-    const wchar_t* CurLang = (LibMode == 1) ? HunspellLanguage.c_str() : AspellLanguage.c_str();
-    HMENU NewMenu = CreatePopupMenu();
-    if (!Invalidate) {
-        if (!CurrentLangs.empty()) {
+    HMENU langs_sub_menu = get_langs_sub_menu(dspellcheck_menu);
+    if (langs_sub_menu)
+        DestroyMenu(langs_sub_menu);
+    const wchar_t* cur_lang = (m_lib_mode == 1) ? m_hunspell_language.c_str() : m_aspell_language.c_str();
+    HMENU new_menu = CreatePopupMenu();
+    if (!invalidate) {
+        if (!m_current_langs.empty()) {
             int i = 0;
-            for (auto& lang : CurrentLangs) {
-                int Checked = (CurLang == lang.orig_name)
+            for (auto& lang : m_current_langs) {
+                int checked = (cur_lang == lang.orig_name)
                                   ? (MFT_RADIOCHECK | MF_CHECKED)
                                   : MF_UNCHECKED;
-                bool Res = AppendMenu(NewMenu, MF_STRING | Checked,
+                bool res = AppendMenu(new_menu, MF_STRING | checked,
                                       get_use_allocated_ids()
                                           ? i + get_langs_menu_id_start()
                                           : MAKEWORD(i, LANGUAGE_MENU_ID),
-                                      DecodeNames
+                                      m_decode_names
                                           ? lang.alias_name.c_str()
                                           : lang.orig_name.c_str());
-                if (!Res)
+                if (!res)
                     return;
                 ++i;
             }
-            int Checked = (wcscmp(CurLang, L"<MULTIPLE>") == 0)
+            int checked = (wcscmp(cur_lang, L"<MULTIPLE>") == 0)
                               ? (MFT_RADIOCHECK | MF_CHECKED)
                               : MF_UNCHECKED;
-            AppendMenu(NewMenu, MF_STRING | Checked,
+            AppendMenu(new_menu, MF_STRING | checked,
                        get_use_allocated_ids()
                            ? MULTIPLE_LANGS + get_langs_menu_id_start()
                            : MAKEWORD(MULTIPLE_LANGS, LANGUAGE_MENU_ID),
                        L"Multiple Languages");
-            AppendMenu(NewMenu, MF_SEPARATOR, 0, nullptr);
-            AppendMenu(NewMenu, MF_STRING,
+            AppendMenu(new_menu, MF_SEPARATOR, 0, nullptr);
+            AppendMenu(new_menu, MF_STRING,
                        get_use_allocated_ids()
                            ? CUSTOMIZE_MULTIPLE_DICS + get_langs_menu_id_start()
                            : MAKEWORD(CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID),
                        L"Set Multiple Languages...");
-            if (LibMode == 1) // Only Hunspell supported
+            if (m_lib_mode == 1) // Only Hunspell supported
             {
-                AppendMenu(NewMenu, MF_STRING,
+                AppendMenu(new_menu, MF_STRING,
                            get_use_allocated_ids()
                                ? DOWNLOAD_DICS + get_langs_menu_id_start()
                                : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
                            L"Download More Languages...");
-                AppendMenu(NewMenu, MF_STRING,
+                AppendMenu(new_menu, MF_STRING,
                            get_use_allocated_ids()
                                ? REMOVE_DICS + get_langs_menu_id_start()
                                : MAKEWORD(REMOVE_DICS, LANGUAGE_MENU_ID),
                            L"Remove Unneeded Languages...");
             }
         }
-        else if (LibMode == 1)
-            AppendMenu(NewMenu, MF_STRING,
+        else if (m_lib_mode == 1)
+            AppendMenu(new_menu, MF_STRING,
                        get_use_allocated_ids()
                            ? DOWNLOAD_DICS + get_langs_menu_id_start()
                            : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
                        L"Download Languages...");
     }
 
-    Mif.fMask = MIIM_SUBMENU | MIIM_STATE;
-    Mif.cbSize = sizeof(MENUITEMINFO);
-    Mif.hSubMenu = NewMenu;
-    Mif.fState = MFS_ENABLED;
+    mif.fMask = MIIM_SUBMENU | MIIM_STATE;
+    mif.cbSize = sizeof(MENUITEMINFO);
+    mif.hSubMenu = new_menu;
+    mif.fState = MFS_ENABLED;
 
-    SetMenuItemInfo(DSpellCheckMenu, QUICK_LANG_CHANGE_ITEM, true, &Mif);
+    SetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, true, &mif);
 }
 
-void SpellChecker::FillDownloadDics() {
-    get_download_dics()->set_options(ShowOnlyKnown, InstallSystem);
+void SpellChecker::fill_download_dics() {
+    get_download_dics()->set_options(m_show_only_known, m_install_system);
 }
 
-void SpellChecker::ResetDownloadCombobox() {
-    HWND TargetCombobox = GetDlgItem(get_download_dics()->getHSelf(), IDC_ADDRESS);
-    wchar_t Buf[DEFAULT_BUF_SIZE];
-    ComboBox_GetText(TargetCombobox, Buf, DEFAULT_BUF_SIZE);
-    if (AddressIsSet) {
-        PreserveCurrentAddressIndex();
+void SpellChecker::reset_download_combobox() {
+    HWND target_combobox = GetDlgItem(get_download_dics()->getHSelf(), IDC_ADDRESS);
+    wchar_t buf[DEFAULT_BUF_SIZE];
+    ComboBox_GetText(target_combobox, buf, DEFAULT_BUF_SIZE);
+    if (m_address_is_set) {
+        preserve_current_address_index();
     }
-    ComboBox_ResetContent(TargetCombobox);
-    for (int i = 0; i < static_cast<int>(COUNTOF(DefaultServers)); i++) {
-        ComboBox_AddString(TargetCombobox, DefaultServers[i].c_str ());
+    ComboBox_ResetContent(target_combobox);
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_default_server_names)); i++) {
+        ComboBox_AddString(target_combobox, m_default_server_names[i].c_str ());
     }
-    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
-        if (!ServerNames[i].empty())
-            ComboBox_AddString(TargetCombobox, ServerNames[i].c_str ());
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
+        if (!m_server_names[i].empty())
+            ComboBox_AddString(target_combobox, m_server_names[i].c_str ());
     }
-    if (LastUsedAddress < USER_SERVER_CONST)
-        ComboBox_SetCurSel(TargetCombobox, LastUsedAddress);
+    if (m_last_used_address < USER_SERVER_CONST)
+        ComboBox_SetCurSel(target_combobox, m_last_used_address);
     else
-        ComboBox_SetCurSel(TargetCombobox, LastUsedAddress - USER_SERVER_CONST +
-        COUNTOF(DefaultServers));
-    AddressIsSet = 1;
+        ComboBox_SetCurSel(target_combobox, m_last_used_address - USER_SERVER_CONST +
+        COUNTOF(m_default_server_names));
+    m_address_is_set = 1;
 }
 
-void SpellChecker::PreserveCurrentAddressIndex() {
+void SpellChecker::preserve_current_address_index() {
     auto mb_address = get_download_dics()->current_address();
     if (!mb_address)
         return;
     auto address = *mb_address;
     ftp_trim(address);
-    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
-        std::wstring defServer = DefaultServers[i];
-        ftp_trim(defServer);
-        if (address == defServer) {
-            LastUsedAddress = i;
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
+        std::wstring def_server = m_default_server_names[i];
+        ftp_trim(def_server);
+        if (address == def_server) {
+            m_last_used_address = i;
             return;
         }
     };
-    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
-        std::wstring server = ServerNames[i];
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
+        std::wstring server = m_server_names[i];
         if (address == server) {
-            LastUsedAddress = USER_SERVER_CONST + i;
+            m_last_used_address = USER_SERVER_CONST + i;
             return;
         }
     }
-    LastUsedAddress = 0;
+    m_last_used_address = 0;
 }
 
 
-void SpellChecker::SetCheckComments(bool Value) { checkOnlyCommentsAndString = Value; }
+void SpellChecker::set_check_comments(bool value) { m_check_only_comments_and_string = value; }
 
-void SpellChecker::CheckFileName() {
-    wchar_t FullPath[MAX_PATH];
-    CheckTextEnabled = !CheckThose;
-    send_msg_to_npp(NppDataInstance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)FullPath);
-    for (auto token : tokenize<wchar_t>(FileTypes, LR"(;)")) {
-        if (CheckThose) {
-            CheckTextEnabled = CheckTextEnabled || PathMatchSpec(FullPath, std::wstring(token).c_str());
-            if (CheckTextEnabled)
+void SpellChecker::check_file_name() {
+    wchar_t full_path[MAX_PATH];
+    m_check_text_enabled = !m_check_those;
+    send_msg_to_npp(m_npp_data_instance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)full_path);
+    for (auto token : tokenize<wchar_t>(m_file_types, LR"(;)")) {
+        if (m_check_those) {
+            m_check_text_enabled = m_check_text_enabled || PathMatchSpec(full_path, std::wstring(token).c_str());
+            if (m_check_text_enabled)
                 break;
         }
         else {
-            CheckTextEnabled &= CheckTextEnabled && (!PathMatchSpec(FullPath, std::wstring(token).c_str()));
-            if (!CheckTextEnabled)
+            m_check_text_enabled &= m_check_text_enabled && (!PathMatchSpec(full_path, std::wstring(token).c_str()));
+            if (!m_check_text_enabled)
                 break;
         }
     }
 
-    Lexer = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLEXER);
+    m_lexer = send_msg_to_active_editor(get_current_scintilla(), SCI_GETLEXER);
 }
 
-LRESULT SpellChecker::GetStyle(int Pos) {
-    return SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETSTYLEAT, Pos);
+LRESULT SpellChecker::get_style(int pos) {
+    return send_msg_to_active_editor(get_current_scintilla(), SCI_GETSTYLEAT, pos);
 }
 
-void SpellChecker::setRecheckDelay(int value) {
+void SpellChecker::set_recheck_delay(int value) {
     if (value < 0)
         value = 0;
 
     if (value > 20000)
         value = 20000;
-    m_recheckDelay = value;
+    m_recheck_delay = value;
 }
 
-int SpellChecker::getRecheckDelay() {
-    return m_recheckDelay;
+int SpellChecker::get_recheck_delay() {
+    return m_recheck_delay;
 }
 
-bool SpellChecker::CheckTextNeeded() {
-    return CheckTextEnabled && AutoCheckText;
+bool SpellChecker::check_text_needed() {
+    return m_check_text_enabled && m_auto_check_text;
 }
 
-void SpellChecker::HideSuggestionBox() { SuggestionsInstance->display(false); }
+void SpellChecker::hide_suggestion_box() { m_suggestions_instance->display(false); }
 
-void SpellChecker::FindNextMistake() {
-    CurrentPosition =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETCURRENTPOS);
-    auto CurLine = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_LINEFROMPOSITION,
-                                         CurrentPosition);
-    auto LineStartPos = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_POSITIONFROMLINE,
-                                              CurLine);
-    auto DocLength =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLENGTH);
-    auto IteratorPos = LineStartPos;
-    Sci_TextRange Range;
-    bool FullCheck = false;
+void SpellChecker::find_next_mistake() {
+    m_current_position =
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
+    auto cur_line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
+                                             m_current_position);
+    auto line_start_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
+                                                  cur_line);
+    auto doc_length =
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
+    auto iterator_pos = line_start_pos;
+    Sci_TextRange range;
+    bool full_check = false;
 
     while (true) {
-        Range.chrg.cpMin = static_cast<long>(IteratorPos);
-        Range.chrg.cpMax = static_cast<long>(IteratorPos + BufferSize);
-        int IgnoreOffsetting = 0;
-        if (Range.chrg.cpMax > DocLength) {
-            IgnoreOffsetting = 1;
-            Range.chrg.cpMax = static_cast<long>(DocLength);
+        range.chrg.cpMin = static_cast<long>(iterator_pos);
+        range.chrg.cpMax = static_cast<long>(iterator_pos + m_buffer_size);
+        int ignore_offsetting = 0;
+        if (range.chrg.cpMax > doc_length) {
+            ignore_offsetting = 1;
+            range.chrg.cpMax = static_cast<long>(doc_length);
         }
-        std::vector<char> text(Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1);
-        Range.lpstrText = text.data();
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&Range));
-        char* IteratingStart =
-            Range.lpstrText + Range.chrg.cpMax - Range.chrg.cpMin - 1;
-        char* IteratingChar = IteratingStart;
-        if (!IgnoreOffsetting) {
-            if (CurrentEncoding == EncodingType::utf8) {
-                while (utf8_is_cont(*IteratingChar) && Range.lpstrText < IteratingChar)
-                    IteratingChar--;
+        std::vector<char> text(range.chrg.cpMax - range.chrg.cpMin + 1 + 1);
+        range.lpstrText = text.data();
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+        char* iterating_start =
+            range.lpstrText + range.chrg.cpMax - range.chrg.cpMin - 1;
+        char* iterating_char = iterating_start;
+        if (!ignore_offsetting) {
+            if (m_current_encoding == EncodingType::utf8) {
+                while (utf8_is_cont(*iterating_char) && range.lpstrText < iterating_char)
+                    iterating_char--;
 
-                while ((!utf8_chr(DelimUtf8Converted.c_str(), IteratingChar)) &&
-                    Range.lpstrText < IteratingChar) {
-                    IteratingChar = utf8_dec(Range.lpstrText, IteratingChar);
+                while ((!utf8_chr(m_delim_utf8_converted.c_str(), iterating_char)) &&
+                    range.lpstrText < iterating_char) {
+                    iterating_char = utf8_dec(range.lpstrText, iterating_char);
                 }
             }
             else {
-                while (!strchr(DelimConverted.c_str(), *IteratingChar) &&
-                    Range.lpstrText < IteratingChar)
-                    IteratingChar--;
+                while (!strchr(m_delim_converted.c_str(), *iterating_char) &&
+                    range.lpstrText < iterating_char)
+                    iterating_char--;
             }
 
-            *IteratingChar = '\0';
+            *iterating_char = '\0';
         }
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_COLOURISE, Range.chrg.cpMin,
-                              Range.chrg.cpMax);
+        send_msg_to_active_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin,
+                                  range.chrg.cpMax);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
-        send_msg_to_npp(NppDataInstance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
+        send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
         // To fix bug with hotspots being removed
-        bool Result = CheckText(Range.lpstrText, static_cast<long>(IteratorPos), FIND_FIRST);
-        if (Result)
+        bool result = check_text(range.lpstrText, static_cast<long>(iterator_pos), CheckTextMode::find_first);
+        if (result)
             break;
 
-        IteratorPos += (BufferSize + IteratingChar - IteratingStart);
+        iterator_pos += (m_buffer_size + iterating_char - iterating_start);
 
-        if (IteratorPos > DocLength) {
-            if (!FullCheck) {
-                CurrentPosition = 0;
-                IteratorPos = 0;
-                FullCheck = true;
+        if (iterator_pos > doc_length) {
+            if (!full_check) {
+                m_current_position = 0;
+                iterator_pos = 0;
+                full_check = true;
             }
             else
                 break;
 
-            if (FullCheck && IteratorPos > CurrentPosition)
+            if (full_check && iterator_pos > m_current_position)
                 break; // So nothing was found TODO: Message probably
         }
     }
 }
 
-void SpellChecker::FindPrevMistake() {
-    CurrentPosition =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETCURRENTPOS);
-    auto CurLine = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_LINEFROMPOSITION,
-                                         CurrentPosition);
-    auto DocLength =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLENGTH);
-    auto LineEndPos = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLINEENDPOSITION,
-                                            CurLine);
+void SpellChecker::find_prev_mistake() {
+    m_current_position =
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
+    auto cur_line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
+                                             m_current_position);
+    auto doc_length =
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
+    auto line_end_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINEENDPOSITION,
+                                                cur_line);
 
-    auto IteratorPos = LineEndPos;
-    Sci_TextRange Range;
-    bool FullCheck = false;
+    auto iterator_pos = line_end_pos;
+    Sci_TextRange range;
+    bool full_check = false;
 
-    while (1) {
-        Range.chrg.cpMin = static_cast<long>(IteratorPos - BufferSize);
-        Range.chrg.cpMax = static_cast<long>(IteratorPos);
-        int IgnoreOffsetting = 0;
-        if (Range.chrg.cpMin < 0) {
-            Range.chrg.cpMin = 0;
-            IgnoreOffsetting = 1;
+    while (true) {
+        range.chrg.cpMin = static_cast<long>(iterator_pos - m_buffer_size);
+        range.chrg.cpMax = static_cast<long>(iterator_pos);
+        int ignore_offsetting = 0;
+        if (range.chrg.cpMin < 0) {
+            range.chrg.cpMin = 0;
+            ignore_offsetting = 1;
         }
-        std::vector<char> text(Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1);
-        Range.lpstrText = text.data();
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&Range));
-        char* IteratingStart = Range.lpstrText;
-        char* IteratingChar = IteratingStart;
-        if (!IgnoreOffsetting) {
-            if (CurrentEncoding == EncodingType::utf8) {
-                while (utf8_is_cont(*IteratingChar) && *IteratingChar)
-                    IteratingChar++;
+        std::vector<char> text(range.chrg.cpMax - range.chrg.cpMin + 1 + 1);
+        range.lpstrText = text.data();
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+        char* iterating_start = range.lpstrText;
+        char* iterating_char = iterating_start;
+        if (!ignore_offsetting) {
+            if (m_current_encoding == EncodingType::utf8) {
+                while (utf8_is_cont(*iterating_char) && *iterating_char)
+                    iterating_char++;
 
-                while ((!utf8_chr(DelimUtf8Converted.c_str(), IteratingChar)) &&
-                    *IteratingChar) {
-                    IteratingChar = utf8_inc(IteratingChar);
+                while ((!utf8_chr(m_delim_utf8_converted.c_str(), iterating_char)) &&
+                    *iterating_char) {
+                    iterating_char = utf8_inc(iterating_char);
                 }
             }
             else {
-                while (!strchr(DelimConverted.c_str(), *IteratingChar) && IteratingChar)
-                    IteratingChar++;
+                while (!strchr(m_delim_converted.c_str(), *iterating_char) && iterating_char)
+                    iterating_char++;
             }
         }
-        auto offset = IteratingChar - IteratingStart;
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_COLOURISE, Range.chrg.cpMin + offset,
-                              Range.chrg.cpMax);
+        auto offset = iterating_char - iterating_start;
+        send_msg_to_active_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin + offset,
+                                  range.chrg.cpMax);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
-        send_msg_to_npp(NppDataInstance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
+        send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
 
-        bool Result = CheckText(Range.lpstrText + offset,
-                                static_cast<long>(Range.chrg.cpMin + offset), FIND_LAST);
-        if (Result)
+        bool result = check_text(range.lpstrText + offset,
+                                 static_cast<long>(range.chrg.cpMin + offset), CheckTextMode::find_last);
+        if (result)
             break;
 
-        IteratorPos -= (BufferSize - offset);
+        iterator_pos -= (m_buffer_size - offset);
 
-        if (IteratorPos < 0) {
-            if (!FullCheck) {
-                CurrentPosition = DocLength + 1;
-                IteratorPos = DocLength;
-                FullCheck = true;
+        if (iterator_pos < 0) {
+            if (!full_check) {
+                m_current_position = doc_length + 1;
+                iterator_pos = doc_length;
+                full_check = true;
             }
             else
                 break;
 
-            if (FullCheck && IteratorPos < CurrentPosition - 1)
+            if (full_check && iterator_pos < m_current_position - 1)
                 break; // So nothing was found TODO: Message probably
         }
     }
 }
 
-void SpellChecker::SetDefaultDelimiters() {
-    SettingsDlgInstance->get_advanced_dlg()->set_delimeters_edit(DEFAULT_DELIMITERS);
+void SpellChecker::set_default_delimiters() {
+    m_settings_dlg_instance->get_advanced_dlg()->set_delimeters_edit(DEFAULT_DELIMITERS);
 }
 
-HWND SpellChecker::GetCurrentScintilla() {
-    return GetScintillaWindow(NppDataInstance); // TODO: optimize
+HWND SpellChecker::get_current_scintilla() {
+    return get_scintilla_window(m_npp_data_instance); // TODO: optimize
 }
 
-bool SpellChecker::GetWordUnderCursorIsRight(long& Pos, long& Length,
-                                             bool UseTextCursor) {
-    bool Ret = true;
+bool SpellChecker::get_word_under_cursor_is_right(long& pos, long& length,
+                                                  bool use_text_cursor) {
+    bool ret = true;
     POINT p;
-    std::ptrdiff_t initCharPos;
-    LRESULT SelectionStart = 0;
-    LRESULT SelectionEnd = 0;
+    std::ptrdiff_t init_char_pos;
+    LRESULT selection_start = 0;
+    LRESULT selection_end = 0;
 
-    if (!UseTextCursor) {
+    if (!use_text_cursor) {
         if (GetCursorPos(&p) == 0)
             return true;
 
-        auto* scintilla = GetScintillaWindow(NppDataInstance);
+        auto* scintilla = get_scintilla_window(m_npp_data_instance);
         if (!scintilla)
             return true;
         ScreenToClient(scintilla, &p);
 
-        initCharPos = SendMsgToActiveEditor(
-            GetCurrentScintilla(), SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+        init_char_pos = send_msg_to_active_editor(
+            get_current_scintilla(), SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
     }
     else {
-        SelectionStart = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETSELECTIONSTART
+        selection_start = send_msg_to_active_editor(get_current_scintilla(), SCI_GETSELECTIONSTART
         );
-        SelectionEnd =
-            SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETSELECTIONEND);
-        initCharPos =
-            SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETCURRENTPOS);
+        selection_end =
+            send_msg_to_active_editor(get_current_scintilla(), SCI_GETSELECTIONEND);
+        init_char_pos =
+            send_msg_to_active_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
     }
 
-    if (initCharPos != -1) {
-        auto Line = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_LINEFROMPOSITION,
-                                          initCharPos);
-        auto LineLength =
-            SendMsgToActiveEditor(GetCurrentScintilla(), SCI_LINELENGTH, Line);
-        std::vector<char> Buf(LineLength + 1);
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLINE, Line, reinterpret_cast<LPARAM>(Buf.data()));
-        Buf[LineLength] = 0;
-        auto Offset = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_POSITIONFROMLINE,
-                                            Line);
-        auto Word = GetWordAt(static_cast<long>(initCharPos), Buf.data(),
-                              static_cast<long>(Offset));
-        if (Word.empty()) {
-            Ret = true;
+    if (init_char_pos != -1) {
+        auto line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
+                                              init_char_pos);
+        auto line_length =
+            send_msg_to_active_editor(get_current_scintilla(), SCI_LINELENGTH, line);
+        std::vector<char> buf(line_length + 1);
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINE, line, reinterpret_cast<LPARAM>(buf.data()));
+        buf[line_length] = 0;
+        auto offset = send_msg_to_active_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
+                                                line);
+        auto word = get_word_at(static_cast<long>(init_char_pos), buf.data(),
+                                static_cast<long>(offset));
+        if (word.empty()) {
+            ret = true;
         }
         else {
-            std::string_view sv = Word;
-            CutApostrophes(sv);
-            Pos = static_cast<long>(sv.data () - Buf.data() + Offset);
-            long PosEnd = Pos + static_cast<long> (sv.length ());
-            long WordLen = PosEnd - Pos;
-            if (SelectionStart != SelectionEnd &&
-                (SelectionStart != Pos || SelectionEnd != Pos + WordLen)) {
+            std::string_view sv = word;
+            cut_apostrophes(sv);
+            pos = static_cast<long>(sv.data() - buf.data() + offset);
+            long pos_end = pos + static_cast<long>(sv.length());
+            long word_len = pos_end - pos;
+            if (selection_start != selection_end &&
+                (selection_start != pos || selection_end != pos + word_len)) {
                 return true;
             }
-            if (CheckWord(std::string (sv), Pos, Pos + WordLen - 1)) {
-                Ret = true;
+            if (check_word(std::string(sv), pos, pos + word_len - 1)) {
+                ret = true;
             }
             else {
-                Ret = false;
-                Length = WordLen;
+                ret = false;
+                length = word_len;
             }
         }
     }
-    return Ret;
+    return ret;
 }
 
-std::string_view SpellChecker::GetWordAt(long CharPos, char* Text, long Offset) const {
-    char* UsedText;
-    char* Iterator = Text + CharPos - Offset;
+std::string_view SpellChecker::get_word_at(long char_pos, char* text, long offset) const {
+    char* iterator = text + char_pos - offset;
 
-    if (CurrentEncoding == EncodingType::utf8) {
-        if (utf8_chr(DelimUtf8Converted.c_str(), Iterator))
-            Iterator = utf8_dec(Text, Iterator);
+    if (m_current_encoding == EncodingType::utf8) {
+        if (utf8_chr(m_delim_utf8_converted.c_str(), iterator))
+            iterator = utf8_dec(text, iterator);
 
-        if (Iterator == nullptr)
+        if (iterator == nullptr)
             return nullptr;
 
-        while ((!utf8_chr(DelimUtf8Converted.c_str(), Iterator)) && Text < Iterator)
-            Iterator = (char *)utf8_dec(Text, Iterator);
+        while ((!utf8_chr(m_delim_utf8_converted.c_str(), iterator)) && text < iterator)
+            iterator = (char *)utf8_dec(text, iterator);
     }
     else {
-        if (strchr(DelimConverted.c_str(), *Iterator))
-            Iterator--;
-        if (Iterator < Text)
+        if (strchr(m_delim_converted.c_str(), *iterator))
+            iterator--;
+        if (iterator < text)
             return nullptr;
 
-        while (!strchr(DelimConverted.c_str(), *Iterator) && Text < Iterator)
-            Iterator--;
+        while (!strchr(m_delim_converted.c_str(), *iterator) && text < iterator)
+            iterator--;
 
-        if (Iterator < Text)
+        if (iterator < text)
             return nullptr;
     }
 
-    UsedText = Iterator;
+    char * used_text = iterator;
 
-    if (CurrentEncoding == EncodingType::utf8) {
-        if (utf8_chr(DelimUtf8Converted.c_str(), UsedText))
-            UsedText = utf8_inc(UsedText); // Then find first token after this zero
+    if (m_current_encoding == EncodingType::utf8) {
+        if (utf8_chr(m_delim_utf8_converted.c_str(), used_text))
+            used_text = utf8_inc(used_text); // Then find first token after this zero
     }
     else {
-        if (strchr(DelimConverted.c_str(), *UsedText))
-            UsedText++;
+        if (strchr(m_delim_converted.c_str(), *used_text))
+            used_text++;
     }
 
     // We're just taking the first token (basically repeating the same code as an
     // in CheckVisible
 
-    std::string_view Res;
-    if (CurrentEncoding == EncodingType::utf8)
-        {
-          auto end = utf8_pbrk(UsedText, DelimUtf8Converted.c_str());
-          if (!end) return {};
-          Res = {UsedText, static_cast<size_t> (end - UsedText)};
-        }
-    else
-        {
-          auto end = strpbrk (UsedText, DelimConverted.c_str());
-          if (!end) return {};
-          Res = {UsedText, static_cast<size_t> (end - UsedText)};
-        }
-    if (Res.data () - Text + Offset > CharPos)
+    std::string_view res;
+    if (m_current_encoding == EncodingType::utf8) {
+        auto end = utf8_pbrk(used_text, m_delim_utf8_converted.c_str());
+        if (!end) return {};
+        res = {used_text, static_cast<size_t>(end - used_text)};
+    }
+    else {
+        auto end = strpbrk(used_text, m_delim_converted.c_str());
+        if (!end) return {};
+        res = {used_text, static_cast<size_t>(end - used_text)};
+    }
+    if (res.data() - text + offset > char_pos)
         return {};
     else
-        return Res;
+        return res;
 }
 
-void SpellChecker::SetSuggestionsBoxTransparency() {
+void SpellChecker::set_suggestions_box_transparency() {
     // Set WS_EX_LAYERED on this window
-    SetWindowLong(SuggestionsInstance->getHSelf(), GWL_EXSTYLE,
-                  GetWindowLong(SuggestionsInstance->getHSelf(), GWL_EXSTYLE) |
+    SetWindowLong(m_suggestions_instance->getHSelf(), GWL_EXSTYLE,
+                  GetWindowLong(m_suggestions_instance->getHSelf(), GWL_EXSTYLE) |
                   WS_EX_LAYERED);
-    SetLayeredWindowAttributes(SuggestionsInstance->getHSelf(), 0,
-                               static_cast<BYTE>((255 * SBTrans) / 100),
+    SetLayeredWindowAttributes(m_suggestions_instance->getHSelf(), 0,
+                               static_cast<BYTE>((255 * m_sb_trans) / 100),
                                LWA_ALPHA);
-    SuggestionsInstance->display(true);
-    SuggestionsInstance->display(false);
+    m_suggestions_instance->display(true);
+    m_suggestions_instance->display(false);
 }
 
-void SpellChecker::InitSuggestionsBox() {
-    if (SuggestionsMode != SUGGESTIONS_BOX)
+void SpellChecker::init_suggestions_box() {
+    if (m_suggestions_mode != SUGGESTIONS_BOX)
         return;
-    if (!CurrentSpeller->is_working())
+    if (!m_current_speller->is_working())
         return;
     POINT p;
-    if (!CheckTextNeeded()) // If there's no red underline let's do nothing
+    if (!check_text_needed()) // If there's no red underline let's do nothing
     {
-        SuggestionsInstance->display(false);
+        m_suggestions_instance->display(false);
         return;
     }
 
     GetCursorPos(&p);
-    auto* scintilla = GetScintillaWindow(NppDataInstance);
+    auto* scintilla = get_scintilla_window(m_npp_data_instance);
     if (!scintilla || WindowFromPoint(p) != scintilla) {
         return;
     }
 
-    long Pos, Length;
-    if (GetWordUnderCursorIsRight(Pos, Length)) {
+    long pos, length;
+    if (get_word_under_cursor_is_right(pos, length)) {
         return;
     }
-    WUCLength = Length;
-    WUCPosition = Pos;
-    auto Line = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_LINEFROMPOSITION,
-                                      WUCPosition);
-    auto TextHeight =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_TEXTHEIGHT, Line);
-    auto XPos = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_POINTXFROMPOSITION,
-                                      0, WUCPosition);
-    auto YPos = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_POINTYFROMPOSITION,
-                                      0, WUCPosition);
+    m_word_under_cursor_length = length;
+    m_word_under_cursor_pos = pos;
+    auto line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
+                                          m_word_under_cursor_pos);
+    auto text_height =
+        send_msg_to_active_editor(get_current_scintilla(), SCI_TEXTHEIGHT, line);
+    auto x_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POINTXFROMPOSITION,
+                                          0, m_word_under_cursor_pos);
+    auto y_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POINTYFROMPOSITION,
+                                          0, m_word_under_cursor_pos);
 
-    p.x = static_cast<LONG>(XPos);
-    p.y = static_cast<LONG>(YPos);
-    RECT R;
-    GetWindowRect(GetCurrentScintilla(), &R);
-    scintilla = GetScintillaWindow(NppDataInstance);
+    p.x = static_cast<LONG>(x_pos);
+    p.y = static_cast<LONG>(y_pos);
+    RECT r;
+    GetWindowRect(get_current_scintilla(), &r);
+    scintilla = get_scintilla_window(m_npp_data_instance);
     if (!scintilla)
         return;
 
     ClientToScreen(scintilla, &p);
-    if (R.top > p.y + TextHeight - 3 || R.left > p.x ||
-        R.bottom < p.y + TextHeight - 3 + SBSize || R.right < p.x + SBSize)
+    if (r.top > p.y + text_height - 3 || r.left > p.x ||
+        r.bottom < p.y + text_height - 3 + m_sb_size || r.right < p.x + m_sb_size)
         return;
-    MoveWindow(SuggestionsInstance->getHSelf(), p.x,
-               p.y + static_cast<int>(TextHeight) - 3, SBSize, SBSize, true);
-    SuggestionsInstance->display(true, false);
+    MoveWindow(m_suggestions_instance->getHSelf(), p.x,
+               p.y + static_cast<int>(text_height) - 3, m_sb_size, m_sb_size, true);
+    m_suggestions_instance->display(true, false);
 }
 
-void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
-    if ((!get_use_allocated_ids() && HIBYTE(MenuId) != DSPELLCHECK_MENU_ID &&
-            HIBYTE(MenuId) != LANGUAGE_MENU_ID) ||
-        (get_use_allocated_ids() && ((int)MenuId < get_context_menu_id_start() ||
-            (int)MenuId > get_context_menu_id_start() + 350)))
+void SpellChecker::process_menu_result(WPARAM menu_id) {
+    if ((!get_use_allocated_ids() && HIBYTE(menu_id) != DSPELLCHECK_MENU_ID &&
+            HIBYTE(menu_id) != LANGUAGE_MENU_ID) ||
+        (get_use_allocated_ids() && ((int)menu_id < get_context_menu_id_start() ||
+            (int)menu_id > get_context_menu_id_start() + 350)))
         return;
-    int UsedMenuId;
+    int used_menu_id;
     if (get_use_allocated_ids()) {
-        UsedMenuId = ((int)MenuId < get_langs_menu_id_start()
+        used_menu_id = ((int)menu_id < get_langs_menu_id_start()
                           ? DSPELLCHECK_MENU_ID
                           : LANGUAGE_MENU_ID);
     }
     else {
-        UsedMenuId = HIBYTE(MenuId);
+        used_menu_id = HIBYTE(menu_id);
     }
 
-    switch (UsedMenuId) {
+    switch (used_menu_id) {
     case DSPELLCHECK_MENU_ID:
         {
-            WPARAM Result;
+            WPARAM result;
             if (!get_use_allocated_ids())
-                Result = LOBYTE(MenuId);
+                result = LOBYTE(menu_id);
             else
-                Result = MenuId - get_context_menu_id_start();
+                result = menu_id - get_context_menu_id_start();
 
-            if (Result != 0) {
-                if (Result == MID_IGNOREALL) {
-                    ApplyConversions(SelectedWord);
-                    CurrentSpeller->ignore_all(SelectedWord.c_str());
-                    WUCLength = SelectedWord.length();
-                    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, WUCPosition + WUCLength,
-                                          WUCPosition + WUCLength);
-                    RecheckVisibleBothViews();
+            if (result != 0) {
+                if (result == MID_IGNOREALL) {
+                    apply_conversions(m_selected_word);
+                    m_current_speller->ignore_all(m_selected_word.c_str());
+                    m_word_under_cursor_length = m_selected_word.length();
+                    send_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL,
+                                              m_word_under_cursor_pos + m_word_under_cursor_length,
+                                              m_word_under_cursor_pos + m_word_under_cursor_length);
+                    recheck_visible_both_views();
                 }
-                else if (Result == MID_ADDTODICTIONARY) {
-                    ApplyConversions(SelectedWord);
-                    CurrentSpeller->add_to_dictionary(SelectedWord.c_str());
-                    WUCLength = SelectedWord.length();
-                    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, WUCPosition + WUCLength,
-                                          WUCPosition + WUCLength);
-                    RecheckVisibleBothViews();
+                else if (result == MID_ADDTODICTIONARY) {
+                    apply_conversions(m_selected_word);
+                    m_current_speller->add_to_dictionary(m_selected_word.c_str());
+                    m_word_under_cursor_length = m_selected_word.length();
+                    send_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL,
+                                              m_word_under_cursor_pos + m_word_under_cursor_length,
+                                              m_word_under_cursor_pos + m_word_under_cursor_length);
+                    recheck_visible_both_views();
                 }
-                else if ((unsigned int)Result <= LastSuggestions.size()) {
-                    std::string ansiStr;
-                    if (CurrentEncoding == EncodingType::ansi)
-                        ansiStr = utf8_to_string(LastSuggestions[Result - 1].c_str());
+                else if ((unsigned int)result <= m_last_suggestions.size()) {
+                    std::string ansi_str;
+                    if (m_current_encoding == EncodingType::ansi)
+                        ansi_str = utf8_to_string(m_last_suggestions[result - 1].c_str());
                     else
-                        ansiStr = LastSuggestions[Result - 1];
+                        ansi_str = m_last_suggestions[result - 1];
 
-                    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_REPLACESEL, 0,
-                                          reinterpret_cast<LPARAM>(ansiStr.c_str()));
+                    send_msg_to_active_editor(get_current_scintilla(), SCI_REPLACESEL, 0,
+                                              reinterpret_cast<LPARAM>(ansi_str.c_str()));
                 }
             }
         }
         break;
     case LANGUAGE_MENU_ID:
         {
-            WPARAM Result;
+            WPARAM result;
             if (!get_use_allocated_ids())
-                Result = LOBYTE(MenuId);
+                result = LOBYTE(menu_id);
             else
-                Result = MenuId - get_langs_menu_id_start();
+                result = menu_id - get_langs_menu_id_start();
 
-            const wchar_t* LangString;
-            if (Result == MULTIPLE_LANGS) {
-                LangString = L"<MULTIPLE>";
+            const wchar_t* lang_string;
+            if (result == MULTIPLE_LANGS) {
+                lang_string = L"<MULTIPLE>";
             }
-            else if (Result == CUSTOMIZE_MULTIPLE_DICS || Result == DOWNLOAD_DICS ||
-                Result == REMOVE_DICS) {
+            else if (result == CUSTOMIZE_MULTIPLE_DICS || result == DOWNLOAD_DICS ||
+                result == REMOVE_DICS) {
                 // All actions are done in GUI thread in that case
                 return;
             }
             else
-                LangString = CurrentLangs[Result].orig_name.c_str();
-            DoPluginMenuInclusion(true);
+                lang_string = m_current_langs[result].orig_name.c_str();
+            do_plugin_menu_inclusion(true);
 
-            if (LibMode == 0)
-                SetAspellLanguage(LangString);
+            if (m_lib_mode == 0)
+                set_aspell_language(lang_string);
             else
-                SetHunspellLanguage(LangString);
+                set_hunspell_language(lang_string);
 
-            ReinitLanguageLists(true);
+            reinit_language_lists(true);
             update_langs_menu();
-            RecheckVisibleBothViews();
-            SaveSettings();
+            recheck_visible_both_views();
+            save_settings();
             break;
         }
     default:
@@ -1040,467 +1041,468 @@ void SpellChecker::ProcessMenuResult(WPARAM MenuId) {
     }
 }
 
-std::vector<SuggestionsMenuItem> SpellChecker::FillSuggestionsMenu(HMENU Menu) {
-    if (!CurrentSpeller->is_working())
+std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu) {
+    if (!m_current_speller->is_working())
         return {}; // Word is already off-screen
 
-    int Pos = WUCPosition;
-    Sci_TextRange Range;
-    Range.chrg.cpMin = WUCPosition;
-    Range.chrg.cpMax = WUCPosition + static_cast<long>(WUCLength);
-    std::vector<char> text(WUCLength + 1);
-    Range.lpstrText = text.data();
-    PostMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, Pos,
-                          Pos + WUCLength);
-    if (SuggestionsMode == SUGGESTIONS_BOX) {
+    int pos = m_word_under_cursor_pos;
+    Sci_TextRange range;
+    range.chrg.cpMin = m_word_under_cursor_pos;
+    range.chrg.cpMax = m_word_under_cursor_pos + static_cast<long>(m_word_under_cursor_length);
+    std::vector<char> text(m_word_under_cursor_length + 1);
+    range.lpstrText = text.data();
+    post_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL, pos,
+                              pos + m_word_under_cursor_length);
+    if (m_suggestions_mode == SUGGESTIONS_BOX) {
         // PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL,
         // Pos, Pos + WUCLength);
     }
-    std::vector<SuggestionsMenuItem> SuggestionMenuItems;
-    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&Range));
+    std::vector<SuggestionsMenuItem> suggestion_menu_items;
+    send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
 
-    SelectedWord = Range.lpstrText;
-    ApplyConversions(SelectedWord);
+    m_selected_word = range.lpstrText;
+    apply_conversions(m_selected_word);
 
-    LastSuggestions = CurrentSpeller->get_suggestions(SelectedWord.c_str());
+    m_last_suggestions = m_current_speller->get_suggestions(m_selected_word.c_str());
 
-    for (size_t i = 0; i < LastSuggestions.size(); i++) {
-        if (i >= static_cast<unsigned int>(SuggestionsNum))
+    for (size_t i = 0; i < m_last_suggestions.size(); i++) {
+        if (i >= static_cast<unsigned int>(m_suggestions_num))
             break;
 
-        auto item = utf8_to_wstring(LastSuggestions[i].c_str());
-        if (SuggestionsMode == SUGGESTIONS_BOX)
-            InsertSuggMenuItem(Menu, item.c_str(), static_cast<BYTE>(i + 1), -1);
+        auto item = utf8_to_wstring(m_last_suggestions[i].c_str());
+        if (m_suggestions_mode == SUGGESTIONS_BOX)
+            insert_sugg_menu_item(menu, item.c_str(), static_cast<BYTE>(i + 1), -1);
         else
-            SuggestionMenuItems.emplace_back(item.c_str(), static_cast<BYTE>(i + 1));
+            suggestion_menu_items.emplace_back(item.c_str(), static_cast<BYTE>(i + 1));
     }
 
-    if (!LastSuggestions.empty()) {
-        if (SuggestionsMode == SUGGESTIONS_BOX)
-            InsertSuggMenuItem(Menu, L"", 0, 103, true);
+    if (!m_last_suggestions.empty()) {
+        if (m_suggestions_mode == SUGGESTIONS_BOX)
+            insert_sugg_menu_item(menu, L"", 0, 103, true);
         else
-            SuggestionMenuItems.emplace_back(L"", 0, true);
+            suggestion_menu_items.emplace_back(L"", 0, true);
     }
 
-    std::string BufUtf8;
-    if (CurrentEncoding == EncodingType::utf8)
-        BufUtf8 = Range.lpstrText;
+    std::string buf_utf8;
+    if (m_current_encoding == EncodingType::utf8)
+        buf_utf8 = range.lpstrText;
     else
-        BufUtf8 = to_utf8_string(Range.lpstrText);
-    ApplyConversions(BufUtf8);
-    auto item = utf8_to_wstring(BufUtf8.c_str());
-    auto menuString = wstring_printf(L"Ignore \"%s\" for Current Session", item.c_str());
-    if (SuggestionsMode == SUGGESTIONS_BOX)
-        InsertSuggMenuItem(Menu, menuString.c_str(), MID_IGNOREALL, -1);
+        buf_utf8 = to_utf8_string(range.lpstrText);
+    apply_conversions(buf_utf8);
+    auto item = utf8_to_wstring(buf_utf8.c_str());
+    auto menu_string = wstring_printf(L"Ignore \"%s\" for Current Session", item.c_str());
+    if (m_suggestions_mode == SUGGESTIONS_BOX)
+        insert_sugg_menu_item(menu, menu_string.c_str(), MID_IGNOREALL, -1);
     else
-        SuggestionMenuItems.emplace_back(menuString.c_str(), MID_IGNOREALL);
-    menuString = wstring_printf(L"Add \"%s\" to Dictionary", item.c_str());;
-    if (SuggestionsMode == SUGGESTIONS_BOX)
-        InsertSuggMenuItem(Menu, menuString.c_str(), MID_ADDTODICTIONARY, -1);
+        suggestion_menu_items.emplace_back(menu_string.c_str(), MID_IGNOREALL);
+    menu_string = wstring_printf(L"Add \"%s\" to Dictionary", item.c_str());;
+    if (m_suggestions_mode == SUGGESTIONS_BOX)
+        insert_sugg_menu_item(menu, menu_string.c_str(), MID_ADDTODICTIONARY, -1);
     else
-        SuggestionMenuItems.emplace_back(menuString.c_str(), MID_ADDTODICTIONARY);
+        suggestion_menu_items.emplace_back(menu_string.c_str(), MID_ADDTODICTIONARY);
 
-    if (SuggestionsMode == SUGGESTIONS_CONTEXT_MENU)
-        SuggestionMenuItems.emplace_back(L"", 0, true);
+    if (m_suggestions_mode == SUGGESTIONS_CONTEXT_MENU)
+        suggestion_menu_items.emplace_back(L"", 0, true);
 
-    return SuggestionMenuItems;
+    return suggestion_menu_items;
 }
 
-void SpellChecker::UpdateAutocheckStatus(int SaveSetting) {
-    if (SaveSetting)
-        SaveSettings();
+void SpellChecker::update_autocheck_status(int save_setting) {
+    if (save_setting)
+        save_settings();
 
-    send_msg_to_npp(NppDataInstance, NPPM_SETMENUITEMCHECK, get_func_item()[0].cmd_id,
-                 AutoCheckText);
+    send_msg_to_npp(m_npp_data_instance, NPPM_SETMENUITEMCHECK, get_func_item()[0].cmd_id,
+                    m_auto_check_text);
 }
 
-void SpellChecker::SetCheckThose(int CheckThoseArg) {
-    CheckThose = CheckThoseArg;
+void SpellChecker::set_check_those(int check_those_arg) {
+    m_check_those = check_those_arg;
 }
 
-void SpellChecker::SetFileTypes(const wchar_t* FileTypesArg) {
-    FileTypes = FileTypesArg;
+void SpellChecker::set_file_types(const wchar_t* file_types_arg) {
+    m_file_types = file_types_arg;
 }
 
-void SpellChecker::SetHunspellMultipleLanguages(const char* MultiLanguagesArg) {
-    HunspellMultiLanguages = to_wstring(MultiLanguagesArg);
+void SpellChecker::set_hunspell_multiple_languages(const char* multi_languages_arg) {
+    m_hunspell_multi_languages = to_wstring(multi_languages_arg);
 }
 
-void SpellChecker::SetAspellMultipleLanguages(const char* MultiLanguagesArg) {
-    AspellMultiLanguages = to_wstring(MultiLanguagesArg);
+void SpellChecker::set_aspell_multiple_languages(const char* multi_languages_arg) {
+    m_aspell_multi_languages = to_wstring(multi_languages_arg);
 }
 
-void SpellChecker::RefreshUnderlineStyle() {
-    SendMsgToBothEditors(NppDataInstance, SCI_INDICSETSTYLE, SCE_ERROR_UNDERLINE,
-                         UnderlineStyle);
-    SendMsgToBothEditors(NppDataInstance, SCI_INDICSETFORE, SCE_ERROR_UNDERLINE,
-                         UnderlineColor);
+void SpellChecker::refresh_underline_style() {
+    send_msg_to_both_editors(m_npp_data_instance, SCI_INDICSETSTYLE, SCE_ERROR_UNDERLINE,
+                             m_underline_style);
+    send_msg_to_both_editors(m_npp_data_instance, SCI_INDICSETFORE, SCE_ERROR_UNDERLINE,
+                             m_underline_color);
 }
 
-void SpellChecker::SetUnderlineColor(int Value) { UnderlineColor = Value; }
+void SpellChecker::set_underline_color(int value) { m_underline_color = value; }
 
-void SpellChecker::SetUnderlineStyle(int Value) { UnderlineStyle = Value; }
+void SpellChecker::set_underline_style(int value) { m_underline_style = value; }
 
-void SpellChecker::SetProxyUserName(const wchar_t* Str) {
-    ProxyUserName = Str;
+void SpellChecker::set_proxy_user_name(const wchar_t* str) {
+    m_proxy_user_name = str;
 }
 
-void SpellChecker::SetProxyHostName(const wchar_t* Str) {
-    ProxyHostName = Str;
+void SpellChecker::set_proxy_host_name(const wchar_t* str) {
+    m_proxy_host_name = str;
 }
 
-void SpellChecker::SetProxyPassword(const wchar_t* Str) {
-    ProxyPassword = Str;
+void SpellChecker::set_proxy_password(const wchar_t* str) {
+    m_proxy_password = str;
 }
 
-void SpellChecker::SetProxyPort(int Value) { ProxyPort = Value; }
+void SpellChecker::set_proxy_port(int value) { m_proxy_port = value; }
 
-void SpellChecker::SetUseProxy(bool Value) { UseProxy = Value; }
+void SpellChecker::set_use_proxy(bool value) { m_use_proxy = value; }
 
-void SpellChecker::SetProxyAnonymous(bool Value) { ProxyAnonymous = Value; }
+void SpellChecker::set_proxy_anonymous(bool value) { m_proxy_anonymous = value; }
 
-void SpellChecker::SetProxyType(int Value) { ProxyType = Value; }
+void SpellChecker::set_proxy_type(int value) { m_proxy_type = value; }
 
-const wchar_t* SpellChecker::GetProxyUserName() const { return ProxyUserName.c_str(); }
+const wchar_t* SpellChecker::get_proxy_user_name() const { return m_proxy_user_name.c_str(); }
 
-const wchar_t* SpellChecker::GetProxyHostName() const { return ProxyHostName.c_str(); }
+const wchar_t* SpellChecker::get_proxy_host_name() const { return m_proxy_host_name.c_str(); }
 
-const wchar_t* SpellChecker::GetProxyPassword() const { return ProxyPassword.c_str(); }
+const wchar_t* SpellChecker::get_proxy_password() const { return m_proxy_password.c_str(); }
 
-int SpellChecker::GetProxyPort() { return ProxyPort; }
+int SpellChecker::get_proxy_port() { return m_proxy_port; }
 
-bool SpellChecker::GetUseProxy() { return UseProxy; }
+bool SpellChecker::get_use_proxy() { return m_use_proxy; }
 
-bool SpellChecker::GetProxyAnonymous() { return ProxyAnonymous; }
+bool SpellChecker::get_proxy_anonymous() { return m_proxy_anonymous; }
 
-int SpellChecker::GetProxyType() { return ProxyType; }
+int SpellChecker::get_proxy_type() { return m_proxy_type; }
 
-void SpellChecker::SetIgnore(bool IgnoreNumbersArg, bool IgnoreCStartArg,
-                             bool IgnoreCHaveArg, bool IgnoreCAllArg,
-                             bool Ignore_Arg, bool IgnoreSEApostropheArg,
-                             bool IgnoreOneLetterArg) {
-    IgnoreNumbers = IgnoreNumbersArg;
-    IgnoreCStart = IgnoreCStartArg;
-    IgnoreCHave = IgnoreCHaveArg;
-    IgnoreCAll = IgnoreCAllArg;
-    Ignore_ = Ignore_Arg;
-    IgnoreSEApostrophe = IgnoreSEApostropheArg;
-    IgnoreOneLetter = IgnoreOneLetterArg;
+void SpellChecker::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg,
+                              bool ignore_c_have_arg, bool ignore_c_all_arg,
+                              bool ignore_arg, bool ignore_se_apostrophe_arg,
+                              bool ignore_one_letter_arg) {
+    m_ignore_numbers = ignore_numbers_arg;
+    m_ignore_starting_with_capital = ignore_c_start_arg;
+    m_ignore_having_a_capital = ignore_c_have_arg;
+    m_ignore_all_capital = ignore_c_all_arg;
+    m_ignore_having_underscore = ignore_arg;
+    m_ignore_starting_or_ending_with_apostrophe = ignore_se_apostrophe_arg;
+    m_ignore_one_letter = ignore_one_letter_arg;
 }
 
-std::wstring SpellChecker::GetDefaultHunspellPath() {
-    return IniFilePath.substr(0, IniFilePath.rfind(L'\\')) + L"\\Hunspell";
+std::wstring SpellChecker::get_default_hunspell_path() {
+    return m_ini_file_path.substr(0, m_ini_file_path.rfind(L'\\')) + L"\\Hunspell";
 }
 
-void SpellChecker::SaveSettings() {
-    FILE* Fp;
-    _wfopen_s(&Fp, IniFilePath.c_str(), L"w"); // Cleaning settings file (or creating it)
-    fclose(Fp);
-    if (!SettingsLoaded)
+void SpellChecker::save_settings() {
+    FILE* fp;
+    _wfopen_s(&fp, m_ini_file_path.c_str(), L"w"); // Cleaning settings file (or creating it)
+    fclose(fp);
+    if (!m_settings_loaded)
         return;
-    SaveToIni(L"Autocheck", AutoCheckText, 1);
-    SaveToIni(L"Hunspell_Multiple_Languages", HunspellMultiLanguages.c_str(), L"");
-    SaveToIni(L"Aspell_Multiple_Languages", AspellMultiLanguages.c_str(), L"");
-    SaveToIni(L"Hunspell_Language", HunspellLanguage.c_str(), L"en_GB");
-    SaveToIni(L"Aspell_Language", AspellLanguage.c_str(), L"en");
-    SaveToIni(L"Remove_User_Dics_On_Dic_Remove", RemoveUserDics, 0);
-    SaveToIni(L"Remove_Dics_For_All_Users", RemoveSystem, 0);
-    SaveToIni(L"Show_Only_Known", ShowOnlyKnown, true);
-    SaveToIni(L"Install_Dictionaries_For_All_Users", InstallSystem, false);
-    SaveToIni(L"Recheck_Delay", m_recheckDelay, 500);
-    wchar_t Buf[DEFAULT_BUF_SIZE];
-    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
-        if (ServerNames[i].empty())
+    save_to_ini(L"Autocheck", m_auto_check_text, 1);
+    save_to_ini(L"Hunspell_Multiple_Languages", m_hunspell_multi_languages.c_str(), L"");
+    save_to_ini(L"Aspell_Multiple_Languages", m_aspell_multi_languages.c_str(), L"");
+    save_to_ini(L"Hunspell_Language", m_hunspell_language.c_str(), L"en_GB");
+    save_to_ini(L"Aspell_Language", m_aspell_language.c_str(), L"en");
+    save_to_ini(L"Remove_User_Dics_On_Dic_Remove", m_remove_user_dics, 0);
+    save_to_ini(L"Remove_Dics_For_All_Users", m_remove_system, 0);
+    save_to_ini(L"Show_Only_Known", m_show_only_known, true);
+    save_to_ini(L"Install_Dictionaries_For_All_Users", m_install_system, false);
+    save_to_ini(L"Recheck_Delay", m_recheck_delay, 500);
+    wchar_t buf[DEFAULT_BUF_SIZE];
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
+        if (m_server_names[i].empty())
             continue;
-        swprintf(Buf, L"Server_Address[%d]", i);
-        SaveToIni(Buf, ServerNames[i].c_str(), L"");
+        swprintf(buf, L"Server_Address[%d]", i);
+        save_to_ini(buf, m_server_names[i].c_str(), L"");
     }
-    SaveToIni(L"Suggestions_Control", SuggestionsMode, 1);
-    SaveToIni(L"Ignore_Yo", IgnoreYo, 0);
-    SaveToIni(L"Convert_Single_Quotes_To_Apostrophe", ConvertSingleQuotes, 1);
-    SaveToIni(L"Remove_Ending_And_Beginning_Apostrophe",
-              RemoveBoundaryApostrophes, 1);
-    SaveToIni(L"Check_Only_Comments_And_Strings", checkOnlyCommentsAndString, 1);
-    SaveToIni(L"Check_Those_\\_Not_Those", CheckThose, 1);
-    SaveToIni(L"File_Types", FileTypes.c_str(), L"*.*");
-    SaveToIni(L"Ignore_Having_Number", IgnoreNumbers, 1);
-    SaveToIni(L"Ignore_Start_Capital", IgnoreCStart, 0);
-    SaveToIni(L"Ignore_Have_Capital", IgnoreCHave, 1);
-    SaveToIni(L"Ignore_All_Capital", IgnoreCAll, 1);
-    SaveToIni(L"Ignore_With_", Ignore_, 1);
-    SaveToIni(L"Ignore_That_Start_or_End_with_'", IgnoreSEApostrophe, 0);
-    SaveToIni(L"Ignore_One_Letter", IgnoreOneLetter, 0);
-    SaveToIni(L"Underline_Color", UnderlineColor, 0x0000ff);
-    SaveToIni(L"Underline_Style", UnderlineStyle, INDIC_SQUIGGLE);
+    save_to_ini(L"Suggestions_Control", m_suggestions_mode, 1);
+    save_to_ini(L"Ignore_Yo", m_ignore_yo, 0);
+    save_to_ini(L"Convert_Single_Quotes_To_Apostrophe", m_convert_single_quotes, 1);
+    save_to_ini(L"Remove_Ending_And_Beginning_Apostrophe",
+                m_remove_boundary_apostrophes, 1);
+    save_to_ini(L"Check_Only_Comments_And_Strings", m_check_only_comments_and_string, 1);
+    save_to_ini(L"Check_Those_\\_Not_Those", m_check_those, 1);
+    save_to_ini(L"File_Types", m_file_types.c_str(), L"*.*");
+    save_to_ini(L"Ignore_Having_Number", m_ignore_numbers, 1);
+    save_to_ini(L"Ignore_Start_Capital", m_ignore_starting_with_capital, 0);
+    save_to_ini(L"Ignore_Have_Capital", m_ignore_having_a_capital, 1);
+    save_to_ini(L"Ignore_All_Capital", m_ignore_all_capital, 1);
+    save_to_ini(L"Ignore_With_", m_ignore_having_underscore, 1);
+    save_to_ini(L"Ignore_That_Start_or_End_with_'", m_ignore_starting_or_ending_with_apostrophe, 0);
+    save_to_ini(L"Ignore_One_Letter", m_ignore_one_letter, 0);
+    save_to_ini(L"Underline_Color", m_underline_color, 0x0000ff);
+    save_to_ini(L"Underline_Style", m_underline_style, INDIC_SQUIGGLE);
     auto path = get_default_aspell_path();
-    SaveToIni(L"Aspell_Path", AspellPath.c_str(), path.c_str());
-    path = GetDefaultHunspellPath();
-    SaveToIni(L"User_Hunspell_Path", HunspellPath.c_str(), path.c_str());
-    SaveToIni(L"System_Hunspell_Path", AdditionalHunspellPath.c_str(),
-              L".\\plugins\\config\\Hunspell");
-    SaveToIni(L"Suggestions_Number", SuggestionsNum, 5);
-    SaveToIniUtf8(L"Delimiters", DelimUtf8.c_str(), to_utf8_string(DEFAULT_DELIMITERS).c_str(), true);
-    SaveToIni(L"Find_Next_Buffer_Size", BufferSize / 1024, 4);
-    SaveToIni(L"Suggestions_Button_Size", SBSize, 15);
-    SaveToIni(L"Suggestions_Button_Opacity", SBTrans, 70);
-    SaveToIni(L"Library", LibMode, 1);
-    PreserveCurrentAddressIndex();
-    SaveToIni(L"Last_Used_Address_Index", LastUsedAddress, 0);
-    SaveToIni(L"Decode_Language_Names", DecodeNames, true);
-    SaveToIni(L"United_User_Dictionary(Hunspell)", OneUserDic, false);
+    save_to_ini(L"Aspell_Path", m_aspell_path.c_str(), path.c_str());
+    path = get_default_hunspell_path();
+    save_to_ini(L"User_Hunspell_Path", m_hunspell_path.c_str(), path.c_str());
+    save_to_ini(L"System_Hunspell_Path", m_additional_hunspell_path.c_str(),
+                L".\\plugins\\config\\Hunspell");
+    save_to_ini(L"Suggestions_Number", m_suggestions_num, 5);
+    save_to_ini_utf8(L"Delimiters", m_delim_utf8.c_str(), to_utf8_string(DEFAULT_DELIMITERS).c_str(), true);
+    save_to_ini(L"Find_Next_Buffer_Size", m_buffer_size / 1024, 4);
+    save_to_ini(L"Suggestions_Button_Size", m_sb_size, 15);
+    save_to_ini(L"Suggestions_Button_Opacity", m_sb_trans, 70);
+    save_to_ini(L"Library", m_lib_mode, 1);
+    preserve_current_address_index();
+    save_to_ini(L"Last_Used_Address_Index", m_last_used_address, 0);
+    save_to_ini(L"Decode_Language_Names", m_decode_names, true);
+    save_to_ini(L"United_User_Dictionary(Hunspell)", m_one_user_dic, false);
 
-    SaveToIni(L"Use_Proxy", UseProxy, false);
-    SaveToIni(L"Proxy_User_Name", ProxyUserName.c_str(), L"anonymous");
-    SaveToIni(L"Proxy_Host_Name", ProxyHostName.c_str(), L"");
-    SaveToIni(L"Proxy_Password", ProxyPassword.c_str(), L"");
-    SaveToIni(L"Proxy_Port", ProxyPort, 808);
-    SaveToIni(L"Proxy_Is_Anonymous", ProxyAnonymous, true);
-    SaveToIni(L"Proxy_Type", ProxyType, 0);
+    save_to_ini(L"Use_Proxy", m_use_proxy, false);
+    save_to_ini(L"Proxy_User_Name", m_proxy_user_name.c_str(), L"anonymous");
+    save_to_ini(L"Proxy_Host_Name", m_proxy_host_name.c_str(), L"");
+    save_to_ini(L"Proxy_Password", m_proxy_password.c_str(), L"");
+    save_to_ini(L"Proxy_Port", m_proxy_port, 808);
+    save_to_ini(L"Proxy_Is_Anonymous", m_proxy_anonymous, true);
+    save_to_ini(L"Proxy_Type", m_proxy_type, 0);
 }
 
-void SpellChecker::SetDecodeNames(bool Value) { DecodeNames = Value; }
+void SpellChecker::set_decode_names(bool value) { m_decode_names = value; }
 
-void SpellChecker::SetOneUserDic(bool Value) {
-    OneUserDic = Value;
-    HunspellSpeller->set_use_one_dic(Value);
+void SpellChecker::set_one_user_dic(bool value) {
+    m_one_user_dic = value;
+    m_hunspell_speller->set_use_one_dic(value);
 }
 
-bool SpellChecker::GetOneUserDic() { return OneUserDic; }
+bool SpellChecker::get_one_user_dic() { return m_one_user_dic; }
 
-void SpellChecker::SetLibMode(int i) {
-    LibMode = i;
+void SpellChecker::set_lib_mode(int i) {
+    m_lib_mode = i;
     if (i == 0) {
-        AspellReinitSettings();
-        CurrentSpeller = AspellSpeller.get();
+        aspell_reinit_settings();
+        m_current_speller = m_aspell_speller.get();
     }
     else {
-        CurrentSpeller = HunspellSpeller.get();
-        HunspellReinitSettings(false);
+        m_current_speller = m_hunspell_speller.get();
+        hunspell_reinit_settings(false);
     }
 }
 
-void SpellChecker::LoadSettings() {
-    SettingsLoaded = true;
-    auto Path = get_default_aspell_path();
-    AspellPath = LoadFromIni(L"Aspell_Path", Path.c_str());
-    Path = GetDefaultHunspellPath();
-    HunspellPath = LoadFromIni(L"User_Hunspell_Path", Path.c_str());
+void SpellChecker::load_settings() {
+    m_settings_loaded = true;
+    auto path = get_default_aspell_path();
+    m_aspell_path = load_from_ini(L"Aspell_Path", path.c_str());
+    path = get_default_hunspell_path();
+    m_hunspell_path = load_from_ini(L"User_Hunspell_Path", path.c_str());
 
-    AdditionalHunspellPath = LoadFromIni(L"System_Hunspell_Path",
-                                         L".\\plugins\\config\\Hunspell");
+    m_additional_hunspell_path = load_from_ini(L"System_Hunspell_Path",
+                                               L".\\plugins\\config\\Hunspell");
 
-    LoadFromIni(SuggestionsMode, L"Suggestions_Control", 1);
-    LoadFromIni(AutoCheckText, L"Autocheck", true);
-    UpdateAutocheckStatus(0);
-    AspellMultiLanguages = LoadFromIni(L"Aspell_Multiple_Languages", L"");
-    HunspellMultiLanguages = LoadFromIni(L"Hunspell_Multiple_Languages", L"");
-    SetAspellLanguage(LoadFromIni(L"Aspell_Language", L"en").c_str());
-    SetHunspellLanguage(LoadFromIni(L"Hunspell_Language", L"en_GB").c_str());
+    load_from_ini(m_suggestions_mode, L"Suggestions_Control", 1);
+    load_from_ini(m_auto_check_text, L"Autocheck", true);
+    update_autocheck_status(0);
+    m_aspell_multi_languages = load_from_ini(L"Aspell_Multiple_Languages", L"");
+    m_hunspell_multi_languages = load_from_ini(L"Hunspell_Multiple_Languages", L"");
+    set_aspell_language(load_from_ini(L"Aspell_Language", L"en").c_str());
+    set_hunspell_language(load_from_ini(L"Hunspell_Language", L"en_GB").c_str());
 
-    SetDelimiters(LoadFromIniUtf8(L"Delimiters", to_utf8_string(DEFAULT_DELIMITERS).c_str()).c_str());
-    LoadFromIni(SuggestionsNum, L"Suggestions_Number", 5);
-    LoadFromIni(IgnoreYo, L"Ignore_Yo", 0);
-    LoadFromIni(ConvertSingleQuotes, L"Convert_Single_Quotes_To_Apostrophe", 1);
-    LoadFromIni(RemoveBoundaryApostrophes,
-                L"Remove_Ending_And_Beginning_Apostrophe", 1);
-    LoadFromIni(CheckThose, L"Check_Those_\\_Not_Those", 1);
-    FileTypes = LoadFromIni(L"File_Types", L"*.*");
-    LoadFromIni(checkOnlyCommentsAndString, L"Check_Only_Comments_And_Strings", 1);
-    LoadFromIni(UnderlineColor, L"Underline_Color", 0x0000ff);
-    LoadFromIni(UnderlineStyle, L"Underline_Style", INDIC_SQUIGGLE);
-    LoadFromIni(IgnoreNumbers, L"Ignore_Having_Number", 1);
-    LoadFromIni(IgnoreCStart, L"Ignore_Start_Capital", 0);
-    LoadFromIni(IgnoreCHave, L"Ignore_Have_Capital", 1);
-    LoadFromIni(IgnoreCAll, L"Ignore_All_Capital", 1);
-    LoadFromIni(IgnoreOneLetter, L"Ignore_One_Letter", 0);
-    LoadFromIni(Ignore_, L"Ignore_With_", 1);
-    int Value;
-    LoadFromIni(Value, L"United_User_Dictionary(Hunspell)", false);
-    SetOneUserDic(Value);
-    LoadFromIni(IgnoreSEApostrophe, L"Ignore_That_Start_or_End_with_'", 0);
+    set_delimiters(load_from_ini_utf8(L"Delimiters", to_utf8_string(DEFAULT_DELIMITERS).c_str()).c_str());
+    load_from_ini(m_suggestions_num, L"Suggestions_Number", 5);
+    load_from_ini(m_ignore_yo, L"Ignore_Yo", false);
+    load_from_ini(m_convert_single_quotes, L"Convert_Single_Quotes_To_Apostrophe", true);
+    load_from_ini(m_remove_boundary_apostrophes,
+                  L"Remove_Ending_And_Beginning_Apostrophe", true);
+    load_from_ini(m_check_those, L"Check_Those_\\_Not_Those", true);
+    m_file_types = load_from_ini(L"File_Types", L"*.*");
+    load_from_ini(m_check_only_comments_and_string, L"Check_Only_Comments_And_Strings", true);
+    load_from_ini(m_underline_color, L"Underline_Color", 0x0000ff);
+    load_from_ini(m_underline_style, L"Underline_Style", INDIC_SQUIGGLE);
+    load_from_ini(m_ignore_numbers, L"Ignore_Having_Number", true);
+    load_from_ini(m_ignore_starting_with_capital, L"Ignore_Start_Capital", false);
+    load_from_ini(m_ignore_having_a_capital, L"Ignore_Have_Capital", true);
+    load_from_ini(m_ignore_all_capital, L"Ignore_All_Capital", true);
+    load_from_ini(m_ignore_one_letter, L"Ignore_One_Letter", false);
+    load_from_ini(m_ignore_having_underscore, L"Ignore_With_", true);
+    int value;
+    load_from_ini(value, L"United_User_Dictionary(Hunspell)", false);
+    set_one_user_dic(value);
+    load_from_ini(m_ignore_starting_or_ending_with_apostrophe, L"Ignore_That_Start_or_End_with_'", false);
 
-    HunspellSpeller->set_directory(HunspellPath.c_str());
-    HunspellSpeller->set_additional_directory(AdditionalHunspellPath.c_str());
-    AspellSpeller->init(AspellPath.c_str());
+    m_hunspell_speller->set_directory(m_hunspell_path.c_str());
+    m_hunspell_speller->set_additional_directory(m_additional_hunspell_path.c_str());
+    m_aspell_speller->init(m_aspell_path.c_str());
     int x;
-    LoadFromIni(x, L"Library", 1);
-    SetLibMode(x);
-    int Size, Trans;
-    LoadFromIni(Size, L"Suggestions_Button_Size", 15);
-    LoadFromIni(Trans, L"Suggestions_Button_Opacity", 70);
-    SetSuggBoxSettings(Size, Trans, 0);
-    LoadFromIni(Size, L"Find_Next_Buffer_Size", 4);
-    SetBufferSize(Size);
-    RefreshUnderlineStyle();
-    LoadFromIni(ShowOnlyKnown, L"Show_Only_Known", true);
-    LoadFromIni(InstallSystem, L"Install_Dictionaries_For_All_Users", false);
-    LoadFromIni(m_recheckDelay, L"Recheck_Delay", 500);
-    wchar_t Buf[DEFAULT_BUF_SIZE];
-    for (int i = 0; i < static_cast<int>(COUNTOF(ServerNames)); i++) {
-        swprintf(Buf, L"Server_Address[%d]", i);
-        ServerNames[i] = LoadFromIni(Buf, L"");
+    load_from_ini(x, L"Library", 1);
+    set_lib_mode(x);
+    int size, trans;
+    load_from_ini(size, L"Suggestions_Button_Size", 15);
+    load_from_ini(trans, L"Suggestions_Button_Opacity", 70);
+    set_sugg_box_settings(size, trans, 0);
+    load_from_ini(size, L"Find_Next_Buffer_Size", 4);
+    set_buffer_size(size);
+    refresh_underline_style();
+    load_from_ini(m_show_only_known, L"Show_Only_Known", true);
+    load_from_ini(m_install_system, L"Install_Dictionaries_For_All_Users", false);
+    load_from_ini(m_recheck_delay, L"Recheck_Delay", 500);
+    wchar_t buf[DEFAULT_BUF_SIZE];
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
+        swprintf(buf, L"Server_Address[%d]", i);
+        m_server_names[i] = load_from_ini(buf, L"");
     }
-    LoadFromIni(LastUsedAddress, L"Last_Used_Address_Index", 0);
-    LoadFromIni(RemoveUserDics, L"Remove_User_Dics_On_Dic_Remove", 0);
-    LoadFromIni(RemoveSystem, L"Remove_Dics_For_All_Users", 0);
-    LoadFromIni(DecodeNames, L"Decode_Language_Names", true);
+    load_from_ini(m_last_used_address, L"Last_Used_Address_Index", 0);
+    load_from_ini(m_remove_user_dics, L"Remove_User_Dics_On_Dic_Remove", false);
+    load_from_ini(m_remove_system, L"Remove_Dics_For_All_Users", false);
+    load_from_ini(m_decode_names, L"Decode_Language_Names", true);
 
-    LoadFromIni(UseProxy, L"Use_Proxy", false);
-    LoadFromIni(ProxyUserName.c_str(), L"Proxy_User_Name", L"anonymous");
-    LoadFromIni(ProxyHostName.c_str(), L"Proxy_Host_Name", L"");
-    LoadFromIni(ProxyPassword.c_str(), L"Proxy_Password", L"");
-    LoadFromIni(ProxyPort, L"Proxy_Port", 808);
-    LoadFromIni(ProxyAnonymous, L"Proxy_Is_Anonymous", true);
-    LoadFromIni(ProxyType, L"Proxy_Type", 0);
+    load_from_ini(m_use_proxy, L"Use_Proxy", false);
+    load_from_ini(m_proxy_user_name.c_str(), L"Proxy_User_Name", L"anonymous");
+    load_from_ini(m_proxy_host_name.c_str(), L"Proxy_Host_Name", L"");
+    load_from_ini(m_proxy_password.c_str(), L"Proxy_Password", L"");
+    load_from_ini(m_proxy_port, L"Proxy_Port", 808);
+    load_from_ini(m_proxy_anonymous, L"Proxy_Is_Anonymous", true);
+    load_from_ini(m_proxy_type, L"Proxy_Type", 0);
 }
 
-void SpellChecker::CreateWordUnderline(HWND ScintillaWindow, long start,
-                                       long end) {
-    PostMsgToActiveEditor(ScintillaWindow, SCI_SETINDICATORCURRENT,
-                          SCE_ERROR_UNDERLINE);
-    PostMsgToActiveEditor(ScintillaWindow, SCI_INDICATORFILLRANGE, start,
-                          (end - start + 1));
+void SpellChecker::create_word_underline(HWND scintilla_window, long start,
+                                         long end) {
+    post_msg_to_active_editor(scintilla_window, SCI_SETINDICATORCURRENT,
+                              SCE_ERROR_UNDERLINE);
+    post_msg_to_active_editor(scintilla_window, SCI_INDICATORFILLRANGE, start,
+                              (end - start + 1));
 }
 
-void SpellChecker::RemoveUnderline(HWND ScintillaWindow, long start, long end) {
+void SpellChecker::remove_underline(HWND scintilla_window, long start, long end) {
     if (end < start)
         return;
-    PostMsgToActiveEditor(ScintillaWindow, SCI_SETINDICATORCURRENT,
-                          SCE_ERROR_UNDERLINE);
-    PostMsgToActiveEditor(ScintillaWindow, SCI_INDICATORCLEARRANGE, start,
-                          (end - start + 1));
+    post_msg_to_active_editor(scintilla_window, SCI_SETINDICATORCURRENT,
+                              SCE_ERROR_UNDERLINE);
+    post_msg_to_active_editor(scintilla_window, SCI_INDICATORCLEARRANGE, start,
+                              (end - start + 1));
 }
 
-void SpellChecker::GetVisibleLimits(long& Start, long& Finish) {
-    auto top = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETFIRSTVISIBLELINE
+void SpellChecker::get_visible_limits(long& start, long& finish) {
+    auto top = send_msg_to_active_editor(get_current_scintilla(), SCI_GETFIRSTVISIBLELINE
     );
-    auto bottom = top + SendMsgToActiveEditor(GetCurrentScintilla(), SCI_LINESONSCREEN
+    auto bottom = top + send_msg_to_active_editor(get_current_scintilla(), SCI_LINESONSCREEN
     );
-    top = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_DOCLINEFROMVISIBLE,
-                                top);
+    top = send_msg_to_active_editor(get_current_scintilla(), SCI_DOCLINEFROMVISIBLE,
+                                    top);
 
-    bottom = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_DOCLINEFROMVISIBLE,
-                                   bottom);
-    auto LineCount =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLINECOUNT);
-    Start = static_cast<long>(SendMsgToActiveEditor(GetCurrentScintilla(), SCI_POSITIONFROMLINE,
-                                                    top));
+    bottom = send_msg_to_active_editor(get_current_scintilla(), SCI_DOCLINEFROMVISIBLE,
+                                       bottom);
+    auto line_count =
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINECOUNT);
+    start = static_cast<long>(send_msg_to_active_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
+                                                        top));
     // Not using end of line position cause utf-8 symbols could be more than one
     // char
     // So we use next line start as the end of our visible text
-    if (bottom + 1 < LineCount) {
-        Finish = static_cast<long>(SendMsgToActiveEditor(
-            GetCurrentScintilla(), SCI_POSITIONFROMLINE, bottom + 1));
+    if (bottom + 1 < line_count) {
+        finish = static_cast<long>(send_msg_to_active_editor(
+            get_current_scintilla(), SCI_POSITIONFROMLINE, bottom + 1));
     }
     else {
-        Finish = static_cast<long>(
-            SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTLENGTH));
+        finish = static_cast<long>(
+            send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTLENGTH));
     }
     return;
 }
 
-std::vector<char> SpellChecker::GetVisibleText(long* offset, bool NotIntersectionOnly) {
+std::vector<char> SpellChecker::get_visible_text(long* offset, bool not_intersection_only) {
     Sci_TextRange range;
-    GetVisibleLimits(range.chrg.cpMin, range.chrg.cpMax);
+    get_visible_limits(range.chrg.cpMin, range.chrg.cpMax);
 
     if (range.chrg.cpMax < 0 || range.chrg.cpMin > range.chrg.cpMax)
         return {};
 
-    PreviousA = range.chrg.cpMin;
-    PreviousB = range.chrg.cpMax;
+    previous_a = range.chrg.cpMin;
+    previous_b = range.chrg.cpMax;
 
-    if (NotIntersectionOnly) {
-        if (range.chrg.cpMin < PreviousA && range.chrg.cpMax >= PreviousA)
-            range.chrg.cpMax = PreviousA - 1;
-        else if (range.chrg.cpMax > PreviousB && range.chrg.cpMin <= PreviousB)
-            range.chrg.cpMin = PreviousB + 1;
+    if (not_intersection_only) {
+        if (range.chrg.cpMin < previous_a && range.chrg.cpMax >= previous_a)
+            range.chrg.cpMax = previous_a - 1;
+        else if (range.chrg.cpMax > previous_b && range.chrg.cpMin <= previous_b)
+            range.chrg.cpMin = previous_b + 1;
     }
 
     std::vector<char> buf(range.chrg.cpMax - range.chrg.cpMin + 1);
     range.lpstrText = buf.data();
-    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTRANGE, NULL, reinterpret_cast<LPARAM>(&range));
+    send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, NULL, reinterpret_cast<LPARAM>(&range));
     *offset = range.chrg.cpMin;
     buf[range.chrg.cpMax - range.chrg.cpMin] = 0;
     return buf;
 }
 
-void SpellChecker::ClearAllUnderlines() {
+void SpellChecker::clear_all_underlines() {
     auto length =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLENGTH);
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
     if (length > 0) {
-        PostMsgToActiveEditor(GetCurrentScintilla(), SCI_SETINDICATORCURRENT,
-                              SCE_ERROR_UNDERLINE);
-        PostMsgToActiveEditor(GetCurrentScintilla(), SCI_INDICATORCLEARRANGE, 0,
-                              length);
+        post_msg_to_active_editor(get_current_scintilla(), SCI_SETINDICATORCURRENT,
+                                  SCE_ERROR_UNDERLINE);
+        post_msg_to_active_editor(get_current_scintilla(), SCI_INDICATORCLEARRANGE, 0,
+                                  length);
     }
 }
 
-void SpellChecker::SetAspellPath(const wchar_t* Path) {
-    AspellPath = Path;
-    AspellReinitSettings();
+void SpellChecker::set_aspell_path(const wchar_t* path) {
+    m_aspell_path = path;
+    aspell_reinit_settings();
 }
 
-void SpellChecker::SetHunspellPath(const wchar_t* Path) {
-    HunspellPath = Path;
-    HunspellReinitSettings(1);
+void SpellChecker::set_hunspell_path(const wchar_t* path) {
+    m_hunspell_path = path;
+    hunspell_reinit_settings(true);
 }
 
-void SpellChecker::SetHunspellAdditionalPath(const wchar_t* Path) {
-    if (!*Path)
+void SpellChecker::set_hunspell_additional_path(const wchar_t* path) {
+    if (!*path)
         return;
-    AdditionalHunspellPath = Path;
-    HunspellReinitSettings(1);
+    m_additional_hunspell_path = path;
+    hunspell_reinit_settings(true);
 }
 
-void SpellChecker::SaveToIni(const wchar_t* Name, const wchar_t* Value,
-                             const wchar_t* DefaultValue, bool InQuotes) {
-    if (!Name || !Value)
+void SpellChecker::save_to_ini(const wchar_t* name, const wchar_t* value,
+                               const wchar_t* default_value, bool in_quotes) {
+    if (!name || !value)
         return;
 
-    if (DefaultValue && wcscmp(Value, DefaultValue) == 0)
+    if (default_value && wcscmp(value, default_value) == 0)
         return;
 
-    if (InQuotes) {
-        WritePrivateProfileString(L"SpellCheck", Name, wstring_printf(LR"("%s")", Value).c_str(), IniFilePath.c_str());
+    if (in_quotes) {
+        WritePrivateProfileString(L"SpellCheck", name, wstring_printf(LR"("%s")", value).c_str(),
+                                  m_ini_file_path.c_str());
     }
     else {
-        WritePrivateProfileString(L"SpellCheck", Name, Value, IniFilePath.c_str());
+        WritePrivateProfileString(L"SpellCheck", name, value, m_ini_file_path.c_str());
     }
 }
 
-void SpellChecker::SaveToIni(const wchar_t* Name, int Value, int DefaultValue) {
-    if (!Name)
+void SpellChecker::save_to_ini(const wchar_t* name, int value, int default_value) {
+    if (!name)
         return;
 
-    if (Value == DefaultValue)
+    if (value == default_value)
         return;
 
-    wchar_t Buf[DEFAULT_BUF_SIZE];
-    _itow_s(Value, Buf, 10);
-    SaveToIni(Name, Buf, nullptr);
+    wchar_t buf[DEFAULT_BUF_SIZE];
+    _itow_s(value, buf, 10);
+    save_to_ini(name, buf, nullptr);
 }
 
-void SpellChecker::SaveToIniUtf8(const wchar_t* Name, const char* Value,
-                                 const char* DefaultValue, bool InQuotes) {
-    if (!Name || !Value)
+void SpellChecker::save_to_ini_utf8(const wchar_t* name, const char* value,
+                                    const char* default_value, bool in_quotes) {
+    if (!name || !value)
         return;
 
-    if (DefaultValue && strcmp(Value, DefaultValue) == 0)
+    if (default_value && strcmp(value, default_value) == 0)
         return;
 
-    SaveToIni(Name, utf8_to_wstring(Value).c_str(), nullptr, InQuotes);
+    save_to_ini(name, utf8_to_wstring(value).c_str(), nullptr, in_quotes);
 }
 
-std::wstring SpellChecker::LoadFromIni(const wchar_t* Name,
-                                       const wchar_t* defaultValue, bool InQuotes) {
+std::wstring SpellChecker::load_from_ini(const wchar_t* name,
+                                         const wchar_t* default_value, bool in_quotes) {
     assert (Name && defaultValue);
 
-    auto value = read_ini_value(L"Spellcheck", Name, defaultValue, IniFilePath.c_str());
+    auto value = read_ini_value(L"Spellcheck", name, default_value, m_ini_file_path.c_str());
 
-    if (InQuotes) {
+    if (in_quotes) {
         // Proof check for quotes
         if (value.front() != '\"' || value.back() != '\"' || value.length() < 2) {
-            return defaultValue;
+            return default_value;
         }
 
         return value.substr(1, value.length() - 2);
@@ -1508,246 +1510,246 @@ std::wstring SpellChecker::LoadFromIni(const wchar_t* Name,
     return value;
 }
 
-void SpellChecker::LoadFromIni(int& Value, const wchar_t* Name,
-                               int defaultValue) {
-    if (!Name)
+void SpellChecker::load_from_ini(int& value, const wchar_t* name,
+                                 int default_value) {
+    if (!name)
         return;
 
-    auto buf = LoadFromIni(Name, std::to_wstring(defaultValue).c_str());
-    Value = _wtoi(buf.c_str());
+    auto buf = load_from_ini(name, std::to_wstring(default_value).c_str());
+    value = _wtoi(buf.c_str());
 }
 
-void SpellChecker::LoadFromIni(bool& Value, const wchar_t* Name,
-                               bool DefaultValue) {
-    if (!Name)
+void SpellChecker::load_from_ini(bool& value, const wchar_t* name,
+                                 bool default_value) {
+    if (!name)
         return;
 
-    auto buf = LoadFromIni(Name, std::to_wstring(DefaultValue).c_str());
-    Value = _wtoi(buf.c_str()) != 0;
+    auto buf = load_from_ini(name, std::to_wstring(default_value).c_str());
+    value = _wtoi(buf.c_str()) != 0;
 }
 
-std::string SpellChecker::LoadFromIniUtf8(const wchar_t* Name,
-                                          const char* defaultValue, bool InQuotes) {
-    if (!Name || !defaultValue)
-        return defaultValue;
-    return to_utf8_string(LoadFromIni(Name, utf8_to_wstring(defaultValue).c_str(), InQuotes).c_str());
+std::string SpellChecker::load_from_ini_utf8(const wchar_t* name,
+                                             const char* default_value, bool in_quotes) {
+    if (!name || !default_value)
+        return default_value;
+    return to_utf8_string(load_from_ini(name, utf8_to_wstring(default_value).c_str(), in_quotes).c_str());
 }
 
 // Here parameter is in ANSI (may as well be utf-8 cause only English I guess)
-void SpellChecker::SetAspellLanguage(const wchar_t* Str) {
-    AspellLanguage = Str;
+void SpellChecker::set_aspell_language(const wchar_t* str) {
+    m_aspell_language = str;
 
-    if (wcscmp(Str, L"<MULTIPLE>") == 0) {
-        SetMultipleLanguages(AspellMultiLanguages.c_str(), AspellSpeller.get());
-        AspellSpeller->set_mode(1);
+    if (wcscmp(str, L"<MULTIPLE>") == 0) {
+        set_multiple_languages(m_aspell_multi_languages.c_str(), m_aspell_speller.get());
+        m_aspell_speller->set_mode(1);
     }
     else {
-        AspellSpeller->set_language(Str);
-        CurrentSpeller->set_mode(0);
+        m_aspell_speller->set_language(str);
+        m_current_speller->set_mode(0);
     }
 }
 
-void SpellChecker::SetHunspellLanguage(const wchar_t* Str) {
-    HunspellLanguage = Str;
+void SpellChecker::set_hunspell_language(const wchar_t* str) {
+    m_hunspell_language = str;
 
-    if (wcscmp(Str, L"<MULTIPLE>") == 0) {
-        SetMultipleLanguages(HunspellMultiLanguages.c_str(), HunspellSpeller.get());
-        HunspellSpeller->set_mode(1);
+    if (wcscmp(str, L"<MULTIPLE>") == 0) {
+        set_multiple_languages(m_hunspell_multi_languages.c_str(), m_hunspell_speller.get());
+        m_hunspell_speller->set_mode(1);
     }
     else {
-        HunspellSpeller->set_language(HunspellLanguage.c_str());
-        HunspellSpeller->set_mode(0);
+        m_hunspell_speller->set_language(m_hunspell_language.c_str());
+        m_hunspell_speller->set_mode(0);
     }
 }
 
-const char* SpellChecker::GetDelimiters() { return DelimUtf8.c_str(); }
+const char* SpellChecker::get_delimiters() { return m_delim_utf8.c_str(); }
 
-void SpellChecker::SetSuggestionsNum(int Num) { SuggestionsNum = Num; }
+void SpellChecker::set_suggestions_num(int num) { m_suggestions_num = num; }
 
 // Here parameter is in UTF-8
-void SpellChecker::SetDelimiters(const char* Str) {
-    DelimUtf8 = Str;
-    DelimUtf8Converted = to_utf8_string((parse_string(utf8_to_wstring(DelimUtf8.c_str()).c_str()) + L" \n\r\t\v").c_str());
-    DelimConverted = utf8_to_string(DelimUtf8Converted.c_str());
+void SpellChecker::set_delimiters(const char* str) {
+    m_delim_utf8 = str;
+    m_delim_utf8_converted = to_utf8_string(
+        (parse_string(utf8_to_wstring(m_delim_utf8.c_str()).c_str()) + L" \n\r\t\v").c_str());
+    m_delim_converted = utf8_to_string(m_delim_utf8_converted.c_str());
 }
 
-void SpellChecker::SetMultipleLanguages(std::wstring_view MultiString,
-                                        AbstractSpellerInterface* Speller) {
-    std::vector<std::wstring> MultiLangList;
-    for (auto token : tokenize<wchar_t>(MultiString, LR"(\|)"))
-        MultiLangList.push_back(std::wstring{token});
+void SpellChecker::set_multiple_languages(std::wstring_view multi_string,
+                                          AbstractSpellerInterface* speller) {
+    std::vector<std::wstring> multi_lang_list;
+    for (auto token : tokenize<wchar_t>(multi_string, LR"(\|)"))
+        multi_lang_list.push_back(std::wstring{token});
 
-    Speller->set_multiple_languages(MultiLangList);
+    speller->set_multiple_languages(multi_lang_list);
 }
 
-bool SpellChecker::HunspellReinitSettings(bool ResetDirectory) {
-    if (ResetDirectory) {
-        HunspellSpeller->set_directory(HunspellPath.c_str());
-        HunspellSpeller->set_additional_directory(AdditionalHunspellPath.c_str());
+bool SpellChecker::hunspell_reinit_settings(bool reset_directory) {
+    if (reset_directory) {
+        m_hunspell_speller->set_directory(m_hunspell_path.c_str());
+        m_hunspell_speller->set_additional_directory(m_additional_hunspell_path.c_str());
     }
-    if (wcscmp(HunspellLanguage.c_str(), L"<MULTIPLE>") != 0)
-        HunspellSpeller->set_language(HunspellLanguage.c_str());
+    if (wcscmp(m_hunspell_language.c_str(), L"<MULTIPLE>") != 0)
+        m_hunspell_speller->set_language(m_hunspell_language.c_str());
     else
-        SetMultipleLanguages(HunspellMultiLanguages.c_str(), HunspellSpeller.get());
+        set_multiple_languages(m_hunspell_multi_languages.c_str(), m_hunspell_speller.get());
     return true;
 }
 
-bool SpellChecker::AspellReinitSettings() {
-    AspellSpeller->init(AspellPath.c_str());
+bool SpellChecker::aspell_reinit_settings() {
+    m_aspell_speller->init(m_aspell_path.c_str());
 
-    if (AspellLanguage == L"<MULTIPLE>") {
-        AspellSpeller->set_language(AspellLanguage.c_str());
+    if (m_aspell_language == L"<MULTIPLE>") {
+        m_aspell_speller->set_language(m_aspell_language.c_str());
     }
     else
-        SetMultipleLanguages(AspellMultiLanguages.c_str(), AspellSpeller.get());
+        set_multiple_languages(m_aspell_multi_languages.c_str(), m_aspell_speller.get());
     return true;
 }
 
-void SpellChecker::SetBufferSize(int Size) {
-    if (Size < 1)
-        Size = 1;
-    if (Size > 10 * 1024)
-        Size = 10 * 1024;
-    BufferSize = Size * 1024;
+void SpellChecker::set_buffer_size(int size) {
+    if (size < 1)
+        size = 1;
+    if (size > 10 * 1024)
+        size = 10 * 1024;
+    m_buffer_size = size * 1024;
 }
 
-void SpellChecker::SetSuggBoxSettings(int Size, int Transparency, int SaveIni) {
-    if (SBSize != Size) {
-        SBSize = Size;
-        if (SaveIni)
-            HideSuggestionBox();
+void SpellChecker::set_sugg_box_settings(int size, int transparency, int save_ini) {
+    if (m_sb_size != size) {
+        m_sb_size = size;
+        if (save_ini)
+            hide_suggestion_box();
     }
 
-    if (Transparency != SBTrans) {
-        SBTrans = Transparency;
+    if (transparency != m_sb_trans) {
+        m_sb_trans = transparency;
         // Don't sure why but this helps to fix a bug with notepad++ window resizing
         // TODO: Fix it normal way
-        SetLayeredWindowAttributes(SuggestionsInstance->getHSelf(), 0,
-                                   static_cast<BYTE>((255 * SBTrans) / 100),
+        SetLayeredWindowAttributes(m_suggestions_instance->getHSelf(), 0,
+                                   static_cast<BYTE>((255 * m_sb_trans) / 100),
                                    LWA_ALPHA);
     }
 }
 
-void SpellChecker::ApplyConversions(
-    std::string& Word) // In Utf-8, Maybe shortened during conversion
+void SpellChecker::apply_conversions(
+    std::string& word) // In Utf-8, Maybe shortened during conversion
 {
-    const char* ConvertFrom[3];
-    const char* ConvertTo[3];
-    int Apply[3] = {IgnoreYo, IgnoreYo, ConvertSingleQuotes};
+    const char* convert_from[3];
+    const char* convert_to[3];
+    int apply[3] = {m_ignore_yo, m_ignore_yo, m_convert_single_quotes};
 
-    if (CurrentEncoding == EncodingType::ansi) {
-        ConvertFrom[0] = YoANSI.c_str();
-        ConvertFrom[1] = yoANSI.c_str();
-        ConvertFrom[2] = PunctuationApostropheANSI.c_str();
-        ConvertTo[0] = YeANSI.c_str();
-        ConvertTo[1] = yeANSI.c_str();
-        ConvertTo[2] = "\'";
+    if (m_current_encoding == EncodingType::ansi) {
+        convert_from[0] = m_yo_capital_ansi.c_str();
+        convert_from[1] = m_yo_ansi.c_str();
+        convert_from[2] = m_punctuation_apostrophe_ansi.c_str();
+        convert_to[0] = m_ye_capital_ansi.c_str();
+        convert_to[1] = m_ye_ansi.c_str();
+        convert_to[2] = "\'";
     }
     else {
-        ConvertFrom[0] = Yo;
-        ConvertFrom[1] = yo;
-        ConvertFrom[2] = PunctuationApostrophe;
-        ConvertTo[0] = Ye;
-        ConvertTo[1] = ye;
-        ConvertTo[2] = "\'";
+        convert_from[0] = yo_capital;
+        convert_from[1] = yo;
+        convert_from[2] = punctuation_apostrophe;
+        convert_to[0] = ye_capital;
+        convert_to[1] = ye;
+        convert_to[2] = "\'";
     }
 
-    static_assert (COUNTOF (ConvertFrom) == COUNTOF (ConvertTo));
-    for (int i = 0; i < static_cast<int> (COUNTOF (ConvertFrom)); ++i) {
-        if (!Apply[i])
+    static_assert (COUNTOF (convert_from) == COUNTOF (convert_to));
+    for (int i = 0; i < static_cast<int>(COUNTOF (convert_from)); ++i) {
+        if (!apply[i])
             continue;
-        replace_all(Word, ConvertFrom[i], ConvertTo[i]);
+        replace_all(word, convert_from[i], convert_to[i]);
     }
 }
 
-void SpellChecker::ResetHotSpotCache() {
-    memset(HotSpotCache, -1, sizeof(HotSpotCache));
+void SpellChecker::reset_hot_spot_cache() {
+    memset(m_hot_spot_cache, -1, sizeof(m_hot_spot_cache));
 }
 
-bool SpellChecker::CheckWord(std::string Word, long Start, long /*End*/) {
-    bool res;
-    if (!CurrentSpeller->is_working() || Word.empty())
+bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
+    if (!m_current_speller->is_working() || word.empty())
         return true;
     // Well Numbers have same codes for ANSI and Unicode I guess, so
     // If word contains number then it's probably just a number or some crazy name
-    auto Style = GetStyle(Start);
-    if (checkOnlyCommentsAndString && !SciUtils::is_comment_or_string(Lexer, Style))
+    auto style = get_style(start);
+    if (m_check_only_comments_and_string && !SciUtils::is_comment_or_string(m_lexer, style))
         return true;
 
-    if (HotSpotCache[Style] == -1) {
-        HotSpotCache[Style] = SendMsgToActiveEditor(GetCurrentScintilla(), SCI_STYLEGETHOTSPOT,
-                                                    Style);
+    if (m_hot_spot_cache[style] == -1) {
+        m_hot_spot_cache[style] = send_msg_to_active_editor(get_current_scintilla(), SCI_STYLEGETHOTSPOT,
+                                                            style);
     }
 
-    if (HotSpotCache[Style] == 1)
+    if (m_hot_spot_cache[style] == 1)
         return true;
 
-    ApplyConversions(Word);
+    apply_conversions(word);
 
-    auto SymbolsNum =
-        (CurrentEncoding == EncodingType::utf8) ? utf8_length(Word.c_str()) : Word.length();
-    if (SymbolsNum == 0) {
-        return true;
-    }
-
-    if (IgnoreOneLetter && SymbolsNum == 1) {
+    auto symbols_num =
+        (m_current_encoding == EncodingType::utf8) ? utf8_length(word.c_str()) : word.length();
+    if (symbols_num == 0) {
         return true;
     }
 
-    if (IgnoreNumbers &&
-        (CurrentEncoding == EncodingType::utf8
-             ? utf8_pbrk(Word.c_str(), "0123456789")
-             : strpbrk(Word.c_str(), "0123456789")) != nullptr) // Same for UTF-8 and not
+    if (m_ignore_one_letter && symbols_num == 1) {
+        return true;
+    }
+
+    if (m_ignore_numbers &&
+        (m_current_encoding == EncodingType::utf8
+             ? utf8_pbrk(word.c_str(), "0123456789")
+             : strpbrk(word.c_str(), "0123456789")) != nullptr) // Same for UTF-8 and not
     {
         return true;
     }
 
-    if (IgnoreCStart || IgnoreCHave || IgnoreCAll) {
-        std::wstring Ts;
-        if (CurrentEncoding == EncodingType::utf8)
-            Ts = utf8_to_wstring(Word.c_str());
+    if (m_ignore_starting_with_capital || m_ignore_having_a_capital || m_ignore_all_capital) {
+        std::wstring ts;
+        if (m_current_encoding == EncodingType::utf8)
+            ts = utf8_to_wstring(word.c_str());
         else
-            Ts = to_wstring(Word.c_str());
-        if (IgnoreCStart && IsCharUpper(Ts[0])) {
+            ts = to_wstring(word.c_str());
+        if (m_ignore_starting_with_capital && IsCharUpper(ts[0])) {
             return true;
         }
-        if (IgnoreCHave || IgnoreCAll) {
-            bool AllUpper = IsCharUpper(Ts[0]);
-            for (auto c : Ts) {
+        if (m_ignore_having_a_capital || m_ignore_all_capital) {
+            bool all_upper = IsCharUpper(ts[0]);
+            for (auto c : ts) {
                 if (IsCharUpper(c)) {
-                    if (IgnoreCHave) {
+                    if (m_ignore_having_a_capital) {
                         return true;
                     }
                 }
                 else
-                    AllUpper = false;
+                    all_upper = false;
             }
 
-            if (AllUpper && IgnoreCAll) {
+            if (all_upper && m_ignore_all_capital) {
                 return true;
             }
         }
     }
 
-    if (Ignore_ && strchr(Word.c_str(), '_') != nullptr) // I guess the same for UTF-8 and ANSI
+    if (m_ignore_having_underscore && strchr(word.c_str(), '_') != nullptr) // I guess the same for UTF-8 and ANSI
     {
         return true;
     }
 
-    auto Len = Word.length();
+    auto len = word.length();
 
-    if (IgnoreSEApostrophe) {
-        if (Word[0] == '\'' || Word[Len - 1] == '\'') {
+    if (m_ignore_starting_or_ending_with_apostrophe) {
+        if (word[0] == '\'' || word[len - 1] == '\'') {
             return true;
         }
     }
 
-    res = CurrentSpeller->check_word(Word.c_str());
+    bool res = m_current_speller->check_word(word.c_str());
     return res;
 }
 
-void SpellChecker::CutApostrophes(std::string_view& word) {
-    if (RemoveBoundaryApostrophes && word.size() > 1) {
+void SpellChecker::cut_apostrophes(std::string_view& word) {
+    if (m_remove_boundary_apostrophes && word.size() > 1) {
         while (!word.empty() && word.front() == '\'')
             word = word.substr(1);
 
@@ -1756,71 +1758,71 @@ void SpellChecker::CutApostrophes(std::string_view& word) {
     }
 }
 
-int SpellChecker::CheckTextDefaultAnswer(CheckTextMode Mode) {
-    switch (Mode) {
-    case SpellChecker::UNDERLINE_ERRORS:
-    case SpellChecker::FIND_FIRST:
-    case SpellChecker::FIND_LAST:
+int SpellChecker::check_text_default_answer(CheckTextMode mode) {
+    switch (mode) {
+    case CheckTextMode::underline_errors:
+    case CheckTextMode::find_first:
+    case CheckTextMode::find_last:
         return false;
-    case SpellChecker::GET_FIRST:
+    case CheckTextMode::get_first:
         return -1;
     }
     return -1;
 }
 
-int SpellChecker::CheckText(char* TextToCheck, long Offset,
-                            CheckTextMode Mode) {
-    if (!TextToCheck || !*TextToCheck) {
-        return CheckTextDefaultAnswer(Mode);
+int SpellChecker::check_text(char* text_to_check, long offset,
+                             CheckTextMode mode) {
+    if (!text_to_check || !*text_to_check) {
+        return check_text_default_answer(mode);
     }
 
-    HWND ScintillaWindow = GetCurrentScintilla();
-    SendMsgToActiveEditor(ScintillaWindow, SCI_GETINDICATORCURRENT);
+    HWND scintilla_window = get_current_scintilla();
+    send_msg_to_active_editor(scintilla_window, SCI_GETINDICATORCURRENT);
     bool stop = false;
-    long ResultingWordEnd = -1, ResultingWordStart = -1;
-    auto TextLen = strlen(TextToCheck);
-    std::vector<long> UnderlineBuffer;
-    long WordStart = 0;
-    long WordEnd = 0;
+    long resulting_word_end = -1, resulting_word_start = -1;
+    auto text_len = strlen(text_to_check);
+    std::vector<long> underline_buffer;
+    long word_start = 0;
+    long word_end = 0;
 
     std::vector<std::string_view> tokens;
-    if (CurrentEncoding == EncodingType::utf8)
-        tokens = tokenize_utf8(TextToCheck, DelimUtf8Converted);
+    if (m_current_encoding == EncodingType::utf8)
+        tokens = tokenize_utf8(text_to_check, m_delim_utf8_converted);
     else
-        tokens = tokenize<char>(TextToCheck, DelimConverted);
+        tokens = tokenize<char>(text_to_check, m_delim_converted);
 
     for (auto token : tokens) {
-        CutApostrophes(token);
-        WordStart = Offset + static_cast<long>(token.data() - TextToCheck);
-        WordEnd = Offset + static_cast<long>(token.data() - TextToCheck + token.length());
-        if (WordEnd < WordStart)
+        cut_apostrophes(token);
+        word_start = offset + static_cast<long>(token.data() - text_to_check);
+        word_end = offset + static_cast<long>(token.data() - text_to_check + token.length());
+        if (word_end < word_start)
             continue;
 
-        if (!CheckWord(std::string(token), WordStart, WordEnd)) {
-            switch (Mode) {
-            case UNDERLINE_ERRORS:
-                UnderlineBuffer.push_back(WordStart);
-                UnderlineBuffer.push_back(WordEnd);
+        if (!check_word(std::string(token), word_start, word_end)) {
+            switch (mode) {
+            case CheckTextMode::underline_errors:
+                underline_buffer.push_back(word_start);
+                underline_buffer.push_back(word_end);
                 break;
-            case FIND_FIRST:
-                if (WordEnd > CurrentPosition) {
-                    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, WordStart,
-                                          WordEnd);
+            case CheckTextMode::find_first:
+                if (word_end > m_current_position) {
+                    send_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL, word_start,
+                                              word_end);
                     stop = true;
                 }
                 break;
-            case FIND_LAST:
+            case CheckTextMode::find_last:
                 {
-                    if (WordEnd >= CurrentPosition) {
+                    if (word_end >= m_current_position) {
                         stop = true;
                         break;
                     }
-                    ResultingWordStart = WordStart;
-                    ResultingWordEnd = WordEnd;
+                    resulting_word_start = word_start;
+                    resulting_word_end = word_end;
                 }
                 break;
-            case GET_FIRST:
-                return WordStart;
+            case CheckTextMode::get_first:
+                return word_start;
             }
             if (stop)
                 break;
@@ -1830,163 +1832,156 @@ int SpellChecker::CheckText(char* TextToCheck, long Offset,
 
     }
 
-    if (Mode == UNDERLINE_ERRORS) {
-        long PrevPos = Offset;
-        for (long i = 0; i < (long)UnderlineBuffer.size() - 1; i += 2) {
-            RemoveUnderline(ScintillaWindow, PrevPos, UnderlineBuffer[i] - 1);
-            CreateWordUnderline(ScintillaWindow, UnderlineBuffer[i],
-                                UnderlineBuffer[i + 1] - 1);
-            PrevPos = UnderlineBuffer[i + 1];
+    if (mode == CheckTextMode::underline_errors) {
+        long prev_pos = offset;
+        for (long i = 0; i < (long)underline_buffer.size() - 1; i += 2) {
+            remove_underline(scintilla_window, prev_pos, underline_buffer[i] - 1);
+            create_word_underline(scintilla_window, underline_buffer[i],
+                                  underline_buffer[i + 1] - 1);
+            prev_pos = underline_buffer[i + 1];
         }
-        RemoveUnderline(ScintillaWindow, PrevPos,
-                        Offset + static_cast<long>(TextLen) - 1);
+        remove_underline(scintilla_window, prev_pos,
+                         offset + static_cast<long>(text_len) - 1);
     }
 
     // PostMsgToEditor (ScintillaWindow, NppDataInstance, SCI_SETINDICATORCURRENT,
     // oldid);
 
-    switch (Mode) {
-    case UNDERLINE_ERRORS:
+    switch (mode) {
+    case CheckTextMode::underline_errors:
         return true;
-    case FIND_FIRST:
+    case CheckTextMode::find_first:
         return stop;
-    case GET_FIRST:
+    case CheckTextMode::get_first:
         return -1;
-    case FIND_LAST:
-        if (ResultingWordStart == -1)
+    case CheckTextMode::find_last:
+        if (resulting_word_start == -1)
             return false;
         else {
-            SendMsgToActiveEditor(GetCurrentScintilla(), SCI_SETSEL, ResultingWordStart,
-                                  ResultingWordEnd);
+            send_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL, resulting_word_start,
+                                      resulting_word_end);
             return true;
         }
     };
     return false;
 }
 
-void SpellChecker::ClearVisibleUnderlines() {
+void SpellChecker::clear_visible_underlines() {
     auto length =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLENGTH);
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
     if (length > 0) {
-        PostMsgToActiveEditor(GetCurrentScintilla(), SCI_SETINDICATORCURRENT,
-                              SCE_ERROR_UNDERLINE);
-        PostMsgToActiveEditor(GetCurrentScintilla(), SCI_INDICATORCLEARRANGE, 0,
-                              length);
+        post_msg_to_active_editor(get_current_scintilla(), SCI_SETINDICATORCURRENT,
+                                  SCE_ERROR_UNDERLINE);
+        post_msg_to_active_editor(get_current_scintilla(), SCI_INDICATORCLEARRANGE, 0,
+                                  length);
     }
 }
 
-void SpellChecker::CheckVisible(bool NotIntersectionOnly) {
-    VisibleText = GetVisibleText(&VisibleTextOffset, NotIntersectionOnly);
-    CheckText(VisibleText.data(), VisibleTextOffset, UNDERLINE_ERRORS);
+void SpellChecker::check_visible(bool not_intersection_only) {
+    m_visible_text = get_visible_text(&m_visible_text_offset, not_intersection_only);
+    check_text(m_visible_text.data(), m_visible_text_offset, CheckTextMode::underline_errors);
 }
 
-void SpellChecker::setEncodingById(int EncId) {
-    /*
-    int CCH;
-    char szCodePage[10];
-    char *FinalString;
-    */
-    switch (EncId) {
+void SpellChecker::set_encoding_by_id(int enc_id) {
+    switch (enc_id) {
     case SC_CP_UTF8:
-        CurrentEncoding = EncodingType::utf8;
-        // SetEncoding ("utf-8");
+        m_current_encoding = EncodingType::utf8;
         break;
     default:
         {
-            CurrentEncoding = EncodingType::ansi;
+            m_current_encoding = EncodingType::ansi;
         }
     }
-    HunspellSpeller->set_encoding(CurrentEncoding);
-    AspellSpeller->set_encoding(CurrentEncoding);
+    m_hunspell_speller->set_encoding(m_current_encoding);
+    m_aspell_speller->set_encoding(m_current_encoding);
 }
 
-void SpellChecker::SwitchAutoCheck() {
-    if (!SettingsLoaded)
+void SpellChecker::switch_auto_check() {
+    if (!m_settings_loaded)
         return;
-    AutoCheckText = !AutoCheckText;
-    UpdateAutocheckStatus();
-    RecheckVisibleBothViews();
+    m_auto_check_text = !m_auto_check_text;
+    update_autocheck_status();
+    recheck_visible_both_views();
 }
 
-void SpellChecker::RecheckModified() {
-    if (!CurrentSpeller->is_working()) {
-        ClearAllUnderlines();
+void SpellChecker::recheck_modified() {
+    if (!m_current_speller->is_working()) {
+        clear_all_underlines();
         return;
     }
 
-    auto FirstModifiedLine = SendMsgToActiveEditor(
-        GetCurrentScintilla(), SCI_LINEFROMPOSITION, ModifiedStart);
-    auto LastModifiedLine = SendMsgToActiveEditor(
-        GetCurrentScintilla(), SCI_LINEFROMPOSITION, ModifiedEnd);
-    auto LineCount =
-        SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLINECOUNT);
-    auto FirstPossiblyModifiedPos = SendMsgToActiveEditor(
-        GetCurrentScintilla(), SCI_POSITIONFROMLINE, FirstModifiedLine);
+    auto first_modified_line = send_msg_to_active_editor(
+        get_current_scintilla(), SCI_LINEFROMPOSITION, m_modified_start);
+    auto last_modified_line = send_msg_to_active_editor(
+        get_current_scintilla(), SCI_LINEFROMPOSITION, m_modified_end);
+    auto line_count =
+        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINECOUNT);
+    auto first_possibly_modified_pos = send_msg_to_active_editor(
+        get_current_scintilla(), SCI_POSITIONFROMLINE, first_modified_line);
 
-    LRESULT LastPossiblyModifiedPos;
-    if (LastModifiedLine + 1 < LineCount) {
-        LastPossiblyModifiedPos = SendMsgToActiveEditor(
-            GetCurrentScintilla(), SCI_POSITIONFROMLINE, LastModifiedLine + 1);
+    LRESULT last_possibly_modified_pos;
+    if (last_modified_line + 1 < line_count) {
+        last_possibly_modified_pos = send_msg_to_active_editor(
+            get_current_scintilla(), SCI_POSITIONFROMLINE, last_modified_line + 1);
     }
     else {
-        LastPossiblyModifiedPos =
-            SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLENGTH);
+        last_possibly_modified_pos =
+            send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
     }
 
-    Sci_TextRange Range;
-    Range.chrg.cpMin = static_cast<long>(FirstPossiblyModifiedPos);
-    Range.chrg.cpMax = static_cast<long>(LastPossiblyModifiedPos);
-    std::vector<char> buf(Range.chrg.cpMax - Range.chrg.cpMin + 1 + 1);
-    Range.lpstrText = buf.data();
-    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXTRANGE, 0, (LPARAM)&Range);
+    Sci_TextRange range;
+    range.chrg.cpMin = static_cast<long>(first_possibly_modified_pos);
+    range.chrg.cpMax = static_cast<long>(last_possibly_modified_pos);
+    std::vector<char> buf(range.chrg.cpMax - range.chrg.cpMin + 1 + 1);
+    range.lpstrText = buf.data();
+    send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, (LPARAM)&range);
 
-    CheckText(Range.lpstrText, static_cast<long>(FirstPossiblyModifiedPos),
-              UNDERLINE_ERRORS);
+    check_text(range.lpstrText, static_cast<long>(first_possibly_modified_pos),
+               CheckTextMode::underline_errors);
 }
 
-void SpellChecker::SetConversionOptions(bool ConvertYo,
-                                        bool ConvertSingleQuotesArg,
-                                        bool RemoveBoundaryApostrophesArg) {
-    IgnoreYo = ConvertYo;
-    ConvertSingleQuotes = ConvertSingleQuotesArg;
-    RemoveBoundaryApostrophes = RemoveBoundaryApostrophesArg;
+void SpellChecker::set_conversion_options(bool convert_yo,
+                                          bool convert_single_quotes_arg,
+                                          bool remove_boundary_apostrophes_arg) {
+    m_ignore_yo = convert_yo;
+    m_convert_single_quotes = convert_single_quotes_arg;
+    m_remove_boundary_apostrophes = remove_boundary_apostrophes_arg;
 }
 
-void SpellChecker::RecheckVisible(bool NotIntersectionOnly) {
-    int CodepageId;
-    if (!CurrentSpeller->is_working()) {
-        ClearAllUnderlines();
+void SpellChecker::recheck_visible(bool not_intersection_only) {
+    if (!m_current_speller->is_working()) {
+        clear_all_underlines();
         return;
     }
 
-    CodepageId = (int)SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETCODEPAGE,
-                                            0, 0);
-    setEncodingById(CodepageId); // For now it just changes should we convert it
+    int codepage_id = (int)send_msg_to_active_editor(get_current_scintilla(), SCI_GETCODEPAGE,
+                                                     0, 0);
+    set_encoding_by_id(codepage_id); // For now it just changes should we convert it
     // to utf-8 or no
-    if (CheckTextNeeded())
-        CheckVisible(NotIntersectionOnly);
+    if (check_text_needed())
+        check_visible(not_intersection_only);
     else
-        ClearAllUnderlines();
+        clear_all_underlines();
 }
 
-void SpellChecker::ErrorMsgBox(const wchar_t* message) {
+void SpellChecker::error_msg_box(const wchar_t* message) {
     wchar_t buf[DEFAULT_BUF_SIZE];
     swprintf_s(buf, L"DSpellCheck Error: %ws", message);
-    MessageBox(NppDataInstance->npp_handle, message, L"Error Happened!",
+    MessageBox(m_npp_data_instance->npp_handle, message, L"Error Happened!",
                MB_OK | MB_ICONSTOP);
 }
 
-void SpellChecker::copyMisspellingsToClipboard() {
-    auto lengthDoc =
-        (SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETLENGTH) + 1);
+void SpellChecker::copy_misspellings_to_clipboard() {
+    auto length_doc =
+        (send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH) + 1);
 
-    std::vector<char> buf(lengthDoc);
-    SendMsgToActiveEditor(GetCurrentScintilla(), SCI_GETTEXT, lengthDoc, reinterpret_cast<LPARAM>(buf.data()));
+    std::vector<char> buf(length_doc);
+    send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXT, length_doc, reinterpret_cast<LPARAM>(buf.data()));
 
     int res = 0;
     std::string str; // Yay for first use of std::stirng
     do {
-        res = CheckText(buf.data() + res, res, GET_FIRST);
+        res = check_text(buf.data() + res, res, CheckTextMode::get_first);
         if (res != -1) {
             str += std::string(buf.data() + res);
             str += "\n";
@@ -2000,14 +1995,14 @@ void SpellChecker::copyMisspellingsToClipboard() {
         while (*(buf.data() + res) == 0)
             res++;
 
-        if (res >= lengthDoc)
+        if (res >= length_doc)
             break;
     }
     while (true);
 
     std::wstring wchar_str;
 
-    switch (CurrentEncoding) {
+    switch (m_current_encoding) {
     case EncodingType::utf8:
         wchar_str = utf8_to_wstring(str.c_str());
         break;
@@ -2017,18 +2012,18 @@ void SpellChecker::copyMisspellingsToClipboard() {
     }
 
     const size_t len = (wchar_str.length() + 1) * 2;
-    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
-    memcpy(GlobalLock(hMem), wchar_str.c_str(), len);
-    GlobalUnlock(hMem);
+    HGLOBAL h_mem = GlobalAlloc(GMEM_MOVEABLE, len);
+    memcpy(GlobalLock(h_mem), wchar_str.c_str(), len);
+    GlobalUnlock(h_mem);
     OpenClipboard(nullptr);
     EmptyClipboard();
-    SetClipboardData(CF_UNICODETEXT, hMem);
+    SetClipboardData(CF_UNICODETEXT, h_mem);
     CloseClipboard();
 }
 
-SuggestionsMenuItem::SuggestionsMenuItem(const wchar_t* TextArg, int IdArg,
-                                         bool SeparatorArg /*= false*/) {
-    Text = TextArg;
-    Id = static_cast<BYTE>(IdArg);
-    Separator = SeparatorArg;
+SuggestionsMenuItem::SuggestionsMenuItem(const wchar_t* text_arg, int id_arg,
+                                         bool separator_arg /*= false*/) {
+    text = text_arg;
+    id = static_cast<BYTE>(id_arg);
+    separator = separator_arg;
 }

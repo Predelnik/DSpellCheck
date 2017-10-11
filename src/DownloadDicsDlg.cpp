@@ -120,13 +120,13 @@ bool DownloadDicsDlg::prepare_downloading() {
     }
     m_cancel_pressed = false;
     ProgressDlg* p = get_progress();
-    p->getProgressData()->set(0, L"");
+    p->get_progress_data()->set(0, L"");
     get_progress()->update();
-    p->SetTopMessage(L"");
+    p->set_top_message(L"");
     if (!check_for_directory_existence(
-        m_spell_checker_instance->GetInstallSystem()
-            ? m_spell_checker_instance->GetHunspellAdditionalPath()
-            : m_spell_checker_instance->GetHunspellPath(),
+        m_spell_checker_instance->get_install_system()
+            ? m_spell_checker_instance->get_hunspell_additional_path()
+            : m_spell_checker_instance->get_hunspell_path(),
         false, _hParent)) // If path doesn't exist we're gonna try to create it
         // else it's finish
     {
@@ -172,11 +172,11 @@ void DownloadDicsDlg::finalize_downloading() {
     }
     for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
         CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);
-    m_spell_checker_instance->HunspellReinitSettings(
+    m_spell_checker_instance->hunspell_reinit_settings(
         true); // Calling the update for Hunspell dictionary list
-    m_spell_checker_instance->ReinitLanguageLists(true);
-    m_spell_checker_instance->DoPluginMenuInclusion();
-    m_spell_checker_instance->RecheckVisibleBothViews();
+    m_spell_checker_instance->reinit_language_lists(true);
+    m_spell_checker_instance->do_plugin_menu_inclusion();
+    m_spell_checker_instance->recheck_visible_both_views();
 }
 
 static const auto buf_size_for_copy = 10240;
@@ -222,7 +222,7 @@ void DownloadDicsDlg::on_file_downloaded() {
                 continue;
 
             swprintf(prog_message, L"Extracting %s...", dic_file_name.c_str());
-            get_progress()->SetTopMessage(prog_message);
+            get_progress()->set_top_message(prog_message);
             DWORD bytes_total = 0;
             int bytes_copied;
             std::vector<char> file_copy_buf(buf_size_for_copy);
@@ -233,7 +233,7 @@ void DownloadDicsDlg::on_file_downloaded() {
                 swprintf(prog_message, L"%d / %d bytes extracted (%d %%)",
                          bytes_total, f_info.uncompressed_size,
                          bytes_total * 100 / f_info.uncompressed_size);
-                get_progress()->getProgressData()->set(bytes_total * 100 / f_info.uncompressed_size, prog_message);
+                get_progress()->get_progress_data()->set(bytes_total * 100 / f_info.uncompressed_size, prog_message);
             }
             unzCloseCurrentFile(fp);
             _close(local_dic_file_handle);
@@ -264,9 +264,9 @@ void DownloadDicsDlg::on_file_downloaded() {
             auto dic_file_local_path = get_temp_path();
             (dic_file_local_path += file_name) += L".aff";
             std::wstring hunspell_dic_path =
-                m_spell_checker_instance->GetInstallSystem()
-                    ? m_spell_checker_instance->GetHunspellAdditionalPath()
-                    : m_spell_checker_instance->GetHunspellPath();
+                m_spell_checker_instance->get_install_system()
+                    ? m_spell_checker_instance->get_hunspell_additional_path()
+                    : m_spell_checker_instance->get_hunspell_path();
             hunspell_dic_path += L"\\";
             hunspell_dic_path += file_name;
             hunspell_dic_path += L".aff";
@@ -349,7 +349,7 @@ void DownloadDicsDlg::start_next_download() {
     if (m_cur == m_to_download.end() || m_cancel_pressed)
         return finalize_downloading();
 
-    get_progress()->SetTopMessage(wstring_printf(L"Downloading %s...", m_cur->file_name.c_str()).c_str());
+    get_progress()->set_top_message(wstring_printf(L"Downloading %s...", m_cur->file_name.c_str()).c_str());
     if (PathFileExists(m_cur->target_path.c_str())) {
         SetFileAttributes(m_cur->target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
         DeleteFile(m_cur->target_path.c_str());
@@ -390,14 +390,14 @@ void DownloadDicsDlg::update_list_box() {
 
     m_current_langs_filtered.clear();
     for (auto& lang : m_current_langs) {
-        if (m_spell_checker_instance->GetShowOnlyKnown() &&
+        if (m_spell_checker_instance->get_show_only_known() &&
             !lang.alias_applied)
             continue;
         m_current_langs_filtered.push_back(lang);
     }
     ListBox_ResetContent(m_h_file_list);
     for (auto& lang : m_current_langs_filtered) {
-        ListBox_AddString(m_h_file_list, m_spell_checker_instance->GetDecodeNames()
+        ListBox_AddString(m_h_file_list, m_spell_checker_instance->get_decode_names()
             ? lang.alias_name.c_str ()
             : lang.orig_name.c_str ());
     }
@@ -663,7 +663,7 @@ std::optional<FtpWebOperationError> do_download_file_web_proxy(FtpOperationParam
     if (!file_handle)
         return FtpWebOperationError{FtpWebOperationErrorType::file_is_not_writeable, -1};
 
-    get_progress()->SetMarquee(true);
+    get_progress()->set_marquee(true);
     while (true) {
         if (token.is_canceled()) {
             _close(file_handle);
@@ -721,7 +721,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring>& list) {
         return update_status(L"Status: Directory doesn't contain any zipped files", COLOR_WARN);
     }
 
-    std::sort(m_current_langs.begin(), m_current_langs.end(), [decode = m_spell_checker_instance->GetDecodeNames()]
+    std::sort(m_current_langs.begin(), m_current_langs.end(), [decode = m_spell_checker_instance->get_decode_names()]
           (const auto& lhs, const auto& rhs)
               {
                   return decode ? less_aliases(lhs, rhs) : less_original(lhs, rhs);
@@ -729,7 +729,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring>& list) {
     update_list_box(); // Used only here and on filter change
     // If it is success when we perhaps should add this address to our list.
     if (m_check_if_saving_is_needed) {
-        m_spell_checker_instance->addUserServer(*current_address());
+        m_spell_checker_instance->add_user_server(*current_address());
     }
     update_status(L"Status: List of available files was successfully loaded", COLOR_OK);
     EnableWindow(m_h_install_selected, true);
@@ -779,12 +779,12 @@ void DownloadDicsDlg::prepare_file_list_update() {
 FtpOperationParams DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring& full_path) {
     FtpOperationParams params;
     std::tie(params.address, params.path) = ftp_split(full_path);
-    params.use_proxy = m_spell_checker_instance->GetUseProxy();
-    params.proxy_port = m_spell_checker_instance->GetProxyPort();
-    params.proxy_address = m_spell_checker_instance->GetProxyHostName();
-    params.anonymous = m_spell_checker_instance->GetProxyAnonymous();
-    params.proxy_username = m_spell_checker_instance->GetProxyUserName();
-    params.proxy_password = m_spell_checker_instance->GetProxyPassword();
+    params.use_proxy = m_spell_checker_instance->get_use_proxy();
+    params.proxy_port = m_spell_checker_instance->get_proxy_port();
+    params.proxy_address = m_spell_checker_instance->get_proxy_host_name();
+    params.anonymous = m_spell_checker_instance->get_proxy_anonymous();
+    params.proxy_username = m_spell_checker_instance->get_proxy_user_name();
+    params.proxy_password = m_spell_checker_instance->get_proxy_password();
     return params;
 }
 
@@ -822,7 +822,7 @@ void DownloadDicsDlg::update_file_list_async(const std::wstring& full_path) {
 
 void DownloadDicsDlg::download_file_async(const std::wstring& full_path, const std::wstring& target_location) {
     m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location,
-                                         progressData = get_progress()->getProgressData()](auto token)
+                                         progressData = get_progress()->get_progress_data()](auto token)
                                      {
                                          return do_download_file(params, target_location, progressData, token);
                                      }, [this](std::optional<FtpOperationErrorType>)
@@ -835,7 +835,7 @@ void DownloadDicsDlg::download_file_async(const std::wstring& full_path, const s
 void DownloadDicsDlg::
 download_file_async_web_proxy(const std::wstring& full_path, const std::wstring& target_location) {
     m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location,
-                                         progressData = get_progress()->getProgressData()](auto token)
+                                         progressData = get_progress()->get_progress_data()](auto token)
                                      {
                                          return do_download_file_web_proxy(
                                              params, target_location, progressData, token);
@@ -847,8 +847,8 @@ download_file_async_web_proxy(const std::wstring& full_path, const std::wstring&
 
 void DownloadDicsDlg::do_ftp_operation(FtpOperationType type, const std::wstring& full_path,
                                        const std::wstring& file_name, const std::wstring& location) {
-    if (m_spell_checker_instance->GetUseProxy() &&
-        m_spell_checker_instance->GetProxyType() == 0)
+    if (m_spell_checker_instance->get_use_proxy() &&
+        m_spell_checker_instance->get_proxy_type() == 0)
         switch (type) {
         case FtpOperationType::fill_file_list: return update_file_list_async_web_proxy(full_path);
         case FtpOperationType::download_file: return download_file_async_web_proxy(full_path + file_name, location);
@@ -880,8 +880,8 @@ void DownloadDicsDlg::set_options(bool show_only_known, bool install_system) {
 }
 
 void DownloadDicsDlg::update_options(SpellChecker* spellchecker) {
-    spellchecker->SetShowOnlyKnow(Button_GetCheck(m_h_show_only_known) == BST_CHECKED);
-    spellchecker->SetInstallSystem(Button_GetCheck(m_h_install_system) ==
+    spellchecker->set_show_only_know(Button_GetCheck(m_h_show_only_known) == BST_CHECKED);
+    spellchecker->set_install_system(Button_GetCheck(m_h_install_system) ==
         BST_CHECKED);
 }
 
@@ -902,8 +902,8 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
             m_refresh_icon = (HICON)LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH),
                                               IMAGE_ICON, 16, 16, 0);
             SendMessage(m_h_refresh, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)m_refresh_icon);
-            get_spell_checker()->ResetDownloadCombobox();
-            get_spell_checker()->fillDownloadDicsDialog();
+            get_spell_checker()->reset_download_combobox();
+            get_spell_checker()->fill_download_dics_dialog();
             m_default_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
         }
         return true;
@@ -913,7 +913,7 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
             case IDOK:
                 if (HIWORD(w_param) == BN_CLICKED) {
                     download_selected();
-                    get_progress()->DoDialog();
+                    get_progress()->do_dialog();
                     display(false);
                 }
                 break;
@@ -933,7 +933,7 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                         CreateTimerQueueTimer(&m_timer, nullptr, reinit_server, this, 1000, 0, 0);
                 }
                 else if (HIWORD(w_param) == CBN_SELCHANGE) {
-                    get_spell_checker()->updateFromDownloadDicsOptionsNoUpdate();
+                    get_spell_checker()->update_from_download_dics_options_no_update();
                     reinit_server(this, false);
                     m_check_if_saving_is_needed = 0;
                 }
@@ -945,12 +945,12 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                 break;
             case IDC_INSTALL_SYSTEM:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    get_spell_checker()->updateFromDownloadDicsOptionsNoUpdate();
+                    get_spell_checker()->update_from_download_dics_options_no_update();
                 }
                 break;
             case IDC_SHOWONLYKNOWN:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    get_spell_checker()->updateFromDownloadDicsOptions();
+                    get_spell_checker()->update_from_download_dics_options();
                 }
                 break;
             case IDC_SELECTPROXY:

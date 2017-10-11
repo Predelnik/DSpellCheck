@@ -33,5 +33,5 @@ protected:
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;  // NOLINT
 
 protected:
-  HWND HLangList = nullptr;
+  HWND m_h_lang_list = nullptr;
 };

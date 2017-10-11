@@ -21,11 +21,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Plugin.h"
 #include "resource.h"
-#include "CommonFunctions.h"
 #include "DownloadDicsDlg.h"
 #include "ProgressData.h"
 
-void ProgressDlg::DoDialog() {
+void ProgressDlg::do_dialog() {
   if (!isCreated()) {
     create(IDD_DIALOGPROGRESS);
   } else {
@@ -34,23 +33,23 @@ void ProgressDlg::DoDialog() {
   }
 }
 
-void ProgressDlg::init(HINSTANCE hInst, HWND Parent) {
-  return Window::init(hInst, Parent);
+void ProgressDlg::init(HINSTANCE h_inst, HWND parent) {
+  return Window::init(h_inst, parent);
 }
 
-INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM /*lParam*/) {
+INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {
-    HDescTop = GetDlgItem(_hSelf, IDC_DESCTOP);
-    HDescBottom = GetDlgItem(_hSelf, IDC_DESCBOTTOM);
-    HProgressBar = GetDlgItem(_hSelf, IDC_PROGRESSBAR);
-    SendMessage(HProgressBar, PBM_SETRANGE, 0, (LPARAM)MAKELONG(0, 100));
+    m_h_desc_top = GetDlgItem(_hSelf, IDC_DESCTOP);
+    m_h_desc_bottom = GetDlgItem(_hSelf, IDC_DESCBOTTOM);
+    m_h_progress_bar = GetDlgItem(_hSelf, IDC_PROGRESSBAR);
+    SendMessage(m_h_progress_bar, PBM_SETRANGE, 0, (LPARAM)MAKELONG(0, 100));
     return true;
-  } break;
+  }
   case WM_COMMAND:
-    switch (LOWORD(wParam)) {
+    switch (LOWORD(w_param)) {
     case IDC_STOP:
-      if (HIWORD(wParam) == BN_CLICKED) {
+      if (HIWORD(w_param) == BN_CLICKED) {
         get_download_dics()->set_cancel_pressed(true);
       }
       break;
@@ -61,31 +60,31 @@ INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM wParam, LPARAM /*lParam*/
 }
 
 
-void ProgressDlg::SetMarquee(bool animated) {
+void ProgressDlg::set_marquee(bool animated) {
   if (m_marquee == animated)
      return;
   m_marquee = animated;
-  DWORD dwStyle = ::GetWindowLong(HProgressBar, GWL_STYLE);
+  DWORD dw_style = ::GetWindowLong(m_h_progress_bar, GWL_STYLE);
   if (animated)
-    dwStyle = dwStyle | PBS_MARQUEE;
+    dw_style = dw_style | PBS_MARQUEE;
   else
-    dwStyle = dwStyle & (~PBS_MARQUEE);
+    dw_style = dw_style & (~PBS_MARQUEE);
 
-  ::SetWindowLong(HProgressBar, GWL_STYLE, dwStyle);
-  SendMessage(HProgressBar, PBM_SETMARQUEE, (int)animated, 0);
+  ::SetWindowLong(m_h_progress_bar, GWL_STYLE, dw_style);
+  SendMessage(m_h_progress_bar, PBM_SETMARQUEE, (int)animated, 0);
 }
 
 void ProgressDlg::update() {
-    SendMessage(HProgressBar, PBM_SETPOS, m_progressData->get_progress(), 0);
-    Static_SetText(HDescBottom, m_progressData->get_status().c_str ());
-    SetMarquee (m_progressData->get_marquee());
-    Static_SetText (HDescTop, m_topMessage.c_str ());
+    SendMessage(m_h_progress_bar, PBM_SETPOS, m_progress_data->get_progress(), 0);
+    Static_SetText(m_h_desc_bottom, m_progress_data->get_status().c_str ());
+    set_marquee (m_progress_data->get_marquee());
+    Static_SetText (m_h_desc_top, m_top_message.c_str ());
 }
 
-void ProgressDlg::SetTopMessage(const wchar_t* Message) {
-  m_topMessage = Message;
+void ProgressDlg::set_top_message(const wchar_t* message) {
+  m_top_message = message;
 }
 
-ProgressDlg::ProgressDlg() : m_progressData(std::make_shared<ProgressData> ()) {}
+ProgressDlg::ProgressDlg() : m_progress_data(std::make_shared<ProgressData> ()) {}
 
 ProgressDlg::~ProgressDlg() {}

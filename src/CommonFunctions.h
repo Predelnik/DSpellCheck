@@ -77,15 +77,15 @@ std::wstring read_ini_value(const wchar_t* app_name, const wchar_t* key_name, co
                           const wchar_t* file_name);
 
 class MoveOnlyFlag {
-    using self = MoveOnlyFlag;
+    using Self = MoveOnlyFlag;
 public:
     MoveOnlyFlag () {}
-    static self create_valid () { self out; out.m_valid = true; return out; }
+    static Self create_valid () { Self out; out.m_valid = true; return out; }
     void make_valid () { m_valid = true; }
-    MoveOnlyFlag (self &&other) noexcept : m_valid (other.m_valid) { other.m_valid = false;}
-    self &operator= (self &&other) noexcept { m_valid = other.m_valid; other.m_valid = false; return *this; }
-    MoveOnlyFlag (const self &) = delete;
-    self &operator= (const self &other) = delete;
+    MoveOnlyFlag (Self &&other) noexcept : m_valid (other.m_valid) { other.m_valid = false;}
+    Self &operator= (Self &&other) noexcept { m_valid = other.m_valid; other.m_valid = false; return *this; }
+    MoveOnlyFlag (const Self &) = delete;
+    Self &operator= (const Self &other) = delete;
     bool is_valid () const { return m_valid; }
 private:
     bool m_valid = false;

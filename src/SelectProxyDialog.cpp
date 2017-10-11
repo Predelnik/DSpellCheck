@@ -35,16 +35,16 @@ void SelectProxyDialog::do_dialog() {
 }
 
 void SelectProxyDialog::apply_choice(SpellChecker *spell_checker_instance) {
-  spell_checker_instance->SetProxyUserName (get_edit_text(m_user_name).c_str ());
-  spell_checker_instance->SetProxyHostName (get_edit_text (m_host_name).c_str ());
-  spell_checker_instance->SetProxyPassword (get_edit_text (m_password).c_str ());
-  spell_checker_instance->SetUseProxy(Button_GetCheck(m_use_proxy) == BST_CHECKED);
-  spell_checker_instance->SetProxyAnonymous(Button_GetCheck(m_proxy_anonymous) == BST_CHECKED);
-  spell_checker_instance->SetProxyType(ComboBox_GetCurSel(m_proxy_type));
+  spell_checker_instance->set_proxy_user_name (get_edit_text(m_user_name).c_str ());
+  spell_checker_instance->set_proxy_host_name (get_edit_text (m_host_name).c_str ());
+  spell_checker_instance->set_proxy_password (get_edit_text (m_password).c_str ());
+  spell_checker_instance->set_use_proxy(Button_GetCheck(m_use_proxy) == BST_CHECKED);
+  spell_checker_instance->set_proxy_anonymous(Button_GetCheck(m_proxy_anonymous) == BST_CHECKED);
+  spell_checker_instance->set_proxy_type(ComboBox_GetCurSel(m_proxy_type));
   auto text = get_edit_text (m_port);
   wchar_t *end_ptr;
   int x = wcstol(text.c_str(), &end_ptr, 10);
-  spell_checker_instance->SetProxyPort(x);
+  spell_checker_instance->set_proxy_port(x);
   get_download_dics()->refresh();
 }
 
@@ -102,20 +102,20 @@ INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
     m_proxy_type = ::GetDlgItem(_hSelf, IDC_PROXY_TYPE);
     ComboBox_AddString(m_proxy_type, L"FTP Web Proxy");
     ComboBox_AddString(m_proxy_type, L"FTP Gateway");
-    get_spell_checker ()->updateSelectProxy();
+    get_spell_checker ()->update_select_proxy();
     return true;
   }
   case WM_COMMAND: {
     switch (LOWORD(w_param)) {
     case IDOK:
       if (HIWORD(w_param) == BN_CLICKED) {
-        get_spell_checker()->applyProxySettings ();
+        get_spell_checker()->apply_proxy_settings ();
         display(false);
       }
       break;
     case IDCANCEL:
       if (HIWORD(w_param) == BN_CLICKED) {
-        get_spell_checker ()->updateSelectProxy(); // Reset all settings
+        get_spell_checker ()->update_select_proxy(); // Reset all settings
         display(false);
       }
       break;

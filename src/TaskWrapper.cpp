@@ -1,6 +1,6 @@
 #include "TaskWrapper.h"
 
-TaskWrapper::TaskWrapper(HWND targetHwnd): m_target_hwnd(targetHwnd)  {
+TaskWrapper::TaskWrapper(HWND target_hwnd): m_target_hwnd(target_hwnd)  {
 }
 
 TaskWrapper::~TaskWrapper() {

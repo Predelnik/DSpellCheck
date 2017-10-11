@@ -133,7 +133,7 @@ bool are_paths_equal(const wchar_t* path1, const wchar_t* path2) {
         bhfi1.nFileIndexLow == bhfi2.nFileIndexLow;
 }
 
-static void write_user_dic(word_set* target, std::wstring path) {
+static void write_user_dic(WordSet* target, std::wstring path) {
 
     if (target->size() == 0) {
         SetFileAttributes(path.c_str(), FILE_ATTRIBUTE_NORMAL);
@@ -141,7 +141,7 @@ static void write_user_dic(word_set* target, std::wstring path) {
         return;
     }
 
-    sorted_word_set temporary_sorted_word_set;
+    SortedWordSet temporary_sorted_word_set;
     // Wordset itself
     // being removed here as local variable, all strings are not copied
 
@@ -161,7 +161,7 @@ static void write_user_dic(word_set* target, std::wstring path) {
             temporary_sorted_word_set.insert(word);
         }
     }
-    sorted_word_set::iterator it = temporary_sorted_word_set.begin();
+    SortedWordSet::iterator it = temporary_sorted_word_set.begin();
     for (; it != temporary_sorted_word_set.end(); ++it) {
         fprintf(fp, "%s\n", it->c_str());
     }
@@ -340,7 +340,7 @@ bool HunspellInterface::check_word(const char* word) {
     return res;
 }
 
-void HunspellInterface::read_user_dic(word_set* target, const wchar_t* path) {
+void HunspellInterface::read_user_dic(WordSet* target, const wchar_t* path) {
     int word_num = 0;
     FILE * fp = _wfopen(path, L"r");
     if (!fp) {
@@ -460,7 +460,7 @@ void HunspellInterface::ignore_all(const char* word) {
 namespace
 {
     class HunspellSuggestions {
-        using self = HunspellSuggestions;
+        using Self = HunspellSuggestions;
     public:
         HunspellSuggestions(Hunspell* hunspell, const char* word) :
             m_hunspell(hunspell) {
@@ -472,8 +472,8 @@ namespace
         HunspellSuggestions() {
         }
 
-        HunspellSuggestions(self&&) = default;
-        self& operator=(self&&) = default;
+        HunspellSuggestions(Self&&) = default;
+        Self& operator=(Self&&) = default;
 
         ~HunspellSuggestions() {
             if (m_flag.is_valid() && m_list)

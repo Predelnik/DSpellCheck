@@ -106,12 +106,12 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
     case WM_LBUTTONUP:
         if (!m_state_pressed)
             return false;
-        get_spell_checker()->showSuggestionMenu();
+        get_spell_checker()->show_suggestion_menu();
         return false;
 
     case WM_MOUSEWHEEL:
         ShowWindow(_hSelf, SW_HIDE);
-        PostMessage(GetScintillaWindow(&m_npp_data_instance), message, w_param, l_param);
+        PostMessage(get_scintilla_window(&m_npp_data_instance), message, w_param, l_param);
         return false;
 
     case WM_PAINT:
@@ -158,7 +158,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
             m_menu_result = TrackPopupMenuEx(m_popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
                                              p.x, p.y, _hSelf, &tpm_params);
             PostMessage(m_npp_data_instance.npp_handle, WM_NULL, 0, 0);
-            SetFocus(GetScintillaWindow(&m_npp_data_instance));
+            SetFocus(get_scintilla_window(&m_npp_data_instance));
             m_state_menu = false;
             DestroyMenu(m_popup_menu);
             m_popup_menu = CreatePopupMenu();
@@ -167,7 +167,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
 
     case WM_COMMAND:
         if (HIWORD(w_param) == 0)
-            get_spell_checker()->ProcessMenuResult(w_param);
+            get_spell_checker()->process_menu_result(w_param);
 
         return false;
 

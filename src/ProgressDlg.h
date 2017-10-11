@@ -27,19 +27,19 @@ public:
   ProgressDlg();
   ~ProgressDlg();
 
-  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) override; // NOLINT
-  void init(HINSTANCE hInst, HWND Parent) override;
-  void DoDialog();
-  void SetTopMessage(const wchar_t* Message);
-  void SetMarquee(bool animated);
-  std::shared_ptr<ProgressData> getProgressData () { return m_progressData; }
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override; // NOLINT
+  void init(HINSTANCE h_inst, HWND parent) override;
+  void do_dialog();
+  void set_top_message(const wchar_t* message);
+  void set_marquee(bool animated);
+  std::shared_ptr<ProgressData> get_progress_data () { return m_progress_data; }
   void update();
 
 private:
-  std::shared_ptr<ProgressData> m_progressData;
-  HWND HDescBottom = nullptr;
-  HWND HDescTop = nullptr;
-  HWND HProgressBar = nullptr;
+  std::shared_ptr<ProgressData> m_progress_data;
+  HWND m_h_desc_bottom = nullptr;
+  HWND m_h_desc_top = nullptr;
+  HWND m_h_progress_bar = nullptr;
   bool m_marquee = false;
-  std::wstring m_topMessage;
+  std::wstring m_top_message;
 };

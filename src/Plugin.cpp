@@ -80,7 +80,7 @@ HHOOK h_mouse_hook = nullptr;
 LRESULT CALLBACK mouse_proc(int n_code, WPARAM w_param, LPARAM l_param) {
     switch (w_param) {
     case WM_MOUSEMOVE:
-        get_spell_checker()->InitSuggestionsBox();
+        get_spell_checker()->init_suggestions_box();
         break;
     }
     return CallNextHookEx(h_mouse_hook, n_code, w_param, l_param);;
@@ -164,7 +164,7 @@ DWORD get_custom_gui_message_id(CustomGuiMessage message_id) {
     return custom_gui_message_ids[static_cast<int>(message_id)];
 }
 
-void switch_auto_check_text() { get_spell_checker()->SwitchAutoCheck(); }
+void switch_auto_check_text() { get_spell_checker()->switch_auto_check(); }
 
 void get_suggestions() {
     // SendEvent (EID_INITSUGGESTIONS);
@@ -182,13 +182,13 @@ void start_about_dlg() { about_dlg->do_dialog(); }
 
 void start_language_list() { lang_list_instance->do_dialog(); }
 
-void load_settings() { get_spell_checker()->LoadSettings(); }
+void load_settings() { get_spell_checker()->load_settings(); }
 
-void recheck_visible() { get_spell_checker()->RecheckVisible(); }
+void recheck_visible() { get_spell_checker()->recheck_visible(); }
 
-void find_next_mistake() { get_spell_checker()->FindNextMistake(); }
+void find_next_mistake() { get_spell_checker()->find_next_mistake(); }
 
-void find_prev_mistake() { get_spell_checker()->FindPrevMistake(); }
+void find_prev_mistake() { get_spell_checker()->find_prev_mistake(); }
 
 void quick_lang_change_context() {
     POINT pos;
@@ -285,7 +285,7 @@ void add_icons() {
 }
 
 void update_langs_menu() {
-    get_spell_checker()->DoPluginMenuInclusion();
+    get_spell_checker()->do_plugin_menu_inclusion();
 }
 
 static std::wstring get_menu_item_text(HMENU menu, UINT index) {
@@ -390,7 +390,7 @@ static int counter = 0;
 
 std::vector<std::unique_ptr<ShortcutKey>> shortcut_storage;
 
-bool set_next_command(const wchar_t* cmd_name, pfuncplugincmd p_func, std::unique_ptr<ShortcutKey> sk,
+bool set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func, std::unique_ptr<ShortcutKey> sk,
                     bool check0_n_init) {
     if (counter >= nb_func)
         return false;

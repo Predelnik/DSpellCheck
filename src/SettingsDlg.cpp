@@ -39,7 +39,7 @@ SimpleDlg::SimpleDlg() : StaticDialog()
 {
     m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
     if (m_h_ux_theme)
-        m_open_theme_data = (otd_proc)::GetProcAddress(m_h_ux_theme, "OpenThemeData");
+        m_open_theme_data = (OtdProc)::GetProcAddress(m_h_ux_theme, "OpenThemeData");
 }
 
 void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data)
@@ -161,9 +161,9 @@ SimpleDlg::~SimpleDlg()
 
 void SimpleDlg::apply_lib_change(SpellChecker* spell_checker_instance)
 {
-    spell_checker_instance->SetLibMode(get_selected_lib());
-    spell_checker_instance->ReinitLanguageLists(true);
-    spell_checker_instance->DoPluginMenuInclusion();
+    spell_checker_instance->set_lib_mode(get_selected_lib());
+    spell_checker_instance->reinit_language_lists(true);
+    spell_checker_instance->do_plugin_menu_inclusion();
 }
 
 // Called from main thread, beware!
@@ -177,39 +177,39 @@ void SimpleDlg::apply_settings(SpellChecker* spell_checker_instance)
         if (cur_sel == lang_count - 1)
         {
             if (get_selected_lib())
-                spell_checker_instance->SetHunspellLanguage(L"<MULTIPLE>");
+                spell_checker_instance->set_hunspell_language(L"<MULTIPLE>");
             else
-                spell_checker_instance->SetAspellLanguage(L"<MULTIPLE>");
+                spell_checker_instance->set_aspell_language(L"<MULTIPLE>");
         }
         else
         {
             if (get_selected_lib() == 0)
-                spell_checker_instance->SetAspellLanguage(
-                    spell_checker_instance->GetLangByIndex(cur_sel));
+                spell_checker_instance->set_aspell_language(
+                    spell_checker_instance->get_lang_by_index(cur_sel));
             else
-                spell_checker_instance->SetHunspellLanguage(
-                    spell_checker_instance->GetLangByIndex(cur_sel));
+                spell_checker_instance->set_hunspell_language(
+                    spell_checker_instance->get_lang_by_index(cur_sel));
         }
     }
-    spell_checker_instance->RecheckVisible();
-    spell_checker_instance->SetSuggestionsNum(_wtoi(get_edit_text (m_h_suggestions_num).c_str ()));
+    spell_checker_instance->recheck_visible();
+    spell_checker_instance->set_suggestions_num(_wtoi(get_edit_text (m_h_suggestions_num).c_str ()));
     if (get_selected_lib() == 0)
-        spell_checker_instance->SetAspellPath(get_edit_text (m_h_lib_path).c_str ());
+        spell_checker_instance->set_aspell_path(get_edit_text (m_h_lib_path).c_str ());
     else
     {
-        spell_checker_instance->SetHunspellPath(get_edit_text (m_h_lib_path).c_str ());
-        spell_checker_instance->SetHunspellAdditionalPath(get_edit_text (m_h_system_path).c_str ());
+        spell_checker_instance->set_hunspell_path(get_edit_text (m_h_lib_path).c_str ());
+        spell_checker_instance->set_hunspell_additional_path(get_edit_text (m_h_system_path).c_str ());
     }
 
-    spell_checker_instance->SetCheckThose(
+    spell_checker_instance->set_check_those(
         Button_GetCheck(m_h_check_only_those) == BST_CHECKED ? 1 : 0);
-    spell_checker_instance->SetFileTypes(get_edit_text (m_h_file_types).c_str ());
-    spell_checker_instance->SetSuggType(ComboBox_GetCurSel(m_h_sugg_type));
-    spell_checker_instance->SetCheckComments(Button_GetCheck(m_h_check_comments) ==
+    spell_checker_instance->set_file_types(get_edit_text (m_h_file_types).c_str ());
+    spell_checker_instance->set_sugg_type(ComboBox_GetCurSel(m_h_sugg_type));
+    spell_checker_instance->set_check_comments(Button_GetCheck(m_h_check_comments) ==
         BST_CHECKED);
-    spell_checker_instance->SetDecodeNames(Button_GetCheck(m_h_decode_names) ==
+    spell_checker_instance->set_decode_names(Button_GetCheck(m_h_decode_names) ==
         BST_CHECKED);
-    spell_checker_instance->SetOneUserDic(Button_GetCheck(m_h_one_user_dic) ==
+    spell_checker_instance->set_one_user_dic(Button_GetCheck(m_h_one_user_dic) ==
         BST_CHECKED);
     update_langs_menu();
 }
@@ -424,7 +424,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             case IDC_LIBRARY:
                 if (HIWORD(w_param) == CBN_SELCHANGE)
                 {
-                    get_spell_checker()->libChange();
+                    get_spell_checker()->lib_change();
                 }
                 break;
             case IDC_HUNSPELL_PATH_TYPE:
@@ -770,7 +770,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
         {
         case IDC_DEFAULT_DELIMITERS:
             if (HIWORD(w_param) == BN_CLICKED)
-                get_spell_checker()->SetDefaultDelimiters();
+                get_spell_checker()->set_default_delimiters();
             return true;
         case IDC_RECHECK_DELAY:
             if (HIWORD(w_param) == EN_CHANGE)
@@ -858,17 +858,17 @@ int AdvancedDlg::get_recheck_delay()
 // Called from main thread, beware!
 void AdvancedDlg::apply_settings(SpellChecker* spell_checker_instance)
 {
-    spell_checker_instance->SetDelimiters(to_utf8_string(get_edit_text (m_h_edit_delimiters).c_str ()).c_str ());
-    spell_checker_instance->SetConversionOptions(
+    spell_checker_instance->set_delimiters(to_utf8_string(get_edit_text (m_h_edit_delimiters).c_str ()).c_str ());
+    spell_checker_instance->set_conversion_options(
         Button_GetCheck(m_h_ignore_yo) == BST_CHECKED ? true : false,
         Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED ? true : false,
         Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED
             ? true
             : false);
-    spell_checker_instance->SetUnderlineColor(m_underline_color_btn);
-    spell_checker_instance->SetUnderlineStyle(ComboBox_GetCurSel(m_h_underline_style));
-    spell_checker_instance->setRecheckDelay(get_recheck_delay());
-    spell_checker_instance->SetIgnore(
+    spell_checker_instance->set_underline_color(m_underline_color_btn);
+    spell_checker_instance->set_underline_style(ComboBox_GetCurSel(m_h_underline_style));
+    spell_checker_instance->set_recheck_delay(get_recheck_delay());
+    spell_checker_instance->set_ignore(
         Button_GetCheck(m_h_ignore_numbers) == BST_CHECKED,
         Button_GetCheck(m_h_ignore_c_start) == BST_CHECKED,
         Button_GetCheck(m_h_ignore_c_have) == BST_CHECKED,
@@ -876,13 +876,13 @@ void AdvancedDlg::apply_settings(SpellChecker* spell_checker_instance)
         Button_GetCheck(m_h_ignore_) == BST_CHECKED,
         Button_GetCheck(m_h_ignore_se_apostrophe) == BST_CHECKED,
         Button_GetCheck(m_h_ignore_one_letter) == BST_CHECKED);
-    spell_checker_instance->SetSuggBoxSettings(
+    spell_checker_instance->set_sugg_box_settings(
         static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0)),
         static_cast<int>(SendMessage(m_h_slider_transparency, TBM_GETPOS, 0, 0)));
     wchar_t* end_ptr;
     auto text = get_edit_text (m_h_buffer_size);
     int x = wcstol(text.c_str (), &end_ptr, 10);
-    spell_checker_instance->SetBufferSize(x);
+    spell_checker_instance->set_buffer_size(x);
     get_download_dics()->update_list_box();
 }
 
@@ -905,7 +905,7 @@ void SettingsDlg::destroy()
 // Send appropriate event and set some npp thread properties
 void SettingsDlg::apply_settings()
 {
-    get_spell_checker()->applySettings();
+    get_spell_checker()->apply_settings();
 }
 
 INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
@@ -944,7 +944,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             if (enable_dlg_theme)
                 enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 
-            get_spell_checker()->FillDialogs();
+            get_spell_checker()->fill_dialogs();
 
             return true;
         }
@@ -976,7 +976,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             {
             case 0: // Menu
                 {
-                    get_spell_checker()->copyMisspellingsToClipboard();
+                    get_spell_checker()->copy_misspellings_to_clipboard();
                 }
                 break;
             case IDAPPLY:
@@ -1018,7 +1018,7 @@ UINT SettingsDlg::do_dialog()
     else
     {
         goToCenter();
-        get_spell_checker()->FillDialogs();
+        get_spell_checker()->fill_dialogs();
     }
 
     return true;
