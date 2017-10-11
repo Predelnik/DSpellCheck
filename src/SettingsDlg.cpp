@@ -192,18 +192,18 @@ void SimpleDlg::apply_settings(SpellChecker* spell_checker_instance)
         }
     }
     spell_checker_instance->RecheckVisible();
-    spell_checker_instance->SetSuggestionsNum(_wtoi(getEditText (m_h_suggestions_num).c_str ()));
+    spell_checker_instance->SetSuggestionsNum(_wtoi(get_edit_text (m_h_suggestions_num).c_str ()));
     if (get_selected_lib() == 0)
-        spell_checker_instance->SetAspellPath(getEditText (m_h_lib_path).c_str ());
+        spell_checker_instance->SetAspellPath(get_edit_text (m_h_lib_path).c_str ());
     else
     {
-        spell_checker_instance->SetHunspellPath(getEditText (m_h_lib_path).c_str ());
-        spell_checker_instance->SetHunspellAdditionalPath(getEditText (m_h_system_path).c_str ());
+        spell_checker_instance->SetHunspellPath(get_edit_text (m_h_lib_path).c_str ());
+        spell_checker_instance->SetHunspellAdditionalPath(get_edit_text (m_h_system_path).c_str ());
     }
 
     spell_checker_instance->SetCheckThose(
         Button_GetCheck(m_h_check_only_those) == BST_CHECKED ? 1 : 0);
-    spell_checker_instance->SetFileTypes(getEditText (m_h_file_types).c_str ());
+    spell_checker_instance->SetFileTypes(get_edit_text (m_h_file_types).c_str ());
     spell_checker_instance->SetSuggType(ComboBox_GetCurSel(m_h_sugg_type));
     spell_checker_instance->SetCheckComments(Button_GetCheck(m_h_check_comments) ==
         BST_CHECKED);
@@ -505,7 +505,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                     ofn.lStructSize = sizeof(ofn);
                     ofn.hwndOwner = _hSelf;
                     std::vector<wchar_t> filename(MAX_PATH);
-                    auto lib_path = getEditText(m_h_lib_path);
+                    auto lib_path = get_edit_text(m_h_lib_path);
                     std::copy (lib_path.begin (), lib_path.end (), filename.begin ());
                     // TODO: add possibility to use modern browse dialog
                     ofn.lpstrFile = filename.data();
@@ -534,7 +534,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                     bi.pszDisplayName = path.data();
                     bi.ulFlags = BIF_RETURNONLYFSDIRS;
                     bi.lpfn = browse_callback_proc;
-                    auto lib_path = getEditText(m_h_lib_path);
+                    auto lib_path = get_edit_text(m_h_lib_path);
                     std::vector<wchar_t> npp_path(MAX_PATH);
                     std::vector<wchar_t> final_path (MAX_PATH);
                     send_msg_to_npp(&m_npp_data_instance, NPPM_GETNPPDIRECTORY, MAX_PATH,
@@ -858,7 +858,7 @@ int AdvancedDlg::get_recheck_delay()
 // Called from main thread, beware!
 void AdvancedDlg::apply_settings(SpellChecker* spell_checker_instance)
 {
-    spell_checker_instance->SetDelimiters(to_utf8_string(getEditText (m_h_edit_delimiters).c_str ()).c_str ());
+    spell_checker_instance->SetDelimiters(to_utf8_string(get_edit_text (m_h_edit_delimiters).c_str ()).c_str ());
     spell_checker_instance->SetConversionOptions(
         Button_GetCheck(m_h_ignore_yo) == BST_CHECKED ? true : false,
         Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED ? true : false,
@@ -880,7 +880,7 @@ void AdvancedDlg::apply_settings(SpellChecker* spell_checker_instance)
         static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0)),
         static_cast<int>(SendMessage(m_h_slider_transparency, TBM_GETPOS, 0, 0)));
     wchar_t* end_ptr;
-    auto text = getEditText (m_h_buffer_size);
+    auto text = get_edit_text (m_h_buffer_size);
     int x = wcstol(text.c_str (), &end_ptr, 10);
     spell_checker_instance->SetBufferSize(x);
     get_download_dics()->update_list_box();

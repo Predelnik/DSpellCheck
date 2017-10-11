@@ -35,13 +35,13 @@ void SelectProxyDialog::do_dialog() {
 }
 
 void SelectProxyDialog::apply_choice(SpellChecker *spell_checker_instance) {
-  spell_checker_instance->SetProxyUserName (getEditText(m_user_name).c_str ());
-  spell_checker_instance->SetProxyHostName (getEditText (m_host_name).c_str ());
-  spell_checker_instance->SetProxyPassword (getEditText (m_password).c_str ());
+  spell_checker_instance->SetProxyUserName (get_edit_text(m_user_name).c_str ());
+  spell_checker_instance->SetProxyHostName (get_edit_text (m_host_name).c_str ());
+  spell_checker_instance->SetProxyPassword (get_edit_text (m_password).c_str ());
   spell_checker_instance->SetUseProxy(Button_GetCheck(m_use_proxy) == BST_CHECKED);
   spell_checker_instance->SetProxyAnonymous(Button_GetCheck(m_proxy_anonymous) == BST_CHECKED);
   spell_checker_instance->SetProxyType(ComboBox_GetCurSel(m_proxy_type));
-  auto text = getEditText (m_port);
+  auto text = get_edit_text (m_port);
   wchar_t *end_ptr;
   int x = wcstol(text.c_str(), &end_ptr, 10);
   spell_checker_instance->SetProxyPort(x);

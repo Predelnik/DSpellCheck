@@ -115,51 +115,55 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
         return false;
 
     case WM_PAINT:
-        if (!isVisible())
+        {
+            if (!isVisible())
+                return false;
+
+            id_img = IDR_DOWNARROW;
+            if (m_state_pressed || m_state_menu)
+                id_img = IDR_DOWNARROW_PUSH;
+            else if (m_state_hovered)
+                id_img = IDR_DOWNARROW_HOVER;
+
+            HDC dc = BeginPaint(_hSelf, &ps);
+            HDC hdc_memory = ::CreateCompatibleDC(dc);
+            HBITMAP h_bmp = LoadBitmap(_hInst, MAKEINTRESOURCE(id_img));
+            GetObject(h_bmp, sizeof(bmp), &bmp);
+            HBITMAP h_old_bitmap = (HBITMAP)SelectObject(hdc_memory, h_bmp);
+            SetStretchBltMode(dc, HALFTONE);
+            RECT r;
+            GetWindowRect(_hSelf, &r);
+            StretchBlt(dc, 0, 0, r.right - r.left, r.bottom - r.top, hdc_memory, 0, 0,
+                       bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+            SelectObject(hdc_memory, h_old_bitmap);
+            DeleteDC(hdc_memory);
+            DeleteObject(h_bmp);
+            EndPaint(_hSelf, &ps);
+            RECT rect;
+            GetWindowRect(_hSelf, &rect);
+            ValidateRect(_hSelf, &rect);
             return false;
-
-        id_img = IDR_DOWNARROW;
-        if (m_state_pressed || m_state_menu)
-            id_img = IDR_DOWNARROW_PUSH;
-        else if (m_state_hovered)
-            id_img = IDR_DOWNARROW_HOVER;
-
-        HDC dc = BeginPaint(_hSelf, &ps);
-        HDC hdc_memory = ::CreateCompatibleDC(dc);
-        HBITMAP h_bmp = LoadBitmap(_hInst, MAKEINTRESOURCE(id_img));
-        GetObject(h_bmp, sizeof(bmp), &bmp);
-        HBITMAP h_old_bitmap = (HBITMAP)SelectObject(hdc_memory, h_bmp);
-        SetStretchBltMode(dc, HALFTONE);
-        RECT r;
-        GetWindowRect(_hSelf, &r);
-        StretchBlt(dc, 0, 0, r.right - r.left, r.bottom - r.top, hdc_memory, 0, 0,
-                   bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-        SelectObject(hdc_memory, h_old_bitmap);
-        DeleteDC(hdc_memory);
-        DeleteObject(h_bmp);
-        EndPaint(_hSelf, &ps);
-        RECT rect;
-        GetWindowRect(_hSelf, &rect);
-        ValidateRect(_hSelf, &rect);
-        return false;
+        }
 
     case WM_SHOWANDRECREATEMENU:
-        tagTPMPARAMS tpm_params;
-        tpm_params.cbSize = sizeof(tagTPMPARAMS);
-        GetWindowRect(_hSelf, &tpm_params.rcExclude);
-        p.x = 0;
-        p.y = 0;
-        ClientToScreen(_hSelf, &p);
-        m_state_menu = true;
-        SetForegroundWindow(m_npp_data_instance.npp_handle);
-        m_menu_result = TrackPopupMenuEx(m_popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
-                                         p.x, p.y, _hSelf, &tpm_params);
-        PostMessage(m_npp_data_instance.npp_handle, WM_NULL, 0, 0);
-        SetFocus(GetScintillaWindow(&m_npp_data_instance));
-        m_state_menu = false;
-        DestroyMenu(m_popup_menu);
-        m_popup_menu = CreatePopupMenu();
-        return false;
+        {
+            tagTPMPARAMS tpm_params;
+            tpm_params.cbSize = sizeof(tagTPMPARAMS);
+            GetWindowRect(_hSelf, &tpm_params.rcExclude);
+            p.x = 0;
+            p.y = 0;
+            ClientToScreen(_hSelf, &p);
+            m_state_menu = true;
+            SetForegroundWindow(m_npp_data_instance.npp_handle);
+            m_menu_result = TrackPopupMenuEx(m_popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
+                                             p.x, p.y, _hSelf, &tpm_params);
+            PostMessage(m_npp_data_instance.npp_handle, WM_NULL, 0, 0);
+            SetFocus(GetScintillaWindow(&m_npp_data_instance));
+            m_state_menu = false;
+            DestroyMenu(m_popup_menu);
+            m_popup_menu = CreatePopupMenu();
+            return false;
+        }
 
     case WM_COMMAND:
         if (HIWORD(w_param) == 0)
