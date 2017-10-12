@@ -1495,7 +1495,7 @@ void SpellChecker::save_to_ini_utf8(const wchar_t* name, const char* value,
 
 std::wstring SpellChecker::load_from_ini(const wchar_t* name,
                                          const wchar_t* default_value, bool in_quotes) {
-    assert (Name && defaultValue);
+    assert (name && default_value);
 
     auto value = read_ini_value(L"Spellcheck", name, default_value, m_ini_file_path.c_str());
 
