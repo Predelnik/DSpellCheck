@@ -306,7 +306,7 @@ bool HunspellInterface::speller_check_word(const DicInfo& dic, const char* word,
     // No additional check for memorized is needed since all words are already in
     // dictionary
 
-    return dic.hunspell->spell(word_to_check.c_str ());
+    return dic.hunspell->spell(word_to_check);
 }
 
 bool HunspellInterface::check_word(const char* word) {
@@ -462,11 +462,9 @@ namespace
     class HunspellSuggestions {
         using Self = HunspellSuggestions;
     public:
-        HunspellSuggestions(Hunspell* hunspell, const char* word) :
+        HunspellSuggestions(Hunspell* hunspell, const std::string& word) :
             m_hunspell(hunspell) {
-            m_count = hunspell->suggest(&m_list, word);
-            if (m_list)
-                m_flag.make_valid();
+            m_list = hunspell->suggest(word);
         }
 
         HunspellSuggestions() {
@@ -476,17 +474,13 @@ namespace
         Self& operator=(Self&&) = default;
 
         ~HunspellSuggestions() {
-            if (m_flag.is_valid() && m_list)
-                m_hunspell->free_list(&m_list, m_count);
         }
 
-        const char* word(int index) const { return m_list[index]; }
-        int count() const { return m_count; }
+        std::string word(int index) const { return m_list[index]; }
+        int count() const { return static_cast<int>(m_list.size()); }
 
     private:
-        char** m_list = nullptr;
-        int m_count = 0;
-        MoveOnlyFlag m_flag;
+        std::vector<std::string> m_list;
         Hunspell* m_hunspell = nullptr;
     };
 }
@@ -519,7 +513,7 @@ std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
     }
 
     for (int i = 0; i < list.count(); i++) {
-        sugg_list.push_back(get_converted_word(list.word(i),
+        sugg_list.push_back(get_converted_word((list.word(i)).c_str (),
                                             m_last_selected_speller->back_converter.get()));
     }
     return sugg_list;
