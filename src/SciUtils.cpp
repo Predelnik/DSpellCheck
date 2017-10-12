@@ -33,6 +33,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
         case SCE_P_STRING:
         case SCE_P_TRIPLE:
         case SCE_P_TRIPLEDOUBLE:
+        case SCE_P_CHARACTER:
             return true;
         default:
             return false;
