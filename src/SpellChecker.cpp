@@ -1746,12 +1746,12 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
 }
 
 void SpellChecker::cut_apostrophes(std::string_view& word) {
-    if (m_remove_boundary_apostrophes && word.size() > 1) {
+    if (m_remove_boundary_apostrophes) {
         while (!word.empty() && word.front() == '\'')
-            word = word.substr(1);
+            word.remove_prefix(1);
 
         while (!word.empty() && word.back() == '\'')
-            word = word.substr(0, word.length() - 1);
+            word.remove_suffix(1);
     }
 }
 
