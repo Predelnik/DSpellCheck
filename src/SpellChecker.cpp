@@ -835,11 +835,8 @@ std::string_view SpellChecker::get_word_at(long char_pos, char* text, long offse
         if (utf8_chr(m_delim_utf8_converted.c_str(), iterator))
             iterator = utf8_dec(text, iterator);
 
-        if (iterator == nullptr)
-            return nullptr;
-
         while ((!utf8_chr(m_delim_utf8_converted.c_str(), iterator)) && text < iterator)
-            iterator = (char *)utf8_dec(text, iterator);
+            iterator = utf8_dec(text, iterator);
     }
     else {
         if (strchr(m_delim_converted.c_str(), *iterator))
@@ -871,7 +868,7 @@ std::string_view SpellChecker::get_word_at(long char_pos, char* text, long offse
     std::string_view res;
     if (m_current_encoding == EncodingType::utf8) {
         auto end = utf8_pbrk(used_text, m_delim_utf8_converted.c_str());
-        if (!end) return {};
+        if (!end) return used_text; // if we didn't meet any delimiters until the end of line
         res = {used_text, static_cast<size_t>(end - used_text)};
     }
     else {
