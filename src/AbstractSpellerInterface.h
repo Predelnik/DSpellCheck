@@ -30,6 +30,7 @@ public:
   void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
   void set_encoding(EncodingType encoding) { m_current_encoding = encoding; }
   virtual bool check_word(const char* word) = 0; // Word in Utf-8 or ANSI
+  // returned suggestions should be in utf-8
   virtual std::vector<std::string> get_suggestions(const char* word) = 0;
   virtual void add_to_dictionary(const char* word) = 0;
   virtual void ignore_all(const char* word) = 0;
