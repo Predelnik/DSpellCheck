@@ -450,7 +450,6 @@ void HunspellInterface::ignore_all(const char* word) {
 }
 
 std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
-    std::vector<std::string> sugg_list;
     std::vector<std::string> list;
     m_last_selected_speller = m_singular_speller;
 
@@ -472,11 +471,11 @@ std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
         }
     }
 
-    for (int i = 0; i < list.size(); ++i) {
-        sugg_list.push_back(get_converted_word((list[i]).c_str(),
-                                               m_last_selected_speller->back_converter.get()));
-    }
-
+    std::vector<std::string> sugg_list (list.size ());
+    std::transform (list.begin (), list.end (), sugg_list.begin (), [this](const std::string &s)
+    {
+       return get_converted_word(s.c_str(), m_last_selected_speller->back_converter.get());
+    });
     return sugg_list;
 }
 
