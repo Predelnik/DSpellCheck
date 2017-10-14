@@ -38,6 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ProgressData.h"
 #include <variant>
 #include <Wininet.h>
+#include "utils/winapi.h"
 
 void DownloadDicsDlg::do_dialog() {
     if (!isCreated()) {
@@ -286,7 +287,7 @@ void DownloadDicsDlg::on_file_downloaded() {
                 }
             }
 
-            if (confirmation && !MoveFile(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
+            if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
                 SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
                 DeleteFile(dic_file_local_path.c_str());
                 m_failure = 1;
@@ -315,7 +316,7 @@ void DownloadDicsDlg::on_file_downloaded() {
                 }
             }
 
-            if (confirmation && !MoveFile(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
+            if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
                 SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
                 DeleteFile(dic_file_local_path.c_str());
                 m_failure = 1;
