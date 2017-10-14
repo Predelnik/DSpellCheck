@@ -2,6 +2,10 @@ cmake_minimum_required (VERSION 3.7)
 project (DSpellCheck)
 include (CMake/ucm.cmake)
 
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:threadSafeInit-")
+endif()
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
     set(DSpellCheck_SANITIZE "none" CACHE STRING "Enable one of llvm sanitizers")
