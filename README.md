@@ -17,6 +17,10 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
+v1.3.2
+* Restore correct work of "Ignore for Current Session" functionality (#104)
+* Restore downloading dictionaries on Windows XP (#107)
+
 v1.3.1
 * Restore correct work of plugin on systems missing Visual Studio redistributable package (#103)
 * Fix creation of directory for dictionaries (#94)
