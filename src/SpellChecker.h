@@ -276,8 +276,7 @@ private:
     std::vector<std::string> m_last_suggestions;
     long m_modified_start;
     long m_modified_end;
-    long m_word_under_cursor_pos; // WUC = Word Under Cursor (Position in global doc
-    // coordinates),
+    long m_word_under_cursor_pos;
     std::size_t m_word_under_cursor_length;
     LRESULT m_current_position;
     NppData* m_npp_data_instance;
