@@ -30,7 +30,7 @@ std::wstring Settings::get_default_hunspell_path() {
 
 void Settings::process(IniWorker& worker) {
     worker.process(L"Aspell_Path", aspell_path, get_default_aspell_path());
-    worker.process(L"User_Hunspell_Path", hunspell_path, get_default_aspell_path());
+    worker.process(L"User_Hunspell_Path", hunspell_path, get_default_hunspell_path());
     worker.process(L"System_Hunspell_Path", hunspell_path, L".\\plugins\\config\\Hunspell");
     worker.process(L"Suggestions_Control", suggestions_mode, 1);
     worker.process(L"Autocheck", auto_check_text, true);

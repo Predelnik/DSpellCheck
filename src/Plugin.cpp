@@ -38,6 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "StackWalker.h"
 #include "utils/raii.h"
 #include "resource.h"
+#include "Settings.h"
 
 const wchar_t config_file_name[] = L"DSpellCheck.ini";
 
@@ -66,6 +67,7 @@ std::unique_ptr<SelectProxyDialog> select_proxy_dlg;
 std::unique_ptr<ProgressDlg> progress_dlg;
 std::unique_ptr<DownloadDicsDlg> download_dics_dlg;
 std::unique_ptr<AboutDlg> about_dlg;
+std::unique_ptr<Settings> settings;
 HMENU langs_menu;
 int context_menu_id_start;
 int langs_menu_id_start = false;
@@ -350,6 +352,9 @@ void init_classes() {
     suggestions_button = std::make_unique<SuggestionsButton>();
     suggestions_button->init_dlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
     suggestions_button->do_dialog();
+
+    settings = std::make_unique<Settings> (ini_file_path);
+    settings->load ();
 
     settings_dlg = std::make_unique<SettingsDlg>();
     settings_dlg->init_settings(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);

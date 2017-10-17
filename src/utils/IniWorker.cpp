@@ -11,10 +11,11 @@ IniWorker::IniWorker(std::wstring_view app_name, std::wstring_view file_name, Ac
 constexpr auto initial_buf_size = 256;
 constexpr auto max_buf_size = 100 * 1024;
 
-bool IniWorker::process(const wchar_t* name, std::wstring& value, std::wstring_view default_value) const {
+void IniWorker::process(const wchar_t* name, std::wstring& value, std::wstring_view default_value) const {
     switch (m_action) {
     case Action::save:
-        return WritePrivateProfileString(m_app_name.data(), name, value.data(), m_file_name.data()) != FALSE;
+        WritePrivateProfileString(m_app_name.data(), name, value.data(), m_file_name.data());
+        return;
     case Action::load:
         {
             int buf_size = initial_buf_size;
@@ -25,25 +26,24 @@ bool IniWorker::process(const wchar_t* name, std::wstring& value, std::wstring_v
                                                    m_file_name.data());
                 if (ret == 0) {
                     value = default_value;
-                    return false;
+                    return;
                 }
 
                 if (static_cast<int>(ret) < buf_size - 1) {
                     value = buf.data();
-                    return true;
+                    return;
                 }
                 if (buf_size > max_buf_size) {
                     value = default_value;
-                    return false;
+                    return;
                 }
                 buf_size *= 2;
             }
         }
     }
-    return false;
 }
 
-bool IniWorker::process(const wchar_t* name, int& value, int default_value) const {
+void IniWorker::process(const wchar_t* name, int& value, int default_value) const {
     switch (m_action) {
     case Action::save:
         {
@@ -53,23 +53,22 @@ bool IniWorker::process(const wchar_t* name, int& value, int default_value) cons
     case Action::load:
         {
             std::wstring str;
-            if (!process(name, str, std::to_wstring(default_value)))
-                return false;
+            process(name, str, std::to_wstring(default_value));
             size_t idx;
             try {
                 auto new_val = std::stoi(str, &idx, 10);
                 value = new_val;
             }
             catch (...) {
-                return false;
+                value = default_value;
             }
             break;
         }
     }
-    return false;
 }
 
-bool IniWorker::process_utf8(const wchar_t* name, std::string& value, const char* default_value, bool in_quotes = false) const {
+void IniWorker::process_utf8(const wchar_t* name, std::string& value, const char* default_value,
+                             bool in_quotes = false) const {
     switch (m_action) {
     case Action::save:
         {
@@ -78,15 +77,18 @@ bool IniWorker::process_utf8(const wchar_t* name, std::string& value, const char
                 str = L'"' + str + L'"';
             process(name, str, utf8_to_wstring(default_value));
         }
-        return true;
+        return;
     case Action::load:
         {
             std::wstring str;
-            if (process(name, str, utf8_to_wstring(default_value))) {
+            process(name, str, utf8_to_wstring(default_value));
+            {
                 auto str_v = std::wstring_view(str);
                 if (in_quotes) {
-                    if (str_v.front() != L'"' || str_v.back() != L'"')
-                        return false;
+                    if (str_v.front() != L'"' || str_v.back() != L'"') {
+                        value = default_value;
+                        return;
+                    }
 
                     if (!str_v.empty())
                         str_v.remove_prefix(1);
@@ -94,17 +96,13 @@ bool IniWorker::process_utf8(const wchar_t* name, std::string& value, const char
                         str_v.remove_suffix(1);
                 }
                 value = to_utf8_string(str_v);
-                return true;
             }
-            return false;
         }
     }
-    return false;
 }
 
-bool IniWorker::process(const wchar_t* name, bool& value, bool default_value) const {
+void IniWorker::process(const wchar_t* name, bool& value, bool default_value) const {
     auto int_value = value ? 1 : 0;
-    bool ret = process(name, int_value, default_value ? 1 : 0);
+    process(name, int_value, default_value ? 1 : 0);
     value = int_value != 0;
-    return ret;
 }

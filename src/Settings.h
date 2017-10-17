@@ -6,6 +6,8 @@ class Settings {
 public:
     Settings (std::wstring_view ini_filepath);
     void process(IniWorker& worker);
+    void save ();
+    void load ();
 
 public:
     bool auto_check_text = false;
@@ -56,8 +58,6 @@ public:
     int proxy_type = 0; // TODO: change to enum
 
 private:
-    void save ();
-    void load ();
     std::wstring get_default_hunspell_path();
 
 private:
