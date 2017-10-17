@@ -147,7 +147,7 @@ public:
     bool get_auto_check_text() const { return m_auto_check_text; }
     void process_menu_result(WPARAM menu_id);
     void copy_misspellings_to_clipboard();
-    void load_settings();
+    void on_load_settings();
     void switch_auto_check();
     void init_suggestions_box();
     void hide_suggestion_box();

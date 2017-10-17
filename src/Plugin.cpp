@@ -182,7 +182,7 @@ void start_about_dlg() { about_dlg->do_dialog(); }
 
 void start_language_list() { lang_list_instance->do_dialog(); }
 
-void load_settings() { get_spell_checker()->load_settings(); }
+void load_settings() { get_spell_checker()->on_load_settings(); }
 
 void recheck_visible() { get_spell_checker()->recheck_visible(); }
 

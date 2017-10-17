@@ -41,15 +41,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "utils/utf8.h"
 #include "resource.h"
 
-#ifdef UNICODE
 #define DEFAULT_DELIMITERS                                                     \
   L",.!?\":;{}()[]\\/"                                                         \
   L"=+-^$*<>|#$@%&~"                                                           \
   L"\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D\u00B7"  \
   L"\u00A0\u0060\u2192\u00d7"
-#else // All non-ASCII symbols removed
-#define DEFAULT_DELIMITERS L",.!?\":;{}()[]\\/=+-^$*<>|#$@%&~"
-#endif
 
 HWND get_scintilla_window(const NppData* npp_data_arg) {
     int which = -1;
@@ -1277,7 +1273,7 @@ void SpellChecker::set_lib_mode(int i) {
     }
 }
 
-void SpellChecker::load_settings() {
+void SpellChecker::on_load_settings() {
     m_settings_loaded = true;
     auto path = get_default_aspell_path();
     m_aspell_path = load_from_ini(L"Aspell_Path", path.c_str());

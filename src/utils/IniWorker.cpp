@@ -69,7 +69,7 @@ bool IniWorker::process(const wchar_t* name, int& value, int default_value) cons
     return false;
 }
 
-bool IniWorker::process_utf8(const wchar_t* name, std::string& value, const char* default_value, bool in_quotes) const {
+bool IniWorker::process_utf8(const wchar_t* name, std::string& value, const char* default_value, bool in_quotes = false) const {
     switch (m_action) {
     case Action::save:
         {
