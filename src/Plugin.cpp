@@ -184,7 +184,7 @@ void start_about_dlg() { about_dlg->do_dialog(); }
 
 void start_language_list() { lang_list_instance->do_dialog(); }
 
-void load_settings() { get_spell_checker()->on_load_settings(); }
+void load_settings() { get_spell_checker()->on_settings_changed(); }
 
 void recheck_visible() { get_spell_checker()->recheck_visible(); }
 
@@ -241,7 +241,7 @@ void command_menu_init() {
         sh_key->is_shift = false;
         sh_key->key = 0x41 + 'a' - 'a';
         set_next_command(TEXT("Spell Check Document Automatically"),
-                       switch_auto_check_text, std::move(sh_key), false);
+                         switch_auto_check_text, std::move(sh_key), false);
     }
     {
         auto sh_key = std::make_unique<ShortcutKey>();
@@ -258,7 +258,7 @@ void command_menu_init() {
         sh_key->is_shift = false;
         sh_key->key = 0x41 + 'b' - 'a';
         set_next_command(TEXT("Find Previous Misspelling"), find_prev_mistake, std::move(sh_key),
-                       false);
+                         false);
     }
 
     {
@@ -268,7 +268,7 @@ void command_menu_init() {
         sh_key->is_shift = false;
         sh_key->key = 0x41 + 'd' - 'a';
         set_next_command(TEXT("Change Current Language"), quick_lang_change_context, std::move(sh_key),
-                       false);
+                         false);
     }
     set_next_command(TEXT("---"), nullptr, nullptr, false);
 
@@ -293,7 +293,7 @@ void update_langs_menu() {
 static std::wstring get_menu_item_text(HMENU menu, UINT index) {
     auto str_len = GetMenuString(menu, index, nullptr, 0, MF_BYPOSITION);
     std::vector<wchar_t> buf(str_len + 1);
-    GetMenuString(menu, index, buf.data(), static_cast<int> (buf.size()), MF_BYPOSITION);
+    GetMenuString(menu, index, buf.data(), static_cast<int>(buf.size()), MF_BYPOSITION);
     return buf.data();
 }
 
@@ -353,8 +353,7 @@ void init_classes() {
     suggestions_button->init_dlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
     suggestions_button->do_dialog();
 
-    settings = std::make_unique<Settings> (ini_file_path);
-    settings->load ();
+    settings = std::make_unique<Settings>(ini_file_path);
 
     settings_dlg = std::make_unique<SettingsDlg>();
     settings_dlg->init_settings(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
@@ -376,11 +375,12 @@ void init_classes() {
 
     spell_checker =
         std::make_unique<SpellChecker>(ini_file_path, settings_dlg.get(), &npp_data,
-                                       suggestions_button.get(), lang_list_instance.get());
+                                       suggestions_button.get(), lang_list_instance.get(), settings.get());
+    settings->load();
 
     download_dics_dlg = std::make_unique<DownloadDicsDlg>();
     download_dics_dlg->init_dlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
-                             spell_checker.get());
+                                spell_checker.get());
 
     resources_inited = true;
 }
@@ -396,7 +396,7 @@ static int counter = 0;
 std::vector<std::unique_ptr<ShortcutKey>> shortcut_storage;
 
 bool set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func, std::unique_ptr<ShortcutKey> sk,
-                    bool check0_n_init) {
+                      bool check0_n_init) {
     if (counter >= nb_func)
         return false;
 

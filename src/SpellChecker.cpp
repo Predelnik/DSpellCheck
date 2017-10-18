@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "utils/string_utils.h"
 #include "utils/utf8.h"
 #include "resource.h"
+#include "Settings.h"
 
 #define DEFAULT_DELIMITERS                                                     \
   L",.!?\":;{}()[]\\/"                                                         \
@@ -116,7 +117,8 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
                            SettingsDlg* settings_dlg_instance_arg,
                            NppData* npp_data_instance_arg,
                            SuggestionsButton* suggestions_instance_arg,
-                           LangList* lang_list_instance_arg) {
+                           LangList* lang_list_instance_arg,
+                           const Settings* settings) {
     m_current_position = 0;
     m_ini_file_path = ini_file_path_arg;
     m_settings_dlg_instance = settings_dlg_instance_arg;
@@ -151,6 +153,8 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
     m_proxy_port = 0;
     m_settings_loaded = false;
     m_use_proxy = false;
+    m_settings = settings;
+    m_settings->settings_changed.connect([this] { on_settings_changed (); });
     bool res =
         (send_msg_to_npp(m_npp_data_instance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
 
@@ -611,9 +615,9 @@ void SpellChecker::find_next_mistake() {
     m_current_position =
         send_msg_to_active_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
     auto cur_line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
-                                             m_current_position);
+                                              m_current_position);
     auto line_start_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
-                                                  cur_line);
+                                                    cur_line);
     auto doc_length =
         send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
     auto iterator_pos = line_start_pos;
@@ -683,11 +687,11 @@ void SpellChecker::find_prev_mistake() {
     m_current_position =
         send_msg_to_active_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
     auto cur_line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
-                                             m_current_position);
+                                              m_current_position);
     auto doc_length =
         send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
     auto line_end_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINEENDPOSITION,
-                                                cur_line);
+                                                  cur_line);
 
     auto iterator_pos = line_end_pos;
     Sci_TextRange range;
@@ -847,7 +851,7 @@ std::string_view SpellChecker::get_word_at(long char_pos, char* text, long offse
             return nullptr;
     }
 
-    char * used_text = iterator;
+    char* used_text = iterator;
 
     if (m_current_encoding == EncodingType::utf8) {
         if (utf8_chr(m_delim_utf8_converted.c_str(), used_text))
@@ -919,9 +923,9 @@ void SpellChecker::init_suggestions_box() {
     auto text_height =
         send_msg_to_active_editor(get_current_scintilla(), SCI_TEXTHEIGHT, line);
     auto x_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POINTXFROMPOSITION,
-                                          0, m_word_under_cursor_pos);
+                                           0, m_word_under_cursor_pos);
     auto y_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POINTYFROMPOSITION,
-                                          0, m_word_under_cursor_pos);
+                                           0, m_word_under_cursor_pos);
 
     p.x = static_cast<LONG>(x_pos);
     p.y = static_cast<LONG>(y_pos);
@@ -949,8 +953,8 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
     int used_menu_id;
     if (get_use_allocated_ids()) {
         used_menu_id = ((int)menu_id < get_langs_menu_id_start()
-                          ? DSPELLCHECK_MENU_ID
-                          : LANGUAGE_MENU_ID);
+                            ? DSPELLCHECK_MENU_ID
+                            : LANGUAGE_MENU_ID);
     }
     else {
         used_menu_id = HIBYTE(menu_id);
@@ -1273,7 +1277,7 @@ void SpellChecker::set_lib_mode(int i) {
     }
 }
 
-void SpellChecker::on_load_settings() {
+void SpellChecker::on_settings_changed() {
     m_settings_loaded = true;
     auto path = get_default_aspell_path();
     m_aspell_path = load_from_ini(L"Aspell_Path", path.c_str());

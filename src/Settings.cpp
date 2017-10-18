@@ -15,6 +15,9 @@ constexpr auto default_delimiters =
     L"\u00A0\u0060\u2192\u00d7";
 
 void Settings::save() {
+    FILE* fp;
+    _wfopen_s(&fp, m_ini_filepath.c_str(), L"w"); // Cleaning settings file (or creating it)
+    fclose(fp);
     IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::save);
     process(worker);
 }
@@ -22,6 +25,7 @@ void Settings::save() {
 void Settings::load() {
     IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::load);
     process(worker);
+    settings_changed ();
 }
 
 std::wstring Settings::get_default_hunspell_path() {

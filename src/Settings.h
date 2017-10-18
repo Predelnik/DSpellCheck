@@ -1,5 +1,7 @@
 #pragma once
 
+#include "lsignal.h"
+
 class IniWorker;
 
 class Settings {
@@ -56,6 +58,8 @@ public:
     int proxy_port = 0;
     bool proxy_is_anonymous = false;
     int proxy_type = 0; // TODO: change to enum
+
+    mutable lsignal::signal<void()> settings_changed;
 
 private:
     std::wstring get_default_hunspell_path();

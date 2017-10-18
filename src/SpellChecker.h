@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MainDef.h"
 
+class Settings;
 struct AspellSpeller;
 struct LanguageName;
 struct AspellWordList;
@@ -67,7 +68,8 @@ public:
     SpellChecker(const wchar_t* ini_file_path_arg,
                  SettingsDlg* settings_dlg_instance_arg, NppData* npp_data_instance_arg,
                  SuggestionsButton* suggestions_instance_arg,
-                 LangList* lang_list_instance_arg);
+                 LangList* lang_list_instance_arg,
+                 const Settings *settings);
     ~SpellChecker();
     void recheck_visible_both_views();
     void apply_settings();
@@ -147,7 +149,7 @@ public:
     bool get_auto_check_text() const { return m_auto_check_text; }
     void process_menu_result(WPARAM menu_id);
     void copy_misspellings_to_clipboard();
-    void on_load_settings();
+    void on_settings_changed();
     void switch_auto_check();
     void init_suggestions_box();
     void hide_suggestion_box();
@@ -271,6 +273,7 @@ private:
     int m_proxy_port;
     std::wstring m_proxy_password;
     int m_recheck_delay;
+    const Settings *m_settings;
 
     LRESULT m_lexer;
     std::vector<std::string> m_last_suggestions;
