@@ -34,22 +34,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "utils/winapi.h"
 #include "utils/string_utils.h"
 #include <uxtheme.h>
+#include "Settings.h"
 
-SimpleDlg::SimpleDlg() : StaticDialog()
-{
+SimpleDlg::SimpleDlg() : StaticDialog() {
     m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
     if (m_h_ux_theme)
         m_open_theme_data = (OtdProc)::GetProcAddress(m_h_ux_theme, "OpenThemeData");
 }
 
-void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data)
-{
-    m_npp_data_instance = npp_data;
-    return Window::init(h_inst, parent);
-}
-
-void SimpleDlg::disable_language_combo(bool disable)
-{
+void SimpleDlg::disable_language_combo(bool disable) {
     ComboBox_ResetContent(m_h_combo_language);
     EnableWindow(m_h_combo_language, !disable);
     ListBox_ResetContent(get_remove_dics()->get_list_box());
@@ -58,10 +51,9 @@ void SimpleDlg::disable_language_combo(bool disable)
 
 // Called from main thread, beware!
 bool SimpleDlg::add_available_languages(const std::vector<LanguageName>& langs_available,
-                                      const wchar_t* current_language,
-                                      std::wstring_view multi_languages,
-                                      HunspellInterface* hunspell_speller)
-{
+                                        const wchar_t* current_language,
+                                        std::wstring_view multi_languages,
+                                        HunspellInterface* hunspell_speller) {
     ComboBox_ResetContent(m_h_combo_language);
     ListBox_ResetContent(get_lang_list()->get_list_box());
     ListBox_ResetContent(get_remove_dics()->get_list_box());
@@ -70,19 +62,17 @@ bool SimpleDlg::add_available_languages(const std::vector<LanguageName>& langs_a
 
     {
         unsigned int i = 0;
-        for (auto &lang : langs_available)
-        {
+        for (auto& lang : langs_available) {
             if (current_language == lang.orig_name)
                 selected_index = i;
 
             ComboBox_AddString(m_h_combo_language, lang.alias_name.c_str ());
             ListBox_AddString(get_lang_list()->get_list_box(),
                 lang.alias_name.c_str ());
-            if (hunspell_speller)
-            {
+            if (hunspell_speller) {
                 wchar_t buf[DEFAULT_BUF_SIZE];
                 wcscpy(buf, lang.alias_name.c_str());
-                if (hunspell_speller->get_lang_only_system(lang.orig_name.c_str ()))
+                if (hunspell_speller->get_lang_only_system(lang.orig_name.c_str()))
                     wcscat(buf, L" [!For All Users]");
 
                 ListBox_AddString(get_remove_dics()->get_list_box(), buf);
@@ -94,20 +84,17 @@ bool SimpleDlg::add_available_languages(const std::vector<LanguageName>& langs_a
             selected_index = i;
     }
 
-    if (!langs_available.empty ())
+    if (!langs_available.empty())
         ComboBox_AddString(m_h_combo_language, L"Multiple Languages...");
 
     ComboBox_SetCurSel(m_h_combo_language, selected_index);
 
     CheckedListBox_EnableCheckAll(get_lang_list()->get_list_box(), BST_UNCHECKED);
-    for (auto &token : tokenize<wchar_t> (multi_languages, LR"(\|)"))
-    {
+    for (auto& token : tokenize<wchar_t>(multi_languages, LR"(\|)")) {
         int index = -1;
         int i = 0;
-        for (auto &lang : langs_available)
-        {
-            if (token == lang.orig_name)
-            {
+        for (auto& lang : langs_available) {
+            if (token == lang.orig_name) {
                 index = i;
                 break;
             }
@@ -120,10 +107,8 @@ bool SimpleDlg::add_available_languages(const std::vector<LanguageName>& langs_a
     return true;
 }
 
-static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t* psz_text)
-{
-    if (!tool_id || !h_dlg || !psz_text)
-    {
+static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t* psz_text) {
+    if (!tool_id || !h_dlg || !psz_text) {
         return nullptr;
     }
     // Get the window of the tool.
@@ -135,8 +120,7 @@ static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t* psz_text)
                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                        h_dlg, nullptr, (HINSTANCE)get_h_module(), nullptr);
 
-    if (!hwnd_tool || !hwnd_tip)
-    {
+    if (!hwnd_tool || !hwnd_tip) {
         return (HWND)nullptr;
     }
 
@@ -153,92 +137,64 @@ static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t* psz_text)
     return hwnd_tip;
 }
 
-SimpleDlg::~SimpleDlg()
-{
+SimpleDlg::~SimpleDlg() {
     if (m_h_ux_theme)
         FreeLibrary(m_h_ux_theme);
 }
 
-void SimpleDlg::apply_lib_change(SpellChecker* spell_checker_instance)
-{
+void SimpleDlg::apply_lib_change(SpellChecker* spell_checker_instance) {
     spell_checker_instance->set_lib_mode(get_selected_lib());
     spell_checker_instance->reinit_language_lists(true);
     spell_checker_instance->do_plugin_menu_inclusion();
 }
 
 // Called from main thread, beware!
-void SimpleDlg::apply_settings(SpellChecker* spell_checker_instance)
-{
+void SimpleDlg::apply_settings(Settings& settings) {
     int lang_count = ComboBox_GetCount(m_h_combo_language);
     int cur_sel = ComboBox_GetCurSel(m_h_combo_language);
 
-    if (IsWindowEnabled(m_h_combo_language))
-    {
-        if (cur_sel == lang_count - 1)
-        {
-            if (get_selected_lib())
-                spell_checker_instance->set_hunspell_language(L"<MULTIPLE>");
-            else
-                spell_checker_instance->set_aspell_language(L"<MULTIPLE>");
-        }
-        else
-        {
-            if (get_selected_lib() == 0)
-                spell_checker_instance->set_aspell_language(
-                    spell_checker_instance->get_lang_by_index(cur_sel));
-            else
-                spell_checker_instance->set_hunspell_language(
-                    spell_checker_instance->get_lang_by_index(cur_sel));
-        }
+    if (IsWindowEnabled(m_h_combo_language)) {
+        (get_selected_lib() == 1 ? settings.hunspell_language : settings.aspell_language) =
+            cur_sel == lang_count - 1
+                ? L"<MULTIPLE>"
+                : get_spell_checker()->
+                get_lang_by_index(cur_sel);
     }
-    spell_checker_instance->recheck_visible();
-    spell_checker_instance->set_suggestions_num(_wtoi(get_edit_text (m_h_suggestions_num).c_str ()));
+    settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
     if (get_selected_lib() == 0)
-        spell_checker_instance->set_aspell_path(get_edit_text (m_h_lib_path).c_str ());
-    else
-    {
-        spell_checker_instance->set_hunspell_path(get_edit_text (m_h_lib_path).c_str ());
-        spell_checker_instance->set_hunspell_additional_path(get_edit_text (m_h_system_path).c_str ());
+        settings.aspell_path = get_edit_text(m_h_lib_path);
+    else {
+        settings.hunspell_path = get_edit_text(m_h_lib_path);
+        settings.additional_hunspell_path = get_edit_text(m_h_system_path);
     }
 
-    spell_checker_instance->set_check_those(
-        Button_GetCheck(m_h_check_only_those) == BST_CHECKED ? 1 : 0);
-    spell_checker_instance->set_file_types(get_edit_text (m_h_file_types).c_str ());
-    spell_checker_instance->set_sugg_type(ComboBox_GetCurSel(m_h_sugg_type));
-    spell_checker_instance->set_check_comments(Button_GetCheck(m_h_check_comments) ==
-        BST_CHECKED);
-    spell_checker_instance->set_decode_names(Button_GetCheck(m_h_decode_names) ==
-        BST_CHECKED);
-    spell_checker_instance->set_one_user_dic(Button_GetCheck(m_h_one_user_dic) ==
-        BST_CHECKED);
-    update_langs_menu();
+    settings.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
+    settings.file_types = get_edit_text(m_h_file_types);
+    settings.suggestions_mode = ComboBox_GetCurSel(m_h_sugg_type);
+    settings.check_only_comments_and_strings = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
+    settings.decode_names = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
+    settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
 }
 
-void SimpleDlg::set_lib_mode(int lib_mode)
-{
+void SimpleDlg::set_lib_mode(int lib_mode) {
     ComboBox_SetCurSel(m_h_library, lib_mode);
 }
 
 void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
-                            const wchar_t* hunspell_path,
-                            const wchar_t* hunspell_additional_path)
-{
-    if (get_selected_lib() == 0)
-    {
+                              const wchar_t* hunspell_path,
+                              const wchar_t* hunspell_additional_path) {
+    if (get_selected_lib() == 0) {
         ShowWindow(m_h_aspell_status, 1);
         ShowWindow(m_h_download_dics, 0);
-        if (status == 2)
-        {
+        if (status == 2) {
             m_aspell_status_color = COLOR_OK;
             Static_SetText(m_h_aspell_status, L"Aspell Status: OK");
         }
-        else if (status == 1)
-        {
+        else if (status == 1) {
             m_aspell_status_color = COLOR_FAIL;
             Static_SetText(m_h_aspell_status, L"Aspell Status: No Dictionaries");
         }
-        else
-        {
+        else {
             m_aspell_status_color = COLOR_FAIL;
             Static_SetText(m_h_aspell_status, L"Aspell Status: Fail");
         }
@@ -258,8 +214,7 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
         // SetWindowText (HLibLink, L"<A HREF=\"http://aspell.net/win32/\">Aspell
         // Library and Dictionaries for Win32</A>");
     }
-    else
-    {
+    else {
         ShowWindow(m_h_aspell_status, 0);
         ShowWindow(m_h_download_dics, 1);
         ShowWindow(m_h_lib_link,
@@ -271,13 +226,11 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
         ShowWindow(m_h_hunspell_reset_path, 1);
         ShowWindow(m_h_hunspell_path_group_box, 1);
         ShowWindow(m_h_hunspell_path_type, 1);
-        if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
-        {
+        if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0) {
             ShowWindow(m_h_lib_path, 1);
             ShowWindow(m_h_system_path, 0);
         }
-        else
-        {
+        else {
             ShowWindow(m_h_lib_path, 0);
             ShowWindow(m_h_system_path, 1);
         }
@@ -290,62 +243,51 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
     Edit_SetText(m_h_system_path, hunspell_additional_path);
 }
 
-void SimpleDlg::fill_sugestions_num(int suggestions_num)
-{
+void SimpleDlg::fill_sugestions_num(int suggestions_num) {
     wchar_t buf[10];
     _itow_s(suggestions_num, buf, 10);
     Edit_SetText(m_h_suggestions_num, buf);
 }
 
-void SimpleDlg::set_file_types(bool check_those, const wchar_t* file_types)
-{
-    if (!check_those)
-    {
+void SimpleDlg::set_file_types(bool check_those, const wchar_t* file_types) {
+    if (!check_those) {
         Button_SetCheck(m_h_check_not_those, BST_CHECKED);
         Button_SetCheck(m_h_check_only_those, BST_UNCHECKED);
         Edit_SetText(m_h_file_types, file_types);
     }
-    else
-    {
+    else {
         Button_SetCheck(m_h_check_only_those, BST_CHECKED);
         Button_SetCheck(m_h_check_not_those, BST_UNCHECKED);
         Edit_SetText(m_h_file_types, file_types);
     }
 }
 
-void SimpleDlg::set_sugg_type(int sugg_type)
-{
+void SimpleDlg::set_sugg_type(int sugg_type) {
     ComboBox_SetCurSel(m_h_sugg_type, sugg_type);
 }
 
-void SimpleDlg::set_check_comments(bool value)
-{
+void SimpleDlg::set_check_comments(bool value) {
     Button_SetCheck(m_h_check_comments, value ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void SimpleDlg::set_decode_names(bool value)
-{
+void SimpleDlg::set_decode_names(bool value) {
     Button_SetCheck(m_h_decode_names, value ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void SimpleDlg::set_one_user_dic(bool value)
-{
+void SimpleDlg::set_one_user_dic(bool value) {
     Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED);
 }
 
 int SimpleDlg::get_selected_lib() { return ComboBox_GetCurSel(m_h_library); }
 
 static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/,
-                                       LPARAM lp_data)
-{
+                                         LPARAM lp_data) {
     // If the BFFM_INITIALIZED message is received
     // set the path to the start path.
-    switch (u_msg)
-    {
+    switch (u_msg) {
     case BFFM_INITIALIZED:
         {
-            if (NULL != lp_data)
-            {
+            if (NULL != lp_data) {
                 SendMessage(hwnd, BFFM_SETSELECTION, true, lp_data);
             }
         }
@@ -356,12 +298,10 @@ static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*
     return 0; // The function should always return 0.
 }
 
-INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
-{
+INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     wchar_t* end_ptr;
 
-    switch (message)
-    {
+    switch (message) {
     case WM_INITDIALOG:
         {
             // Retrieving handles of dialog controls
@@ -409,35 +349,28 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
         }
     case WM_COMMAND:
         {
-            switch (LOWORD(w_param))
-            {
+            switch (LOWORD(w_param)) {
             case IDC_COMBO_LANGUAGE:
-                if (HIWORD(w_param) == CBN_SELCHANGE)
-                {
+                if (HIWORD(w_param) == CBN_SELCHANGE) {
                     if (ComboBox_GetCurSel(m_h_combo_language) ==
-                        ComboBox_GetCount(m_h_combo_language) - 1)
-                    {
+                        ComboBox_GetCount(m_h_combo_language) - 1) {
                         get_lang_list()->do_dialog();
                     }
                 }
                 break;
             case IDC_LIBRARY:
-                if (HIWORD(w_param) == CBN_SELCHANGE)
-                {
+                if (HIWORD(w_param) == CBN_SELCHANGE) {
                     get_spell_checker()->lib_change();
                 }
                 break;
             case IDC_HUNSPELL_PATH_TYPE:
-                if (HIWORD(w_param) == CBN_SELCHANGE)
-                {
+                if (HIWORD(w_param) == CBN_SELCHANGE) {
                     if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0 ||
-                        get_selected_lib() == 0)
-                    {
+                        get_selected_lib() == 0) {
                         ShowWindow(m_h_lib_path, 1);
                         ShowWindow(m_h_system_path, 0);
                     }
-                    else
-                    {
+                    else {
                         ShowWindow(m_h_lib_path, 0);
                         ShowWindow(m_h_system_path, 1);
                     }
@@ -445,8 +378,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                 break;
             case IDC_SUGGESTIONS_NUM:
                 {
-                    if (HIWORD(w_param) == EN_CHANGE)
-                    {
+                    if (HIWORD(w_param) == EN_CHANGE) {
                         wchar_t buf[DEFAULT_BUF_SIZE];
                         Edit_GetText(m_h_suggestions_num, buf, DEFAULT_BUF_SIZE);
                         if (!*buf)
@@ -465,16 +397,14 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                 }
                 break;
             case IDC_REMOVE_DICS:
-                if (HIWORD(w_param) == BN_CLICKED)
-                {
+                if (HIWORD(w_param) == BN_CLICKED) {
                     get_remove_dics()->do_dialog();
                 }
                 break;
             case IDC_RESETASPELLPATH:
             case IDC_RESETHUNSPELLPATH:
                 {
-                    if (HIWORD(w_param) == BN_CLICKED)
-                    {
+                    if (HIWORD(w_param) == BN_CLICKED) {
                         std::wstring path;
                         if (get_selected_lib() == 0)
                             path = get_default_aspell_path();
@@ -491,22 +421,20 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                 break;
             case IDC_DOWNLOADDICS:
                 {
-                    if (HIWORD(w_param) == BN_CLICKED)
-                    {
+                    if (HIWORD(w_param) == BN_CLICKED) {
                         get_download_dics()->do_dialog();
                     }
                 }
                 break;
             case IDC_BROWSEASPELLPATH:
-                if (get_selected_lib() == 0)
-                {
+                if (get_selected_lib() == 0) {
                     OPENFILENAME ofn;
                     ZeroMemory(&ofn, sizeof(ofn));
                     ofn.lStructSize = sizeof(ofn);
                     ofn.hwndOwner = _hSelf;
                     std::vector<wchar_t> filename(MAX_PATH);
                     auto lib_path = get_edit_text(m_h_lib_path);
-                    std::copy (lib_path.begin (), lib_path.end (), filename.begin ());
+                    std::copy(lib_path.begin(), lib_path.end(), filename.begin());
                     // TODO: add possibility to use modern browse dialog
                     ofn.lpstrFile = filename.data();
                     ofn.nMaxFile = DEFAULT_BUF_SIZE;
@@ -519,8 +447,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                     if (GetOpenFileName(&ofn))
                         Edit_SetText(m_h_lib_path, filename.data ());
                 }
-                else
-                {
+                else {
                     // Thanks to http://vcfaq.mvps.org/sdk/20.htm
                     BROWSEINFO bi;
                     memset(&bi, 0, sizeof(bi));
@@ -536,17 +463,16 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                     bi.lpfn = browse_callback_proc;
                     auto lib_path = get_edit_text(m_h_lib_path);
                     std::vector<wchar_t> npp_path(MAX_PATH);
-                    std::vector<wchar_t> final_path (MAX_PATH);
+                    std::vector<wchar_t> final_path(MAX_PATH);
                     send_msg_to_npp(&m_npp_data_instance, NPPM_GETNPPDIRECTORY, MAX_PATH,
-                                 reinterpret_cast<LPARAM>(npp_path.data()));
-                    PathCombine(final_path.data (), npp_path.data (), lib_path.c_str());
-                    bi.lParam = reinterpret_cast<LPARAM>(final_path.data ());
+                                    reinterpret_cast<LPARAM>(npp_path.data()));
+                    PathCombine(final_path.data(), npp_path.data(), lib_path.c_str());
+                    bi.lParam = reinterpret_cast<LPARAM>(final_path.data());
                     LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-                    if (pidl != nullptr)
-                    {
+                    if (pidl != nullptr) {
                         // get the name of the folder
-                        std::vector<wchar_t> sz_path (MAX_PATH);
-                        SHGetPathFromIDList(pidl, sz_path.data ());
+                        std::vector<wchar_t> sz_path(MAX_PATH);
+                        SHGetPathFromIDList(pidl, sz_path.data());
                         Edit_SetText(m_h_lib_path, sz_path.data ());
                         CoTaskMemFree(pidl);
                         // free memory used
@@ -560,16 +486,14 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
         break;
     case WM_NOTIFY:
 
-        switch (reinterpret_cast<LPNMHDR>(l_param)->code)
-        {
+        switch (reinterpret_cast<LPNMHDR>(l_param)->code) {
         case NM_CLICK: // Fall through to the next case.
         case NM_RETURN:
             {
                 PNMLINK p_nm_link = reinterpret_cast<PNMLINK>(l_param);
                 LITEM item = p_nm_link->item;
 
-                if ((reinterpret_cast<LPNMHDR>(l_param)->hwndFrom == m_h_lib_link) && (item.iLink == 0))
-                {
+                if ((reinterpret_cast<LPNMHDR>(l_param)->hwndFrom == m_h_lib_link) && (item.iLink == 0)) {
                     ShellExecute(nullptr, L"open", item.szUrl, nullptr, nullptr, SW_SHOW);
                 }
 
@@ -580,8 +504,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
         }
         break;
     case WM_CTLCOLORSTATIC:
-        if (GetDlgItem(_hSelf, IDC_ASPELL_STATUS) == reinterpret_cast<HWND>(l_param))
-        {
+        if (GetDlgItem(_hSelf, IDC_ASPELL_STATUS) == reinterpret_cast<HWND>(l_param)) {
             HDC h_dc = (HDC)w_param;
             HTHEME h_theme;
 
@@ -605,20 +528,17 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
     return false;
 }
 
-void AdvancedDlg::set_underline_settings(int color, int style)
-{
+void AdvancedDlg::set_underline_settings(int color, int style) {
     m_underline_color_btn = color;
     ComboBox_SetCurSel(m_h_underline_style, style);
 }
 
-void AdvancedDlg::fill_delimiters(const char* delimiters)
-{
+void AdvancedDlg::fill_delimiters(const char* delimiters) {
     Edit_SetText(m_h_edit_delimiters, utf8_to_wstring (delimiters).c_str ());
 }
 
 void AdvancedDlg::set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg,
-                                    bool remove_boundary_apostrophes)
-{
+                                      bool remove_boundary_apostrophes) {
     Button_SetCheck(m_h_ignore_yo, convert_yo ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(m_h_convert_single_quotes,
         convert_single_quotes_arg ? BST_CHECKED : BST_UNCHECKED);
@@ -627,10 +547,9 @@ void AdvancedDlg::set_conversion_opts(bool convert_yo, bool convert_single_quote
 }
 
 void AdvancedDlg::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg,
-                            bool ignore_c_have_arg, bool ignore_c_all_arg,
-                            bool ignore_arg, bool ignore_sa_apostrophe_arg,
-                            bool ignore_one_letter)
-{
+                             bool ignore_c_have_arg, bool ignore_c_all_arg,
+                             bool ignore_arg, bool ignore_sa_apostrophe_arg,
+                             bool ignore_one_letter) {
     Button_SetCheck(m_h_ignore_numbers,
         ignore_numbers_arg ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(m_h_ignore_c_start, ignore_c_start_arg ? BST_CHECKED : BST_UNCHECKED);
@@ -643,14 +562,12 @@ void AdvancedDlg::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg,
         ignore_sa_apostrophe_arg ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void AdvancedDlg::set_sugg_box_settings(LRESULT size, LRESULT trans)
-{
+void AdvancedDlg::set_sugg_box_settings(LRESULT size, LRESULT trans) {
     SendMessage(m_h_slider_size, TBM_SETPOS, true, size);
-    SendMessage(m_h_slider_transparency, TBM_SETPOS, true, trans);
+    SendMessage(m_h_slider_sugg_button_opacity, TBM_SETPOS, true, trans);
 }
 
-void AdvancedDlg::set_buffer_size(int size)
-{
+void AdvancedDlg::set_buffer_size(int size) {
     wchar_t buf[DEFAULT_BUF_SIZE];
     _itow_s(size, buf, 10);
     Edit_SetText(m_h_buffer_size, buf);
@@ -662,13 +579,11 @@ const wchar_t*const indic_names[] = {
     L"Straight Box", L"Dash", L"Dots", L"Squiggle Low"
 };
 
-INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
-{
+INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     wchar_t* end_ptr = nullptr;
     wchar_t buf[DEFAULT_BUF_SIZE];
     int x;
-    switch (message)
-    {
+    switch (message) {
     case WM_INITDIALOG:
         {
             // Retrieving handles of dialog controls
@@ -690,31 +605,31 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             m_h_ignore_ = ::GetDlgItem(_hSelf, IDC_IGNORE_);
             m_h_ignore_se_apostrophe = ::GetDlgItem(_hSelf, IDC_IGNORE_SE_APOSTROPHE);
             m_h_slider_size = ::GetDlgItem(_hSelf, IDC_SLIDER_SIZE);
-            m_h_slider_transparency = ::GetDlgItem(_hSelf, IDC_SLIDER_TRANSPARENCY);
+            m_h_slider_sugg_button_opacity = ::GetDlgItem(_hSelf, IDC_SLIDER_TRANSPARENCY);
             m_h_buffer_size = ::GetDlgItem(_hSelf, IDC_BUFFER_SIZE);
             SendMessage(m_h_slider_size, TBM_SETRANGE, true, MAKELPARAM(5, 22));
-            SendMessage(m_h_slider_transparency, TBM_SETRANGE, true, MAKELPARAM(5, 100));
+            SendMessage(m_h_slider_sugg_button_opacity, TBM_SETRANGE, true, MAKELPARAM(5, 100));
 
             m_brush = nullptr;
 
             SetWindowText(m_h_ignore_yo, L"Cyrillic: Count io (\u0451) as e");
             create_tool_tip(IDC_DELIMETERS, _hSelf,
-                          L"Standard white-space symbols such as New Line ('\\n'), "
-                          L"Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are "
-                          L"always counted as delimiters");
+                            L"Standard white-space symbols such as New Line ('\\n'), "
+                            L"Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are "
+                            L"always counted as delimiters");
             create_tool_tip(IDC_RECHECK_DELAY, _hSelf, L"Delay between the end of typing "
-                          L"and rechecking the the text "
-                          L"after it");
+                            L"and rechecking the the text "
+                            L"after it");
             create_tool_tip(IDC_IGNORE_CSTART, _hSelf, L"Remember that words at the "
-                          L"beginning of sentences would "
-                          L"also be ignored that way.");
+                            L"beginning of sentences would "
+                            L"also be ignored that way.");
             create_tool_tip(
                 IDC_IGNORE_SE_APOSTROPHE, _hSelf,
                 L"Words like this sadly cannot be added to Aspell user dictionary");
             create_tool_tip(IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
-                          L"Words like this are mostly mean plural possessive form in "
-                          L"English, if you want to add such forms of words to "
-                          L"dictionary manually, please uncheck");
+                            L"Words like this are mostly mean plural possessive form in "
+                            L"English, if you want to add such forms of words to "
+                            L"dictionary manually, please uncheck");
 
             ComboBox_ResetContent(m_h_underline_style);
             for (auto name : indic_names)
@@ -729,8 +644,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             return false;
         }
     case WM_DRAWITEM:
-        switch (w_param)
-        {
+        switch (w_param) {
         case IDC_UNDERLINE_COLOR:
             PAINTSTRUCT ps;
             DRAWITEMSTRUCT* ds = (LPDRAWITEMSTRUCT)l_param;
@@ -739,12 +653,10 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             Pen = CreatePen (PS_SOLID, 1, RGB (128, 128, 128));
             SelectPen (Dc, Pen);
             */
-            if (ds->itemState & ODS_SELECTED)
-            {
+            if (ds->itemState & ODS_SELECTED) {
                 DrawEdge(dc, &ds->rcItem, BDR_SUNKENINNER | BDR_SUNKENOUTER, BF_RECT);
             }
-            else
-            {
+            else {
                 DrawEdge(dc, &ds->rcItem, BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT);
             }
             // DeleteObject (Pen);
@@ -753,8 +665,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
         }
         break;
     case WM_CTLCOLORBTN:
-        if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) == (HWND)l_param)
-        {
+        if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) == (HWND)l_param) {
             HDC h_dc = (HDC)w_param;
             if (m_brush)
                 DeleteObject(m_brush);
@@ -766,15 +677,13 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
         }
         break;
     case WM_COMMAND:
-        switch (LOWORD(w_param))
-        {
+        switch (LOWORD(w_param)) {
         case IDC_DEFAULT_DELIMITERS:
             if (HIWORD(w_param) == BN_CLICKED)
                 get_spell_checker()->set_default_delimiters();
             return true;
         case IDC_RECHECK_DELAY:
-            if (HIWORD(w_param) == EN_CHANGE)
-            {
+            if (HIWORD(w_param) == EN_CHANGE) {
                 Edit_GetText(m_h_recheck_delay, buf, DEFAULT_BUF_SIZE);
                 if (!*buf)
                     return true;
@@ -791,8 +700,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             }
             break;
         case IDC_BUFFER_SIZE:
-            if (HIWORD(w_param) == EN_CHANGE)
-            {
+            if (HIWORD(w_param) == EN_CHANGE) {
                 Edit_GetText(m_h_buffer_size, buf, DEFAULT_BUF_SIZE);
                 if (!*buf)
                     return true;
@@ -809,8 +717,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             }
             break;
         case IDC_UNDERLINE_COLOR:
-            if (HIWORD(w_param) == BN_CLICKED)
-            {
+            if (HIWORD(w_param) == BN_CLICKED) {
                 CHOOSECOLOR cc;
                 static COLORREF acr_cust_clr[16];
                 memset(&cc, 0, sizeof(cc));
@@ -819,8 +726,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                 cc.rgbResult = m_underline_color_btn;
                 cc.lpCustColors = acr_cust_clr;
                 cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-                if (ChooseColor(&cc))
-                {
+                if (ChooseColor(&cc)) {
                     m_underline_color_btn = cc.rgbResult;
                     RedrawWindow(m_h_underline_color, nullptr, nullptr,
                                  RDW_UPDATENOW | RDW_INVALIDATE | RDW_ERASE);
@@ -834,20 +740,17 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
     return false;
 }
 
-void AdvancedDlg::set_delimeters_edit(const wchar_t* delimiters)
-{
+void AdvancedDlg::set_delimeters_edit(const wchar_t* delimiters) {
     Edit_SetText(m_h_edit_delimiters, delimiters);
 }
 
-void AdvancedDlg::set_recheck_delay(int delay)
-{
+void AdvancedDlg::set_recheck_delay(int delay) {
     wchar_t buf[DEFAULT_BUF_SIZE];
     _itow(delay, buf, 10);
     Edit_SetText(m_h_recheck_delay, buf);
 }
 
-int AdvancedDlg::get_recheck_delay()
-{
+int AdvancedDlg::get_recheck_delay() {
     wchar_t buf[DEFAULT_BUF_SIZE];
     Edit_GetText(m_h_recheck_delay, buf, DEFAULT_BUF_SIZE);
     wchar_t* end_ptr;
@@ -856,86 +759,82 @@ int AdvancedDlg::get_recheck_delay()
 }
 
 // Called from main thread, beware!
-void AdvancedDlg::apply_settings(SpellChecker* spell_checker_instance)
-{
-    spell_checker_instance->set_delimiters(to_utf8_string(get_edit_text (m_h_edit_delimiters).c_str ()).c_str ());
-    spell_checker_instance->set_conversion_options(
-        Button_GetCheck(m_h_ignore_yo) == BST_CHECKED ? true : false,
-        Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED ? true : false,
-        Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED
-            ? true
-            : false);
-    spell_checker_instance->set_underline_color(m_underline_color_btn);
-    spell_checker_instance->set_underline_style(ComboBox_GetCurSel(m_h_underline_style));
-    spell_checker_instance->set_recheck_delay(get_recheck_delay());
-    spell_checker_instance->set_ignore(
-        Button_GetCheck(m_h_ignore_numbers) == BST_CHECKED,
-        Button_GetCheck(m_h_ignore_c_start) == BST_CHECKED,
-        Button_GetCheck(m_h_ignore_c_have) == BST_CHECKED,
-        Button_GetCheck(m_h_ignore_c_all) == BST_CHECKED,
-        Button_GetCheck(m_h_ignore_) == BST_CHECKED,
-        Button_GetCheck(m_h_ignore_se_apostrophe) == BST_CHECKED,
-        Button_GetCheck(m_h_ignore_one_letter) == BST_CHECKED);
-    spell_checker_instance->set_sugg_box_settings(
-        static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0)),
-        static_cast<int>(SendMessage(m_h_slider_transparency, TBM_GETPOS, 0, 0)));
-    wchar_t* end_ptr;
-    auto text = get_edit_text (m_h_buffer_size);
-    int x = wcstol(text.c_str (), &end_ptr, 10);
-    spell_checker_instance->set_buffer_size(x);
-    get_download_dics()->update_list_box();
+void AdvancedDlg::apply_settings(Settings& settings) {
+    settings.delim_utf8 = to_utf8_string(get_edit_text(m_h_edit_delimiters).c_str());
+    settings.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
+    settings.convert_single_quotes = Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
+    settings.remove_boundary_apostrophes = Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED;
+    settings.underline_color = m_underline_color_btn;
+    settings.underline_style = ComboBox_GetCurSel(m_h_underline_style);
+    settings.recheck_delay = get_recheck_delay();
+    settings.ignore_containing_digit = Button_GetCheck(m_h_ignore_numbers) == BST_CHECKED;
+    settings.ignore_starting_with_capital = Button_GetCheck(m_h_ignore_c_start) == BST_CHECKED;
+    settings.ignore_having_a_capital = Button_GetCheck(m_h_ignore_c_have) == BST_CHECKED;
+    settings.ignore_all_capital = Button_GetCheck(m_h_ignore_c_all) == BST_CHECKED;
+    settings.ignore_having_underscore = Button_GetCheck(m_h_ignore_) == BST_CHECKED;
+    settings.ignore_starting_or_ending_with_apostrophe = Button_GetCheck(m_h_ignore_se_apostrophe) == BST_CHECKED;
+    settings.ignore_one_letter = Button_GetCheck(m_h_ignore_one_letter) == BST_CHECKED;
+    settings.suggestion_button_size = static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0));
+    settings.suggestion_button_opacity = static_cast<int>(SendMessage(m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0)
+    );
+    wchar_t* end_ptr = nullptr;
+    settings.find_next_buffer_size = wcstol(get_edit_text(m_h_buffer_size).c_str(), &end_ptr, 10);
 }
 
-SimpleDlg* SettingsDlg::get_simple_dlg() { return &m_simple_dlg_instance; }
+SimpleDlg* SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
 
-AdvancedDlg* SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg_instance; }
+AdvancedDlg* SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
 
-void SettingsDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data)
+SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, Settings& settings) :
+    m_npp_data(npp_data), m_settings(settings) {
+    Window::init(h_inst, parent);
+}
+
+void SettingsDlg::destroy() {
+    m_simple_dlg.destroy();
+    m_advanced_dlg.destroy();
+};
+
+// Send appropriate event and set some npp thread properties
+void SettingsDlg::apply_settings() {
+    m_simple_dlg.apply_settings(m_settings);
+    m_advanced_dlg.apply_settings(m_settings);
+    m_settings.save ();
+    m_settings.settings_changed();
+}
+
+void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data)
 {
     m_npp_data_instance = npp_data;
     return Window::init(h_inst, parent);
 }
 
-void SettingsDlg::destroy()
-{
-    m_simple_dlg_instance.destroy();
-    m_advanced_dlg_instance.destroy();
-};
-
-// Send appropriate event and set some npp thread properties
-void SettingsDlg::apply_settings()
-{
-    get_spell_checker()->apply_settings();
-}
-
-INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
-{
-    switch (message)
-    {
+INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
+    switch (message) {
     case WM_INITDIALOG:
         {
-            m_controls_tab_instance.initTabBar(_hInst, _hSelf, false, true, false);
-            m_controls_tab_instance.setFont(L"Tahoma", 13);
+            m_controls_tab.initTabBar(_hInst, _hSelf, false, true, false);
+            m_controls_tab.setFont(L"Tahoma", 13);
 
-            m_simple_dlg_instance.init_settings(_hInst, _hSelf, m_npp_data_instance);
-            m_simple_dlg_instance.create(IDD_SIMPLE, false, false);
-            m_simple_dlg_instance.display();
-            m_advanced_dlg_instance.init(_hInst, _hSelf);
-            m_advanced_dlg_instance.create(IDD_ADVANCED, false, false);
+            m_simple_dlg.init_settings(_hInst, _hSelf, m_npp_data);
+            m_simple_dlg.create(IDD_SIMPLE, false, false);
+            m_simple_dlg.display();
+            m_advanced_dlg.init(_hInst, _hSelf);
+            m_advanced_dlg.create(IDD_ADVANCED, false, false);
 
-            m_window_vector_instance.push_back(
-                DlgInfo(&m_simple_dlg_instance, TEXT("Simple"), TEXT("Simple Options")));
-            m_window_vector_instance.push_back(DlgInfo(
-                &m_advanced_dlg_instance, TEXT("Advanced"), TEXT("Advanced Options")));
-            m_controls_tab_instance.createTabs(m_window_vector_instance);
-            m_controls_tab_instance.display();
+            m_window_vector.push_back(
+                DlgInfo(&m_simple_dlg, TEXT("Simple"), TEXT("Simple Options")));
+            m_window_vector.push_back(DlgInfo(
+                &m_advanced_dlg, TEXT("Advanced"), TEXT("Advanced Options")));
+            m_controls_tab.createTabs(m_window_vector);
+            m_controls_tab.display();
             RECT rc;
             getClientRect(rc);
-            m_controls_tab_instance.reSizeTo(rc);
+            m_controls_tab.reSizeTo(rc);
             rc.bottom -= 30;
 
-            m_simple_dlg_instance.reSizeTo(rc);
-            m_advanced_dlg_instance.reSizeTo(rc);
+            m_simple_dlg.reSizeTo(rc);
+            m_advanced_dlg.reSizeTo(rc);
 
             // This stuff is copied from npp source to make tabbed window looked totally
             // nice and white
@@ -960,11 +859,9 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
     case WM_NOTIFY:
         {
             NMHDR* nmhdr = (NMHDR *)l_param;
-            if (nmhdr->code == TCN_SELCHANGE)
-            {
-                if (nmhdr->hwndFrom == m_controls_tab_instance.getHSelf())
-                {
-                    m_controls_tab_instance.clickedUpdate();
+            if (nmhdr->code == TCN_SELCHANGE) {
+                if (nmhdr->hwndFrom == m_controls_tab.getHSelf()) {
+                    m_controls_tab.clickedUpdate();
                     return false;
                 }
             }
@@ -972,32 +869,28 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
         }
     case WM_COMMAND:
         {
-            switch (LOWORD(w_param))
-            {
+            switch (LOWORD(w_param)) {
             case 0: // Menu
                 {
                     get_spell_checker()->copy_misspellings_to_clipboard();
                 }
                 break;
             case IDAPPLY:
-                if (HIWORD(w_param) == BN_CLICKED)
-                {
+                if (HIWORD(w_param) == BN_CLICKED) {
                     apply_settings();
 
                     return false;
                 }
                 break;
             case IDOK:
-                if (HIWORD(w_param) == BN_CLICKED)
-                {
+                if (HIWORD(w_param) == BN_CLICKED) {
                     display(false);
                     apply_settings();
                     return false;
                 }
                 break;
             case IDCANCEL:
-                if (HIWORD(w_param) == BN_CLICKED)
-                {
+                if (HIWORD(w_param) == BN_CLICKED) {
                     display(false);
                     return false;
                 }
@@ -1008,15 +901,12 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
     return false;
 }
 
-UINT SettingsDlg::do_dialog()
-{
-    if (!isCreated())
-    {
+UINT SettingsDlg::do_dialog() {
+    if (!isCreated()) {
         create(IDD_SETTINGS);
         goToCenter();
     }
-    else
-    {
+    else {
         goToCenter();
         get_spell_checker()->fill_dialogs();
     }

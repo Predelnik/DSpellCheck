@@ -231,7 +231,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code) {
             restyling_caused_recheck_was_done = false;
             get_spell_checker()->set_suggestions_box_transparency();
             get_spell_checker()->reinit_language_lists(false); // To update quick lang change menu
-            update_langs_menu();
         }
         break;
 

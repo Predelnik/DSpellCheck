@@ -273,7 +273,7 @@ private:
     int m_proxy_port;
     std::wstring m_proxy_password;
     int m_recheck_delay;
-    const Settings *m_settings;
+    const Settings &m_settings;
 
     LRESULT m_lexer;
     std::vector<std::string> m_last_suggestions;

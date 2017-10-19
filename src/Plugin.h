@@ -73,7 +73,6 @@ void load_settings ();
 void recheck_visible ();
 void init_classes ();
 void create_hooks ();
-void update_langs_menu ();
 LRESULT show_calculated_menu(const std::vector<SuggestionsMenuItem>&& menu_list);
 void add_icons ();
 bool get_auto_check_state ();

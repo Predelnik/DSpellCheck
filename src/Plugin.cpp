@@ -286,9 +286,6 @@ void add_icons() {
                   static_cast<WPARAM>(func_item[0].cmd_id), reinterpret_cast<LPARAM>(auto_check_icon.get()));
 }
 
-void update_langs_menu() {
-    get_spell_checker()->do_plugin_menu_inclusion();
-}
 
 static std::wstring get_menu_item_text(HMENU menu, UINT index) {
     auto str_len = GetMenuString(menu, index, nullptr, 0, MF_BYPOSITION);
@@ -355,8 +352,7 @@ void init_classes() {
 
     settings = std::make_unique<Settings>(ini_file_path);
 
-    settings_dlg = std::make_unique<SettingsDlg>();
-    settings_dlg->init_settings(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
+    settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data, *settings);
 
     about_dlg = std::make_unique<AboutDlg>();
     about_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);

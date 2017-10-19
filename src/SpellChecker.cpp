@@ -118,7 +118,7 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
                            NppData* npp_data_instance_arg,
                            SuggestionsButton* suggestions_instance_arg,
                            LangList* lang_list_instance_arg,
-                           const Settings* settings) {
+                           const Settings* settings) : m_settings (*settings) {
     m_current_position = 0;
     m_ini_file_path = ini_file_path_arg;
     m_settings_dlg_instance = settings_dlg_instance_arg;
@@ -153,8 +153,7 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
     m_proxy_port = 0;
     m_settings_loaded = false;
     m_use_proxy = false;
-    m_settings = settings;
-    m_settings->settings_changed.connect([this] { on_settings_changed (); });
+    m_settings.settings_changed.connect([this] { on_settings_changed(); });
     bool res =
         (send_msg_to_npp(m_npp_data_instance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
 
@@ -359,16 +358,6 @@ void SpellChecker::recheck_visible_both_views() {
     m_current_encoding = old_encoding;
     m_aspell_speller->set_encoding(m_current_encoding);
     m_hunspell_speller->set_encoding(m_current_encoding);
-}
-
-void SpellChecker::apply_settings() {
-    m_settings_dlg_instance->get_simple_dlg()->apply_settings(this);
-    m_settings_dlg_instance->get_advanced_dlg()->apply_settings(this);
-    fill_dialogs(true);
-    save_settings();
-    check_file_name(); // Cause filters may change
-    refresh_underline_style();
-    recheck_visible_both_views();
 }
 
 void SpellChecker::apply_multi_lang_settings() {
@@ -1027,8 +1016,8 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
             else
                 set_hunspell_language(lang_string);
 
+            do_plugin_menu_inclusion ();
             reinit_language_lists(true);
-            update_langs_menu();
             recheck_visible_both_views();
             save_settings();
             break;
@@ -1350,6 +1339,13 @@ void SpellChecker::on_settings_changed() {
     load_from_ini(m_proxy_port, L"Proxy_Port", 808);
     load_from_ini(m_proxy_anonymous, L"Proxy_Is_Anonymous", true);
     load_from_ini(m_proxy_type, L"Proxy_Type", 0);
+
+    fill_dialogs(true);
+    check_file_name();
+    refresh_underline_style();
+    recheck_visible_both_views();
+    do_plugin_menu_inclusion();
+    get_download_dics()->update_list_box();
 }
 
 void SpellChecker::create_word_underline(HWND scintilla_window, long start,
@@ -1712,7 +1708,7 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
         }
         if (m_ignore_having_a_capital || m_ignore_all_capital) {
             bool all_upper = IsCharUpper(ts[0]);
-            for (auto c : ts) {
+            for (auto c : std::wstring_view (ts).substr(1)) {
                 if (IsCharUpper(c)) {
                     if (m_ignore_having_a_capital) {
                         return true;

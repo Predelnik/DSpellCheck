@@ -26,14 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class HunspellInterface;
 class SpellChecker;
 struct LanguageName;
+class Settings;
 typedef HTHEME(WINAPI *OtdProc)(HWND, LPCWSTR);
 
 class SimpleDlg : public StaticDialog {
 public:
   SimpleDlg();
   ~SimpleDlg();
-  void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
-  void apply_settings(SpellChecker *spell_checker_instance);
+  void apply_settings(Settings& settings);
   bool add_available_languages(const std::vector<LanguageName>& langs_available,
                              const wchar_t *current_language,
                              std::wstring_view multi_languages,
@@ -50,9 +50,10 @@ public:
   void set_decode_names(bool value);
   void set_one_user_dic(bool value);
   void apply_lib_change(SpellChecker *spell_checker_instance);
+  void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
 
 protected:
-    INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 
 private:
   /* NppData struct instance */
@@ -89,7 +90,7 @@ private:
 
 class AdvancedDlg : public StaticDialog {
 public:
-  void apply_settings(SpellChecker *spell_checker_instance);
+  void apply_settings(Settings& settings);
   void fill_delimiters(const char *delimiters);
   void set_delimeters_edit(const wchar_t* delimiters);
    void set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg,
@@ -122,7 +123,7 @@ private:
   HWND m_h_ignore_ = nullptr;
   HWND m_h_ignore_se_apostrophe = nullptr;
   HWND m_h_slider_size = nullptr;
-  HWND m_h_slider_transparency = nullptr;
+  HWND m_h_slider_sugg_button_opacity = nullptr;
   HWND m_h_buffer_size = nullptr;
   HWND m_h_remove_boundary_apostrophes = nullptr;
 
@@ -133,19 +134,20 @@ private:
 class SettingsDlg : public StaticDialog {
 public:
   UINT do_dialog();
-  void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
   SimpleDlg *get_simple_dlg();
   AdvancedDlg *get_advanced_dlg();
+  SettingsDlg (HINSTANCE h_inst, HWND parent, NppData npp_data, Settings &settings);
 
 protected:
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
   void destroy() override;
-    static void apply_settings();
+   void apply_settings();
 
 private:
-  NppData m_npp_data_instance;
-  SimpleDlg m_simple_dlg_instance;
-  AdvancedDlg m_advanced_dlg_instance;
-  WindowVector m_window_vector_instance;
-  ControlsTab m_controls_tab_instance;
+  NppData m_npp_data;
+  SimpleDlg m_simple_dlg;
+  AdvancedDlg m_advanced_dlg;
+  WindowVector m_window_vector;
+  ControlsTab m_controls_tab;
+  Settings &m_settings;
 };
