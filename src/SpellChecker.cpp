@@ -118,7 +118,7 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
                            NppData* npp_data_instance_arg,
                            SuggestionsButton* suggestions_instance_arg,
                            LangList* lang_list_instance_arg,
-                           const Settings* settings) : m_settings (*settings) {
+                           const Settings* settings) : m_settings(*settings) {
     m_current_position = 0;
     m_ini_file_path = ini_file_path_arg;
     m_settings_dlg_instance = settings_dlg_instance_arg;
@@ -312,37 +312,13 @@ void SpellChecker::reinit_language_lists(bool update_dialogs) {
     }
 }
 
-int SpellChecker::get_lib_mode() { return m_lib_mode; }
-
-void SpellChecker::fill_dialogs(bool no_display_call) {
-    reinit_language_lists(true);
-    m_settings_dlg_instance->get_simple_dlg()->set_lib_mode(m_lib_mode);
-    m_settings_dlg_instance->get_simple_dlg()->fill_lib_info(
-        m_aspell_speller->is_working()
-            ? 2 - (m_current_langs.empty() ? 0 : 1)
-            : 0,
-        m_aspell_path.c_str(), m_hunspell_path.c_str(), m_additional_hunspell_path.c_str());
-    m_settings_dlg_instance->get_simple_dlg()->fill_sugestions_num(m_suggestions_num);
-    m_settings_dlg_instance->get_simple_dlg()->set_file_types(m_check_those, m_file_types.c_str());
-    m_settings_dlg_instance->get_simple_dlg()->set_check_comments(m_check_only_comments_and_string);
-    m_settings_dlg_instance->get_simple_dlg()->set_decode_names(m_decode_names);
-    m_settings_dlg_instance->get_simple_dlg()->set_sugg_type(m_suggestions_mode);
-    m_settings_dlg_instance->get_simple_dlg()->set_one_user_dic(m_one_user_dic);
-    m_settings_dlg_instance->get_advanced_dlg()->fill_delimiters(m_delim_utf8.c_str());
-    m_settings_dlg_instance->get_advanced_dlg()->set_recheck_delay(m_recheck_delay);
-    m_settings_dlg_instance->get_advanced_dlg()->set_conversion_opts(
-        m_ignore_yo, m_convert_single_quotes, m_remove_boundary_apostrophes);
-    m_settings_dlg_instance->get_advanced_dlg()->set_underline_settings(m_underline_color,
-                                                                        m_underline_style);
-    m_settings_dlg_instance->get_advanced_dlg()->set_ignore(
-        m_ignore_numbers, m_ignore_starting_with_capital, m_ignore_having_a_capital, m_ignore_all_capital,
-        m_ignore_having_underscore,
-        m_ignore_starting_or_ending_with_apostrophe, m_ignore_one_letter);
-    m_settings_dlg_instance->get_advanced_dlg()->set_sugg_box_settings(m_sb_size, m_sb_trans);
-    m_settings_dlg_instance->get_advanced_dlg()->set_buffer_size(m_buffer_size / 1024);
-    if (!no_display_call)
-        m_settings_dlg_instance->display();
+int SpellChecker::get_aspell_status() {
+    return m_aspell_speller->is_working()
+               ? 2 - (m_current_langs.empty() ? 0 : 1)
+               : 0;
 }
+
+int SpellChecker::get_lib_mode() { return m_lib_mode; }
 
 void SpellChecker::recheck_visible_both_views() {
     LRESULT old_lexer = m_lexer;
@@ -1016,7 +992,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
             else
                 set_hunspell_language(lang_string);
 
-            do_plugin_menu_inclusion ();
+            do_plugin_menu_inclusion();
             reinit_language_lists(true);
             recheck_visible_both_views();
             save_settings();
@@ -1340,12 +1316,12 @@ void SpellChecker::on_settings_changed() {
     load_from_ini(m_proxy_anonymous, L"Proxy_Is_Anonymous", true);
     load_from_ini(m_proxy_type, L"Proxy_Type", 0);
 
-    fill_dialogs(true);
     check_file_name();
     refresh_underline_style();
     recheck_visible_both_views();
     do_plugin_menu_inclusion();
     get_download_dics()->update_list_box();
+    reinit_language_lists(true);
 }
 
 void SpellChecker::create_word_underline(HWND scintilla_window, long start,
@@ -1708,7 +1684,7 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
         }
         if (m_ignore_having_a_capital || m_ignore_all_capital) {
             bool all_upper = IsCharUpper(ts[0]);
-            for (auto c : std::wstring_view (ts).substr(1)) {
+            for (auto c : std::wstring_view(ts).substr(1)) {
                 if (IsCharUpper(c)) {
                     if (m_ignore_having_a_capital) {
                         return true;

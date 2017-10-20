@@ -122,7 +122,8 @@ public:
     void set_install_system(bool value);
     void fill_dialogs(bool no_display_call = false);
     void reinit_language_lists(bool update_dialogs);
-    const wchar_t* get_hunspell_path() const { return m_hunspell_path.c_str(); };
+    const wchar_t* get_hunspell_path() const { return m_hunspell_path.c_str(); }
+    int get_aspell_status();;
     const wchar_t* get_hunspell_additional_path() const { return m_additional_hunspell_path.c_str(); };
     const wchar_t* get_lang_by_index(int i);
     bool get_show_only_known();

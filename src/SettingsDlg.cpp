@@ -339,6 +339,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_default_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
             m_aspell_status_color = RGB(0, 0, 0);
+            get_spell_checker ()->reinit_language_lists (true);
             return true;
         }
     case WM_CLOSE:
@@ -573,6 +574,20 @@ void AdvancedDlg::set_buffer_size(int size) {
     Edit_SetText(m_h_buffer_size, buf);
 }
 
+void AdvancedDlg::setup_controls(const Settings& settings) {
+    fill_delimiters(settings.delim_utf8.c_str ());
+    set_recheck_delay(settings.recheck_delay);
+    set_conversion_opts(
+        settings.ignore_yo, settings.convert_single_quotes, settings.remove_boundary_apostrophes);
+    set_underline_settings(settings.underline_color, settings.underline_style);
+    set_ignore(
+        settings.ignore_containing_digit, settings.ignore_starting_with_capital, settings.ignore_having_a_capital,
+        settings.ignore_all_capital, settings.ignore_having_underscore,
+        settings.ignore_starting_or_ending_with_apostrophe, settings.ignore_one_letter);
+    set_sugg_box_settings(settings.suggestion_button_size, settings.suggestion_button_opacity);
+    set_buffer_size(settings.find_next_buffer_size);
+}
+
 const wchar_t*const indic_names[] = {
     L"Plain", L"Squiggle", L"TT", L"Diagonal",
     L"Strike", L"Hidden", L"Box", L"Round Box",
@@ -803,10 +818,27 @@ void SettingsDlg::apply_settings() {
     m_settings.settings_changed();
 }
 
+void SettingsDlg::setup_controls() {
+    m_simple_dlg.setup_controls (m_settings);
+    m_advanced_dlg.setup_controls (m_settings);
+}
+
 void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data)
 {
     m_npp_data_instance = npp_data;
     return Window::init(h_inst, parent);
+}
+
+void SimpleDlg::setup_controls(const Settings& settings) {
+  set_lib_mode(settings.lib_mode);
+  fill_lib_info(get_spell_checker ()->get_aspell_status(),
+      settings.aspell_path.c_str (), settings.hunspell_path.c_str (), settings.additional_hunspell_path.c_str ());
+  fill_sugestions_num(settings.suggestion_count);
+  set_file_types(settings.check_those, settings.file_types.c_str ());
+  set_check_comments(settings.check_only_comments_and_strings);
+  set_decode_names(settings.decode_names);
+  set_sugg_type(settings.suggestions_mode);
+  set_one_user_dic(settings.use_unified_dictionary);
 }
 
 INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
@@ -843,7 +875,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
             if (enable_dlg_theme)
                 enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 
-            get_spell_checker()->fill_dialogs();
+            setup_controls();
 
             return true;
         }
@@ -908,10 +940,9 @@ UINT SettingsDlg::do_dialog() {
     }
     else {
         goToCenter();
-        get_spell_checker()->fill_dialogs();
+        setup_controls();
     }
 
+    display ();
     return true;
-    // return (UINT)::DialogBoxParam(_hInst, MAKEINTRESOURCE(IDD_SETTINGS),
-    // _hParent, (DLGPROC)dlgProc, (LPARAM)this);
 }

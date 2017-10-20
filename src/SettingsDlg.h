@@ -51,6 +51,7 @@ public:
   void set_one_user_dic(bool value);
   void apply_lib_change(SpellChecker *spell_checker_instance);
   void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
+  void setup_controls(const Settings& settings);
 
 protected:
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
@@ -103,6 +104,7 @@ public:
                  bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
                  bool ignore_sa_apostrophe_arg, bool ignore_one_letter);
   void set_buffer_size(int size);
+  void setup_controls(const Settings& settings);
 
 protected:
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
@@ -138,10 +140,11 @@ public:
   AdvancedDlg *get_advanced_dlg();
   SettingsDlg (HINSTANCE h_inst, HWND parent, NppData npp_data, Settings &settings);
 
-protected:
+private:
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
   void destroy() override;
-   void apply_settings();
+  void apply_settings();
+  void setup_controls ();
 
 private:
   NppData m_npp_data;

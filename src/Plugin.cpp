@@ -372,12 +372,12 @@ void init_classes() {
     spell_checker =
         std::make_unique<SpellChecker>(ini_file_path, settings_dlg.get(), &npp_data,
                                        suggestions_button.get(), lang_list_instance.get(), settings.get());
-    settings->load();
 
     download_dics_dlg = std::make_unique<DownloadDicsDlg>();
     download_dics_dlg->init_dlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
                                 spell_checker.get());
 
+    settings->load();
     resources_inited = true;
 }
 
