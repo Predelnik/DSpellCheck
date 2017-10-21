@@ -21,20 +21,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 struct AspellCanHaveError;
 struct AspellSpeller;
 
-#include "AbstractSpellerInterface.h"
+#include "SpellerInterface.h"
 
-class AspellInterface : public AbstractSpellerInterface {
+class LanguageInfo;
+
+class AspellInterface : public SpellerInterface {
   using SpellerPtr = std::unique_ptr<AspellSpeller, void (*)(AspellSpeller *)>;
 public:
   AspellInterface(HWND npp_window_arg); // Window for error reporting
   ~AspellInterface();
-    std::vector<std::wstring> get_language_list() override;
+  std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t* lang) override;
   void set_multiple_languages(
       const std::vector<std::wstring>& list) override; // Languages are from LangList
   bool
   check_word(const char* word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
-  bool is_working() override;
+  bool is_working() const override;
     std::vector<std::string> get_suggestions(const char* word) override;
   void add_to_dictionary(const char* word) override;
   void ignore_all(const char* word) override;

@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "AbstractSpellerInterface.h"
+#include "SpellerInterface.h"
 #include "AspellInterface.h"
 #include "HunspellInterface.h"
 
@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "DownloadDicsDlg.h"
 #include "iconv.h"
 #include "CommonFunctions.h"
-#include "LanguageName.h"
+#include "LanguageInfo.h"
 #include "LangList.h"
 #include "MainDef.h"
 #include "PluginInterface.h"
@@ -244,77 +244,9 @@ bool SpellChecker::get_install_system() { return m_install_system; }
 
 bool SpellChecker::get_decode_names() { return m_decode_names; }
 
-const wchar_t* SpellChecker::get_lang_by_index(int i) {
-    return m_current_langs[i].orig_name.c_str();
-}
-
-void SpellChecker::reinit_language_lists(bool update_dialogs) {
-    int speller_id = m_lib_mode;
-    bool current_lang_exists = false;
-    const wchar_t* current_lang;
-
-    auto speller_to_use =
-    (speller_id == 1
-         ? static_cast<AbstractSpellerInterface *>(m_hunspell_speller.get())
-         : m_aspell_speller.get());
-
-    if (speller_id == 0) {
-        get_download_dics()->display(false);
-        get_remove_dics()->display(false);
-    }
-
-    if (speller_id == 1)
-        current_lang = m_hunspell_language.c_str();
-    else
-        current_lang = m_aspell_language.c_str();
-
-    if (speller_to_use->is_working()) {
-        if (update_dialogs)
-            m_settings_dlg_instance->get_simple_dlg()->disable_language_combo(false);
-        auto langs_from_speller = speller_to_use->get_language_list();
-        m_current_langs.clear();
-
-        if (langs_from_speller.empty()) {
-            if (update_dialogs)
-                m_settings_dlg_instance->get_simple_dlg()->disable_language_combo(true);
-            return;
-        }
-        for (auto& lang : langs_from_speller) {
-            LanguageName lang_name(
-                lang.c_str(),
-                (speller_id == 1 && m_decode_names)); // Using them only for Hunspell
-            m_current_langs.push_back(
-                lang_name);
-            if (lang_name.orig_name == current_lang)
-                current_lang_exists = true;
-        }
-        if (wcscmp(current_lang, L"<MULTIPLE>") == 0)
-            current_lang_exists = true;
-
-        std::sort(m_current_langs.begin(), m_current_langs.end(),
-                  m_decode_names ? less_aliases : less_original);
-        if (!current_lang_exists && !m_current_langs.empty()) {
-            if (speller_id == 1)
-                set_hunspell_language(m_current_langs.front().orig_name.c_str());
-            else
-                set_aspell_language(m_current_langs.front().orig_name.c_str());
-            recheck_visible_both_views();
-        }
-        if (update_dialogs)
-            m_settings_dlg_instance->get_simple_dlg()->add_available_languages(
-                m_current_langs, speller_id == 1 ? m_hunspell_language.c_str() : m_aspell_language.c_str(),
-                speller_id == 1 ? m_hunspell_multi_languages : m_aspell_multi_languages,
-                speller_id == 1 ? m_hunspell_speller.get() : 0);
-    }
-    else {
-        if (update_dialogs)
-            m_settings_dlg_instance->get_simple_dlg()->disable_language_combo(true);
-    }
-}
-
 int SpellChecker::get_aspell_status() {
     return m_aspell_speller->is_working()
-               ? 2 - (m_current_langs.empty() ? 0 : 1)
+               ? 2 - (get_available_languages().empty() ? 0 : 1)
                : 0;
 }
 
@@ -336,9 +268,14 @@ void SpellChecker::recheck_visible_both_views() {
     m_hunspell_speller->set_encoding(m_current_encoding);
 }
 
-void SpellChecker::apply_multi_lang_settings() {
-    m_lang_list_instance->apply_choice(this);
-    save_settings();
+const SpellerInterface* SpellChecker::active_speller() const {
+    switch (m_settings.active_speller_lib_id) {
+    case 0:
+        return m_aspell_speller.get();
+    case 1:
+        return m_hunspell_speller.get();
+    }
+    return nullptr;
 }
 
 void SpellChecker::apply_proxy_settings() {
@@ -383,17 +320,6 @@ void SpellChecker::update_from_download_dics_options_no_update() {
     save_settings();
 }
 
-void SpellChecker::lib_change() {
-    m_settings_dlg_instance->get_simple_dlg()->apply_lib_change(this);
-    m_settings_dlg_instance->get_simple_dlg()->fill_lib_info(
-        m_aspell_speller->is_working()
-            ? 2 - (m_current_langs.empty() ? 1 : 0)
-            : 0,
-        m_aspell_path.c_str(), m_hunspell_path.c_str(), m_additional_hunspell_path.c_str());
-    recheck_visible_both_views();
-    save_settings();
-}
-
 void SpellChecker::lang_change() {
     m_lexer = send_msg_to_active_editor(get_current_scintilla(), SCI_GETLEXER);
     recheck_visible();
@@ -418,9 +344,10 @@ void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
     const wchar_t* cur_lang = (m_lib_mode == 1) ? m_hunspell_language.c_str() : m_aspell_language.c_str();
     HMENU new_menu = CreatePopupMenu();
     if (!invalidate) {
-        if (!m_current_langs.empty()) {
+        auto langs = get_available_languages();
+        if (!langs.empty()) {
             int i = 0;
-            for (auto& lang : m_current_langs) {
+            for (auto& lang : langs) {
                 int checked = (cur_lang == lang.orig_name)
                                   ? (MFT_RADIOCHECK | MF_CHECKED)
                                   : MF_UNCHECKED;
@@ -974,7 +901,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
             else
                 result = menu_id - get_langs_menu_id_start();
 
-            const wchar_t* lang_string;
+            std::wstring lang_string;
             if (result == MULTIPLE_LANGS) {
                 lang_string = L"<MULTIPLE>";
             }
@@ -984,16 +911,15 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
                 return;
             }
             else
-                lang_string = m_current_langs[result].orig_name.c_str();
+                lang_string = get_available_languages()[result].orig_name;
             do_plugin_menu_inclusion(true);
 
             if (m_lib_mode == 0)
-                set_aspell_language(lang_string);
+                set_aspell_language(lang_string.c_str ());
             else
-                set_hunspell_language(lang_string);
+                set_hunspell_language(lang_string.c_str ());
 
             do_plugin_menu_inclusion();
-            reinit_language_lists(true);
             recheck_visible_both_views();
             save_settings();
             break;
@@ -1321,7 +1247,7 @@ void SpellChecker::on_settings_changed() {
     recheck_visible_both_views();
     do_plugin_menu_inclusion();
     get_download_dics()->update_list_box();
-    reinit_language_lists(true);
+    lang_list_changed();
 }
 
 void SpellChecker::create_word_underline(HWND scintilla_window, long start,
@@ -1544,7 +1470,7 @@ void SpellChecker::set_delimiters(const char* str) {
 }
 
 void SpellChecker::set_multiple_languages(std::wstring_view multi_string,
-                                          AbstractSpellerInterface* speller) {
+                                          SpellerInterface* speller) {
     std::vector<std::wstring> multi_lang_list;
     for (auto token : tokenize<wchar_t>(multi_string, LR"(\|)"))
         multi_lang_list.push_back(std::wstring{token});
@@ -1737,6 +1663,15 @@ int SpellChecker::check_text_default_answer(CheckTextMode mode) {
         return -1;
     }
     return -1;
+}
+
+std::vector<LanguageInfo> SpellChecker::get_available_languages() const {
+    if (!active_speller()->is_working())
+        return {};
+
+    auto langs = active_speller()->get_language_list();
+    std::sort(langs.begin(), langs.end(), m_decode_names ? less_aliases : less_original);
+    return langs;
 }
 
 int SpellChecker::check_text(char* text_to_check, long offset,

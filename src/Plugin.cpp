@@ -352,7 +352,12 @@ void init_classes() {
 
     settings = std::make_unique<Settings>(ini_file_path);
 
-    settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data, *settings);
+    spell_checker =
+        std::make_unique<SpellChecker>(ini_file_path, settings_dlg.get(), &npp_data,
+                                       suggestions_button.get(), lang_list_instance.get(), settings.get());
+
+    settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data,
+                                                 *settings);
 
     about_dlg = std::make_unique<AboutDlg>();
     about_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
@@ -360,18 +365,13 @@ void init_classes() {
     progress_dlg = std::make_unique<ProgressDlg>();
     progress_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
-    lang_list_instance = std::make_unique<LangList>();
-    lang_list_instance->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
+    lang_list_instance = std::make_unique<LangList>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings);
 
     select_proxy_dlg = std::make_unique<SelectProxyDialog>();
     select_proxy_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
-    remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>();
-    remove_dics_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
-
-    spell_checker =
-        std::make_unique<SpellChecker>(ini_file_path, settings_dlg.get(), &npp_data,
-                                       suggestions_button.get(), lang_list_instance.get(), settings.get());
+    remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
+                                                                 *settings);
 
     download_dics_dlg = std::make_unique<DownloadDicsDlg>();
     download_dics_dlg->init_dlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,

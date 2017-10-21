@@ -24,72 +24,101 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Plugin.h"
 
 #include "resource.h"
+#include "LanguageInfo.h"
+#include "Settings.h"
+#include "utils/string_utils.h"
 
-void LangList::do_dialog() {
-  if (!isCreated()) {
-    create(IDD_CHOOSE_MULTIPLE_LANGUAGES);
-  }
-  goToCenter();
-  display();
-  SetFocus(m_h_lang_list);
+LangList::LangList(HINSTANCE h_inst, HWND parent, Settings& settings) : m_settings(settings) {
+    Window::init(h_inst, parent);
+    m_settings.settings_changed.connect([this] { update_list(); });
+    get_spell_checker()->lang_list_changed.connect([this] { update_list(); });
 }
 
-void LangList::init(HINSTANCE h_inst, HWND parent) {
-  return Window::init(h_inst, parent);
+void LangList::do_dialog() {
+    if (!isCreated()) {
+        create(IDD_CHOOSE_MULTIPLE_LANGUAGES);
+    }
+    goToCenter();
+    display();
+    SetFocus(m_h_lang_list);
 }
 
 HWND LangList::get_list_box() { return m_h_lang_list; }
 
-void LangList::apply_choice(SpellChecker *spell_checker_instance) {
-  int count = ListBox_GetCount(m_h_lang_list);
-  std::wstring buf;
-  bool first = true;
-  for (int i = 0; i < count; i++) {
-    if (CheckedListBox_GetCheckState(m_h_lang_list, i)) {
-      if (!first)
-      {
-        buf += L"|";
-      }
-      else
-          first = false;
+void LangList::update_list() {
+    if (!m_h_lang_list)
+        return;
 
-      buf += spell_checker_instance->get_lang_by_index(i);
+    ListBox_ResetContent(m_h_lang_list);
+    auto langs = get_spell_checker()->get_available_languages();
+    for (auto& lang : langs) {
+        ListBox_AddString(m_h_lang_list, lang.get_aliased_name (m_settings.use_language_name_aliases));
     }
-  }
-  auto converted_buf = to_utf8_string(buf.c_str ());
-  if (spell_checker_instance->get_lib_mode() == 1) {
-    spell_checker_instance->set_hunspell_multiple_languages(converted_buf.c_str ());
-    spell_checker_instance->hunspell_reinit_settings(false);
-  } else {
-    spell_checker_instance->set_aspell_multiple_languages(converted_buf.c_str ());
-    spell_checker_instance->aspell_reinit_settings();
-  }
-  spell_checker_instance->recheck_visible();
+
+    CheckedListBox_EnableCheckAll(get_lang_list()->get_list_box(), BST_UNCHECKED);
+    for (auto& token : tokenize<wchar_t>(m_settings.get_current_multi_languages(), LR"(\|)")) {
+        int index = -1;
+        int i = 0;
+        for (auto& lang : langs) {
+            if (token == lang.orig_name) {
+                index = i;
+                break;
+            }
+            ++i;
+        }
+        if (index != -1)
+            CheckedListBox_SetCheckState(m_h_lang_list, index,
+            BST_CHECKED);
+    }
+}
+
+void LangList::apply() {
+    int count = ListBox_GetCount(m_h_lang_list);
+    std::wstring buf;
+    bool first = true;
+    auto langs = get_spell_checker()->get_available_languages();
+    for (int i = 0; i < count; i++) {
+        if (CheckedListBox_GetCheckState(m_h_lang_list, i)) {
+            if (!first) {
+                buf += L"|";
+            }
+            else
+                first = false;
+
+            buf += langs[i].orig_name;
+        }
+    }
+    m_settings.get_current_multi_languages() = buf;
+    m_settings.get_current_language() = L"<MULTIPLE>";
+    m_settings.settings_changed ();
 }
 
 INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param, LPARAM) {
-  switch (message) {
-  case WM_INITDIALOG: {
-    m_h_lang_list = ::GetDlgItem(_hSelf, IDC_LANGLIST);
-    get_spell_checker ()->reinit_language_lists(true);
-    return true;
-  }
-  case WM_COMMAND: {
-    switch (LOWORD(w_param)) {
-    case IDOK:
-      if (HIWORD(w_param) == BN_CLICKED) {
-        get_spell_checker ()->apply_multi_lang_settings ();
-        display(false);
-      }
-      break;
-    case IDCANCEL:
-      if (HIWORD(w_param) == BN_CLICKED) {
-        get_spell_checker ()->reinit_language_lists(true); // Reset all settings
-        display(false);
-      }
-      break;
-    }
-  } break;
-  };
-  return false;
+    switch (message) {
+    case WM_INITDIALOG:
+        {
+            m_h_lang_list = ::GetDlgItem(_hSelf, IDC_LANGLIST);
+            update_list();
+            return true;
+        }
+    case WM_COMMAND:
+        {
+            switch (LOWORD(w_param)) {
+            case IDOK:
+                if (HIWORD(w_param) == BN_CLICKED) {
+                    apply();
+                    display(false);
+                }
+                break;
+            case IDCANCEL:
+                if (HIWORD(w_param) == BN_CLICKED) {
+                    update_list();
+                    display(false);
+                }
+                break;
+            }
+        }
+        break;
+    };
+    return false;
 }

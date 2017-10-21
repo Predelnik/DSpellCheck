@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "hunspell/hunspell.hxx"
 #include "HunspellInterface.h"
 #include "Plugin.h"
+#include "LanguageInfo.h"
 
 #include <io.h>
 #include <fcntl.h>
@@ -187,10 +188,10 @@ HunspellInterface::~HunspellInterface() {
     }
 }
 
-std::vector<std::wstring> HunspellInterface::get_language_list() {
-    std::vector<std::wstring> list;
+std::vector<LanguageInfo> HunspellInterface::get_language_list() const {
+    std::vector<LanguageInfo> list;
     for (auto& dic : m_dic_list) {
-        list.push_back(dic.name);
+        list.emplace_back(dic.name, true, get_lang_only_system(dic.name.c_str ()));
     }
     return list;
 }
@@ -456,7 +457,8 @@ std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
     if (!m_multi_mode) {
         list = m_singular_speller->hunspell->suggest(get_converted_word(word, (m_current_encoding == EncodingType::utf8)
                                                                                   ? m_singular_speller->converter.get()
-                                                                                  : m_singular_speller->converter_ansi.get()));
+                                                                                  : m_singular_speller->converter_ansi.
+                                                                                                        get()));
     }
     else {
         for (auto speller : m_spellers) {
@@ -471,10 +473,10 @@ std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
         }
     }
 
-    std::vector<std::string> sugg_list (list.size ());
-    std::transform (list.begin (), list.end (), sugg_list.begin (), [this](const std::string &s)
+    std::vector<std::string> sugg_list(list.size());
+    std::transform(list.begin(), list.end(), sugg_list.begin(), [this](const std::string& s)
     {
-       return get_converted_word(s.c_str(), m_last_selected_speller->back_converter.get());
+        return get_converted_word(s.c_str(), m_last_selected_speller->back_converter.get());
     });
     return sugg_list;
 }
@@ -538,15 +540,15 @@ void HunspellInterface::set_additional_directory(const wchar_t* dir) {
                   m_system_wrong_dic_path.c_str()); // We should load user dictionary first.
 }
 
-bool HunspellInterface::get_lang_only_system(const wchar_t* lang) {
+bool HunspellInterface::get_lang_only_system(const wchar_t* lang) const {
     AvailableLangInfo needle;
     needle.name = lang;
     needle.type = 1;
-    std::set<AvailableLangInfo>::iterator it = m_dic_list.find(needle);
+    auto it = m_dic_list.find(needle);
     if (it != m_dic_list.end() && it->type == 1)
         return true;
     else
         return false;
 }
 
-bool HunspellInterface::is_working() { return m_is_hunspell_working; }
+bool HunspellInterface::is_working() const { return m_is_hunspell_working; }

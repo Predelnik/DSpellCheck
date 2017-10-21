@@ -25,7 +25,39 @@ void Settings::save() {
 void Settings::load() {
     IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::load);
     process(worker);
-    settings_changed ();
+    settings_changed();
+}
+
+std::wstring& Settings::get_current_language() {
+    switch (active_speller_lib_id) {
+    case 0:
+        return aspell_language;
+    case 1:
+        return hunspell_language;
+    default:
+        break;
+    }
+    return aspell_language;
+}
+
+const std::wstring& Settings::get_current_language() const {
+    return const_cast<Self *>(this)->get_current_language();
+}
+
+std::wstring& Settings::get_current_multi_languages() {
+    switch (active_speller_lib_id) {
+    case 0:
+        return aspell_multi_languages;
+    case 1:
+        return hunspell_multi_languages;
+    default:
+        break;
+    }
+    return hunspell_multi_languages;
+}
+
+const std::wstring& Settings::get_current_multi_languages() const {
+    return const_cast<Self *>(this)->get_current_multi_languages();
 }
 
 std::wstring Settings::get_default_hunspell_path() {
@@ -35,7 +67,7 @@ std::wstring Settings::get_default_hunspell_path() {
 void Settings::process(IniWorker& worker) {
     worker.process(L"Aspell_Path", aspell_path, get_default_aspell_path());
     worker.process(L"User_Hunspell_Path", hunspell_path, get_default_hunspell_path());
-    worker.process(L"System_Hunspell_Path", hunspell_path, L".\\plugins\\config\\Hunspell");
+    worker.process(L"System_Hunspell_Path", additional_hunspell_path, L".\\plugins\\config\\Hunspell");
     worker.process(L"Suggestions_Control", suggestions_mode, 1);
     worker.process(L"Autocheck", auto_check_text, true);
     worker.process(L"Aspell_Multiple_Languages", aspell_multi_languages, L"");
@@ -60,7 +92,7 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"Ignore_With_", ignore_having_underscore, true);
     worker.process(L"United_User_Dictionary(Hunspell)", use_unified_dictionary, false);
     worker.process(L"Ignore_That_Start_or_End_with_", ignore_starting_or_ending_with_apostrophe, false);
-    worker.process(L"Library", lib_mode, 1);
+    worker.process(L"Library", active_speller_lib_id, 1);
     worker.process(L"Suggestions_Button_Size", suggestion_button_size, 15);
     worker.process(L"Suggestions_Button_Opacity", suggestion_button_opacity, 70);
     worker.process(L"Find_Next_Buffer_Size", find_next_buffer_size, 4);
@@ -72,7 +104,7 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"Last_Used_Address_Index", last_used_address_index, 0);
     worker.process(L"Remove_User_Dics_On_Dic_Remove", remove_user_dictionaries, false);
     worker.process(L"Remove_Dics_For_All_Users", remove_system_dictionaries, false);
-    worker.process(L"Decode_Language_Names", decode_names, true);
+    worker.process(L"Decode_Language_Names", use_language_name_aliases, true);
     worker.process(L"Use_Proxy", use_proxy, false);
     worker.process(L"Proxy_User_Name", proxy_user_name, L"anonymous");
     worker.process(L"Proxy_Host_Name", proxy_host_name, L"");

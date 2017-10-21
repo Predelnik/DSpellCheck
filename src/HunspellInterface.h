@@ -18,11 +18,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #pragma once
 
-#include "AbstractSpellerInterface.h"
+#include "SpellerInterface.h"
 
 #include "iconv.h"
 #include "CommonFunctions.h"
 #include "MainDef.h"
+
+class LanguageInfo;
 
 class Hunspell;
 
@@ -72,16 +74,16 @@ struct AvailableLangInfo {
   }
 };
 
-class HunspellInterface : public AbstractSpellerInterface {
+class HunspellInterface : public SpellerInterface {
 public:
   HunspellInterface(HWND npp_window_arg);
   ~HunspellInterface();
-  std::vector<std::wstring> get_language_list() override;
+  std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t* lang) override;
   void set_multiple_languages(
       const std::vector<std::wstring>& list) override;             // Languages are from LangList
   bool check_word(const char* word) override; // Word in Utf-8 or ANSI
-  bool is_working() override;
+  bool is_working() const override;
   std::vector<std::string> get_suggestions(const char* word) override;
   void add_to_dictionary(const char* word) override;
   void ignore_all(const char* word) override;
@@ -92,7 +94,7 @@ public:
   void set_use_one_dic(bool value);
   void update_on_dic_removal(wchar_t *path, bool &need_single_lang_reset,
                           bool &need_multi_lang_reset);
-  bool get_lang_only_system(const wchar_t* lang);
+  bool get_lang_only_system(const wchar_t* lang) const;
 
 private:
   DicInfo* create_hunspell(const wchar_t* name, int type);

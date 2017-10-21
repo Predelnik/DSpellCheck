@@ -21,15 +21,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // Class that will do most of the job with spellchecker
 
 #include "MainDef.h"
+#include "lsignal.h"
 
 class Settings;
 struct AspellSpeller;
-struct LanguageName;
+class LanguageInfo;
 struct AspellWordList;
 class SettingsDlg;
 class LangList;
 class SuggestionsButton;
-class AbstractSpellerInterface;
+class SpellerInterface;
 class AspellInterface;
 class HunspellInterface;
 class SelectProxy;
@@ -65,6 +66,9 @@ class SpellChecker {
     };
 
 public:
+    mutable lsignal::signal<void()> lang_list_changed;
+
+public:
     SpellChecker(const wchar_t* ini_file_path_arg,
                  SettingsDlg* settings_dlg_instance_arg, NppData* npp_data_instance_arg,
                  SuggestionsButton* suggestions_instance_arg,
@@ -72,8 +76,7 @@ public:
                  const Settings *settings);
     ~SpellChecker();
     void recheck_visible_both_views();
-    void apply_settings();
-    void apply_multi_lang_settings();
+    const SpellerInterface* active_speller() const;
     void apply_proxy_settings();
     void show_suggestion_menu();
     void precalculate_menu();
@@ -88,7 +91,7 @@ public:
     void set_suggestions_num(int num);
     void set_aspell_path(const wchar_t* path);
     void set_multiple_languages(std::wstring_view multi_string,
-                                AbstractSpellerInterface* speller);
+                                SpellerInterface* speller);
     void set_hunspell_path(const wchar_t* path);
     void set_hunspell_additional_path(const wchar_t* path);
     void set_conversion_options(bool convert_yo, bool convert_single_quotes_arg,
@@ -120,12 +123,9 @@ public:
     bool get_one_user_dic();
     void set_show_only_know(bool value);
     void set_install_system(bool value);
-    void fill_dialogs(bool no_display_call = false);
-    void reinit_language_lists(bool update_dialogs);
     const wchar_t* get_hunspell_path() const { return m_hunspell_path.c_str(); }
     int get_aspell_status();;
     const wchar_t* get_hunspell_additional_path() const { return m_additional_hunspell_path.c_str(); };
-    const wchar_t* get_lang_by_index(int i);
     bool get_show_only_known();
     bool get_install_system();
     bool get_decode_names();
@@ -164,11 +164,11 @@ public:
     void update_remove_dics_options();
     void update_from_download_dics_options();
     void update_from_download_dics_options_no_update();
-    void lib_change();
     void lang_change();
     void reset_download_combobox();
     void set_recheck_delay(int value);
     int get_recheck_delay();
+    std::vector<LanguageInfo> get_available_languages() const;
 
 private:
     HWND get_current_scintilla();
@@ -214,7 +214,6 @@ private:
     static int check_text_default_answer(CheckTextMode mode);
 
 private:
-    std::vector<LanguageName> m_current_langs;
     bool m_settings_loaded;
     bool m_one_user_dic;
     bool m_auto_check_text;
@@ -295,7 +294,7 @@ private:
     bool m_remove_user_dics;
     bool m_remove_system;
 
-    AbstractSpellerInterface* m_current_speller;
+    SpellerInterface* m_current_speller;
     std::unique_ptr<AspellInterface> m_aspell_speller;
     std::unique_ptr<HunspellInterface> m_hunspell_speller;
 

@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "FTPClient.h"
 #include "FTPDataTypes.h"
-#include "LanguageName.h"
+#include "LanguageInfo.h"
 #include "Plugin.h"
 #include "ProgressDlg.h"
 #include "resource.h"
@@ -175,9 +175,7 @@ void DownloadDicsDlg::finalize_downloading() {
         CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);
     m_spell_checker_instance->hunspell_reinit_settings(
         true); // Calling the update for Hunspell dictionary list
-    m_spell_checker_instance->reinit_language_lists(true);
-    m_spell_checker_instance->do_plugin_menu_inclusion();
-    m_spell_checker_instance->recheck_visible_both_views();
+    m_spell_checker_instance->on_settings_changed ();
 }
 
 static const auto buf_size_for_copy = 10240;
@@ -714,7 +712,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring>& list) {
         count++;
         auto name = list[i];
         name.erase(name.end() - 4, name.end());
-        LanguageName lang(name.c_str());
+        LanguageInfo lang(name.c_str());
         m_current_langs.push_back(lang);
     }
 

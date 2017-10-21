@@ -21,12 +21,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "StaticDialog/StaticDialog.h"
 
+class Settings;
 class SpellChecker;
 
 class RemoveDictionariesDialog : public StaticDialog {
 public:
-  void init(HINSTANCE h_inst, HWND parent) override;
+  RemoveDictionariesDialog (HINSTANCE h_inst, HWND parent, const Settings &settings);
   void do_dialog();
+  void update_list();
   void remove_selected(SpellChecker *spell_checker_instance);
   HWND get_list_box();
   void update_options(SpellChecker *spell_checker_instance);
@@ -39,4 +41,5 @@ protected:
   HWND m_lang_list = nullptr;
   HWND m_remove_user_dics = nullptr;
   HWND m_remove_system = nullptr;
+  const Settings &m_settings;
 };

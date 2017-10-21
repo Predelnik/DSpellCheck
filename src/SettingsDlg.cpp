@@ -20,7 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SettingsDlg.h"
 
 #include "aspell.h"
-#include "CheckedList/CheckedList.h"
 #include "CommonFunctions.h"
 #include "LangList.h"
 #include "DownloadDicsDlg.h"
@@ -29,14 +28,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 
 #include "resource.h"
-#include "LanguageName.h"
-#include "HunspellInterface.h"
+#include "LanguageInfo.h"
 #include "utils/winapi.h"
-#include "utils/string_utils.h"
 #include <uxtheme.h>
 #include "Settings.h"
 
-SimpleDlg::SimpleDlg() : StaticDialog() {
+SimpleDlg::SimpleDlg(SettingsDlg& parent) : StaticDialog(), m_parent(parent) {
     m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
     if (m_h_ux_theme)
         m_open_theme_data = (OtdProc)::GetProcAddress(m_h_ux_theme, "OpenThemeData");
@@ -49,62 +46,32 @@ void SimpleDlg::disable_language_combo(bool disable) {
     EnableWindow(m_h_remove_dics, !disable);
 }
 
-// Called from main thread, beware!
-bool SimpleDlg::add_available_languages(const std::vector<LanguageName>& langs_available,
-                                        const wchar_t* current_language,
-                                        std::wstring_view multi_languages,
-                                        HunspellInterface* hunspell_speller) {
+void SimpleDlg::update_language_controls(const Settings& settings) {
+    if (!m_h_combo_language)
+        return;
+
     ComboBox_ResetContent(m_h_combo_language);
-    ListBox_ResetContent(get_lang_list()->get_list_box());
-    ListBox_ResetContent(get_remove_dics()->get_list_box());
+    auto langs = get_spell_checker()->get_available_languages();
 
     int selected_index = 0;
 
-    {
-        unsigned int i = 0;
-        for (auto& lang : langs_available) {
-            if (current_language == lang.orig_name)
-                selected_index = i;
+    auto langs_available = get_spell_checker()->get_available_languages();
 
-            ComboBox_AddString(m_h_combo_language, lang.alias_name.c_str ());
-            ListBox_AddString(get_lang_list()->get_list_box(),
-                lang.alias_name.c_str ());
-            if (hunspell_speller) {
-                wchar_t buf[DEFAULT_BUF_SIZE];
-                wcscpy(buf, lang.alias_name.c_str());
-                if (hunspell_speller->get_lang_only_system(lang.orig_name.c_str()))
-                    wcscat(buf, L" [!For All Users]");
-
-                ListBox_AddString(get_remove_dics()->get_list_box(), buf);
-            }
-            ++i;
-        }
-
-        if (wcscmp(current_language, L"<MULTIPLE>") == 0)
+    int i = 0;
+    for (auto& lang : langs_available) {
+        if (settings.get_current_language() == lang.orig_name)
             selected_index = i;
+
+        ComboBox_AddString(m_h_combo_language, lang.get_aliased_name(settings.use_language_name_aliases));
+        ++i;
     }
+    if (settings.get_current_language() == L"<MULTIPLE>")
+        selected_index = i;
 
     if (!langs_available.empty())
         ComboBox_AddString(m_h_combo_language, L"Multiple Languages...");
 
     ComboBox_SetCurSel(m_h_combo_language, selected_index);
-
-    CheckedListBox_EnableCheckAll(get_lang_list()->get_list_box(), BST_UNCHECKED);
-    for (auto& token : tokenize<wchar_t>(multi_languages, LR"(\|)")) {
-        int index = -1;
-        int i = 0;
-        for (auto& lang : langs_available) {
-            if (token == lang.orig_name) {
-                index = i;
-                break;
-            }
-            ++i;
-        }
-        if (index != -1)
-            CheckedListBox_SetCheckState(get_lang_list()->get_list_box(), index,
-            BST_CHECKED);
-    }
-    return true;
 }
 
 static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t* psz_text) {
@@ -142,13 +109,6 @@ SimpleDlg::~SimpleDlg() {
         FreeLibrary(m_h_ux_theme);
 }
 
-void SimpleDlg::apply_lib_change(SpellChecker* spell_checker_instance) {
-    spell_checker_instance->set_lib_mode(get_selected_lib());
-    spell_checker_instance->reinit_language_lists(true);
-    spell_checker_instance->do_plugin_menu_inclusion();
-}
-
-// Called from main thread, beware!
 void SimpleDlg::apply_settings(Settings& settings) {
     int lang_count = ComboBox_GetCount(m_h_combo_language);
     int cur_sel = ComboBox_GetCurSel(m_h_combo_language);
@@ -158,7 +118,7 @@ void SimpleDlg::apply_settings(Settings& settings) {
             cur_sel == lang_count - 1
                 ? L"<MULTIPLE>"
                 : get_spell_checker()->
-                get_lang_by_index(cur_sel);
+                get_available_languages()[cur_sel].orig_name.c_str ();
     }
     settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
     if (get_selected_lib() == 0)
@@ -172,7 +132,7 @@ void SimpleDlg::apply_settings(Settings& settings) {
     settings.file_types = get_edit_text(m_h_file_types);
     settings.suggestions_mode = ComboBox_GetCurSel(m_h_sugg_type);
     settings.check_only_comments_and_strings = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
-    settings.decode_names = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
+    settings.use_language_name_aliases = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
     settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
 }
 
@@ -339,7 +299,6 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_default_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
             m_aspell_status_color = RGB(0, 0, 0);
-            get_spell_checker ()->reinit_language_lists (true);
             return true;
         }
     case WM_CLOSE:
@@ -361,7 +320,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
                 break;
             case IDC_LIBRARY:
                 if (HIWORD(w_param) == CBN_SELCHANGE) {
-                    get_spell_checker()->lib_change();
+                    m_parent.apply_lib_change(get_selected_lib());
                 }
                 break;
             case IDC_HUNSPELL_PATH_TYPE:
@@ -575,7 +534,7 @@ void AdvancedDlg::set_buffer_size(int size) {
 }
 
 void AdvancedDlg::setup_controls(const Settings& settings) {
-    fill_delimiters(settings.delim_utf8.c_str ());
+    fill_delimiters(settings.delim_utf8.c_str());
     set_recheck_delay(settings.recheck_delay);
     set_conversion_opts(
         settings.ignore_yo, settings.convert_single_quotes, settings.remove_boundary_apostrophes);
@@ -773,7 +732,6 @@ int AdvancedDlg::get_recheck_delay() {
     return x;
 }
 
-// Called from main thread, beware!
 void AdvancedDlg::apply_settings(Settings& settings) {
     settings.delim_utf8 = to_utf8_string(get_edit_text(m_h_edit_delimiters).c_str());
     settings.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
@@ -801,8 +759,11 @@ SimpleDlg* SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
 AdvancedDlg* SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
 
 SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, Settings& settings) :
-    m_npp_data(npp_data), m_settings(settings) {
+    m_npp_data(npp_data),
+    m_simple_dlg(*this), m_settings(settings) {
     Window::init(h_inst, parent);
+    m_settings.settings_changed.connect([this] { m_simple_dlg.update_language_controls(m_settings); });
+    get_spell_checker()->lang_list_changed.connect([this] { m_simple_dlg.update_language_controls(m_settings); });
 }
 
 void SettingsDlg::destroy() {
@@ -814,31 +775,36 @@ void SettingsDlg::destroy() {
 void SettingsDlg::apply_settings() {
     m_simple_dlg.apply_settings(m_settings);
     m_advanced_dlg.apply_settings(m_settings);
-    m_settings.save ();
+    m_settings.save();
     m_settings.settings_changed();
 }
 
 void SettingsDlg::setup_controls() {
-    m_simple_dlg.setup_controls (m_settings);
-    m_advanced_dlg.setup_controls (m_settings);
+    m_simple_dlg.setup_controls(m_settings);
+    m_advanced_dlg.setup_controls(m_settings);
 }
 
-void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data)
-{
+void SettingsDlg::apply_lib_change(int new_lib_id) {
+    m_settings.active_speller_lib_id = new_lib_id;
+    m_settings.settings_changed();
+}
+
+void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data) {
     m_npp_data_instance = npp_data;
     return Window::init(h_inst, parent);
 }
 
 void SimpleDlg::setup_controls(const Settings& settings) {
-  set_lib_mode(settings.lib_mode);
-  fill_lib_info(get_spell_checker ()->get_aspell_status(),
-      settings.aspell_path.c_str (), settings.hunspell_path.c_str (), settings.additional_hunspell_path.c_str ());
-  fill_sugestions_num(settings.suggestion_count);
-  set_file_types(settings.check_those, settings.file_types.c_str ());
-  set_check_comments(settings.check_only_comments_and_strings);
-  set_decode_names(settings.decode_names);
-  set_sugg_type(settings.suggestions_mode);
-  set_one_user_dic(settings.use_unified_dictionary);
+    set_lib_mode(settings.active_speller_lib_id);
+    fill_lib_info(get_spell_checker()->get_aspell_status(),
+                  settings.aspell_path.c_str(), settings.hunspell_path.c_str(),
+                  settings.additional_hunspell_path.c_str());
+    fill_sugestions_num(settings.suggestion_count);
+    set_file_types(settings.check_those, settings.file_types.c_str());
+    set_check_comments(settings.check_only_comments_and_strings);
+    set_decode_names(settings.use_language_name_aliases);
+    set_sugg_type(settings.suggestions_mode);
+    set_one_user_dic(settings.use_unified_dictionary);
 }
 
 INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
@@ -876,6 +842,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
                 enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 
             setup_controls();
+            m_simple_dlg.update_language_controls(m_settings);
 
             return true;
         }
@@ -943,6 +910,6 @@ UINT SettingsDlg::do_dialog() {
         setup_controls();
     }
 
-    display ();
+    display();
     return true;
 }

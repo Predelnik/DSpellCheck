@@ -5,12 +5,16 @@
 class IniWorker;
 
 class Settings {
+    using Self = Settings;
 public:
     Settings (std::wstring_view ini_filepath);
     void process(IniWorker& worker);
     void save ();
     void load ();
-
+    std::wstring &get_current_language ();
+    const std::wstring &get_current_language () const;
+    std::wstring &get_current_multi_languages();
+    const std::wstring& get_current_multi_languages() const;
 public:
     bool auto_check_text = false;
     std::wstring aspell_path;
@@ -39,7 +43,7 @@ public:
     bool ignore_having_underscore = false;
     bool ignore_starting_or_ending_with_apostrophe = false;
     bool use_unified_dictionary = false;
-    int lib_mode = 0; // TODO: change to enum
+    int active_speller_lib_id = 0; // TODO: change to enum
     int suggestion_button_size = 0;
     int suggestion_button_opacity = 0;
     int find_next_buffer_size = 0;
@@ -50,7 +54,7 @@ public:
     int last_used_address_index = 0;
     bool remove_user_dictionaries = false;
     bool remove_system_dictionaries = false;
-    bool decode_names = false;
+    bool use_language_name_aliases = false;
     bool use_proxy = false;
     std::wstring proxy_user_name;
     std::wstring proxy_host_name;

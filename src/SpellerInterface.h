@@ -18,12 +18,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #pragma once
 #include <MainDef.h>
-class AbstractSpellerInterface {
+
+class LanguageInfo;
+
+class SpellerInterface {
 private:
 protected:
 public:
-  virtual ~AbstractSpellerInterface() = default;
-  virtual std::vector<std::wstring> get_language_list() = 0;
+  virtual ~SpellerInterface() = default;
+  virtual std::vector<LanguageInfo> get_language_list() const = 0;
   virtual void set_language(const wchar_t* lang) = 0;
   virtual void set_multiple_languages(
   const std::vector<std::wstring>& list) = 0;         // Languages are from LangList
@@ -34,7 +37,7 @@ public:
   virtual std::vector<std::string> get_suggestions(const char* word) = 0;
   virtual void add_to_dictionary(const char* word) = 0;
   virtual void ignore_all(const char* word) = 0;
-  virtual bool is_working() = 0;
+  virtual bool is_working() const = 0;
 
 protected:
   int m_multi_mode = 0;

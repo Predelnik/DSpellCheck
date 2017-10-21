@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "TaskWrapper.h"
 
-struct LanguageName;
+class LanguageInfo;
 
 void ftp_trim(std::wstring& ftp_address);
 
@@ -110,8 +110,8 @@ public:
     void process_file_list_error(FtpOperationErrorType error);
     void process_file_list_error(const FtpWebOperationError& error);
 private:
-    std::vector<LanguageName> m_current_langs;
-    std::vector<LanguageName> m_current_langs_filtered;
+    std::vector<LanguageInfo> m_current_langs;
+    std::vector<LanguageInfo> m_current_langs_filtered;
     HBRUSH m_default_brush;
     COLORREF m_status_color;
     SpellChecker* m_spell_checker_instance;

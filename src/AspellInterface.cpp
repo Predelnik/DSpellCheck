@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "MainDef.h"
 #include "Plugin.h"
+#include "LanguageInfo.h"
 
 AspellInterface::~AspellInterface() {
 }
@@ -45,7 +46,7 @@ AspellInterface::AspellInterface(HWND npp_window_arg) : m_single_speller(wrap_sp
     m_aspell_loaded = false;
 }
 
-std::vector<std::wstring> AspellInterface::get_language_list() {
+std::vector<LanguageInfo> AspellInterface::get_language_list() const {
     if (!m_aspell_loaded)
         return {};
 
@@ -61,15 +62,15 @@ std::vector<std::wstring> AspellInterface::get_language_list() {
     }
 
     const AspellDictInfo* entry;
-    std::vector<std::wstring> names;
+    std::vector<LanguageInfo> names;
     while ((entry = aspell_dict_info_enumeration_next(dels)) != nullptr) {
-        names.push_back(to_wstring (entry->name));
+        names.emplace_back (to_wstring (entry->name), false);
     }
-    std::sort(names.begin(), names.end());
+    std::sort(names.begin(), names.end(), less_original);
     return names;
 }
 
-bool AspellInterface::is_working() {
+bool AspellInterface::is_working() const {
     return m_aspell_loaded;
 }
 
@@ -224,8 +225,8 @@ void AspellInterface::set_language(const wchar_t* lang) {
 
     if (aspell_error_number(possible_err) != 0) {
         auto lang_list = get_language_list();
-        if (!lang_list.empty () && (!lang || lang != lang_list.front ())) {
-            set_language(lang_list.front ().c_str ());
+        if (!lang_list.empty () && (!lang || lang != lang_list.front ().orig_name)) {
+            set_language(lang_list.front ().orig_name.c_str ());
         }
         else {
             m_single_speller.reset ();
