@@ -125,7 +125,6 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
     m_suggestions_instance = suggestions_instance_arg;
     m_npp_data_instance = npp_data_instance_arg;
     m_lang_list_instance = lang_list_instance_arg;
-    m_auto_check_text = false;
     m_multi_lang_mode = 0;
     m_check_those = false;
     m_sb_trans = 0;
@@ -498,7 +497,7 @@ int SpellChecker::get_recheck_delay() {
 }
 
 bool SpellChecker::check_text_needed() {
-    return m_check_text_enabled && m_auto_check_text;
+    return m_check_text_enabled && m_settings.auto_check_text;
 }
 
 void SpellChecker::hide_suggestion_box() { m_suggestions_instance->display(false); }
@@ -995,14 +994,6 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
     return suggestion_menu_items;
 }
 
-void SpellChecker::update_autocheck_status(int save_setting) {
-    if (save_setting)
-        save_settings();
-
-    send_msg_to_npp(m_npp_data_instance, NPPM_SETMENUITEMCHECK, get_func_item()[0].cmd_id,
-                    m_auto_check_text);
-}
-
 void SpellChecker::set_check_those(int check_those_arg) {
     m_check_those = check_those_arg;
 }
@@ -1087,7 +1078,6 @@ void SpellChecker::save_settings() {
     fclose(fp);
     if (!m_settings_loaded)
         return;
-    save_to_ini(L"Autocheck", m_auto_check_text, 1);
     save_to_ini(L"Hunspell_Multiple_Languages", m_hunspell_multi_languages.c_str(), L"");
     save_to_ini(L"Aspell_Multiple_Languages", m_aspell_multi_languages.c_str(), L"");
     save_to_ini(L"Hunspell_Language", m_hunspell_language.c_str(), L"en_GB");
@@ -1136,7 +1126,6 @@ void SpellChecker::save_settings() {
     preserve_current_address_index();
     save_to_ini(L"Last_Used_Address_Index", m_last_used_address, 0);
     save_to_ini(L"Decode_Language_Names", m_decode_names, true);
-    save_to_ini(L"United_User_Dictionary(Hunspell)", m_one_user_dic, false);
 
     save_to_ini(L"Use_Proxy", m_use_proxy, false);
     save_to_ini(L"Proxy_User_Name", m_proxy_user_name.c_str(), L"anonymous");
@@ -1148,13 +1137,6 @@ void SpellChecker::save_settings() {
 }
 
 void SpellChecker::set_decode_names(bool value) { m_decode_names = value; }
-
-void SpellChecker::set_one_user_dic(bool value) {
-    m_one_user_dic = value;
-    m_hunspell_speller->set_use_one_dic(value);
-}
-
-bool SpellChecker::get_one_user_dic() { return m_one_user_dic; }
 
 void SpellChecker::set_lib_mode(int i) {
     m_lib_mode = i;
@@ -1169,6 +1151,10 @@ void SpellChecker::set_lib_mode(int i) {
 }
 
 void SpellChecker::on_settings_changed() {
+    m_hunspell_speller->set_use_one_dic(m_settings.use_unified_dictionary);
+    send_msg_to_npp(m_npp_data_instance, NPPM_SETMENUITEMCHECK, get_func_item()[0].cmd_id,
+                    m_settings.auto_check_text);
+
     m_settings_loaded = true;
     auto path = get_default_aspell_path();
     m_aspell_path = load_from_ini(L"Aspell_Path", path.c_str());
@@ -1179,8 +1165,6 @@ void SpellChecker::on_settings_changed() {
                                                L".\\plugins\\config\\Hunspell");
 
     load_from_ini(m_suggestions_mode, L"Suggestions_Control", 1);
-    load_from_ini(m_auto_check_text, L"Autocheck", true);
-    update_autocheck_status(0);
     m_aspell_multi_languages = load_from_ini(L"Aspell_Multiple_Languages", L"");
     m_hunspell_multi_languages = load_from_ini(L"Hunspell_Multiple_Languages", L"");
     set_aspell_language(load_from_ini(L"Aspell_Language", L"en").c_str());
@@ -1203,9 +1187,6 @@ void SpellChecker::on_settings_changed() {
     load_from_ini(m_ignore_all_capital, L"Ignore_All_Capital", true);
     load_from_ini(m_ignore_one_letter, L"Ignore_One_Letter", false);
     load_from_ini(m_ignore_having_underscore, L"Ignore_With_", true);
-    int value;
-    load_from_ini(value, L"United_User_Dictionary(Hunspell)", false);
-    set_one_user_dic(value);
     load_from_ini(m_ignore_starting_or_ending_with_apostrophe, L"Ignore_That_Start_or_End_with_'", false);
 
     m_hunspell_speller->set_directory(m_hunspell_path.c_str());
@@ -1798,14 +1779,6 @@ void SpellChecker::set_encoding_by_id(int enc_id) {
     }
     m_hunspell_speller->set_encoding(m_current_encoding);
     m_aspell_speller->set_encoding(m_current_encoding);
-}
-
-void SpellChecker::switch_auto_check() {
-    if (!m_settings_loaded)
-        return;
-    m_auto_check_text = !m_auto_check_text;
-    update_autocheck_status();
-    recheck_visible_both_views();
 }
 
 void SpellChecker::recheck_modified() {

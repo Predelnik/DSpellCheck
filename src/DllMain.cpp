@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "MainDef.h"
 #include "SpellChecker.h"
 #include "menuCmdID.h"
+#include "Settings.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -105,15 +106,16 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
 
             if (LOWORD(w_param) == IDM_FILE_PRINTNOW ||
                 LOWORD(w_param) == IDM_FILE_PRINT) {
-                bool auto_check_disabled_while_printing = get_spell_checker()->get_auto_check_text();
+                // Disable autocheck while printing
+                bool prev_value = get_settings ().auto_check_text;
 
-                if (auto_check_disabled_while_printing)
-                    get_spell_checker()->switch_auto_check();
+                if (prev_value)
+                    get_settings ().auto_check_text = false;
 
                 ret = ::CallWindowProc(wnd_proc_notepad, h_wnd, message, w_param, l_param);
 
-                if (auto_check_disabled_while_printing)
-                    get_spell_checker()->switch_auto_check();
+                if (prev_value)
+                    get_settings ().auto_check_text = prev_value;
 
                 return ret;
             }

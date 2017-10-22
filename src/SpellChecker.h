@@ -119,8 +119,6 @@ public:
     void set_sugg_type(int sugg_type);
     void set_lib_mode(int i);
     void set_decode_names(bool value);
-    void set_one_user_dic(bool value);
-    bool get_one_user_dic();
     void set_show_only_know(bool value);
     void set_install_system(bool value);
     const wchar_t* get_hunspell_path() const { return m_hunspell_path.c_str(); }
@@ -147,11 +145,9 @@ public:
     long previous_a, previous_b;
     void set_suggestions_box_transparency();
     void add_user_server(std::wstring server);
-    bool get_auto_check_text() const { return m_auto_check_text; }
     void process_menu_result(WPARAM menu_id);
     void copy_misspellings_to_clipboard();
     void on_settings_changed();
-    void switch_auto_check();
     void init_suggestions_box();
     void hide_suggestion_box();
     void set_default_delimiters();
@@ -184,7 +180,6 @@ private:
     void check_visible(bool not_intersection_only = false);
     void set_encoding_by_id(int enc_id);
     void save_settings();
-    void update_autocheck_status(int save_setting = 1);
     std::vector<SuggestionsMenuItem> fill_suggestions_menu(HMENU menu);
     bool get_word_under_cursor_is_right(long& pos, long& length,
                                         bool use_text_cursor = false);
@@ -215,8 +210,6 @@ private:
 
 private:
     bool m_settings_loaded;
-    bool m_one_user_dic;
-    bool m_auto_check_text;
     bool m_check_text_enabled;
     bool m_word_under_cursor_is_correct;
     std::wstring m_hunspell_language;

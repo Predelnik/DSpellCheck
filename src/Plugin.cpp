@@ -102,6 +102,10 @@ bool get_use_allocated_ids() { return use_allocated_ids; }
 
 SpellChecker* get_spell_checker() { return spell_checker.get(); }
 
+Settings& get_settings() {
+    return *settings;
+}
+
 
 std::wstring get_default_hunspell_path() {
     std::wstring path = ini_file_path;
@@ -166,10 +170,10 @@ DWORD get_custom_gui_message_id(CustomGuiMessage message_id) {
     return custom_gui_message_ids[static_cast<int>(message_id)];
 }
 
-void switch_auto_check_text() { get_spell_checker()->switch_auto_check(); }
-
-void get_suggestions() {
-    // SendEvent (EID_INITSUGGESTIONS);
+void switch_auto_check_text() {
+    settings->auto_check_text = !settings->auto_check_text;
+    settings->settings_changed();
+    settings->save();
 }
 
 void start_settings() { settings_dlg->do_dialog(); }
