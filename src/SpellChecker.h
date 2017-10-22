@@ -85,8 +85,8 @@ public:
     void error_msg_box(const wchar_t* message);
 
     bool aspell_reinit_settings();
-    void set_hunspell_language(const wchar_t* str);
-    void set_aspell_language(const wchar_t* str);
+    void set_hunspell_language_options();
+    void set_aspell_language_options();
     void set_delimiters(const char* str);
     void set_suggestions_num(int num);
     void set_aspell_path(const wchar_t* path);
@@ -99,8 +99,6 @@ public:
     void set_check_those(int check_those_arg);
     void set_file_types(const wchar_t* file_types_arg);
     void set_check_comments(bool value);
-    void set_hunspell_multiple_languages(const char* multi_languages_arg);
-    void set_aspell_multiple_languages(const char* multi_languages_arg);
     void set_underline_color(int value);
     void set_underline_style(int value);
     void set_proxy_user_name(const wchar_t* str);
@@ -117,7 +115,7 @@ public:
     void set_sugg_box_settings(int size, int transparency, int save_ini = 1);
     void set_buffer_size(int size);
     void set_sugg_type(int sugg_type);
-    void set_lib_mode(int i);
+    void init_speller();
     void set_decode_names(bool value);
     void set_show_only_know(bool value);
     void set_install_system(bool value);
@@ -129,7 +127,6 @@ public:
     bool get_decode_names();
     void do_plugin_menu_inclusion(bool invalidate = false);
     HunspellInterface* get_hunspell_speller() { return m_hunspell_speller.get(); };
-    int get_lib_mode();
     bool hunspell_reinit_settings(bool reset_directory);
     void set_remove_user_dics(bool value);
     void set_remove_system(bool value);
@@ -210,13 +207,8 @@ private:
 
 private:
     bool m_settings_loaded;
-    bool m_check_text_enabled;
+    bool m_check_text_enabled; // cache for check_those
     bool m_word_under_cursor_is_correct;
-    std::wstring m_hunspell_language;
-    std::wstring m_hunspell_multi_languages;
-    std::wstring m_aspell_language;
-    std::wstring m_aspell_multi_languages;
-    int m_lib_mode; // 0 - Aspell, 1 - Hunspell
     int m_multi_lang_mode;
     int m_suggestions_num;
     int m_suggestions_mode;
