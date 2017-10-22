@@ -758,7 +758,7 @@ SimpleDlg* SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
 
 AdvancedDlg* SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
 
-SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, Settings& settings) :
+SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, const Settings& settings) :
     m_npp_data(npp_data),
     m_simple_dlg(*this), m_settings(settings) {
     Window::init(h_inst, parent);
@@ -773,10 +773,9 @@ void SettingsDlg::destroy() {
 
 // Send appropriate event and set some npp thread properties
 void SettingsDlg::apply_settings() {
-    m_simple_dlg.apply_settings(m_settings);
-    m_advanced_dlg.apply_settings(m_settings);
-    m_settings.save();
-    m_settings.settings_changed();
+    auto mut_settings = m_settings.modify();
+    m_simple_dlg.apply_settings(*mut_settings);
+    m_advanced_dlg.apply_settings(*mut_settings);
 }
 
 void SettingsDlg::setup_controls() {
@@ -785,8 +784,8 @@ void SettingsDlg::setup_controls() {
 }
 
 void SettingsDlg::apply_lib_change(int new_lib_id) {
-    m_settings.active_speller_lib_id = new_lib_id;
-    m_settings.settings_changed();
+    auto mut_settings = m_settings.modify();
+    mut_settings->active_speller_lib_id = new_lib_id;
 }
 
 void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data) {

@@ -138,7 +138,7 @@ public:
     UINT do_dialog();
     SimpleDlg* get_simple_dlg();
     AdvancedDlg* get_advanced_dlg();
-    SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, Settings& settings);
+    SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, const Settings& settings);
 
 private:
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
@@ -153,7 +153,7 @@ private:
     AdvancedDlg m_advanced_dlg;
     WindowVector m_window_vector;
     ControlsTab m_controls_tab;
-    Settings& m_settings;
+    const Settings& m_settings;
 
     friend class SimpleDlg;
 };

@@ -109,13 +109,10 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
                 // Disable autocheck while printing
                 bool prev_value = get_settings ().auto_check_text;
 
-                if (prev_value)
-                    get_settings ().auto_check_text = false;
-
+                auto mut_settings = get_settings().modify();
+                mut_settings->auto_check_text = false;
                 ret = ::CallWindowProc(wnd_proc_notepad, h_wnd, message, w_param, l_param);
-
-                if (prev_value)
-                    get_settings ().auto_check_text = prev_value;
+                mut_settings->auto_check_text = prev_value;
 
                 return ret;
             }

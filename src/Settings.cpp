@@ -60,6 +60,17 @@ const std::wstring& Settings::get_current_multi_languages() const {
     return const_cast<Self *>(this)->get_current_multi_languages();
 }
 
+TemporaryAcessor<Settings::Self> Settings::modify() const {
+    auto non_const_this = const_cast<Self *>(this);
+    return {
+        *non_const_this, [non_const_this]()
+        {
+            non_const_this->save();
+            non_const_this->settings_changed();
+        }
+    };
+}
+
 std::wstring Settings::get_default_hunspell_path() {
     return m_ini_filepath.substr(0, m_ini_filepath.rfind(L'\\')) + L"\\Hunspell";
 }

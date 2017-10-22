@@ -102,7 +102,7 @@ bool get_use_allocated_ids() { return use_allocated_ids; }
 
 SpellChecker* get_spell_checker() { return spell_checker.get(); }
 
-Settings& get_settings() {
+const Settings& get_settings() {
     return *settings;
 }
 

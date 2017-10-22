@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lsignal.h"
+#include "utils/TemporaryAcessor.h"
 
 class IniWorker;
 
@@ -15,6 +16,7 @@ public:
     const std::wstring &get_current_language () const;
     std::wstring &get_current_multi_languages();
     const std::wstring& get_current_multi_languages() const;
+    TemporaryAcessor<Self> modify() const;
 public:
     bool auto_check_text = false;
     std::wstring aspell_path;

@@ -94,7 +94,7 @@ int get_context_menu_id_start ();
 int get_langs_menu_id_start ();
 bool get_use_allocated_ids ();
 SpellChecker *get_spell_checker ();
-Settings &get_settings ();
+const Settings& get_settings();
 DWORD get_custom_gui_message_id (CustomGuiMessage message_id);
 void register_custom_messages ();
 
