@@ -39,6 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <variant>
 #include <Wininet.h>
 #include "utils/winapi.h"
+#include "Settings.h"
 
 void DownloadDicsDlg::do_dialog() {
     if (!isCreated()) {
@@ -59,29 +60,20 @@ void DownloadDicsDlg::on_display_action() {
     fill_file_list();
 }
 
-DownloadDicsDlg::DownloadDicsDlg(): m_default_brush(nullptr), m_status_color(0), m_spell_checker_instance(nullptr),
-                                    m_lib_combo(nullptr), m_h_status(nullptr), m_h_install_selected(nullptr),
-                                    m_h_show_only_known(nullptr), m_h_refresh(nullptr), m_h_install_system(nullptr),
-                                    m_cancel_pressed(false), m_failure(0), m_downloaded_count(0),
-                                    m_supposed_downloaded_count(0) {
-    m_timer = nullptr;
-    m_refresh_icon = nullptr;
-    m_check_if_saving_is_needed = 0;
-    m_h_file_list = nullptr;
-}
-
-void DownloadDicsDlg::init_dlg(HINSTANCE h_inst, HWND parent,
-                               SpellChecker* spell_checker_instance_arg) {
-    m_ftp_operation_task = TaskWrapper{parent};
-    m_spell_checker_instance = spell_checker_instance_arg;
-    return Window::init(h_inst, parent);
-}
-
 DownloadDicsDlg::~DownloadDicsDlg() {
     if (m_timer)
         DeleteTimerQueueTimer(nullptr, m_timer, nullptr);
     if (m_refresh_icon)
         DestroyIcon(m_refresh_icon);
+}
+
+DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings& settings) : m_settings(settings) {
+    m_ftp_operation_task = TaskWrapper{parent};
+    Window::init(h_inst, parent);
+    m_default_server_names[0] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
+    m_default_server_names[1] = L"ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/";
+    m_default_server_names[2] = L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/";
+    m_settings.settings_changed.connect([this]{update_controls ();});
 }
 
 void DownloadDicsDlg::indicate_that_saving_might_be_needed() {
@@ -125,9 +117,9 @@ bool DownloadDicsDlg::prepare_downloading() {
     get_progress()->update();
     p->set_top_message(L"");
     if (!check_for_directory_existence(
-        m_spell_checker_instance->get_install_system()
-            ? m_spell_checker_instance->get_hunspell_additional_path()
-            : m_spell_checker_instance->get_hunspell_path(),
+        m_settings.ftp_install_dictionaries_for_all_users
+            ? m_settings.hunspell_system_path
+            : m_settings.hunspell_user_path,
         false, _hParent)) // If path doesn't exist we're gonna try to create it
         // else it's finish
     {
@@ -173,9 +165,7 @@ void DownloadDicsDlg::finalize_downloading() {
     }
     for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
         CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);
-    m_spell_checker_instance->hunspell_reinit_settings(
-        true); // Calling the update for Hunspell dictionary list
-    m_spell_checker_instance->on_settings_changed ();
+    get_spell_checker()->on_settings_changed();
 }
 
 static const auto buf_size_for_copy = 10240;
@@ -263,9 +253,9 @@ void DownloadDicsDlg::on_file_downloaded() {
             auto dic_file_local_path = get_temp_path();
             (dic_file_local_path += file_name) += L".aff";
             std::wstring hunspell_dic_path =
-                m_spell_checker_instance->get_install_system()
-                    ? m_spell_checker_instance->get_hunspell_additional_path()
-                    : m_spell_checker_instance->get_hunspell_path();
+                m_settings.ftp_install_dictionaries_for_all_users
+                    ? m_settings.hunspell_system_path
+                    : m_settings.hunspell_user_path;
             hunspell_dic_path += L"\\";
             hunspell_dic_path += file_name;
             hunspell_dic_path += L".aff";
@@ -285,7 +275,8 @@ void DownloadDicsDlg::on_file_downloaded() {
                 }
             }
 
-            if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
+            if (confirmation && !move_file_and_reset_security_descriptor(
+                dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
                 SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
                 DeleteFile(dic_file_local_path.c_str());
                 m_failure = 1;
@@ -314,7 +305,8 @@ void DownloadDicsDlg::on_file_downloaded() {
                 }
             }
 
-            if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
+            if (confirmation && !move_file_and_reset_security_descriptor(
+                dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
                 SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
                 DeleteFile(dic_file_local_path.c_str());
                 m_failure = 1;
@@ -389,14 +381,14 @@ void DownloadDicsDlg::update_list_box() {
 
     m_current_langs_filtered.clear();
     for (auto& lang : m_current_langs) {
-        if (m_spell_checker_instance->get_show_only_known() &&
+        if (m_settings.ftp_show_only_known_dictionaries &&
             !lang.alias_applied)
             continue;
         m_current_langs_filtered.push_back(lang);
     }
     ListBox_ResetContent(m_h_file_list);
     for (auto& lang : m_current_langs_filtered) {
-        ListBox_AddString(m_h_file_list, m_spell_checker_instance->get_decode_names()
+        ListBox_AddString(m_h_file_list, m_settings.use_language_name_aliases
             ? lang.alias_name.c_str ()
             : lang.orig_name.c_str ());
     }
@@ -720,7 +712,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring>& list) {
         return update_status(L"Status: Directory doesn't contain any zipped files", COLOR_WARN);
     }
 
-    std::sort(m_current_langs.begin(), m_current_langs.end(), [decode = m_spell_checker_instance->get_decode_names()]
+    std::sort(m_current_langs.begin(), m_current_langs.end(), [decode = m_settings.use_language_name_aliases]
           (const auto& lhs, const auto& rhs)
               {
                   return decode ? less_aliases(lhs, rhs) : less_original(lhs, rhs);
@@ -728,10 +720,81 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring>& list) {
     update_list_box(); // Used only here and on filter change
     // If it is success when we perhaps should add this address to our list.
     if (m_check_if_saving_is_needed) {
-        m_spell_checker_instance->add_user_server(*current_address());
+        add_user_server(*current_address());
     }
     update_status(L"Status: List of available files was successfully loaded", COLOR_OK);
     EnableWindow(m_h_install_selected, true);
+}
+
+void DownloadDicsDlg::preserve_current_address_index(Settings& settings) {
+    auto mb_address = current_address();
+    if (!mb_address)
+        return;
+    auto address = *mb_address;
+    ftp_trim(address);
+    int i = 0;
+    for (auto def_server : m_default_server_names) {
+        ftp_trim(def_server);
+        if (address == def_server) {
+            settings.last_used_address_index = i;
+            return;
+        }
+        ++i;
+    };
+    for (auto& server : m_settings.server_names) {
+        if (address == server) {
+            settings.last_used_address_index = USER_SERVER_CONST + i;
+            return;
+        }
+    }
+    settings.last_used_address_index = 0;
+}
+
+void DownloadDicsDlg::reset_download_combobox() {
+    HWND target_combobox = GetDlgItem(get_download_dics()->getHSelf(), IDC_ADDRESS);
+    wchar_t buf[DEFAULT_BUF_SIZE];
+    ComboBox_GetText(target_combobox, buf, DEFAULT_BUF_SIZE);
+    if (m_address_is_set) {
+        auto mut_settings = m_settings.modify ();
+        preserve_current_address_index(*mut_settings);
+    }
+    ComboBox_ResetContent(target_combobox);
+    for (int i = 0; i < static_cast<int>(COUNTOF(m_default_server_names)); i++) {
+        ComboBox_AddString(target_combobox, m_default_server_names[i].c_str ());
+    }
+    for (auto& server_name : m_settings.server_names) {
+        if (!server_name.empty())
+            ComboBox_AddString(target_combobox, server_name.c_str ());
+    }
+    if (m_settings.last_used_address_index < USER_SERVER_CONST)
+        ComboBox_SetCurSel(target_combobox, m_settings.last_used_address_index);
+    else
+        ComboBox_SetCurSel(target_combobox, m_settings.last_used_address_index - USER_SERVER_CONST +
+        COUNTOF(m_default_server_names));
+    m_address_is_set = true;
+}
+
+void DownloadDicsDlg::add_user_server(std::wstring server) {
+    {
+        ftp_trim(server);
+        for (auto def_server : m_default_server_names) {
+            ftp_trim(def_server);
+            if (server == def_server)
+                goto add_user_server_cleanup; // Nothing is done in this case
+        }
+        for (auto added_server : m_settings.server_names) {
+            ftp_trim(added_server);
+            if (server == added_server)
+                goto add_user_server_cleanup; // Nothing is done in this case
+        }
+        auto settings_mut = m_settings.modify();
+        // Then we're adding finally
+        auto& names = settings_mut->server_names;
+        std::move(std::next(names.rbegin()), names.rend(), names.rbegin());
+        names.front() = server;
+    }
+add_user_server_cleanup:
+    reset_download_combobox();
 }
 
 void DownloadDicsDlg::process_file_list_error(FtpOperationErrorType error) {
@@ -778,12 +841,12 @@ void DownloadDicsDlg::prepare_file_list_update() {
 FtpOperationParams DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring& full_path) {
     FtpOperationParams params;
     std::tie(params.address, params.path) = ftp_split(full_path);
-    params.use_proxy = m_spell_checker_instance->get_use_proxy();
-    params.proxy_port = m_spell_checker_instance->get_proxy_port();
-    params.proxy_address = m_spell_checker_instance->get_proxy_host_name();
-    params.anonymous = m_spell_checker_instance->get_proxy_anonymous();
-    params.proxy_username = m_spell_checker_instance->get_proxy_user_name();
-    params.proxy_password = m_spell_checker_instance->get_proxy_password();
+    params.use_proxy = m_settings.use_proxy;
+    params.proxy_port = m_settings.proxy_port;
+    params.proxy_address = m_settings.proxy_host_name;
+    params.anonymous = m_settings.proxy_is_anonymous;
+    params.proxy_username = m_settings.proxy_user_name;
+    params.proxy_password = m_settings.proxy_password;
     return params;
 }
 
@@ -792,15 +855,15 @@ void DownloadDicsDlg::update_file_list_async_web_proxy(const std::wstring& full_
     static_assert(std::is_copy_constructible_v<std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
     prepare_file_list_update();
     m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path)](auto)
-                                     {
-                                         return do_download_file_list_ftp_web_proxy(params);
-                                     }, [this](std::variant<FtpWebOperationError, std::vector<std::wstring>> res)
-                                     {
-                                         if (auto error = std::get_if<FtpWebOperationError>(&res)) {
-                                             return this->process_file_list_error(*error);
-                                         }
-                                         on_new_file_list(std::get<std::vector<std::wstring>>(res));
-                                     });
+                                      {
+                                          return do_download_file_list_ftp_web_proxy(params);
+                                      }, [this](std::variant<FtpWebOperationError, std::vector<std::wstring>> res)
+                                      {
+                                          if (auto error = std::get_if<FtpWebOperationError>(&res)) {
+                                              return this->process_file_list_error(*error);
+                                          }
+                                          on_new_file_list(std::get<std::vector<std::wstring>>(res));
+                                      });
 }
 
 void DownloadDicsDlg::update_file_list_async(const std::wstring& full_path) {
@@ -808,46 +871,46 @@ void DownloadDicsDlg::update_file_list_async(const std::wstring& full_path) {
     static_assert(std::is_copy_constructible_v<std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
     prepare_file_list_update();
     m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path)](auto)
-                                     {
-                                         return do_download_file_list_ftp(params);
-                                     }, [this](std::variant<FtpOperationErrorType, std::vector<std::wstring>> res)
-                                     {
-                                         if (auto error = std::get_if<FtpOperationErrorType>(&res)) {
-                                             return this->process_file_list_error(*error);
-                                         }
-                                         on_new_file_list(std::get<std::vector<std::wstring>>(res));
-                                     });
+                                      {
+                                          return do_download_file_list_ftp(params);
+                                      }, [this](std::variant<FtpOperationErrorType, std::vector<std::wstring>> res)
+                                      {
+                                          if (auto error = std::get_if<FtpOperationErrorType>(&res)) {
+                                              return this->process_file_list_error(*error);
+                                          }
+                                          on_new_file_list(std::get<std::vector<std::wstring>>(res));
+                                      });
 }
 
 void DownloadDicsDlg::download_file_async(const std::wstring& full_path, const std::wstring& target_location) {
     m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location,
-                                         progressData = get_progress()->get_progress_data()](auto token)
-                                     {
-                                         return do_download_file(params, target_location, progressData, token);
-                                     }, [this](std::optional<FtpOperationErrorType>)
-                                     {
-                                         on_file_downloaded();
-                                     });
+                                          progressData = get_progress()->get_progress_data()](auto token)
+                                      {
+                                          return do_download_file(params, target_location, progressData, token);
+                                      }, [this](std::optional<FtpOperationErrorType>)
+                                      {
+                                          on_file_downloaded();
+                                      });
 }
 
 
 void DownloadDicsDlg::
 download_file_async_web_proxy(const std::wstring& full_path, const std::wstring& target_location) {
     m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location,
-                                         progressData = get_progress()->get_progress_data()](auto token)
-                                     {
-                                         return do_download_file_web_proxy(
-                                             params, target_location, progressData, token);
-                                     }, [this](std::optional<FtpWebOperationError>)
-                                     {
-                                         on_file_downloaded();
-                                     });
+                                          progressData = get_progress()->get_progress_data()](auto token)
+                                      {
+                                          return do_download_file_web_proxy(
+                                              params, target_location, progressData, token);
+                                      }, [this](std::optional<FtpWebOperationError>)
+                                      {
+                                          on_file_downloaded();
+                                      });
 }
 
 void DownloadDicsDlg::do_ftp_operation(FtpOperationType type, const std::wstring& full_path,
                                        const std::wstring& file_name, const std::wstring& location) {
-    if (m_spell_checker_instance->get_use_proxy() &&
-        m_spell_checker_instance->get_proxy_type() == 0)
+    if (m_settings.use_proxy &&
+        m_settings.proxy_type == 0)
         switch (type) {
         case FtpOperationType::fill_file_list: return update_file_list_async_web_proxy(full_path);
         case FtpOperationType::download_file: return download_file_async_web_proxy(full_path + file_name, location);
@@ -873,15 +936,14 @@ void DownloadDicsDlg::remove_timer() {
     m_timer = nullptr;
 }
 
-void DownloadDicsDlg::set_options(bool show_only_known, bool install_system) {
-    Button_SetCheck(m_h_show_only_known, show_only_known ? BST_CHECKED : BST_UNCHECKED);
-    Button_SetCheck(m_h_install_system, install_system ? BST_CHECKED : BST_UNCHECKED);
+void DownloadDicsDlg::update_controls() {
+    Button_SetCheck(m_h_show_only_known, m_settings.ftp_show_only_known_dictionaries ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(m_h_install_system, m_settings.ftp_install_dictionaries_for_all_users ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void DownloadDicsDlg::update_options(SpellChecker* spellchecker) {
-    spellchecker->set_show_only_know(Button_GetCheck(m_h_show_only_known) == BST_CHECKED);
-    spellchecker->set_install_system(Button_GetCheck(m_h_install_system) ==
-        BST_CHECKED);
+void DownloadDicsDlg::update_settings(Settings& settings) {
+    settings.ftp_show_only_known_dictionaries = Button_GetCheck(m_h_show_only_known) == BST_CHECKED;
+    settings.ftp_install_dictionaries_for_all_users = Button_GetCheck(m_h_install_system) == BST_CHECKED;
 }
 
 void DownloadDicsDlg::refresh() { reinit_server(this, false); }
@@ -901,8 +963,9 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
             m_refresh_icon = (HICON)LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH),
                                               IMAGE_ICON, 16, 16, 0);
             SendMessage(m_h_refresh, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)m_refresh_icon);
-            get_spell_checker()->reset_download_combobox();
-            get_spell_checker()->fill_download_dics_dialog();
+            reset_download_combobox();
+            fill_file_list ();
+            update_controls ();
             m_default_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
         }
         return true;
@@ -932,7 +995,10 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                         CreateTimerQueueTimer(&m_timer, nullptr, reinit_server, this, 1000, 0, 0);
                 }
                 else if (HIWORD(w_param) == CBN_SELCHANGE) {
-                    get_spell_checker()->update_from_download_dics_options_no_update();
+                    {
+                    auto mut_settings = m_settings.modify();
+                    preserve_current_address_index (*mut_settings);
+                    }
                     reinit_server(this, false);
                     m_check_if_saving_is_needed = 0;
                 }
@@ -944,12 +1010,14 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                 break;
             case IDC_INSTALL_SYSTEM:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    get_spell_checker()->update_from_download_dics_options_no_update();
+                    auto mut_settings = m_settings.modify();
+                    update_settings(*mut_settings);
                 }
                 break;
             case IDC_SHOWONLYKNOWN:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    get_spell_checker()->update_from_download_dics_options();
+                    auto mut_settings = m_settings.modify();
+                    update_settings(*mut_settings);
                 }
                 break;
             case IDC_SELECTPROXY:

@@ -20,8 +20,8 @@ public:
 public:
     bool auto_check_text = false;
     std::wstring aspell_path;
-    std::wstring hunspell_path;
-    std::wstring additional_hunspell_path;
+    std::wstring hunspell_user_path;
+    std::wstring hunspell_system_path;
     std::wstring aspell_multi_languages;
     std::wstring hunspell_multi_languages;
     int suggestions_mode = 0; // TODO: change to enum

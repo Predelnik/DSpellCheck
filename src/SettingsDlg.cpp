@@ -124,8 +124,8 @@ void SimpleDlg::apply_settings(Settings& settings) {
     if (get_selected_lib() == 0)
         settings.aspell_path = get_edit_text(m_h_lib_path);
     else {
-        settings.hunspell_path = get_edit_text(m_h_lib_path);
-        settings.additional_hunspell_path = get_edit_text(m_h_system_path);
+        settings.hunspell_user_path = get_edit_text(m_h_lib_path);
+        settings.hunspell_system_path = get_edit_text(m_h_system_path);
     }
 
     settings.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
@@ -796,8 +796,8 @@ void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data) {
 void SimpleDlg::setup_controls(const Settings& settings) {
     set_lib_mode(settings.active_speller_lib_id);
     fill_lib_info(get_spell_checker()->get_aspell_status(),
-                  settings.aspell_path.c_str(), settings.hunspell_path.c_str(),
-                  settings.additional_hunspell_path.c_str());
+                  settings.aspell_path.c_str(), settings.hunspell_user_path.c_str(),
+                  settings.hunspell_system_path.c_str());
     fill_sugestions_num(settings.suggestion_count);
     set_file_types(settings.check_those, settings.file_types.c_str());
     set_check_comments(settings.check_only_comments_and_strings);

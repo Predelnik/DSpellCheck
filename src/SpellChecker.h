@@ -87,8 +87,7 @@ public:
     bool aspell_reinit_settings();
     void set_hunspell_language_options();
     void set_aspell_language_options();
-    void set_delimiters(const char* str);
-    void set_suggestions_num(int num);
+    void update_delimiters();
     void set_aspell_path(const wchar_t* path);
     void set_multiple_languages(std::wstring_view multi_string,
                                 SpellerInterface* speller);
@@ -114,7 +113,7 @@ public:
     std::wstring get_default_hunspell_path();
     void set_sugg_box_settings(int size, int transparency, int save_ini = 1);
     void set_buffer_size(int size);
-    void set_sugg_type(int sugg_type);
+
     void init_speller();
     void set_decode_names(bool value);
     void set_show_only_know(bool value);
@@ -151,14 +150,10 @@ public:
     void find_next_mistake();
     void find_prev_mistake();
     void check_file_name();
-    void fill_download_dics_dialog();
     void update_select_proxy();
     void update_from_remove_dics_options();
     void update_remove_dics_options();
-    void update_from_download_dics_options();
-    void update_from_download_dics_options_no_update();
     void lang_change();
-    void reset_download_combobox();
     void set_recheck_delay(int value);
     int get_recheck_delay();
     std::vector<LanguageInfo> get_available_languages() const;
@@ -169,7 +164,6 @@ private:
     static void remove_underline(HWND scintilla_window, long start, long end);
     void clear_all_underlines();
     void clear_visible_underlines();
-    const char* get_delimiters();
     bool check_word(std::string word, long start, long end);
     void get_visible_limits(long& start, long& finish);
     std::vector<char> get_visible_text(long* offset, bool not_intersection_only = false);
@@ -186,8 +180,6 @@ private:
     void refresh_underline_style();
     void apply_conversions(std::string& word);
     void prepare_string_for_conversion();
-    void preserve_current_address_index();
-    void fill_download_dics();
     void reset_hot_spot_cache();
     void cut_apostrophes(std::string_view& word);
 
@@ -209,20 +201,10 @@ private:
     bool m_settings_loaded;
     bool m_check_text_enabled; // cache for check_those
     bool m_word_under_cursor_is_correct;
-    int m_multi_lang_mode;
-    int m_suggestions_num;
-    int m_suggestions_mode;
-    std::string m_delim_utf8; // String without special characters but maybe with escape
-    // characters (like '\n' and stuff)
     std::string m_delim_utf8_converted; // String where escape characters are properly
     // converted to corresponding symbols
     std::string m_delim_converted; // Same but in ANSI encoding
-    std::wstring m_server_names[3]; // Only user ones, there'll also be bunch of
-    // predetermined ones
     std::wstring m_default_server_names[3];
-    int m_last_used_address; // equals USER_SERVER_CONST + num if user address is
-    // used, otherwise equals number of default server
-    int m_address_is_set;
     std::wstring m_file_types;
     std::wstring m_aspell_path;
     std::wstring m_hunspell_path;

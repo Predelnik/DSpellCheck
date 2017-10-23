@@ -87,32 +87,6 @@ LRESULT post_msg_to_active_editor(HWND scintilla_window, UINT msg,
     return PostMessage(scintilla_window, msg, w_param, l_param);
 }
 
-void SpellChecker::add_user_server(std::wstring server) {
-    ftp_trim(server);
-    for (int i = 0; i < static_cast<int>(COUNTOF(m_default_server_names)); i++) {
-        std::wstring def_server = m_default_server_names[i];
-        ftp_trim(def_server);
-        if (server == def_server)
-            goto add_user_server_cleanup; // Nothing is done in this case
-    }
-    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
-        std::wstring added_server = m_server_names[i];
-        ftp_trim(added_server);
-        if (server == added_server)
-            goto add_user_server_cleanup; // Nothing is done in this case
-    }
-    // Then we're adding finally
-    m_server_names[COUNTOF(m_server_names) - 1].clear();
-    for (int i = COUNTOF(m_server_names) - 1; i > 0; i--) {
-        m_server_names[i] = m_server_names[i - 1];
-    }
-    m_server_names[0] = nullptr;
-    m_server_names[0] = server;
-add_user_server_cleanup:
-    reset_download_combobox();
-    save_settings();
-}
-
 SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
                            SettingsDlg* settings_dlg_instance_arg,
                            NppData* npp_data_instance_arg,
@@ -125,12 +99,10 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
     m_suggestions_instance = suggestions_instance_arg;
     m_npp_data_instance = npp_data_instance_arg;
     m_lang_list_instance = lang_list_instance_arg;
-    m_multi_lang_mode = 0;
     m_check_those = false;
     m_sb_trans = 0;
     m_sb_size = 0;
     m_cur_word_list = nullptr;
-    m_suggestions_mode = 1;
     m_word_under_cursor_length = 0;
     m_word_under_cursor_pos = 0;
     m_word_under_cursor_is_correct = true;
@@ -139,12 +111,6 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
     m_hunspell_speller = std::make_unique<HunspellInterface>(m_npp_data_instance->npp_handle);
     m_current_speller = m_aspell_speller.get();
     prepare_string_for_conversion();
-    memset(m_server_names, 0, sizeof(m_server_names));
-    memset(m_default_server_names, 0, sizeof(m_default_server_names));
-    m_address_is_set = 0;
-    m_default_server_names[0] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
-    m_default_server_names[1] = L"ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/";
-    m_default_server_names[2] = L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/";
     m_decode_names = false;
     reset_hot_spot_cache();
     m_proxy_anonymous = true;
@@ -216,7 +182,7 @@ void insert_sugg_menu_item(HMENU menu, const wchar_t* text, BYTE id, int insert_
 
 void SpellChecker::precalculate_menu() {
     std::vector<SuggestionsMenuItem> suggestion_menu_items;
-    if (check_text_needed() && m_suggestions_mode == SUGGESTIONS_CONTEXT_MENU) {
+    if (check_text_needed() && m_settings.suggestions_mode == SUGGESTIONS_CONTEXT_MENU) {
         long pos, length;
         m_word_under_cursor_is_correct = get_word_under_cursor_is_right(pos, length, true);
         if (!m_word_under_cursor_is_correct) {
@@ -226,11 +192,6 @@ void SpellChecker::precalculate_menu() {
         }
     }
     show_calculated_menu(std::move(suggestion_menu_items));
-}
-
-void SpellChecker::set_sugg_type(int sugg_type) {
-    m_suggestions_mode = sugg_type;
-    hide_suggestion_box();
 }
 
 void SpellChecker::set_show_only_know(bool value) { m_show_only_known = value; }
@@ -286,11 +247,6 @@ void SpellChecker::show_suggestion_menu() {
 }
 
 
-void SpellChecker::fill_download_dics_dialog() {
-    fill_download_dics();
-    get_download_dics()->fill_file_list();
-}
-
 void SpellChecker::update_select_proxy() {
     get_select_proxy()->set_options(m_use_proxy, m_proxy_host_name.c_str(), m_proxy_user_name.c_str(),
                                     m_proxy_password.c_str(), m_proxy_port, m_proxy_anonymous,
@@ -304,17 +260,6 @@ void SpellChecker::update_from_remove_dics_options() {
 
 void SpellChecker::update_remove_dics_options() {
     get_remove_dics()->set_check_boxes(m_remove_user_dics, m_remove_system);
-}
-
-void SpellChecker::update_from_download_dics_options() {
-    get_download_dics()->update_options(this);
-    get_download_dics()->update_list_box();
-    save_settings();
-}
-
-void SpellChecker::update_from_download_dics_options_no_update() {
-    get_download_dics()->update_options(this);
-    save_settings();
 }
 
 void SpellChecker::lang_change() {
@@ -387,7 +332,7 @@ void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
                            L"Remove Unneeded Languages...");
             }
         }
-        else if (m_settings.active_speller_lib_id  == 1)
+        else if (m_settings.active_speller_lib_id == 1)
             AppendMenu(new_menu, MF_STRING,
                        get_use_allocated_ids()
                            ? DOWNLOAD_DICS + get_langs_menu_id_start()
@@ -402,58 +347,6 @@ void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
 
     SetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, true, &mif);
 }
-
-void SpellChecker::fill_download_dics() {
-    get_download_dics()->set_options(m_show_only_known, m_install_system);
-}
-
-void SpellChecker::reset_download_combobox() {
-    HWND target_combobox = GetDlgItem(get_download_dics()->getHSelf(), IDC_ADDRESS);
-    wchar_t buf[DEFAULT_BUF_SIZE];
-    ComboBox_GetText(target_combobox, buf, DEFAULT_BUF_SIZE);
-    if (m_address_is_set) {
-        preserve_current_address_index();
-    }
-    ComboBox_ResetContent(target_combobox);
-    for (int i = 0; i < static_cast<int>(COUNTOF(m_default_server_names)); i++) {
-        ComboBox_AddString(target_combobox, m_default_server_names[i].c_str ());
-    }
-    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
-        if (!m_server_names[i].empty())
-            ComboBox_AddString(target_combobox, m_server_names[i].c_str ());
-    }
-    if (m_last_used_address < USER_SERVER_CONST)
-        ComboBox_SetCurSel(target_combobox, m_last_used_address);
-    else
-        ComboBox_SetCurSel(target_combobox, m_last_used_address - USER_SERVER_CONST +
-        COUNTOF(m_default_server_names));
-    m_address_is_set = 1;
-}
-
-void SpellChecker::preserve_current_address_index() {
-    auto mb_address = get_download_dics()->current_address();
-    if (!mb_address)
-        return;
-    auto address = *mb_address;
-    ftp_trim(address);
-    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
-        std::wstring def_server = m_default_server_names[i];
-        ftp_trim(def_server);
-        if (address == def_server) {
-            m_last_used_address = i;
-            return;
-        }
-    };
-    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
-        std::wstring server = m_server_names[i];
-        if (address == server) {
-            m_last_used_address = USER_SERVER_CONST + i;
-            return;
-        }
-    }
-    m_last_used_address = 0;
-}
-
 
 void SpellChecker::set_check_comments(bool value) { m_check_only_comments_and_string = value; }
 
@@ -784,7 +677,7 @@ void SpellChecker::set_suggestions_box_transparency() {
 }
 
 void SpellChecker::init_suggestions_box() {
-    if (m_suggestions_mode != SUGGESTIONS_BOX)
+    if (m_settings.suggestions_mode != SUGGESTIONS_BOX)
         return;
     if (!m_current_speller->is_working())
         return;
@@ -911,8 +804,8 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
                 lang_string = get_available_languages()[result].orig_name;
             do_plugin_menu_inclusion(true);
 
-            auto mut_settings = m_settings.modify ();
-            mut_settings->get_current_language () = lang_string;
+            auto mut_settings = m_settings.modify();
+            mut_settings->get_current_language() = lang_string;
             break;
         }
     default:
@@ -932,10 +825,6 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
     range.lpstrText = text.data();
     post_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL, pos,
                               pos + m_word_under_cursor_length);
-    if (m_suggestions_mode == SUGGESTIONS_BOX) {
-        // PostMsgToEditor (GetCurrentScintilla (), NppDataInstance, SCI_SETSEL,
-        // Pos, Pos + WUCLength);
-    }
     std::vector<SuggestionsMenuItem> suggestion_menu_items;
     send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
 
@@ -944,19 +833,19 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
 
     m_last_suggestions = m_current_speller->get_suggestions(m_selected_word.c_str());
 
-    for (size_t i = 0; i < m_last_suggestions.size(); i++) {
-        if (i >= static_cast<unsigned int>(m_suggestions_num))
+    for (int i = 0; i < static_cast<int>(m_last_suggestions.size()); i++) {
+        if (i >= m_settings.suggestion_count)
             break;
 
         auto item = utf8_to_wstring(m_last_suggestions[i].c_str());
-        if (m_suggestions_mode == SUGGESTIONS_BOX)
+        if (m_settings.suggestions_mode == SUGGESTIONS_BOX)
             insert_sugg_menu_item(menu, item.c_str(), static_cast<BYTE>(i + 1), -1);
         else
             suggestion_menu_items.emplace_back(item.c_str(), static_cast<BYTE>(i + 1));
     }
 
     if (!m_last_suggestions.empty()) {
-        if (m_suggestions_mode == SUGGESTIONS_BOX)
+        if (m_settings.suggestions_mode == SUGGESTIONS_BOX)
             insert_sugg_menu_item(menu, L"", 0, 103, true);
         else
             suggestion_menu_items.emplace_back(L"", 0, true);
@@ -970,17 +859,17 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
     apply_conversions(buf_utf8);
     auto item = utf8_to_wstring(buf_utf8.c_str());
     auto menu_string = wstring_printf(L"Ignore \"%s\" for Current Session", item.c_str());
-    if (m_suggestions_mode == SUGGESTIONS_BOX)
+    if (m_settings.suggestions_mode == SUGGESTIONS_BOX)
         insert_sugg_menu_item(menu, menu_string.c_str(), MID_IGNOREALL, -1);
     else
         suggestion_menu_items.emplace_back(menu_string.c_str(), MID_IGNOREALL);
     menu_string = wstring_printf(L"Add \"%s\" to Dictionary", item.c_str());;
-    if (m_suggestions_mode == SUGGESTIONS_BOX)
+    if (m_settings.suggestions_mode == SUGGESTIONS_BOX)
         insert_sugg_menu_item(menu, menu_string.c_str(), MID_ADDTODICTIONARY, -1);
     else
         suggestion_menu_items.emplace_back(menu_string.c_str(), MID_ADDTODICTIONARY);
 
-    if (m_suggestions_mode == SUGGESTIONS_CONTEXT_MENU)
+    if (m_settings.suggestions_mode == SUGGESTIONS_CONTEXT_MENU)
         suggestion_menu_items.emplace_back(L"", 0, true);
 
     return suggestion_menu_items;
@@ -1067,14 +956,6 @@ void SpellChecker::save_settings() {
     save_to_ini(L"Show_Only_Known", m_show_only_known, true);
     save_to_ini(L"Install_Dictionaries_For_All_Users", m_install_system, false);
     save_to_ini(L"Recheck_Delay", m_recheck_delay, 500);
-    wchar_t buf[DEFAULT_BUF_SIZE];
-    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
-        if (m_server_names[i].empty())
-            continue;
-        swprintf(buf, L"Server_Address[%d]", i);
-        save_to_ini(buf, m_server_names[i].c_str(), L"");
-    }
-    save_to_ini(L"Suggestions_Control", m_suggestions_mode, 1);
     save_to_ini(L"Ignore_Yo", m_ignore_yo, 0);
     save_to_ini(L"Convert_Single_Quotes_To_Apostrophe", m_convert_single_quotes, 1);
     save_to_ini(L"Remove_Ending_And_Beginning_Apostrophe",
@@ -1097,13 +978,10 @@ void SpellChecker::save_settings() {
     save_to_ini(L"User_Hunspell_Path", m_hunspell_path.c_str(), path.c_str());
     save_to_ini(L"System_Hunspell_Path", m_additional_hunspell_path.c_str(),
                 L".\\plugins\\config\\Hunspell");
-    save_to_ini(L"Suggestions_Number", m_suggestions_num, 5);
-    save_to_ini_utf8(L"Delimiters", m_delim_utf8.c_str(), to_utf8_string(DEFAULT_DELIMITERS).c_str(), true);
     save_to_ini(L"Find_Next_Buffer_Size", m_buffer_size / 1024, 4);
     save_to_ini(L"Suggestions_Button_Size", m_sb_size, 15);
     save_to_ini(L"Suggestions_Button_Opacity", m_sb_trans, 70);
-    preserve_current_address_index();
-    save_to_ini(L"Last_Used_Address_Index", m_last_used_address, 0);
+
     save_to_ini(L"Decode_Language_Names", m_decode_names, true);
 
     save_to_ini(L"Use_Proxy", m_use_proxy, false);
@@ -1142,12 +1020,10 @@ void SpellChecker::on_settings_changed() {
     m_additional_hunspell_path = load_from_ini(L"System_Hunspell_Path",
                                                L".\\plugins\\config\\Hunspell");
 
-    load_from_ini(m_suggestions_mode, L"Suggestions_Control", 1);
     set_aspell_language_options();
     set_hunspell_language_options();
+    update_delimiters();
 
-    set_delimiters(load_from_ini_utf8(L"Delimiters", to_utf8_string(DEFAULT_DELIMITERS).c_str()).c_str());
-    load_from_ini(m_suggestions_num, L"Suggestions_Number", 5);
     load_from_ini(m_ignore_yo, L"Ignore_Yo", false);
     load_from_ini(m_convert_single_quotes, L"Convert_Single_Quotes_To_Apostrophe", true);
     load_from_ini(m_remove_boundary_apostrophes,
@@ -1181,12 +1057,6 @@ void SpellChecker::on_settings_changed() {
     load_from_ini(m_show_only_known, L"Show_Only_Known", true);
     load_from_ini(m_install_system, L"Install_Dictionaries_For_All_Users", false);
     load_from_ini(m_recheck_delay, L"Recheck_Delay", 500);
-    wchar_t buf[DEFAULT_BUF_SIZE];
-    for (int i = 0; i < static_cast<int>(COUNTOF(m_server_names)); i++) {
-        swprintf(buf, L"Server_Address[%d]", i);
-        m_server_names[i] = load_from_ini(buf, L"");
-    }
-    load_from_ini(m_last_used_address, L"Last_Used_Address_Index", 0);
     load_from_ini(m_remove_user_dics, L"Remove_User_Dics_On_Dic_Remove", false);
     load_from_ini(m_remove_system, L"Remove_Dics_For_All_Users", false);
     load_from_ini(m_decode_names, L"Decode_Language_Names", true);
@@ -1394,7 +1264,7 @@ void SpellChecker::set_aspell_language_options() {
         m_aspell_speller->set_mode(1);
     }
     else {
-        m_aspell_speller->set_language(m_settings.aspell_language.c_str ());
+        m_aspell_speller->set_language(m_settings.aspell_language.c_str());
         m_current_speller->set_mode(0);
     }
 }
@@ -1405,20 +1275,15 @@ void SpellChecker::set_hunspell_language_options() {
         m_hunspell_speller->set_mode(1);
     }
     else {
-        m_hunspell_speller->set_language(m_settings.hunspell_language.c_str ());
+        m_hunspell_speller->set_language(m_settings.hunspell_language.c_str());
         m_hunspell_speller->set_mode(0);
     }
 }
 
-const char* SpellChecker::get_delimiters() { return m_delim_utf8.c_str(); }
-
-void SpellChecker::set_suggestions_num(int num) { m_suggestions_num = num; }
-
 // Here parameter is in UTF-8
-void SpellChecker::set_delimiters(const char* str) {
-    m_delim_utf8 = str;
+void SpellChecker::update_delimiters() {
     m_delim_utf8_converted = to_utf8_string(
-        (parse_string(utf8_to_wstring(m_delim_utf8.c_str()).c_str()) + L" \n\r\t\v").c_str());
+        (parse_string(utf8_to_wstring(m_settings.delim_utf8.c_str()).c_str()) + L" \n\r\t\v").c_str());
     m_delim_converted = utf8_to_string(m_delim_utf8_converted.c_str());
 }
 
@@ -1437,7 +1302,7 @@ bool SpellChecker::hunspell_reinit_settings(bool reset_directory) {
         m_hunspell_speller->set_additional_directory(m_additional_hunspell_path.c_str());
     }
     if (m_settings.hunspell_language != L"<MULTIPLE>")
-        m_hunspell_speller->set_language(m_settings.hunspell_language.c_str ());
+        m_hunspell_speller->set_language(m_settings.hunspell_language.c_str());
     else
         set_multiple_languages(m_settings.hunspell_multi_languages.c_str(), m_hunspell_speller.get());
     return true;

@@ -74,14 +74,15 @@ struct FtpOperationParams {
 class DownloadDicsDlg : public StaticDialog {
 public:
     ~DownloadDicsDlg();
-    DownloadDicsDlg();
+    DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings& settings);
     void do_dialog();
     // Maybe hunspell interface should be passed here
-    void init_dlg(HINSTANCE h_inst, HWND parent,
-              SpellChecker* spell_checker_instance_arg);
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
     void update_list_box();
     void on_new_file_list(const std::vector<std::wstring>& list);
+    void preserve_current_address_index(Settings& settings);
+    void reset_download_combobox();
+    void add_user_server(std::wstring server);
     void prepare_file_list_update();
     FtpOperationParams spawn_ftp_operation_params(const std::wstring& full_path);
     void update_file_list_async_web_proxy(const std::wstring& full_path);
@@ -89,15 +90,15 @@ public:
     void download_file_async(const std::wstring& full_path, const std::wstring& target_location);
     void download_file_async_web_proxy(const std::wstring& full_path, const std::wstring& target_location);
     void do_ftp_operation(FtpOperationType type, const std::wstring& full_path,
-                        const std::wstring& file_name = L"", const std::wstring& location = L"");
+                          const std::wstring& file_name = L"", const std::wstring& location = L"");
     void start_next_download();
     void download_selected();
     void fill_file_list();
     void remove_timer();
     void on_display_action();
     void indicate_that_saving_might_be_needed();
-    void set_options(bool show_only_known, bool install_system);
-    void update_options(SpellChecker* spellchecker);
+    void update_controls();
+    void update_settings(Settings& settings);
     void set_cancel_pressed(bool value);
     void refresh();
     LRESULT ask_replacement_message(const wchar_t* dic_name);
@@ -114,7 +115,6 @@ private:
     std::vector<LanguageInfo> m_current_langs_filtered;
     HBRUSH m_default_brush;
     COLORREF m_status_color;
-    SpellChecker* m_spell_checker_instance;
     HWND m_lib_combo;
     HWND m_h_file_list;
     HWND m_h_address = nullptr;
@@ -141,4 +141,7 @@ private:
     std::wstring m_message;
     std::vector<DownloadRequest> m_to_download;
     decltype (m_to_download)::iterator m_cur;
+    std::array<std::wstring, 3> m_default_server_names;
+    Settings& m_settings;
+    bool m_address_is_set = false;
 };

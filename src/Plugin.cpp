@@ -377,9 +377,7 @@ void init_classes() {
     remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
                                                                  *settings);
 
-    download_dics_dlg = std::make_unique<DownloadDicsDlg>();
-    download_dics_dlg->init_dlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
-                                spell_checker.get());
+    download_dics_dlg = std::make_unique<DownloadDicsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings);
 
     settings->load();
     resources_inited = true;
