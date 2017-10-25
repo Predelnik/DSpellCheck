@@ -2168,6 +2168,8 @@ void SpellChecker::GetDefaultHunspellPath(wchar_t *&Path) {
 void SpellChecker::SaveSettings() {
   FILE *Fp;
   _wfopen_s(&Fp, IniFilePath, L"w"); // Cleaning settings file (or creating it)
+  WORD wBOM = 0xFEFF;
+  fwrite (&wBOM, sizeof (wBOM), 1, Fp);
   fclose(Fp);
   if (!SettingsLoaded)
     return;
