@@ -34,6 +34,7 @@ RemoveDictionariesDialog::RemoveDictionariesDialog(HINSTANCE h_inst, HWND parent
     m_settings.settings_changed.connect([this] { update_list(); });
     get_spell_checker()->lang_list_changed.connect([this] { update_list(); });
     Window::init(h_inst, parent);
+    m_settings.settings_changed.connect([this]{ update_controls (); });
 }
 
 void RemoveDictionariesDialog::do_dialog() {
@@ -69,13 +70,13 @@ void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_insta
     for (int i = 0; i < ListBox_GetCount(m_lang_list); i++) {
         if (CheckedListBox_GetCheckState(m_lang_list, i) == BST_CHECKED) {
             wchar_t file_name[MAX_PATH];
-            for (int j = 0; j < 1 + spell_checker_instance->get_remove_system() ? 1 : 0;
+            for (int j = 0; j < 1 + m_settings.remove_system_dictionaries ? 1 : 0;
                  j++) {
                 *file_name = L'\0';
                 wcscat(file_name,
-                       (j == 0)
-                           ? spell_checker_instance->get_hunspell_path()
-                           : spell_checker_instance->get_hunspell_additional_path());
+                       ((j == 0)
+                           ? m_settings.hunspell_user_path
+                           : m_settings.hunspell_system_path).c_str ());
                 wcscat(file_name, L"\\");
                 wcscat(file_name, spell_checker_instance->get_available_languages()[i].orig_name.c_str ());
                 wcscat(file_name, L".aff");
@@ -84,7 +85,7 @@ void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_insta
                 wcsncpy(file_name + wcslen(file_name) - 4, L".dic", 4);
                 SetFileAttributes(file_name, FILE_ATTRIBUTE_NORMAL);
                 success = success && DeleteFile(file_name);
-                if (spell_checker_instance->get_remove_user_dics()) {
+                if (m_settings.remove_user_dictionaries) {
                     wcsncpy(file_name + wcslen(file_name) - 4, L".usr", 4);
                     SetFileAttributes(file_name, FILE_ATTRIBUTE_NORMAL);
                     DeleteFile(file_name); // Success doesn't matter in that case, 'cause
@@ -116,17 +117,18 @@ void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_insta
     }
 }
 
-void RemoveDictionariesDialog::update_options(SpellChecker* spell_checker_instance) {
-    spell_checker_instance->set_remove_user_dics(Button_GetCheck(m_remove_user_dics) ==
-        BST_CHECKED);
-    spell_checker_instance->set_remove_system(Button_GetCheck(m_remove_system) ==
-        BST_CHECKED);
+void RemoveDictionariesDialog::update_options() {
+    auto mut_settings = m_settings.modify ();
+    mut_settings->remove_user_dictionaries = Button_GetCheck(m_remove_user_dics) ==
+        BST_CHECKED;
+    mut_settings->remove_system_dictionaries = Button_GetCheck(m_remove_system) ==
+        BST_CHECKED;
 }
 
-void RemoveDictionariesDialog::set_check_boxes(bool remove_user_dics, bool remove_system) {
+void RemoveDictionariesDialog::update_controls() {
     Button_SetCheck(m_remove_user_dics,
-        remove_user_dics ? BST_CHECKED : BST_UNCHECKED);
-    Button_SetCheck(m_remove_system, remove_system ? BST_CHECKED : BST_UNCHECKED);
+        m_settings.remove_user_dictionaries ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(m_remove_system, m_settings.remove_system_dictionaries ? BST_CHECKED : BST_UNCHECKED);
 }
 
 INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param,
@@ -138,7 +140,7 @@ INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param,
             m_remove_user_dics = ::GetDlgItem(_hSelf, IDC_REMOVE_USER_DICS);
             m_remove_system = ::GetDlgItem(_hSelf, IDC_REMOVE_SYSTEM);
             update_list();
-            get_spell_checker()->update_remove_dics_options();
+            update_controls();
             return true;
         }
     case WM_COMMAND:

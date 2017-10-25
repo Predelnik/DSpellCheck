@@ -265,7 +265,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code) {
             (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) {
 
             if (recheck_timer) {
-                SetTimer(npp_data.npp_handle, recheck_timer, get_spell_checker()->get_recheck_delay(), do_recheck);
+                SetTimer(npp_data.npp_handle, recheck_timer, get_settings ().recheck_delay, do_recheck);
                 recheck_done = false;
             }
         }

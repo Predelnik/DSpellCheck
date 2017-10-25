@@ -31,8 +31,8 @@ public:
   void update_list();
   void remove_selected(SpellChecker *spell_checker_instance);
   HWND get_list_box();
-  void update_options(SpellChecker *spell_checker_instance);
-  void set_check_boxes(bool remove_user_dics, bool remove_system);
+  void update_options();
+  void update_controls();
 
 protected:
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;

@@ -97,4 +97,3 @@ SpellChecker *get_spell_checker ();
 const Settings& get_settings();
 DWORD get_custom_gui_message_id (CustomGuiMessage message_id);
 void register_custom_messages ();
-

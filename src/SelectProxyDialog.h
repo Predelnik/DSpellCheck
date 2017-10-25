@@ -20,15 +20,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 #include "StaticDialog/StaticDialog.h"
 
+class Settings;
 class SpellChecker;
 
 class SelectProxyDialog : public StaticDialog {
 public:
+    explicit SelectProxyDialog (Settings &settings);
   void do_dialog();
-  void apply_choice(SpellChecker *spell_checker_instance);
-  void set_options(bool use_proxy, const wchar_t* host_name, const wchar_t* user_name,
-                  const wchar_t* password, int port, bool proxy_anonymous,
-                  int proxy_type);
+  void apply_choice();
+  void update_controls(
+  );
 
 protected:
   virtual INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
@@ -43,4 +44,5 @@ protected:
   HWND m_use_proxy = nullptr;
   HWND m_proxy_anonymous = nullptr;
   HWND m_proxy_type = nullptr;
+  Settings &m_settings;
 };

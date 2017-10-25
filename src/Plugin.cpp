@@ -371,7 +371,7 @@ void init_classes() {
 
     lang_list_instance = std::make_unique<LangList>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings);
 
-    select_proxy_dlg = std::make_unique<SelectProxyDialog>();
+    select_proxy_dlg = std::make_unique<SelectProxyDialog>(*settings);
     select_proxy_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
     remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,

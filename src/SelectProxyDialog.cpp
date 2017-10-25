@@ -26,6 +26,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "utils/winapi.h"
 #include "resource.h"
+#include "Settings.h"
+
+SelectProxyDialog::SelectProxyDialog(Settings& settings) : m_settings (settings) {
+}
 
 void SelectProxyDialog::do_dialog() {
   if (!isCreated()) {
@@ -34,17 +38,18 @@ void SelectProxyDialog::do_dialog() {
   goToCenter();
 }
 
-void SelectProxyDialog::apply_choice(SpellChecker *spell_checker_instance) {
-  spell_checker_instance->set_proxy_user_name (get_edit_text(m_user_name).c_str ());
-  spell_checker_instance->set_proxy_host_name (get_edit_text (m_host_name).c_str ());
-  spell_checker_instance->set_proxy_password (get_edit_text (m_password).c_str ());
-  spell_checker_instance->set_use_proxy(Button_GetCheck(m_use_proxy) == BST_CHECKED);
-  spell_checker_instance->set_proxy_anonymous(Button_GetCheck(m_proxy_anonymous) == BST_CHECKED);
-  spell_checker_instance->set_proxy_type(ComboBox_GetCurSel(m_proxy_type));
+void SelectProxyDialog::apply_choice() {
+  auto mut_settings = m_settings.modify ();
+  mut_settings->proxy_user_name = get_edit_text(m_user_name);
+  mut_settings->proxy_host_name = get_edit_text (m_host_name);
+  mut_settings->proxy_password = get_edit_text (m_password);
+  mut_settings->use_proxy = Button_GetCheck(m_use_proxy) == BST_CHECKED;
+  mut_settings->proxy_is_anonymous = Button_GetCheck(m_proxy_anonymous) == BST_CHECKED;
+  mut_settings->proxy_type = ComboBox_GetCurSel(m_proxy_type);
   auto text = get_edit_text (m_port);
   wchar_t *end_ptr;
   int x = wcstol(text.c_str(), &end_ptr, 10);
-  spell_checker_instance->set_proxy_port(x);
+  mut_settings->proxy_port = (x);
   get_download_dics()->refresh();
 }
 
@@ -69,24 +74,17 @@ void SelectProxyDialog::disable_controls() {
   }
 }
 
-void SelectProxyDialog::set_options(bool use_proxy, const wchar_t* host_name,
-                                   const wchar_t* user_name, const wchar_t* password, int port,
-                                   bool proxy_anonymous, int proxy_type) {
-  Button_SetCheck(m_use_proxy, use_proxy ? BST_CHECKED : BST_UNCHECKED);
+void SelectProxyDialog::update_controls()
+{
+  Button_SetCheck(m_use_proxy, m_settings.use_proxy ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_proxy_anonymous,
-                  proxy_anonymous ? BST_CHECKED : BST_UNCHECKED);
-  Edit_SetText(m_user_name, user_name);
-  Edit_SetText(m_host_name, host_name);
-  Edit_SetText(m_password, password);
-  if (port < 0)
-    port = 0;
-  if (port > 65535)
-    port = 65535;
-  wchar_t buf[DEFAULT_BUF_SIZE];
-  _itow(port, buf, 10);
-  Edit_SetText(m_port, buf);
+                  m_settings.proxy_is_anonymous ? BST_CHECKED : BST_UNCHECKED);
+  Edit_SetText(m_user_name, m_settings.proxy_user_name.c_str ());
+  Edit_SetText(m_host_name, m_settings.proxy_host_name.c_str ());
+  Edit_SetText(m_password, m_settings.proxy_password.c_str ());
+  Edit_SetText(m_port, std::to_wstring (m_settings.proxy_port).c_str ());
   disable_controls();
-  ComboBox_SetCurSel(m_proxy_type, proxy_type);
+  ComboBox_SetCurSel(m_proxy_type, m_settings.proxy_type);
 }
 
 INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
@@ -102,7 +100,7 @@ INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
     m_proxy_type = ::GetDlgItem(_hSelf, IDC_PROXY_TYPE);
     ComboBox_AddString(m_proxy_type, L"FTP Web Proxy");
     ComboBox_AddString(m_proxy_type, L"FTP Gateway");
-    get_spell_checker ()->update_select_proxy();
+    update_controls ();
     return true;
   }
   case WM_COMMAND: {
@@ -115,7 +113,7 @@ INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
       break;
     case IDCANCEL:
       if (HIWORD(w_param) == BN_CLICKED) {
-        get_spell_checker ()->update_select_proxy(); // Reset all settings
+        update_controls(); // Reset all settings
         display(false);
       }
       break;

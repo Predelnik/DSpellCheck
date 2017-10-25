@@ -85,62 +85,21 @@ public:
     void error_msg_box(const wchar_t* message);
 
     bool aspell_reinit_settings();
-    void set_hunspell_language_options();
-    void set_aspell_language_options();
+    void update_hunspell_language_options();
+    void update_aspell_language_options();
     void update_delimiters();
-    void set_aspell_path(const wchar_t* path);
     void set_multiple_languages(std::wstring_view multi_string,
                                 SpellerInterface* speller);
-    void set_hunspell_path(const wchar_t* path);
-    void set_hunspell_additional_path(const wchar_t* path);
-    void set_conversion_options(bool convert_yo, bool convert_single_quotes_arg,
-                                bool remove_boundary_apostrophes_arg);
-    void set_check_those(int check_those_arg);
-    void set_file_types(const wchar_t* file_types_arg);
-    void set_check_comments(bool value);
-    void set_underline_color(int value);
-    void set_underline_style(int value);
-    void set_proxy_user_name(const wchar_t* str);
-    void set_proxy_host_name(const wchar_t* str);
-    void set_proxy_password(const wchar_t* str);
-    void set_proxy_port(int value);
-    void set_use_proxy(bool value);
-    void set_proxy_anonymous(bool value);
-    void set_proxy_type(int value);
-    void set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg,
-                    bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
-                    bool ignore_se_apostrophe_arg, bool ignore_one_letter_arg);
     std::wstring get_default_hunspell_path();
-    void set_sugg_box_settings(int size, int transparency, int save_ini = 1);
-    void set_buffer_size(int size);
+    void update_suggestion_box();
 
     void init_speller();
-    void set_decode_names(bool value);
-    void set_show_only_know(bool value);
-    void set_install_system(bool value);
-    const wchar_t* get_hunspell_path() const { return m_hunspell_path.c_str(); }
     int get_aspell_status();;
-    const wchar_t* get_hunspell_additional_path() const { return m_additional_hunspell_path.c_str(); };
-    bool get_show_only_known();
-    bool get_install_system();
-    bool get_decode_names();
     void do_plugin_menu_inclusion(bool invalidate = false);
     HunspellInterface* get_hunspell_speller() { return m_hunspell_speller.get(); };
     bool hunspell_reinit_settings(bool reset_directory);
-    void set_remove_user_dics(bool value);
-    void set_remove_system(bool value);
-    bool get_remove_user_dics();
-    bool get_remove_system();
-    const wchar_t* get_proxy_user_name() const;
-    const wchar_t* get_proxy_host_name() const;
-    const wchar_t* get_proxy_password() const;
-    int get_proxy_port();
-    bool get_use_proxy();
-    bool get_proxy_anonymous();
-    int get_proxy_type();
     long previous_a, previous_b;
     void set_suggestions_box_transparency();
-    void add_user_server(std::wstring server);
     void process_menu_result(WPARAM menu_id);
     void copy_misspellings_to_clipboard();
     void on_settings_changed();
@@ -150,12 +109,9 @@ public:
     void find_next_mistake();
     void find_prev_mistake();
     void check_file_name();
-    void update_select_proxy();
     void update_from_remove_dics_options();
-    void update_remove_dics_options();
+
     void lang_change();
-    void set_recheck_delay(int value);
-    int get_recheck_delay();
     std::vector<LanguageInfo> get_available_languages() const;
 
 private:
@@ -204,42 +160,9 @@ private:
     std::string m_delim_utf8_converted; // String where escape characters are properly
     // converted to corresponding symbols
     std::string m_delim_converted; // Same but in ANSI encoding
-    std::wstring m_default_server_names[3];
-    std::wstring m_file_types;
-    std::wstring m_aspell_path;
-    std::wstring m_hunspell_path;
-    std::wstring m_additional_hunspell_path;
-    bool m_ignore_yo;
-    bool m_convert_single_quotes;
-    bool m_remove_boundary_apostrophes;
-    bool m_check_those;
-    bool m_check_only_comments_and_string;
-    int m_underline_color;
-    int m_underline_style;
-    bool m_ignore_numbers;
-    bool m_ignore_starting_with_capital;
-    bool m_ignore_having_a_capital;
-    bool m_ignore_all_capital;
-    bool m_ignore_having_underscore;
-    bool m_ignore_starting_or_ending_with_apostrophe;
-    bool m_ignore_one_letter;
-    bool m_decode_names;
-    bool m_show_only_known;
-    bool m_install_system;
-    int m_sb_size;
-    int m_sb_trans;
-    int m_buffer_size;
     const AspellWordList* m_cur_word_list;
     HWND m_current_scintilla;
     LRESULT m_hot_spot_cache[256]; // STYLE_MAX = 255
-    bool m_use_proxy;
-    bool m_proxy_anonymous;
-    int m_proxy_type;
-    std::wstring m_proxy_host_name;
-    std::wstring m_proxy_user_name;
-    int m_proxy_port;
-    std::wstring m_proxy_password;
-    int m_recheck_delay;
     const Settings &m_settings;
 
     LRESULT m_lexer;
@@ -258,8 +181,6 @@ private:
     LangList* m_lang_list_instance;
     std::vector<char> m_visible_text;
     long m_visible_text_offset;
-    bool m_remove_user_dics;
-    bool m_remove_system;
 
     SpellerInterface* m_current_speller;
     std::unique_ptr<AspellInterface> m_aspell_speller;
