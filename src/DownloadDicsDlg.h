@@ -72,6 +72,9 @@ struct FtpOperationParams {
 };
 
 class DownloadDicsDlg : public StaticDialog {
+    enum {
+      refresh_timer_id = 0
+    };
 public:
     ~DownloadDicsDlg();
     DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings& settings);
@@ -91,16 +94,15 @@ public:
     void download_file_async_web_proxy(const std::wstring& full_path, const std::wstring& target_location);
     void do_ftp_operation(FtpOperationType type, const std::wstring& full_path,
                           const std::wstring& file_name = L"", const std::wstring& location = L"");
+    void refresh();
     void start_next_download();
     void download_selected();
     void fill_file_list();
-    void remove_timer();
     void on_display_action();
     void indicate_that_saving_might_be_needed();
     void update_controls();
     void update_settings(Settings& settings);
     void set_cancel_pressed(bool value);
-    void refresh();
     LRESULT ask_replacement_message(const wchar_t* dic_name);
     bool prepare_downloading();
     void finalize_downloading();
@@ -124,7 +126,6 @@ private:
     HWND m_h_refresh;
     HWND m_h_install_system;
     HICON m_refresh_icon;
-    HANDLE m_timer;
     bool m_cancel_pressed;
     int m_check_if_saving_is_needed;
     std::optional<TaskWrapper> m_ftp_operation_task;

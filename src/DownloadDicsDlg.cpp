@@ -61,8 +61,6 @@ void DownloadDicsDlg::on_display_action() {
 }
 
 DownloadDicsDlg::~DownloadDicsDlg() {
-    if (m_timer)
-        DeleteTimerQueueTimer(nullptr, m_timer, nullptr);
     if (m_refresh_icon)
         DestroyIcon(m_refresh_icon);
 }
@@ -73,7 +71,7 @@ DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings& settin
     m_default_server_names[0] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
     m_default_server_names[1] = L"ftp://sunsite.informatik.rwth-aachen.de/pub/mirror/OpenOffice/contrib/dictionaries/";
     m_default_server_names[2] = L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/";
-    m_settings.settings_changed.connect([this]{update_controls ();});
+    m_settings.settings_changed.connect([this] { update_controls(); });
 }
 
 void DownloadDicsDlg::indicate_that_saving_might_be_needed() {
@@ -741,11 +739,13 @@ void DownloadDicsDlg::preserve_current_address_index(Settings& settings) {
         }
         ++i;
     };
+    i = 0;
     for (auto& server : m_settings.server_names) {
         if (address == server) {
             settings.last_used_address_index = USER_SERVER_CONST + i;
             return;
         }
+        ++i;
     }
     settings.last_used_address_index = 0;
 }
@@ -755,7 +755,7 @@ void DownloadDicsDlg::reset_download_combobox() {
     wchar_t buf[DEFAULT_BUF_SIZE];
     ComboBox_GetText(target_combobox, buf, DEFAULT_BUF_SIZE);
     if (m_address_is_set) {
-        auto mut_settings = m_settings.modify ();
+        auto mut_settings = m_settings.modify();
         preserve_current_address_index(*mut_settings);
     }
     ComboBox_ResetContent(target_combobox);
@@ -923,22 +923,16 @@ void DownloadDicsDlg::do_ftp_operation(FtpOperationType type, const std::wstring
     return;
 }
 
-VOID CALLBACK reinit_server(PVOID lp_parameter, BOOLEAN /*TimerOrWaitFired*/
-) {
-    DownloadDicsDlg* dlg_instance = ((DownloadDicsDlg *)lp_parameter);
-    dlg_instance->indicate_that_saving_might_be_needed();
-    dlg_instance->on_display_action();
-    dlg_instance->remove_timer();
-}
-
-void DownloadDicsDlg::remove_timer() {
-    DeleteTimerQueueTimer(nullptr, m_timer, nullptr);
-    m_timer = nullptr;
+void DownloadDicsDlg::refresh() {
+    indicate_that_saving_might_be_needed();
+    on_display_action();
+    KillTimer(_hSelf, refresh_timer_id);
 }
 
 void DownloadDicsDlg::update_controls() {
     Button_SetCheck(m_h_show_only_known, m_settings.ftp_show_only_known_dictionaries ? BST_CHECKED : BST_UNCHECKED);
-    Button_SetCheck(m_h_install_system, m_settings.ftp_install_dictionaries_for_all_users ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(m_h_install_system, m_settings.ftp_install_dictionaries_for_all_users ? BST_CHECKED : BST_UNCHECKED
+    );
 }
 
 void DownloadDicsDlg::update_settings(Settings& settings) {
@@ -946,11 +940,17 @@ void DownloadDicsDlg::update_settings(Settings& settings) {
     settings.ftp_install_dictionaries_for_all_users = Button_GetCheck(m_h_install_system) == BST_CHECKED;
 }
 
-void DownloadDicsDlg::refresh() { reinit_server(this, false); }
-
 INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                                       LPARAM l_param) {
     switch (message) {
+    case WM_TIMER:
+        {
+            switch (w_param) {
+            case refresh_timer_id:
+                refresh ();
+                return true;
+            }
+        }
     case WM_INITDIALOG:
         {
             m_h_file_list = ::GetDlgItem(_hSelf, IDC_FILE_LIST);
@@ -964,8 +964,8 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                                               IMAGE_ICON, 16, 16, 0);
             SendMessage(m_h_refresh, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)m_refresh_icon);
             reset_download_combobox();
-            fill_file_list ();
-            update_controls ();
+            fill_file_list();
+            update_controls();
             m_default_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
         }
         return true;
@@ -989,17 +989,14 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                 break;
             case IDC_ADDRESS:
                 if (HIWORD(w_param) == CBN_EDITCHANGE) {
-                    if (m_timer)
-                        ChangeTimerQueueTimer(nullptr, m_timer, 1000, 0);
-                    else
-                        CreateTimerQueueTimer(&m_timer, nullptr, reinit_server, this, 1000, 0, 0);
+                    SetTimer(_hSelf, refresh_timer_id, 1000, nullptr);
                 }
                 else if (HIWORD(w_param) == CBN_SELCHANGE) {
                     {
-                    auto mut_settings = m_settings.modify();
-                    preserve_current_address_index (*mut_settings);
+                        auto mut_settings = m_settings.modify();
+                        preserve_current_address_index(*mut_settings);
                     }
-                    reinit_server(this, false);
+                    refresh();
                     m_check_if_saving_is_needed = 0;
                 }
                 break;
