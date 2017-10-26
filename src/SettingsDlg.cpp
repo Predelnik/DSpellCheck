@@ -72,6 +72,7 @@ void SimpleDlg::update_language_controls(const Settings& settings) {
         ComboBox_AddString(m_h_combo_language, L"Multiple Languages...");
 
     ComboBox_SetCurSel(m_h_combo_language, selected_index);
+    EnableWindow (m_h_combo_language, !langs.empty ());
 }
 
 static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t* psz_text) {
@@ -533,7 +534,7 @@ void AdvancedDlg::set_buffer_size(int size) {
     Edit_SetText(m_h_buffer_size, buf);
 }
 
-void AdvancedDlg::setup_controls(const Settings& settings) {
+void AdvancedDlg::update_controls(const Settings& settings) {
     fill_delimiters(settings.delim_utf8.c_str());
     set_recheck_delay(settings.recheck_delay);
     set_conversion_opts(
@@ -762,8 +763,11 @@ SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, const 
     m_npp_data(npp_data),
     m_simple_dlg(*this), m_settings(settings) {
     Window::init(h_inst, parent);
-    m_settings.settings_changed.connect([this] { m_simple_dlg.update_language_controls(m_settings); });
-    get_spell_checker()->lang_list_changed.connect([this] { m_simple_dlg.update_language_controls(m_settings); });
+    m_settings.settings_changed.connect([this] { update_controls (); });
+    get_spell_checker()->speller_status_changed.connect([this] {
+        m_simple_dlg.update_language_controls(m_settings);
+        m_simple_dlg.update_lib_status (m_settings);
+    });
 }
 
 void SettingsDlg::destroy() {
@@ -778,9 +782,9 @@ void SettingsDlg::apply_settings() {
     m_advanced_dlg.apply_settings(*mut_settings);
 }
 
-void SettingsDlg::setup_controls() {
-    m_simple_dlg.setup_controls(m_settings);
-    m_advanced_dlg.setup_controls(m_settings);
+void SettingsDlg::update_controls() {
+    m_simple_dlg.update_controls(m_settings);
+    m_advanced_dlg.update_controls(m_settings);
 }
 
 void SettingsDlg::apply_lib_change(int new_lib_id) {
@@ -793,11 +797,15 @@ void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data) {
     return Window::init(h_inst, parent);
 }
 
-void SimpleDlg::setup_controls(const Settings& settings) {
-    set_lib_mode(settings.active_speller_lib_id);
+void SimpleDlg::update_lib_status (const Settings& settings) {
     fill_lib_info(get_spell_checker()->get_aspell_status(),
                   settings.aspell_path.c_str(), settings.hunspell_user_path.c_str(),
                   settings.hunspell_system_path.c_str());
+}
+
+void SimpleDlg::update_controls(const Settings& settings) {
+    set_lib_mode(settings.active_speller_lib_id);
+    update_lib_status (settings);
     fill_sugestions_num(settings.suggestion_count);
     set_file_types(settings.check_those, settings.file_types.c_str());
     set_check_comments(settings.check_only_comments_and_strings);
@@ -840,7 +848,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
             if (enable_dlg_theme)
                 enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 
-            setup_controls();
+            update_controls();
             m_simple_dlg.update_language_controls(m_settings);
 
             return true;
@@ -906,7 +914,7 @@ UINT SettingsDlg::do_dialog() {
     }
     else {
         goToCenter();
-        setup_controls();
+        update_controls();
     }
 
     display();

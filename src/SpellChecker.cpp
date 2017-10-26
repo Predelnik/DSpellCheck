@@ -188,7 +188,7 @@ void SpellChecker::precalculate_menu() {
 
 int SpellChecker::get_aspell_status() {
     return m_aspell_speller->is_working()
-               ? 2 - (get_available_languages().empty() ? 0 : 1)
+               ? 2 - (get_available_languages().empty() ? 1 : 0)
                : 0;
 }
 
@@ -882,7 +882,7 @@ void SpellChecker::on_settings_changed() {
     recheck_visible_both_views();
     do_plugin_menu_inclusion();
     get_download_dics()->update_list_box();
-    lang_list_changed();
+    speller_status_changed();
 }
 
 void SpellChecker::create_word_underline(HWND scintilla_window, long start,

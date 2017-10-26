@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 RemoveDictionariesDialog::RemoveDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings& settings) :
     m_settings(settings) {
     m_settings.settings_changed.connect([this] { update_list(); });
-    get_spell_checker()->lang_list_changed.connect([this] { update_list(); });
+    get_spell_checker()->speller_status_changed.connect([this] { update_list(); });
     Window::init(h_inst, parent);
     m_settings.settings_changed.connect([this]{ update_controls (); });
 }

@@ -49,7 +49,8 @@ public:
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
-    void setup_controls(const Settings& settings);
+    void update_lib_status(const Settings& settings);
+    void update_controls(const Settings& settings);
 
 protected:
 
@@ -104,7 +105,7 @@ public:
                     bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
                     bool ignore_sa_apostrophe_arg, bool ignore_one_letter);
     void set_buffer_size(int size);
-    void setup_controls(const Settings& settings);
+    void update_controls(const Settings& settings);
 
 protected:
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
@@ -144,7 +145,7 @@ private:
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
     void destroy() override;
     void apply_settings();
-    void setup_controls();
+    void update_controls();
     void apply_lib_change (int new_lib_id);
 
 private:

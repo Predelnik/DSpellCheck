@@ -66,7 +66,7 @@ class SpellChecker {
     };
 
 public:
-    mutable lsignal::signal<void()> lang_list_changed;
+    mutable lsignal::signal<void()> speller_status_changed;
 
 public:
     SpellChecker(const wchar_t* ini_file_path_arg,
