@@ -166,8 +166,6 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
         ShowWindow(m_h_remove_dics, 0);
         ShowWindow(m_h_decode_names, 0);
         ShowWindow(m_h_one_user_dic, 0);
-        ShowWindow(m_h_aspell_reset_path, 1);
-        ShowWindow(m_h_hunspell_reset_path, 0);
         ShowWindow(m_h_hunspell_path_group_box, 0);
         ShowWindow(m_h_hunspell_path_type, 0);
         ShowWindow(m_h_lib_path, 1);
@@ -183,8 +181,6 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
         ShowWindow(m_h_remove_dics, 1);
         ShowWindow(m_h_decode_names, 1);
         ShowWindow(m_h_one_user_dic, 1);
-        ShowWindow(m_h_aspell_reset_path, 0);
-        ShowWindow(m_h_hunspell_reset_path, 1);
         ShowWindow(m_h_hunspell_path_group_box, 1);
         ShowWindow(m_h_hunspell_path_type, 1);
         if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0) {
@@ -283,9 +279,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_h_decode_names = ::GetDlgItem(_hSelf, IDC_DECODE_NAMES);
             m_h_one_user_dic = ::GetDlgItem(_hSelf, IDC_ONE_USER_DIC);
             m_h_hunspell_path_group_box = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_GROUPBOX);
-            m_h_hunspell_path_type = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_TYPE);
-            m_h_aspell_reset_path = ::GetDlgItem(_hSelf, IDC_RESETASPELLPATH);
-            m_h_hunspell_reset_path = ::GetDlgItem(_hSelf, IDC_RESETHUNSPELLPATH);
+            m_h_reset_speller_path = ::GetDlgItem(_hSelf, IDC_RESETSPELLERPATH);
             m_h_system_path = ::GetDlgItem(_hSelf, IDC_SYSTEMPATH);
             ComboBox_AddString(m_h_library, L"Aspell");
             ComboBox_AddString(m_h_library, L"Hunspell");
@@ -362,8 +356,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
                     get_remove_dics()->do_dialog();
                 }
                 break;
-            case IDC_RESETASPELLPATH:
-            case IDC_RESETHUNSPELLPATH:
+            case IDC_RESETSPELLERPATH:
                 {
                     if (HIWORD(w_param) == BN_CLICKED) {
                         std::wstring path;

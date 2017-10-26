@@ -59,8 +59,6 @@
 #define IDC_FILETYPES_CHECKNOTTHOSE             1016
 #define IDC_PROGRESSBAR                         1016
 #define IDC_BUFFER_SIZE                         1017
-#define IDC_RESETASPELLPATH                     1017
-#define IDC_RESETHUNSPELLPATH                   1018
 #define IDC_ANONYMOUS_LOGIN                     1019
 #define IDC_HUNSPELL_PATH_TYPE                  1019
 #define IDC_IGNORE_NUMBERS                      1019
@@ -85,3 +83,4 @@
 #define IDC_LIB_GROUPBOX                        1040
 #define IDC_DESCTOP                             1041
 #define IDC_HUNSPELL_PATH_GROUPBOX              1041
+#define IDC_RESETSPELLERPATH                    40000

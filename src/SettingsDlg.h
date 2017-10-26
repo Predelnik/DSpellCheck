@@ -81,9 +81,8 @@ private:
     HWND m_h_decode_names = nullptr;
     HWND m_h_one_user_dic = nullptr;
     HWND m_h_hunspell_path_group_box = nullptr;
+    HWND m_h_reset_speller_path = nullptr;
     HWND m_h_hunspell_path_type = nullptr;
-    HWND m_h_aspell_reset_path = nullptr;
-    HWND m_h_hunspell_reset_path = nullptr;
     HWND m_h_system_path = nullptr;
 
     HMODULE m_h_ux_theme;
