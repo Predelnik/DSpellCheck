@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #pragma once
+#include "aspell.h"
 
 struct AspellCanHaveError;
 struct AspellSpeller;
@@ -37,19 +38,22 @@ public:
   bool
   check_word(const char* word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
   bool is_working() const override;
-    std::vector<std::string> get_suggestions(const char* word) override;
+  std::vector<std::string> get_suggestions(const char* word) override;
   void add_to_dictionary(const char* word) override;
   void ignore_all(const char* word) override;
+  void set_allow_run_together (bool allow);
 
   bool init(const wchar_t* path_arg);
 
 private:
   void send_aspell_error(AspellCanHaveError *error);
+    void setup_aspell_config(AspellConfig* spell_config);
 
 private:
   AspellSpeller *m_last_selected_speller;
   SpellerPtr m_single_speller;
   std::vector<SpellerPtr> m_spellers;
+  bool m_allow_run_together;
   bool m_aspell_loaded;
   HWND m_npp_window; // For message boxes
 };

@@ -84,6 +84,7 @@ private:
     HWND m_h_reset_speller_path = nullptr;
     HWND m_h_hunspell_path_type = nullptr;
     HWND m_h_system_path = nullptr;
+    HWND m_h_aspell_run_together_cb = nullptr;
 
     HMODULE m_h_ux_theme;
     OtdProc m_open_theme_data;

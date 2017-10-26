@@ -224,6 +224,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
     AUTOCHECKBOX    "Check Only Comments and Strings if Possible", IDC_CHECKCOMMENTS, 1, 190, 156, 10, 0, WS_EX_LEFT
     LTEXT           "Suggestions Control:", IDC_STATIC, 1, 204, 75, 9, SS_LEFT, WS_EX_LEFT
     COMBOBOX        IDC_SUGG_TYPE, 94, 204, 98, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS, WS_EX_LEFT
+    AUTOCHECKBOX    "Allow Run-Together Words", IDC_ASPELL_RUNTOGETHER_CB, 10, 79, 101, 8, 0, WS_EX_LEFT
 }
 
 

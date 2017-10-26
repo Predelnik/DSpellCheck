@@ -1101,6 +1101,7 @@ bool SpellChecker::hunspell_reinit_settings(bool reset_directory) {
 
 bool SpellChecker::aspell_reinit_settings() {
     m_aspell_speller->init(m_settings.aspell_path.c_str());
+    m_aspell_speller->set_allow_run_together(m_settings.aspell_allow_run_together_words);
 
     if (m_settings.aspell_language != L"<MULTIPLE>") {
         m_aspell_speller->set_language(m_settings.aspell_language.c_str());

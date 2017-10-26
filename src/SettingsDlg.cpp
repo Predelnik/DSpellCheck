@@ -135,6 +135,7 @@ void SimpleDlg::apply_settings(Settings& settings) {
     settings.check_only_comments_and_strings = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
     settings.use_language_name_aliases = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
     settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
+    settings.aspell_allow_run_together_words = Button_GetCheck (m_h_aspell_run_together_cb) == BST_CHECKED;
 }
 
 void SimpleDlg::set_lib_mode(int lib_mode) {
@@ -144,6 +145,7 @@ void SimpleDlg::set_lib_mode(int lib_mode) {
 void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
                               const wchar_t* hunspell_path,
                               const wchar_t* hunspell_additional_path) {
+    ShowWindow (m_h_aspell_run_together_cb, get_selected_lib() == 0);
     if (get_selected_lib() == 0) {
         ShowWindow(m_h_aspell_status, 1);
         ShowWindow(m_h_download_dics, 0);
@@ -279,8 +281,10 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_h_decode_names = ::GetDlgItem(_hSelf, IDC_DECODE_NAMES);
             m_h_one_user_dic = ::GetDlgItem(_hSelf, IDC_ONE_USER_DIC);
             m_h_hunspell_path_group_box = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_GROUPBOX);
+            m_h_hunspell_path_type = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_TYPE);
             m_h_reset_speller_path = ::GetDlgItem(_hSelf, IDC_RESETSPELLERPATH);
             m_h_system_path = ::GetDlgItem(_hSelf, IDC_SYSTEMPATH);
+            m_h_aspell_run_together_cb = ::GetDlgItem(_hSelf, IDC_ASPELL_RUNTOGETHER_CB);
             ComboBox_AddString(m_h_library, L"Aspell");
             ComboBox_AddString(m_h_library, L"Hunspell");
             ComboBox_AddString(m_h_hunspell_path_type, L"For Current User");
@@ -805,6 +809,7 @@ void SimpleDlg::update_controls(const Settings& settings) {
     set_decode_names(settings.use_language_name_aliases);
     set_sugg_type(settings.suggestions_mode);
     set_one_user_dic(settings.use_unified_dictionary);
+    Button_SetCheck (m_h_aspell_run_together_cb, settings.aspell_allow_run_together_words);
 }
 
 INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {

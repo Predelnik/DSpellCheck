@@ -84,3 +84,4 @@
 #define IDC_DESCTOP                             1041
 #define IDC_HUNSPELL_PATH_GROUPBOX              1041
 #define IDC_RESETSPELLERPATH                    40000
+#define IDC_ASPELL_RUNTOGETHER_CB               40001

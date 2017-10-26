@@ -45,6 +45,7 @@ public:
     bool ignore_having_underscore = false;
     bool ignore_starting_or_ending_with_apostrophe = false;
     bool use_unified_dictionary = false;
+    bool aspell_allow_run_together_words = false;
     int active_speller_lib_id = 0; // TODO: change to enum
     int suggestion_button_size = 0;
     int suggestion_button_opacity = 0;
