@@ -30,12 +30,10 @@ void Settings::load() {
 
 std::wstring& Settings::get_current_language() {
     switch (active_speller_lib_id) {
-    case 0:
+    case SpellerId::aspell:
         return aspell_language;
-    case 1:
+    case SpellerId::hunspell:
         return hunspell_language;
-    default:
-        break;
     }
     return aspell_language;
 }
@@ -46,12 +44,10 @@ const std::wstring& Settings::get_current_language() const {
 
 std::wstring& Settings::get_current_multi_languages() {
     switch (active_speller_lib_id) {
-    case 0:
+    case SpellerId::aspell:
         return aspell_multi_languages;
-    case 1:
+    case SpellerId::hunspell:
         return hunspell_multi_languages;
-    default:
-        break;
     }
     return hunspell_multi_languages;
 }
@@ -104,7 +100,7 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"Ignore_With_", ignore_having_underscore, true);
     worker.process(L"United_User_Dictionary(Hunspell)", use_unified_dictionary, false);
     worker.process(L"Ignore_That_Start_or_End_with_", ignore_starting_or_ending_with_apostrophe, false);
-    worker.process(L"Library", active_speller_lib_id, 1);
+    worker.process(L"Library", active_speller_lib_id, SpellerId::hunspell);
     worker.process(L"Suggestions_Button_Size", suggestion_button_size, 15);
     worker.process(L"Suggestions_Button_Opacity", suggestion_button_opacity, 70);
     worker.process(L"Find_Next_Buffer_Size", find_next_buffer_size, 4);

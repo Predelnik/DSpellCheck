@@ -49,7 +49,7 @@ void insert_sugg_menu_item(HMENU menu, const wchar_t* text, BYTE id, int insert_
                            bool separator = false);
 
 HWND get_scintilla_window(const NppData* npp_data_arg);
-LRESULT send_msg_to_active_editor(HWND scintilla_window, UINT msg,
+LRESULT send_msg_to_editor(HWND scintilla_window, UINT msg,
                                   WPARAM w_param = 0, LPARAM l_param = 0);
 bool send_msg_to_both_editors(const NppData* npp_data_arg, UINT msg,
                               WPARAM w_param = 0, LPARAM l_param = 0);

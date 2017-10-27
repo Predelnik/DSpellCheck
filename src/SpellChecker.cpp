@@ -68,7 +68,7 @@ bool send_msg_to_both_editors(const NppData* npp_data_arg, UINT msg, WPARAM w_pa
     return true;
 }
 
-LRESULT send_msg_to_active_editor(HWND scintilla_window, UINT msg,
+LRESULT send_msg_to_editor(HWND scintilla_window, UINT msg,
                                   WPARAM w_param /*= 0*/, LPARAM l_param /*= 0*/) {
     return SendMessage(scintilla_window, msg, w_param, l_param);
 }
@@ -195,12 +195,12 @@ int SpellChecker::get_aspell_status() {
 void SpellChecker::recheck_visible_both_views() {
     LRESULT old_lexer = m_lexer;
     EncodingType old_encoding = m_current_encoding;
-    m_lexer = send_msg_to_active_editor(m_npp_data_instance->scintilla_main_handle, SCI_GETLEXER);
+    m_lexer = send_msg_to_editor(m_npp_data_instance->scintilla_main_handle, SCI_GETLEXER);
     m_current_scintilla = m_npp_data_instance->scintilla_main_handle;
     recheck_visible();
 
     m_current_scintilla = m_npp_data_instance->scintilla_second_handle;
-    m_lexer = send_msg_to_active_editor(m_npp_data_instance->scintilla_second_handle, SCI_GETLEXER);
+    m_lexer = send_msg_to_editor(m_npp_data_instance->scintilla_second_handle, SCI_GETLEXER);
     recheck_visible();
     m_lexer = old_lexer;
     m_current_encoding = old_encoding;
@@ -210,9 +210,9 @@ void SpellChecker::recheck_visible_both_views() {
 
 const SpellerInterface* SpellChecker::active_speller() const {
     switch (m_settings.active_speller_lib_id) {
-    case 0:
+    case SpellerId::aspell:
         return m_aspell_speller.get();
-    case 1:
+    case SpellerId::hunspell:
         return m_hunspell_speller.get();
     }
     return nullptr;
@@ -234,7 +234,7 @@ void SpellChecker::update_from_remove_dics_options() {
 }
 
 void SpellChecker::lang_change() {
-    m_lexer = send_msg_to_active_editor(get_current_scintilla(), SCI_GETLEXER);
+    m_lexer = send_msg_to_editor(get_current_scintilla(), SCI_GETLEXER);
     recheck_visible();
 }
 
@@ -281,7 +281,7 @@ void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
                            ? CUSTOMIZE_MULTIPLE_DICS + get_langs_menu_id_start()
                            : MAKEWORD(CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID),
                        L"Set Multiple Languages...");
-            if (m_settings.active_speller_lib_id == 1) // Only Hunspell supported
+            if (m_settings.active_speller_lib_id == SpellerId::hunspell) // Only Hunspell supported
             {
                 AppendMenu(new_menu, MF_STRING,
                            get_use_allocated_ids()
@@ -295,7 +295,7 @@ void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
                            L"Remove Unneeded Languages...");
             }
         }
-        else if (m_settings.active_speller_lib_id == 1)
+        else if (m_settings.active_speller_lib_id == SpellerId::hunspell)
             AppendMenu(new_menu, MF_STRING,
                        get_use_allocated_ids()
                            ? DOWNLOAD_DICS + get_langs_menu_id_start()
@@ -328,11 +328,11 @@ void SpellChecker::check_file_name() {
         }
     }
 
-    m_lexer = send_msg_to_active_editor(get_current_scintilla(), SCI_GETLEXER);
+    m_lexer = send_msg_to_editor(get_current_scintilla(), SCI_GETLEXER);
 }
 
 LRESULT SpellChecker::get_style(int pos) {
-    return send_msg_to_active_editor(get_current_scintilla(), SCI_GETSTYLEAT, pos);
+    return send_msg_to_editor(get_current_scintilla(), SCI_GETSTYLEAT, pos);
 }
 
 bool SpellChecker::check_text_needed() {
@@ -343,13 +343,13 @@ void SpellChecker::hide_suggestion_box() { m_suggestions_instance->display(false
 
 void SpellChecker::find_next_mistake() {
     m_current_position =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
-    auto cur_line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
+        send_msg_to_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
+    auto cur_line = send_msg_to_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
                                               m_current_position);
-    auto line_start_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
+    auto line_start_pos = send_msg_to_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
                                                     cur_line);
     auto doc_length =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
+        send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
     auto iterator_pos = line_start_pos;
     Sci_TextRange range;
     bool full_check = false;
@@ -364,7 +364,7 @@ void SpellChecker::find_next_mistake() {
         }
         std::vector<char> text(range.chrg.cpMax - range.chrg.cpMin + 1 + 1);
         range.lpstrText = text.data();
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+        send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
         char* iterating_start =
             range.lpstrText + range.chrg.cpMax - range.chrg.cpMin - 1;
         char* iterating_char = iterating_start;
@@ -386,7 +386,7 @@ void SpellChecker::find_next_mistake() {
 
             *iterating_char = '\0';
         }
-        send_msg_to_active_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin,
+        send_msg_to_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin,
                                   range.chrg.cpMax);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
@@ -415,12 +415,12 @@ void SpellChecker::find_next_mistake() {
 
 void SpellChecker::find_prev_mistake() {
     m_current_position =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
-    auto cur_line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
+        send_msg_to_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
+    auto cur_line = send_msg_to_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
                                               m_current_position);
     auto doc_length =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
-    auto line_end_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINEENDPOSITION,
+        send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
+    auto line_end_pos = send_msg_to_editor(get_current_scintilla(), SCI_GETLINEENDPOSITION,
                                                   cur_line);
 
     auto iterator_pos = line_end_pos;
@@ -437,7 +437,7 @@ void SpellChecker::find_prev_mistake() {
         }
         std::vector<char> text(range.chrg.cpMax - range.chrg.cpMin + 1 + 1);
         range.lpstrText = text.data();
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+        send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
         char* iterating_start = range.lpstrText;
         char* iterating_char = iterating_start;
         if (!ignore_offsetting) {
@@ -456,7 +456,7 @@ void SpellChecker::find_prev_mistake() {
             }
         }
         auto offset = iterating_char - iterating_start;
-        send_msg_to_active_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin + offset,
+        send_msg_to_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin + offset,
                                   range.chrg.cpMax);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
@@ -509,27 +509,27 @@ bool SpellChecker::get_word_under_cursor_is_right(long& pos, long& length,
             return true;
         ScreenToClient(scintilla, &p);
 
-        init_char_pos = send_msg_to_active_editor(
+        init_char_pos = send_msg_to_editor(
             get_current_scintilla(), SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
     }
     else {
-        selection_start = send_msg_to_active_editor(get_current_scintilla(), SCI_GETSELECTIONSTART
+        selection_start = send_msg_to_editor(get_current_scintilla(), SCI_GETSELECTIONSTART
         );
         selection_end =
-            send_msg_to_active_editor(get_current_scintilla(), SCI_GETSELECTIONEND);
+            send_msg_to_editor(get_current_scintilla(), SCI_GETSELECTIONEND);
         init_char_pos =
-            send_msg_to_active_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
+            send_msg_to_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
     }
 
     if (init_char_pos != -1) {
-        auto line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
+        auto line = send_msg_to_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
                                               init_char_pos);
         auto line_length =
-            send_msg_to_active_editor(get_current_scintilla(), SCI_LINELENGTH, line);
+            send_msg_to_editor(get_current_scintilla(), SCI_LINELENGTH, line);
         std::vector<char> buf(line_length + 1);
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINE, line, reinterpret_cast<LPARAM>(buf.data()));
+        send_msg_to_editor(get_current_scintilla(), SCI_GETLINE, line, reinterpret_cast<LPARAM>(buf.data()));
         buf[line_length] = 0;
-        auto offset = send_msg_to_active_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
+        auto offset = send_msg_to_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
                                                 line);
         auto word = get_word_at(static_cast<long>(init_char_pos), buf.data(),
                                 static_cast<long>(offset));
@@ -648,13 +648,13 @@ void SpellChecker::init_suggestions_box() {
     }
     m_word_under_cursor_length = length;
     m_word_under_cursor_pos = pos;
-    auto line = send_msg_to_active_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
+    auto line = send_msg_to_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
                                           m_word_under_cursor_pos);
     auto text_height =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_TEXTHEIGHT, line);
-    auto x_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POINTXFROMPOSITION,
+        send_msg_to_editor(get_current_scintilla(), SCI_TEXTHEIGHT, line);
+    auto x_pos = send_msg_to_editor(get_current_scintilla(), SCI_POINTXFROMPOSITION,
                                            0, m_word_under_cursor_pos);
-    auto y_pos = send_msg_to_active_editor(get_current_scintilla(), SCI_POINTYFROMPOSITION,
+    auto y_pos = send_msg_to_editor(get_current_scintilla(), SCI_POINTYFROMPOSITION,
                                            0, m_word_under_cursor_pos);
 
     p.x = static_cast<LONG>(x_pos);
@@ -706,7 +706,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
                     apply_conversions(m_selected_word);
                     m_current_speller->ignore_all(m_selected_word.c_str());
                     m_word_under_cursor_length = m_selected_word.length();
-                    send_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL,
+                    send_msg_to_editor(get_current_scintilla(), SCI_SETSEL,
                                               m_word_under_cursor_pos + m_word_under_cursor_length,
                                               m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
@@ -715,7 +715,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
                     apply_conversions(m_selected_word);
                     m_current_speller->add_to_dictionary(m_selected_word.c_str());
                     m_word_under_cursor_length = m_selected_word.length();
-                    send_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL,
+                    send_msg_to_editor(get_current_scintilla(), SCI_SETSEL,
                                               m_word_under_cursor_pos + m_word_under_cursor_length,
                                               m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
@@ -727,7 +727,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
                     else
                         ansi_str = m_last_suggestions[result - 1];
 
-                    send_msg_to_active_editor(get_current_scintilla(), SCI_REPLACESEL, 0,
+                    send_msg_to_editor(get_current_scintilla(), SCI_REPLACESEL, 0,
                                               reinterpret_cast<LPARAM>(ansi_str.c_str()));
                 }
             }
@@ -776,7 +776,7 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
     post_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL, pos,
                               pos + m_word_under_cursor_length);
     std::vector<SuggestionsMenuItem> suggestion_menu_items;
-    send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+    send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
 
     m_selected_word = range.lpstrText;
     apply_conversions(m_selected_word);
@@ -847,13 +847,16 @@ void SpellChecker::save_settings() {
 }
 
 void SpellChecker::init_speller() {
-    if (m_settings.active_speller_lib_id == 0) {
+    switch (m_settings.active_speller_lib_id) {
+
+    case SpellerId::aspell:
         aspell_reinit_settings();
         m_current_speller = m_aspell_speller.get();
-    }
-    else {
+        break;
+    case SpellerId::hunspell:
         m_current_speller = m_hunspell_speller.get();
         hunspell_reinit_settings(false);
+        break;
     }
 }
 
@@ -903,29 +906,29 @@ void SpellChecker::remove_underline(HWND scintilla_window, long start, long end)
 }
 
 void SpellChecker::get_visible_limits(long& start, long& finish) {
-    auto top = send_msg_to_active_editor(get_current_scintilla(), SCI_GETFIRSTVISIBLELINE
+    auto top = send_msg_to_editor(get_current_scintilla(), SCI_GETFIRSTVISIBLELINE
     );
-    auto bottom = top + send_msg_to_active_editor(get_current_scintilla(), SCI_LINESONSCREEN
+    auto bottom = top + send_msg_to_editor(get_current_scintilla(), SCI_LINESONSCREEN
     );
-    top = send_msg_to_active_editor(get_current_scintilla(), SCI_DOCLINEFROMVISIBLE,
+    top = send_msg_to_editor(get_current_scintilla(), SCI_DOCLINEFROMVISIBLE,
                                     top);
 
-    bottom = send_msg_to_active_editor(get_current_scintilla(), SCI_DOCLINEFROMVISIBLE,
+    bottom = send_msg_to_editor(get_current_scintilla(), SCI_DOCLINEFROMVISIBLE,
                                        bottom);
     auto line_count =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINECOUNT);
-    start = static_cast<long>(send_msg_to_active_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
+        send_msg_to_editor(get_current_scintilla(), SCI_GETLINECOUNT);
+    start = static_cast<long>(send_msg_to_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
                                                         top));
     // Not using end of line position cause utf-8 symbols could be more than one
     // char
     // So we use next line start as the end of our visible text
     if (bottom + 1 < line_count) {
-        finish = static_cast<long>(send_msg_to_active_editor(
+        finish = static_cast<long>(send_msg_to_editor(
             get_current_scintilla(), SCI_POSITIONFROMLINE, bottom + 1));
     }
     else {
         finish = static_cast<long>(
-            send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTLENGTH));
+            send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTLENGTH));
     }
     return;
 }
@@ -949,7 +952,7 @@ std::vector<char> SpellChecker::get_visible_text(long* offset, bool not_intersec
 
     std::vector<char> buf(range.chrg.cpMax - range.chrg.cpMin + 1);
     range.lpstrText = buf.data();
-    send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, NULL, reinterpret_cast<LPARAM>(&range));
+    send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, NULL, reinterpret_cast<LPARAM>(&range));
     *offset = range.chrg.cpMin;
     buf[range.chrg.cpMax - range.chrg.cpMin] = 0;
     return buf;
@@ -957,7 +960,7 @@ std::vector<char> SpellChecker::get_visible_text(long* offset, bool not_intersec
 
 void SpellChecker::clear_all_underlines() {
     auto length =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
+        send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
     if (length > 0) {
         post_msg_to_active_editor(get_current_scintilla(), SCI_SETINDICATORCURRENT,
                                   SCE_ERROR_UNDERLINE);
@@ -1164,7 +1167,7 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
         return true;
 
     if (m_hot_spot_cache[style] == -1) {
-        m_hot_spot_cache[style] = send_msg_to_active_editor(get_current_scintilla(), SCI_STYLEGETHOTSPOT,
+        m_hot_spot_cache[style] = send_msg_to_editor(get_current_scintilla(), SCI_STYLEGETHOTSPOT,
                                                             style);
     }
 
@@ -1275,7 +1278,7 @@ int SpellChecker::check_text(char* text_to_check, long offset,
     }
 
     HWND scintilla_window = get_current_scintilla();
-    send_msg_to_active_editor(scintilla_window, SCI_GETINDICATORCURRENT);
+    send_msg_to_editor(scintilla_window, SCI_GETINDICATORCURRENT);
     bool stop = false;
     long resulting_word_end = -1, resulting_word_start = -1;
     auto text_len = strlen(text_to_check);
@@ -1304,7 +1307,7 @@ int SpellChecker::check_text(char* text_to_check, long offset,
                 break;
             case CheckTextMode::find_first:
                 if (word_end > m_current_position) {
-                    send_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL, word_start,
+                    send_msg_to_editor(get_current_scintilla(), SCI_SETSEL, word_start,
                                               word_end);
                     stop = true;
                 }
@@ -1356,7 +1359,7 @@ int SpellChecker::check_text(char* text_to_check, long offset,
         if (resulting_word_start == -1)
             return false;
         else {
-            send_msg_to_active_editor(get_current_scintilla(), SCI_SETSEL, resulting_word_start,
+            send_msg_to_editor(get_current_scintilla(), SCI_SETSEL, resulting_word_start,
                                       resulting_word_end);
             return true;
         }
@@ -1366,7 +1369,7 @@ int SpellChecker::check_text(char* text_to_check, long offset,
 
 void SpellChecker::clear_visible_underlines() {
     auto length =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
+        send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
     if (length > 0) {
         post_msg_to_active_editor(get_current_scintilla(), SCI_SETINDICATORCURRENT,
                                   SCE_ERROR_UNDERLINE);
@@ -1400,23 +1403,23 @@ void SpellChecker::recheck_modified() {
         return;
     }
 
-    auto first_modified_line = send_msg_to_active_editor(
+    auto first_modified_line = send_msg_to_editor(
         get_current_scintilla(), SCI_LINEFROMPOSITION, m_modified_start);
-    auto last_modified_line = send_msg_to_active_editor(
+    auto last_modified_line = send_msg_to_editor(
         get_current_scintilla(), SCI_LINEFROMPOSITION, m_modified_end);
     auto line_count =
-        send_msg_to_active_editor(get_current_scintilla(), SCI_GETLINECOUNT);
-    auto first_possibly_modified_pos = send_msg_to_active_editor(
+        send_msg_to_editor(get_current_scintilla(), SCI_GETLINECOUNT);
+    auto first_possibly_modified_pos = send_msg_to_editor(
         get_current_scintilla(), SCI_POSITIONFROMLINE, first_modified_line);
 
     LRESULT last_possibly_modified_pos;
     if (last_modified_line + 1 < line_count) {
-        last_possibly_modified_pos = send_msg_to_active_editor(
+        last_possibly_modified_pos = send_msg_to_editor(
             get_current_scintilla(), SCI_POSITIONFROMLINE, last_modified_line + 1);
     }
     else {
         last_possibly_modified_pos =
-            send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH);
+            send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
     }
 
     Sci_TextRange range;
@@ -1424,7 +1427,7 @@ void SpellChecker::recheck_modified() {
     range.chrg.cpMax = static_cast<long>(last_possibly_modified_pos);
     std::vector<char> buf(range.chrg.cpMax - range.chrg.cpMin + 1 + 1);
     range.lpstrText = buf.data();
-    send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, (LPARAM)&range);
+    send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, (LPARAM)&range);
 
     check_text(range.lpstrText, static_cast<long>(first_possibly_modified_pos),
                CheckTextMode::underline_errors);
@@ -1437,7 +1440,7 @@ void SpellChecker::recheck_visible(bool not_intersection_only) {
         return;
     }
 
-    int codepage_id = (int)send_msg_to_active_editor(get_current_scintilla(), SCI_GETCODEPAGE,
+    int codepage_id = (int)send_msg_to_editor(get_current_scintilla(), SCI_GETCODEPAGE,
                                                      0, 0);
     set_encoding_by_id(codepage_id); // For now it just changes should we convert it
     // to utf-8 or no
@@ -1456,10 +1459,10 @@ void SpellChecker::error_msg_box(const wchar_t* message) {
 
 void SpellChecker::copy_misspellings_to_clipboard() {
     auto length_doc =
-        (send_msg_to_active_editor(get_current_scintilla(), SCI_GETLENGTH) + 1);
+        (send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH) + 1);
 
     std::vector<char> buf(length_doc);
-    send_msg_to_active_editor(get_current_scintilla(), SCI_GETTEXT, length_doc, reinterpret_cast<LPARAM>(buf.data()));
+    send_msg_to_editor(get_current_scintilla(), SCI_GETTEXT, length_doc, reinterpret_cast<LPARAM>(buf.data()));
 
     int res = 0;
     std::string str; // Yay for first use of std::stirng

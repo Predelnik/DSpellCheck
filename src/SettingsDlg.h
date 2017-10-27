@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
 #include "TabBar/ControlsTab.h"
+#include "Settings.h"
 
 class HunspellInterface;
 class SpellChecker;
@@ -44,8 +45,8 @@ public:
     void set_file_types(bool check_those, const wchar_t* file_types);
     void set_sugg_type(int sugg_type);
     void set_check_comments(bool value);
-    int get_selected_lib();
-    void set_lib_mode(int lib_mode);
+    SpellerId get_selected_lib();
+    void set_lib_mode(SpellerId lib_mode);
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
@@ -146,7 +147,7 @@ private:
     void destroy() override;
     void apply_settings();
     void update_controls();
-    void apply_lib_change (int new_lib_id);
+    void apply_lib_change (SpellerId new_lib_id);
 
 private:
     NppData m_npp_data;

@@ -72,7 +72,7 @@ void SimpleDlg::update_language_controls(const Settings& settings) {
         ComboBox_AddString(m_h_combo_language, L"Multiple Languages...");
 
     ComboBox_SetCurSel(m_h_combo_language, selected_index);
-    EnableWindow (m_h_combo_language, !langs.empty ());
+    EnableWindow(m_h_combo_language, !langs.empty());
 }
 
 static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t* psz_text) {
@@ -115,18 +115,32 @@ void SimpleDlg::apply_settings(Settings& settings) {
     int cur_sel = ComboBox_GetCurSel(m_h_combo_language);
 
     if (IsWindowEnabled(m_h_combo_language)) {
-        (get_selected_lib() == 1 ? settings.hunspell_language : settings.aspell_language) =
+        *[&]() -> std::wstring*
+
+
+
+            {
+                switch (get_selected_lib()) {
+                case SpellerId::aspell: return &settings.aspell_language;
+                case SpellerId::hunspell: return &settings.hunspell_language;
+                }
+                return nullptr;
+            }()
+            =
             cur_sel == lang_count - 1
                 ? L"<MULTIPLE>"
                 : get_spell_checker()->
-                get_available_languages()[cur_sel].orig_name.c_str ();
+                get_available_languages()[cur_sel].orig_name.c_str();
     }
     settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
-    if (get_selected_lib() == 0)
+    switch (get_selected_lib()) {
+    case SpellerId::aspell:
         settings.aspell_path = get_edit_text(m_h_lib_path);
-    else {
+        break;
+    case SpellerId::hunspell:
         settings.hunspell_user_path = get_edit_text(m_h_lib_path);
         settings.hunspell_system_path = get_edit_text(m_h_system_path);
+        break;
     }
 
     settings.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
@@ -138,15 +152,19 @@ void SimpleDlg::apply_settings(Settings& settings) {
     settings.aspell_allow_run_together_words = Button_GetCheck (m_h_aspell_run_together_cb) == BST_CHECKED;
 }
 
-void SimpleDlg::set_lib_mode(int lib_mode) {
-    ComboBox_SetCurSel(m_h_library, lib_mode);
+void SimpleDlg::set_lib_mode(SpellerId lib_mode) {
+    // TODO: make a separate function for this
+    for (int i = 0; i < ComboBox_GetCount(m_h_library); ++i)
+        if (ComboBox_GetItemData (m_h_library, i) == static_cast<int>(lib_mode))
+            ComboBox_SetCurSel(m_h_library, i);
 }
 
 void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
                               const wchar_t* hunspell_path,
                               const wchar_t* hunspell_additional_path) {
-    ShowWindow (m_h_aspell_run_together_cb, get_selected_lib() == 0);
-    if (get_selected_lib() == 0) {
+    ShowWindow(m_h_aspell_run_together_cb, get_selected_lib() == SpellerId::aspell);
+    switch (get_selected_lib()) {
+    case SpellerId::aspell:
         ShowWindow(m_h_aspell_status, 1);
         ShowWindow(m_h_download_dics, 0);
         if (status == 2) {
@@ -172,10 +190,8 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
         ShowWindow(m_h_hunspell_path_type, 0);
         ShowWindow(m_h_lib_path, 1);
         ShowWindow(m_h_system_path, 0);
-        // SetWindowText (HLibLink, L"<A HREF=\"http://aspell.net/win32/\">Aspell
-        // Library and Dictionaries for Win32</A>");
-    }
-    else {
+        break;
+    case SpellerId::hunspell:
         ShowWindow(m_h_aspell_status, 0);
         ShowWindow(m_h_download_dics, 1);
         ShowWindow(m_h_lib_link,
@@ -193,11 +209,9 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
             ShowWindow(m_h_lib_path, 0);
             ShowWindow(m_h_system_path, 1);
         }
-        // SetWindowText (HLibLink, L"<A
-        // HREF=\"http://wiki.openoffice.org/wiki/Dictionaries\">Hunspell
-        // Dictionaries</A>");
         Static_SetText(m_h_lib_group_box, L"Hunspell Settings");
         Edit_SetText(m_h_lib_path, hunspell_path);
+        break;
     }
     Edit_SetText(m_h_system_path, hunspell_additional_path);
 }
@@ -237,7 +251,9 @@ void SimpleDlg::set_one_user_dic(bool value) {
     Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED);
 }
 
-int SimpleDlg::get_selected_lib() { return ComboBox_GetCurSel(m_h_library); }
+SpellerId SimpleDlg::get_selected_lib() {
+    return static_cast<SpellerId>(ComboBox_GetItemData(m_h_library, ComboBox_GetCurSel (m_h_library)));
+}
 
 static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/,
                                          LPARAM lp_data) {
@@ -286,7 +302,9 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_h_system_path = ::GetDlgItem(_hSelf, IDC_SYSTEMPATH);
             m_h_aspell_run_together_cb = ::GetDlgItem(_hSelf, IDC_ASPELL_RUNTOGETHER_CB);
             ComboBox_AddString(m_h_library, L"Aspell");
+            ComboBox_SetItemData(m_h_library, 0, SpellerId::aspell);
             ComboBox_AddString(m_h_library, L"Hunspell");
+            ComboBox_SetItemData(m_h_library, 1, SpellerId::hunspell);
             ComboBox_AddString(m_h_hunspell_path_type, L"For Current User");
             ComboBox_AddString(m_h_hunspell_path_type, L"For All Users");
             ComboBox_SetCurSel(m_h_hunspell_path_type, 0);
@@ -325,7 +343,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             case IDC_HUNSPELL_PATH_TYPE:
                 if (HIWORD(w_param) == CBN_SELCHANGE) {
                     if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0 ||
-                        get_selected_lib() == 0) {
+                        get_selected_lib() == SpellerId::aspell) {
                         ShowWindow(m_h_lib_path, 1);
                         ShowWindow(m_h_system_path, 0);
                     }
@@ -364,12 +382,14 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
                 {
                     if (HIWORD(w_param) == BN_CLICKED) {
                         std::wstring path;
-                        if (get_selected_lib() == 0)
-                            path = get_default_aspell_path();
-                        else
-                            path = get_default_hunspell_path();
+                        switch (get_selected_lib()) {
+                        case SpellerId::aspell: path = get_default_aspell_path();
+                            break;
+                        case SpellerId::hunspell: path = get_default_hunspell_path();
+                            break;
+                        }
 
-                        if (get_selected_lib() == 0 || ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
+                        if (get_selected_lib() == SpellerId::aspell || ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
                             Edit_SetText(m_h_lib_path, path.c_str ());
                         else
                             Edit_SetText(m_h_system_path, L".\\plugins\\config\\Hunspell");
@@ -385,27 +405,30 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
                 }
                 break;
             case IDC_BROWSEASPELLPATH:
-                if (get_selected_lib() == 0) {
-                    OPENFILENAME ofn;
-                    ZeroMemory(&ofn, sizeof(ofn));
-                    ofn.lStructSize = sizeof(ofn);
-                    ofn.hwndOwner = _hSelf;
-                    std::vector<wchar_t> filename(MAX_PATH);
-                    auto lib_path = get_edit_text(m_h_lib_path);
-                    std::copy(lib_path.begin(), lib_path.end(), filename.begin());
-                    // TODO: add possibility to use modern browse dialog
-                    ofn.lpstrFile = filename.data();
-                    ofn.nMaxFile = DEFAULT_BUF_SIZE;
-                    ofn.lpstrFilter = L"Aspell Library (*.dll)\0*.dll\0";
-                    ofn.nFilterIndex = 1;
-                    ofn.lpstrFileTitle = nullptr;
-                    ofn.nMaxFileTitle = 0;
-                    ofn.lpstrInitialDir = nullptr;
-                    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-                    if (GetOpenFileName(&ofn))
-                        Edit_SetText(m_h_lib_path, filename.data ());
-                }
-                else {
+                switch (get_selected_lib()) {
+                case SpellerId::aspell:
+                    {
+                        OPENFILENAME ofn;
+                        ZeroMemory(&ofn, sizeof(ofn));
+                        ofn.lStructSize = sizeof(ofn);
+                        ofn.hwndOwner = _hSelf;
+                        std::vector<wchar_t> filename(MAX_PATH);
+                        auto lib_path = get_edit_text(m_h_lib_path);
+                        std::copy(lib_path.begin(), lib_path.end(), filename.begin());
+                        // TODO: add possibility to use modern browse dialog
+                        ofn.lpstrFile = filename.data();
+                        ofn.nMaxFile = DEFAULT_BUF_SIZE;
+                        ofn.lpstrFilter = L"Aspell Library (*.dll)\0*.dll\0";
+                        ofn.nFilterIndex = 1;
+                        ofn.lpstrFileTitle = nullptr;
+                        ofn.nMaxFileTitle = 0;
+                        ofn.lpstrInitialDir = nullptr;
+                        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                        if (GetOpenFileName(&ofn))
+                            Edit_SetText(m_h_lib_path, filename.data ());
+                    }
+                    break;
+                case SpellerId::hunspell:
                     // Thanks to http://vcfaq.mvps.org/sdk/20.htm
                     BROWSEINFO bi;
                     memset(&bi, 0, sizeof(bi));
@@ -437,6 +460,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
 
                         CoUninitialize();
                     }
+                    break;
                 }
                 break;
             }
@@ -760,10 +784,11 @@ SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, const 
     m_npp_data(npp_data),
     m_simple_dlg(*this), m_settings(settings) {
     Window::init(h_inst, parent);
-    m_settings.settings_changed.connect([this] { update_controls (); });
-    get_spell_checker()->speller_status_changed.connect([this] {
+    m_settings.settings_changed.connect([this] { update_controls(); });
+    get_spell_checker()->speller_status_changed.connect([this]
+    {
         m_simple_dlg.update_language_controls(m_settings);
-        m_simple_dlg.update_lib_status (m_settings);
+        m_simple_dlg.update_lib_status(m_settings);
     });
 }
 
@@ -784,7 +809,7 @@ void SettingsDlg::update_controls() {
     m_advanced_dlg.update_controls(m_settings);
 }
 
-void SettingsDlg::apply_lib_change(int new_lib_id) {
+void SettingsDlg::apply_lib_change(SpellerId new_lib_id) {
     auto mut_settings = m_settings.modify();
     mut_settings->active_speller_lib_id = new_lib_id;
 }
@@ -794,7 +819,7 @@ void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data) {
     return Window::init(h_inst, parent);
 }
 
-void SimpleDlg::update_lib_status (const Settings& settings) {
+void SimpleDlg::update_lib_status(const Settings& settings) {
     fill_lib_info(get_spell_checker()->get_aspell_status(),
                   settings.aspell_path.c_str(), settings.hunspell_user_path.c_str(),
                   settings.hunspell_system_path.c_str());
@@ -802,7 +827,7 @@ void SimpleDlg::update_lib_status (const Settings& settings) {
 
 void SimpleDlg::update_controls(const Settings& settings) {
     set_lib_mode(settings.active_speller_lib_id);
-    update_lib_status (settings);
+    update_lib_status(settings);
     fill_sugestions_num(settings.suggestion_count);
     set_file_types(settings.check_those, settings.file_types.c_str());
     set_check_comments(settings.check_only_comments_and_strings);

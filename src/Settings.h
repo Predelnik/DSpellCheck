@@ -5,6 +5,11 @@
 
 class IniWorker;
 
+enum class SpellerId {
+    aspell,
+    hunspell,
+};
+
 class Settings {
     using Self = Settings;
 public:
@@ -46,7 +51,7 @@ public:
     bool ignore_starting_or_ending_with_apostrophe = false;
     bool use_unified_dictionary = false;
     bool aspell_allow_run_together_words = false;
-    int active_speller_lib_id = 0; // TODO: change to enum
+    SpellerId active_speller_lib_id = SpellerId::aspell;
     int suggestion_button_size = 0;
     int suggestion_button_opacity = 0;
     int find_next_buffer_size = 0;
