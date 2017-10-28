@@ -38,11 +38,11 @@ namespace WinApi
         }
 
         int current_index() const {
-            return ComboBox_GetCurSel(m_hwnd);
+            return static_cast<int> (ComboBox_GetCurSel(m_hwnd));
         }
 
         int current_data() const {
-            return ComboBox_GetItemData(m_hwnd, current_index ());
+            return static_cast<int> (ComboBox_GetItemData(m_hwnd, current_index ()));
         }
 
         void set_current_index(int index) {

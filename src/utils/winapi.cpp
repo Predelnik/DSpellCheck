@@ -21,12 +21,14 @@ bool move_file_and_reset_security_descriptor(const wchar_t* from, const wchar_t*
     return ret;
 }
 
+#ifdef _DEBUG
 static std::wstring get_class_name(HWND hwnd) {
     static const int max_class_name = 256;
     std::vector<wchar_t> buf(max_class_name);
     GetClassName(hwnd, buf.data(), max_class_name);
     return {buf.data()};
 }
+#endif
 
 
 namespace WinApi
