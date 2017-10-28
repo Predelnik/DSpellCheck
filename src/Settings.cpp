@@ -4,6 +4,15 @@
 #include "CommonFunctions.h"
 #include "Scintilla.h"
 
+const wchar_t* gui_string(SpellerId value) {
+    switch (value) {
+    case SpellerId::aspell: return L"Aspell";
+    case SpellerId::hunspell: return L"Hunspell";
+    case SpellerId::COUNT: break;
+    }
+    return nullptr;
+}
+
 Settings::Settings(std::wstring_view ini_filepath) : m_ini_filepath(ini_filepath) {
 }
 

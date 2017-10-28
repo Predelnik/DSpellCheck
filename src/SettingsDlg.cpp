@@ -152,13 +152,6 @@ void SimpleDlg::apply_settings(Settings& settings) {
     settings.aspell_allow_run_together_words = Button_GetCheck (m_h_aspell_run_together_cb) == BST_CHECKED;
 }
 
-void SimpleDlg::set_lib_mode(SpellerId lib_mode) {
-    // TODO: make a separate function for this
-    for (int i = 0; i < ComboBox_GetCount(m_h_library); ++i)
-        if (ComboBox_GetItemData (m_h_library, i) == static_cast<int>(lib_mode))
-            ComboBox_SetCurSel(m_h_library, i);
-}
-
 void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
                               const wchar_t* hunspell_path,
                               const wchar_t* hunspell_additional_path) {
@@ -252,7 +245,7 @@ void SimpleDlg::set_one_user_dic(bool value) {
 }
 
 SpellerId SimpleDlg::get_selected_lib() {
-    return static_cast<SpellerId>(ComboBox_GetItemData(m_h_library, ComboBox_GetCurSel (m_h_library)));
+    return m_speller_cmb.current_data();
 }
 
 static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/,
@@ -290,7 +283,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_h_check_comments = ::GetDlgItem(_hSelf, IDC_CHECKCOMMENTS);
             m_h_lib_link = ::GetDlgItem(_hSelf, IDC_LIB_LINK);
             m_h_sugg_type = ::GetDlgItem(_hSelf, IDC_SUGG_TYPE);
-            m_h_library = ::GetDlgItem(_hSelf, IDC_LIBRARY);
+            m_speller_cmb.init (::GetDlgItem(_hSelf, IDC_LIBRARY));
             m_h_lib_group_box = ::GetDlgItem(_hSelf, IDC_LIB_GROUPBOX);
             m_h_download_dics = ::GetDlgItem(_hSelf, IDC_DOWNLOADDICS);
             m_h_remove_dics = ::GetDlgItem(_hSelf, IDC_REMOVE_DICS);
@@ -301,10 +294,6 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_h_reset_speller_path = ::GetDlgItem(_hSelf, IDC_RESETSPELLERPATH);
             m_h_system_path = ::GetDlgItem(_hSelf, IDC_SYSTEMPATH);
             m_h_aspell_run_together_cb = ::GetDlgItem(_hSelf, IDC_ASPELL_RUNTOGETHER_CB);
-            ComboBox_AddString(m_h_library, L"Aspell");
-            ComboBox_SetItemData(m_h_library, 0, SpellerId::aspell);
-            ComboBox_AddString(m_h_library, L"Hunspell");
-            ComboBox_SetItemData(m_h_library, 1, SpellerId::hunspell);
             ComboBox_AddString(m_h_hunspell_path_type, L"For Current User");
             ComboBox_AddString(m_h_hunspell_path_type, L"For All Users");
             ComboBox_SetCurSel(m_h_hunspell_path_type, 0);
@@ -826,7 +815,7 @@ void SimpleDlg::update_lib_status(const Settings& settings) {
 }
 
 void SimpleDlg::update_controls(const Settings& settings) {
-    set_lib_mode(settings.active_speller_lib_id);
+    m_speller_cmb.set_index(settings.active_speller_lib_id);
     update_lib_status(settings);
     fill_sugestions_num(settings.suggestion_count);
     set_file_types(settings.check_those, settings.file_types.c_str());

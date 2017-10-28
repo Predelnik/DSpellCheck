@@ -8,7 +8,12 @@ class IniWorker;
 enum class SpellerId {
     aspell,
     hunspell,
+
+    // ReSharper disable once CppInconsistentNaming
+    COUNT,
 };
+
+const wchar_t *gui_string (SpellerId value);
 
 class Settings {
     using Self = Settings;

@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "PluginInterface.h"
 #include "TabBar/ControlsTab.h"
 #include "Settings.h"
+#include "utils/winapi.h"
 
 class HunspellInterface;
 class SpellChecker;
@@ -46,7 +47,7 @@ public:
     void set_sugg_type(int sugg_type);
     void set_check_comments(bool value);
     SpellerId get_selected_lib();
-    void set_lib_mode(SpellerId lib_mode);
+    void set_active_speller(SpellerId lib_mode);
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
@@ -75,7 +76,6 @@ private:
     HWND m_h_check_comments = nullptr;
     HWND m_h_lib_link = nullptr;
     HWND m_h_sugg_type = nullptr;
-    HWND m_h_library = nullptr;
     HWND m_h_lib_group_box = nullptr;
     HWND m_h_download_dics = nullptr;
     HWND m_h_remove_dics = nullptr;
@@ -86,6 +86,7 @@ private:
     HWND m_h_hunspell_path_type = nullptr;
     HWND m_h_system_path = nullptr;
     HWND m_h_aspell_run_together_cb = nullptr;
+    WinApi::EnumComboBox<SpellerId> m_speller_cmb;
 
     HMODULE m_h_ux_theme;
     OtdProc m_open_theme_data;
