@@ -17,6 +17,8 @@ constexpr auto default_delimiters =
 void Settings::save() {
     FILE* fp;
     _wfopen_s(&fp, m_ini_filepath.c_str(), L"w"); // Cleaning settings file (or creating it)
+    WORD wBOM = 0xFEFF;
+    fwrite (&wBOM, sizeof (wBOM), 1, fp);
     fclose(fp);
     IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::save);
     process(worker);
