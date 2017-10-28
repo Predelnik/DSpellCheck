@@ -33,7 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <uxtheme.h>
 #include "Settings.h"
 
-SimpleDlg::SimpleDlg(SettingsDlg& parent) : StaticDialog(), m_parent(parent) {
+SimpleDlg::SimpleDlg(SettingsDlg& parent, const Settings& settings) : StaticDialog(), m_settings(settings),
+                                                                      m_parent(parent) {
     m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
     if (m_h_ux_theme)
         m_open_theme_data = (OtdProc)::GetProcAddress(m_h_ux_theme, "OpenThemeData");
@@ -120,9 +121,10 @@ void SimpleDlg::apply_settings(Settings& settings) {
 
 
             {
-                switch (get_selected_lib()) {
+                switch (settings.active_speller_lib_id) {
                 case SpellerId::aspell: return &settings.aspell_language;
                 case SpellerId::hunspell: return &settings.hunspell_language;
+                case SpellerId::COUNT: break;
                 }
                 return nullptr;
             }()
@@ -133,7 +135,7 @@ void SimpleDlg::apply_settings(Settings& settings) {
                 get_available_languages()[cur_sel].orig_name.c_str();
     }
     settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
-    switch (get_selected_lib()) {
+    switch (settings.active_speller_lib_id) {
     case SpellerId::aspell:
         settings.aspell_path = get_edit_text(m_h_lib_path);
         break;
@@ -141,6 +143,7 @@ void SimpleDlg::apply_settings(Settings& settings) {
         settings.hunspell_user_path = get_edit_text(m_h_lib_path);
         settings.hunspell_system_path = get_edit_text(m_h_system_path);
         break;
+    case SpellerId::COUNT: break;
     }
 
     settings.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
@@ -152,11 +155,9 @@ void SimpleDlg::apply_settings(Settings& settings) {
     settings.aspell_allow_run_together_words = Button_GetCheck (m_h_aspell_run_together_cb) == BST_CHECKED;
 }
 
-void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
-                              const wchar_t* hunspell_path,
-                              const wchar_t* hunspell_additional_path) {
-    ShowWindow(m_h_aspell_run_together_cb, get_selected_lib() == SpellerId::aspell);
-    switch (get_selected_lib()) {
+void SimpleDlg::fill_lib_info(int status, const Settings& settings) {
+    ShowWindow(m_h_aspell_run_together_cb, settings.active_speller_lib_id == SpellerId::aspell);
+    switch (settings.active_speller_lib_id) {
     case SpellerId::aspell:
         ShowWindow(m_h_aspell_status, 1);
         ShowWindow(m_h_download_dics, 0);
@@ -172,7 +173,7 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
             m_aspell_status_color = COLOR_FAIL;
             Static_SetText(m_h_aspell_status, L"Aspell Status: Fail");
         }
-        Edit_SetText(m_h_lib_path, get_actual_aspell_path(aspell_path).c_str ());
+        Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.aspell_path).c_str ());
 
         Static_SetText(m_h_lib_group_box, L"Aspell Location");
         ShowWindow(m_h_lib_link, 1);
@@ -203,10 +204,10 @@ void SimpleDlg::fill_lib_info(int status, const wchar_t* aspell_path,
             ShowWindow(m_h_system_path, 1);
         }
         Static_SetText(m_h_lib_group_box, L"Hunspell Settings");
-        Edit_SetText(m_h_lib_path, hunspell_path);
+        Edit_SetText(m_h_lib_path, settings.hunspell_user_path.c_str ());
         break;
     }
-    Edit_SetText(m_h_system_path, hunspell_additional_path);
+    Edit_SetText(m_h_system_path, settings.hunspell_system_path.c_str ());
 }
 
 void SimpleDlg::fill_sugestions_num(int suggestions_num) {
@@ -244,10 +245,6 @@ void SimpleDlg::set_one_user_dic(bool value) {
     Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED);
 }
 
-SpellerId SimpleDlg::get_selected_lib() {
-    return m_speller_cmb.current_data();
-}
-
 static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/,
                                          LPARAM lp_data) {
     // If the BFFM_INITIALIZED message is received
@@ -283,7 +280,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_h_check_comments = ::GetDlgItem(_hSelf, IDC_CHECKCOMMENTS);
             m_h_lib_link = ::GetDlgItem(_hSelf, IDC_LIB_LINK);
             m_h_sugg_type = ::GetDlgItem(_hSelf, IDC_SUGG_TYPE);
-            m_speller_cmb.init (::GetDlgItem(_hSelf, IDC_LIBRARY));
+            m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
             m_h_lib_group_box = ::GetDlgItem(_hSelf, IDC_LIB_GROUPBOX);
             m_h_download_dics = ::GetDlgItem(_hSelf, IDC_DOWNLOADDICS);
             m_h_remove_dics = ::GetDlgItem(_hSelf, IDC_REMOVE_DICS);
@@ -326,13 +323,13 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
                 break;
             case IDC_LIBRARY:
                 if (HIWORD(w_param) == CBN_SELCHANGE) {
-                    m_parent.apply_lib_change(get_selected_lib());
+                    m_parent.apply_lib_change(m_speller_cmb.current_data());
                 }
                 break;
             case IDC_HUNSPELL_PATH_TYPE:
                 if (HIWORD(w_param) == CBN_SELCHANGE) {
                     if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0 ||
-                        get_selected_lib() == SpellerId::aspell) {
+                        m_settings.active_speller_lib_id == SpellerId::aspell) {
                         ShowWindow(m_h_lib_path, 1);
                         ShowWindow(m_h_system_path, 0);
                     }
@@ -371,14 +368,16 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
                 {
                     if (HIWORD(w_param) == BN_CLICKED) {
                         std::wstring path;
-                        switch (get_selected_lib()) {
+                        switch (m_settings.active_speller_lib_id) {
                         case SpellerId::aspell: path = get_default_aspell_path();
                             break;
                         case SpellerId::hunspell: path = get_default_hunspell_path();
                             break;
+                        case SpellerId::COUNT: break;
                         }
 
-                        if (get_selected_lib() == SpellerId::aspell || ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
+                        if (m_settings.active_speller_lib_id == SpellerId::aspell || ComboBox_GetCurSel(
+                            m_h_hunspell_path_type) == 0)
                             Edit_SetText(m_h_lib_path, path.c_str ());
                         else
                             Edit_SetText(m_h_system_path, L".\\plugins\\config\\Hunspell");
@@ -394,7 +393,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
                 }
                 break;
             case IDC_BROWSEASPELLPATH:
-                switch (get_selected_lib()) {
+                switch (m_settings.active_speller_lib_id) {
                 case SpellerId::aspell:
                     {
                         OPENFILENAME ofn;
@@ -418,38 +417,41 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
                     }
                     break;
                 case SpellerId::hunspell:
-                    // Thanks to http://vcfaq.mvps.org/sdk/20.htm
-                    BROWSEINFO bi;
-                    memset(&bi, 0, sizeof(bi));
-                    std::vector<wchar_t> path;
+                    {
+                        // Thanks to http://vcfaq.mvps.org/sdk/20.htm
+                        BROWSEINFO bi;
+                        memset(&bi, 0, sizeof(bi));
+                        std::vector<wchar_t> path;
 
-                    LPITEMIDLIST pidl_root = nullptr;
-                    SHGetFolderLocation(_hSelf, 0, nullptr, NULL, &pidl_root);
+                        LPITEMIDLIST pidl_root = nullptr;
+                        SHGetFolderLocation(_hSelf, 0, nullptr, NULL, &pidl_root);
 
-                    bi.pidlRoot = pidl_root;
-                    bi.lpszTitle = L"Pick a Directory";
-                    bi.pszDisplayName = path.data();
-                    bi.ulFlags = BIF_RETURNONLYFSDIRS;
-                    bi.lpfn = browse_callback_proc;
-                    auto lib_path = get_edit_text(m_h_lib_path);
-                    std::vector<wchar_t> npp_path(MAX_PATH);
-                    std::vector<wchar_t> final_path(MAX_PATH);
-                    send_msg_to_npp(&m_npp_data_instance, NPPM_GETNPPDIRECTORY, MAX_PATH,
-                                    reinterpret_cast<LPARAM>(npp_path.data()));
-                    PathCombine(final_path.data(), npp_path.data(), lib_path.c_str());
-                    bi.lParam = reinterpret_cast<LPARAM>(final_path.data());
-                    LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-                    if (pidl != nullptr) {
-                        // get the name of the folder
-                        std::vector<wchar_t> sz_path(MAX_PATH);
-                        SHGetPathFromIDList(pidl, sz_path.data());
-                        Edit_SetText(m_h_lib_path, sz_path.data ());
-                        CoTaskMemFree(pidl);
-                        // free memory used
+                        bi.pidlRoot = pidl_root;
+                        bi.lpszTitle = L"Pick a Directory";
+                        bi.pszDisplayName = path.data();
+                        bi.ulFlags = BIF_RETURNONLYFSDIRS;
+                        bi.lpfn = browse_callback_proc;
+                        auto lib_path = get_edit_text(m_h_lib_path);
+                        std::vector<wchar_t> npp_path(MAX_PATH);
+                        std::vector<wchar_t> final_path(MAX_PATH);
+                        send_msg_to_npp(&m_npp_data_instance, NPPM_GETNPPDIRECTORY, MAX_PATH,
+                                        reinterpret_cast<LPARAM>(npp_path.data()));
+                        PathCombine(final_path.data(), npp_path.data(), lib_path.c_str());
+                        bi.lParam = reinterpret_cast<LPARAM>(final_path.data());
+                        LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
+                        if (pidl != nullptr) {
+                            // get the name of the folder
+                            std::vector<wchar_t> sz_path(MAX_PATH);
+                            SHGetPathFromIDList(pidl, sz_path.data());
+                            Edit_SetText(m_h_lib_path, sz_path.data ());
+                            CoTaskMemFree(pidl);
+                            // free memory used
 
-                        CoUninitialize();
+                            CoUninitialize();
+                        }
                     }
                     break;
+                case SpellerId::COUNT: break;
                 }
                 break;
             }
@@ -743,6 +745,9 @@ int AdvancedDlg::get_recheck_delay() {
     return x;
 }
 
+AdvancedDlg::AdvancedDlg(const Settings& settings) : m_settings(settings) {
+}
+
 void AdvancedDlg::apply_settings(Settings& settings) {
     settings.delim_utf8 = to_utf8_string(get_edit_text(m_h_edit_delimiters).c_str());
     settings.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
@@ -771,7 +776,7 @@ AdvancedDlg* SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
 
 SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, const Settings& settings) :
     m_npp_data(npp_data),
-    m_simple_dlg(*this), m_settings(settings) {
+    m_simple_dlg(*this, settings), m_advanced_dlg(settings), m_settings(settings) {
     Window::init(h_inst, parent);
     m_settings.settings_changed.connect([this] { update_controls(); });
     get_spell_checker()->speller_status_changed.connect([this]
@@ -809,9 +814,7 @@ void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data) {
 }
 
 void SimpleDlg::update_lib_status(const Settings& settings) {
-    fill_lib_info(get_spell_checker()->get_aspell_status(),
-                  settings.aspell_path.c_str(), settings.hunspell_user_path.c_str(),
-                  settings.hunspell_system_path.c_str());
+    fill_lib_info(get_spell_checker()->get_aspell_status(), settings);
 }
 
 void SimpleDlg::update_controls(const Settings& settings) {

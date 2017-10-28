@@ -34,20 +34,17 @@ typedef HTHEME (WINAPI *OtdProc)(HWND, LPCWSTR);
 
 class SimpleDlg : public StaticDialog {
 public:
-    SimpleDlg(SettingsDlg& parent);
+    SimpleDlg(SettingsDlg& parent, const Settings &settings);
     ~SimpleDlg();
     void apply_settings(Settings& settings);
     void update_language_controls(const Settings& settings
     );
     void fill_sugestions_num(int suggestions_num);
-    void fill_lib_info(int status, const wchar_t* aspell_path, const wchar_t* hunspell_path,
-                       const wchar_t* hunspell_additional_path);
+    void fill_lib_info(int status, const Settings& settings);
     void disable_language_combo(bool disable);
     void set_file_types(bool check_those, const wchar_t* file_types);
     void set_sugg_type(int sugg_type);
     void set_check_comments(bool value);
-    SpellerId get_selected_lib();
-    void set_active_speller(SpellerId lib_mode);
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
@@ -60,6 +57,7 @@ protected:
 
 private:
     /* NppData struct instance */
+    const Settings &m_settings;
     NppData m_npp_data_instance;
     SettingsDlg& m_parent;
 
@@ -94,6 +92,7 @@ private:
 
 class AdvancedDlg : public StaticDialog {
 public:
+    explicit AdvancedDlg (const Settings &settings);
     void apply_settings(Settings& settings);
     void fill_delimiters(const char* delimiters);
     void set_delimeters_edit(const wchar_t* delimiters);
@@ -113,6 +112,7 @@ protected:
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 
 private:
+    const Settings &m_settings;
     HWND m_h_edit_delimiters = nullptr;
     HWND m_h_default_delimiters = nullptr;
     HWND m_h_ignore_yo = nullptr;
