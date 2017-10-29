@@ -43,7 +43,7 @@ public:
     void fill_lib_info(int status, const Settings& settings);
     void disable_language_combo(bool disable);
     void set_file_types(bool check_those, const wchar_t* file_types);
-    void set_sugg_type(int sugg_type);
+    void set_sugg_type(SuggestionMode mode);
     void set_check_comments(bool value);
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
@@ -73,7 +73,6 @@ private:
     HWND m_h_file_types = nullptr;
     HWND m_h_check_comments = nullptr;
     HWND m_h_lib_link = nullptr;
-    HWND m_h_sugg_type = nullptr;
     HWND m_h_lib_group_box = nullptr;
     HWND m_h_download_dics = nullptr;
     HWND m_h_remove_dics = nullptr;
@@ -85,6 +84,7 @@ private:
     HWND m_h_system_path = nullptr;
     HWND m_h_aspell_run_together_cb = nullptr;
     WinApi::EnumComboBox<SpellerId> m_speller_cmb;
+    WinApi::EnumComboBox<SuggestionMode> m_suggestion_mode_cmb;
 
     HMODULE m_h_ux_theme;
     OtdProc m_open_theme_data;

@@ -174,7 +174,7 @@ void insert_sugg_menu_item(HMENU menu, const wchar_t* text, BYTE id, int insert_
 
 void SpellChecker::precalculate_menu() {
     std::vector<SuggestionsMenuItem> suggestion_menu_items;
-    if (check_text_needed() && m_settings.suggestions_mode == SUGGESTIONS_CONTEXT_MENU) {
+    if (check_text_needed() && m_settings.suggestions_mode == SuggestionMode::context_menu) {
         long pos, length;
         m_word_under_cursor_is_correct = get_word_under_cursor_is_right(pos, length, true);
         if (!m_word_under_cursor_is_correct) {
@@ -625,7 +625,7 @@ void SpellChecker::set_suggestions_box_transparency() {
 }
 
 void SpellChecker::init_suggestions_box() {
-    if (m_settings.suggestions_mode != SUGGESTIONS_BOX)
+    if (m_settings.suggestions_mode != SuggestionMode::button)
         return;
     if (!m_current_speller->is_working())
         return;
@@ -788,14 +788,14 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
             break;
 
         auto item = utf8_to_wstring(m_last_suggestions[i].c_str());
-        if (m_settings.suggestions_mode == SUGGESTIONS_BOX)
+        if (m_settings.suggestions_mode == SuggestionMode::button)
             insert_sugg_menu_item(menu, item.c_str(), static_cast<BYTE>(i + 1), -1);
         else
             suggestion_menu_items.emplace_back(item.c_str(), static_cast<BYTE>(i + 1));
     }
 
     if (!m_last_suggestions.empty()) {
-        if (m_settings.suggestions_mode == SUGGESTIONS_BOX)
+        if (m_settings.suggestions_mode == SuggestionMode::button)
             insert_sugg_menu_item(menu, L"", 0, 103, true);
         else
             suggestion_menu_items.emplace_back(L"", 0, true);
@@ -809,17 +809,17 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
     apply_conversions(buf_utf8);
     auto item = utf8_to_wstring(buf_utf8.c_str());
     auto menu_string = wstring_printf(L"Ignore \"%s\" for Current Session", item.c_str());
-    if (m_settings.suggestions_mode == SUGGESTIONS_BOX)
+    if (m_settings.suggestions_mode == SuggestionMode::button)
         insert_sugg_menu_item(menu, menu_string.c_str(), MID_IGNOREALL, -1);
     else
         suggestion_menu_items.emplace_back(menu_string.c_str(), MID_IGNOREALL);
     menu_string = wstring_printf(L"Add \"%s\" to Dictionary", item.c_str());;
-    if (m_settings.suggestions_mode == SUGGESTIONS_BOX)
+    if (m_settings.suggestions_mode == SuggestionMode::button)
         insert_sugg_menu_item(menu, menu_string.c_str(), MID_ADDTODICTIONARY, -1);
     else
         suggestion_menu_items.emplace_back(menu_string.c_str(), MID_ADDTODICTIONARY);
 
-    if (m_settings.suggestions_mode == SUGGESTIONS_CONTEXT_MENU)
+    if (m_settings.suggestions_mode == SuggestionMode::context_menu)
         suggestion_menu_items.emplace_back(L"", 0, true);
 
     return suggestion_menu_items;

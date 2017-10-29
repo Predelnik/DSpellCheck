@@ -148,7 +148,7 @@ void SimpleDlg::apply_settings(Settings& settings) {
 
     settings.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
     settings.file_types = get_edit_text(m_h_file_types);
-    settings.suggestions_mode = ComboBox_GetCurSel(m_h_sugg_type);
+    settings.suggestions_mode = m_suggestion_mode_cmb.current_data();
     settings.check_only_comments_and_strings = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
     settings.use_language_name_aliases = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
     settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
@@ -229,8 +229,8 @@ void SimpleDlg::set_file_types(bool check_those, const wchar_t* file_types) {
     }
 }
 
-void SimpleDlg::set_sugg_type(int sugg_type) {
-    ComboBox_SetCurSel(m_h_sugg_type, sugg_type);
+void SimpleDlg::set_sugg_type(SuggestionMode mode) {
+    m_suggestion_mode_cmb.set_index(mode);
 }
 
 void SimpleDlg::set_check_comments(bool value) {
@@ -279,7 +279,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_h_file_types = ::GetDlgItem(_hSelf, IDC_FILETYPES);
             m_h_check_comments = ::GetDlgItem(_hSelf, IDC_CHECKCOMMENTS);
             m_h_lib_link = ::GetDlgItem(_hSelf, IDC_LIB_LINK);
-            m_h_sugg_type = ::GetDlgItem(_hSelf, IDC_SUGG_TYPE);
+            m_suggestion_mode_cmb.init (GetDlgItem(_hSelf, IDC_SUGG_TYPE));
             m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
             m_h_lib_group_box = ::GetDlgItem(_hSelf, IDC_LIB_GROUPBOX);
             m_h_download_dics = ::GetDlgItem(_hSelf, IDC_DOWNLOADDICS);
@@ -296,9 +296,6 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             ComboBox_SetCurSel(m_h_hunspell_path_type, 0);
             ShowWindow(m_h_lib_path, 1);
             ShowWindow(m_h_system_path, 0);
-
-            ComboBox_AddString(m_h_sugg_type, L"Special Suggestion Button");
-            ComboBox_AddString(m_h_sugg_type, L"Use N++ Context Menu");
             m_default_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
             m_aspell_status_color = RGB(0, 0, 0);

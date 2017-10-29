@@ -37,9 +37,6 @@ struct CallbackData {
   std::function<void ()> callback;
 };
 
-#define SUGGESTIONS_BOX 0
-#define SUGGESTIONS_CONTEXT_MENU 1
-
 // Global Menu ID
 #define DSPELLCHECK_MENU_ID 193
 #define LANGUAGE_MENU_ID 197

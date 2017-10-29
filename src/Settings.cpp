@@ -4,6 +4,15 @@
 #include "CommonFunctions.h"
 #include "Scintilla.h"
 
+const wchar_t* gui_string(SuggestionMode value) {
+    switch (value) {
+    case SuggestionMode::button: return L"Special Suggestion Button";
+    case SuggestionMode::context_menu: return L"Use N++ Context Menu";
+    case SuggestionMode::COUNT: break;
+    }
+    return nullptr;
+}
+
 const wchar_t* gui_string(SpellerId value) {
     switch (value) {
     case SpellerId::aspell: return L"Aspell";
@@ -27,7 +36,7 @@ void Settings::save() {
     FILE* fp;
     _wfopen_s(&fp, m_ini_filepath.c_str(), L"w"); // Cleaning settings file (or creating it)
     WORD wBOM = 0xFEFF;
-    fwrite (&wBOM, sizeof (wBOM), 1, fp);
+    fwrite(&wBOM, sizeof (wBOM), 1, fp);
     fclose(fp);
     IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::save);
     process(worker);
@@ -87,7 +96,7 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"User_Hunspell_Path", hunspell_user_path, get_default_hunspell_path());
     worker.process(L"System_Hunspell_Path", hunspell_system_path, L".\\plugins\\config\\Hunspell");
     worker.process(L"Aspell_Allow_Run_Together_Words", aspell_allow_run_together_words, false);
-    worker.process(L"Suggestions_Control", suggestions_mode, 1);
+    worker.process(L"Suggestions_Control", suggestions_mode, SuggestionMode::context_menu);
     worker.process(L"Autocheck", auto_check_text, true);
     worker.process(L"Aspell_Multiple_Languages", aspell_multi_languages, L"");
     worker.process(L"Hunspell_Multiple_Languages", hunspell_multi_languages, L"");

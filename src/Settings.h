@@ -13,6 +13,16 @@ enum class SpellerId {
     COUNT,
 };
 
+enum class SuggestionMode {
+  button,
+  context_menu,
+
+  // ReSharper disable once CppInconsistentNaming
+  COUNT,
+};
+
+const wchar_t *gui_string (SuggestionMode value);
+
 const wchar_t *gui_string (SpellerId value);
 
 class Settings {
@@ -34,7 +44,7 @@ public:
     std::wstring hunspell_system_path;
     std::wstring aspell_multi_languages;
     std::wstring hunspell_multi_languages;
-    int suggestions_mode = 0; // TODO: change to enum
+    SuggestionMode suggestions_mode = SuggestionMode::button;
     std::wstring aspell_language;
     std::wstring hunspell_language;
     std::string delim_utf8;
