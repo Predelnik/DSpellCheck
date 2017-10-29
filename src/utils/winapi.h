@@ -57,6 +57,7 @@ namespace WinApi
         using Parent = ComboBox;
     public:
         using Parent::init;
+        using Parent::set_enabled;
 
         EnumType current_data() const {
             return static_cast<EnumType>(Parent::current_data());

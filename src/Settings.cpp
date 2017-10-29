@@ -4,6 +4,16 @@
 #include "CommonFunctions.h"
 #include "Scintilla.h"
 
+const wchar_t* gui_string(ProxyType value) {
+    switch (value) {
+    case ProxyType::web_proxy: return L"FTP Web Proxy";
+    case ProxyType::ftp_gateway: return L"FTP Gateway";
+    case ProxyType::COUNT: break;
+    }
+    return nullptr;
+}
+
+
 const wchar_t* gui_string(SuggestionMode value) {
     switch (value) {
     case SuggestionMode::button: return L"Special Suggestion Button";
@@ -139,5 +149,5 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"Proxy_Password", proxy_password, L"");
     worker.process(L"Proxy_Port", proxy_port, 808);
     worker.process(L"Proxy_Is_Anonymous", proxy_is_anonymous, true);
-    worker.process(L"Proxy_Type", proxy_type, 0);
+    worker.process(L"Proxy_Type", proxy_type, ProxyType::web_proxy);
 }

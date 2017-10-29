@@ -12,6 +12,7 @@ enum class SpellerId {
     // ReSharper disable once CppInconsistentNaming
     COUNT,
 };
+const wchar_t *gui_string (SpellerId value);
 
 enum class SuggestionMode {
   button,
@@ -20,10 +21,16 @@ enum class SuggestionMode {
   // ReSharper disable once CppInconsistentNaming
   COUNT,
 };
-
 const wchar_t *gui_string (SuggestionMode value);
 
-const wchar_t *gui_string (SpellerId value);
+enum class ProxyType {
+    web_proxy,
+    ftp_gateway,
+
+    // ReSharper disable once CppInconsistentNaming
+    COUNT,
+};
+const wchar_t *gui_string (ProxyType value);
 
 class Settings {
     using Self = Settings;
@@ -84,7 +91,7 @@ public:
     std::wstring proxy_password;
     int proxy_port = 0;
     bool proxy_is_anonymous = false;
-    int proxy_type = 0; // TODO: change to enum
+    ProxyType proxy_type = ProxyType::ftp_gateway;
 
     mutable lsignal::signal<void()> settings_changed;
 

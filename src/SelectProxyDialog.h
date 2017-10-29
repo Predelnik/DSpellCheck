@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
 #include "StaticDialog/StaticDialog.h"
+#include "CommonFunctions.h"
 
 class Settings;
 class SpellChecker;
@@ -43,6 +44,7 @@ protected:
   HWND m_password = nullptr;
   HWND m_use_proxy = nullptr;
   HWND m_proxy_anonymous = nullptr;
-  HWND m_proxy_type = nullptr;
+
+  WinApi::EnumComboBox<ProxyType> m_proxy_type_cmb;
   Settings &m_settings;
 };

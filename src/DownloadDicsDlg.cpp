@@ -910,7 +910,7 @@ download_file_async_web_proxy(const std::wstring& full_path, const std::wstring&
 void DownloadDicsDlg::do_ftp_operation(FtpOperationType type, const std::wstring& full_path,
                                        const std::wstring& file_name, const std::wstring& location) {
     if (m_settings.use_proxy &&
-        m_settings.proxy_type == 0)
+        m_settings.proxy_type == ProxyType::web_proxy)
         switch (type) {
         case FtpOperationType::fill_file_list: return update_file_list_async_web_proxy(full_path);
         case FtpOperationType::download_file: return download_file_async_web_proxy(full_path + file_name, location);
