@@ -1,16 +1,19 @@
 #include "SciUtils.h"
 #include "SciLexer.h"
 
-bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
-{
-    switch (lexer)
-    {
+bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style) {
+    switch (lexer) {
     case SCLEX_CONTAINER:
     case SCLEX_NULL:
         return true;
+    // Meaning unclear:
+    case SCLEX_AS:
+    case SCLEX_SREC:
+    case SCLEX_IHEX:
+    case SCLEX_TEHEX:
+        return false;
     case SCLEX_USER:
-        switch (style)
-        {
+        switch (style) {
         case SCE_USER_STYLE_COMMENT:
         case SCE_USER_STYLE_COMMENTLINE:
         case SCE_USER_STYLE_DELIMITER1:
@@ -26,8 +29,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         };
     case SCLEX_PYTHON:
-        switch (style)
-        {
+        switch (style) {
         case SCE_P_COMMENTLINE:
         case SCE_P_COMMENTBLOCK:
         case SCE_P_STRING:
@@ -41,8 +43,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
     case SCLEX_CPP:
     case SCLEX_OBJC:
     case SCLEX_BULLANT:
-        switch (style)
-        {
+        switch (style) {
         case SCE_C_COMMENT:
         case SCE_C_COMMENTLINE:
         case SCE_C_COMMENTDOC:
@@ -54,8 +55,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
         };
     case SCLEX_HTML:
     case SCLEX_XML:
-        switch (style)
-        {
+        switch (style) {
         case SCE_H_COMMENT:
         case SCE_H_DEFAULT:
         case SCE_H_TAGUNKNOWN:
@@ -91,8 +91,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_PERL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_PL_COMMENTLINE:
         case SCE_PL_STRING_Q:
         case SCE_PL_STRING_QQ:
@@ -104,8 +103,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         };
     case SCLEX_SQL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_SQL_COMMENT:
         case SCE_SQL_COMMENTLINE:
         case SCE_SQL_COMMENTDOC:
@@ -116,8 +114,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_PROPERTIES:
-        switch (style)
-        {
+        switch (style) {
         case SCE_PROPS_COMMENT:
             return true;
         default:
@@ -126,16 +123,14 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
     case SCLEX_ERRORLIST:
         return false;
     case SCLEX_MAKEFILE:
-        switch (style)
-        {
+        switch (style) {
         case SCE_MAKE_COMMENT:
             return true;
         default:
             return false;
         }
     case SCLEX_BATCH:
-        switch (style)
-        {
+        switch (style) {
         case SCE_BAT_COMMENT:
             return true;
         default:
@@ -144,8 +139,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
     case SCLEX_XCODE:
         return false;
     case SCLEX_LATEX:
-        switch (style)
-        {
+        switch (style) {
         case SCE_L_DEFAULT:
         case SCE_L_COMMENT:
             return true;
@@ -153,8 +147,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_LUA:
-        switch (style)
-        {
+        switch (style) {
         case SCE_LUA_COMMENT:
         case SCE_LUA_COMMENTLINE:
         case SCE_LUA_COMMENTDOC:
@@ -164,16 +157,14 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_DIFF:
-        switch (style)
-        {
+        switch (style) {
         case SCE_DIFF_COMMENT:
             return true;
         default:
             return false;
         }
     case SCLEX_CONF:
-        switch (style)
-        {
+        switch (style) {
         case SCE_CONF_COMMENT:
         case SCE_CONF_STRING:
             return true;
@@ -181,8 +172,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_PASCAL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_PAS_COMMENT:
         case SCE_PAS_COMMENT2:
         case SCE_PAS_COMMENTLINE:
@@ -192,8 +182,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_AVE:
-        switch (style)
-        {
+        switch (style) {
         case SCE_AVE_COMMENT:
         case SCE_AVE_STRING:
             return true;
@@ -201,8 +190,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_ADA:
-        switch (style)
-        {
+        switch (style) {
         case SCE_ADA_STRING:
         case SCE_ADA_COMMENTLINE:
             return true;
@@ -210,8 +198,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_LISP:
-        switch (style)
-        {
+        switch (style) {
         case SCE_LISP_COMMENT:
         case SCE_LISP_STRING:
             return true;
@@ -219,8 +206,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_RUBY:
-        switch (style)
-        {
+        switch (style) {
         case SCE_RB_COMMENTLINE:
         case SCE_RB_STRING:
         case SCE_RB_STRING_Q:
@@ -234,8 +220,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
         }
     case SCLEX_EIFFEL:
     case SCLEX_EIFFELKW:
-        switch (style)
-        {
+        switch (style) {
         case SCE_EIFFEL_COMMENTLINE:
         case SCE_EIFFEL_STRING:
             return true;
@@ -243,8 +228,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         };
     case SCLEX_TCL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_TCL_COMMENT:
         case SCE_TCL_COMMENTLINE:
         case SCE_TCL_BLOCK_COMMENT:
@@ -254,8 +238,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_NNCRONTAB:
-        switch (style)
-        {
+        switch (style) {
         case SCE_NNCRONTAB_COMMENT:
         case SCE_NNCRONTAB_STRING:
             return true;
@@ -263,8 +246,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_BAAN:
-        switch (style)
-        {
+        switch (style) {
         case SCE_BAAN_COMMENT:
         case SCE_BAAN_COMMENTDOC:
         case SCE_BAAN_STRING:
@@ -273,8 +255,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_MATLAB:
-        switch (style)
-        {
+        switch (style) {
         case SCE_MATLAB_COMMENT:
         case SCE_MATLAB_STRING:
             return true;
@@ -282,8 +263,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_SCRIPTOL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_SCRIPTOL_COMMENTLINE:
         case SCE_SCRIPTOL_COMMENTBLOCK:
         case SCE_SCRIPTOL_STRING:
@@ -292,10 +272,13 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_ASM:
-        switch (style)
-        {
+        switch (style) {
         case SCE_ASM_COMMENT:
         case SCE_ASM_COMMENTBLOCK:
+        case SCE_ASM_STRING:
+        case SCE_ASM_STRINGEOL:
+        case SCE_ASM_CHARACTER:
+        case SCE_ASM_COMMENTDIRECTIVE:
             return true;
         default:
             return false;
@@ -303,8 +286,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
     case SCLEX_CPPNOCASE:
     case SCLEX_FORTRAN:
     case SCLEX_F77:
-        switch (style)
-        {
+        switch (style) {
         case SCE_F_COMMENT:
         case SCE_F_STRING1:
         case SCE_F_STRING2:
@@ -313,8 +295,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_CSS:
-        switch (style)
-        {
+        switch (style) {
         case SCE_CSS_COMMENT:
         case SCE_CSS_DOUBLESTRING:
         case SCE_CSS_SINGLESTRING:
@@ -323,8 +304,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_POV:
-        switch (style)
-        {
+        switch (style) {
         case SCE_POV_COMMENT:
         case SCE_POV_COMMENTLINE:
         case SCE_POV_STRING:
@@ -333,8 +313,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_LOUT:
-        switch (style)
-        {
+        switch (style) {
         case SCE_LOUT_COMMENT:
         case SCE_LOUT_STRING:
             return true;
@@ -342,8 +321,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_ESCRIPT:
-        switch (style)
-        {
+        switch (style) {
         case SCE_ESCRIPT_COMMENT:
         case SCE_ESCRIPT_COMMENTLINE:
         case SCE_ESCRIPT_COMMENTDOC:
@@ -353,8 +331,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_PS:
-        switch (style)
-        {
+        switch (style) {
         case SCE_PS_COMMENT:
         case SCE_PS_DSC_COMMENT:
         case SCE_PS_TEXT:
@@ -363,8 +340,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_NSIS:
-        switch (style)
-        {
+        switch (style) {
         case SCE_NSIS_COMMENT:
         case SCE_NSIS_STRINGDQ:
         case SCE_NSIS_STRINGLQ:
@@ -374,8 +350,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_MMIXAL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_MMIXAL_COMMENT:
         case SCE_MMIXAL_STRING:
             return true;
@@ -383,8 +358,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_CLW:
-        switch (style)
-        {
+        switch (style) {
         case SCE_CLW_COMMENT:
         case SCE_CLW_STRING:
             return true;
@@ -395,8 +369,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
     case SCLEX_LOT:
         return false;
     case SCLEX_YAML:
-        switch (style)
-        {
+        switch (style) {
         case SCE_YAML_COMMENT:
         case SCE_YAML_TEXT:
             return true;
@@ -404,16 +377,14 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_TEX:
-        switch (style)
-        {
+        switch (style) {
         case SCE_TEX_TEXT:
             return true;
         default:
             return false;
         }
     case SCLEX_METAPOST:
-        switch (style)
-        {
+        switch (style) {
         case SCE_METAPOST_TEXT:
         case SCE_METAPOST_DEFAULT:
             return true;
@@ -421,8 +392,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_FORTH:
-        switch (style)
-        {
+        switch (style) {
         case SCE_FORTH_COMMENT:
         case SCE_FORTH_COMMENT_ML:
         case SCE_FORTH_STRING:
@@ -431,8 +401,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_ERLANG:
-        switch (style)
-        {
+        switch (style) {
         case SCE_ERLANG_COMMENT:
         case SCE_ERLANG_STRING:
         case SCE_ERLANG_COMMENT_FUNCTION:
@@ -445,8 +414,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
         }
     case SCLEX_OCTAVE:
     case SCLEX_MSSQL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_MSSQL_COMMENT:
         case SCE_MSSQL_LINE_COMMENT:
         case SCE_MSSQL_STRING:
@@ -455,8 +423,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_VERILOG:
-        switch (style)
-        {
+        switch (style) {
         case SCE_V_COMMENT:
         case SCE_V_COMMENTLINE:
         case SCE_V_COMMENTLINEBANG:
@@ -466,8 +433,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_KIX:
-        switch (style)
-        {
+        switch (style) {
         case SCE_KIX_COMMENT:
         case SCE_KIX_STRING1:
         case SCE_KIX_STRING2:
@@ -476,8 +442,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_GUI4CLI:
-        switch (style)
-        {
+        switch (style) {
         case SCE_GC_COMMENTLINE:
         case SCE_GC_COMMENTBLOCK:
         case SCE_GC_STRING:
@@ -486,8 +451,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_SPECMAN:
-        switch (style)
-        {
+        switch (style) {
         case SCE_SN_COMMENTLINE:
         case SCE_SN_COMMENTLINEBANG:
         case SCE_SN_STRING:
@@ -496,8 +460,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_AU3:
-        switch (style)
-        {
+        switch (style) {
         case SCE_AU3_COMMENT:
         case SCE_AU3_COMMENTBLOCK:
         case SCE_AU3_STRING:
@@ -506,8 +469,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_APDL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_APDL_COMMENT:
         case SCE_APDL_COMMENTBLOCK:
         case SCE_APDL_STRING:
@@ -516,8 +478,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_BASH:
-        switch (style)
-        {
+        switch (style) {
         case SCE_SH_COMMENTLINE:
         case SCE_SH_STRING:
             return true;
@@ -525,8 +486,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_ASN1:
-        switch (style)
-        {
+        switch (style) {
         case SCE_ASN1_COMMENT:
         case SCE_ASN1_STRING:
             return true;
@@ -534,8 +494,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_VHDL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_VHDL_COMMENT:
         case SCE_VHDL_COMMENTLINEBANG:
         case SCE_VHDL_STRING:
@@ -544,8 +503,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_CAML:
-        switch (style)
-        {
+        switch (style) {
         case SCE_CAML_STRING:
         case SCE_CAML_COMMENT:
         case SCE_CAML_COMMENT1:
@@ -561,8 +519,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
     case SCLEX_PUREBASIC:
     case SCLEX_FREEBASIC:
     case SCLEX_POWERBASIC:
-        switch (style)
-        {
+        switch (style) {
         case SCE_B_COMMENT:
         case SCE_B_STRING:
             return true;
@@ -570,8 +527,8 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_HASKELL:
-        switch (style)
-        {
+    case SCLEX_LITERATEHASKELL:
+        switch (style) {
         case SCE_HA_STRING:
         case SCE_HA_COMMENTLINE:
         case SCE_HA_COMMENTBLOCK:
@@ -583,8 +540,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
         }
     case SCLEX_PHPSCRIPT:
     case SCLEX_TADS3:
-        switch (style)
-        {
+        switch (style) {
         case SCE_T3_BLOCK_COMMENT:
         case SCE_T3_LINE_COMMENT:
         case SCE_T3_S_STRING:
@@ -595,8 +551,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_REBOL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_REBOL_COMMENTLINE:
         case SCE_REBOL_COMMENTBLOCK:
         case SCE_REBOL_QUOTEDSTRING:
@@ -606,8 +561,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_SMALLTALK:
-        switch (style)
-        {
+        switch (style) {
         case SCE_ST_STRING:
         case SCE_ST_COMMENT:
             return true;
@@ -615,8 +569,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_FLAGSHIP:
-        switch (style)
-        {
+        switch (style) {
         case SCE_FS_COMMENT:
         case SCE_FS_COMMENTLINE:
         case SCE_FS_COMMENTDOC:
@@ -632,8 +585,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_CSOUND:
-        switch (style)
-        {
+        switch (style) {
         case SCE_CSOUND_COMMENT:
         case SCE_CSOUND_COMMENTBLOCK:
             return true;
@@ -641,8 +593,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_INNOSETUP:
-        switch (style)
-        {
+        switch (style) {
         case SCE_INNO_COMMENT:
         case SCE_INNO_COMMENT_PASCAL:
         case SCE_INNO_STRING_DOUBLE:
@@ -652,8 +603,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_OPAL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_OPAL_COMMENT_BLOCK:
         case SCE_OPAL_COMMENT_LINE:
         case SCE_OPAL_STRING:
@@ -662,16 +612,14 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_SPICE:
-        switch (style)
-        {
+        switch (style) {
         case SCE_SPICE_COMMENTLINE:
             return true;
         default:
             return false;
         }
     case SCLEX_D:
-        switch (style)
-        {
+        switch (style) {
         case SCE_D_COMMENT:
         case SCE_D_COMMENTLINE:
         case SCE_D_COMMENTDOC:
@@ -682,16 +630,14 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_CMAKE:
-        switch (style)
-        {
+        switch (style) {
         case SCE_CMAKE_COMMENT:
             return true;
         default:
             return false;
         }
     case SCLEX_GAP:
-        switch (style)
-        {
+        switch (style) {
         case SCE_GAP_COMMENT:
         case SCE_GAP_STRING:
             return true;
@@ -699,8 +645,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_PLM:
-        switch (style)
-        {
+        switch (style) {
         case SCE_PLM_COMMENT:
         case SCE_PLM_STRING:
             return true;
@@ -708,8 +653,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_PROGRESS:
-        switch (style)
-        {
+        switch (style) {
         case SCE_4GL_STRING:
         case SCE_4GL_COMMENT1:
         case SCE_4GL_COMMENT2:
@@ -729,8 +673,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_ABAQUS:
-        switch (style)
-        {
+        switch (style) {
         case SCE_ABAQUS_COMMENT:
         case SCE_ABAQUS_COMMENTBLOCK:
         case SCE_ABAQUS_STRING:
@@ -739,8 +682,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_ASYMPTOTE:
-        switch (style)
-        {
+        switch (style) {
         case SCE_ASY_COMMENT:
         case SCE_ASY_COMMENTLINE:
         case SCE_ASY_STRING:
@@ -749,8 +691,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_R:
-        switch (style)
-        {
+        switch (style) {
         case SCE_R_COMMENT:
         case SCE_R_STRING:
         case SCE_R_STRING2:
@@ -759,8 +700,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_MAGIK:
-        switch (style)
-        {
+        switch (style) {
         case SCE_MAGIK_COMMENT:
         case SCE_MAGIK_HYPER_COMMENT:
         case SCE_MAGIK_STRING:
@@ -769,8 +709,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_POWERSHELL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_POWERSHELL_COMMENT:
         case SCE_POWERSHELL_STRING:
             return true;
@@ -778,8 +717,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_MYSQL:
-        switch (style)
-        {
+        switch (style) {
         case SCE_MYSQL_COMMENT:
         case SCE_MYSQL_COMMENTLINE:
         case SCE_MYSQL_STRING:
@@ -790,8 +728,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_PO:
-        switch (style)
-        {
+        switch (style) {
         case SCE_PO_COMMENT:
             return true;
         default:
@@ -801,16 +738,14 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
     case SCLEX_COBOL:
     case SCLEX_TACL:
     case SCLEX_SORCUS:
-        switch (style)
-        {
+        switch (style) {
         case SCE_SORCUS_STRING:
             return true;
         default:
             return false;
         }
     case SCLEX_POWERPRO:
-        switch (style)
-        {
+        switch (style) {
         case SCE_POWERPRO_COMMENTBLOCK:
         case SCE_POWERPRO_COMMENTLINE:
         case SCE_POWERPRO_DOUBLEQUOTEDSTRING:
@@ -821,8 +756,7 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
         }
     case SCLEX_NIMROD:
     case SCLEX_SML:
-        switch (style)
-        {
+        switch (style) {
         case SCE_SML_STRING:
         case SCE_SML_COMMENT:
         case SCE_SML_COMMENT1:
@@ -835,16 +769,14 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
     case SCLEX_MARKDOWN:
         return false;
     case SCLEX_TXT2TAGS:
-        switch (style)
-        {
+        switch (style) {
         case SCE_TXT2TAGS_COMMENT:
             return true;
         default:
             return false;
         }
     case SCLEX_A68K:
-        switch (style)
-        {
+        switch (style) {
         case SCE_A68K_COMMENT:
         case SCE_A68K_STRING1:
         case SCE_A68K_STRING2:
@@ -853,16 +785,181 @@ bool SciUtils::is_comment_or_string(LRESULT lexer, LRESULT style)
             return false;
         }
     case SCLEX_MODULA:
-        switch (style)
-        {
+        switch (style) {
         case SCE_MODULA_COMMENT:
         case SCE_MODULA_STRING:
             return true;
         default:
             return false;
         }
-    case SCLEX_SEARCHRESULT:
-        return false;
+    case SCLEX_COFFEESCRIPT:
+        switch (style) {
+        case SCE_COFFEESCRIPT_COMMENT:
+        case SCE_COFFEESCRIPT_COMMENTLINE:
+        case SCE_COFFEESCRIPT_COMMENTDOC:
+        case SCE_COFFEESCRIPT_COMMENTLINEDOC:
+        case SCE_COFFEESCRIPT_COMMENTDOCKEYWORD:
+        case SCE_COFFEESCRIPT_COMMENTDOCKEYWORDERROR:
+        case SCE_COFFEESCRIPT_COMMENTBLOCK:
+        case SCE_COFFEESCRIPT_CHARACTER:
+        case SCE_COFFEESCRIPT_STRING:
+        case SCE_COFFEESCRIPT_STRINGEOL:
+        case SCE_COFFEESCRIPT_STRINGRAW:
+            return true;
+        default:
+            return false;
+        }
+    case SCLEX_TCMD:
+        {
+            switch (style) {
+            case SCE_TCMD_COMMENT:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_AVS:
+        {
+            switch (style) {
+            case SCE_AVS_COMMENTLINE:
+            case SCE_AVS_COMMENTBLOCK:
+            case SCE_AVS_COMMENTBLOCKN:
+            case SCE_AVS_STRING:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_ECL:
+        {
+            switch (style) {
+            case SCE_ECL_COMMENT:
+            case SCE_ECL_COMMENTLINE:
+            case SCE_ECL_COMMENTLINEDOC:
+            case SCE_ECL_COMMENTDOCKEYWORD:
+            case SCE_ECL_COMMENTDOCKEYWORDERROR:
+            case SCE_ECL_COMMENTDOC:
+            case SCE_ECL_STRING:
+            case SCE_ECL_CHARACTER:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_OSCRIPT:
+        {
+            switch (style) {
+            case SCE_OSCRIPT_BLOCK_COMMENT:
+            case SCE_OSCRIPT_DOC_COMMENT:
+            case SCE_OSCRIPT_LINE_COMMENT:
+            case SCE_OSCRIPT_DOUBLEQUOTE_STRING:
+            case SCE_OSCRIPT_SINGLEQUOTE_STRING:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_VISUALPROLOG:
+        {
+            switch (style) {
+            case SCE_VISUALPROLOG_CHARACTER:
+            case SCE_VISUALPROLOG_COMMENT_BLOCK:
+            case SCE_VISUALPROLOG_COMMENT_KEY:
+            case SCE_VISUALPROLOG_COMMENT_KEY_ERROR:
+            case SCE_VISUALPROLOG_COMMENT_LINE:
+            case SCE_VISUALPROLOG_STRING:
+            case SCE_VISUALPROLOG_STRING_ESCAPE:
+            case SCE_VISUALPROLOG_STRING_ESCAPE_ERROR:
+            case SCE_VISUALPROLOG_STRING_EOL_OPEN:
+            case SCE_VISUALPROLOG_STRING_VERBATIM:
+            case SCE_VISUALPROLOG_STRING_VERBATIM_SPECIAL:
+            case SCE_VISUALPROLOG_STRING_VERBATIM_EOL:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_STTXT:
+        {
+            switch (style) {
+            case SCE_STTXT_CHARACTER:
+            case SCE_STTXT_STRING1:
+            case SCE_STTXT_STRING2:
+            case SCE_STTXT_COMMENT:
+            case SCE_STTXT_COMMENTLINE:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_KVIRC:
+        {
+            switch (style) {
+            case SCE_KVIRC_STRING:
+            case SCE_KVIRC_STRING_FUNCTION:
+            case SCE_KVIRC_VARIABLE:
+            case SCE_KVIRC_COMMENT:
+            case SCE_KVIRC_COMMENTBLOCK:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_RUST:
+        {
+            switch (style) {
+            case SCE_RUST_CHARACTER:
+            case SCE_RUST_STRING:
+            case SCE_RUST_STRINGR:
+            case SCE_RUST_COMMENTBLOCK:
+            case SCE_RUST_COMMENTBLOCKDOC:
+            case SCE_RUST_COMMENTLINE:
+            case SCE_RUST_COMMENTLINEDOC:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_DMAP:
+        {
+            switch (style) {
+            case SCE_DMAP_COMMENT:
+            case SCE_DMAP_STRING1:
+            case SCE_DMAP_STRING2:
+            case SCE_DMAP_STRINGEOL:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_DMIS:
+        {
+            switch (style) {
+            case SCE_DMIS_COMMENT:
+            case SCE_DMIS_STRING:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_REGISTRY:
+        {
+            switch (style) {
+            case SCE_REG_COMMENT:
+            case SCE_REG_STRING:
+                return true;
+            default:
+                return false;
+            }
+        }
+    case SCLEX_BIBTEX:
+        {
+            switch (style) {
+            case SCE_BIBTEX_COMMENT:
+            default:
+                return false;
+            }
+        }
     };
-    return true;
+    return false;
 }
