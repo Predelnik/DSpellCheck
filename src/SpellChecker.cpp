@@ -69,7 +69,7 @@ bool send_msg_to_both_editors(const NppData* npp_data_arg, UINT msg, WPARAM w_pa
 }
 
 LRESULT send_msg_to_editor(HWND scintilla_window, UINT msg,
-                                  WPARAM w_param /*= 0*/, LPARAM l_param /*= 0*/) {
+                           WPARAM w_param /*= 0*/, LPARAM l_param /*= 0*/) {
     return SendMessage(scintilla_window, msg, w_param, l_param);
 }
 
@@ -345,9 +345,9 @@ void SpellChecker::find_next_mistake() {
     m_current_position =
         send_msg_to_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
     auto cur_line = send_msg_to_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
-                                              m_current_position);
+                                       m_current_position);
     auto line_start_pos = send_msg_to_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
-                                                    cur_line);
+                                             cur_line);
     auto doc_length =
         send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
     auto iterator_pos = line_start_pos;
@@ -387,7 +387,7 @@ void SpellChecker::find_next_mistake() {
             *iterating_char = '\0';
         }
         send_msg_to_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin,
-                                  range.chrg.cpMax);
+                           range.chrg.cpMax);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
         send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
@@ -417,11 +417,11 @@ void SpellChecker::find_prev_mistake() {
     m_current_position =
         send_msg_to_editor(get_current_scintilla(), SCI_GETCURRENTPOS);
     auto cur_line = send_msg_to_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
-                                              m_current_position);
+                                       m_current_position);
     auto doc_length =
         send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
     auto line_end_pos = send_msg_to_editor(get_current_scintilla(), SCI_GETLINEENDPOSITION,
-                                                  cur_line);
+                                           cur_line);
 
     auto iterator_pos = line_end_pos;
     Sci_TextRange range;
@@ -457,7 +457,7 @@ void SpellChecker::find_prev_mistake() {
         }
         auto offset = iterating_char - iterating_start;
         send_msg_to_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin + offset,
-                                  range.chrg.cpMax);
+                           range.chrg.cpMax);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
         send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
@@ -523,14 +523,14 @@ bool SpellChecker::get_word_under_cursor_is_right(long& pos, long& length,
 
     if (init_char_pos != -1) {
         auto line = send_msg_to_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
-                                              init_char_pos);
+                                       init_char_pos);
         auto line_length =
             send_msg_to_editor(get_current_scintilla(), SCI_LINELENGTH, line);
         std::vector<char> buf(line_length + 1);
         send_msg_to_editor(get_current_scintilla(), SCI_GETLINE, line, reinterpret_cast<LPARAM>(buf.data()));
         buf[line_length] = 0;
         auto offset = send_msg_to_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
-                                                line);
+                                         line);
         auto word = get_word_at(static_cast<long>(init_char_pos), buf.data(),
                                 static_cast<long>(offset));
         if (word.empty()) {
@@ -649,13 +649,13 @@ void SpellChecker::init_suggestions_box() {
     m_word_under_cursor_length = length;
     m_word_under_cursor_pos = pos;
     auto line = send_msg_to_editor(get_current_scintilla(), SCI_LINEFROMPOSITION,
-                                          m_word_under_cursor_pos);
+                                   m_word_under_cursor_pos);
     auto text_height =
         send_msg_to_editor(get_current_scintilla(), SCI_TEXTHEIGHT, line);
     auto x_pos = send_msg_to_editor(get_current_scintilla(), SCI_POINTXFROMPOSITION,
-                                           0, m_word_under_cursor_pos);
+                                    0, m_word_under_cursor_pos);
     auto y_pos = send_msg_to_editor(get_current_scintilla(), SCI_POINTYFROMPOSITION,
-                                           0, m_word_under_cursor_pos);
+                                    0, m_word_under_cursor_pos);
 
     p.x = static_cast<LONG>(x_pos);
     p.y = static_cast<LONG>(y_pos);
@@ -707,8 +707,8 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
                     m_current_speller->ignore_all(m_selected_word.c_str());
                     m_word_under_cursor_length = m_selected_word.length();
                     send_msg_to_editor(get_current_scintilla(), SCI_SETSEL,
-                                              m_word_under_cursor_pos + m_word_under_cursor_length,
-                                              m_word_under_cursor_pos + m_word_under_cursor_length);
+                                       m_word_under_cursor_pos + m_word_under_cursor_length,
+                                       m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
                 }
                 else if (result == MID_ADDTODICTIONARY) {
@@ -716,8 +716,8 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
                     m_current_speller->add_to_dictionary(m_selected_word.c_str());
                     m_word_under_cursor_length = m_selected_word.length();
                     send_msg_to_editor(get_current_scintilla(), SCI_SETSEL,
-                                              m_word_under_cursor_pos + m_word_under_cursor_length,
-                                              m_word_under_cursor_pos + m_word_under_cursor_length);
+                                       m_word_under_cursor_pos + m_word_under_cursor_length,
+                                       m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
                 }
                 else if ((unsigned int)result <= m_last_suggestions.size()) {
@@ -728,7 +728,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
                         ansi_str = m_last_suggestions[result - 1];
 
                     send_msg_to_editor(get_current_scintilla(), SCI_REPLACESEL, 0,
-                                              reinterpret_cast<LPARAM>(ansi_str.c_str()));
+                                       reinterpret_cast<LPARAM>(ansi_str.c_str()));
                 }
             }
         }
@@ -911,14 +911,14 @@ void SpellChecker::get_visible_limits(long& start, long& finish) {
     auto bottom = top + send_msg_to_editor(get_current_scintilla(), SCI_LINESONSCREEN
     );
     top = send_msg_to_editor(get_current_scintilla(), SCI_DOCLINEFROMVISIBLE,
-                                    top);
+                             top);
 
     bottom = send_msg_to_editor(get_current_scintilla(), SCI_DOCLINEFROMVISIBLE,
-                                       bottom);
+                                bottom);
     auto line_count =
         send_msg_to_editor(get_current_scintilla(), SCI_GETLINECOUNT);
     start = static_cast<long>(send_msg_to_editor(get_current_scintilla(), SCI_POSITIONFROMLINE,
-                                                        top));
+                                                 top));
     // Not using end of line position cause utf-8 symbols could be more than one
     // char
     // So we use next line start as the end of our visible text
@@ -1168,7 +1168,7 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
 
     if (m_hot_spot_cache[style] == -1) {
         m_hot_spot_cache[style] = send_msg_to_editor(get_current_scintilla(), SCI_STYLEGETHOTSPOT,
-                                                            style);
+                                                     style);
     }
 
     if (m_hot_spot_cache[style] == 1)
@@ -1205,20 +1205,20 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
             return true;
         }
         if (m_settings.ignore_having_a_capital || m_settings.ignore_all_capital) {
-            bool all_upper = IsCharUpper(ts[0]);
+            bool all_upper = IsCharUpper(ts[0]), any_upper = false;
             for (auto c : std::wstring_view(ts).substr(1)) {
                 if (IsCharUpper(c)) {
-                    if (m_settings.ignore_having_a_capital) {
-                        return true;
-                    }
+                    any_upper = true;
                 }
                 else
                     all_upper = false;
             }
 
-            if (all_upper && m_settings.ignore_all_capital) {
+            if (!all_upper && any_upper && m_settings.ignore_having_a_capital)
                 return true;
-            }
+
+            if (all_upper && m_settings.ignore_all_capital)
+                return true;
         }
     }
 
@@ -1308,7 +1308,7 @@ int SpellChecker::check_text(char* text_to_check, long offset,
             case CheckTextMode::find_first:
                 if (word_end > m_current_position) {
                     send_msg_to_editor(get_current_scintilla(), SCI_SETSEL, word_start,
-                                              word_end);
+                                       word_end);
                     stop = true;
                 }
                 break;
@@ -1360,7 +1360,7 @@ int SpellChecker::check_text(char* text_to_check, long offset,
             return false;
         else {
             send_msg_to_editor(get_current_scintilla(), SCI_SETSEL, resulting_word_start,
-                                      resulting_word_end);
+                               resulting_word_end);
             return true;
         }
     };
@@ -1441,7 +1441,7 @@ void SpellChecker::recheck_visible(bool not_intersection_only) {
     }
 
     int codepage_id = (int)send_msg_to_editor(get_current_scintilla(), SCI_GETCODEPAGE,
-                                                     0, 0);
+                                              0, 0);
     set_encoding_by_id(codepage_id); // For now it just changes should we convert it
     // to utf-8 or no
     if (check_text_needed())
