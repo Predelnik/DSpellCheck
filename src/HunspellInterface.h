@@ -90,7 +90,7 @@ public:
 
   void set_directory(const wchar_t* dir);
   void set_additional_directory(const wchar_t* dir);
-  static void read_user_dic(WordSet *target, const wchar_t* path);
+  static void read_user_dic(WordSet& target, const wchar_t* path);
   void set_use_one_dic(bool value);
   void update_on_dic_removal(wchar_t *path, bool &need_single_lang_reset,
                           bool &need_multi_lang_reset);

@@ -223,7 +223,7 @@ DicInfo* HunspellInterface::create_hunspell(const wchar_t* name, int type) {
     new_dic.back_converter_ansi = {"", dic_enconding};
     new_dic.local_dic_path += m_dic_dir + L"\\"s + name + L".usr";
 
-    read_user_dic(&new_dic.local_dic, new_dic.local_dic_path.c_str());
+    read_user_dic(new_dic.local_dic, new_dic.local_dic_path.c_str());
     {
         for (auto word : m_memorized) {
             auto conv_word = get_converted_word(word.c_str(), new_dic.converter.get());
@@ -333,7 +333,7 @@ bool HunspellInterface::check_word(const char* word) {
     return res;
 }
 
-void HunspellInterface::read_user_dic(WordSet* target, const wchar_t* path) {
+void HunspellInterface::read_user_dic(WordSet& target, const wchar_t* path) {
     int word_num = 0;
     FILE* fp = _wfopen(path, L"r");
     if (!fp) {
@@ -344,15 +344,11 @@ void HunspellInterface::read_user_dic(WordSet* target, const wchar_t* path) {
         if (fscanf(fp, "%d\n", &word_num) != 1) {
             return;
         }
-        for (int i = 0; i < word_num; i++) {
-            if (fgets(buf, DEFAULT_BUF_SIZE, fp)) {
-                buf[strlen(buf) - 1] = 0;
-                if (target->find(buf) == target->end()) {
-                    target->insert(buf);
-                }
+        while (fgets(buf, DEFAULT_BUF_SIZE, fp)) {
+            buf[strlen(buf) - 1] = 0;
+            if (target.find(buf) == target.end()) {
+                target.insert(buf);
             }
-            else
-                break;
         }
     }
 
@@ -363,7 +359,7 @@ void HunspellInterface::message_box_word_cannot_be_added() {
     MessageBox(
         m_npp_window, L"Sadly, this word contains symbols out of current dictionary "
         L"encoding, thus it cannot be added to user dictionary. You "
-        L"can convert this dictionary to UTF-8 or choose the "
+        L"can convert this dictionary to UTF-8 (don't forget to change the line `SET {encoding}` in .aff file) or choose the "
         L"different one with appropriate encoding.",
         L"Word cannot be added", MB_OK | MB_ICONWARNING);
 }
@@ -486,7 +482,7 @@ void HunspellInterface::set_directory(const wchar_t* dir) {
     if (m_user_dic_path.back() != L'\\')
         m_user_dic_path += L"\\";
     m_user_dic_path += L"UserDic.dic"; // Should be tunable really
-    read_user_dic(&m_memorized, m_user_dic_path.c_str()); // We should load user dictionary first.
+    read_user_dic(m_memorized, m_user_dic_path.c_str()); // We should load user dictionary first.
 
     m_dic_dir = dir;
 
@@ -536,7 +532,7 @@ void HunspellInterface::set_additional_directory(const wchar_t* dir) {
     if (m_system_wrong_dic_path.back() != L'\\')
         m_system_wrong_dic_path += L"\\";
     m_system_wrong_dic_path += L"UserDic.dic"; // Should be tunable really
-    read_user_dic(&m_memorized,
+    read_user_dic(m_memorized,
                   m_system_wrong_dic_path.c_str()); // We should load user dictionary first.
 }
 
