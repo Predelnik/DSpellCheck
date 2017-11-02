@@ -73,6 +73,14 @@ static std::vector<std::wstring> list_files(const wchar_t* path, const wchar_t* 
     return out;
 }
 
+std::string DicInfo::to_dictionary_encoding(std::wstring_view input) const {
+    return convert_impl<char>(converter, input);
+}
+
+std::wstring DicInfo::from_dictionary_encoding(std::string_view input) const {
+    return convert_impl<wchar_t>(converter, input);
+}
+
 HunspellInterface::HunspellInterface(HWND npp_window_arg): m_use_one_dic(false) {
     m_npp_window = npp_window_arg;
     m_singular_speller = {};
@@ -134,15 +142,15 @@ bool are_paths_equal(const wchar_t* path1, const wchar_t* path2) {
         bhfi1.nFileIndexLow == bhfi2.nFileIndexLow;
 }
 
-static void write_user_dic(WordSet* target, std::wstring path) {
+template <typename CharType>
+static void write_user_dic(const std::unordered_set<std::basic_string<CharType>>& target, std::wstring path) {
 
-    if (target->size() == 0) {
+    if (target.empty()) {
         SetFileAttributes(path.c_str(), FILE_ATTRIBUTE_NORMAL);
         DeleteFile(path.c_str());
         return;
     }
 
-    SortedWordSet temporary_sorted_word_set;
     // Wordset itself
     // being removed here as local variable, all strings are not copied
 
@@ -156,16 +164,12 @@ static void write_user_dic(WordSet* target, std::wstring path) {
     FILE* fp = _wfopen(path.c_str(), L"w");
     if (!fp)
         return;
-    {
-        fprintf(fp, "%zu\n", target->size());
-        for (auto word : *target) {
-            temporary_sorted_word_set.insert(word);
-        }
-    }
-    SortedWordSet::iterator it = temporary_sorted_word_set.begin();
-    for (; it != temporary_sorted_word_set.end(); ++it) {
-        fprintf(fp, "%s\n", it->c_str());
-    }
+
+    std::vector<std::basic_string<CharType>> words(target.begin(), target.end());
+    std::sort(words.begin(), words.end());
+    fprintf(fp, "%zu\n", target.size());
+    for (auto word : words)
+        fprintf(fp, sizeof (CharType) == 1 ? "%s\n" : "%ws\n", word.c_str());
 
     fclose(fp);
 }
@@ -180,18 +184,18 @@ HunspellInterface::~HunspellInterface() {
     }
 
     if (!m_user_dic_path.empty())
-        write_user_dic(&m_memorized, m_user_dic_path.c_str());
+        write_user_dic(m_memorized, m_user_dic_path.c_str());
     for (auto& p : m_all_hunspells) {
         auto& hs = p.second;
         if (!hs.local_dic_path.empty())
-            write_user_dic(&hs.local_dic, hs.local_dic_path);
+            write_user_dic(hs.local_dic, hs.local_dic_path);
     }
 }
 
 std::vector<LanguageInfo> HunspellInterface::get_language_list() const {
     std::vector<LanguageInfo> list;
     for (auto& dic : m_dic_list) {
-        list.emplace_back(dic.name, true, get_lang_only_system(dic.name.c_str ()));
+        list.emplace_back(dic.name, true, get_lang_only_system(dic.name.c_str()));
     }
     return list;
 }
@@ -219,14 +223,12 @@ DicInfo* HunspellInterface::create_hunspell(const wchar_t* name, int type) {
     // such failures
     new_dic.converter = {dic_enconding, "UTF-8"};
     new_dic.back_converter = {"UTF-8", dic_enconding};
-    new_dic.converter_ansi = {dic_enconding, ""};
-    new_dic.back_converter_ansi = {"", dic_enconding};
     new_dic.local_dic_path += m_dic_dir + L"\\"s + name + L".usr";
 
     read_user_dic(new_dic.local_dic, new_dic.local_dic_path.c_str());
     {
         for (auto word : m_memorized) {
-            auto conv_word = get_converted_word(word.c_str(), new_dic.converter.get());
+            auto conv_word = new_dic.to_dictionary_encoding(word);
             if (!conv_word.empty())
                 new_hunspell->add(conv_word.c_str()); // Adding all already memorized words to
             // newly loaded Hunspell instance
@@ -279,28 +281,28 @@ void HunspellInterface::set_multiple_languages(const std::vector<std::wstring>& 
     }
 }
 
-std::string HunspellInterface::get_converted_word(const char* source,
-                                                  iconv_t converter) {
+template <typename OutputCharType, typename InputCharType>
+std::basic_string<OutputCharType> DicInfo::convert_impl(const IconvWrapperT& conv,
+                                                        std::basic_string_view<InputCharType> input) const {
     static std::vector<char> buf;
-    buf.resize(strlen(source) * 6);
-    if (converter == iconv_t(-1)) {
+    buf.resize(input.length() * 4);
+    if (conv.get() == iconv_t(-1)) {
         buf.front() = '\0';
         return {};
     }
-    size_t in_size = strlen(source) + 1;
+    size_t in_size = (input.length() + 1) * sizeof (InputCharType);
     size_t out_size = DEFAULT_BUF_SIZE;
     char* out_buf = buf.data();
-    size_t res = iconv(converter, &source, &in_size, &out_buf, &out_size);
+    auto in_buf = input.data();
+    size_t res = iconv(conv.get(), reinterpret_cast<const char **>(&in_buf), &in_size, &out_buf, &out_size);
     if (res == (size_t)(-1)) {
         buf.front() = '\0';
     }
-    return buf.data();
+    return {reinterpret_cast<OutputCharType *>(buf.data())};
 }
 
-bool HunspellInterface::speller_check_word(const DicInfo& dic, const char* word,
-                                           EncodingType encoding) {
-    auto word_to_check = get_converted_word(
-        word, encoding == (EncodingType::utf8) ? dic.converter.get() : dic.converter_ansi.get());
+bool HunspellInterface::speller_check_word(const DicInfo& dic, const wchar_t* word) {
+    auto word_to_check = dic.to_dictionary_encoding(word);
     if (word_to_check.empty())
         return true;
     // No additional check for memorized is needed since all words are already in
@@ -309,14 +311,14 @@ bool HunspellInterface::speller_check_word(const DicInfo& dic, const char* word,
     return dic.hunspell->spell(word_to_check);
 }
 
-bool HunspellInterface::check_word(const char* word) {
+bool HunspellInterface::check_word(const wchar_t* word) {
     if (m_ignored.find(word) != m_ignored.end())
         return true;
 
     bool res = false;
     if (!m_multi_mode) {
         if (m_singular_speller)
-            res = speller_check_word(*m_singular_speller, word, m_current_encoding);
+            res = speller_check_word(*m_singular_speller, word);
         else
             res = true;
     }
@@ -325,7 +327,7 @@ bool HunspellInterface::check_word(const char* word) {
             return true;
 
         for (auto& speller : m_spellers) {
-            res = res || speller_check_word(*speller, word, m_current_encoding);
+            res = res || speller_check_word(*speller, word);
             if (res)
                 break;
         }
@@ -333,20 +335,28 @@ bool HunspellInterface::check_word(const char* word) {
     return res;
 }
 
-void HunspellInterface::read_user_dic(WordSet& target, const wchar_t* path) {
+template <typename CharType>
+void HunspellInterface::read_user_dic(std::unordered_set<std::basic_string<CharType>>& target, const wchar_t* path) {
     int word_num = 0;
     FILE* fp = _wfopen(path, L"r");
     if (!fp) {
         return;
     }
     {
-        char buf[DEFAULT_BUF_SIZE];
         if (fscanf(fp, "%d\n", &word_num) != 1) {
             return;
         }
-        while (fgets(buf, DEFAULT_BUF_SIZE, fp)) {
-            buf[strlen(buf) - 1] = 0;
-            if (target.find(buf) == target.end()) {
+        if constexpr (std::is_same_v<CharType, char>) {
+            char buf[DEFAULT_BUF_SIZE];
+            while (fgets(buf, DEFAULT_BUF_SIZE, fp)) {
+                buf[strlen(buf) - 1] = '\0';
+                target.insert(buf);
+            }
+        }
+        else {
+            wchar_t buf[DEFAULT_BUF_SIZE];
+            while (fgetws(buf, DEFAULT_BUF_SIZE, fp)) {
+                buf[wcslen(buf) - 1] = L'\0';
                 target.insert(buf);
             }
         }
@@ -364,7 +374,7 @@ void HunspellInterface::message_box_word_cannot_be_added() {
         L"Word cannot be added", MB_OK | MB_ICONWARNING);
 }
 
-void HunspellInterface::add_to_dictionary(const char* word) {
+void HunspellInterface::add_to_dictionary(const wchar_t* word) {
     if (!m_last_selected_speller)
         return;
 
@@ -411,16 +421,10 @@ void HunspellInterface::add_to_dictionary(const char* word) {
             _close(local_dic_file_handle);
     }
 
-    std::string buf;
-    if (m_current_encoding == EncodingType::utf8)
-        buf = word;
-    else
-        buf = utf8_to_string(word);
-
     if (m_use_one_dic) {
-        m_memorized.insert(buf);
+        m_memorized.insert(word);
         for (auto& p : m_all_hunspells) {
-            auto conv_word = get_converted_word(buf.c_str(), p.second.converter.get());
+            auto conv_word = p.second.to_dictionary_encoding(word);
             if (!conv_word.empty())
                 p.second.hunspell->add(conv_word.c_str());
             else if (p.second.hunspell == m_last_selected_speller->hunspell)
@@ -430,7 +434,7 @@ void HunspellInterface::add_to_dictionary(const char* word) {
         }
     }
     else {
-        auto conv_word = get_converted_word(buf.c_str(), m_last_selected_speller->converter.get());
+        auto conv_word = m_last_selected_speller->to_dictionary_encoding(word);
         m_last_selected_speller->local_dic.insert(conv_word);
         if (!conv_word.empty())
             m_last_selected_speller->hunspell->add(conv_word.c_str());
@@ -439,29 +443,23 @@ void HunspellInterface::add_to_dictionary(const char* word) {
     }
 }
 
-void HunspellInterface::ignore_all(const char* word) {
+void HunspellInterface::ignore_all(const wchar_t* word) {
     if (!m_last_selected_speller)
         return;
 
     m_ignored.insert(word);
 }
 
-std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
+std::vector<std::wstring> HunspellInterface::get_suggestions(const wchar_t* word) {
     std::vector<std::string> list;
     m_last_selected_speller = m_singular_speller;
 
     if (!m_multi_mode) {
-        list = m_singular_speller->hunspell->suggest(get_converted_word(word, (m_current_encoding == EncodingType::utf8)
-                                                                                  ? m_singular_speller->converter.get()
-                                                                                  : m_singular_speller->converter_ansi.
-                                                                                                        get()));
+        list = m_singular_speller->hunspell->suggest(m_singular_speller->to_dictionary_encoding(word));
     }
     else {
         for (auto speller : m_spellers) {
-            auto cur_list = speller->hunspell->suggest(get_converted_word(
-                word, (m_current_encoding == EncodingType::utf8)
-                          ? speller->converter.get()
-                          : speller->converter_ansi.get()).c_str());
+            auto cur_list = speller->hunspell->suggest(speller->to_dictionary_encoding(word));
             if (cur_list.size() > list.size()) {
                 list = std::move(cur_list);
                 m_last_selected_speller = speller;
@@ -469,15 +467,17 @@ std::vector<std::string> HunspellInterface::get_suggestions(const char* word) {
         }
     }
 
-    std::vector<std::string> sugg_list(list.size());
+    std::vector<std::wstring> sugg_list(list.size());
     std::transform(list.begin(), list.end(), sugg_list.begin(), [this](const std::string& s)
     {
-        return get_converted_word(s.c_str(), m_last_selected_speller->back_converter.get());
+        return m_last_selected_speller->from_dictionary_encoding(s);
     });
     return sugg_list;
 }
 
 void HunspellInterface::set_directory(const wchar_t* dir) {
+    if (!dir || !*dir)
+       return;
     m_user_dic_path = dir;
     if (m_user_dic_path.back() != L'\\')
         m_user_dic_path += L"\\";

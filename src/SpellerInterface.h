@@ -32,11 +32,11 @@ public:
   const std::vector<std::wstring>& list) = 0;         // Languages are from LangList
   void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
   void set_encoding(EncodingType encoding) { m_current_encoding = encoding; }
-  virtual bool check_word(const char* word) = 0; // Word in Utf-8 or ANSI
+  virtual bool check_word(const wchar_t* word) = 0; // Word in Utf-8 or ANSI
   // returned suggestions should be in utf-8
-  virtual std::vector<std::string> get_suggestions(const char* word) = 0;
-  virtual void add_to_dictionary(const char* word) = 0;
-  virtual void ignore_all(const char* word) = 0;
+  virtual std::vector<std::wstring> get_suggestions(const wchar_t* word) = 0;
+  virtual void add_to_dictionary(const wchar_t* word) = 0;
+  virtual void ignore_all(const wchar_t* word) = 0;
   virtual bool is_working() const = 0;
 
 protected:

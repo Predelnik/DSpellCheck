@@ -94,7 +94,6 @@ class AdvancedDlg : public StaticDialog {
 public:
     explicit AdvancedDlg (const Settings &settings);
     void apply_settings(Settings& settings);
-    void fill_delimiters(const char* delimiters);
     void set_delimeters_edit(const wchar_t* delimiters);
     void set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg,
                              bool remove_single_apostrophe);

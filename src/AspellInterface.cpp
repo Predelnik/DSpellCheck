@@ -104,16 +104,10 @@ void AspellInterface::set_multiple_languages(const std::vector<std::wstring>& li
     }
 }
 
-std::vector<std::string> AspellInterface::get_suggestions(const char* word) {
+std::vector<std::wstring> AspellInterface::get_suggestions(const wchar_t* word) {
     const AspellWordList* word_list = nullptr;
-    std::string target_word;
+    auto target_word = to_utf8_string(word);
 
-    if (m_current_encoding == EncodingType::utf8)
-        target_word = word;
-    else
-        target_word = to_utf8_string(word);
-
-    std::vector<std::string> sugg_list;
     if (!m_multi_mode) {
         m_last_selected_speller = m_single_speller.get();
         word_list = aspell_speller_suggest(m_single_speller.get(), target_word.c_str(), -1);
@@ -137,20 +131,15 @@ std::vector<std::string> AspellInterface::get_suggestions(const char* word) {
     AspellStringEnumeration* els = aspell_word_list_elements(word_list);
     const char* suggestion;
 
+    std::vector<std::wstring> sugg_list;
     while ((suggestion = aspell_string_enumeration_next(els)) != nullptr) {
-        sugg_list.push_back(suggestion);
+        sugg_list.push_back(utf8_to_wstring (suggestion));
     }
     return sugg_list;
 }
 
-void AspellInterface::add_to_dictionary(const char* word) {
-    std::string target_word;
-
-    if (m_current_encoding == EncodingType::utf8)
-        target_word = word;
-    else
-        target_word = to_utf8_string(word);
-
+void AspellInterface::add_to_dictionary(const wchar_t* word) {
+    auto target_word = to_utf8_string(word);;
     if (!m_last_selected_speller)
         return;
     aspell_speller_add_to_personal(m_last_selected_speller, target_word.c_str(),
@@ -165,17 +154,11 @@ void AspellInterface::add_to_dictionary(const char* word) {
 
 }
 
-void AspellInterface::ignore_all(const char* word) {
+void AspellInterface::ignore_all(const wchar_t* word) {
     if (!m_last_selected_speller)
         return;
 
-    std::string target_word;
-
-    if (m_current_encoding == EncodingType::utf8)
-        target_word = word;
-    else
-        target_word = to_utf8_string(word);
-
+    std::string target_word = to_utf8_string(word);
     aspell_speller_add_to_session(m_last_selected_speller, target_word.c_str(),
                                   static_cast<int>(target_word.length()) + 1);
     aspell_speller_save_all_word_lists(m_last_selected_speller);
@@ -189,16 +172,12 @@ void AspellInterface::set_allow_run_together(bool allow) {
     m_allow_run_together = allow;
 }
 
-bool AspellInterface::check_word(const char* word) {
+bool AspellInterface::check_word(const wchar_t* word) {
     if (!m_aspell_loaded)
         return true;
 
-    std::string dst_word;
     bool res = false;
-    if (m_current_encoding == EncodingType::utf8)
-        dst_word = word;
-    else
-        dst_word = to_utf8_string(word);
+    auto dst_word = to_utf8_string(word);
 
     auto len = static_cast<int>(dst_word.length());
     if (!m_multi_mode) {

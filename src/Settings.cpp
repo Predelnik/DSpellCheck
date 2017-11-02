@@ -112,7 +112,7 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"Hunspell_Multiple_Languages", hunspell_multi_languages, L"");
     worker.process(L"Aspell_Language", aspell_language, L"en");
     worker.process(L"Hunspell_Language", hunspell_language, L"en_GB");
-    worker.process_utf8(L"Delimiters", delim_utf8, to_utf8_string(default_delimiters).c_str(), true);
+    worker.process(L"Delimiters", delimiters, default_delimiters, true);
     worker.process(L"Suggestions_Number", suggestion_count, 5);
     worker.process(L"Ignore_Yo", ignore_yo, false);
     worker.process(L"Convert_Single_Quotes_To_Apostrophe", convert_single_quotes, true);

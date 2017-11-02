@@ -36,11 +36,11 @@ public:
   void set_multiple_languages(
       const std::vector<std::wstring>& list) override; // Languages are from LangList
   bool
-  check_word(const char* word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
+  check_word(const wchar_t* word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
   bool is_working() const override;
-  std::vector<std::string> get_suggestions(const char* word) override;
-  void add_to_dictionary(const char* word) override;
-  void ignore_all(const char* word) override;
+    std::vector<std::wstring> get_suggestions(const wchar_t* word) override;
+  void add_to_dictionary(const wchar_t* word) override;
+  void ignore_all(const wchar_t* word) override;
   void set_allow_run_together (bool allow);
 
   bool init(const wchar_t* path_arg);

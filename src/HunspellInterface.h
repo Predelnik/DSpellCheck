@@ -28,8 +28,6 @@ class LanguageInfo;
 
 class Hunspell;
 
-using WordSet = std::unordered_set<std::string>;
-using SortedWordSet = std::set<std::string>;
 class IconvWrapperT {
     static void close_iconv (iconv_t conv)
     {
@@ -59,11 +57,16 @@ struct DicInfo {
   std::unique_ptr<Hunspell> hunspell;
   IconvWrapperT converter;
   IconvWrapperT back_converter;
-  IconvWrapperT converter_ansi;
-  IconvWrapperT back_converter_ansi;
   std::wstring local_dic_path;
-  WordSet local_dic; // Stored in Dictionary encoding
+  std::unordered_set<std::string> local_dic; // Stored in Dictionary encoding
+  std::string to_dictionary_encoding (std::wstring_view input) const;
+  std::wstring from_dictionary_encoding (std::string_view input) const;
+private:
+  template <typename CharType, typename InputCharType>
+  std::basic_string<CharType> convert_impl (const IconvWrapperT& conv, std::basic_string_view<InputCharType> input) const;
 };
+
+
 
 struct AvailableLangInfo {
   std::wstring name;
@@ -82,23 +85,24 @@ public:
   void set_language(const wchar_t* lang) override;
   void set_multiple_languages(
       const std::vector<std::wstring>& list) override;             // Languages are from LangList
-  bool check_word(const char* word) override; // Word in Utf-8 or ANSI
+  bool check_word(const wchar_t* word) override; // Word in Utf-8 or ANSI
   bool is_working() const override;
-  std::vector<std::string> get_suggestions(const char* word) override;
-  void add_to_dictionary(const char* word) override;
-  void ignore_all(const char* word) override;
+    std::vector<std::wstring> get_suggestions(const wchar_t* word) override;
+  void add_to_dictionary(const wchar_t* word) override;
+  void ignore_all(const wchar_t* word) override;
 
   void set_directory(const wchar_t* dir);
   void set_additional_directory(const wchar_t* dir);
-  static void read_user_dic(WordSet& target, const wchar_t* path);
   void set_use_one_dic(bool value);
   void update_on_dic_removal(wchar_t *path, bool &need_single_lang_reset,
                           bool &need_multi_lang_reset);
   bool get_lang_only_system(const wchar_t* lang) const;
 
 private:
+  template <typename CharType>
+  static void read_user_dic(std::unordered_set<std::basic_string<CharType>>& target, const wchar_t* path);
   DicInfo* create_hunspell(const wchar_t* name, int type);
-    static bool speller_check_word(const DicInfo& dic, const char* word, EncodingType encoding);
+  static bool speller_check_word(const DicInfo& dic, const wchar_t* word);
   void message_box_word_cannot_be_added();
 
 private:
@@ -108,12 +112,11 @@ private:
   std::wstring m_sys_dic_dir;
   std::set<AvailableLangInfo> m_dic_list;
   std::map<std::wstring, DicInfo> m_all_hunspells;
-    static std::string get_converted_word(const char* source, iconv_t converter);
   DicInfo *m_singular_speller;
   DicInfo *m_last_selected_speller;
   std::vector<DicInfo *> m_spellers;
-  WordSet m_memorized;
-  WordSet m_ignored;
+  std::unordered_set<std::wstring> m_memorized;
+  std::unordered_set<std::wstring> m_ignored;
   std::wstring m_user_dic_path;        // For now only default one.
   std::wstring m_system_wrong_dic_path; // Only for reading and then removing
   HWND m_npp_window;

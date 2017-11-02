@@ -54,7 +54,7 @@ public:
     SuggestionMode suggestions_mode = SuggestionMode::button;
     std::wstring aspell_language;
     std::wstring hunspell_language;
-    std::string delim_utf8;
+    std::wstring delimiters;
     int suggestion_count = 0;
     bool ignore_yo = false;
     bool convert_single_quotes = false;

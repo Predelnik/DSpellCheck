@@ -38,6 +38,29 @@ static std::vector<char> convert(const char* source_enc, const char* target_enc,
     return buf;
 }
 
+MappedWstring utf8_to_mapped_wstring(std::string_view str) {
+   ptrdiff_t len = str.length ();
+   std::vector<wchar_t> buf;
+   std::vector<size_t> mapping;
+   buf.reserve (len);
+   mapping.reserve (len);
+   auto it = str.data ();
+   size_t char_cnt = 1;
+   while (it - str.data () < len) {
+      auto next = utf8_inc(it);
+      buf.resize (char_cnt);
+      MultiByteToWideChar(CP_UTF8, 0, it, static_cast<int> (next - it), buf.data () + char_cnt - 1, 1);
+      mapping.push_back (it - str.data ());
+      ++char_cnt;
+      it = next;
+   }
+   return {std::wstring {buf.begin (), buf.end ()}, std::move (mapping)};
+}
+
+MappedWstring to_mapped_wstring(std::string_view str) {
+   return {to_wstring (str), {}};
+}
+
 std::wstring to_wstring(std::string_view source) {
     auto bytes = convert("CHAR", "UCS-2LE//IGNORE", source.data(), source.length(),
                          sizeof(wchar_t) * (source.length() + 1));

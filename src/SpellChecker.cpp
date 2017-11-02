@@ -107,7 +107,6 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
     m_aspell_speller = std::make_unique<AspellInterface>(m_npp_data_instance->npp_handle);
     m_hunspell_speller = std::make_unique<HunspellInterface>(m_npp_data_instance->npp_handle);
     m_current_speller = m_aspell_speller.get();
-    prepare_string_for_conversion();
     reset_hot_spot_cache();
     m_settings_loaded = false;
     m_settings.settings_changed.connect([this] { on_settings_changed(); });
@@ -121,27 +120,6 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
         set_context_menu_id_start(id);
         set_langs_menu_id_start(id + 103);
     }
-}
-
-static const char yo_capital[] = "\xd0\x81";
-static const char ye_capital[] = "\xd0\x95";
-static const char yo[] = "\xd1\x91";
-static const char ye[] = "\xd0\xb5";
-static const char punctuation_apostrophe[] = "\xe2\x80\x99";
-
-void SpellChecker::prepare_string_for_conversion() {
-    iconv_t conv = iconv_open("CHAR", "UTF-8");
-    const char* in_string[] = {yo_capital, yo, ye_capital, ye, punctuation_apostrophe};
-    std::string* out_string[] = {
-        &m_yo_capital_ansi, &m_yo_ansi, &m_ye_capital_ansi, &m_ye_ansi, &m_punctuation_apostrophe_ansi
-    };
-
-    int i = 0;
-    for (auto str : in_string) {
-        *out_string[i] = to_utf8_string(str);
-        ++i;
-    }
-    iconv_close(conv);
 }
 
 SpellChecker::~SpellChecker() {
@@ -392,7 +370,7 @@ void SpellChecker::find_next_mistake() {
         scn.nmhdr.code = SCN_SCROLLED;
         send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
         // To fix bug with hotspots being removed
-        bool result = check_text(range.lpstrText, static_cast<long>(iterator_pos), CheckTextMode::find_first);
+        bool result = check_text(to_mapped_wstring(range.lpstrText), static_cast<long>(iterator_pos), CheckTextMode::find_first);
         if (result)
             break;
 
@@ -462,7 +440,7 @@ void SpellChecker::find_prev_mistake() {
         scn.nmhdr.code = SCN_SCROLLED;
         send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
 
-        bool result = check_text(range.lpstrText + offset,
+        bool result = check_text(to_mapped_wstring (range.lpstrText + offset),
                                  static_cast<long>(range.chrg.cpMin + offset), CheckTextMode::find_last);
         if (result)
             break;
@@ -537,16 +515,17 @@ bool SpellChecker::get_word_under_cursor_is_right(long& pos, long& length,
             ret = true;
         }
         else {
-            std::string_view sv = word;
+            auto mapped_str = to_mapped_wstring(word);
+            auto sv = std::wstring_view (mapped_str.str);
             cut_apostrophes(sv);
-            pos = static_cast<long>(sv.data() - buf.data() + offset);
+            pos = static_cast<long>(sv.data() - mapped_str.str.data() + offset);
             long pos_end = pos + static_cast<long>(sv.length());
             long word_len = pos_end - pos;
             if (selection_start != selection_end &&
                 (selection_start != pos || selection_end != pos + word_len)) {
                 return true;
             }
-            if (check_word(std::string(sv), pos, pos + word_len - 1)) {
+            if (check_word(mapped_str.str, pos, pos + word_len - 1)) {
                 ret = true;
             }
             else {
@@ -703,32 +682,32 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
 
             if (result != 0) {
                 if (result == MID_IGNOREALL) {
-                    apply_conversions(m_selected_word);
-                    m_current_speller->ignore_all(m_selected_word.c_str());
-                    m_word_under_cursor_length = m_selected_word.length();
+                    apply_conversions(m_selected_word.str);
+                    m_current_speller->ignore_all(m_selected_word.str.c_str());
+                    m_word_under_cursor_length = m_selected_word.str.length();
                     send_msg_to_editor(get_current_scintilla(), SCI_SETSEL,
                                        m_word_under_cursor_pos + m_word_under_cursor_length,
                                        m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
                 }
                 else if (result == MID_ADDTODICTIONARY) {
-                    apply_conversions(m_selected_word);
-                    m_current_speller->add_to_dictionary(m_selected_word.c_str());
-                    m_word_under_cursor_length = m_selected_word.length();
+                    apply_conversions(m_selected_word.str);
+                    m_current_speller->add_to_dictionary(m_selected_word.str.c_str());
+                    m_word_under_cursor_length = m_selected_word.str.length();
                     send_msg_to_editor(get_current_scintilla(), SCI_SETSEL,
                                        m_word_under_cursor_pos + m_word_under_cursor_length,
                                        m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
                 }
                 else if ((unsigned int)result <= m_last_suggestions.size()) {
-                    std::string ansi_str;
+                    std::string encoded_str;
                     if (m_current_encoding == EncodingType::ansi)
-                        ansi_str = utf8_to_string(m_last_suggestions[result - 1].c_str());
+                        encoded_str = to_string(m_last_suggestions[result - 1].c_str());
                     else
-                        ansi_str = m_last_suggestions[result - 1];
+                        encoded_str = to_utf8_string(m_last_suggestions[result - 1]);
 
                     send_msg_to_editor(get_current_scintilla(), SCI_REPLACESEL, 0,
-                                       reinterpret_cast<LPARAM>(ansi_str.c_str()));
+                                       reinterpret_cast<LPARAM>(encoded_str.c_str()));
                 }
             }
         }
@@ -778,20 +757,20 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
     std::vector<SuggestionsMenuItem> suggestion_menu_items;
     send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
 
-    m_selected_word = range.lpstrText;
-    apply_conversions(m_selected_word);
+    m_selected_word = to_mapped_wstring (range.lpstrText);
+    apply_conversions(m_selected_word.str);
 
-    m_last_suggestions = m_current_speller->get_suggestions(m_selected_word.c_str());
+    m_last_suggestions = m_current_speller->get_suggestions(m_selected_word.str.c_str ());
 
     for (int i = 0; i < static_cast<int>(m_last_suggestions.size()); i++) {
         if (i >= m_settings.suggestion_count)
             break;
 
-        auto item = utf8_to_wstring(m_last_suggestions[i].c_str());
+        auto item = m_last_suggestions[i].c_str ();
         if (m_settings.suggestions_mode == SuggestionMode::button)
-            insert_sugg_menu_item(menu, item.c_str(), static_cast<BYTE>(i + 1), -1);
+            insert_sugg_menu_item(menu, item, static_cast<BYTE>(i + 1), -1);
         else
-            suggestion_menu_items.emplace_back(item.c_str(), static_cast<BYTE>(i + 1));
+            suggestion_menu_items.emplace_back(item, static_cast<BYTE>(i + 1));
     }
 
     if (!m_last_suggestions.empty()) {
@@ -801,19 +780,14 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
             suggestion_menu_items.emplace_back(L"", 0, true);
     }
 
-    std::string buf_utf8;
-    if (m_current_encoding == EncodingType::utf8)
-        buf_utf8 = range.lpstrText;
-    else
-        buf_utf8 = to_utf8_string(range.lpstrText);
-    apply_conversions(buf_utf8);
-    auto item = utf8_to_wstring(buf_utf8.c_str());
-    auto menu_string = wstring_printf(L"Ignore \"%s\" for Current Session", item.c_str());
+    auto mapped_str = to_mapped_wstring(range.lpstrText);
+    apply_conversions(mapped_str.str);
+    auto menu_string = wstring_printf(L"Ignore \"%s\" for Current Session", mapped_str.str.c_str());
     if (m_settings.suggestions_mode == SuggestionMode::button)
         insert_sugg_menu_item(menu, menu_string.c_str(), MID_IGNOREALL, -1);
     else
         suggestion_menu_items.emplace_back(menu_string.c_str(), MID_IGNOREALL);
-    menu_string = wstring_printf(L"Add \"%s\" to Dictionary", item.c_str());;
+    menu_string = wstring_printf(L"Add \"%s\" to Dictionary", mapped_str.str.c_str());;
     if (m_settings.suggestions_mode == SuggestionMode::button)
         insert_sugg_menu_item(menu, menu_string.c_str(), MID_ADDTODICTIONARY, -1);
     else
@@ -867,7 +841,6 @@ void SpellChecker::on_settings_changed() {
     m_settings_loaded = true;
     update_aspell_language_options();
     update_hunspell_language_options();
-    update_delimiters();
     m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
     m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
     m_aspell_speller->init(m_settings.aspell_path.c_str());
@@ -933,7 +906,7 @@ void SpellChecker::get_visible_limits(long& start, long& finish) {
     return;
 }
 
-std::vector<char> SpellChecker::get_visible_text(long* offset, bool not_intersection_only) {
+MappedWstring SpellChecker::get_visible_text(long* offset, bool not_intersection_only) {
     Sci_TextRange range;
     get_visible_limits(range.chrg.cpMin, range.chrg.cpMax);
 
@@ -955,7 +928,7 @@ std::vector<char> SpellChecker::get_visible_text(long* offset, bool not_intersec
     send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, NULL, reinterpret_cast<LPARAM>(&range));
     *offset = range.chrg.cpMin;
     buf[range.chrg.cpMax - range.chrg.cpMin] = 0;
-    return buf;
+    return to_mapped_wstring(buf.data());
 }
 
 void SpellChecker::clear_all_underlines() {
@@ -1074,13 +1047,6 @@ void SpellChecker::update_hunspell_language_options() {
     }
 }
 
-// Here parameter is in UTF-8
-void SpellChecker::update_delimiters() {
-    m_delim_utf8_converted = to_utf8_string(
-        (parse_string(utf8_to_wstring(m_settings.delim_utf8.c_str()).c_str()) + L" \n\r\t\v").c_str());
-    m_delim_converted = utf8_to_string(m_delim_utf8_converted.c_str());
-}
-
 void SpellChecker::set_multiple_languages(std::wstring_view multi_string,
                                           SpellerInterface* speller) {
     std::vector<std::wstring> multi_lang_list;
@@ -1122,34 +1088,18 @@ void SpellChecker::update_suggestion_box() {
 }
 
 void SpellChecker::apply_conversions(
-    std::string& word) // In Utf-8, Maybe shortened during conversion
-{
-    const char* convert_from[3];
-    const char* convert_to[3];
-    int apply[3] = {m_settings.ignore_yo, m_settings.ignore_yo, m_settings.convert_single_quotes};
-
-    if (m_current_encoding == EncodingType::ansi) {
-        convert_from[0] = m_yo_capital_ansi.c_str();
-        convert_from[1] = m_yo_ansi.c_str();
-        convert_from[2] = m_punctuation_apostrophe_ansi.c_str();
-        convert_to[0] = m_ye_capital_ansi.c_str();
-        convert_to[1] = m_ye_ansi.c_str();
-        convert_to[2] = "\'";
-    }
-    else {
-        convert_from[0] = yo_capital;
-        convert_from[1] = yo;
-        convert_from[2] = punctuation_apostrophe;
-        convert_to[0] = ye_capital;
-        convert_to[1] = ye;
-        convert_to[2] = "\'";
-    }
-
-    static_assert (COUNTOF (convert_from) == COUNTOF (convert_to));
-    for (int i = 0; i < static_cast<int>(COUNTOF (convert_from)); ++i) {
-        if (!apply[i])
-            continue;
-        replace_all(word, convert_from[i], convert_to[i]);
+    std::wstring& word) {
+    for (auto& c : word) {
+        if (m_settings.ignore_yo) {
+            if (c == L'¸')
+                c = L'å';
+            if (c == L'¨')
+                c = L'¸';
+        }
+        if (m_settings.convert_single_quotes) {
+            if (c == L'’')
+                c = L'\'';
+        }
     }
 }
 
@@ -1157,7 +1107,7 @@ void SpellChecker::reset_hot_spot_cache() {
     memset(m_hot_spot_cache, -1, sizeof(m_hot_spot_cache));
 }
 
-bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
+bool SpellChecker::check_word(std::wstring word, long start, long /*End*/) {
     if (!m_current_speller->is_working() || word.empty())
         return true;
     // Well Numbers have same codes for ANSI and Unicode I guess, so
@@ -1176,8 +1126,7 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
 
     apply_conversions(word);
 
-    auto symbols_num =
-        (m_current_encoding == EncodingType::utf8) ? utf8_length(word.c_str()) : word.length();
+    auto symbols_num = word.length();
     if (symbols_num == 0) {
         return true;
     }
@@ -1187,26 +1136,19 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
     }
 
     if (m_settings.ignore_containing_digit &&
-        (m_current_encoding == EncodingType::utf8
-             ? utf8_pbrk(word.c_str(), "0123456789")
-             : strpbrk(word.c_str(), "0123456789")) != nullptr) // Same for UTF-8 and not
+        wcspbrk(word.c_str(), L"0123456789") != nullptr) // Same for UTF-8 and not
     {
         return true;
     }
 
     if (m_settings.ignore_starting_with_capital || m_settings.ignore_having_a_capital || m_settings.ignore_all_capital
     ) {
-        std::wstring ts;
-        if (m_current_encoding == EncodingType::utf8)
-            ts = utf8_to_wstring(word.c_str());
-        else
-            ts = to_wstring(word.c_str());
-        if (m_settings.ignore_starting_with_capital && IsCharUpper(ts[0])) {
+        if (m_settings.ignore_starting_with_capital && IsCharUpper(word.front ())) {
             return true;
         }
         if (m_settings.ignore_having_a_capital || m_settings.ignore_all_capital) {
-            bool all_upper = IsCharUpper(ts[0]), any_upper = false;
-            for (auto c : std::wstring_view(ts).substr(1)) {
+            bool all_upper = IsCharUpper(word.front()), any_upper = false;
+            for (auto c : std::wstring_view(word).substr(1)) {
                 if (IsCharUpper(c)) {
                     any_upper = true;
                 }
@@ -1222,7 +1164,7 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
         }
     }
 
-    if (m_settings.ignore_having_underscore && strchr(word.c_str(), '_') != nullptr)
+    if (m_settings.ignore_having_underscore && wcschr(word.c_str(), L'_') != nullptr)
         // I guess the same for UTF-8 and ANSI
     {
         return true;
@@ -1240,12 +1182,12 @@ bool SpellChecker::check_word(std::string word, long start, long /*End*/) {
     return res;
 }
 
-void SpellChecker::cut_apostrophes(std::string_view& word) {
+void SpellChecker::cut_apostrophes(std::wstring_view& word) {
     if (m_settings.remove_boundary_apostrophes) {
-        while (!word.empty() && word.front() == '\'')
+        while (!word.empty() && word.front() == L'\'')
             word.remove_prefix(1);
 
-        while (!word.empty() && word.back() == '\'')
+        while (!word.empty() && word.back() == L'\'')
             word.remove_suffix(1);
     }
 }
@@ -1271,9 +1213,9 @@ std::vector<LanguageInfo> SpellChecker::get_available_languages() const {
     return langs;
 }
 
-int SpellChecker::check_text(char* text_to_check, long offset,
-                             CheckTextMode mode) {
-    if (!text_to_check || !*text_to_check) {
+int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
+                             CheckTextMode mode, size_t skip_chars) {
+    if (text_to_check.str.empty()) {
         return check_text_default_answer(mode);
     }
 
@@ -1281,25 +1223,23 @@ int SpellChecker::check_text(char* text_to_check, long offset,
     send_msg_to_editor(scintilla_window, SCI_GETINDICATORCURRENT);
     bool stop = false;
     long resulting_word_end = -1, resulting_word_start = -1;
-    auto text_len = strlen(text_to_check);
+    auto text_len = text_to_check.str.length();
     std::vector<long> underline_buffer;
     long word_start = 0;
     long word_end = 0;
 
-    std::vector<std::string_view> tokens;
-    if (m_current_encoding == EncodingType::utf8)
-        tokens = tokenize_utf8(text_to_check, m_delim_utf8_converted);
-    else
-        tokens = tokenize<char>(text_to_check, m_delim_converted);
+    auto sv = std::wstring_view (text_to_check.str);
+    sv.remove_prefix(skip_chars);
+    auto tokens = tokenize<wchar_t>(sv, m_settings.delimiters);
 
     for (auto token : tokens) {
         cut_apostrophes(token);
-        word_start = offset + static_cast<long>(token.data() - text_to_check);
-        word_end = offset + static_cast<long>(token.data() - text_to_check + token.length());
+        word_start = static_cast<long> (offset + text_to_check.get_original_index(token.data() - text_to_check.str.data()));
+        word_end = static_cast<long> (word_start + token.length());
         if (word_end < word_start)
             continue;
 
-        if (!check_word(std::string(token), word_start, word_end)) {
+        if (!check_word(std::wstring(token), word_start, word_end)) {
             switch (mode) {
             case CheckTextMode::underline_errors:
                 underline_buffer.push_back(word_start);
@@ -1379,8 +1319,8 @@ void SpellChecker::clear_visible_underlines() {
 }
 
 void SpellChecker::check_visible(bool not_intersection_only) {
-    m_visible_text = get_visible_text(&m_visible_text_offset, not_intersection_only);
-    check_text(m_visible_text.data(), m_visible_text_offset, CheckTextMode::underline_errors);
+    check_text(get_visible_text(&m_visible_text_offset, not_intersection_only), m_visible_text_offset,
+               CheckTextMode::underline_errors);
 }
 
 void SpellChecker::set_encoding_by_id(int enc_id) {
@@ -1429,10 +1369,16 @@ void SpellChecker::recheck_modified() {
     range.lpstrText = buf.data();
     send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, (LPARAM)&range);
 
-    check_text(range.lpstrText, static_cast<long>(first_possibly_modified_pos),
+    check_text(to_mapped_wstring(range.lpstrText), static_cast<long>(first_possibly_modified_pos),
                CheckTextMode::underline_errors);
 }
 
+MappedWstring SpellChecker::to_mapped_wstring(std::string_view str) {
+    if (m_current_encoding == EncodingType::utf8)
+        return utf8_to_mapped_wstring(str);
+    else
+        return to_mapped_wstring(str);
+}
 
 void SpellChecker::recheck_visible(bool not_intersection_only) {
     if (!m_current_speller->is_working()) {
@@ -1463,14 +1409,14 @@ void SpellChecker::copy_misspellings_to_clipboard() {
 
     std::vector<char> buf(length_doc);
     send_msg_to_editor(get_current_scintilla(), SCI_GETTEXT, length_doc, reinterpret_cast<LPARAM>(buf.data()));
-
+    auto mapped_str = to_mapped_wstring(buf.data ());
     int res = 0;
-    std::string str; // Yay for first use of std::stirng
+    std::wstring str;
     do {
-        res = check_text(buf.data() + res, res, CheckTextMode::get_first);
+        res = check_text(mapped_str, res, CheckTextMode::get_first);
         if (res != -1) {
-            str += std::string(buf.data() + res);
-            str += "\n";
+            str += mapped_str.str.data() + res;
+            str += L"\n";
         }
         else
             break;
@@ -1485,21 +1431,9 @@ void SpellChecker::copy_misspellings_to_clipboard() {
             break;
     }
     while (true);
-
-    std::wstring wchar_str;
-
-    switch (m_current_encoding) {
-    case EncodingType::utf8:
-        wchar_str = utf8_to_wstring(str.c_str());
-        break;
-    case EncodingType::ansi:
-        wchar_str = to_wstring(str.c_str());
-        break;
-    }
-
-    const size_t len = (wchar_str.length() + 1) * 2;
+    const size_t len = (str.length() + 1) * 2;
     HGLOBAL h_mem = GlobalAlloc(GMEM_MOVEABLE, len);
-    memcpy(GlobalLock(h_mem), wchar_str.c_str(), len);
+    memcpy(GlobalLock(h_mem), str.c_str(), len);
     GlobalUnlock(h_mem);
     OpenClipboard(nullptr);
     EmptyClipboard();

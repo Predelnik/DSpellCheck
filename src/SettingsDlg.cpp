@@ -503,9 +503,6 @@ void AdvancedDlg::set_underline_settings(int color, int style) {
     ComboBox_SetCurSel(m_h_underline_style, style);
 }
 
-void AdvancedDlg::fill_delimiters(const char* delimiters) {
-    Edit_SetText(m_h_edit_delimiters, utf8_to_wstring (delimiters).c_str ());
-}
 
 void AdvancedDlg::set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg,
                                       bool remove_boundary_apostrophes) {
@@ -544,7 +541,7 @@ void AdvancedDlg::set_buffer_size(int size) {
 }
 
 void AdvancedDlg::update_controls(const Settings& settings) {
-    fill_delimiters(settings.delim_utf8.c_str());
+    Edit_SetText(m_h_edit_delimiters, settings.delimiters.c_str ());
     set_recheck_delay(settings.recheck_delay);
     set_conversion_opts(
         settings.ignore_yo, settings.convert_single_quotes, settings.remove_boundary_apostrophes);
@@ -746,7 +743,7 @@ AdvancedDlg::AdvancedDlg(const Settings& settings) : m_settings(settings) {
 }
 
 void AdvancedDlg::apply_settings(Settings& settings) {
-    settings.delim_utf8 = to_utf8_string(get_edit_text(m_h_edit_delimiters).c_str());
+    settings.delimiters = get_edit_text(m_h_edit_delimiters);
     settings.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
     settings.convert_single_quotes = Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
     settings.remove_boundary_apostrophes = Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED;

@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MainDef.h"
 #include "lsignal.h"
+#include "CommonFunctions.h"
 
 class Settings;
 struct AspellSpeller;
@@ -34,6 +35,7 @@ class SpellerInterface;
 class AspellInterface;
 class HunspellInterface;
 class SelectProxy;
+class MappedWstring;
 
 struct SuggestionsMenuItem {
     std::wstring text;
@@ -82,12 +84,12 @@ public:
     void precalculate_menu();
     void recheck_visible(bool not_intersection_only = false);
     void recheck_modified();
+    MappedWstring to_mapped_wstring(std::string_view str);
     void error_msg_box(const wchar_t* message);
 
     bool aspell_reinit_settings();
     void update_hunspell_language_options();
     void update_aspell_language_options();
-    void update_delimiters();
     void set_multiple_languages(std::wstring_view multi_string,
                                 SpellerInterface* speller);
     std::wstring get_default_hunspell_path();
@@ -120,10 +122,10 @@ private:
     static void remove_underline(HWND scintilla_window, long start, long end);
     void clear_all_underlines();
     void clear_visible_underlines();
-    bool check_word(std::string word, long start, long end);
+    bool check_word(std::wstring word, long start, long end);
     void get_visible_limits(long& start, long& finish);
-    std::vector<char> get_visible_text(long* offset, bool not_intersection_only = false);
-    int check_text(char* text_to_check, long offset, CheckTextMode mode);
+    MappedWstring get_visible_text(long* offset, bool not_intersection_only = false);
+    int check_text(const MappedWstring& text_to_check, long offset, CheckTextMode mode, size_t skip_chars = 0);
     void check_visible(bool not_intersection_only = false);
     void set_encoding_by_id(int enc_id);
     void save_settings();
@@ -134,10 +136,9 @@ private:
     bool check_text_needed();
     LRESULT get_style(int pos);
     void refresh_underline_style();
-    void apply_conversions(std::string& word);
-    void prepare_string_for_conversion();
+    void apply_conversions(std::wstring& word);
     void reset_hot_spot_cache();
-    void cut_apostrophes(std::string_view& word);
+    void cut_apostrophes(std::wstring_view& word);
 
     void save_to_ini(const wchar_t* name, const wchar_t* value,
                      const wchar_t* default_value, bool in_quotes = false);
@@ -166,7 +167,7 @@ private:
     const Settings &m_settings;
 
     LRESULT m_lexer;
-    std::vector<std::string> m_last_suggestions;
+    std::vector<std::wstring> m_last_suggestions;
     long m_modified_start;
     long m_modified_end;
     long m_word_under_cursor_pos;
@@ -175,20 +176,13 @@ private:
     NppData* m_npp_data_instance;
     EncodingType m_current_encoding;
     std::wstring m_ini_file_path;
-    std::string m_selected_word;
+    MappedWstring m_selected_word;
     SettingsDlg* m_settings_dlg_instance;
     SuggestionsButton* m_suggestions_instance;
     LangList* m_lang_list_instance;
-    std::vector<char> m_visible_text;
     long m_visible_text_offset;
 
     SpellerInterface* m_current_speller;
     std::unique_ptr<AspellInterface> m_aspell_speller;
     std::unique_ptr<HunspellInterface> m_hunspell_speller;
-
-    std::string m_yo_capital_ansi;
-    std::string m_ye_capital_ansi;
-    std::string m_yo_ansi;
-    std::string m_ye_ansi;
-    std::string m_punctuation_apostrophe_ansi;
 };
