@@ -24,7 +24,9 @@ struct NppData;
 
 class MappedWstring {
 public:
-    size_t get_original_index(size_t cur_index) const { return !mapping.empty() ? mapping[cur_index] : cur_index; }
+    size_t to_original_index(size_t cur_index) const { return !mapping.empty() ? mapping[cur_index] : cur_index; }
+    size_t from_original_index(size_t cur_index) const { return !mapping.empty() ?
+        std::lower_bound(mapping.begin (), mapping.end (), cur_index) - mapping.begin () : cur_index; }
 public:
     std::wstring str;
     std::vector<size_t> mapping; // should have size str.length () or empty (if empty mapping is identity a<->a)

@@ -54,6 +54,7 @@ MappedWstring utf8_to_mapped_wstring(std::string_view str) {
       ++char_cnt;
       it = next;
    }
+   mapping.push_back (it - str.data ());
    return {std::wstring {buf.begin (), buf.end ()}, std::move (mapping)};
 }
 

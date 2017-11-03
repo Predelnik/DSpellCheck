@@ -104,6 +104,7 @@ public:
     void set_suggestions_box_transparency();
     void process_menu_result(WPARAM menu_id);
     void copy_misspellings_to_clipboard();
+    void update_delimiters();
     void on_settings_changed();
     void init_suggestions_box();
     void hide_suggestion_box();
@@ -132,7 +133,7 @@ private:
     std::vector<SuggestionsMenuItem> fill_suggestions_menu(HMENU menu);
     bool get_word_under_cursor_is_right(long& pos, long& length,
                                         bool use_text_cursor = false);
-    std::string_view get_word_at(long char_pos, char* text, long offset) const;
+    std::wstring_view get_word_at(long char_pos, const MappedWstring& text, long offset) const;
     bool check_text_needed();
     LRESULT get_style(int pos);
     void refresh_underline_style();
@@ -158,13 +159,12 @@ private:
     bool m_settings_loaded;
     bool m_check_text_enabled; // cache for check_those
     bool m_word_under_cursor_is_correct;
-    std::string m_delim_utf8_converted; // String where escape characters are properly
     // converted to corresponding symbols
-    std::string m_delim_converted; // Same but in ANSI encoding
     const AspellWordList* m_cur_word_list;
     HWND m_current_scintilla;
     LRESULT m_hot_spot_cache[256]; // STYLE_MAX = 255
     const Settings &m_settings;
+    std::wstring m_delimiters;
 
     LRESULT m_lexer;
     std::vector<std::wstring> m_last_suggestions;

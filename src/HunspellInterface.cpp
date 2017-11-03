@@ -78,7 +78,7 @@ std::string DicInfo::to_dictionary_encoding(std::wstring_view input) const {
 }
 
 std::wstring DicInfo::from_dictionary_encoding(std::string_view input) const {
-    return convert_impl<wchar_t>(converter, input);
+    return convert_impl<wchar_t>(back_converter, input);
 }
 
 HunspellInterface::HunspellInterface(HWND npp_window_arg): m_use_one_dic(false) {
@@ -221,8 +221,8 @@ DicInfo* HunspellInterface::create_hunspell(const wchar_t* name, int type) {
         dic_enconding = "cp1251"; // Queer fix for encoding which isn't being guessed
     // correctly by libiconv TODO: Find other possible
     // such failures
-    new_dic.converter = {dic_enconding, "UTF-8"};
-    new_dic.back_converter = {"UTF-8", dic_enconding};
+    new_dic.converter = {dic_enconding, "UCS-2LE"};
+    new_dic.back_converter = {"UCS-2LE", dic_enconding};
     new_dic.local_dic_path += m_dic_dir + L"\\"s + name + L".usr";
 
     read_user_dic(new_dic.local_dic, new_dic.local_dic_path.c_str());
@@ -285,13 +285,16 @@ template <typename OutputCharType, typename InputCharType>
 std::basic_string<OutputCharType> DicInfo::convert_impl(const IconvWrapperT& conv,
                                                         std::basic_string_view<InputCharType> input) const {
     static std::vector<char> buf;
-    buf.resize(input.length() * 4);
+    if constexpr (std::is_same_v<OutputCharType, char>)
+      buf.resize((input.length() + 1) * 6);
+    else
+      buf.resize((input.length() + 1) * sizeof (OutputCharType));
     if (conv.get() == iconv_t(-1)) {
         buf.front() = '\0';
         return {};
     }
     size_t in_size = (input.length() + 1) * sizeof (InputCharType);
-    size_t out_size = DEFAULT_BUF_SIZE;
+    size_t out_size = buf.size ();
     char* out_buf = buf.data();
     auto in_buf = input.data();
     size_t res = iconv(conv.get(), reinterpret_cast<const char **>(&in_buf), &in_size, &out_buf, &out_size);
@@ -477,7 +480,7 @@ std::vector<std::wstring> HunspellInterface::get_suggestions(const wchar_t* word
 
 void HunspellInterface::set_directory(const wchar_t* dir) {
     if (!dir || !*dir)
-       return;
+        return;
     m_user_dic_path = dir;
     if (m_user_dic_path.back() != L'\\')
         m_user_dic_path += L"\\";
