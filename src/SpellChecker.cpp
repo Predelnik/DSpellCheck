@@ -1188,13 +1188,14 @@ int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
 
     auto sv = std::wstring_view(text_to_check.str);
     sv.remove_prefix(skip_chars);
+    auto skip_chars_offset = text_to_check.to_original_index(skip_chars);
     auto tokens = tokenize<wchar_t>(sv, m_delimiters);
 
     for (auto token : tokens) {
         cut_apostrophes(token);
-        word_start = static_cast<long>(offset + text_to_check.to_original_index(token.data() - text_to_check.str.data())
+        word_start = static_cast<long>(offset + text_to_check.to_original_index(token.data() - text_to_check.str.data() - skip_chars_offset)
         );
-        word_end = static_cast<long>(offset + text_to_check.to_original_index(token.data() - text_to_check.str.data() + token.length ()));
+        word_end = static_cast<long>(offset + text_to_check.to_original_index(token.data() - text_to_check.str.data() + token.length ()) - skip_chars_offset);
         if (word_end < word_start)
             continue;
 
