@@ -293,7 +293,7 @@ void SpellChecker::check_file_name() {
     wchar_t full_path[MAX_PATH];
     m_check_text_enabled = !m_settings.check_those;
     send_msg_to_npp(m_npp_data_instance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)full_path);
-    for (auto token : tokenize_by_delimiters<wchar_t>(m_settings.file_types, LR"(;)")) {
+    for (auto token : tokenize_by_delimiters(m_settings.file_types, LR"(;)")) {
         if (m_settings.check_those) {
             m_check_text_enabled = m_check_text_enabled || PathMatchSpec(full_path, std::wstring(token).c_str());
             if (m_check_text_enabled)
@@ -1008,7 +1008,7 @@ void SpellChecker::update_hunspell_language_options() {
 void SpellChecker::set_multiple_languages(std::wstring_view multi_string,
                                           SpellerInterface* speller) {
     std::vector<std::wstring> multi_lang_list;
-    for (auto token : tokenize_by_delimiters<wchar_t>(multi_string, LR"(\|)"))
+    for (auto token : tokenize_by_delimiters(multi_string, LR"(\|)"))
         multi_lang_list.push_back(std::wstring{token});
 
     speller->set_multiple_languages(multi_lang_list);
@@ -1192,10 +1192,10 @@ int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
     std::vector<std::wstring_view> tokens;
     switch (m_settings.tokenization_style) {
     case TokenizationStyle::by_non_alphabetic:
-        tokens = tokenize_by_condition<wchar_t>(sv, [](wchar_t c) { return !IsCharAlphaNumeric(c) && c != L'\''; });
+        tokens = tokenize_by_condition(sv, [](wchar_t c) { return !IsCharAlphaNumeric(c) && c != L'\''; });
         break;
     case TokenizationStyle::by_delimiters:
-        tokens = tokenize_by_delimiters<wchar_t>(sv, m_delimiters);
+        tokens = tokenize_by_delimiters(sv, m_delimiters);
         break;
     case TokenizationStyle::COUNT: break;
     }

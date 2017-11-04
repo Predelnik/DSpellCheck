@@ -1,10 +1,10 @@
 #pragma once
 
-template <typename CharType, typename IsDelimiterType>
-std::vector<std::basic_string_view<CharType>> tokenize_by_condition(std::basic_string_view<CharType> target,
+template <typename IsDelimiterType>
+std::vector<std::basic_string_view<wchar_t>> tokenize_by_condition(std::basic_string_view<wchar_t> target,
                                                           IsDelimiterType is_delimiter) {
     int token_begin = 0, token_end = -1;
-    std::vector<std::basic_string_view<CharType>> ret;
+    std::vector<std::basic_string_view<wchar_t>> ret;
     int i = 0;
 
     auto on_delim = [&]()
@@ -28,11 +28,5 @@ std::vector<std::basic_string_view<CharType>> tokenize_by_condition(std::basic_s
     return ret;
 }
 
-template <typename CharType>
-std::vector<std::basic_string_view<CharType>> tokenize_by_delimiters(std::basic_string_view<CharType> target,
-                                                             std::basic_string_view<CharType> delimiters) {
-    return tokenize_by_condition(target, [&](wchar_t c) { return delimiters.find(c) != std::string_view::npos; });
-}
-
-std::vector<std::string_view> tokenize_utf8(std::string_view target,
-                                            std::string_view delim);
+std::vector<std::basic_string_view<wchar_t>> tokenize_by_delimiters(std::basic_string_view<wchar_t> target,
+                                                                    std::basic_string_view<wchar_t> delimiters);
