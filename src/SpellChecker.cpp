@@ -982,6 +982,14 @@ std::string SpellChecker::load_from_ini_utf8(const wchar_t* name,
     return to_utf8_string(load_from_ini(name, utf8_to_wstring(default_value).c_str(), in_quotes).c_str());
 }
 
+static void set_multiple_languages(std::wstring_view multi_string, SpellerInterface* speller) {
+    std::vector<std::wstring> multi_lang_list;
+    for (auto token : tokenize_by_delimiters(multi_string, LR"(\|)"))
+        multi_lang_list.push_back(std::wstring{token});
+
+    speller->set_multiple_languages(multi_lang_list);
+}
+
 // Here parameter is in ANSI (may as well be utf-8 cause only English I guess)
 void SpellChecker::update_aspell_language_options() {
     if (m_settings.aspell_language == L"<MULTIPLE>") {
@@ -1003,15 +1011,6 @@ void SpellChecker::update_hunspell_language_options() {
         m_hunspell_speller->set_language(m_settings.hunspell_language.c_str());
         m_hunspell_speller->set_mode(0);
     }
-}
-
-void SpellChecker::set_multiple_languages(std::wstring_view multi_string,
-                                          SpellerInterface* speller) {
-    std::vector<std::wstring> multi_lang_list;
-    for (auto token : tokenize_by_delimiters(multi_string, LR"(\|)"))
-        multi_lang_list.push_back(std::wstring{token});
-
-    speller->set_multiple_languages(multi_lang_list);
 }
 
 bool SpellChecker::hunspell_reinit_settings(bool reset_directory) {

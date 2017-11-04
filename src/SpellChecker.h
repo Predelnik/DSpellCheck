@@ -90,8 +90,6 @@ public:
     bool aspell_reinit_settings();
     void update_hunspell_language_options();
     void update_aspell_language_options();
-    void set_multiple_languages(std::wstring_view multi_string,
-                                SpellerInterface* speller);
     std::wstring get_default_hunspell_path();
     void update_suggestion_box();
 
