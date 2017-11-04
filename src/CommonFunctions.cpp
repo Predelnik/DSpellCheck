@@ -41,7 +41,7 @@ static std::vector<char> convert(const char* source_enc, const char* target_enc,
 MappedWstring utf8_to_mapped_wstring(std::string_view str) {
    ptrdiff_t len = str.length ();
    std::vector<wchar_t> buf;
-   std::vector<size_t> mapping;
+   std::vector<ptrdiff_t> mapping;
    buf.reserve (len);
    mapping.reserve (len);
    auto it = str.data ();

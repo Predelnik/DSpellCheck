@@ -542,7 +542,7 @@ std::wstring_view SpellChecker::get_word_at(long char_pos, const MappedWstring& 
     auto end = wcspbrk(used_text, m_delimiters.c_str());
     if (!end) return {};
     std::wstring_view res = {used_text, static_cast<size_t>(end - used_text)};
-    if (text.to_original_index(res.data() - text.str.data()) + offset > char_pos)
+    if (static_cast<long> (text.to_original_index(res.data() - text.str.data()) + offset) > char_pos)
         return {};
     else
         return res;
