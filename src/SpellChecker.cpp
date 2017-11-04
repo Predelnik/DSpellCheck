@@ -1337,7 +1337,7 @@ MappedWstring SpellChecker::to_mapped_wstring(std::string_view str) {
     if (m_current_encoding == EncodingType::utf8)
         return utf8_to_mapped_wstring(str);
     else
-        return to_mapped_wstring(str);
+        return ::to_mapped_wstring(str);
 }
 
 void SpellChecker::recheck_visible(bool not_intersection_only) {
