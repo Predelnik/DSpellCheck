@@ -56,7 +56,7 @@ void LangList::update_list() {
     }
 
     CheckedListBox_EnableCheckAll(get_lang_list()->get_list_box(), BST_UNCHECKED);
-    for (auto& token : tokenize<wchar_t>(m_settings.get_current_multi_languages(), LR"(\|)")) {
+    for (auto& token : tokenize_by_delimiters<wchar_t>(m_settings.get_current_multi_languages(), LR"(\|)")) {
         int index = -1;
         int i = 0;
         for (auto& lang : langs) {

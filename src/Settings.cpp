@@ -45,8 +45,8 @@ constexpr auto default_delimiters =
 void Settings::save() {
     FILE* fp;
     _wfopen_s(&fp, m_ini_filepath.c_str(), L"w"); // Cleaning settings file (or creating it)
-    WORD wBOM = 0xFEFF;
-    fwrite(&wBOM, sizeof (wBOM), 1, fp);
+    WORD bom = 0xFEFF;
+    fwrite(&bom, sizeof (bom), 1, fp);
     fclose(fp);
     IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::save);
     process(worker);
@@ -64,6 +64,7 @@ std::wstring& Settings::get_current_language() {
         return aspell_language;
     case SpellerId::hunspell:
         return hunspell_language;
+    case SpellerId::COUNT: break;
     }
     return aspell_language;
 }
@@ -78,6 +79,7 @@ std::wstring& Settings::get_current_multi_languages() {
         return aspell_multi_languages;
     case SpellerId::hunspell:
         return hunspell_multi_languages;
+    case SpellerId::COUNT: break;
     }
     return hunspell_multi_languages;
 }
@@ -112,6 +114,7 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"Hunspell_Multiple_Languages", hunspell_multi_languages, L"");
     worker.process(L"Aspell_Language", aspell_language, L"en");
     worker.process(L"Hunspell_Language", hunspell_language, L"en_GB");
+    worker.process(L"Tokenization_Style", tokenization_style, TokenizationStyle::by_delimiters);
     worker.process(L"Delimiters", delimiters, default_delimiters, true);
     worker.process(L"Suggestions_Number", suggestion_count, 5);
     worker.process(L"Ignore_Yo", ignore_yo, false);

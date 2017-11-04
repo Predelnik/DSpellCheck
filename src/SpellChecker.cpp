@@ -293,7 +293,7 @@ void SpellChecker::check_file_name() {
     wchar_t full_path[MAX_PATH];
     m_check_text_enabled = !m_settings.check_those;
     send_msg_to_npp(m_npp_data_instance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)full_path);
-    for (auto token : tokenize<wchar_t>(m_settings.file_types, LR"(;)")) {
+    for (auto token : tokenize_by_delimiters<wchar_t>(m_settings.file_types, LR"(;)")) {
         if (m_settings.check_those) {
             m_check_text_enabled = m_check_text_enabled || PathMatchSpec(full_path, std::wstring(token).c_str());
             if (m_check_text_enabled)
@@ -340,8 +340,8 @@ void SpellChecker::find_next_mistake() {
             ignore_offsetting = 1;
             range.chrg.cpMax = static_cast<long>(doc_length);
         }
-        std::vector<char> buf (range.chrg.cpMax - range.chrg.cpMin + 1);
-        range.lpstrText = buf.data ();
+        std::vector<char> buf(range.chrg.cpMax - range.chrg.cpMin + 1);
+        range.lpstrText = buf.data();
         send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
         auto text = to_mapped_wstring(range.lpstrText);
         auto iterating_start = text.str.data() + text.str.size() - 1;
@@ -505,7 +505,7 @@ bool SpellChecker::get_word_under_cursor_is_right(long& pos, long& length,
                 (selection_start != pos || selection_end != pos + word_len)) {
                 return true;
             }
-            if (check_word(std::wstring (word), pos, pos + word_len - 1)) {
+            if (check_word(std::wstring(word), pos, pos + word_len - 1)) {
                 ret = true;
             }
             else {
@@ -1008,7 +1008,7 @@ void SpellChecker::update_hunspell_language_options() {
 void SpellChecker::set_multiple_languages(std::wstring_view multi_string,
                                           SpellerInterface* speller) {
     std::vector<std::wstring> multi_lang_list;
-    for (auto token : tokenize<wchar_t>(multi_string, LR"(\|)"))
+    for (auto token : tokenize_by_delimiters<wchar_t>(multi_string, LR"(\|)"))
         multi_lang_list.push_back(std::wstring{token});
 
     speller->set_multiple_languages(multi_lang_list);
@@ -1189,13 +1189,24 @@ int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
     auto sv = std::wstring_view(text_to_check.str);
     sv.remove_prefix(skip_chars);
     auto skip_chars_offset = text_to_check.to_original_index(skip_chars);
-    auto tokens = tokenize<wchar_t>(sv, m_delimiters);
+    std::vector<std::wstring_view> tokens;
+    switch (m_settings.tokenization_style) {
+    case TokenizationStyle::by_non_alphabetic:
+        tokens = tokenize_by_condition<wchar_t>(sv, [](wchar_t c) { return !IsCharAlphaNumeric(c) && c != L'\''; });
+        break;
+    case TokenizationStyle::by_delimiters:
+        tokens = tokenize_by_delimiters<wchar_t>(sv, m_delimiters);
+        break;
+    case TokenizationStyle::COUNT: break;
+    }
 
     for (auto token : tokens) {
         cut_apostrophes(token);
-        word_start = static_cast<long>(offset + text_to_check.to_original_index(token.data() - text_to_check.str.data() - skip_chars_offset)
+        word_start = static_cast<long>(offset + text_to_check.to_original_index(
+                token.data() - text_to_check.str.data() - skip_chars_offset)
         );
-        word_end = static_cast<long>(offset + text_to_check.to_original_index(token.data() - text_to_check.str.data() + token.length ()) - skip_chars_offset);
+        word_end = static_cast<long>(offset + text_to_check.to_original_index(
+            token.data() - text_to_check.str.data() + token.length()) - skip_chars_offset);
         if (word_end < word_start)
             continue;
 

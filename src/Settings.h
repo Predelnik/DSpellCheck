@@ -32,6 +32,14 @@ enum class ProxyType {
 };
 const wchar_t *gui_string (ProxyType value);
 
+enum class TokenizationStyle {
+    by_non_alphabetic,
+    by_delimiters,
+
+    // ReSharper disable once CppInconsistentNaming
+    COUNT,
+};
+
 class Settings {
     using Self = Settings;
 public:
@@ -92,6 +100,7 @@ public:
     int proxy_port = 0;
     bool proxy_is_anonymous = false;
     ProxyType proxy_type = ProxyType::ftp_gateway;
+    TokenizationStyle tokenization_style = TokenizationStyle::by_delimiters;
 
     mutable lsignal::signal<void()> settings_changed;
 
