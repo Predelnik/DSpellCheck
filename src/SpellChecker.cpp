@@ -42,12 +42,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "resource.h"
 #include "Settings.h"
 
-#define DEFAULT_DELIMITERS                                                     \
-  L",.!?\":;{}()[]\\/"                                                         \
-  L"=+-^$*<>|#$@%&~"                                                           \
-  L"\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D\u00B7"  \
-  L"\u00A0\u0060\u2192\u00d7"
-
 HWND get_scintilla_window(const NppData* npp_data_arg) {
     int which = -1;
     SendMessage(npp_data_arg->npp_handle, NPPM_GETCURRENTSCINTILLA, 0,
@@ -439,10 +433,6 @@ void SpellChecker::find_prev_mistake() {
                 break; // So nothing was found TODO: Message probably
         }
     }
-}
-
-void SpellChecker::set_default_delimiters() {
-    m_settings_dlg_instance->get_advanced_dlg()->set_delimeters_edit(DEFAULT_DELIMITERS);
 }
 
 HWND SpellChecker::get_current_scintilla() {

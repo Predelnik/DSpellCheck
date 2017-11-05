@@ -279,7 +279,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
             m_h_file_types = ::GetDlgItem(_hSelf, IDC_FILETYPES);
             m_h_check_comments = ::GetDlgItem(_hSelf, IDC_CHECKCOMMENTS);
             m_h_lib_link = ::GetDlgItem(_hSelf, IDC_LIB_LINK);
-            m_suggestion_mode_cmb.init (GetDlgItem(_hSelf, IDC_SUGG_TYPE));
+            m_suggestion_mode_cmb.init(GetDlgItem(_hSelf, IDC_SUGG_TYPE));
             m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
             m_h_lib_group_box = ::GetDlgItem(_hSelf, IDC_LIB_GROUPBOX);
             m_h_download_dics = ::GetDlgItem(_hSelf, IDC_DOWNLOADDICS);
@@ -542,6 +542,7 @@ void AdvancedDlg::set_buffer_size(int size) {
 
 void AdvancedDlg::update_controls(const Settings& settings) {
     Edit_SetText(m_h_edit_delimiters, settings.delimiters.c_str ());
+    Edit_SetText (m_delimiter_exclusions_le, m_settings.delimiter_exclusions.c_str ());
     set_recheck_delay(settings.recheck_delay);
     set_conversion_opts(
         settings.ignore_yo, settings.convert_single_quotes, settings.remove_boundary_apostrophes);
@@ -552,6 +553,8 @@ void AdvancedDlg::update_controls(const Settings& settings) {
         settings.ignore_starting_or_ending_with_apostrophe, settings.ignore_one_letter);
     set_sugg_box_settings(settings.suggestion_button_size, settings.suggestion_button_opacity);
     set_buffer_size(settings.find_next_buffer_size);
+    m_tokenization_style_cmb.set_index(settings.tokenization_style);
+    setup_delimiter_line_edit_visiblity();
 }
 
 const wchar_t*const indic_names[] = {
@@ -559,6 +562,13 @@ const wchar_t*const indic_names[] = {
     L"Strike", L"Hidden", L"Box", L"Round Box",
     L"Straight Box", L"Dash", L"Dots", L"Squiggle Low"
 };
+
+void AdvancedDlg::setup_delimiter_line_edit_visiblity() {
+    ShowWindow(m_delimiter_exclusions_le,
+               m_tokenization_style_cmb.current_data() == TokenizationStyle::by_non_alphabetic);
+    ShowWindow(m_h_edit_delimiters,
+               m_tokenization_style_cmb.current_data() == TokenizationStyle::by_delimiters);
+}
 
 INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     wchar_t* end_ptr = nullptr;
@@ -568,7 +578,8 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
     case WM_INITDIALOG:
         {
             // Retrieving handles of dialog controls
-            m_h_edit_delimiters = ::GetDlgItem(_hSelf, IDC_DELIMETERS);
+            m_h_edit_delimiters = ::GetDlgItem(_hSelf, IDC_DELIMITERS);
+            m_delimiter_exclusions_le = ::GetDlgItem(_hSelf, IDC_DELIMITER_EXCLUSIONS_LE);
             m_h_default_delimiters = ::GetDlgItem(_hSelf, IDC_DEFAULT_DELIMITERS);
             m_h_ignore_yo = ::GetDlgItem(_hSelf, IDC_COUNT_YO_AS_YE);
             m_h_convert_single_quotes =
@@ -588,13 +599,14 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
             m_h_slider_size = ::GetDlgItem(_hSelf, IDC_SLIDER_SIZE);
             m_h_slider_sugg_button_opacity = ::GetDlgItem(_hSelf, IDC_SLIDER_TRANSPARENCY);
             m_h_buffer_size = ::GetDlgItem(_hSelf, IDC_BUFFER_SIZE);
+            m_tokenization_style_cmb.init(::GetDlgItem(_hSelf, IDC_TOKENIZATION_STYLE_CMB));
             SendMessage(m_h_slider_size, TBM_SETRANGE, true, MAKELPARAM(5, 22));
             SendMessage(m_h_slider_sugg_button_opacity, TBM_SETRANGE, true, MAKELPARAM(5, 100));
 
             m_brush = nullptr;
 
             SetWindowText(m_h_ignore_yo, L"Cyrillic: Count io (\u0451) as e");
-            create_tool_tip(IDC_DELIMETERS, _hSelf,
+            create_tool_tip(IDC_DELIMITERS, _hSelf,
                             L"Standard white-space symbols such as New Line ('\\n'), "
                             L"Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are "
                             L"always counted as delimiters");
@@ -659,10 +671,23 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
         break;
     case WM_COMMAND:
         switch (LOWORD(w_param)) {
+        case IDC_TOKENIZATION_STYLE_CMB:
+            {
+                setup_delimiter_line_edit_visiblity();
+            }
         case IDC_DEFAULT_DELIMITERS:
-            if (HIWORD(w_param) == BN_CLICKED)
-                get_spell_checker()->set_default_delimiters();
-            return true;
+            if (HIWORD(w_param) == BN_CLICKED) {
+                switch (m_tokenization_style_cmb.current_data()) {
+                case TokenizationStyle::by_non_alphabetic:
+                    Edit_SetText (m_delimiter_exclusions_le, default_delimiter_exclusions ());
+                    break;
+                case TokenizationStyle::by_delimiters:
+                    Edit_SetText (m_h_edit_delimiters, default_delimiters ());
+                    break;
+                case TokenizationStyle::COUNT: break;
+                }
+                return true;
+            }
         case IDC_RECHECK_DELAY:
             if (HIWORD(w_param) == EN_CHANGE) {
                 Edit_GetText(m_h_recheck_delay, buf, DEFAULT_BUF_SIZE);
@@ -746,7 +771,8 @@ void AdvancedDlg::apply_settings(Settings& settings) {
     settings.delimiters = get_edit_text(m_h_edit_delimiters);
     settings.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
     settings.convert_single_quotes = Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
-    settings.remove_boundary_apostrophes = Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED;
+    settings.remove_boundary_apostrophes = Button_GetCheck(m_h_remove_boundary_apostrophes) ==
+        BST_CHECKED;
     settings.underline_color = m_underline_color_btn;
     settings.underline_style = ComboBox_GetCurSel(m_h_underline_style);
     settings.recheck_delay = get_recheck_delay();
@@ -755,20 +781,26 @@ void AdvancedDlg::apply_settings(Settings& settings) {
     settings.ignore_having_a_capital = Button_GetCheck(m_h_ignore_c_have) == BST_CHECKED;
     settings.ignore_all_capital = Button_GetCheck(m_h_ignore_c_all) == BST_CHECKED;
     settings.ignore_having_underscore = Button_GetCheck(m_h_ignore_) == BST_CHECKED;
-    settings.ignore_starting_or_ending_with_apostrophe = Button_GetCheck(m_h_ignore_se_apostrophe) == BST_CHECKED;
+    settings.ignore_starting_or_ending_with_apostrophe = Button_GetCheck(m_h_ignore_se_apostrophe)
+        == BST_CHECKED;
     settings.ignore_one_letter = Button_GetCheck(m_h_ignore_one_letter) == BST_CHECKED;
-    settings.suggestion_button_size = static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0));
-    settings.suggestion_button_opacity = static_cast<int>(SendMessage(m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0)
+    settings.suggestion_button_size = static_cast<int>(SendMessage(
+        m_h_slider_size, TBM_GETPOS, 0, 0));
+    settings.suggestion_button_opacity = static_cast<int>(SendMessage(
+            m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0)
     );
+    settings.tokenization_style = m_tokenization_style_cmb.current_data();
     wchar_t* end_ptr = nullptr;
     settings.find_next_buffer_size = wcstol(get_edit_text(m_h_buffer_size).c_str(), &end_ptr, 10);
+    settings.delimiter_exclusions = get_edit_text(m_delimiter_exclusions_le);
 }
 
 SimpleDlg* SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
 
 AdvancedDlg* SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
 
-SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, const Settings& settings) :
+SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data,
+                         const Settings& settings) :
     m_npp_data(npp_data),
     m_simple_dlg(*this, settings), m_advanced_dlg(settings), m_settings(settings) {
     Window::init(h_inst, parent);

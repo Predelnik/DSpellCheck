@@ -33,7 +33,6 @@
 #define IDC_COMBO_LANGUAGE                      1005
 #define IDC_INSTALL_SYSTEM                      1005
 #define IDC_ASPELLPATH                          1006
-#define IDC_DELIMETERS                          1006
 #define IDC_BROWSEASPELLPATH                    1007
 #define IDC_HOSTNAME                            1007
 #define IDD_SIMPLE                              1007
@@ -84,4 +83,7 @@
 #define IDC_DESCTOP                             1041
 #define IDC_HUNSPELL_PATH_GROUPBOX              1041
 #define IDC_RESETSPELLERPATH                    40000
+#define IDC_TOKENIZATION_STYLE_CMB              40000
 #define IDC_ASPELL_RUNTOGETHER_CB               40001
+#define IDC_DELIMITERS                          40001
+#define IDC_DELIMITER_EXCLUSIONS_LE             40002

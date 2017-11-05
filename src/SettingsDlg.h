@@ -108,6 +108,7 @@ public:
     void update_controls(const Settings& settings);
 
 protected:
+    void setup_delimiter_line_edit_visiblity();
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 
 private:
@@ -130,6 +131,8 @@ private:
     HWND m_h_slider_sugg_button_opacity = nullptr;
     HWND m_h_buffer_size = nullptr;
     HWND m_h_remove_boundary_apostrophes = nullptr;
+    HWND m_delimiter_exclusions_le = nullptr;
+    WinApi::EnumComboBox<TokenizationStyle> m_tokenization_style_cmb;
 
     HBRUSH m_brush = nullptr;
     COLORREF m_underline_color_btn = 0;

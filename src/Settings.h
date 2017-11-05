@@ -5,6 +5,9 @@
 
 class IniWorker;
 
+constexpr const wchar_t *default_delimiters ();
+constexpr const wchar_t *default_delimiter_exclusions ();
+
 enum class SpellerId {
     aspell,
     hunspell,
@@ -39,6 +42,8 @@ enum class TokenizationStyle {
     // ReSharper disable once CppInconsistentNaming
     COUNT,
 };
+
+const wchar_t* gui_string(TokenizationStyle value);
 
 class Settings {
     using Self = Settings;
@@ -101,6 +106,7 @@ public:
     bool proxy_is_anonymous = false;
     ProxyType proxy_type = ProxyType::ftp_gateway;
     TokenizationStyle tokenization_style = TokenizationStyle::by_delimiters;
+    std::wstring delimiter_exclusions;
 
     mutable lsignal::signal<void()> settings_changed;
 

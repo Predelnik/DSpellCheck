@@ -16,6 +16,8 @@ void IniWorker::process(const wchar_t* name, std::wstring& value, std::wstring_v
     switch (m_action) {
     case Action::save:
         {
+            if (value == default_value)
+              return;
             std::wstring str = value;
             if (in_quotes)
                 str = L'"' + str + L'"';

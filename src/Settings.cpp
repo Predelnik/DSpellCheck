@@ -4,11 +4,31 @@
 #include "CommonFunctions.h"
 #include "Scintilla.h"
 
+constexpr const wchar_t *default_delimiters () {
+   return L",.!?\":;{}()[]\\/"
+    L"=+-^$*<>|#$@%&~"
+    L"\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D\u00B7"
+    L"\u00A0\u0060\u2192\u00d7";
+}
+
+constexpr const wchar_t* default_delimiter_exclusions() {
+    return L"'";
+}
+
 const wchar_t* gui_string(ProxyType value) {
     switch (value) {
     case ProxyType::web_proxy: return L"FTP Web Proxy";
     case ProxyType::ftp_gateway: return L"FTP Gateway";
     case ProxyType::COUNT: break;
+    }
+    return nullptr;
+}
+
+const wchar_t* gui_string(TokenizationStyle value) {
+    switch (value) {
+    case TokenizationStyle::by_non_alphabetic: return L"Split Words by Non-Alphabetic Characters Except:";
+    case TokenizationStyle::by_delimiters:return L"Split Words by the Following Delimiters:";
+    case TokenizationStyle::COUNT: break;
     }
     return nullptr;
 }
@@ -36,11 +56,7 @@ Settings::Settings(std::wstring_view ini_filepath) : m_ini_filepath(ini_filepath
 }
 
 constexpr auto app_name = L"SpellCheck";
-constexpr auto default_delimiters =
-    L",.!?\":;{}()[]\\/"
-    L"=+-^$*<>|#$@%&~"
-    L"\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D\u00B7"
-    L"\u00A0\u0060\u2192\u00d7";
+
 
 void Settings::save() {
     FILE* fp;
@@ -114,8 +130,9 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"Hunspell_Multiple_Languages", hunspell_multi_languages, L"");
     worker.process(L"Aspell_Language", aspell_language, L"en");
     worker.process(L"Hunspell_Language", hunspell_language, L"en_GB");
-    worker.process(L"Tokenization_Style", tokenization_style, TokenizationStyle::by_delimiters);
-    worker.process(L"Delimiters", delimiters, default_delimiters, true);
+    worker.process(L"Tokenization_Style", tokenization_style, TokenizationStyle::by_non_alphabetic);
+    worker.process(L"Delimiter_Exclusions", delimiter_exclusions, default_delimiter_exclusions ());
+    worker.process(L"Delimiters", delimiters, default_delimiters (), true);
     worker.process(L"Suggestions_Number", suggestion_count, 5);
     worker.process(L"Ignore_Yo", ignore_yo, false);
     worker.process(L"Convert_Single_Quotes_To_Apostrophe", convert_single_quotes, true);
