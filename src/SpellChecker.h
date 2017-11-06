@@ -152,6 +152,9 @@ private:
     std::string load_from_ini_utf8(const wchar_t* name,
                                 const char* default_value, bool in_quotes = false);
     static int check_text_default_answer(CheckTextMode mode);
+    std::optional<ptrdiff_t> next_token_end(std::wstring_view target, ptrdiff_t index) const;
+    std::optional<ptrdiff_t> prev_token_begin(std::wstring_view target, ptrdiff_t index) const;
+    auto non_alphabetic_tokenizer (std::wstring_view target) const;
 
 private:
     bool m_settings_loaded;

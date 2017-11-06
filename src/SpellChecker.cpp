@@ -287,7 +287,7 @@ void SpellChecker::check_file_name() {
     wchar_t full_path[MAX_PATH];
     m_check_text_enabled = !m_settings.check_those;
     send_msg_to_npp(m_npp_data_instance, NPPM_GETFULLCURRENTPATH, MAX_PATH, (LPARAM)full_path);
-    for (auto token : make_delimiter_tokenizer(m_settings.file_types, LR"(;)").get_all_tokens ()) {
+    for (auto token : make_delimiter_tokenizer(m_settings.file_types, LR"(;)").get_all_tokens()) {
         if (m_settings.check_those) {
             m_check_text_enabled = m_check_text_enabled || PathMatchSpec(full_path, std::wstring(token).c_str());
             if (m_check_text_enabled)
@@ -338,15 +338,8 @@ void SpellChecker::find_next_mistake() {
         range.lpstrText = buf.data();
         send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
         auto text = to_mapped_wstring(range.lpstrText);
-        auto iterating_start = text.str.data() + text.str.size() - 1;
-        auto iterating_char = iterating_start;
-        if (!ignore_offsetting) {
-            while (!wcschr(m_delimiters.c_str(), *iterating_char) &&
-                text.str.data() < iterating_char)
-                iterating_char--;
-
-            *iterating_char = '\0';
-        }
+        auto index = prev_token_begin(text.str, text.str.size() - 1).value_or(text.str.size() - 1);
+        text.str.data()[index] = L'\0';
         send_msg_to_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin,
                            range.chrg.cpMax);
         SCNotification scn;
@@ -357,7 +350,7 @@ void SpellChecker::find_next_mistake() {
         if (result)
             break;
 
-        iterator_pos += (m_settings.find_next_buffer_size * 1024 + iterating_char - iterating_start);
+        iterator_pos += (m_settings.find_next_buffer_size * 1024 + index);
 
         if (iterator_pos > doc_length) {
             if (!full_check) {
@@ -400,13 +393,7 @@ void SpellChecker::find_prev_mistake() {
         range.lpstrText = buf.data();
         send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
         auto text = to_mapped_wstring(range.lpstrText);
-        auto iterating_start = text.str.data();
-        auto iterating_char = iterating_start;
-        if (!ignore_offsetting) {
-            while (!wcschr(m_delimiters.c_str(), *iterating_char) && iterating_char)
-                iterating_char++;
-        }
-        auto offset = iterating_char - iterating_start;
+        auto offset = next_token_end(text.str, 0).value_or(0);
         send_msg_to_editor(get_current_scintilla(), SCI_COLOURISE, range.chrg.cpMin + offset,
                            range.chrg.cpMax);
         SCNotification scn;
@@ -489,7 +476,8 @@ bool SpellChecker::get_word_under_cursor_is_right(long& pos, long& length,
             pos = static_cast<long>(
                 mapped_str.to_original_index(word.data() - mapped_str.str.data()) + offset
             );
-            long pos_end = pos + static_cast<long>(word.length());
+            long pos_end = static_cast<long>(mapped_str.to_original_index(
+                word.data() + word.length() - mapped_str.str.data()) + offset);
             long word_len = pos_end - pos;
             if (selection_start != selection_end &&
                 (selection_start != pos || selection_end != pos + word_len)) {
@@ -508,34 +496,14 @@ bool SpellChecker::get_word_under_cursor_is_right(long& pos, long& length,
 }
 
 std::wstring_view SpellChecker::get_word_at(long char_pos, const MappedWstring& text, long offset) const {
-    auto ptr = text.str.data() + text.from_original_index(char_pos - offset);
-
-    if (m_delimiters.find(*ptr) != std::string::npos)
-        ptr--;
-    if (ptr < text.str.data())
-        return nullptr;
-
-    // going back by non-delimiters
-    while (m_delimiters.find(*ptr) == std::string::npos && text.str.data() < ptr)
-        ptr--;
-
-    if (ptr < text.str.data())
-        return nullptr;
-
-    auto used_text = ptr;
-
-    if (m_delimiters.find(*ptr) != std::string::npos)
-        used_text++;
-
-    // We're just taking the first token (basically repeating the same code as an
-    // in CheckVisible
-    auto end = wcspbrk(used_text, m_delimiters.c_str());
-    if (!end) return {};
-    std::wstring_view res = {used_text, static_cast<size_t>(end - used_text)};
-    if (static_cast<long> (text.to_original_index(res.data() - text.str.data()) + offset) > char_pos)
+    auto index = text.from_original_index(char_pos - offset);
+    auto begin = prev_token_begin(text.str, index);
+    if (!begin)
         return {};
-    else
-        return res;
+    auto end = next_token_end(text.str, *begin);
+    if (!end)
+        return {};
+    return std::wstring_view(text.str).substr(*begin, *end - *begin);
 }
 
 void SpellChecker::set_suggestions_box_transparency() {
@@ -974,7 +942,7 @@ std::string SpellChecker::load_from_ini_utf8(const wchar_t* name,
 
 static void set_multiple_languages(std::wstring_view multi_string, SpellerInterface* speller) {
     std::vector<std::wstring> multi_lang_list;
-    for (auto token : make_delimiter_tokenizer(multi_string, LR"(\|)").get_all_tokens ())
+    for (auto token : make_delimiter_tokenizer(multi_string, LR"(\|)").get_all_tokens())
         multi_lang_list.push_back(std::wstring{token});
 
     speller->set_multiple_languages(multi_lang_list);
@@ -1160,6 +1128,39 @@ std::vector<LanguageInfo> SpellChecker::get_available_languages() const {
     return langs;
 }
 
+auto SpellChecker::non_alphabetic_tokenizer(std::wstring_view target) const {
+    return make_condition_tokenizer(target, [this](wchar_t c)
+    {
+        return !IsCharAlphaNumeric(c) && m_settings.delimiter_exclusions.find(c) == std
+            ::wstring_view::npos;
+    });
+}
+
+std::optional<ptrdiff_t> SpellChecker::next_token_end(std::wstring_view target, ptrdiff_t index) const {
+    switch (m_settings.tokenization_style) {
+    case TokenizationStyle::by_non_alphabetic:
+        return non_alphabetic_tokenizer(target).next_token_end(index);
+    case TokenizationStyle::by_delimiters:
+        return make_delimiter_tokenizer(target, m_delimiters).next_token_end(index);
+    case TokenizationStyle::COUNT: break;
+    }
+    assert (false);
+    return std::nullopt;
+}
+
+
+std::optional<ptrdiff_t> SpellChecker::prev_token_begin(std::wstring_view target, ptrdiff_t index) const {
+    switch (m_settings.tokenization_style) {
+    case TokenizationStyle::by_non_alphabetic:
+        return non_alphabetic_tokenizer(target).prev_token_begin(index);
+    case TokenizationStyle::by_delimiters:
+        return make_delimiter_tokenizer(target, m_delimiters).prev_token_begin(index);
+    case TokenizationStyle::COUNT: break;
+    }
+    assert (false);
+    return std::nullopt;
+}
+
 int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
                              CheckTextMode mode, size_t skip_chars) {
     if (text_to_check.str.empty()) {
@@ -1181,10 +1182,11 @@ int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
     std::vector<std::wstring_view> tokens;
     switch (m_settings.tokenization_style) {
     case TokenizationStyle::by_non_alphabetic:
-        tokens = make_condition_tokenizer(sv, [](wchar_t c) { return !IsCharAlphaNumeric(c) && c != L'\''; }).get_all_tokens ();
+        tokens = make_condition_tokenizer(sv, [](wchar_t c) { return !IsCharAlphaNumeric(c) && c != L'\''; }).
+            get_all_tokens();
         break;
     case TokenizationStyle::by_delimiters:
-        tokens = make_delimiter_tokenizer(sv, m_delimiters).get_all_tokens ();
+        tokens = make_delimiter_tokenizer(sv, m_delimiters).get_all_tokens();
         break;
     case TokenizationStyle::COUNT: break;
     }

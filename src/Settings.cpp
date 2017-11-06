@@ -3,6 +3,8 @@
 #include "aspell.h"
 #include "CommonFunctions.h"
 #include "Scintilla.h"
+#include <cassert>
+#include "utils/string_utils.h"
 
 const wchar_t *default_delimiters () {
    return L",.!?\":;{}()[]\\/"

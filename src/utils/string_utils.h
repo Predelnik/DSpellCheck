@@ -43,18 +43,32 @@ public:
         return ret;
     }
 
-    ptrdiff_t prev_token_begin(ptrdiff_t index) {
+    std::optional<ptrdiff_t> prev_token_begin(ptrdiff_t index) {
         if (m_is_delimiter(m_target[index]))
-            --index;
-        while (index < m_target.length() && !m_is_delimiter(m_target[index])) {
+            return std::nullopt;
+        while (index >= 0 && !m_is_delimiter(m_target[index])) {
             if (m_split_camel_case
-                && index < m_target.length() - 1
+                && index > 0
                 && IsCharUpper(m_target[index - 1])
                 && IsCharLower(m_target[index]))
                 return index;
             --index;
         }
         ++index;
+        return index;
+    }
+
+    std::optional<ptrdiff_t> next_token_end(ptrdiff_t index) {
+        if (m_is_delimiter(m_target[index]))
+            return std::nullopt;
+        while (index < static_cast<ptrdiff_t> (m_target.length()) && !m_is_delimiter(m_target[index])) {
+            if (m_split_camel_case
+                && index < static_cast<ptrdiff_t> (m_target.length()) - 1
+                && IsCharUpper(m_target[index + 1])
+                && IsCharLower(m_target[index]))
+                return index;
+            ++index;
+        }
         return index;
     }
 
