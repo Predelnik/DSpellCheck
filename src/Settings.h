@@ -5,8 +5,8 @@
 
 class IniWorker;
 
-constexpr const wchar_t *default_delimiters ();
-constexpr const wchar_t *default_delimiter_exclusions ();
+const wchar_t *default_delimiters ();
+const wchar_t *default_delimiter_exclusions ();
 
 enum class SpellerId {
     aspell,
