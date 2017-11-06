@@ -4,14 +4,14 @@
 #include "CommonFunctions.h"
 #include "Scintilla.h"
 
-constexpr const wchar_t *default_delimiters () {
+const wchar_t *default_delimiters () {
    return L",.!?\":;{}()[]\\/"
     L"=+-^$*<>|#$@%&~"
     L"\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D\u00B7"
     L"\u00A0\u0060\u2192\u00d7";
 }
 
-constexpr const wchar_t* default_delimiter_exclusions() {
+const wchar_t* default_delimiter_exclusions() {
     return L"'";
 }
 
