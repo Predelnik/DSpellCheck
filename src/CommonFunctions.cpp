@@ -47,7 +47,9 @@ MappedWstring utf8_to_mapped_wstring(std::string_view str) {
     buf.reserve(len);
     mapping.reserve(len);
     auto it = str.data();
-    assert (utf8_is_lead(*str.data()));
+    // sadly this garbage skipping is required due to bad find prev mistake algorithm
+    while (utf8_is_cont (*it))
+      ++it;
     size_t char_cnt = 1;
     while (it - str.data() < len) {
         auto next = utf8_inc(it);

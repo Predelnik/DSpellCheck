@@ -400,8 +400,7 @@ void SpellChecker::find_prev_mistake() {
         scn.nmhdr.code = SCN_SCROLLED;
         send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
 
-        bool result = check_text(text,
-                                 static_cast<long>(range.chrg.cpMin + offset), CheckTextMode::find_last, offset);
+        bool result = check_text(text, range.chrg.cpMin, CheckTextMode::find_last, offset);
         if (result)
             break;
 
@@ -1182,7 +1181,6 @@ int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
 
     auto sv = std::wstring_view(text_to_check.str);
     sv.remove_prefix(skip_chars);
-    auto skip_chars_offset = text_to_check.to_original_index(skip_chars);
     std::vector<std::wstring_view> tokens;
     switch (m_settings.tokenization_style) {
     case TokenizationStyle::by_non_alphabetic:
@@ -1197,10 +1195,10 @@ int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
     for (auto token : tokens) {
         cut_apostrophes(token);
         word_start = static_cast<long>(offset + text_to_check.to_original_index(
-                token.data() - text_to_check.str.data() - skip_chars_offset)
+                token.data() - text_to_check.str.data())
         );
         word_end = static_cast<long>(offset + text_to_check.to_original_index(
-            token.data() - text_to_check.str.data() + token.length()) - skip_chars_offset);
+            token.data() - text_to_check.str.data() + token.length()));
         if (word_end < word_start)
             continue;
 
