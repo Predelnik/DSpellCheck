@@ -49,8 +49,8 @@ public:
         while (index >= 0 && !m_is_delimiter(m_target[index])) {
             if (m_split_camel_case
                 && index > 0
-                && IsCharUpper(m_target[index - 1])
-                && IsCharLower(m_target[index]))
+                && IsCharLower(m_target[index - 1])
+                && IsCharUpper(m_target[index]))
                 return index;
             --index;
         }
