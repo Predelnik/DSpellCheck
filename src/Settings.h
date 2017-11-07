@@ -107,6 +107,7 @@ public:
     ProxyType proxy_type = ProxyType::ftp_gateway;
     TokenizationStyle tokenization_style = TokenizationStyle::by_delimiters;
     std::wstring delimiter_exclusions;
+    bool split_camel_case;
 
     mutable lsignal::signal<void()> settings_changed;
 

@@ -350,9 +350,9 @@ void SpellChecker::find_next_mistake() {
         if (result)
             break;
 
-        iterator_pos += (m_settings.find_next_buffer_size * 1024 + index);
+        iterator_pos += (text.to_original_index(index));
 
-        if (iterator_pos > doc_length) {
+        if (range.chrg.cpMax == doc_length) {
             if (!full_check) {
                 m_current_position = 0;
                 iterator_pos = 0;
@@ -405,7 +405,7 @@ void SpellChecker::find_prev_mistake() {
         if (result)
             break;
 
-        iterator_pos -= (m_settings.find_next_buffer_size * 1024 - offset);
+        iterator_pos -= (m_settings.find_next_buffer_size * 1024 - text.to_original_index(offset));
 
         if (iterator_pos < 0) {
             if (!full_check) {
@@ -1133,7 +1133,11 @@ auto SpellChecker::non_alphabetic_tokenizer(std::wstring_view target) const {
     {
         return !IsCharAlphaNumeric(c) && m_settings.delimiter_exclusions.find(c) == std
             ::wstring_view::npos;
-    });
+    }, m_settings.split_camel_case);
+}
+
+auto SpellChecker::delimiter_tokenizer(std::wstring_view target) const {
+    return make_delimiter_tokenizer(target, m_settings.delimiters, m_settings.split_camel_case);
 }
 
 std::optional<ptrdiff_t> SpellChecker::next_token_end(std::wstring_view target, ptrdiff_t index) const {
@@ -1141,7 +1145,7 @@ std::optional<ptrdiff_t> SpellChecker::next_token_end(std::wstring_view target, 
     case TokenizationStyle::by_non_alphabetic:
         return non_alphabetic_tokenizer(target).next_token_end(index);
     case TokenizationStyle::by_delimiters:
-        return make_delimiter_tokenizer(target, m_delimiters).next_token_end(index);
+        return delimiter_tokenizer(target).next_token_end(index);
     case TokenizationStyle::COUNT: break;
     }
     assert (false);
@@ -1154,7 +1158,7 @@ std::optional<ptrdiff_t> SpellChecker::prev_token_begin(std::wstring_view target
     case TokenizationStyle::by_non_alphabetic:
         return non_alphabetic_tokenizer(target).prev_token_begin(index);
     case TokenizationStyle::by_delimiters:
-        return make_delimiter_tokenizer(target, m_delimiters).prev_token_begin(index);
+        return delimiter_tokenizer (target).prev_token_begin(index);
     case TokenizationStyle::COUNT: break;
     }
     assert (false);
@@ -1182,11 +1186,10 @@ int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
     std::vector<std::wstring_view> tokens;
     switch (m_settings.tokenization_style) {
     case TokenizationStyle::by_non_alphabetic:
-        tokens = make_condition_tokenizer(sv, [](wchar_t c) { return !IsCharAlphaNumeric(c) && c != L'\''; }).
-            get_all_tokens();
+        tokens = non_alphabetic_tokenizer(sv).get_all_tokens();
         break;
     case TokenizationStyle::by_delimiters:
-        tokens = make_delimiter_tokenizer(sv, m_delimiters).get_all_tokens();
+        tokens = delimiter_tokenizer(sv).get_all_tokens();
         break;
     case TokenizationStyle::COUNT: break;
     }

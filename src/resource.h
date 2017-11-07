@@ -87,3 +87,4 @@
 #define IDC_ASPELL_RUNTOGETHER_CB               40001
 #define IDC_DELIMITERS                          40001
 #define IDC_DELIMITER_EXCLUSIONS_LE             40002
+#define IDC_CAMEL_CASE_SPLITTING_CB             40003

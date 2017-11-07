@@ -155,6 +155,7 @@ private:
     std::optional<ptrdiff_t> next_token_end(std::wstring_view target, ptrdiff_t index) const;
     std::optional<ptrdiff_t> prev_token_begin(std::wstring_view target, ptrdiff_t index) const;
     auto non_alphabetic_tokenizer (std::wstring_view target) const;
+    auto delimiter_tokenizer(std::wstring_view target) const;
 
 private:
     bool m_settings_loaded;

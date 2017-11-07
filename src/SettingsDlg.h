@@ -132,6 +132,7 @@ private:
     HWND m_h_buffer_size = nullptr;
     HWND m_h_remove_boundary_apostrophes = nullptr;
     HWND m_delimiter_exclusions_le = nullptr;
+    HWND m_split_camel_case_cb = nullptr;
     WinApi::EnumComboBox<TokenizationStyle> m_tokenization_style_cmb;
 
     HBRUSH m_brush = nullptr;

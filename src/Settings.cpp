@@ -133,6 +133,7 @@ void Settings::process(IniWorker& worker) {
     worker.process(L"Aspell_Language", aspell_language, L"en");
     worker.process(L"Hunspell_Language", hunspell_language, L"en_GB");
     worker.process(L"Tokenization_Style", tokenization_style, TokenizationStyle::by_non_alphabetic);
+    worker.process(L"Split_CamelCase", split_camel_case, true);
     worker.process(L"Delimiter_Exclusions", delimiter_exclusions, default_delimiter_exclusions ());
     worker.process(L"Delimiters", delimiters, default_delimiters (), true);
     worker.process(L"Suggestions_Number", suggestion_count, 5);

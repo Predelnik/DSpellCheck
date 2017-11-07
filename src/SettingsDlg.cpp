@@ -543,6 +543,7 @@ void AdvancedDlg::set_buffer_size(int size) {
 void AdvancedDlg::update_controls(const Settings& settings) {
     Edit_SetText(m_h_edit_delimiters, settings.delimiters.c_str ());
     Edit_SetText (m_delimiter_exclusions_le, m_settings.delimiter_exclusions.c_str ());
+    Button_SetCheck(m_split_camel_case_cb, m_settings.split_camel_case);
     set_recheck_delay(settings.recheck_delay);
     set_conversion_opts(
         settings.ignore_yo, settings.convert_single_quotes, settings.remove_boundary_apostrophes);
@@ -602,6 +603,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
             m_tokenization_style_cmb.init(::GetDlgItem(_hSelf, IDC_TOKENIZATION_STYLE_CMB));
             SendMessage(m_h_slider_size, TBM_SETRANGE, true, MAKELPARAM(5, 22));
             SendMessage(m_h_slider_sugg_button_opacity, TBM_SETRANGE, true, MAKELPARAM(5, 100));
+            m_split_camel_case_cb = ::GetDlgItem(_hSelf, IDC_CAMEL_CASE_SPLITTING_CB);
 
             m_brush = nullptr;
 
@@ -793,6 +795,7 @@ void AdvancedDlg::apply_settings(Settings& settings) {
     wchar_t* end_ptr = nullptr;
     settings.find_next_buffer_size = wcstol(get_edit_text(m_h_buffer_size).c_str(), &end_ptr, 10);
     settings.delimiter_exclusions = get_edit_text(m_delimiter_exclusions_le);
+    settings.split_camel_case = Button_GetCheck (m_split_camel_case_cb) == BST_CHECKED;
 }
 
 SimpleDlg* SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
