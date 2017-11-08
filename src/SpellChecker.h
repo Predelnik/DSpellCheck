@@ -79,7 +79,6 @@ public:
     ~SpellChecker();
     void recheck_visible_both_views();
     const SpellerInterface* active_speller() const;
-    void apply_proxy_settings();
     void show_suggestion_menu();
     void precalculate_menu();
     void recheck_visible(bool not_intersection_only = false);
@@ -106,11 +105,9 @@ public:
     void on_settings_changed();
     void init_suggestions_box();
     void hide_suggestion_box();
-    void set_default_delimiters();
     void find_next_mistake();
     void find_prev_mistake();
     void check_file_name();
-    void update_from_remove_dics_options();
 
     void lang_change();
     std::vector<LanguageInfo> get_available_languages() const;
@@ -127,7 +124,6 @@ private:
     int check_text(const MappedWstring& text_to_check, long offset, CheckTextMode mode, size_t skip_chars = 0);
     void check_visible(bool not_intersection_only = false);
     void set_encoding_by_id(int enc_id);
-    void save_settings();
     std::vector<SuggestionsMenuItem> fill_suggestions_menu(HMENU menu);
     bool get_word_under_cursor_is_right(long& pos, long& length,
                                         bool use_text_cursor = false);
@@ -138,19 +134,6 @@ private:
     void apply_conversions(std::wstring& word);
     void reset_hot_spot_cache();
     void cut_apostrophes(std::wstring_view& word);
-
-    void save_to_ini(const wchar_t* name, const wchar_t* value,
-                     const wchar_t* default_value, bool in_quotes = false);
-    void save_to_ini(const wchar_t* name, int value, int default_value);
-    void save_to_ini_utf8(const wchar_t* name, const char* value,
-                          const char* default_value, bool in_quotes = false);
-
-    std::wstring load_from_ini(const wchar_t* name,
-                             const wchar_t* default_value, bool in_quotes = false);
-    void load_from_ini(bool& value, const wchar_t* name, bool default_value);
-    void load_from_ini(int& value, const wchar_t* name, int default_value);
-    std::string load_from_ini_utf8(const wchar_t* name,
-                                const char* default_value, bool in_quotes = false);
     static int check_text_default_answer(CheckTextMode mode);
     std::optional<ptrdiff_t> next_token_end(std::wstring_view target, ptrdiff_t index) const;
     std::optional<ptrdiff_t> prev_token_begin(std::wstring_view target, ptrdiff_t index) const;

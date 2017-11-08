@@ -30,25 +30,30 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Settings.h"
 
 RemoveDictionariesDialog::RemoveDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings& settings) :
-    m_settings(settings) {
+    m_settings(settings)
+{
     m_settings.settings_changed.connect([this] { update_list(); });
     get_spell_checker()->speller_status_changed.connect([this] { update_list(); });
     Window::init(h_inst, parent);
-    m_settings.settings_changed.connect([this]{ update_controls (); });
+    m_settings.settings_changed.connect([this] { update_controls(); });
 }
 
-void RemoveDictionariesDialog::do_dialog() {
-    if (!isCreated()) {
+void RemoveDictionariesDialog::do_dialog()
+{
+    if (!isCreated())
+    {
         create(IDD_REMOVE_DICS);
     }
-    else {
+    else
+    {
         goToCenter();
         display();
     }
     SetFocus(m_lang_list);
 }
 
-void RemoveDictionariesDialog::update_list() {
+void RemoveDictionariesDialog::update_list()
+{
     if (!m_lang_list)
         return;
 
@@ -62,36 +67,42 @@ void RemoveDictionariesDialog::update_list() {
 
 HWND RemoveDictionariesDialog::get_list_box() { return m_lang_list; }
 
-void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_instance) {
+void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_instance)
+{
     int count = 0;
     bool need_single_reset = false;
     bool need_multi_reset = false;
     bool single_temp, multi_temp;
-    for (int i = 0; i < ListBox_GetCount(m_lang_list); i++) {
-        if (CheckedListBox_GetCheckState(m_lang_list, i) == BST_CHECKED) {
+    for (int i = 0; i < ListBox_GetCount(m_lang_list); i++)
+    {
+        if (CheckedListBox_GetCheckState(m_lang_list, i) == BST_CHECKED)
+        {
             wchar_t file_name[MAX_PATH];
             for (int j = 0; j < 1 + m_settings.remove_system_dictionaries ? 1 : 0;
-                 j++) {
+                 j++)
+            {
                 *file_name = L'\0';
                 wcscat(file_name,
                        ((j == 0)
-                           ? m_settings.hunspell_user_path
-                           : m_settings.hunspell_system_path).c_str ());
+                            ? m_settings.hunspell_user_path
+                            : m_settings.hunspell_system_path).c_str());
                 wcscat(file_name, L"\\");
-                wcscat(file_name, spell_checker_instance->get_available_languages()[i].orig_name.c_str ());
+                wcscat(file_name, spell_checker_instance->get_available_languages()[i].orig_name.c_str());
                 wcscat(file_name, L".aff");
                 SetFileAttributes(file_name, FILE_ATTRIBUTE_NORMAL);
                 bool success = DeleteFile(file_name);
                 wcsncpy(file_name + wcslen(file_name) - 4, L".dic", 4);
                 SetFileAttributes(file_name, FILE_ATTRIBUTE_NORMAL);
                 success = success && DeleteFile(file_name);
-                if (m_settings.remove_user_dictionaries) {
+                if (m_settings.remove_user_dictionaries)
+                {
                     wcsncpy(file_name + wcslen(file_name) - 4, L".usr", 4);
                     SetFileAttributes(file_name, FILE_ATTRIBUTE_NORMAL);
                     DeleteFile(file_name); // Success doesn't matter in that case, 'cause
                     // dictionary might not exist.
                 }
-                if (success) {
+                if (success)
+                {
                     file_name[wcslen(file_name) - 4] = L'\0';
                     spell_checker_instance->get_hunspell_speller()->update_on_dic_removal(
                         file_name, single_temp, multi_temp);
@@ -104,7 +115,8 @@ void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_insta
     }
     for (int i = 0; i < ListBox_GetCount(m_lang_list); i++)
         CheckedListBox_SetCheckState(m_lang_list, i, BST_UNCHECKED);
-    if (count > 0) {
+    if (count > 0)
+    {
         spell_checker_instance->hunspell_reinit_settings(true);
         update_list();
         spell_checker_instance->do_plugin_menu_inclusion();
@@ -117,23 +129,27 @@ void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_insta
     }
 }
 
-void RemoveDictionariesDialog::update_options() {
-    auto mut_settings = m_settings.modify ();
+void RemoveDictionariesDialog::update_options()
+{
+    auto mut_settings = m_settings.modify();
     mut_settings->remove_user_dictionaries = Button_GetCheck(m_remove_user_dics) ==
         BST_CHECKED;
     mut_settings->remove_system_dictionaries = Button_GetCheck(m_remove_system) ==
         BST_CHECKED;
 }
 
-void RemoveDictionariesDialog::update_controls() {
+void RemoveDictionariesDialog::update_controls()
+{
     Button_SetCheck(m_remove_user_dics,
         m_settings.remove_user_dictionaries ? BST_CHECKED : BST_UNCHECKED);
     Button_SetCheck(m_remove_system, m_settings.remove_system_dictionaries ? BST_CHECKED : BST_UNCHECKED);
 }
 
 INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param,
-                                               LPARAM /*lParam*/) {
-    switch (message) {
+                                               LPARAM /*lParam*/)
+{
+    switch (message)
+    {
     case WM_INITDIALOG:
         {
             m_lang_list = ::GetDlgItem(_hSelf, IDC_REMOVE_LANGLIST);
@@ -145,25 +161,29 @@ INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param,
         }
     case WM_COMMAND:
         {
-            switch (LOWORD(w_param)) {
+            switch (LOWORD(w_param))
+            {
             case IDC_REMOVE_USER_DICS:
             case IDC_REMOVE_SYSTEM:
                 {
-                    if (HIWORD(w_param) == BN_CLICKED) {
-                        get_spell_checker()->update_from_remove_dics_options();
+                    if (HIWORD(w_param) == BN_CLICKED)
+                    {
+                        update_options();
                     }
                 }
                 break;
             case IDOK:
-                if (HIWORD(w_param) == BN_CLICKED) {
+                if (HIWORD(w_param) == BN_CLICKED)
+                {
                     display(false);
                     remove_selected(get_spell_checker());
                 }
                 break;
             case IDCANCEL:
-                if (HIWORD(w_param) == BN_CLICKED) {
+                if (HIWORD(w_param) == BN_CLICKED)
+                {
                     display(false);
-                    update_list (); // reset checkboxes
+                    update_list(); // reset checkboxes
                 }
 
                 break;

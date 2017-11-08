@@ -190,19 +190,9 @@ const SpellerInterface* SpellChecker::active_speller() const {
     return nullptr;
 }
 
-void SpellChecker::apply_proxy_settings() {
-    get_select_proxy()->apply_choice();
-    save_settings();
-}
-
 void SpellChecker::show_suggestion_menu() {
     fill_suggestions_menu(m_suggestions_instance->get_popup_menu());
     SendMessage(m_suggestions_instance->getHSelf(), WM_SHOWANDRECREATEMENU, 0, 0);
-}
-
-void SpellChecker::update_from_remove_dics_options() {
-    get_remove_dics()->update_options();
-    save_settings();
 }
 
 void SpellChecker::lang_change() {
@@ -724,16 +714,6 @@ std::wstring SpellChecker::get_default_hunspell_path() {
     return m_ini_file_path.substr(0, m_ini_file_path.rfind(L'\\')) + L"\\Hunspell";
 }
 
-void SpellChecker::save_settings() {
-    FILE* fp;
-    _wfopen_s(&fp, m_ini_file_path.c_str(), L"w"); // Cleaning settings file (or creating it)
-    fclose(fp);
-    if (!m_settings_loaded)
-        return;
-    auto path = get_default_aspell_path();
-
-}
-
 void SpellChecker::init_speller() {
     switch (m_settings.active_speller_lib_id) {
 
@@ -758,14 +738,8 @@ void SpellChecker::on_settings_changed() {
     m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
     m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
     m_aspell_speller->init(m_settings.aspell_path.c_str());
-    int x;
-    load_from_ini(x, L"Library", 1);
     init_speller();
-    int size, trans;
-    load_from_ini(size, L"Suggestions_Button_Size", 15);
-    load_from_ini(trans, L"Suggestions_Button_Opacity", 70);
     update_suggestion_box();
-    load_from_ini(size, L"Find_Next_Buffer_Size", 4);
     refresh_underline_style();
     check_file_name();
     refresh_underline_style();
@@ -855,88 +829,6 @@ void SpellChecker::clear_all_underlines() {
         post_msg_to_active_editor(get_current_scintilla(), SCI_INDICATORCLEARRANGE, 0,
                                   length);
     }
-}
-
-void SpellChecker::save_to_ini(const wchar_t* name, const wchar_t* value,
-                               const wchar_t* default_value, bool in_quotes) {
-    if (!name || !value)
-        return;
-
-    if (default_value && wcscmp(value, default_value) == 0)
-        return;
-
-    if (in_quotes) {
-        WritePrivateProfileString(L"SpellCheck", name, wstring_printf(LR"("%s")", value).c_str(),
-                                  m_ini_file_path.c_str());
-    }
-    else {
-        WritePrivateProfileString(L"SpellCheck", name, value, m_ini_file_path.c_str());
-    }
-}
-
-void SpellChecker::save_to_ini(const wchar_t* name, int value, int default_value) {
-    if (!name)
-        return;
-
-    if (value == default_value)
-        return;
-
-    wchar_t buf[DEFAULT_BUF_SIZE];
-    _itow_s(value, buf, 10);
-    save_to_ini(name, buf, nullptr);
-}
-
-void SpellChecker::save_to_ini_utf8(const wchar_t* name, const char* value,
-                                    const char* default_value, bool in_quotes) {
-    if (!name || !value)
-        return;
-
-    if (default_value && strcmp(value, default_value) == 0)
-        return;
-
-    save_to_ini(name, utf8_to_wstring(value).c_str(), nullptr, in_quotes);
-}
-
-std::wstring SpellChecker::load_from_ini(const wchar_t* name,
-                                         const wchar_t* default_value, bool in_quotes) {
-    assert (name && default_value);
-
-    auto value = read_ini_value(L"Spellcheck", name, default_value, m_ini_file_path.c_str());
-
-    if (in_quotes) {
-        // Proof check for quotes
-        if (value.front() != '\"' || value.back() != '\"' || value.length() < 2) {
-            return default_value;
-        }
-
-        return value.substr(1, value.length() - 2);
-    }
-    return value;
-}
-
-void SpellChecker::load_from_ini(int& value, const wchar_t* name,
-                                 int default_value) {
-    if (!name)
-        return;
-
-    auto buf = load_from_ini(name, std::to_wstring(default_value).c_str());
-    value = _wtoi(buf.c_str());
-}
-
-void SpellChecker::load_from_ini(bool& value, const wchar_t* name,
-                                 bool default_value) {
-    if (!name)
-        return;
-
-    auto buf = load_from_ini(name, std::to_wstring(default_value).c_str());
-    value = _wtoi(buf.c_str()) != 0;
-}
-
-std::string SpellChecker::load_from_ini_utf8(const wchar_t* name,
-                                             const char* default_value, bool in_quotes) {
-    if (!name || !default_value)
-        return default_value;
-    return to_utf8_string(load_from_ini(name, utf8_to_wstring(default_value).c_str(), in_quotes).c_str());
 }
 
 static void set_multiple_languages(std::wstring_view multi_string, SpellerInterface* speller) {

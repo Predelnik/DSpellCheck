@@ -107,7 +107,7 @@ INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
             switch (LOWORD(w_param)) {
             case IDOK:
                 if (HIWORD(w_param) == BN_CLICKED) {
-                    get_spell_checker()->apply_proxy_settings();
+                    apply_choice ();
                     display(false);
                 }
                 break;
