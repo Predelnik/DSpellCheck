@@ -357,8 +357,8 @@ void init_classes() {
     settings = std::make_unique<Settings>(ini_file_path);
 
     spell_checker =
-        std::make_unique<SpellChecker>(ini_file_path, settings_dlg.get(), &npp_data,
-                                       suggestions_button.get(), lang_list_instance.get(), settings.get());
+        std::make_unique<SpellChecker>(&npp_data,
+                                       suggestions_button.get(), settings.get());
 
     settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data,
                                                  *settings);

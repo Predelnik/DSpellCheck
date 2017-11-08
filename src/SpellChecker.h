@@ -71,10 +71,8 @@ public:
     mutable lsignal::signal<void()> speller_status_changed;
 
 public:
-    SpellChecker(const wchar_t* ini_file_path_arg,
-                 SettingsDlg* settings_dlg_instance_arg, NppData* npp_data_instance_arg,
+    SpellChecker(NppData* npp_data_instance_arg,
                  SuggestionsButton* suggestions_instance_arg,
-                 LangList* lang_list_instance_arg,
                  const Settings *settings);
     ~SpellChecker();
     void recheck_visible_both_views();
@@ -141,11 +139,9 @@ private:
     auto delimiter_tokenizer(std::wstring_view target) const;
 
 private:
-    bool m_settings_loaded;
     bool m_check_text_enabled; // cache for check_those
     bool m_word_under_cursor_is_correct;
     // converted to corresponding symbols
-    const AspellWordList* m_cur_word_list;
     HWND m_current_scintilla;
     LRESULT m_hot_spot_cache[256]; // STYLE_MAX = 255
     const Settings &m_settings;
@@ -153,18 +149,14 @@ private:
 
     LRESULT m_lexer;
     std::vector<std::wstring> m_last_suggestions;
-    long m_modified_start;
-    long m_modified_end;
     long m_word_under_cursor_pos;
     std::size_t m_word_under_cursor_length;
     LRESULT m_current_position;
     NppData* m_npp_data_instance;
     EncodingType m_current_encoding;
-    std::wstring m_ini_file_path;
     MappedWstring m_selected_word;
     SettingsDlg* m_settings_dlg_instance;
     SuggestionsButton* m_suggestions_instance;
-    LangList* m_lang_list_instance;
     long m_visible_text_offset;
 
     SpellerInterface* m_current_speller;

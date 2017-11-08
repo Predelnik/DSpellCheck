@@ -81,19 +81,12 @@ LRESULT post_msg_to_active_editor(HWND scintilla_window, UINT msg,
     return PostMessage(scintilla_window, msg, w_param, l_param);
 }
 
-SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
-                           SettingsDlg* settings_dlg_instance_arg,
-                           NppData* npp_data_instance_arg,
+SpellChecker::SpellChecker(NppData* npp_data_instance_arg,
                            SuggestionsButton* suggestions_instance_arg,
-                           LangList* lang_list_instance_arg,
                            const Settings* settings) : m_settings(*settings) {
     m_current_position = 0;
-    m_ini_file_path = ini_file_path_arg;
-    m_settings_dlg_instance = settings_dlg_instance_arg;
     m_suggestions_instance = suggestions_instance_arg;
     m_npp_data_instance = npp_data_instance_arg;
-    m_lang_list_instance = lang_list_instance_arg;
-    m_cur_word_list = nullptr;
     m_word_under_cursor_length = 0;
     m_word_under_cursor_pos = 0;
     m_word_under_cursor_is_correct = true;
@@ -102,7 +95,6 @@ SpellChecker::SpellChecker(const wchar_t* ini_file_path_arg,
     m_hunspell_speller = std::make_unique<HunspellInterface>(m_npp_data_instance->npp_handle);
     m_current_speller = m_aspell_speller.get();
     reset_hot_spot_cache();
-    m_settings_loaded = false;
     m_settings.settings_changed.connect([this] { on_settings_changed(); });
     bool res =
         (send_msg_to_npp(m_npp_data_instance, NPPM_ALLOCATESUPPORTED, 0, 0) != 0);
@@ -710,10 +702,6 @@ void SpellChecker::refresh_underline_style() {
                              m_settings.underline_color);
 }
 
-std::wstring SpellChecker::get_default_hunspell_path() {
-    return m_ini_file_path.substr(0, m_ini_file_path.rfind(L'\\')) + L"\\Hunspell";
-}
-
 void SpellChecker::init_speller() {
     switch (m_settings.active_speller_lib_id) {
 
@@ -732,7 +720,6 @@ void SpellChecker::on_settings_changed() {
     m_hunspell_speller->set_use_one_dic(m_settings.use_unified_dictionary);
     send_msg_to_npp(m_npp_data_instance, NPPM_SETMENUITEMCHECK, get_func_item()[0].cmd_id,
                     m_settings.auto_check_text);
-    m_settings_loaded = true;
     update_aspell_language_options();
     update_hunspell_language_options();
     m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
@@ -1190,42 +1177,6 @@ void SpellChecker::set_encoding_by_id(int enc_id) {
     }
     m_hunspell_speller->set_encoding(m_current_encoding);
     m_aspell_speller->set_encoding(m_current_encoding);
-}
-
-void SpellChecker::recheck_modified() {
-    if (!m_current_speller->is_working()) {
-        clear_all_underlines();
-        return;
-    }
-
-    auto first_modified_line = send_msg_to_editor(
-        get_current_scintilla(), SCI_LINEFROMPOSITION, m_modified_start);
-    auto last_modified_line = send_msg_to_editor(
-        get_current_scintilla(), SCI_LINEFROMPOSITION, m_modified_end);
-    auto line_count =
-        send_msg_to_editor(get_current_scintilla(), SCI_GETLINECOUNT);
-    auto first_possibly_modified_pos = send_msg_to_editor(
-        get_current_scintilla(), SCI_POSITIONFROMLINE, first_modified_line);
-
-    LRESULT last_possibly_modified_pos;
-    if (last_modified_line + 1 < line_count) {
-        last_possibly_modified_pos = send_msg_to_editor(
-            get_current_scintilla(), SCI_POSITIONFROMLINE, last_modified_line + 1);
-    }
-    else {
-        last_possibly_modified_pos =
-            send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
-    }
-
-    Sci_TextRange range;
-    range.chrg.cpMin = static_cast<long>(first_possibly_modified_pos);
-    range.chrg.cpMax = static_cast<long>(last_possibly_modified_pos);
-    std::vector<char> buf(range.chrg.cpMax - range.chrg.cpMin + 1 + 1);
-    range.lpstrText = buf.data();
-    send_msg_to_editor(get_current_scintilla(), SCI_GETTEXTRANGE, 0, (LPARAM)&range);
-
-    check_text(to_mapped_wstring(range.lpstrText), static_cast<long>(first_possibly_modified_pos),
-               CheckTextMode::underline_errors);
 }
 
 MappedWstring SpellChecker::to_mapped_wstring(std::string_view str) {
