@@ -23,17 +23,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Plugin.h"
 #include "resource.h"
 #include "SpellChecker.h"
+#include "npp/NppInterface.h"
 
 #define MOUSELEAVE 0x0001
 #define MOUSEHOVER 0x0002
 
-void SuggestionsButton::do_dialog() {
+void SuggestionsButton::do_dialog()
+{
     HWND temp = GetFocus();
     create(IDD_SUGGESTIONS);
     SetFocus(temp);
 }
 
-bool reg_msg(HWND h_wnd, DWORD dw_msg_type) {
+bool reg_msg(HWND h_wnd, DWORD dw_msg_type)
+{
     TRACKMOUSEEVENT tme_event_track; // tracking information
 
     tme_event_track.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -48,7 +51,8 @@ bool reg_msg(HWND h_wnd, DWORD dw_msg_type) {
     tme_event_track.dwHoverTime = HOVER_DEFAULT;
     //      tmeEventTrack.dwHoverTime = 10;
 
-    if (!TrackMouseEvent(&tme_event_track)) {
+    if (!TrackMouseEvent(&tme_event_track))
+    {
         wchar_t sz_error[64];
 
         swprintf(sz_error, L"Can't TrackMouseEvent ! ErrorId: %d", GetLastError());
@@ -64,24 +68,26 @@ HMENU SuggestionsButton::get_popup_menu() { return m_popup_menu; }
 
 int SuggestionsButton::get_result() { return m_menu_result; }
 
-SuggestionsButton::SuggestionsButton(): m_menu_result(0), m_popup_menu(nullptr) {
+SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface& npp): m_npp(npp),
+                                                                                        m_menu_result(0),
+                                                                                        m_popup_menu(nullptr)
+{
+    Window::init(h_inst, parent);
     m_state_pressed = false;
     m_state_hovered = false;
     m_state_menu = false;
 }
 
-void SuggestionsButton::init_dlg(HINSTANCE h_inst, HWND parent, NppData npp_data) {
-    m_npp_data_instance = npp_data;
-    return Window::init(h_inst, parent);
-}
 
-INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
+INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
+{
     POINT p;
     BITMAP bmp;
     int id_img;
     PAINTSTRUCT ps;
 
-    switch (message) {
+    switch (message)
+    {
     case WM_INITDIALOG:
 
         display(false);
@@ -111,7 +117,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
 
     case WM_MOUSEWHEEL:
         ShowWindow(_hSelf, SW_HIDE);
-        PostMessage(get_scintilla_window(&m_npp_data_instance), message, w_param, l_param);
+        PostMessage(m_npp.get_scintilla_hwnd(m_npp.active_view()), message, w_param, l_param);
         return false;
 
     case WM_PAINT:
@@ -158,7 +164,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
             m_menu_result = TrackPopupMenuEx(m_popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN,
                                              p.x, p.y, _hSelf, &tpm_params);
             PostMessage(m_npp_data_instance.npp_handle, WM_NULL, 0, 0);
-            SetFocus(get_scintilla_window(&m_npp_data_instance));
+            SetFocus(m_npp.get_scintilla_hwnd(m_npp.active_view()));
             m_state_menu = false;
             DestroyMenu(m_popup_menu);
             m_popup_menu = CreatePopupMenu();

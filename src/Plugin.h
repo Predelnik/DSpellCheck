@@ -33,6 +33,7 @@ const int nb_func = 8;
 
 enum class CustomGuiMessage;
 class LangList;
+class NppInterface;
 class DownloadDicsDlg;
 class SelectProxyDialog;
 class SpellChecker;
@@ -97,3 +98,6 @@ SpellChecker *get_spell_checker ();
 const Settings& get_settings();
 DWORD get_custom_gui_message_id (CustomGuiMessage message_id);
 void register_custom_messages ();
+void init_npp_interface ();
+void notify (SCNotification* notify_code);
+NppInterface &npp_interface ();

@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "menuCmdID.h"
 #include "Settings.h"
+#include "npp/NppInterface.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -44,8 +45,10 @@ bool restyling_caused_recheck_was_done =
 bool first_restyle = true; // hack to successfully avoid checking hyperlinks when they appear on program start
 
 // ReSharper disable once CppInconsistentNaming
-bool APIENTRY DllMain(HANDLE h_module, DWORD reason_for_call, LPVOID) {
-    switch (reason_for_call) {
+bool APIENTRY DllMain(HANDLE h_module, DWORD reason_for_call, LPVOID)
+{
+    switch (reason_for_call)
+    {
     case DLL_PROCESS_ATTACH:
         plugin_init(h_module);
         break;
@@ -69,13 +72,16 @@ LPARAM last_coords = 0;
 std::vector<SuggestionsMenuItem> cur_menu_list;
 // Ok, trying to use window subclassing to handle messages
 LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
-                                      LPARAM l_param) {
+                                      LPARAM l_param)
+{
     LRESULT ret; // int->LRESULT, fix x64 issue, still compatible with x86
-    switch (message) {
+    switch (message)
+    {
     case WM_INITMENUPOPUP:
         {
             // Checking that it isn't system menu and nor any main menu except 0th
-            if (!cur_menu_list.empty() && LOWORD(l_param) == 0 && HIWORD(l_param) == 0) {
+            if (!cur_menu_list.empty() && LOWORD(l_param) == 0 && HIWORD(l_param) == 0)
+            {
                 // Special check for 0th main menu item
                 MENUBARINFO info;
                 info.cbSize = sizeof(MENUBARINFO);
@@ -87,9 +93,11 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
                 GetMenuItemInfo(main_menu, 0, true, &file_menu_item);
 
                 const auto menu = reinterpret_cast<HMENU>(w_param);
-                if (file_menu_item.hSubMenu != menu && get_langs_sub_menu() != menu) {
+                if (file_menu_item.hSubMenu != menu && get_langs_sub_menu() != menu)
+                {
                     int i = 0;
-                    for (auto& item : cur_menu_list) {
+                    for (auto& item : cur_menu_list)
+                    {
                         insert_sugg_menu_item(menu, item.text.c_str(), item.id, i, item.separator);
                         ++i;
                     }
@@ -100,14 +108,16 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
         break;
 
     case WM_COMMAND:
-        if (HIWORD(w_param) == 0) {
+        if (HIWORD(w_param) == 0)
+        {
             if (!get_use_allocated_ids())
                 get_spell_checker()->process_menu_result(w_param);
 
             if (LOWORD(w_param) == IDM_FILE_PRINTNOW ||
-                LOWORD(w_param) == IDM_FILE_PRINT) {
+                LOWORD(w_param) == IDM_FILE_PRINT)
+            {
                 // Disable autocheck while printing
-                bool prev_value = get_settings ().auto_check_text;
+                bool prev_value = get_settings().auto_check_text;
 
                 auto mut_settings = get_settings().modify();
                 mut_settings->auto_check_text = false;
@@ -120,7 +130,8 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
         break;
     case WM_NOTIFY:
         // Removing possibility of adding items to tab bar menu.
-        if (((LPNMHDR)l_param)->code == NM_RCLICK) {
+        if (((LPNMHDR)l_param)->code == NM_RCLICK)
+        {
             cur_menu_list.clear();
         }
         break;
@@ -136,8 +147,10 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
         break;
     }
 
-    if (message != 0) {
-        if (message == get_custom_gui_message_id(CustomGuiMessage::generic_callback)) {
+    if (message != 0)
+    {
+        if (message == get_custom_gui_message_id(CustomGuiMessage::generic_callback))
+        {
             const auto callback_ptr = std::unique_ptr<CallbackData>(reinterpret_cast<CallbackData *>(w_param));
             if (callback_ptr->alive_status.expired())
                 return false;
@@ -150,24 +163,29 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
     return ret;
 }
 
-LRESULT show_calculated_menu(const std::vector<SuggestionsMenuItem>&& menu_list) {
+LRESULT show_calculated_menu(const std::vector<SuggestionsMenuItem>&& menu_list)
+{
     cur_menu_list = std::move(menu_list);
     return ::CallWindowProc(wnd_proc_notepad, npp_data.npp_handle, WM_CONTEXTMENU, last_hwnd, last_coords);
 }
 
 // ReSharper disable CppInconsistentNaming
-extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) {
+extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
+{
     npp_data = notpadPlusData;
+    init_npp_interface ();
     command_menu_init();
-    wnd_proc_notepad = (WNDPROC)::SetWindowLongPtr(npp_data.npp_handle, GWLP_WNDPROC,
-                                                   (LPARAM)sub_wnd_proc_notepad);
+    wnd_proc_notepad = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(npp_data.npp_handle, GWLP_WNDPROC,
+                                                                    reinterpret_cast<LPARAM>(sub_wnd_proc_notepad)));
 }
 
-extern "C" __declspec(dllexport) const wchar_t* getName() {
+extern "C" __declspec(dllexport) const wchar_t* getName()
+{
     return npp_plugin_name;
 }
 
-extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int* nbF) {
+extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int* nbF)
+{
     *nbF = nb_func;
     return func_item;
 }
@@ -176,25 +194,30 @@ extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int* nbF) {
 
 // For now doesn't look like there is such a need in check modified, but code
 // stays until thorough testing
-void WINAPI do_recheck(HWND, UINT, UINT_PTR, DWORD) {
+void WINAPI do_recheck(HWND, UINT, UINT_PTR, DWORD)
+{
     if (recheck_timer)
         SetTimer(npp_data.npp_handle, recheck_timer, USER_TIMER_MAXIMUM, do_recheck);
     recheck_done = true;
 
-    get_spell_checker()->recheck_visible();
+    get_spell_checker()->recheck_visible(npp_interface().active_view());
     if (!first_restyle)
         restyling_caused_recheck_was_done = true;
     first_restyle = false;
 }
 
 // (PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/)
-void WINAPI ui_update(HWND, UINT, UINT_PTR, DWORD) {
+void WINAPI ui_update(HWND, UINT, UINT_PTR, DWORD)
+{
     get_download_dics()->ui_update();
 }
 
 // ReSharper disable once CppInconsistentNaming
-extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code) {
-    switch (notify_code->nmhdr.code) {
+extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code)
+{
+    notify (notify_code);
+    switch (notify_code->nmhdr.code)
+    {
     case NPPN_SHUTDOWN:
         {
             MSG msg;
@@ -234,7 +257,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code) {
 
     case NPPN_BUFFERACTIVATED:
         {
-            if (get_spell_checker()) {
+            if (get_spell_checker())
+            {
                 get_spell_checker()->check_file_name();
                 recheck_visible();
                 restyling_caused_recheck_was_done = false;
@@ -246,7 +270,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code) {
         if (notify_code->updated & (SC_UPDATE_CONTENT) && (recheck_done || first_restyle) &&
             !restyling_caused_recheck_was_done) // If restyling wasn't caused by user input...
         {
-            get_spell_checker()->recheck_visible();
+            get_spell_checker()->recheck_visible(npp_interface().active_view());
             if (!first_restyle)
                 restyling_caused_recheck_was_done = true;
         }
@@ -254,7 +278,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code) {
             (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) &&
             recheck_done) // If scroll wasn't caused by user input...
         {
-            get_spell_checker()->recheck_visible(true);
+            get_spell_checker()->recheck_visible(npp_interface().active_view(), true);
             restyling_caused_recheck_was_done = false;
         }
         get_spell_checker()->hide_suggestion_box();
@@ -262,10 +286,11 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code) {
 
     case SCN_MODIFIED:
         if (notify_code->modificationType &
-            (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) {
-
-            if (recheck_timer) {
-                SetTimer(npp_data.npp_handle, recheck_timer, get_settings ().recheck_delay, do_recheck);
+            (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
+        {
+            if (recheck_timer)
+            {
+                SetTimer(npp_data.npp_handle, recheck_timer, get_settings().recheck_delay, do_recheck);
                 recheck_done = false;
             }
         }
@@ -292,7 +317,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code) {
 // of plugin development.
 // Please let me know if you need to access to some messages :
 
-void init_needed_dialogs(WPARAM w_param) {
+void init_needed_dialogs(WPARAM w_param)
+{
     // A little bit of code duplication here :(
     auto menu_id = w_param;
     if ((!get_use_allocated_ids() && HIBYTE(menu_id) != DSPELLCHECK_MENU_ID &&
@@ -301,15 +327,18 @@ void init_needed_dialogs(WPARAM w_param) {
             (int)menu_id > get_context_menu_id_start() + 350)))
         return;
     int used_menu_id;
-    if (get_use_allocated_ids()) {
+    if (get_use_allocated_ids())
+    {
         used_menu_id = ((int)menu_id < get_langs_menu_id_start()
-                          ? DSPELLCHECK_MENU_ID
-                          : LANGUAGE_MENU_ID);
+                            ? DSPELLCHECK_MENU_ID
+                            : LANGUAGE_MENU_ID);
     }
-    else {
+    else
+    {
         used_menu_id = HIBYTE(menu_id);
     }
-    switch (used_menu_id) {
+    switch (used_menu_id)
+    {
     case LANGUAGE_MENU_ID:
         WPARAM result;
         if (!get_use_allocated_ids())
@@ -318,10 +347,12 @@ void init_needed_dialogs(WPARAM w_param) {
             result = menu_id - get_langs_menu_id_start();
         if (result == DOWNLOAD_DICS)
             get_download_dics()->do_dialog();
-        else if (result == CUSTOMIZE_MULTIPLE_DICS) {
+        else if (result == CUSTOMIZE_MULTIPLE_DICS)
+        {
             get_lang_list()->do_dialog();
         }
-        else if (result == REMOVE_DICS) {
+        else if (result == REMOVE_DICS)
+        {
             get_remove_dics()->do_dialog();
         }
         break;
@@ -331,16 +362,19 @@ void init_needed_dialogs(WPARAM w_param) {
 
 extern "C" __declspec(dllexport) LRESULT
 // ReSharper disable once CppInconsistentNaming
-messageProc(UINT message, WPARAM w_param, LPARAM /*lParam*/) {
+messageProc(UINT message, WPARAM w_param, LPARAM /*lParam*/)
+{
     // NOLINT
-    switch (message) {
+    switch (message)
+    {
     case WM_MOVE:
         if (get_spell_checker())
             get_spell_checker()->hide_suggestion_box();
         return false;
     case WM_COMMAND:
         {
-            if (HIWORD(w_param) == 0 && get_use_allocated_ids()) {
+            if (HIWORD(w_param) == 0 && get_use_allocated_ids())
+            {
                 init_needed_dialogs(w_param);
                 get_spell_checker()->process_menu_result(w_param);
             }

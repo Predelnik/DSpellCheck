@@ -27,14 +27,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class HunspellInterface;
 class SpellChecker;
+class NppInterface;
 class LanguageInfo;
 class Settings;
 class SettingsDlg;
+class NppInteface;
 typedef HTHEME (WINAPI *OtdProc)(HWND, LPCWSTR);
 
 class SimpleDlg : public StaticDialog {
 public:
-    SimpleDlg(SettingsDlg& parent, const Settings &settings);
+    SimpleDlg(SettingsDlg& parent, const Settings &settings, NppInterface &npp);
     ~SimpleDlg();
     void apply_settings(Settings& settings);
     void update_language_controls(const Settings& settings
@@ -47,7 +49,7 @@ public:
     void set_check_comments(bool value);
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
-    void init_settings(HINSTANCE h_inst, HWND parent, NppData npp_data);
+    void init_settings(HINSTANCE h_inst, HWND parent);
     void update_lib_status(const Settings& settings);
     void update_controls(const Settings& settings);
 
@@ -57,8 +59,8 @@ protected:
 
 private:
     /* NppData struct instance */
+    NppInterface &m_npp;
     const Settings &m_settings;
-    NppData m_npp_data_instance;
     SettingsDlg& m_parent;
 
     /* handles of controls */
@@ -144,7 +146,7 @@ public:
     UINT do_dialog();
     SimpleDlg* get_simple_dlg();
     AdvancedDlg* get_advanced_dlg();
-    SettingsDlg(HINSTANCE h_inst, HWND parent, NppData npp_data, const Settings& settings);
+    SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings& settings);
 
 private:
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
@@ -154,7 +156,7 @@ private:
     void apply_lib_change (SpellerId new_lib_id);
 
 private:
-    NppData m_npp_data;
+    NppInterface &m_npp;
     SimpleDlg m_simple_dlg;
     AdvancedDlg m_advanced_dlg;
     WindowVector m_window_vector;

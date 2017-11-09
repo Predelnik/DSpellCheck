@@ -43,7 +43,7 @@ public:
         return ret;
     }
 
-    std::optional<ptrdiff_t> prev_token_begin(ptrdiff_t index) {
+    std::optional<long> prev_token_begin(long index) {
         if (m_is_delimiter(m_target[index]))
             return std::nullopt;
         while (index >= 0 && !m_is_delimiter(m_target[index])) {
@@ -58,12 +58,12 @@ public:
         return index;
     }
 
-    std::optional<ptrdiff_t> next_token_end(ptrdiff_t index) {
+    std::optional<long> next_token_end(long index) {
         if (m_is_delimiter(m_target[index]))
             return std::nullopt;
-        while (index < static_cast<ptrdiff_t> (m_target.length()) && !m_is_delimiter(m_target[index])) {
+        while (index < static_cast<long> (m_target.length()) && !m_is_delimiter(m_target[index])) {
             if (m_split_camel_case
-                && index < static_cast<ptrdiff_t> (m_target.length()) - 1
+                && index < static_cast<long> (m_target.length()) - 1
                 && IsCharUpper(m_target[index + 1])
                 && IsCharLower(m_target[index]))
                 return index;

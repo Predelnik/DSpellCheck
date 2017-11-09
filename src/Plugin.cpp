@@ -39,6 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "utils/raii.h"
 #include "resource.h"
 #include "Settings.h"
+#include "npp/NppInterface.h"
 
 const wchar_t config_file_name[] = L"DSpellCheck.ini";
 
@@ -72,6 +73,7 @@ HMENU langs_menu;
 int context_menu_id_start;
 int langs_menu_id_start = false;
 bool use_allocated_ids;
+std::unique_ptr<NppInterface> npp;
 
 HANDLE h_module = nullptr;
 HHOOK h_mouse_hook = nullptr;
@@ -166,6 +168,21 @@ void register_custom_messages() {
     }
 }
 
+void init_npp_interface()
+{
+    npp = std::make_unique<NppInterface> (&npp_data);
+}
+
+void notify(SCNotification* notify_code)
+{
+    npp->notify (notify_code);
+}
+
+NppInterface& npp_interface()
+{
+    return *npp;
+}
+
 DWORD get_custom_gui_message_id(CustomGuiMessage message_id) {
     return custom_gui_message_ids[static_cast<int>(message_id)];
 }
@@ -190,7 +207,10 @@ void start_language_list() { lang_list_instance->do_dialog(); }
 
 void load_settings() { get_spell_checker()->on_settings_changed(); }
 
-void recheck_visible() { get_spell_checker()->recheck_visible(); }
+void recheck_visible()
+{
+    get_spell_checker()->recheck_visible(npp_interface ().active_view());
+}
 
 void find_next_mistake() { get_spell_checker()->find_next_mistake(); }
 
@@ -299,8 +319,7 @@ static std::wstring get_menu_item_text(HMENU menu, UINT index) {
 }
 
 HMENU get_dspellcheck_menu() {
-    HMENU plugins_menu =
-        reinterpret_cast<HMENU>(send_msg_to_npp(&npp_data, NPPM_GETMENUHANDLE, NPPPLUGINMENU));
+    HMENU plugins_menu = npp->get_menu_handle (NPPPLUGINMENU);
     HMENU dspellcheck_menu = nullptr;
     int count = GetMenuItemCount(plugins_menu);
     for (int i = 0; i < count; i++) {
@@ -350,17 +369,16 @@ void init_classes() {
 
     InitCheckedListBox(static_cast<HINSTANCE>(h_module));
 
-    suggestions_button = std::make_unique<SuggestionsButton>();
-    suggestions_button->init_dlg(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data);
+    suggestions_button = std::make_unique<SuggestionsButton>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp);
     suggestions_button->do_dialog();
 
     settings = std::make_unique<Settings>(ini_file_path);
 
     spell_checker =
         std::make_unique<SpellChecker>(&npp_data,
-                                       suggestions_button.get(), settings.get());
+                                       suggestions_button.get(), settings.get(), *npp);
 
-    settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, npp_data,
+    settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp,
                                                  *settings);
 
     about_dlg = std::make_unique<AboutDlg>();

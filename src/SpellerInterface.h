@@ -31,7 +31,6 @@ public:
   virtual void set_multiple_languages(
   const std::vector<std::wstring>& list) = 0;         // Languages are from LangList
   void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
-  void set_encoding(EncodingType encoding) { m_current_encoding = encoding; }
   virtual bool check_word(const wchar_t* word) = 0; // Word in Utf-8 or ANSI
   // returned suggestions should be in utf-8
   virtual std::vector<std::wstring> get_suggestions(const wchar_t* word) = 0;
@@ -41,5 +40,4 @@ public:
 
 protected:
   int m_multi_mode = 0;
-  EncodingType m_current_encoding = EncodingType::utf8;
 };

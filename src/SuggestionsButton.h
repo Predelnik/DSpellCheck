@@ -22,13 +22,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
 
+class NppInterface;
+
 class SuggestionsButton : public StaticDialog {
 public:
-  SuggestionsButton();
   void do_dialog();
   HMENU get_popup_menu();
   int get_result();
-  void init_dlg(HINSTANCE h_inst, HWND parent, NppData npp_data);
+  SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface& npp);
 
 protected:
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
@@ -40,4 +41,5 @@ private:
   bool m_state_menu;
   HMENU m_popup_menu;
   NppData m_npp_data_instance;
+  NppInterface &m_npp;
 };

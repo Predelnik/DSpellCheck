@@ -24,12 +24,13 @@ struct NppData;
 
 class MappedWstring {
 public:
-    ptrdiff_t to_original_index(ptrdiff_t cur_index) const { return !mapping.empty() ? mapping[cur_index] : cur_index; }
-    ptrdiff_t from_original_index(ptrdiff_t cur_index) const { return !mapping.empty() ?
-        std::lower_bound(mapping.begin (), mapping.end (), cur_index) - mapping.begin () : cur_index; }
+    long to_original_index(long cur_index) const { return !mapping.empty() ? mapping[cur_index] : cur_index; }
+
+    long from_original_index(long cur_index) const { return !mapping.empty() ?
+        static_cast<long> (std::lower_bound(mapping.begin (), mapping.end (), cur_index) - mapping.begin ()) : cur_index; }
 public:
     std::wstring str;
-    std::vector<ptrdiff_t> mapping; // should have size str.length () or empty (if empty mapping is identity a<->a)
+    std::vector<long> mapping; // should have size str.length () or empty (if empty mapping is identity a<->a)
     // indices should correspond to offsets string `str` had in original encoding
 };
 
@@ -46,9 +47,6 @@ std::string utf8_to_string(const char* source);
 std::pair<std::wstring_view, bool> apply_alias(std::wstring_view str);
 
 std::wstring parse_string(const wchar_t* source);
-
-LRESULT send_msg_to_npp(const NppData* npp_data_arg, UINT msg,
-                        WPARAM w_param = 0, LPARAM l_param = 0);
 
 bool sort_compare(wchar_t* a, wchar_t* b);
 
