@@ -23,6 +23,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define COUNTOF(A) sizeof(A) / sizeof((A)[0])
 #define DEFAULT_BUF_SIZE 4096
 
+
+#ifdef _DEBUG
+#define ASSERT_RETURN(CONDITION,RET) do { if (!(CONDITION)) { assert (false); return RET; }} while (0)
+#else // !_DEBUG
+#define ASSERT_RETURN(CONDITION,RET) do { if (!(CONDITION)) return RET; } while (0)
+#endif // !_DEBUG
+
 enum class EncodingType { utf8 = 0, ansi };
 
 enum class CustomGuiMessage {
