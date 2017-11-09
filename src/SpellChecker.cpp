@@ -21,25 +21,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "AspellInterface.h"
 #include "HunspellInterface.h"
 
-#include "aspell.h"
 #include "DownloadDicsDlg.h"
-#include "iconv.h"
 #include "CommonFunctions.h"
 #include "LanguageInfo.h"
-#include "LangList.h"
 #include "MainDef.h"
 #include "PluginInterface.h"
 #include "Plugin.h"
-#include "RemoveDictionariesDialog.h"
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "Scintilla.h"
-#include "SelectProxyDialog.h"
 #include "SuggestionsButton.h"
 #include "SciUtils.h"
 #include "utils/string_utils.h"
-#include "utils/utf8.h"
-#include "resource.h"
 #include "Settings.h"
 
 HWND get_scintilla_window(const NppData* npp_data_arg) {
@@ -1149,17 +1142,6 @@ int SpellChecker::check_text(const MappedWstring& text_to_check, long offset,
     return false;
 }
 
-void SpellChecker::clear_visible_underlines() {
-    auto length =
-        send_msg_to_editor(get_current_scintilla(), SCI_GETLENGTH);
-    if (length > 0) {
-        post_msg_to_active_editor(get_current_scintilla(), SCI_SETINDICATORCURRENT,
-                                  SCE_ERROR_UNDERLINE);
-        post_msg_to_active_editor(get_current_scintilla(), SCI_INDICATORCLEARRANGE, 0,
-                                  length);
-    }
-}
-
 void SpellChecker::check_visible(bool not_intersection_only) {
     check_text(get_visible_text(&m_visible_text_offset, not_intersection_only), m_visible_text_offset,
                CheckTextMode::underline_errors);
@@ -1200,13 +1182,6 @@ void SpellChecker::recheck_visible(bool not_intersection_only) {
         check_visible(not_intersection_only);
     else
         clear_all_underlines();
-}
-
-void SpellChecker::error_msg_box(const wchar_t* message) {
-    wchar_t buf[DEFAULT_BUF_SIZE];
-    swprintf_s(buf, L"DSpellCheck Error: %ws", message);
-    MessageBox(m_npp_data_instance->npp_handle, message, L"Error Happened!",
-               MB_OK | MB_ICONSTOP);
 }
 
 void SpellChecker::copy_misspellings_to_clipboard() {

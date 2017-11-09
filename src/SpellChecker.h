@@ -80,22 +80,18 @@ public:
     void show_suggestion_menu();
     void precalculate_menu();
     void recheck_visible(bool not_intersection_only = false);
-    void recheck_modified();
     MappedWstring to_mapped_wstring(std::string_view str);
-    void error_msg_box(const wchar_t* message);
 
     bool aspell_reinit_settings();
     void update_hunspell_language_options();
     void update_aspell_language_options();
-    std::wstring get_default_hunspell_path();
     void update_suggestion_box();
 
     void init_speller();
     int get_aspell_status();;
     void do_plugin_menu_inclusion(bool invalidate = false);
-    HunspellInterface* get_hunspell_speller() { return m_hunspell_speller.get(); };
+    HunspellInterface* get_hunspell_speller() const { return m_hunspell_speller.get(); };
     bool hunspell_reinit_settings(bool reset_directory);
-    long previous_a, previous_b;
     void set_suggestions_box_transparency();
     void process_menu_result(WPARAM menu_id);
     void copy_misspellings_to_clipboard();
@@ -115,7 +111,6 @@ private:
     static void create_word_underline(HWND scintilla_window, long start, long end);
     static void remove_underline(HWND scintilla_window, long start, long end);
     void clear_all_underlines();
-    void clear_visible_underlines();
     bool check_word(std::wstring word, long start, long end);
     void get_visible_limits(long& start, long& finish);
     MappedWstring get_visible_text(long* offset, bool not_intersection_only = false);
@@ -158,6 +153,7 @@ private:
     SettingsDlg* m_settings_dlg_instance;
     SuggestionsButton* m_suggestions_instance;
     long m_visible_text_offset;
+    long previous_a, previous_b;
 
     SpellerInterface* m_current_speller;
     std::unique_ptr<AspellInterface> m_aspell_speller;
