@@ -120,7 +120,6 @@ private:
     void apply_conversions(std::wstring& word);
     void reset_hot_spot_cache();
     void cut_apostrophes(std::wstring_view& word);
-    static int check_text_default_answer(CheckTextMode mode);
     std::optional<long> next_token_end(std::wstring_view target, long index) const;
     std::optional<long> prev_token_begin(std::wstring_view target, long index) const;
     auto non_alphabetic_tokenizer (std::wstring_view target) const;
@@ -145,6 +144,7 @@ private:
     long m_visible_text_offset;
     long m_previous_a, m_previous_b;
     EditorInterface &m_editor;
+    std::wstring_view last_result; // workaround for getting latest misspelling
 
     SpellerInterface* m_current_speller;
     std::unique_ptr<AspellInterface> m_aspell_speller;

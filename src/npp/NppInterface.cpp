@@ -230,8 +230,9 @@ long NppInterface::get_document_line_count(EditorViewType view) const
 
 std::vector<char> NppInterface::get_active_document_text(EditorViewType view) const
 {
-    std::vector<char> buf(get_active_document_length(view) + 1);
-    send_msg_to_scintilla(view, SCI_GETTEXT, 0, reinterpret_cast<LPARAM>(buf.data()));
+    auto buf_len = get_active_document_length(view) + 1;
+    std::vector<char> buf(buf_len);
+    send_msg_to_scintilla(view, SCI_GETTEXT, buf_len, reinterpret_cast<LPARAM>(buf.data()));
     return buf;
 }
 
