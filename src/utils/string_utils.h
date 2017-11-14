@@ -86,6 +86,6 @@ auto make_condition_tokenizer(std::wstring_view target, IsDelimiterType is_delim
 
 inline auto make_delimiter_tokenizer(std::wstring_view target, std::wstring_view delimiters,
                                      bool split_camel_case = false) {
-    return make_condition_tokenizer(target, [&](wchar_t c) { return delimiters.find(c) != std::string_view::npos; },
+    return make_condition_tokenizer(target, [=](wchar_t c) { return delimiters.find(c) != std::string_view::npos; },
                                     split_camel_case);
 }
