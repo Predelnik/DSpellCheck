@@ -59,7 +59,9 @@ const wchar_t* gui_string(SpellerId value)
     {
     case SpellerId::aspell: return L"Aspell";
     case SpellerId::hunspell: return L"Hunspell";
+    case SpellerId::native: return L"Native (Windows)";
     case SpellerId::COUNT: break;
+    default: ;
     }
     return nullptr;
 }
@@ -165,6 +167,7 @@ void Settings::process(IniWorker& worker)
     worker.process(L"Hunspell_Multiple_Languages", hunspell_multi_languages, L"");
     worker.process(L"Aspell_Language", aspell_language, L"en");
     worker.process(L"Hunspell_Language", hunspell_language, L"en_GB");
+    worker.process(L"Native_Speller_Language", native_speller_language, L"en-US");
     worker.process(L"Tokenization_Style", tokenization_style, TokenizationStyle::by_non_alphabetic);
     worker.process(L"Split_CamelCase", split_camel_case, true);
     worker.process(L"Delimiter_Exclusions", delimiter_exclusions, default_delimiter_exclusions());

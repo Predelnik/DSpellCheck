@@ -11,6 +11,7 @@ const wchar_t *default_delimiter_exclusions ();
 enum class SpellerId {
     aspell,
     hunspell,
+    native,
 
     // ReSharper disable once CppInconsistentNaming
     COUNT,
@@ -67,6 +68,7 @@ public:
     SuggestionMode suggestions_mode = SuggestionMode::button;
     std::wstring aspell_language;
     std::wstring hunspell_language;
+    std::wstring native_speller_language;
     std::wstring delimiters;
     int suggestion_count = 0;
     bool ignore_yo = false;

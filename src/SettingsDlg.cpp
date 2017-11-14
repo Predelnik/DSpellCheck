@@ -136,6 +136,7 @@ void SimpleDlg::apply_settings(Settings& settings)
                 {
                 case SpellerId::aspell: return &settings.aspell_language;
                 case SpellerId::hunspell: return &settings.hunspell_language;
+                case SpellerId::native: return &settings.native_speller_language;
                 case SpellerId::COUNT: break;
                 }
                 return nullptr;

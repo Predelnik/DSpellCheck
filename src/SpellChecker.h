@@ -38,6 +38,7 @@ class AspellInterface;
 class HunspellInterface;
 class SelectProxy;
 class MappedWstring;
+class NativeSpellerInterface;
 
 struct SuggestionsMenuItem {
     std::wstring text;
@@ -72,6 +73,7 @@ public:
     ~SpellChecker();
     void recheck_visible_both_views();
     const SpellerInterface* active_speller() const;
+    SpellerInterface* active_speller();
     void show_suggestion_menu();
     void precalculate_menu();
     void recheck_visible(EditorViewType view, bool not_intersection_only = false);
@@ -83,7 +85,8 @@ public:
     void update_suggestion_box();
 
     void init_speller();
-    int get_aspell_status();;
+    int get_aspell_status();
+    void cleanup();
     void do_plugin_menu_inclusion(bool invalidate = false);
     HunspellInterface* get_hunspell_speller() const { return m_hunspell_speller.get(); };
     bool hunspell_reinit_settings(bool reset_directory);
@@ -146,7 +149,7 @@ private:
     EditorInterface &m_editor;
     std::wstring_view last_result; // workaround for getting latest misspelling
 
-    SpellerInterface* m_current_speller;
     std::unique_ptr<AspellInterface> m_aspell_speller;
     std::unique_ptr<HunspellInterface> m_hunspell_speller;
+    std::unique_ptr<NativeSpellerInterface> m_native_speller;
 };

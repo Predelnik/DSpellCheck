@@ -56,7 +56,7 @@ HWND NppInterface::get_scintilla_hwnd(EditorViewType view) const
     case EditorViewType::secondary:
         handle = m_npp_data.scintilla_second_handle;
         break;
-    default: break;
+    case EditorViewType::COUNT: break;    
     }
     return handle;
 }

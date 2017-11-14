@@ -159,6 +159,7 @@ void create_hooks() {
 }
 
 void plugin_clean_up() {
+    spell_checker->cleanup ();
     UnhookWindowsHookEx(h_mouse_hook);
 }
 

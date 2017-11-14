@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellerInterface.h"
 #include "AspellInterface.h"
 #include "HunspellInterface.h"
+#include "NativeSpellerInterface.h"
 
 #include "DownloadDicsDlg.h"
 #include "CommonFunctions.h"
@@ -49,7 +50,7 @@ SpellChecker::SpellChecker(NppData* npp_data_instance_arg,
     m_word_under_cursor_is_correct = true;
     m_aspell_speller = std::make_unique<AspellInterface>(m_npp_data_instance->npp_handle);
     m_hunspell_speller = std::make_unique<HunspellInterface>(m_npp_data_instance->npp_handle);
-    m_current_speller = m_aspell_speller.get();
+    m_native_speller = std::make_unique<NativeSpellerInterface> ();
     reset_hot_spot_cache();
     m_settings.settings_changed.connect([this] { on_settings_changed(); });
     auto npp = dynamic_cast<NppInterface *> (&m_editor);
@@ -114,17 +115,30 @@ int SpellChecker::get_aspell_status() {
                : 0;
 }
 
+void SpellChecker::cleanup()
+{
+    m_native_speller->cleanup ();
+}
+
 void SpellChecker::recheck_visible_both_views() {
     recheck_visible(EditorViewType::primary);
     recheck_visible(EditorViewType::secondary);
 }
 
 const SpellerInterface* SpellChecker::active_speller() const {
+    return const_cast<SpellChecker *> (this)->active_speller ();
+}
+
+SpellerInterface* SpellChecker::active_speller()
+{
     switch (m_settings.active_speller_lib_id) {
     case SpellerId::aspell:
         return m_aspell_speller.get();
     case SpellerId::hunspell:
         return m_hunspell_speller.get();
+    case SpellerId::native:
+        return m_native_speller.get();
+    case SpellerId::COUNT: break;
     }
     return nullptr;
 }
@@ -413,7 +427,7 @@ void SpellChecker::set_suggestions_box_transparency() {
 void SpellChecker::init_suggestions_box() {
     if (m_settings.suggestions_mode != SuggestionMode::button)
         return;
-    if (!m_current_speller->is_working())
+    if (!active_speller ()->is_working())
         return;
     POINT p;
     if (!check_text_needed()) // If there's no red underline let's do nothing
@@ -482,14 +496,14 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
             if (result != 0) {
                 if (result == MID_IGNOREALL) {
                     apply_conversions(m_selected_word.str);
-                    m_current_speller->ignore_all(m_selected_word.str.c_str());
+                    active_speller ()->ignore_all(m_selected_word.str.c_str());
                     m_word_under_cursor_length = static_cast<long> (m_selected_word.str.length());
                     m_editor.set_cursor_pos(view, m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
                 }
                 else if (result == MID_ADDTODICTIONARY) {
                     apply_conversions(m_selected_word.str);
-                    m_current_speller->add_to_dictionary(m_selected_word.str.c_str());
+                    active_speller ()->add_to_dictionary(m_selected_word.str.c_str());
                     m_word_under_cursor_length = static_cast<long> (m_selected_word.str.length());
                     m_editor.set_cursor_pos(view, m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
@@ -537,7 +551,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
 }
 
 std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu) {
-    if (!m_current_speller->is_working())
+    if (!active_speller ()->is_working())
         return {}; // Word is already off-screen
 
     int pos = m_word_under_cursor_pos;
@@ -549,7 +563,7 @@ std::vector<SuggestionsMenuItem> SpellChecker::fill_suggestions_menu(HMENU menu)
     m_selected_word = to_mapped_wstring(view, text.data ());
     apply_conversions(m_selected_word.str);
 
-    m_last_suggestions = m_current_speller->get_suggestions(m_selected_word.str.c_str());
+    m_last_suggestions = active_speller ()->get_suggestions(m_selected_word.str.c_str());
 
     for (int i = 0; i < static_cast<int>(m_last_suggestions.size()); i++) {
         if (i >= m_settings.suggestion_count)
@@ -597,13 +611,13 @@ void SpellChecker::refresh_underline_style() {
 
 void SpellChecker::init_speller() {
     switch (m_settings.active_speller_lib_id) {
-
+    case SpellerId::native:
+        m_native_speller->init ();
+        break;
     case SpellerId::aspell:
         aspell_reinit_settings();
-        m_current_speller = m_aspell_speller.get();
         break;
     case SpellerId::hunspell:
-        m_current_speller = m_hunspell_speller.get();
         hunspell_reinit_settings(false);
         break;
     }
@@ -621,6 +635,7 @@ void SpellChecker::on_settings_changed() {
     m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
     m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
     m_aspell_speller->init(m_settings.aspell_path.c_str());
+    m_native_speller->set_language(m_settings.native_speller_language.c_str ());
     init_speller();
     update_suggestion_box();
     refresh_underline_style();
@@ -673,15 +688,15 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view, long* offset, 
     if (to < 0 || from > to)
         return {};
 
+    if (not_intersection_only) {
+        if (from <= m_previous_a && to >= m_previous_a)
+            to = m_previous_a;
+        else if (to >= m_previous_b && from <= m_previous_b)
+            from = m_previous_b;
+    }
     m_previous_a = from;
     m_previous_b = to;
 
-    if (not_intersection_only) {
-        if (from < m_previous_a && to >= m_previous_a)
-            to = m_previous_a - 1;
-        else if (to > m_previous_b && from <= m_previous_b)
-            from = m_previous_b + 1;
-    }
     *offset = from;
     return to_mapped_wstring(view, m_editor.get_text_range(view, from, to));
 }
@@ -711,7 +726,7 @@ void SpellChecker::update_aspell_language_options() {
     }
     else {
         m_aspell_speller->set_language(m_settings.aspell_language.c_str());
-        m_current_speller->set_mode(0);
+        active_speller ()->set_mode(0);
     }
 }
 
@@ -778,7 +793,7 @@ void SpellChecker::reset_hot_spot_cache() {
 }
 
 bool SpellChecker::check_word(EditorViewType view, std::wstring word, long start, long /*End*/) {
-    if (!m_current_speller->is_working() || word.empty())
+    if (!active_speller ()->is_working() || word.empty())
         return true;
     // Well Numbers have same codes for ANSI and Unicode I guess, so
     // If word contains number then it's probably just a number or some crazy name
@@ -843,7 +858,7 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring word, long start
         }
     }
 
-    bool res = m_current_speller->check_word(word.c_str());
+    bool res = active_speller ()->check_word(word.c_str());
     return res;
 }
 
@@ -905,6 +920,7 @@ std::optional<long> SpellChecker::prev_token_begin(std::wstring_view target, lon
 
 int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_check,
                              long offset, CheckTextMode mode, size_t skip_chars) {
+    clock_t begin = clock();
     if (text_to_check.str.empty())
         return false;
 
@@ -981,6 +997,10 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
                            offset + static_cast<long>(text_len) - 1);
     }
 
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    OutputDebugString ((std::to_wstring (elapsed_secs) + L"\n").c_str ());
+
     switch (mode) {
     case CheckTextMode::underline_errors:
         return true;
@@ -1014,7 +1034,7 @@ MappedWstring SpellChecker::to_mapped_wstring(EditorViewType view, std::string_v
 }
 
 void SpellChecker::recheck_visible(EditorViewType view, bool not_intersection_only) {
-    if (!m_current_speller->is_working()) {
+    if (!active_speller ()->is_working()) {
         clear_all_underlines(view);
         return;
     }
