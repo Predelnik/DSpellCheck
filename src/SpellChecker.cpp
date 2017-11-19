@@ -2167,7 +2167,14 @@ void SpellChecker::GetDefaultHunspellPath(wchar_t *&Path) {
 
 void SpellChecker::SaveSettings() {
   FILE *Fp;
-  _wfopen_s(&Fp, IniFilePath, L"w"); // Cleaning settings file (or creating it)
+  // Cleaning settings file (or creating it)
+  if (_wfopen_s(&Fp, IniFilePath, L"w") != 0/*Success*/)
+      {
+        wchar_t buf[DEFAULT_BUF_SIZE];
+        wsprintf (buf, L"Setting file %s cannot be written. All settings will be lost when you close Notepad++.", IniFilePath);
+        MessageBox (NppDataInstance->_nppHandle, buf, L"Saving of Settings Failed", MB_OK | MB_ICONHAND);
+        return;
+      }
   WORD wBOM = 0xFEFF;
   fwrite (&wBOM, sizeof (wBOM), 1, Fp);
   fclose(Fp);
