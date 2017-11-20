@@ -107,7 +107,9 @@ public:
   void SetInstallSystem(BOOL Value);
   void FillDialogs(BOOL NoDisplayCall = FALSE);
   void ReinitLanguageLists(BOOL UpdateDialogs);
-  wchar_t *GetHunspellPath() { return HunspellPath; };
+  wchar_t *GetHunspellPath() { return HunspellPath; }
+  void switchWriteDebugLog();
+  bool getWriteDebugLog () const { return writeDebugLog; }
   wchar_t *GetHunspellAdditionalPath() { return AdditionalHunspellPath; };
   wchar_t *GetLangByIndex(int i);
   BOOL GetShowOnlyKnown();
@@ -293,4 +295,5 @@ private:
   char *yoANSI;
   char *yeANSI;
   char *PunctuationApostropheANSI;
+  bool writeDebugLog = false;
 };

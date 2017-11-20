@@ -70,6 +70,7 @@ struct FtpOperationParams {
     bool anonymous;
     std::wstring proxyUsername;
     std::wstring proxyPassword;
+    bool writeDebugLog;
 };
 
 class DownloadDicsDlg : public StaticDialog {

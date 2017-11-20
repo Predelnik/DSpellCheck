@@ -400,6 +400,11 @@ void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs) {
   }
 }
 
+void SpellChecker::switchWriteDebugLog()
+{
+    writeDebugLog = !writeDebugLog;
+}
+
 int SpellChecker::GetLibMode() { return LibMode; }
 
 void SpellChecker::FillDialogs(BOOL NoDisplayCall) {
