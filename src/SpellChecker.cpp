@@ -2168,6 +2168,11 @@ void SpellChecker::GetDefaultHunspellPath(wchar_t *&Path) {
 void SpellChecker::SaveSettings() {
   FILE *Fp;
   // Cleaning settings file (or creating it)
+  wchar_t *LastSlashPos = GetLastSlashPosition(IniFilePath);
+  *LastSlashPos = L'\0';
+  CheckForDirectoryExistence(IniFilePath);
+  *LastSlashPos = L'\\';
+
   if (_wfopen_s(&Fp, IniFilePath, L"w") != 0/*Success*/)
       {
         wchar_t buf[DEFAULT_BUF_SIZE];
