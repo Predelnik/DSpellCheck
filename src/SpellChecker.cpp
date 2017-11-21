@@ -332,6 +332,15 @@ BOOL SpellChecker::GetInstallSystem() { return InstallSystem; }
 
 BOOL SpellChecker::GetDecodeNames() { return DecodeNames; }
 
+std::wstring SpellChecker::getDebugLogPath() const
+{
+    std::vector<wchar_t> buf (MAX_PATH);
+    GetTempPath (static_cast<DWORD> (buf.size ()), buf.data ());
+    std::wstring path = buf.data ();
+    path += L"\\DSpellCheck_Debug_Log.txt";
+    return path;
+}
+
 wchar_t *SpellChecker::GetLangByIndex(int i) {
   return CurrentLangs->at(i).OrigName;
 }
@@ -403,6 +412,10 @@ void SpellChecker::ReinitLanguageLists(BOOL UpdateDialogs) {
 void SpellChecker::switchWriteDebugLog()
 {
     writeDebugLog = !writeDebugLog;
+    if (writeDebugLog)
+        {
+            DeleteFile (getDebugLogPath().c_str ());
+        }
 }
 
 int SpellChecker::GetLibMode() { return LibMode; }

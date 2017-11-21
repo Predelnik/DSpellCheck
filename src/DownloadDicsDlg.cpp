@@ -612,7 +612,7 @@ private:
 std::variant<FtpOperationErrorType, std::vector<std::wstring>> doDownloadFileListFTP(FtpOperationParams params)
 {
     nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 3);
-    auto logObserver = std::make_unique<LogObserver>(L"DSpellCheck-debug-log.txt");
+    auto logObserver = std::make_unique<LogObserver>(params.logPath.c_str ());
     if (params.writeDebugLog)
     {
         client.AttachObserver(logObserver.get());
@@ -635,7 +635,7 @@ std::optional<FtpOperationErrorType> doDownloadFile(FtpOperationParams params, c
                                                     cancellation_token token)
 {
     nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 3);
-    auto logObserver = std::make_unique<LogObserver>(L"DSpellCheck-debug-log.txt");
+    auto logObserver = std::make_unique<LogObserver>(params.logPath.c_str ());
     if (params.writeDebugLog)
     {
         client.AttachObserver(logObserver.get());
@@ -959,6 +959,7 @@ FtpOperationParams DownloadDicsDlg::spawnFtpOperationParams(const std::wstring& 
     params.proxyUsername = SpellCheckerInstance->GetProxyUserName();
     params.proxyPassword = SpellCheckerInstance->GetProxyPassword();
     params.writeDebugLog = SpellCheckerInstance->getWriteDebugLog();
+    params.logPath = SpellCheckerInstance->getDebugLogPath ();
     return params;
 }
 

@@ -110,7 +110,8 @@ public:
   wchar_t *GetHunspellPath() { return HunspellPath; }
   void switchWriteDebugLog();
   bool getWriteDebugLog () const { return writeDebugLog; }
-  wchar_t *GetHunspellAdditionalPath() { return AdditionalHunspellPath; };
+  wchar_t *GetHunspellAdditionalPath() { return AdditionalHunspellPath; }
+  std::wstring getDebugLogPath() const;
   wchar_t *GetLangByIndex(int i);
   BOOL GetShowOnlyKnown();
   BOOL GetInstallSystem();

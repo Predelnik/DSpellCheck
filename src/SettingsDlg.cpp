@@ -987,6 +987,8 @@ INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
                 flags |= MF_CHECKED;
             AppendMenu(menu, flags, 0,
                        L"Enable Debug Logging");
+            AppendMenu(menu, MF_STRING, 2,
+                       L"Open Debug Log...");
             AppendMenu(menu, MF_SEPARATOR, 0, L"");
             AppendMenu(menu, MF_STRING, 1,
                        L"Copy All Misspelled Words in Current Document to Clipboard");
@@ -1016,6 +1018,9 @@ INT_PTR SettingsDlg::run_dlgProc(UINT Message, WPARAM wParam, LPARAM lParam)
                 {
                 case 0:
                     GetSpellChecker()->switchWriteDebugLog();
+                    break;
+                case 2:
+                    ShellExecute (nullptr, L"open", GetSpellChecker()->getDebugLogPath().c_str (), nullptr, nullptr, SW_SHOW);
                     break;
                 case 1:
                     GetSpellChecker()->NotifyEvent(EID_COPY_MISSPELLINGS_TO_CLIPBOARD);
