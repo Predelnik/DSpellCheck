@@ -582,10 +582,11 @@ struct LogObserver : public nsFTP::CFTPClient::CNotification
         std::wstring s = L"Command ";
         s += cmd.AsString();
         s += L" with args: ";
-        for (int i = 0; i < args.size (); ++i) 
+        auto n = static_cast<int> (args.size ());
+        for (int i = 0; i < n; ++i) 
         {
             s += args[i];
-            if (i != args.size () - 1)
+            if (i != n - 1)
                 s += L", ";
         }
         s += L'\n';
