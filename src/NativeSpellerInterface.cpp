@@ -1,3 +1,4 @@
+#ifdef DSPELLCHECK_NEW_SDK
 #include "NativeSpellerInterface.h"
 #include "CommonFunctions.h"
 #include "LanguageInfo.h"
@@ -41,7 +42,7 @@ void NativeSpellerInterface::init_impl()
                         nullptr,
                         CLSCTX_INPROC_SERVER,
                         __uuidof(m_ptrs->m_factory),
-                        reinterpret_cast<void **>(m_ptrs->m_factory.GetAddressOf())));
+                        reinterpret_cast<void **>(&m_ptrs->m_factory)));
 }
 
 void NativeSpellerInterface::init()
@@ -68,7 +69,7 @@ void NativeSpellerInterface::set_language(const wchar_t* lang)
       return;
   try
   {
-    HR (m_ptrs->m_factory->CreateSpellChecker(lang, m_ptrs->m_speller.GetAddressOf()));
+    HR (m_ptrs->m_factory->CreateSpellChecker(lang, &m_ptrs->m_speller));
   }
   catch (const std::exception &e)
   {
@@ -81,9 +82,9 @@ bool NativeSpellerInterface::check_word(const wchar_t *word)
     OutputDebugString(L"check_word\n");
     if (!m_ok || !m_ptrs->m_speller)
       return true;
-    m_ptrs->m_speller->Check(word, m_ptrs->m_err.GetAddressOf());
-    Microsoft::WRL::ComPtr<ISpellingError> dummy;
-    return m_ptrs->m_err->Next(dummy.GetAddressOf()) != S_OK; // Check that error list is empty
+    m_ptrs->m_speller->Check(word, &m_ptrs->m_err);
+    CComPtr<ISpellingError> dummy;
+    return m_ptrs->m_err->Next(&dummy) != S_OK; // Check that error list is empty
 }
 
 void NativeSpellerInterface::add_to_dictionary(const wchar_t* /*word*/)
@@ -101,8 +102,8 @@ bool NativeSpellerInterface::is_working() const
 
 std::vector<LanguageInfo> NativeSpellerInterface::get_language_list() const
 {
-    Microsoft::WRL::ComPtr<IEnumString> ptr;
-    m_ptrs->m_factory->get_SupportedLanguages(ptr.GetAddressOf());
+    CComPtr<IEnumString> ptr;
+    m_ptrs->m_factory->get_SupportedLanguages(&ptr);
     ULONG fetched;
     wchar_t *ws;
     std::vector<LanguageInfo> res;
@@ -134,3 +135,4 @@ void NativeSpellerInterface::cleanup()
     m_ok = false;
     m_ptrs.reset ();
 }
+#endif // DSPELLCHECK_NEW_SDK

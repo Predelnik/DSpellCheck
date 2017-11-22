@@ -17,3 +17,36 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #include "SpellerInterface.h"
+#include "LanguageInfo.h"
+
+std::vector<LanguageInfo> DummySpeller::get_language_list() const
+{
+    return {};
+}
+
+void DummySpeller::set_language(const wchar_t*)
+{
+}
+
+bool DummySpeller::check_word(const wchar_t*)
+{
+    return true;
+}
+
+std::vector<std::wstring> DummySpeller::get_suggestions(const wchar_t*)
+{
+    return {};
+}
+
+void DummySpeller::add_to_dictionary(const wchar_t*)
+{
+}
+
+void DummySpeller::ignore_all(const wchar_t*)
+{
+}
+
+bool DummySpeller::is_working() const
+{
+    return false;
+}

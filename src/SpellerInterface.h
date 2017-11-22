@@ -41,3 +41,17 @@ public:
 protected:
   int m_multi_mode = 0;
 };
+
+// speller that does not do anything and never works
+class DummySpeller : public SpellerInterface
+{
+public:
+    std::vector<LanguageInfo> get_language_list() const override;
+    void set_language(const wchar_t*) override;
+    void set_multiple_languages(const std::vector<std::wstring>&) override {}
+    bool check_word(const wchar_t*) override;
+    std::vector<std::wstring> get_suggestions(const wchar_t*) override;
+    void add_to_dictionary(const wchar_t*) override;
+    void ignore_all(const wchar_t*) override;
+    bool is_working() const override;
+};

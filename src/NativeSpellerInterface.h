@@ -1,6 +1,8 @@
 #pragma once
 
 #include "SpellerInterface.h"
+
+#ifdef DSPELLCHECK_NEW_SDK
 #include <atlbase.h>
 
 struct ISpellCheckerFactory;
@@ -36,3 +38,9 @@ private:
     bool m_ok = false;
     bool m_com_initialized = true;
 };
+#else
+class NativeSpellerInterface : public DummySpeller
+{
+    void cleanup ();
+};
+#endif

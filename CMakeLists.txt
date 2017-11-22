@@ -45,6 +45,7 @@ endif()
 if ( DSpellCheck_USE_VLD )
     add_definitions ("-DVLD_BUILD")
 endif ()
+
 file (GLOB_RECURSE source_files src/*.cpp src/*.h src/*.rc)
 
 include (CMake/PrecompiledHeader.cmake)
@@ -78,6 +79,19 @@ target_link_libraries(DSpellCheck lsignal)
 target_link_libraries(DSpellCheck shlwapi comctl32 version wininet Ws2_32)
 target_include_directories (DSpellCheck PRIVATE src/Controls)
 target_include_directories (DSpellCheck PRIVATE src)
+
+# this is hack to support native spell checker while building with xp toolset
+set(DSpellCheck_SUPPOSED_SDK_PATH "c:\\Program Files (x86)\\Windows Kits\\8.1\\Include\\")
+if (EXISTS ${DSpellCheck_SUPPOSED_SDK_PATH})
+  set (DSpellCheck_NEW_SDK_PATH_DEFAULT ${DSpellCheck_SUPPOSED_SDK_PATH})
+endif ()
+set(DSpellCheck_NEW_SDK_PATH ${DSpellCheck_NEW_SDK_PATH_DEFAULT} CACHE STRING "Newer(8.1) SDK path to support native windows spell check")
+
+if ( NOT ${DSpellCheck_NEW_SDK_PATH} STREQUAL none)
+    target_compile_definitions (DSpellCheck PRIVATE DSPELLCHECK_NEW_SDK)
+    target_include_directories (DSpellCheck PRIVATE ${DSpellCheck_NEW_SDK_PATH}/um 
+      ${DSpellCheck_NEW_SDK_PATH}/shared)
+endif ()
 
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   target_compile_options (DSpellCheck PRIVATE /permissive- /Zc:twoPhase-)
