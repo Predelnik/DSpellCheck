@@ -611,7 +611,7 @@ private:
 
 std::variant<FtpOperationErrorType, std::vector<std::wstring>> doDownloadFileListFTP(FtpOperationParams params)
 {
-    nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 3);
+    nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 500);
     auto logObserver = std::make_unique<LogObserver>(params.logPath.c_str ());
     if (params.writeDebugLog)
     {
@@ -634,7 +634,7 @@ std::optional<FtpOperationErrorType> doDownloadFile(FtpOperationParams params, c
                                                     std::shared_ptr<ProgressData> progressData, concurrency::
                                                     cancellation_token token)
 {
-    nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 3);
+    nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 500);
     auto logObserver = std::make_unique<LogObserver>(params.logPath.c_str ());
     if (params.writeDebugLog)
     {
