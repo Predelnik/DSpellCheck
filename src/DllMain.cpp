@@ -273,6 +273,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code)
             get_spell_checker()->recheck_visible(npp_interface().active_view());
             if (!first_restyle)
                 restyling_caused_recheck_was_done = true;
+            first_restyle = false;
         }
         else if (notify_code->updated &
             (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL) &&

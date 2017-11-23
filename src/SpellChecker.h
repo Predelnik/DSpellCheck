@@ -53,6 +53,14 @@ struct SuggestionsMenuItem {
 void insert_sugg_menu_item(HMENU menu, const wchar_t* text, BYTE id, int insert_pos,
                            bool separator = false);
 
+struct WordToCheck
+{
+    std::wstring str;
+    long word_start;
+    long word_end;
+    bool is_correct;
+};
+
 class SpellChecker {
     enum class CheckTextMode {
         underline_errors = 0,
@@ -108,7 +116,7 @@ private:
     void create_word_underline(EditorViewType view, long start, long end);
     void remove_underline(EditorViewType view, long start, long end);
     void clear_all_underlines(EditorViewType view);
-    bool check_word(EditorViewType view, std::wstring word, long start, long end);
+    bool check_word(EditorViewType view, std::wstring word, long word_start, std::vector<WordToCheck>* words_to_check = nullptr);
     void get_visible_limits(EditorViewType view, long& start, long& finish);
     MappedWstring get_visible_text(EditorViewType view, long* offset, bool not_intersection_only = false);
     int check_text(EditorViewType view, const MappedWstring& text_to_check, long offset, CheckTextMode mode, size_t skip_chars = 0);

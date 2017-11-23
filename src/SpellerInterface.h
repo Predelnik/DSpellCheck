@@ -32,6 +32,8 @@ public:
   const std::vector<std::wstring>& list) = 0;         // Languages are from LangList
   void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
   virtual bool check_word(const wchar_t* word) = 0; // Word in Utf-8 or ANSI
+  // Functions which should be implemented in case if words for some awkward reason could be faster checked in bulk
+  std::vector<bool> check_words (std::vector<const wchar_t *> words);
   // returned suggestions should be in utf-8
   virtual std::vector<std::wstring> get_suggestions(const wchar_t* word) = 0;
   virtual void add_to_dictionary(const wchar_t* word) = 0;
