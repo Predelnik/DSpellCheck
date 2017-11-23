@@ -621,7 +621,7 @@ std::variant<FtpOperationErrorType, std::vector<std::wstring>> doDownloadFileLis
         return FtpOperationErrorType::loginFailed;
 
     nsFTP::TFTPFileStatusShPtrVec list;
-    if (!client.List(params.path, list, true))
+    if (!client.List(params.path, list))
         return FtpOperationErrorType::downloadFailed;
 
     std::vector<std::wstring> ret(list.size());
@@ -653,8 +653,7 @@ std::optional<FtpOperationErrorType> doDownloadFile(FtpOperationParams params, c
     client.AttachObserver(progressUpdater.get());
 
     if (!client.DownloadFile(params.path, targetPath,
-                             nsFTP::CRepresentation(nsFTP::CType::Image()),
-                             true))
+                             nsFTP::CRepresentation(nsFTP::CType::Image())))
     {
         if (PathFileExists(targetPath.c_str()))
         {
