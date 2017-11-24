@@ -1062,9 +1062,9 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
 
     std::vector<bool> results(tokens.size());
     static std::vector<WordToCheck> words_to_check;
-    words_to_check.clear ();
+    words_to_check.clear();
     static std::vector<const wchar_t *> words_for_speller;
-    words_for_speller.clear ();
+    words_for_speller.clear();
     for (int i = 0; i < static_cast<int>(tokens.size()); ++i)
     {
         auto token = tokens[i];
@@ -1082,8 +1082,13 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
         }
     }
     auto spellcheck_result = active_speller()->check_words(words_for_speller);
-    for (int i = 0; i < words_for_speller.size(); ++i)
-        words_to_check[i].is_correct = spellcheck_result[i];
+    if (!spellcheck_result.empty())
+    {
+        for (int i = 0; i < words_for_speller.size(); ++i)
+            words_to_check[i].is_correct = spellcheck_result[i];
+    }
+    else for (auto &w : words_to_check)
+        w.is_correct = true;
 
     for (auto& result : words_to_check)
     {

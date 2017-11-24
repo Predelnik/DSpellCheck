@@ -15,7 +15,7 @@ public:
     void init (); // init should be done after initialization, not after construction
     NativeSpellerInterface ();
     void set_language(const wchar_t* lang) override;
-    bool check_word(const wchar_t* word) override;
+    std::vector<bool> check_words(std::vector<const wchar_t*> words) override;
     void add_to_dictionary(const wchar_t* word) override;
     void ignore_all(const wchar_t* word) override;
     bool is_working() const override;
@@ -25,18 +25,16 @@ public:
     void cleanup();
 
 private:
-    void test();
     void init_impl();
 private:
     struct ptrs
     {
     CComPtr<ISpellCheckerFactory> m_factory;
     CComPtr<ISpellChecker> m_speller;
-    CComPtr<IEnumSpellingError> m_err;
     };
     std::unique_ptr<ptrs> m_ptrs;
     bool m_ok = false;
-    bool m_com_initialized = true;
+    bool m_inited = false;
 };
 #else
 class NativeSpellerInterface : public DummySpeller

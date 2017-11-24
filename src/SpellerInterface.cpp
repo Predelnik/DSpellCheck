@@ -19,6 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellerInterface.h"
 #include "LanguageInfo.h"
 
+bool SpellerInterface::check_word(const wchar_t* word)
+{
+    return check_words({word}).front();
+}
+
 std::vector<bool> SpellerInterface::check_words(std::vector<const wchar_t*> words)
 {
     std::vector<bool> ret;

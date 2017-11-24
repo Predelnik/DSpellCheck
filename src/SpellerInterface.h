@@ -21,27 +21,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class LanguageInfo;
 
-class SpellerInterface {
-private:
-protected:
+class SpellerInterface
+{
 public:
-  virtual ~SpellerInterface() = default;
-  virtual std::vector<LanguageInfo> get_language_list() const = 0;
-  virtual void set_language(const wchar_t* lang) = 0;
-  virtual void set_multiple_languages(
-  const std::vector<std::wstring>& list) = 0;         // Languages are from LangList
-  void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
-  virtual bool check_word(const wchar_t* word) = 0; // Word in Utf-8 or ANSI
-  // Functions which should be implemented in case if words for some awkward reason could be faster checked in bulk
-  std::vector<bool> check_words (std::vector<const wchar_t *> words);
-  // returned suggestions should be in utf-8
-  virtual std::vector<std::wstring> get_suggestions(const wchar_t* word) = 0;
-  virtual void add_to_dictionary(const wchar_t* word) = 0;
-  virtual void ignore_all(const wchar_t* word) = 0;
-  virtual bool is_working() const = 0;
+    virtual ~SpellerInterface() = default;
+    virtual std::vector<LanguageInfo> get_language_list() const = 0;
+    virtual void set_language(const wchar_t* lang) = 0;
+    virtual void set_multiple_languages(
+        const std::vector<std::wstring>& list) = 0; // Languages are from LangList
+    void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
+    // Implement either check_word or check_words or get the endless recursion
+    virtual bool check_word(const wchar_t* word); // Word in Utf-8 or ANSI
+    // Functions which should be implemented in case if words for some awkward reason could be faster checked in bulk
+    virtual std::vector<bool> check_words(std::vector<const wchar_t *> words);
+    virtual std::vector<std::wstring> get_suggestions(const wchar_t* word) = 0;
+    virtual void add_to_dictionary(const wchar_t* word) = 0;
+    virtual void ignore_all(const wchar_t* word) = 0;
+    virtual bool is_working() const = 0;
 
 protected:
-  int m_multi_mode = 0;
+    int m_multi_mode = 0;
 };
 
 // speller that does not do anything and never works
@@ -50,7 +49,11 @@ class DummySpeller : public SpellerInterface
 public:
     std::vector<LanguageInfo> get_language_list() const override;
     void set_language(const wchar_t*) override;
-    void set_multiple_languages(const std::vector<std::wstring>&) override {}
+
+    void set_multiple_languages(const std::vector<std::wstring>&) override
+    {
+    }
+
     bool check_word(const wchar_t*) override;
     std::vector<std::wstring> get_suggestions(const wchar_t*) override;
     void add_to_dictionary(const wchar_t*) override;

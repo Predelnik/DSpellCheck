@@ -25,17 +25,15 @@ inline void HR(HRESULT const result)
 
 void NativeSpellerInterface::init_impl()
 {
-    try 
+    try
     {
-    HR(CoInitializeEx(nullptr, // reserved
-                      COINIT_MULTITHREADED));
+        HR(CoInitializeEx(nullptr, // reserved
+                          COINIT_MULTITHREADED));
     }
-    catch (const ComException &e)
+    catch (const ComException& e)
     {
         if (e.code != RPC_E_CHANGED_MODE)
             throw e;
-        
-        m_com_initialized = false;
     }
 
     HR(CoCreateInstance(__uuidof(SpellCheckerFactory),
@@ -47,6 +45,11 @@ void NativeSpellerInterface::init_impl()
 
 void NativeSpellerInterface::init()
 {
+    if (m_inited)
+        return;
+
+    m_inited = true;
+
     try
     {
         init_impl();
@@ -60,31 +63,51 @@ void NativeSpellerInterface::init()
 
 NativeSpellerInterface::NativeSpellerInterface()
 {
-    m_ptrs = std::make_unique<ptrs> ();
+    m_ptrs = std::make_unique<ptrs>();
 }
 
 void NativeSpellerInterface::set_language(const wchar_t* lang)
 {
-  if (!m_ok)
-      return;
-  try
-  {
-    HR (m_ptrs->m_factory->CreateSpellChecker(lang, &m_ptrs->m_speller));
-  }
-  catch (const std::exception &e)
-  {
-      std::cerr << e.what () << '\n';
-  }
+    if (!m_ok)
+        return;
+    try
+    {
+        HR(m_ptrs->m_factory->CreateSpellChecker(lang, &m_ptrs->m_speller));
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }
 
-bool NativeSpellerInterface::check_word(const wchar_t *word)
+std::vector<bool> NativeSpellerInterface::check_words(std::vector<const wchar_t*> words)
 {
-    OutputDebugString(L"check_word\n");
     if (!m_ok || !m_ptrs->m_speller)
-      return true;
-    m_ptrs->m_speller->Check(word, &m_ptrs->m_err);
-    CComPtr<ISpellingError> dummy;
-    return m_ptrs->m_err->Next(&dummy) != S_OK; // Check that error list is empty
+        return {};
+    std::wstring w;
+    std::vector<bool> ret(words.size(), true);
+    std::vector<std::array<int, 2>> coords;
+    for (int i = 0; i < words.size(); ++i)
+    {
+        coords.push_back({static_cast<int>(w.length()), i});
+        w += words[i];
+        w += L" ";
+    }
+    CComPtr<IEnumSpellingError> err_enum;
+    if (m_ptrs->m_speller->Check(w.c_str(), &err_enum) != S_OK)
+       return {};
+    auto it = coords.begin();
+    while (true)
+    {
+        CComPtr<ISpellingError> err;
+        if (err_enum->Next(&err) != S_OK)
+            break;
+        ULONG si;
+        err->get_StartIndex(&si);
+        it = std::lower_bound(it, coords.end(), static_cast<int> (si), [](auto& arr, auto& i) { return arr[0] < i;});
+        ret[it - coords.begin()] = false;
+    }
+    return ret;
 }
 
 void NativeSpellerInterface::add_to_dictionary(const wchar_t* /*word*/)
@@ -105,14 +128,14 @@ std::vector<LanguageInfo> NativeSpellerInterface::get_language_list() const
     CComPtr<IEnumString> ptr;
     m_ptrs->m_factory->get_SupportedLanguages(&ptr);
     ULONG fetched;
-    wchar_t *ws;
+    wchar_t* ws;
     std::vector<LanguageInfo> res;
     while (true)
     {
         ptr->Next(1, &ws, &fetched);
         if (fetched == 0)
             break;
-        res.push_back (LanguageInfo (ws));
+        res.push_back(LanguageInfo(ws));
     }
     return res;
 }
@@ -133,6 +156,6 @@ void NativeSpellerInterface::cleanup()
     // In the future it could be resolved other way if all the notifications from NPP
     // will be processed as signals which will be disconnected as the first cleanup step
     m_ok = false;
-    m_ptrs.reset ();
+    m_ptrs.reset();
 }
 #endif // DSPELLCHECK_NEW_SDK
