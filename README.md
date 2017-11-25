@@ -17,6 +17,11 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
+v1.3.3
+* Fix non-ASCII delimiters saving/restoring (#108)
+* Fix crash in case if settings file cannot be written (#110)
+* Increase FTP timeout and disable passive mode which should help with its usage in some cases (#111)
+
 v1.3.2
 * Restore correct work of "Ignore for Current Session" functionality (#104)
 * Restore downloading dictionaries on Windows XP (#107)
