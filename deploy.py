@@ -69,12 +69,15 @@ for arch in ['x64', 'x86']:
 	if call(build_args, stdout= (None if options.verbose else FNULL)) != 0:
 		print ('Error: Build error')
 		sys.exit (1)
-	target_zip_path = os.path.join ('out', str (get_version_number (binary_path)),
+	out_path = str (get_version_number (binary_path))
+	target_zip_path = os.path.join ('out', out_path,
 		'DSpellCheck_{}.zip'.format (arch))
-	target_zip_dir = os.path.dirname (target_zip_path)
-	if not os.path.isdir (target_zip_dir):
-		os.makedirs (target_zip_dir)
+	target_pdb_path = os.path.join ('out', out_path,
+		'DSpellCheck_{}.pdb'.format (arch))
+	if not os.path.isdir (out_path):
+		os.makedirs (out_path)
 	print ('Deploying to {}...'.format (target_zip_path))
+	shutil.copy (pdb_path, target_pdb_path)
 	if os.path.isfile (target_zip_path):
 		print ('Error: File {} already exists. Remove it explicitly if you want to overwrite.'
 			.format (target_zip_path))
