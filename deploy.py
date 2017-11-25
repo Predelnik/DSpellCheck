@@ -62,10 +62,10 @@ if options.new_minor:
 
 for arch in ['x64', 'x86']:
 	dir = 'build-deploy-msvc2017-{}'.format (arch)
-	build_args = ['cmake', '--build', dir, '--config', 'Release']
+	build_args = ['cmake', '--build', dir, '--config', 'RelWithDebInfo']
 	FNULL = open(os.devnull, 'w')
 	print ('Building {} version...'.format (arch))
-	binary_path = os.path.join (dir, 'Release', 'DSpellCheck.dll')
+	binary_path = os.path.join (dir, 'RelWithDebInfo', 'DSpellCheck.dll')
 	if call(build_args, stdout= (None if options.verbose else FNULL)) != 0:
 		print ('Error: Build error')
 		sys.exit (1)
