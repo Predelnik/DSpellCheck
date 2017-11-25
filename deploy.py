@@ -6,6 +6,7 @@ import os
 import argparse
 import re
 import sys
+import shutil
 
 def get_version_number (filename):
 	info = GetFileVersionInfo (filename, "\\")
@@ -66,23 +67,24 @@ for arch in ['x64', 'x86']:
 	FNULL = open(os.devnull, 'w')
 	print ('Building {} version...'.format (arch))
 	binary_path = os.path.join (dir, 'RelWithDebInfo', 'DSpellCheck.dll')
+	pdb_path = os.path.join (dir, 'RelWithDebInfo', 'DSpellCheck.pdb')
 	if call(build_args, stdout= (None if options.verbose else FNULL)) != 0:
 		print ('Error: Build error')
 		sys.exit (1)
-	out_path = str (get_version_number (binary_path))
-	target_zip_path = os.path.join ('out', out_path,
-		'DSpellCheck_{}.zip'.format (arch))
-	target_pdb_path = os.path.join ('out', out_path,
+	out_path = os.path.join ('out', str (get_version_number (binary_path)))
+	target_zip_path = os.path.join (out_path, 'DSpellCheck_{}.zip'.format (arch))
+	target_pdb_path = os.path.join (out_path,
 		'DSpellCheck_{}.pdb'.format (arch))
 	if not os.path.isdir (out_path):
 		os.makedirs (out_path)
 	print ('Deploying to {}...'.format (target_zip_path))
-	shutil.copy (pdb_path, target_pdb_path)
 	if os.path.isfile (target_zip_path):
 		print ('Error: File {} already exists. Remove it explicitly if you want to overwrite.'
 			.format (target_zip_path))
 		sys.exit (1)
 	zip (binary_path, target_zip_path)
+	print ('Copying PDB...')
+	shutil.copy (pdb_path, target_pdb_path)
 successString = 'Success!'
 try:
 	from colorama import init, Fore, Style
