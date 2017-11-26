@@ -7,6 +7,8 @@ import argparse
 import re
 import sys
 import shutil
+import json
+import hashlib
 from bs4 import BeautifulSoup
 
 def get_version_number (filename):
@@ -61,9 +63,9 @@ if options.new_minor:
 	ver[-1]=str (int (ver[-1]) + 1)
 	replace_rc_version (ver)
 	print ('Version increased to {}'.format ('.'.join (ver)))
+x64_zip_path = ''
 
 for arch in ['x64', 'x86']:
-	'''
 	dir = 'build-deploy-msvc2017-{}'.format (arch)
 	build_args = ['cmake', '--build', dir, '--config', 'RelWithDebInfo']
 	FNULL = open(os.devnull, 'w')
@@ -85,10 +87,12 @@ for arch in ['x64', 'x86']:
 			.format (target_zip_path))
 		sys.exit (1)
 	zip (binary_path, target_zip_path)
+	if arch == 'x64':
+		x64_zip_path = target_zip_path
 	print ('Copying PDB...')
 	shutil.copy (pdb_path, target_pdb_path)
-	'''
-if 'NPP_PLUGINS_X64_PATH' in os.environ:
+
+if options.new_minor and 'NPP_PLUGINS_X64_PATH' in os.environ:
 	plugins_x64_path = os.environ['NPP_PLUGINS_X64_PATH']
 	print ('Applying change to npp-plugins-x64 source directory...')
 	plugins_xml_path = os.path.join (plugins_x64_path, 'plugins/plugins64.xml')
@@ -97,10 +101,39 @@ if 'NPP_PLUGINS_X64_PATH' in os.environ:
 		plugins_xml_data = file.read()
 	bs = BeautifulSoup(plugins_xml_data, features="xml")
 	plugin_node = bs.plugins.find("plugin", attrs={'name' : 'DSpellCheck'})
+	def replace_text(bs_node, new_text):
+		prev_node_str = str (bs_node)
+		bs_node.string = new_text
+		global plugins_xml_data
+		plugins_xml_data = plugins_xml_data.replace (prev_node_str, str (bs_node))
+
 	ver = get_rc_version ()
-	plugin_node.x64Version.string = ver
-	plugin_node.download.string = 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_x64.zip'.arg (ver);
-	print (plugin_node)
+	replace_text (plugin_node.x64Version, ver)
+	replace_text (plugin_node.download, 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_x64.zip'.format (ver))
+	readme_text = ''
+	with open ('readme.md', "r") as file:
+		readme_text = file.read()
+	key = 'v{}'.format (ver)
+	start_pos = readme_text.find (key)
+	start_pos += len (key)
+	end_pos = readme_text.find ('\n\n', start_pos)
+	replace_text (plugin_node.latestUpdate, readme_text[start_pos:end_pos] + '\n')
+	with open (plugins_xml_path, "w") as file:
+		file.write (plugins_xml_data)
+
+	validate_path = os.path.join (plugins_x64_path, 'plugins/validate.json')
+	validate_data = None
+	validate_text = ''
+	with open(validate_path) as data_file:
+		validate_text = data_file.read ()
+		validate_data = json.loads(validate_text)
+	str_before = json.dumps (validate_data['DSpellCheck'])
+	validate_data['DSpellCheck'] = {}
+	validate_data['DSpellCheck'][hashlib.md5(open(x64_zip_path, 'rb').read()).hexdigest()] = 'DSpellCheck.dll'
+	str_after = json.dumps (validate_data['DSpellCheck'])
+	validate_text = validate_text.replace (str_before[1:-1], str_after[1:-1])
+	with open (validate_path, "w") as file:
+		file.write (validate_text)
 else:
 	print ('%NPP_PLUGINS_X64_PATH% is not set up, nothing to update')
 
