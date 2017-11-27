@@ -64,7 +64,7 @@ if options.new_minor:
 	ver[-1]=str (int (ver[-1]) + 1)
 	replace_rc_version (ver)
 	print ('Version increased to {}'.format ('.'.join (ver)))
-x64_zip_path = ''
+x64_binary_path = ''
 
 for arch in ['x64', 'x86']:
 	dir = 'build-deploy-msvc2017-{}'.format (arch)
@@ -72,6 +72,8 @@ for arch in ['x64', 'x86']:
 	FNULL = open(os.devnull, 'w')
 	print ('Building {} version...'.format (arch))
 	binary_path = os.path.join (dir, 'RelWithDebInfo', 'DSpellCheck.dll')
+	if arch == 'x64':
+		x64_binary_path = binary_path
 	pdb_path = os.path.join (dir, 'RelWithDebInfo', 'DSpellCheck.pdb')
 	if call(build_args, stdout= (None if options.verbose else FNULL)) != 0:
 		print ('Error: Build error')
@@ -88,8 +90,6 @@ for arch in ['x64', 'x86']:
 			.format (target_zip_path))
 		sys.exit (1)
 	zip (binary_path, target_zip_path)
-	if arch == 'x64':
-		x64_zip_path = target_zip_path
 	print ('Copying PDB...')
 	shutil.copy (pdb_path, target_pdb_path)
 
@@ -131,7 +131,7 @@ if options.new_minor or options.update_pm:
 			validate_data = json.loads(validate_text)
 		str_before = json.dumps (validate_data['DSpellCheck'])
 		validate_data['DSpellCheck'] = {}
-		validate_data['DSpellCheck'][hashlib.md5(open(x64_zip_path, 'rb').read()).hexdigest()] = 'DSpellCheck.dll'
+		validate_data['DSpellCheck'][hashlib.md5(open(x64_binary_path, 'rb').read()).hexdigest()] = 'DSpellCheck.dll'
 		str_after = json.dumps (validate_data['DSpellCheck'])
 		validate_text = validate_text.replace (str_before[1:-1], str_after[1:-1])
 		with open (validate_path, "w") as file:
