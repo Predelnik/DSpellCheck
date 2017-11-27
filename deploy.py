@@ -56,6 +56,7 @@ def zip(src, dst):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--new-minor', action="store_true", dest="new_minor", help="Deploy new minor version", default=False)
+parser.add_argument('--update-pm', action="store_true", dest="update_pm", help="Update plugin manager (done automatically if new minor version is set)", default=False)
 parser.add_argument('-v', '--verbose', action="store_true", dest="verbose", help="Verbose output", default=False)
 options = parser.parse_args()
 if options.new_minor:
@@ -92,50 +93,51 @@ for arch in ['x64', 'x86']:
 	print ('Copying PDB...')
 	shutil.copy (pdb_path, target_pdb_path)
 
-if options.new_minor and 'NPP_PLUGINS_X64_PATH' in os.environ:
-	plugins_x64_path = os.environ['NPP_PLUGINS_X64_PATH']
-	print ('Applying change to npp-plugins-x64 source directory...')
-	plugins_xml_path = os.path.join (plugins_x64_path, 'plugins/plugins64.xml')
-	plugins_xml_data = ''
-	with open (plugins_xml_path, "r") as file:
-		plugins_xml_data = file.read()
-	bs = BeautifulSoup(plugins_xml_data, features="xml")
-	plugin_node = bs.plugins.find("plugin", attrs={'name' : 'DSpellCheck'})
-	def replace_text(bs_node, new_text):
-		prev_node_str = str (bs_node)
-		bs_node.string = new_text
-		global plugins_xml_data
-		plugins_xml_data = plugins_xml_data.replace (prev_node_str, str (bs_node))
-
-	ver = get_rc_version ()
-	replace_text (plugin_node.x64Version, ver)
-	replace_text (plugin_node.download, 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_x64.zip'.format (ver))
-	readme_text = ''
-	with open ('readme.md', "r") as file:
-		readme_text = file.read()
-	key = 'v{}'.format (ver)
-	start_pos = readme_text.find (key)
-	start_pos += len (key)
-	end_pos = readme_text.find ('\n\n', start_pos)
-	replace_text (plugin_node.latestUpdate, readme_text[start_pos:end_pos] + '\n')
-	with open (plugins_xml_path, "w") as file:
-		file.write (plugins_xml_data)
-
-	validate_path = os.path.join (plugins_x64_path, 'plugins/validate.json')
-	validate_data = None
-	validate_text = ''
-	with open(validate_path) as data_file:
-		validate_text = data_file.read ()
-		validate_data = json.loads(validate_text)
-	str_before = json.dumps (validate_data['DSpellCheck'])
-	validate_data['DSpellCheck'] = {}
-	validate_data['DSpellCheck'][hashlib.md5(open(x64_zip_path, 'rb').read()).hexdigest()] = 'DSpellCheck.dll'
-	str_after = json.dumps (validate_data['DSpellCheck'])
-	validate_text = validate_text.replace (str_before[1:-1], str_after[1:-1])
-	with open (validate_path, "w") as file:
-		file.write (validate_text)
-else:
-	print ('%NPP_PLUGINS_X64_PATH% is not set up, nothing to update')
+if options.new_minor or options.update_pm:
+	if 'NPP_PLUGINS_X64_PATH' in os.environ:
+		plugins_x64_path = os.environ['NPP_PLUGINS_X64_PATH']
+		print ('Applying change to npp-plugins-x64 source directory...')
+		plugins_xml_path = os.path.join (plugins_x64_path, 'plugins/plugins64.xml')
+		plugins_xml_data = ''
+		with open (plugins_xml_path, "r") as file:
+			plugins_xml_data = file.read()
+		bs = BeautifulSoup(plugins_xml_data, features="xml")
+		plugin_node = bs.plugins.find("plugin", attrs={'name' : 'DSpellCheck'})
+		def replace_text(bs_node, new_text):
+			prev_node_str = str (bs_node)
+			bs_node.string = new_text
+			global plugins_xml_data
+			plugins_xml_data = plugins_xml_data.replace (prev_node_str, str (bs_node))
+	
+		ver = get_rc_version ()
+		replace_text (plugin_node.x64Version, ver)
+		replace_text (plugin_node.download, 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_x64.zip'.format (ver))
+		readme_text = ''
+		with open ('readme.md', "r") as file:
+			readme_text = file.read()
+		key = 'v{}'.format (ver)
+		start_pos = readme_text.find (key)
+		start_pos += len (key)
+		end_pos = readme_text.find ('\n\n', start_pos)
+		replace_text (plugin_node.latestUpdate, readme_text[start_pos:end_pos] + '\n')
+		with open (plugins_xml_path, "w") as file:
+			file.write (plugins_xml_data)
+	
+		validate_path = os.path.join (plugins_x64_path, 'plugins/validate.json')
+		validate_data = None
+		validate_text = ''
+		with open(validate_path) as data_file:
+			validate_text = data_file.read ()
+			validate_data = json.loads(validate_text)
+		str_before = json.dumps (validate_data['DSpellCheck'])
+		validate_data['DSpellCheck'] = {}
+		validate_data['DSpellCheck'][hashlib.md5(open(x64_zip_path, 'rb').read()).hexdigest()] = 'DSpellCheck.dll'
+		str_after = json.dumps (validate_data['DSpellCheck'])
+		validate_text = validate_text.replace (str_before[1:-1], str_after[1:-1])
+		with open (validate_path, "w") as file:
+			file.write (validate_text)
+	else:
+		print ('%NPP_PLUGINS_X64_PATH% is not set up, nothing to update')
 
 successString = 'Success!'
 try:
