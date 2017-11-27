@@ -465,12 +465,12 @@ static bool ftp_login(nsFTP::CFTPClient& client, const FtpOperationParams& param
 
 
 std::variant<FtpOperationErrorType, std::vector<std::wstring>> do_download_file_list_ftp(FtpOperationParams params) {
-    nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 3);
+    nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 500);
     if (!ftp_login(client, params))
         return FtpOperationErrorType::login_failed;
 
     nsFTP::TFTPFileStatusShPtrVec list;
-    if (!client.List(params.path, list, true))
+    if (!client.List(params.path, list))
         return FtpOperationErrorType::download_failed;
 
     std::vector<std::wstring> ret(list.size());
@@ -482,7 +482,7 @@ std::variant<FtpOperationErrorType, std::vector<std::wstring>> do_download_file_
 std::optional<FtpOperationErrorType> do_download_file(FtpOperationParams params, const std::wstring& target_path,
                                                       std::shared_ptr<ProgressData> progress_data, concurrency::
                                                       cancellation_token token) {
-    nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 3);
+    nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 500);
     if (!ftp_login(client, params))
         return FtpOperationErrorType::login_failed;
 
@@ -494,8 +494,7 @@ std::optional<FtpOperationErrorType> do_download_file(FtpOperationParams params,
     client.AttachObserver(progress_updater.get());
 
     if (!client.DownloadFile(params.path, target_path,
-                             nsFTP::CRepresentation(nsFTP::CType::Image()),
-                             true)) {
+                             nsFTP::CRepresentation(nsFTP::CType::Image()))) {
         if (PathFileExists(target_path.c_str())) {
             SetFileAttributes(target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
             DeleteFile(target_path.c_str());
