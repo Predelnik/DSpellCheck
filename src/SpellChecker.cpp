@@ -752,23 +752,13 @@ void SpellChecker::get_visible_limits(EditorViewType view, long& start, long& fi
     return;
 }
 
-MappedWstring SpellChecker::get_visible_text(EditorViewType view, long* offset, bool not_intersection_only)
+MappedWstring SpellChecker::get_visible_text(EditorViewType view, long* offset, bool /*not_intersection_only*/)
 {
     long from, to;
     get_visible_limits(view, from, to);
 
     if (to < 0 || from > to)
         return {};
-
-    if (not_intersection_only)
-    {
-        if (from <= m_previous_a && to >= m_previous_a)
-            to = m_previous_a;
-        else if (to >= m_previous_b && from <= m_previous_b)
-            from = m_previous_b;
-    }
-    m_previous_a = from;
-    m_previous_b = to;
 
     *offset = from;
     return to_mapped_wstring(view, m_editor.get_text_range(view, from, to));

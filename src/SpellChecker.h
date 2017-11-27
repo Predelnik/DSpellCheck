@@ -153,7 +153,6 @@ private:
     SettingsDlg* m_settings_dlg_instance;
     SuggestionsButton* m_suggestions_instance;
     long m_visible_text_offset;
-    long m_previous_a, m_previous_b;
     EditorInterface &m_editor;
     std::wstring_view last_result; // workaround for getting latest misspelling
 
