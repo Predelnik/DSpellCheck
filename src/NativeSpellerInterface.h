@@ -15,7 +15,7 @@ public:
     void init (); // init should be done after initialization, not after construction
     NativeSpellerInterface ();
     void set_language(const wchar_t* lang) override;
-    std::vector<bool> check_words(std::vector<const wchar_t*> words) override;
+    std::vector<bool> check_words(const std::vector<const wchar_t*>& words) override;
     void add_to_dictionary(const wchar_t* word) override;
     void ignore_all(const wchar_t* word) override;
     bool is_working() const override;

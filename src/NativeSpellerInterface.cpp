@@ -72,6 +72,7 @@ void NativeSpellerInterface::set_language(const wchar_t* lang)
         return;
     try
     {
+        m_ptrs->m_speller.Release();
         HR(m_ptrs->m_factory->CreateSpellChecker(lang, &m_ptrs->m_speller));
     }
     catch (const std::exception& e)
@@ -80,7 +81,7 @@ void NativeSpellerInterface::set_language(const wchar_t* lang)
     }
 }
 
-std::vector<bool> NativeSpellerInterface::check_words(std::vector<const wchar_t*> words)
+std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wchar_t*>& words)
 {
     if (!m_ok || !m_ptrs->m_speller)
         return {};

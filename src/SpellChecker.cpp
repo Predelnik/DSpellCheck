@@ -697,7 +697,7 @@ void SpellChecker::on_settings_changed()
         if (npp)
             npp->set_menu_item_check(get_func_item()[0].cmd_id, m_settings.auto_check_text);
     }
-    update_aspell_language_options();
+    update_aspell_language_options(); 
     update_hunspell_language_options();
     m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
     m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
@@ -1051,10 +1051,9 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
     }
 
     std::vector<bool> results(tokens.size());
-    static std::vector<WordToCheck> words_to_check;
+    std::vector<WordToCheck> words_to_check;
     words_to_check.clear();
-    static std::vector<const wchar_t *> words_for_speller;
-    words_for_speller.clear();
+    std::vector<const wchar_t *> words_for_speller;
     for (int i = 0; i < static_cast<int>(tokens.size()); ++i)
     {
         auto token = tokens[i];
@@ -1068,12 +1067,15 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
             words_to_check.back().word_start = word_start;
             words_to_check.back().word_end = static_cast<long>(offset + text_to_check.to_original_index(
                 static_cast<long>(token.data() - text_to_check.str.data() + token.length())));
-            words_for_speller.push_back(words_to_check.back().str.c_str());
         }
     }
+    words_for_speller.resize (words_to_check.size ());
+    OutputDebugString (wstring_printf (L"words_for_speller.size() before: %d\n", words_for_speller.size()).c_str ());
+    std::transform(words_to_check.begin (), words_to_check.end (), words_for_speller.begin (), [](auto &word){ return word.str.c_str (); });
     auto spellcheck_result = active_speller()->check_words(words_for_speller);
     if (!spellcheck_result.empty())
     {
+        OutputDebugString (wstring_printf (L"words_for_speller.size() after: %d\n", words_for_speller.size()).c_str ());
         for (int i = 0; i < words_for_speller.size(); ++i)
             words_to_check[i].is_correct = spellcheck_result[i];
     }

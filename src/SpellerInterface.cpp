@@ -24,7 +24,7 @@ bool SpellerInterface::check_word(const wchar_t* word)
     return check_words({word}).front();
 }
 
-std::vector<bool> SpellerInterface::check_words(std::vector<const wchar_t*> words)
+std::vector<bool> SpellerInterface::check_words(const std::vector<const wchar_t*>& words)
 {
     std::vector<bool> ret;
     ret.resize(words.size());

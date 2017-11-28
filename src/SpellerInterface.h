@@ -33,7 +33,7 @@ public:
     // Implement either check_word or check_words or get the endless recursion
     virtual bool check_word(const wchar_t* word); // Word in Utf-8 or ANSI
     // Functions which should be implemented in case if words for some awkward reason could be faster checked in bulk
-    virtual std::vector<bool> check_words(std::vector<const wchar_t *> words);
+    virtual std::vector<bool> check_words(const std::vector<const wchar_t*>& words);
     virtual std::vector<std::wstring> get_suggestions(const wchar_t* word) = 0;
     virtual void add_to_dictionary(const wchar_t* word) = 0;
     virtual void ignore_all(const wchar_t* word) = 0;
