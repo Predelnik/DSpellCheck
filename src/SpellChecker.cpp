@@ -697,7 +697,7 @@ void SpellChecker::on_settings_changed()
         if (npp)
             npp->set_menu_item_check(get_func_item()[0].cmd_id, m_settings.auto_check_text);
     }
-    update_aspell_language_options(); 
+    update_aspell_language_options();
     update_hunspell_language_options();
     m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
     m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
@@ -1069,18 +1069,20 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
                 static_cast<long>(token.data() - text_to_check.str.data() + token.length())));
         }
     }
-    words_for_speller.resize (words_to_check.size ());
-    OutputDebugString (wstring_printf (L"words_for_speller.size() before: %d\n", words_for_speller.size()).c_str ());
-    std::transform(words_to_check.begin (), words_to_check.end (), words_for_speller.begin (), [](auto &word){ return word.str.c_str (); });
+    words_for_speller.resize(words_to_check.size());
+    OutputDebugString(wstring_printf(L"words_for_speller.size() before: %d\n", words_for_speller.size()).c_str());
+    std::transform(words_to_check.begin(), words_to_check.end(), words_for_speller.begin(),
+                   [](auto& word) { return word.str.c_str(); });
     auto spellcheck_result = active_speller()->check_words(words_for_speller);
     if (!spellcheck_result.empty())
     {
-        OutputDebugString (wstring_printf (L"words_for_speller.size() after: %d\n", words_for_speller.size()).c_str ());
+        OutputDebugString(wstring_printf(L"words_for_speller.size() after: %d\n", words_for_speller.size()).c_str());
         for (int i = 0; i < words_for_speller.size(); ++i)
             words_to_check[i].is_correct = spellcheck_result[i];
     }
-    else for (auto &w : words_to_check)
-        w.is_correct = true;
+    else
+        for (auto& w : words_to_check)
+            w.is_correct = true;
 
     for (auto& result : words_to_check)
     {
@@ -1118,20 +1120,20 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
             if (stop)
                 break;
         }
+    }
 
-        if (mode == CheckTextMode::underline_errors)
+    if (mode == CheckTextMode::underline_errors)
+    {
+        long prev_pos = offset;
+        for (long i = 0; i < (long)underline_buffer.size() - 1; i += 2)
         {
-            long prev_pos = offset;
-            for (long i = 0; i < (long)underline_buffer.size() - 1; i += 2)
-            {
-                remove_underline(view, prev_pos, underline_buffer[i] - 1);
-                create_word_underline(view, underline_buffer[i],
-                                      underline_buffer[i + 1] - 1);
-                prev_pos = underline_buffer[i + 1];
-            }
-            remove_underline(view, prev_pos,
-                             offset + static_cast<long>(text_len) - 1);
+            remove_underline(view, prev_pos, underline_buffer[i] - 1);
+            create_word_underline(view, underline_buffer[i],
+                                  underline_buffer[i + 1] - 1);
+            prev_pos = underline_buffer[i + 1];
         }
+        remove_underline(view, prev_pos,
+                         offset + static_cast<long>(text_len) - 1);
     }
     switch (mode)
     {
