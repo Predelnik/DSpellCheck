@@ -152,7 +152,6 @@ private:
     MappedWstring m_selected_word;
     SettingsDlg* m_settings_dlg_instance;
     SuggestionsButton* m_suggestions_instance;
-    long m_visible_text_offset;
     EditorInterface &m_editor;
     std::wstring_view last_result; // workaround for getting latest misspelling
 

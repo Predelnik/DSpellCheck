@@ -1157,7 +1157,9 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
 
 void SpellChecker::check_visible(EditorViewType view, bool not_intersection_only)
 {
-    check_text(view, get_visible_text(view, &m_visible_text_offset, not_intersection_only), m_visible_text_offset,
+    long offset;
+    auto text = get_visible_text(view, &offset, not_intersection_only);
+    check_text(view, text, offset,
                CheckTextMode::underline_errors);
 }
 
