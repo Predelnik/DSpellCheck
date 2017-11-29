@@ -111,12 +111,20 @@ std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wc
     return ret;
 }
 
-void NativeSpellerInterface::add_to_dictionary(const wchar_t* /*word*/)
+void NativeSpellerInterface::add_to_dictionary(const wchar_t* word)
 {
+    if (!m_ok || !m_ptrs->m_speller)
+      return;
+
+    m_ptrs->m_speller->Add(word);
 }
 
-void NativeSpellerInterface::ignore_all(const wchar_t* /*word*/)
+void NativeSpellerInterface::ignore_all(const wchar_t* word)
 {
+   if (!m_ok || !m_ptrs->m_speller)
+      return;
+
+    m_ptrs->m_speller->Ignore(word);
 }
 
 bool NativeSpellerInterface::is_working() const
