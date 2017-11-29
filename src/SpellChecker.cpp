@@ -1077,7 +1077,7 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
     if (!spellcheck_result.empty())
     {
         OutputDebugString(wstring_printf(L"words_for_speller.size() after: %d\n", words_for_speller.size()).c_str());
-        for (int i = 0; i < words_for_speller.size(); ++i)
+        for (int i = 0; i < static_cast<int> (words_for_speller.size()); ++i)
             words_to_check[i].is_correct = spellcheck_result[i];
     }
     else

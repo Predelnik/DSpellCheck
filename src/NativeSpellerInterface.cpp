@@ -88,7 +88,7 @@ std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wc
     std::wstring w;
     std::vector<bool> ret(words.size(), true);
     std::vector<std::array<int, 2>> coords;
-    for (int i = 0; i < words.size(); ++i)
+    for (int i = 0; i < static_cast<int> (words.size()); ++i)
     {
         coords.push_back({static_cast<int>(w.length()), i});
         w += words[i];
