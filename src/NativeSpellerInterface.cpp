@@ -88,7 +88,7 @@ std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wc
     std::wstring w;
     std::vector<bool> ret(words.size(), true);
     std::vector<std::array<int, 2>> coords;
-    for (int i = 0; i < static_cast<int> (words.size()); ++i)
+    for (int i = 0; i < static_cast<int>(words.size()); ++i)
     {
         coords.push_back({static_cast<int>(w.length()), i});
         w += words[i];
@@ -96,7 +96,7 @@ std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wc
     }
     CComPtr<IEnumSpellingError> err_enum;
     if (m_ptrs->m_speller->Check(w.c_str(), &err_enum) != S_OK)
-       return {};
+        return {};
     auto it = coords.begin();
     while (true)
     {
@@ -105,7 +105,7 @@ std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wc
             break;
         ULONG si;
         err->get_StartIndex(&si);
-        it = std::lower_bound(it, coords.end(), static_cast<int> (si), [](auto& arr, auto& i) { return arr[0] < i;});
+        it = std::lower_bound(it, coords.end(), static_cast<int>(si), [](auto& arr, auto& i) { return arr[0] < i; });
         ret[it - coords.begin()] = false;
     }
     return ret;
@@ -145,9 +145,24 @@ void NativeSpellerInterface::set_multiple_languages(const std::vector<std::wstri
 {
 }
 
-std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t* /*word*/)
+std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t* word)
 {
-    return {};
+    if (!m_ok || !m_ptrs->m_speller)
+        return {};
+
+    CComPtr<IEnumString> suggestions;
+    m_ptrs->m_speller->Suggest(word, &suggestions);
+    std::vector<std::wstring> ret;
+    wchar_t* ws;
+    ULONG fetched;
+    while (true)
+    {
+        suggestions->Next(1, &ws, &fetched);
+        if (fetched == 0)
+            break;
+        ret.push_back (ws);
+    }
+    return ret;
 }
 
 void NativeSpellerInterface::cleanup()
