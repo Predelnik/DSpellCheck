@@ -34,8 +34,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Settings.h"
 #include "npp/NppInterface.h"
 
-SimpleDlg::SimpleDlg(SettingsDlg& parent, const Settings& settings, NppInterface &npp) : StaticDialog(), m_npp (npp), m_settings(settings),
-                                                                      m_parent(parent)
+SimpleDlg::SimpleDlg(SettingsDlg& parent, const Settings& settings, NppInterface& npp) : StaticDialog(), m_npp(npp),
+                                                                                         m_settings(settings),
+                                                                                         m_parent(parent)
 {
     m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
     if (m_h_ux_theme)
@@ -157,7 +158,9 @@ void SimpleDlg::apply_settings(Settings& settings)
         settings.hunspell_user_path = get_edit_text(m_h_lib_path);
         settings.hunspell_system_path = get_edit_text(m_h_system_path);
         break;
+    case SpellerId::native: break;
     case SpellerId::COUNT: break;
+    default: ;
     }
 
     settings.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
@@ -172,11 +175,29 @@ void SimpleDlg::apply_settings(Settings& settings)
 void SimpleDlg::fill_lib_info(int status, const Settings& settings)
 {
     ShowWindow(m_h_aspell_run_together_cb, settings.active_speller_lib_id == SpellerId::aspell);
+
+    bool is_aspell = settings.active_speller_lib_id == SpellerId::aspell;
+    ShowWindow(m_h_lib_link, is_aspell);
+    ShowWindow(m_h_aspell_status, is_aspell);
+    bool is_hunspell = settings.active_speller_lib_id == SpellerId::hunspell;
+    ShowWindow(m_h_download_dics, is_hunspell);
+    ShowWindow(m_h_remove_dics, is_hunspell);
+    ShowWindow(m_h_decode_names, is_hunspell);
+    ShowWindow(m_h_one_user_dic, is_hunspell);
+    ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
+    ShowWindow(m_h_hunspell_path_type, false);
+    ShowWindow(m_h_system_path, false);
+    bool is_native = settings.active_speller_lib_id == SpellerId::native;
+    ShowWindow(m_h_lib_group_box, !is_native);
+    ShowWindow(m_h_lib_path, !is_native);
+    ShowWindow(m_h_reset_speller_path, !is_native);
+    ShowWindow(m_browse_btn, !is_native);
+    
+
     switch (settings.active_speller_lib_id)
     {
     case SpellerId::aspell:
-        ShowWindow(m_h_aspell_status, 1);
-        ShowWindow(m_h_download_dics, 0);
+
         if (status == 2)
         {
             m_aspell_status_color = COLOR_OK;
@@ -195,38 +216,20 @@ void SimpleDlg::fill_lib_info(int status, const Settings& settings)
         Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.aspell_path).c_str ());
 
         Static_SetText(m_h_lib_group_box, L"Aspell Location");
-        ShowWindow(m_h_lib_link, 1);
-        ShowWindow(m_h_remove_dics, 0);
-        ShowWindow(m_h_decode_names, 0);
-        ShowWindow(m_h_one_user_dic, 0);
-        ShowWindow(m_h_hunspell_path_group_box, 0);
-        ShowWindow(m_h_hunspell_path_type, 0);
-        ShowWindow(m_h_lib_path, 1);
-        ShowWindow(m_h_system_path, 0);
         break;
     case SpellerId::hunspell:
-        ShowWindow(m_h_aspell_status, 0);
-        ShowWindow(m_h_download_dics, 1);
-        ShowWindow(m_h_lib_link,
-                   0); // Link to dictionaries doesn't seem to be working anyway
-        ShowWindow(m_h_remove_dics, 1);
-        ShowWindow(m_h_decode_names, 1);
-        ShowWindow(m_h_one_user_dic, 1);
-        ShowWindow(m_h_hunspell_path_group_box, 1);
-        ShowWindow(m_h_hunspell_path_type, 1);
-        if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
         {
-            ShowWindow(m_h_lib_path, 1);
-            ShowWindow(m_h_system_path, 0);
+            auto is_lib_path = ComboBox_GetCurSel(m_h_hunspell_path_type) == 0;
+            ShowWindow(m_h_lib_path, is_lib_path);
+            ShowWindow(m_h_system_path, !is_lib_path);
+            Static_SetText(m_h_lib_group_box, L"Hunspell Settings");
+            Edit_SetText(m_h_lib_path, settings.hunspell_user_path.c_str ());
         }
-        else
-        {
-            ShowWindow(m_h_lib_path, 0);
-            ShowWindow(m_h_system_path, 1);
-        }
-        Static_SetText(m_h_lib_group_box, L"Hunspell Settings");
-        Edit_SetText(m_h_lib_path, settings.hunspell_user_path.c_str ());
         break;
+    case SpellerId::native:
+        break;
+    case SpellerId::COUNT: break;
+    default: ;
     }
     Edit_SetText(m_h_system_path, settings.hunspell_system_path.c_str ());
 }
@@ -325,6 +328,8 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             m_h_reset_speller_path = ::GetDlgItem(_hSelf, IDC_RESETSPELLERPATH);
             m_h_system_path = ::GetDlgItem(_hSelf, IDC_SYSTEMPATH);
             m_h_aspell_run_together_cb = ::GetDlgItem(_hSelf, IDC_ASPELL_RUNTOGETHER_CB);
+            m_browse_btn = ::GetDlgItem(_hSelf, IDC_BROWSEASPELLPATH);
+            
             ComboBox_AddString(m_h_hunspell_path_type, L"For Current User");
             ComboBox_AddString(m_h_hunspell_path_type, L"For All Users");
             ComboBox_SetCurSel(m_h_hunspell_path_type, 0);
@@ -416,6 +421,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                         case SpellerId::hunspell: path = get_default_hunspell_path();
                             break;
                         case SpellerId::COUNT: break;
+                        case SpellerId::native: break;
                         }
 
                         if (m_settings.active_speller_lib_id == SpellerId::aspell || ComboBox_GetCurSel(
@@ -478,7 +484,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                         auto lib_path = get_edit_text(m_h_lib_path);
                         std::vector<wchar_t> final_path(MAX_PATH);
 
-                        auto npp_path = m_npp.get_npp_directory ();
+                        auto npp_path = m_npp.get_npp_directory();
                         PathCombine(final_path.data(), npp_path.data(), lib_path.c_str());
                         bi.lParam = reinterpret_cast<LPARAM>(final_path.data());
                         LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
@@ -496,6 +502,8 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
                     }
                     break;
                 case SpellerId::COUNT: break;
+                case SpellerId::native: break;
+                default: ;
                 }
                 break;
             }

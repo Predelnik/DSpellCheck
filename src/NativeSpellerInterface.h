@@ -31,8 +31,10 @@ private:
     {
     CComPtr<ISpellCheckerFactory> m_factory;
     CComPtr<ISpellChecker> m_speller;
+    std::vector<CComPtr<ISpellChecker>> m_spellers;
     };
     std::unique_ptr<ptrs> m_ptrs;
+    ISpellChecker *last_used_speller = nullptr;
     bool m_ok = false;
     bool m_inited = false;
 };

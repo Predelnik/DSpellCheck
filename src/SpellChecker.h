@@ -92,6 +92,7 @@ public:
     void update_aspell_language_options();
     void update_suggestion_box();
 
+    void native_reinit_settings();
     void init_speller();
     int get_aspell_status();
     void cleanup();

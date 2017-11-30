@@ -38,7 +38,7 @@ add_subdirectory (deps/npp_extra)
 add_subdirectory (deps/lsignal)
 
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX /w44061")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX /w44062")
     set(DSpellCheck_USE_VLD "OFF" CACHE BOOL "Use Visual Leak Detector")
 endif()
 

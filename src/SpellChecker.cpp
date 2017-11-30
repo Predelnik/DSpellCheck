@@ -678,7 +678,7 @@ void SpellChecker::init_speller()
     switch (m_settings.active_speller_lib_id)
     {
     case SpellerId::native:
-        m_native_speller->init();
+        native_reinit_settings();
         break;
     case SpellerId::aspell:
         aspell_reinit_settings();
@@ -686,6 +686,8 @@ void SpellChecker::init_speller()
     case SpellerId::hunspell:
         hunspell_reinit_settings(false);
         break;
+    case SpellerId::COUNT: break;
+    default: ;
     }
 }
 
@@ -697,12 +699,6 @@ void SpellChecker::on_settings_changed()
         if (npp)
             npp->set_menu_item_check(get_func_item()[0].cmd_id, m_settings.auto_check_text);
     }
-    update_aspell_language_options();
-    update_hunspell_language_options();
-    m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
-    m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
-    m_aspell_speller->init(m_settings.aspell_path.c_str());
-    m_native_speller->set_language(m_settings.native_speller_language.c_str());
     init_speller();
     update_suggestion_box();
     refresh_underline_style();
@@ -846,6 +842,22 @@ void SpellChecker::update_suggestion_box()
     SetLayeredWindowAttributes(m_suggestions_instance->getHSelf(), 0,
                                static_cast<BYTE>((255 * m_settings.suggestion_button_opacity) / 100),
                                LWA_ALPHA);
+}
+
+void SpellChecker::native_reinit_settings()
+{
+    m_native_speller->init();
+
+    if (m_settings.native_speller_language != L"<MULTIPLE>")
+    {
+        m_native_speller->set_language(m_settings.native_speller_language.c_str());
+        m_native_speller->set_mode(false);
+    }
+    else
+    {
+        set_multiple_languages(m_settings.native_speller_multi_languages, m_native_speller.get());
+        m_native_speller->set_mode(true);
+    }
 }
 
 void SpellChecker::apply_conversions(
@@ -1077,7 +1089,7 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
     if (!spellcheck_result.empty())
     {
         OutputDebugString(wstring_printf(L"words_for_speller.size() after: %d\n", words_for_speller.size()).c_str());
-        for (int i = 0; i < static_cast<int> (words_for_speller.size()); ++i)
+        for (int i = 0; i < static_cast<int>(words_for_speller.size()); ++i)
             words_to_check[i].is_correct = spellcheck_result[i];
     }
     else

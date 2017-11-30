@@ -110,7 +110,10 @@ std::wstring& Settings::get_current_language()
         return aspell_language;
     case SpellerId::hunspell:
         return hunspell_language;
+    case SpellerId::native:
+        return native_speller_language;
     case SpellerId::COUNT: break;
+    default: ;
     }
     return aspell_language;
 }
@@ -128,7 +131,10 @@ std::wstring& Settings::get_current_multi_languages()
         return aspell_multi_languages;
     case SpellerId::hunspell:
         return hunspell_multi_languages;
+    case SpellerId::native:
+        return native_speller_multi_languages;
     case SpellerId::COUNT: break;
+    default: ;
     }
     return hunspell_multi_languages;
 }
@@ -168,6 +174,7 @@ void Settings::process(IniWorker& worker)
     worker.process(L"Aspell_Language", aspell_language, L"en");
     worker.process(L"Hunspell_Language", hunspell_language, L"en_GB");
     worker.process(L"Native_Speller_Language", native_speller_language, L"en-US");
+    worker.process(L"Native_Speller_Multiple_Languages", native_speller_multi_languages, L"");
     worker.process(L"Tokenization_Style", tokenization_style, TokenizationStyle::by_non_alphabetic);
     worker.process(L"Split_CamelCase", split_camel_case, true);
     worker.process(L"Delimiter_Exclusions", delimiter_exclusions, default_delimiter_exclusions());

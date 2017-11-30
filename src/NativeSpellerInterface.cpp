@@ -81,9 +81,9 @@ void NativeSpellerInterface::set_language(const wchar_t* lang)
     }
 }
 
-std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wchar_t*>& words)
+static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const std::vector<const wchar_t*>& words)
 {
-    if (!m_ok || !m_ptrs->m_speller)
+    if (!speller)
         return {};
     std::wstring w;
     std::vector<bool> ret(words.size(), true);
@@ -95,7 +95,7 @@ std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wc
         w += L" ";
     }
     CComPtr<IEnumSpellingError> err_enum;
-    if (m_ptrs->m_speller->Check(w.c_str(), &err_enum) != S_OK)
+    if (speller->Check(w.c_str(), &err_enum) != S_OK)
         return {};
     auto it = coords.begin();
     while (true)
@@ -111,20 +111,47 @@ std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wc
     return ret;
 }
 
+std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wchar_t*>& words)
+{
+    if (!m_ok)
+        return {};
+
+    switch (m_multi_mode)
+    {
+    case 0:
+        return check_words_by_speller (m_ptrs->m_speller, words);
+    case 1:
+        {
+            std::vector<bool> ret(words.size(), false);
+            for (auto speller : m_ptrs->m_spellers)
+                {
+                    auto cur_res = check_words_by_speller (speller, words);
+                    if (!cur_res.empty ())
+                        for (int i = 0; i < static_cast<int> (ret.size ()); ++i)
+                            ret[i] = ret[i] || cur_res[i];
+                }
+            return ret;
+        }
+    default:
+       break;
+    }
+    return {};
+}
+
 void NativeSpellerInterface::add_to_dictionary(const wchar_t* word)
 {
-    if (!m_ok || !m_ptrs->m_speller)
-      return;
+    if (!m_ok || !last_used_speller)
+        return;
 
-    m_ptrs->m_speller->Add(word);
+    last_used_speller->Add(word);
 }
 
 void NativeSpellerInterface::ignore_all(const wchar_t* word)
 {
-   if (!m_ok || !m_ptrs->m_speller)
-      return;
+    if (!m_ok || !m_ptrs->m_speller)
+        return;
 
-    m_ptrs->m_speller->Ignore(word);
+    last_used_speller->Ignore(word);
 }
 
 bool NativeSpellerInterface::is_working() const
@@ -149,17 +176,33 @@ std::vector<LanguageInfo> NativeSpellerInterface::get_language_list() const
     return res;
 }
 
-void NativeSpellerInterface::set_multiple_languages(const std::vector<std::wstring>& /*list*/)
+void NativeSpellerInterface::set_multiple_languages(const std::vector<std::wstring>& list)
 {
+    if (!m_ok)
+        return;
+
+    try
+    {
+        m_ptrs->m_spellers.clear();
+        for (auto& lang : list)
+        {
+            m_ptrs->m_spellers.emplace_back();
+            HR(m_ptrs->m_factory->CreateSpellChecker(lang.c_str(), &m_ptrs->m_spellers.back()));
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }
 
-std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t* word)
+static std::vector<std::wstring> get_speller_suggestions(ISpellChecker* speller, const wchar_t* word)
 {
-    if (!m_ok || !m_ptrs->m_speller)
+    if (!speller)
         return {};
 
     CComPtr<IEnumString> suggestions;
-    m_ptrs->m_speller->Suggest(word, &suggestions);
+    speller->Suggest(word, &suggestions);
     std::vector<std::wstring> ret;
     wchar_t* ws;
     ULONG fetched;
@@ -168,9 +211,39 @@ std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t*
         suggestions->Next(1, &ws, &fetched);
         if (fetched == 0)
             break;
-        ret.push_back (ws);
+        ret.push_back(ws);
     }
     return ret;
+}
+
+std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t* word)
+{
+    if (!m_ok)
+        return {};
+
+    switch (m_multi_mode)
+    {
+    case 0:
+        last_used_speller = m_ptrs->m_speller;
+        return get_speller_suggestions(m_ptrs->m_speller, word);
+    case 1:
+        {
+            std::vector<std::wstring> longest;
+            for (auto speller : m_ptrs->m_spellers)
+            {
+                auto list = get_speller_suggestions(speller, word);
+                if (list.size() > longest.size())
+                {
+                    longest = list;
+                    last_used_speller = speller;
+                }
+            }
+            return longest;
+        }
+    default:
+        break;
+    }
+    return {};
 }
 
 void NativeSpellerInterface::cleanup()

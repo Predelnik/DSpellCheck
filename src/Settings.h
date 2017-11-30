@@ -69,6 +69,7 @@ public:
     std::wstring aspell_language;
     std::wstring hunspell_language;
     std::wstring native_speller_language;
+    std::wstring native_speller_multi_languages;
     std::wstring delimiters;
     int suggestion_count = 0;
     bool ignore_yo = false;

@@ -85,6 +85,7 @@ private:
     HWND m_h_hunspell_path_type = nullptr;
     HWND m_h_system_path = nullptr;
     HWND m_h_aspell_run_together_cb = nullptr;
+    HWND m_browse_btn = nullptr;
     WinApi::EnumComboBox<SpellerId> m_speller_cmb;
     WinApi::EnumComboBox<SuggestionMode> m_suggestion_mode_cmb;
 
