@@ -185,7 +185,7 @@ void SimpleDlg::fill_lib_info(int status, const Settings& settings)
     ShowWindow(m_h_decode_names, is_hunspell);
     ShowWindow(m_h_one_user_dic, is_hunspell);
     ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
-    ShowWindow(m_h_hunspell_path_type, false);
+    ShowWindow(m_h_hunspell_path_type, is_hunspell);
     ShowWindow(m_h_system_path, false);
     bool is_native = settings.active_speller_lib_id == SpellerId::native;
     ShowWindow(m_h_lib_group_box, !is_native);
