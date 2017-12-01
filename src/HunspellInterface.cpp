@@ -51,10 +51,8 @@ static BOOL ListFiles(wchar_t *path, const wchar_t* mask,
     directories->pop();
 
     hFind = FindFirstFile(spec, &ffd);
-    if (hFind == INVALID_HANDLE_VALUE) {
-      Result = FALSE;
-      goto cleanup;
-    }
+    if (hFind == INVALID_HANDLE_VALUE)
+      continue;
 
     do {
       if (wcscmp(ffd.cFileName, L".") != 0 &&
@@ -103,9 +101,6 @@ HunspellInterface::HunspellInterface(HWND NppWindowArg) {
   DicDir = 0;
   SysDicDir = 0;
   LastSelectedSpeller = Empty;
-  AllHunspells =
-      new std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)>(
-          SortCompare);
   IsHunspellWorking = FALSE;
   TemporaryBuffer = new char[DEFAULT_BUF_SIZE];
   UserDicPath = 0;
@@ -115,11 +110,10 @@ HunspellInterface::HunspellInterface(HWND NppWindowArg) {
 void HunspellInterface::UpdateOnDicRemoval(wchar_t *Path,
                                            BOOL &NeedSingleLangReset,
                                            BOOL &NeedMultiLangReset) {
-  std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)>::iterator it =
-      AllHunspells->find(Path);
+  auto it = AllHunspells.find(Path);
   NeedSingleLangReset = FALSE;
   NeedMultiLangReset = FALSE;
-  if (it != AllHunspells->end()) {
+  if (it != AllHunspells.end()) {
     if (SingularSpeller.Speller == (*it).second.Speller)
       NeedSingleLangReset = TRUE;
 
@@ -130,7 +124,6 @@ void HunspellInterface::UpdateOnDicRemoval(wchar_t *Path,
         }
     }
 
-    delete[]((*it).first);
     CLEAN_AND_ZERO((*it).second.Speller);
     WriteUserDic((*it).second.LocalDic, (*it).second.LocalDicPath);
     CLEAN_AND_ZERO((*it).second.LocalDicPath);
@@ -148,7 +141,7 @@ void HunspellInterface::UpdateOnDicRemoval(wchar_t *Path,
 
     CLEAN_AND_ZERO((*it).second.LocalDic);
     CLEAN_AND_ZERO((*it).second.LocalDicPath);
-    AllHunspells->erase(it);
+    AllHunspells.erase(it);
   }
 }
 
@@ -197,10 +190,8 @@ BOOL ArePathsEqual(wchar_t *path1, wchar_t *path2) {
 HunspellInterface::~HunspellInterface() {
   IsHunspellWorking = FALSE;
   {
-    std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)>::iterator it =
-        AllHunspells->begin();
-    for (; it != AllHunspells->end(); ++it) {
-      delete[]((*it).first);
+    auto it = AllHunspells.begin();
+    for (; it != AllHunspells.end(); ++it) {
       CLEAN_AND_ZERO((*it).second.Speller);
       WriteUserDic((*it).second.LocalDic, (*it).second.LocalDicPath);
       WordSet::iterator NestedIt;
@@ -222,7 +213,6 @@ HunspellInterface::~HunspellInterface() {
       if ((*it).second.BackConverterANSI != (iconv_t)-1)
         iconv_close((*it).second.BackConverterANSI);
     }
-    CLEAN_AND_ZERO(AllHunspells);
   }
 
   if (SystemWrongDicPath && UserDicPath &&
@@ -264,36 +254,20 @@ std::vector<wchar_t *> *HunspellInterface::GetLanguageList() {
   return List;
 }
 
-DicInfo HunspellInterface::CreateHunspell(wchar_t *Name, int Type) {
-  auto size = (Type ? wcslen(SysDicDir) : wcslen(DicDir)) + 1 + wcslen(Name) +
-              1 + 3 + 1; // + . + aff/dic + /0
-  wchar_t *AffBuf = new wchar_t[size];
-  char *AffBufAnsi = 0;
-  char *DicBufAnsi = 0;
-  wcscpy(AffBuf, (Type ? SysDicDir : DicDir));
-  wcscat(AffBuf, L"\\");
-  wcscat(AffBuf, Name);
+DicInfo HunspellInterface::CreateHunspell(const AvailableLangInfo& info) {
+  std::wstring AffBuf = info.full_path + L".aff";
   {
-    std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)>::iterator it =
-        AllHunspells->find(AffBuf);
-    if (it != AllHunspells->end()) {
-      CLEAN_AND_ZERO_ARR(AffBuf);
+    auto it = AllHunspells.find(AffBuf.c_str ());
+    if (it != AllHunspells.end()) {
       return (*it).second;
     }
   }
-  wchar_t *DicBuf = new wchar_t[size];
-  wcscat(AffBuf, L".aff");
-  wcscpy(DicBuf, Type ? SysDicDir : DicDir);
-  wcscat(DicBuf, L"\\");
-  wcscat(DicBuf, Name);
-  wcscat(DicBuf, L".dic");
-  SetString(AffBufAnsi, AffBuf);
-  SetString(DicBufAnsi, DicBuf);
+  auto DicBuf = info.full_path + L".dic";
+  char *AffBufAnsi = nullptr, *DicBufAnsi = nullptr;
+  SetString(AffBufAnsi, AffBuf.c_str ());
+  SetString(DicBufAnsi, DicBuf.c_str ());
 
   Hunspell *NewHunspell = new Hunspell(AffBufAnsi, DicBufAnsi);
-  wchar_t *NewName = 0;
-  AffBuf[wcslen(AffBuf) - 4] = L'\0';
-  SetString(NewName, AffBuf); // Without aff and dic
   DicInfo NewDic;
   const char *DicEnconding = NewHunspell->get_dic_encoding();
   if (stricmp(DicEnconding, "Microsoft-cp1251") == 0)
@@ -306,12 +280,12 @@ DicInfo HunspellInterface::CreateHunspell(wchar_t *Name, int Type) {
   NewDic.BackConverterANSI = iconv_open("", DicEnconding);
   NewDic.LocalDic = new WordSet();
   NewDic.LocalDicPath =
-      new wchar_t[wcslen(DicDir) + 1 + wcslen(Name) + 1 + 3 +
+      new wchar_t[wcslen(DicDir) + 1 + wcslen(info.Name) + 1 + 3 +
                   1]; // Local Dic path always points to non-system directory
   NewDic.LocalDicPath[0] = '\0';
   wcscat(NewDic.LocalDicPath, DicDir);
   wcscat(NewDic.LocalDicPath, L"\\");
-  wcscat(NewDic.LocalDicPath, Name);
+  wcscat(NewDic.LocalDicPath, info.Name);
   wcscat(NewDic.LocalDicPath, L".usr");
 
   ReadUserDic(NewDic.LocalDic, NewDic.LocalDicPath);
@@ -333,9 +307,7 @@ DicInfo HunspellInterface::CreateHunspell(wchar_t *Name, int Type) {
                              // dictionaries are in dictionary encoding
     }
   }
-  (*AllHunspells)[NewName] = NewDic;
-  CLEAN_AND_ZERO_ARR(AffBuf);
-  CLEAN_AND_ZERO_ARR(DicBuf);
+  AllHunspells[info.full_path] = NewDic;
   CLEAN_AND_ZERO_ARR(AffBufAnsi);
   CLEAN_AND_ZERO_ARR(DicBufAnsi);
   return NewDic;
@@ -353,7 +325,7 @@ void HunspellInterface::SetLanguage(wchar_t *Lang) {
   if (SearchResult == DicList->end()) {
     SearchResult = DicList->begin();
   }
-  SingularSpeller = CreateHunspell((*SearchResult).Name, (*SearchResult).Type);
+  SingularSpeller = CreateHunspell(*SearchResult);
 }
 
 void HunspellInterface::SetMultipleLanguages(std::vector<wchar_t *> *List) {
@@ -370,7 +342,7 @@ void HunspellInterface::SetMultipleLanguages(std::vector<wchar_t *> *List) {
     if (SearchResult == DicList->end())
       continue;
     DicInfo Instance =
-        CreateHunspell((*SearchResult).Name, (*SearchResult).Type);
+        CreateHunspell(*SearchResult);
     Spellers->push_back(Instance);
   }
 }
@@ -563,10 +535,9 @@ void HunspellInterface::AddToDictionary(char *Word) {
     SetStringDUtf8(Buf, Word);
 
   if (UseOneDic) {
-    std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)>::iterator it;
     Memorized->insert(Buf);
-    it = AllHunspells->begin();
-    for (; it != AllHunspells->end(); ++it) {
+    auto it = AllHunspells.begin();
+    for (; it != AllHunspells.end(); ++it) {
       char *ConvWord = GetConvertedWord(Buf, (*it).second.Converter);
       if (*ConvWord)
         (*it).second.Speller->add(ConvWord);
@@ -691,6 +662,7 @@ void HunspellInterface::SetDirectory(wchar_t *Dir) {
       AvailableLangInfo NewX;
       NewX.Type = 0;
       NewX.Name = TBuf;
+      NewX.full_path = Buf;
       DicList->insert(NewX);
     }
     CLEAN_AND_ZERO_ARR(Buf);

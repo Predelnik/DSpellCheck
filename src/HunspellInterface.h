@@ -42,6 +42,7 @@ struct DicInfo {
 struct AvailableLangInfo {
   wchar_t *Name;
   int Type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
+  std::wstring full_path;
 
   bool operator<(const AvailableLangInfo &rhs) const {
     return (wcscmp(Name, rhs.Name) < 0);
@@ -72,7 +73,7 @@ public:
   BOOL GetLangOnlySystem(wchar_t *Lang);
 
 private:
-  DicInfo CreateHunspell(wchar_t *Name, int Type);
+  DicInfo CreateHunspell(const AvailableLangInfo& info);
   BOOL SpellerCheckWord(DicInfo Dic, char *Word, EncodingType Encoding);
   void MessageBoxWordCannotBeAdded();
 
@@ -83,7 +84,7 @@ private:
   wchar_t *DicDir;
   wchar_t *SysDicDir;
   std::set<AvailableLangInfo> *DicList;
-  std::map<wchar_t *, DicInfo, bool (*)(wchar_t *, wchar_t *)> *AllHunspells;
+  std::map<std::wstring, DicInfo> AllHunspells;
   char *GetConvertedWord(const char *Source, iconv_t Converter);
   DicInfo SingularSpeller;
   DicInfo LastSelectedSpeller;
