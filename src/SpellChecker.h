@@ -98,7 +98,7 @@ public:
     void cleanup();
     void do_plugin_menu_inclusion(bool invalidate = false);
     HunspellInterface* get_hunspell_speller() const { return m_hunspell_speller.get(); };
-    bool hunspell_reinit_settings(bool reset_directory);
+    bool hunspell_reinit_settings();
     void set_suggestions_box_transparency();
     void process_menu_result(WPARAM menu_id);
     void copy_misspellings_to_clipboard();

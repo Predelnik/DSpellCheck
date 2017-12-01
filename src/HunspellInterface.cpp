@@ -31,31 +31,38 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <fcntl.h>
 
 static std::vector<std::wstring> list_files(const wchar_t* path, const wchar_t* mask,
-                                            const wchar_t* filter) {
+                                            const wchar_t* filter)
+{
     WIN32_FIND_DATA ffd;
     std::stack<std::wstring> directories;
 
     directories.push(path);
     std::vector<std::wstring> out;
 
-    while (!directories.empty()) {
+    while (!directories.empty())
+    {
         auto top = std::move(directories.top());
-        auto spec = path + L"\\"s + mask;
+        auto spec = top + L"\\"s + mask;
         directories.pop();
 
         HANDLE h_find = FindFirstFile(spec.c_str(), &ffd);
-        if (h_find == INVALID_HANDLE_VALUE) {
+        if (h_find == INVALID_HANDLE_VALUE)
+        {
             return {};
         }
 
-        do {
+        do
+        {
             if (ffd.cFileName != L"."sv &&
-                ffd.cFileName != L".."sv) {
-                auto buf = path + L"\\"s + ffd.cFileName;
-                if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                ffd.cFileName != L".."sv)
+            {
+                auto buf = top + L"\\" + ffd.cFileName;
+                if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
                     directories.push(buf);
                 }
-                else {
+                else
+                {
                     if (PathMatchSpec(buf.c_str(), filter))
                         out.push_back(buf);
                 }
@@ -63,7 +70,8 @@ static std::vector<std::wstring> list_files(const wchar_t* path, const wchar_t* 
         }
         while (FindNextFile(h_find, &ffd) != 0);
 
-        if (GetLastError() != ERROR_NO_MORE_FILES) {
+        if (GetLastError() != ERROR_NO_MORE_FILES)
+        {
             FindClose(h_find);
             return {};
         }
@@ -73,15 +81,18 @@ static std::vector<std::wstring> list_files(const wchar_t* path, const wchar_t* 
     return out;
 }
 
-std::string DicInfo::to_dictionary_encoding(std::wstring_view input) const {
+std::string DicInfo::to_dictionary_encoding(std::wstring_view input) const
+{
     return convert_impl<char>(converter, input);
 }
 
-std::wstring DicInfo::from_dictionary_encoding(std::string_view input) const {
+std::wstring DicInfo::from_dictionary_encoding(std::string_view input) const
+{
     return convert_impl<wchar_t>(back_converter, input);
 }
 
-HunspellInterface::HunspellInterface(HWND npp_window_arg): m_use_one_dic(false) {
+HunspellInterface::HunspellInterface(HWND npp_window_arg): m_use_one_dic(false)
+{
     m_npp_window = npp_window_arg;
     m_singular_speller = {};
     m_last_selected_speller = {};
@@ -90,17 +101,20 @@ HunspellInterface::HunspellInterface(HWND npp_window_arg): m_use_one_dic(false) 
 
 void HunspellInterface::update_on_dic_removal(wchar_t* path,
                                               bool& need_single_lang_reset,
-                                              bool& need_multi_lang_reset) {
+                                              bool& need_multi_lang_reset)
+{
     auto it =
         m_all_hunspells.find(path);
     need_single_lang_reset = false;
     need_multi_lang_reset = false;
-    if (it != m_all_hunspells.end()) {
+    if (it != m_all_hunspells.end())
+    {
         if (m_singular_speller && m_singular_speller == &it->second)
             need_single_lang_reset = true;
 
         for (auto speller : m_spellers)
-            if (speller == &it->second) {
+            if (speller == &it->second)
+            {
                 need_multi_lang_reset = true;
             }
         m_all_hunspells.erase(it);
@@ -109,7 +123,8 @@ void HunspellInterface::update_on_dic_removal(wchar_t* path,
 
 void HunspellInterface::set_use_one_dic(bool value) { m_use_one_dic = value; }
 
-bool are_paths_equal(const wchar_t* path1, const wchar_t* path2) {
+bool are_paths_equal(const wchar_t* path1, const wchar_t* path2)
+{
     BY_HANDLE_FILE_INFORMATION bhfi1, bhfi2;
     HANDLE h2;
     DWORD access = 0;
@@ -120,7 +135,8 @@ bool are_paths_equal(const wchar_t* path1, const wchar_t* path2) {
                                ? FILE_FLAG_BACKUP_SEMANTICS
                                : 0,
                            nullptr);
-    if (INVALID_HANDLE_VALUE != h1) {
+    if (INVALID_HANDLE_VALUE != h1)
+    {
         if (!GetFileInformationByHandle(h1, &bhfi1))
             bhfi1.dwVolumeSerialNumber = 0;
         h2 = CreateFile(path2, access, share, nullptr, OPEN_EXISTING,
@@ -143,9 +159,10 @@ bool are_paths_equal(const wchar_t* path1, const wchar_t* path2) {
 }
 
 template <typename CharType>
-static void write_user_dic(const std::unordered_set<std::basic_string<CharType>>& target, std::wstring path) {
-
-    if (target.empty()) {
+static void write_user_dic(const std::unordered_set<std::basic_string<CharType>>& target, std::wstring path)
+{
+    if (target.empty())
+    {
         SetFileAttributes(path.c_str(), FILE_ATTRIBUTE_NORMAL);
         DeleteFile(path.c_str());
         return;
@@ -174,43 +191,49 @@ static void write_user_dic(const std::unordered_set<std::basic_string<CharType>>
     fclose(fp);
 }
 
-HunspellInterface::~HunspellInterface() {
+HunspellInterface::~HunspellInterface()
+{
     m_is_hunspell_working = false;
 
     if (!m_system_wrong_dic_path.empty() && !m_user_dic_path.empty() &&
-        !are_paths_equal(m_system_wrong_dic_path.c_str(), m_user_dic_path.c_str())) {
+        !are_paths_equal(m_system_wrong_dic_path.c_str(), m_user_dic_path.c_str()))
+    {
         SetFileAttributes(m_system_wrong_dic_path.c_str(), FILE_ATTRIBUTE_NORMAL);
         DeleteFile(m_system_wrong_dic_path.c_str());
     }
 
     if (!m_user_dic_path.empty())
         write_user_dic(m_memorized, m_user_dic_path.c_str());
-    for (auto& p : m_all_hunspells) {
+    for (auto& p : m_all_hunspells)
+    {
         auto& hs = p.second;
         if (!hs.local_dic_path.empty())
             write_user_dic(hs.local_dic, hs.local_dic_path);
     }
 }
 
-std::vector<LanguageInfo> HunspellInterface::get_language_list() const {
+std::vector<LanguageInfo> HunspellInterface::get_language_list() const
+{
     std::vector<LanguageInfo> list;
-    for (auto& dic : m_dic_list) {
+    for (auto& dic : m_dic_list)
+    {
         list.emplace_back(dic.name, true, get_lang_only_system(dic.name.c_str()));
     }
     return list;
 }
 
-DicInfo* HunspellInterface::create_hunspell(const wchar_t* name, int type) {
-    std::wstring aff_buf = (type ? m_sys_dic_dir : m_dic_dir) + L"\\"s + name;
+DicInfo* HunspellInterface::create_hunspell(const AvailableLangInfo& info)
+{
+    auto aff_buf = info.full_path + L".aff";
     {
         auto it =
             m_all_hunspells.find(aff_buf);
-        if (it != m_all_hunspells.end()) {
+        if (it != m_all_hunspells.end())
+        {
             return &it->second;
         }
     }
-    aff_buf += L".aff";
-    std::wstring dic_buf = (type ? m_sys_dic_dir : m_dic_dir) + L"\\"s + name + L".dic";
+    std::wstring dic_buf = info.full_path + L".dic";
     auto aff_buf_ansi = to_string(aff_buf.c_str());
     auto dic_buf_ansi = to_string(dic_buf.c_str());
     auto new_hunspell = std::make_unique<Hunspell>(aff_buf_ansi.c_str(), dic_buf_ansi.c_str());
@@ -223,11 +246,12 @@ DicInfo* HunspellInterface::create_hunspell(const wchar_t* name, int type) {
     // such failures
     new_dic.converter = {dic_enconding, "UCS-2LE"};
     new_dic.back_converter = {"UCS-2LE", dic_enconding};
-    new_dic.local_dic_path += m_dic_dir + L"\\"s + name + L".usr";
+    new_dic.local_dic_path += m_dic_dir + L"\\"s + info.name + L".usr";
 
     read_user_dic(new_dic.local_dic, new_dic.local_dic_path.c_str());
     {
-        for (auto word : m_memorized) {
+        for (auto word : m_memorized)
+        {
             auto conv_word = new_dic.to_dictionary_encoding(word);
             if (!conv_word.empty())
                 new_hunspell->add(conv_word.c_str()); // Adding all already memorized words to
@@ -235,7 +259,8 @@ DicInfo* HunspellInterface::create_hunspell(const wchar_t* name, int type) {
         }
     }
     {
-        for (auto word : new_dic.local_dic) {
+        for (auto word : new_dic.local_dic)
+        {
             new_hunspell->add(word.c_str()); // Adding all already memorized words from local
             // dictionary to Hunspell instance, local
             // dictionaries are in dictionary encoding
@@ -247,28 +272,31 @@ DicInfo* HunspellInterface::create_hunspell(const wchar_t* name, int type) {
     return &target;
 }
 
-void HunspellInterface::set_language(const wchar_t* lang) {
-    if (m_dic_list.empty()) {
+void HunspellInterface::set_language(const wchar_t* lang)
+{
+    if (m_dic_list.empty())
+    {
         m_singular_speller = nullptr;
         return;
     }
     AvailableLangInfo temp;
     temp.name = lang;
     temp.type = 0;
-    std::set<AvailableLangInfo>::iterator it = m_dic_list.find(temp);
-    if (it == m_dic_list.end()) {
+    auto it = m_dic_list.find(temp);
+    if (it == m_dic_list.end())
         it = m_dic_list.begin();
-    }
-    m_singular_speller = create_hunspell(it->name.c_str(), it->type);
+    m_singular_speller = create_hunspell(*it);
 }
 
-void HunspellInterface::set_multiple_languages(const std::vector<std::wstring>& list) {
+void HunspellInterface::set_multiple_languages(const std::vector<std::wstring>& list)
+{
     m_spellers.clear();
 
     if (m_dic_list.empty())
         return;
 
-    for (auto& lang : list) {
+    for (auto& lang : list)
+    {
         AvailableLangInfo temp;
         temp.name = lang;
         temp.type = 0;
@@ -276,35 +304,39 @@ void HunspellInterface::set_multiple_languages(const std::vector<std::wstring>& 
         if (it == m_dic_list.end())
             continue;
         auto ptr =
-            create_hunspell(it->name.c_str(), it->type);
+            create_hunspell(*it);
         m_spellers.push_back(ptr);
     }
 }
 
 template <typename OutputCharType, typename InputCharType>
 std::basic_string<OutputCharType> DicInfo::convert_impl(const IconvWrapperT& conv,
-                                                        std::basic_string_view<InputCharType> input) const {
+                                                        std::basic_string_view<InputCharType> input) const
+{
     static std::vector<char> buf;
     if constexpr (std::is_same_v<OutputCharType, char>)
-      buf.resize((input.length() + 1) * 6);
+        buf.resize((input.length() + 1) * 6);
     else
-      buf.resize((input.length() + 1) * sizeof (OutputCharType));
-    if (conv.get() == iconv_t(-1)) {
+        buf.resize((input.length() + 1) * sizeof (OutputCharType));
+    if (conv.get() == iconv_t(-1))
+    {
         buf.front() = '\0';
         return {};
     }
     size_t in_size = (input.length() + 1) * sizeof (InputCharType);
-    size_t out_size = buf.size ();
+    size_t out_size = buf.size();
     char* out_buf = buf.data();
     auto in_buf = input.data();
     size_t res = iconv(conv.get(), reinterpret_cast<const char **>(&in_buf), &in_size, &out_buf, &out_size);
-    if (res == (size_t)(-1)) {
+    if (res == (size_t)(-1))
+    {
         buf.front() = '\0';
     }
     return {reinterpret_cast<OutputCharType *>(buf.data())};
 }
 
-bool HunspellInterface::speller_check_word(const DicInfo& dic, const wchar_t* word) {
+bool HunspellInterface::speller_check_word(const DicInfo& dic, const wchar_t* word)
+{
     auto word_to_check = dic.to_dictionary_encoding(word);
     if (word_to_check.empty())
         return true;
@@ -314,22 +346,26 @@ bool HunspellInterface::speller_check_word(const DicInfo& dic, const wchar_t* wo
     return dic.hunspell->spell(word_to_check);
 }
 
-bool HunspellInterface::check_word(const wchar_t* word) {
+bool HunspellInterface::check_word(const wchar_t* word)
+{
     if (m_ignored.find(word) != m_ignored.end())
         return true;
 
     bool res = false;
-    if (!m_multi_mode) {
+    if (!m_multi_mode)
+    {
         if (m_singular_speller)
             res = speller_check_word(*m_singular_speller, word);
         else
             res = true;
     }
-    else {
+    else
+    {
         if (m_spellers.empty())
             return true;
 
-        for (auto& speller : m_spellers) {
+        for (auto& speller : m_spellers)
+        {
             res = res || speller_check_word(*speller, word);
             if (res)
                 break;
@@ -339,26 +375,33 @@ bool HunspellInterface::check_word(const wchar_t* word) {
 }
 
 template <typename CharType>
-void HunspellInterface::read_user_dic(std::unordered_set<std::basic_string<CharType>>& target, const wchar_t* path) {
+void HunspellInterface::read_user_dic(std::unordered_set<std::basic_string<CharType>>& target, const wchar_t* path)
+{
     int word_num = 0;
     FILE* fp = _wfopen(path, L"r");
-    if (!fp) {
+    if (!fp)
+    {
         return;
     }
     {
-        if (fscanf(fp, "%d\n", &word_num) != 1) {
+        if (fscanf(fp, "%d\n", &word_num) != 1)
+        {
             return;
         }
-        if constexpr (std::is_same_v<CharType, char>) {
+        if constexpr (std::is_same_v<CharType, char>)
+        {
             char buf[DEFAULT_BUF_SIZE];
-            while (fgets(buf, DEFAULT_BUF_SIZE, fp)) {
+            while (fgets(buf, DEFAULT_BUF_SIZE, fp))
+            {
                 buf[strlen(buf) - 1] = '\0';
                 target.insert(buf);
             }
         }
-        else {
+        else
+        {
             wchar_t buf[DEFAULT_BUF_SIZE];
-            while (fgetws(buf, DEFAULT_BUF_SIZE, fp)) {
+            while (fgetws(buf, DEFAULT_BUF_SIZE, fp))
+            {
                 buf[wcslen(buf) - 1] = L'\0';
                 target.insert(buf);
             }
@@ -368,7 +411,8 @@ void HunspellInterface::read_user_dic(std::unordered_set<std::basic_string<CharT
     fclose(fp);
 }
 
-void HunspellInterface::message_box_word_cannot_be_added() {
+void HunspellInterface::message_box_word_cannot_be_added()
+{
     MessageBox(
         m_npp_window, L"Sadly, this word contains symbols out of current dictionary "
         L"encoding, thus it cannot be added to user dictionary. You "
@@ -377,7 +421,8 @@ void HunspellInterface::message_box_word_cannot_be_added() {
         L"Word cannot be added", MB_OK | MB_ICONWARNING);
 }
 
-void HunspellInterface::add_to_dictionary(const wchar_t* word) {
+void HunspellInterface::add_to_dictionary(const wchar_t* word)
+{
     if (!m_last_selected_speller)
         return;
 
@@ -387,7 +432,8 @@ void HunspellInterface::add_to_dictionary(const wchar_t* word) {
     else
         dic_path = m_last_selected_speller->local_dic_path;
 
-    if (!PathFileExists(dic_path.c_str())) {
+    if (!PathFileExists(dic_path.c_str()))
+    {
         auto last_slash_pos = dic_path.rfind(L"\\");
         if (last_slash_pos == std::wstring::npos)
             return;
@@ -396,7 +442,8 @@ void HunspellInterface::add_to_dictionary(const wchar_t* word) {
         // If there's no file then we're checking if we can create it, there's no
         // harm in it
         int local_dic_file_handle = _wopen(dic_path.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
-        if (local_dic_file_handle == -1) {
+        if (local_dic_file_handle == -1)
+        {
             MessageBox(
                 m_npp_window, L"User dictionary cannot be written, please check if you "
                 L"have access for writing into your dictionary directory, "
@@ -404,15 +451,18 @@ void HunspellInterface::add_to_dictionary(const wchar_t* word) {
                 L"administrator.",
                 L"User dictionary cannot be saved", MB_OK | MB_ICONWARNING);
         }
-        else {
+        else
+        {
             _close(local_dic_file_handle);
         }
         SetFileAttributes(dic_path.c_str(), FILE_ATTRIBUTE_NORMAL);
     }
-    else {
+    else
+    {
         SetFileAttributes(dic_path.c_str(), FILE_ATTRIBUTE_NORMAL);
         int local_dic_file_handle = _wopen(dic_path.c_str(), _O_APPEND | _O_BINARY | _O_WRONLY);
-        if (local_dic_file_handle == -1) {
+        if (local_dic_file_handle == -1)
+        {
             MessageBox(
                 m_npp_window, L"User dictionary cannot be written, please check if you "
                 L"have access for writing into your dictionary directory, "
@@ -424,9 +474,11 @@ void HunspellInterface::add_to_dictionary(const wchar_t* word) {
             _close(local_dic_file_handle);
     }
 
-    if (m_use_one_dic) {
+    if (m_use_one_dic)
+    {
         m_memorized.insert(word);
-        for (auto& p : m_all_hunspells) {
+        for (auto& p : m_all_hunspells)
+        {
             auto conv_word = p.second.to_dictionary_encoding(word);
             if (!conv_word.empty())
                 p.second.hunspell->add(conv_word.c_str());
@@ -436,7 +488,8 @@ void HunspellInterface::add_to_dictionary(const wchar_t* word) {
             // to save it.
         }
     }
-    else {
+    else
+    {
         auto conv_word = m_last_selected_speller->to_dictionary_encoding(word);
         m_last_selected_speller->local_dic.insert(conv_word);
         if (!conv_word.empty())
@@ -446,24 +499,30 @@ void HunspellInterface::add_to_dictionary(const wchar_t* word) {
     }
 }
 
-void HunspellInterface::ignore_all(const wchar_t* word) {
+void HunspellInterface::ignore_all(const wchar_t* word)
+{
     if (!m_last_selected_speller)
         return;
 
     m_ignored.insert(word);
 }
 
-std::vector<std::wstring> HunspellInterface::get_suggestions(const wchar_t* word) {
+std::vector<std::wstring> HunspellInterface::get_suggestions(const wchar_t* word)
+{
     std::vector<std::string> list;
     m_last_selected_speller = m_singular_speller;
 
-    if (!m_multi_mode) {
+    if (!m_multi_mode)
+    {
         list = m_singular_speller->hunspell->suggest(m_singular_speller->to_dictionary_encoding(word));
     }
-    else {
-        for (auto speller : m_spellers) {
+    else
+    {
+        for (auto speller : m_spellers)
+        {
             auto cur_list = speller->hunspell->suggest(speller->to_dictionary_encoding(word));
-            if (cur_list.size() > list.size()) {
+            if (cur_list.size() > list.size())
+            {
                 list = std::move(cur_list);
                 m_last_selected_speller = speller;
             }
@@ -478,7 +537,8 @@ std::vector<std::wstring> HunspellInterface::get_suggestions(const wchar_t* word
     return sugg_list;
 }
 
-void HunspellInterface::set_directory(const wchar_t* dir) {
+void HunspellInterface::set_directory(const wchar_t* dir)
+{
     if (!dir || !*dir)
         return;
     m_user_dic_path = dir;
@@ -493,24 +553,29 @@ void HunspellInterface::set_directory(const wchar_t* dir) {
     m_is_hunspell_working = true;
 
     auto files = list_files(dir, L"*.*", L"*.aff");
-    if (files.empty()) {
+    if (files.empty())
+    {
         return;
     }
 
-    for (auto& file_path : files) {
+    for (auto& file_path : files)
+    {
         auto dic_file_path = file_path.substr(0, file_path.length() - 4) + L".dic";
-        if (PathFileExists(dic_file_path.c_str())) {
+        if (PathFileExists(dic_file_path.c_str()))
+        {
             auto dic_name = file_path.substr(dic_file_path.rfind(L'\\') + 1);
             dic_name = dic_name.substr(0, dic_name.length() - 4);
             AvailableLangInfo new_x;
             new_x.type = 0;
             new_x.name = dic_name;
+            new_x.full_path = file_path.substr(0, file_path.length() - 4);
             m_dic_list.insert(new_x);
         }
     }
 }
 
-void HunspellInterface::set_additional_directory(const wchar_t* dir) {
+void HunspellInterface::set_additional_directory(const wchar_t* dir)
+{
     m_sys_dic_dir = dir;
     m_is_hunspell_working = true;
 
@@ -518,9 +583,11 @@ void HunspellInterface::set_additional_directory(const wchar_t* dir) {
     if (files.empty())
         return;
 
-    for (auto& file : files) {
+    for (auto& file : files)
+    {
         auto file_name_without_ext = file.substr(0, file.rfind(L'.'));
-        if (PathFileExists((file_name_without_ext + L".dic").c_str())) {
+        if (PathFileExists((file_name_without_ext + L".dic").c_str()))
+        {
             AvailableLangInfo new_x;
             new_x.type = 1;
             new_x.name = file_name_without_ext.substr(file_name_without_ext.rfind(L'\\') + 1);
@@ -539,7 +606,8 @@ void HunspellInterface::set_additional_directory(const wchar_t* dir) {
                   m_system_wrong_dic_path.c_str()); // We should load user dictionary first.
 }
 
-bool HunspellInterface::get_lang_only_system(const wchar_t* lang) const {
+bool HunspellInterface::get_lang_only_system(const wchar_t* lang) const
+{
     AvailableLangInfo needle;
     needle.name = lang;
     needle.type = 1;

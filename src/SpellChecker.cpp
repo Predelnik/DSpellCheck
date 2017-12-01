@@ -684,7 +684,7 @@ void SpellChecker::init_speller()
         aspell_reinit_settings();
         break;
     case SpellerId::hunspell:
-        hunspell_reinit_settings(false);
+        hunspell_reinit_settings();
         break;
     case SpellerId::COUNT: break;
     default: ;
@@ -808,13 +808,10 @@ void SpellChecker::update_hunspell_language_options()
     }
 }
 
-bool SpellChecker::hunspell_reinit_settings(bool reset_directory)
+bool SpellChecker::hunspell_reinit_settings()
 {
-    if (reset_directory)
-    {
-        m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
-        m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
-    }
+    m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
+    m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
     if (m_settings.hunspell_language != L"<MULTIPLE>")
         m_hunspell_speller->set_language(m_settings.hunspell_language.c_str());
     else

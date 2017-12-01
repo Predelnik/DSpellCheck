@@ -117,7 +117,7 @@ void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_insta
         CheckedListBox_SetCheckState(m_lang_list, i, BST_UNCHECKED);
     if (count > 0)
     {
-        spell_checker_instance->hunspell_reinit_settings(true);
+        spell_checker_instance->hunspell_reinit_settings();
         update_list();
         spell_checker_instance->do_plugin_menu_inclusion();
         spell_checker_instance->recheck_visible_both_views();

@@ -71,6 +71,7 @@ private:
 struct AvailableLangInfo {
   std::wstring name;
   int type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
+  std::wstring full_path;
 
   bool operator<(const AvailableLangInfo &rhs) const {
     return name < rhs.name;
@@ -101,7 +102,7 @@ public:
 private:
   template <typename CharType>
   static void read_user_dic(std::unordered_set<std::basic_string<CharType>>& target, const wchar_t* path);
-  DicInfo* create_hunspell(const wchar_t* name, int type);
+  DicInfo* create_hunspell(const AvailableLangInfo& info);
   static bool speller_check_word(const DicInfo& dic, const wchar_t* word);
   void message_box_word_cannot_be_added();
 
