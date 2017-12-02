@@ -296,7 +296,7 @@ void SpellChecker::find_next_mistake()
         }
         auto text = to_mapped_wstring(view, m_editor.get_text_range(view, from, to).c_str());
         auto index = prev_token_begin(text.str, static_cast<long>(text.str.size()) - 1).value_or(text.str.size() - 1);
-        text.str.data()[index] = L'\0';
+        text.str.erase (index, text.str.size () - index);
         m_editor.force_style_update(view, from, to);
         SCNotification scn;
         scn.nmhdr.code = SCN_SCROLLED;
