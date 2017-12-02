@@ -90,9 +90,14 @@ static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const st
     std::vector<std::array<int, 2>> coords;
     for (int i = 0; i < static_cast<int>(words.size()); ++i)
     {
-        coords.push_back({static_cast<int>(w.length()), i});
-        w += words[i];
-        w += L" ";
+        if (i == 0 || lstrcmpi  (words[i], words[i - 1]) != 0)
+        {
+            coords.push_back({static_cast<int>(w.length()), i});
+            w += words[i];
+            w += L" ";
+        }
+        else
+            coords.push_back({coords.back ()[0], i});
     }
     CComPtr<IEnumSpellingError> err_enum;
     if (speller->Check(w.c_str(), &err_enum) != S_OK)
