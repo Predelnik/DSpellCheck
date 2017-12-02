@@ -294,20 +294,24 @@ void SpellChecker::find_next_mistake()
             ignore_offsetting = 1;
             to = static_cast<long>(doc_length);
         }
-        auto text = to_mapped_wstring(view, m_editor.get_text_range(view, from, to).c_str());
-        auto index = prev_token_begin(text.str, static_cast<long>(text.str.size()) - 1).value_or(text.str.size() - 1);
-        text.str.erase (index, text.str.size () - index);
-        m_editor.force_style_update(view, from, to);
-        SCNotification scn;
-        scn.nmhdr.code = SCN_SCROLLED;
-        // This was workaround for hotspots
-        // TODO: check if it's still needed
-        // send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
-        bool result = check_text(view, text, static_cast<long>(iterator_pos), CheckTextMode::find_first);
-        if (result)
-            break;
+        if (from < to)
+        {
+            auto text = to_mapped_wstring(view, m_editor.get_text_range(view, from, to).c_str());
+            auto index = prev_token_begin(text.str, static_cast<long>(text.str.size()) - 1).value_or(
+                text.str.size() - 1);
+            text.str.erase(index, text.str.size() - index);
+            m_editor.force_style_update(view, from, to);
+            SCNotification scn;
+            scn.nmhdr.code = SCN_SCROLLED;
+            // This was workaround for hotspots
+            // TODO: check if it's still needed
+            // send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
+            bool result = check_text(view, text, static_cast<long>(iterator_pos), CheckTextMode::find_first);
+            if (result)
+                break;
 
-        iterator_pos += text.to_original_index(index);
+            iterator_pos += text.to_original_index(index);
+        }
 
         if (to == doc_length)
         {
@@ -348,20 +352,25 @@ void SpellChecker::find_prev_mistake()
             ignore_offsetting = 1;
         }
 
-        auto text = to_mapped_wstring(view, m_editor.get_text_range(view, from, to));
-        auto offset = next_token_end(text.str, 0).value_or(0);
-        m_editor.force_style_update(view, from + offset, to);
-        SCNotification scn;
-        scn.nmhdr.code = SCN_SCROLLED;
-        // This was workaround for hotspots
-        // TODO: check if it's still needed
-        // send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
+        if (from < to)
+        {
+            auto text = to_mapped_wstring(view, m_editor.get_text_range(view, from, to));
+            auto offset = next_token_end(text.str, 0).value_or(0);
+            m_editor.force_style_update(view, from + offset, to);
+            SCNotification scn;
+            scn.nmhdr.code = SCN_SCROLLED;
+            // This was workaround for hotspots
+            // TODO: check if it's still needed
+            // send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scn));
 
-        bool result = check_text(view, text, from, CheckTextMode::find_last, offset);
-        if (result)
-            break;
+            bool result = check_text(view, text, from, CheckTextMode::find_last, offset);
+            if (result)
+                break;
 
-        iterator_pos -= (m_settings.find_next_buffer_size * 1024 - text.to_original_index(offset));
+            iterator_pos -= (m_settings.find_next_buffer_size * 1024 - text.to_original_index(offset));
+        }
+        else
+            --iterator_pos;
 
         if (iterator_pos < 0)
         {
