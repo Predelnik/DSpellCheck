@@ -44,6 +44,8 @@ public:
     }
 
     std::optional<long> prev_token_begin(long index) {
+        if (m_is_delimiter(m_target[index]) && index > 0)
+            --index;
         if (m_is_delimiter(m_target[index]))
             return std::nullopt;
         while (index >= 0 && !m_is_delimiter(m_target[index])) {
