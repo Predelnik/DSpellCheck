@@ -180,7 +180,7 @@ void NppInterface::set_selection(EditorViewType view, long from, long to)
 
 void NppInterface::replace_selection(EditorViewType view, const char* str)
 {
-    send_msg_to_scintilla(view, SCI_SETSEL, 0, reinterpret_cast<LPARAM>(str));
+    send_msg_to_scintilla(view, SCI_REPLACESEL, 0, reinterpret_cast<LPARAM>(str));
 }
 
 void NppInterface::set_indicator_style(EditorViewType view, int indicator_index, int style)
