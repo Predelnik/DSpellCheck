@@ -68,7 +68,7 @@ public:
                 && index < static_cast<long> (m_target.length()) - 1
                 && IsCharUpper(m_target[index + 1])
                 && IsCharLower(m_target[index]))
-                return index;
+                return index + 1;
             ++index;
         }
         return index;
