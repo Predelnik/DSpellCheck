@@ -2,5 +2,17 @@
 
 namespace SciUtils
 {
-    bool is_comment_or_string(LRESULT lexer, LRESULT style);
+    enum class StyleCategory
+    {
+      text,     // Currently - should be spell-checked
+      comment,  // 
+      string,   // 
+      variable, //  
+      function, //
+      unknown,  // Should never be spell-checked
+      
+      COUNT,
+    };
+
+    StyleCategory get_style_category(LRESULT lexer, LRESULT style);
 }
