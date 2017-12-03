@@ -120,6 +120,7 @@ private:
     bool check_word(EditorViewType view, std::wstring word, long word_start, std::vector<WordToCheck>* words_to_check = nullptr);
     void get_visible_limits(EditorViewType view, long& start, long& finish);
     MappedWstring get_visible_text(EditorViewType view, long* offset, bool not_intersection_only = false);
+    void add_periods(const std::wstring_view& parent_string_view, std::wstring_view& target);
     int check_text(EditorViewType view, const MappedWstring& text_to_check, long offset, CheckTextMode mode, size_t skip_chars = 0);
     void check_visible(EditorViewType view, bool not_intersection_only = false);
     void set_encoding_by_id(int enc_id);
