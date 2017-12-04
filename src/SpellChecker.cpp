@@ -908,7 +908,12 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring word, long word_
     // Well Numbers have same codes for ANSI and Unicode I guess, so
     // If word contains number then it's probably just a number or some crazy name
     auto style = m_editor.get_style_at(view, word_start);
-    if (m_settings.check_only_comments_and_strings && !SciUtils::is_comment_or_string(m_editor.get_lexer(view), style))
+    auto lexer = m_editor.get_lexer(view);
+    auto category = SciUtils::get_style_category(lexer, style) ;
+    if (m_settings.check_only_comments_and_strings && 
+        (category != SciUtils::StyleCategory::comment &&
+         category != SciUtils::StyleCategory::string
+        ))
         return true;
 
     if (m_editor.is_style_hotspot(view, style))
