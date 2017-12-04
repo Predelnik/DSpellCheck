@@ -45,8 +45,7 @@ public:
     void fill_lib_info(int status, const Settings& settings);
     void disable_language_combo(bool disable);
     void set_file_types(bool check_those, const wchar_t* file_types);
-    void set_sugg_type(SuggestionMode mode);
-    void set_check_comments(bool value);
+    void set_sugg_type(SuggestionMode mode);    
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent);
@@ -74,6 +73,8 @@ private:
     HWND m_h_check_only_those = nullptr;
     HWND m_h_file_types = nullptr;
     HWND m_h_check_comments = nullptr;
+    HWND m_h_check_strings  = nullptr;
+    HWND m_h_check_varfunc = nullptr;
     HWND m_h_lib_link = nullptr;
     HWND m_h_lib_group_box = nullptr;
     HWND m_h_download_dics = nullptr;

@@ -166,7 +166,9 @@ void SimpleDlg::apply_settings(Settings& settings)
     settings.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
     settings.file_types = get_edit_text(m_h_file_types);
     settings.suggestions_mode = m_suggestion_mode_cmb.current_data();
-    settings.check_only_comments_and_strings = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
+    settings.check_comments = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
+    settings.check_strings = Button_GetCheck(m_h_check_strings) == BST_CHECKED;
+    settings.check_variable_functions = Button_GetCheck(m_h_check_varfunc) == BST_CHECKED;
     settings.use_language_name_aliases = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
     settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
     settings.aspell_allow_run_together_words = Button_GetCheck (m_h_aspell_run_together_cb) == BST_CHECKED;
@@ -262,10 +264,6 @@ void SimpleDlg::set_sugg_type(SuggestionMode mode)
     m_suggestion_mode_cmb.set_index(mode);
 }
 
-void SimpleDlg::set_check_comments(bool value)
-{
-    Button_SetCheck(m_h_check_comments, value ? BST_CHECKED : BST_UNCHECKED);
-}
 
 void SimpleDlg::set_decode_names(bool value)
 {
@@ -314,7 +312,9 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param)
             m_h_check_not_those = ::GetDlgItem(_hSelf, IDC_FILETYPES_CHECKNOTTHOSE);
             m_h_check_only_those = ::GetDlgItem(_hSelf, IDC_FILETYPES_CHECKTHOSE);
             m_h_file_types = ::GetDlgItem(_hSelf, IDC_FILETYPES);
-            m_h_check_comments = ::GetDlgItem(_hSelf, IDC_CHECKCOMMENTS);
+            m_h_check_comments = ::GetDlgItem(_hSelf, IDC_CHECKCOMMENTS_CB);
+            m_h_check_strings = ::GetDlgItem(_hSelf, IDC_CHECKSTRINGS_CB);
+            m_h_check_varfunc = ::GetDlgItem(_hSelf, IDC_CHECKFUNCVAR_CB);
             m_h_lib_link = ::GetDlgItem(_hSelf, IDC_LIB_LINK);
             m_suggestion_mode_cmb.init(GetDlgItem(_hSelf, IDC_SUGG_TYPE));
             m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
@@ -941,7 +941,9 @@ void SimpleDlg::update_controls(const Settings& settings)
     update_lib_status(settings);
     fill_sugestions_num(settings.suggestion_count);
     set_file_types(settings.check_those, settings.file_types.c_str());
-    set_check_comments(settings.check_only_comments_and_strings);
+    Button_SetCheck(m_h_check_comments, settings.check_comments ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(m_h_check_strings, settings.check_strings ? BST_CHECKED : BST_UNCHECKED);
+    Button_SetCheck(m_h_check_varfunc, settings.check_variable_functions ? BST_CHECKED : BST_UNCHECKED);
     set_decode_names(settings.use_language_name_aliases);
     set_sugg_type(settings.suggestions_mode);
     set_one_user_dic(settings.use_unified_dictionary);

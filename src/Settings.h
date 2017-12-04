@@ -77,7 +77,9 @@ public:
     bool remove_boundary_apostrophes = false;
     bool check_those = false;
     std::wstring file_types;
-    bool check_only_comments_and_strings = false;
+    bool check_comments = false;
+    bool check_strings = false;
+    bool check_variable_functions = false;
     int underline_color = 0;
     int underline_style = 0;
     bool ignore_containing_digit = false;

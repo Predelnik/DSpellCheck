@@ -185,7 +185,9 @@ void Settings::process(IniWorker& worker)
     worker.process(L"Remove_Ending_And_Beginning_Apostrophe", remove_boundary_apostrophes, true);
     worker.process(L"Check_Those_\\_Not_Those", check_those, true);
     worker.process(L"File_Types", file_types, L"*.*");
-    worker.process(L"Check_Only_Comments_And_Strings", check_only_comments_and_strings, true);
+    worker.process(L"Check_Comments", check_comments, true);
+    worker.process(L"Check_String", check_strings, true);
+    worker.process(L"Check_Variable_Function_Names", check_variable_functions, false);
     worker.process(L"Underline_Color", underline_color, 0x0000ff); //red
     worker.process(L"Underline_Style", underline_style, INDIC_SQUIGGLE);
     worker.process(L"Ignore_Having_Number", ignore_containing_digit, true);

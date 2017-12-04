@@ -71,7 +71,6 @@
 #define IDC_UNDERLINE_STYLE                     1025
 #define IDC_SLIDER_SIZE                         1029
 #define IDC_SLIDER_TRANSPARENCY                 1030
-#define IDC_CHECKCOMMENTS                       1031
 #define IDC_LANGLIST                            1032
 #define IDC_IGNORE_                             1036
 #define IDC_IGNORE_CALL                         1037
@@ -87,4 +86,8 @@
 #define IDC_ASPELL_RUNTOGETHER_CB               40001
 #define IDC_DELIMITERS                          40001
 #define IDC_DELIMITER_EXCLUSIONS_LE             40002
+#define IDC_LIB_CODE_GB                         40002
 #define IDC_CAMEL_CASE_SPLITTING_CB             40003
+#define IDC_CHECKFUNCVAR_CB                     40004
+#define IDC_CHECKCOMMENTS_CB                    40005
+#define IDC_CHECKSTRINGS_CB                     40006

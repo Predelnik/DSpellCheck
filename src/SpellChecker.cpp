@@ -910,10 +910,13 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring word, long word_
     auto style = m_editor.get_style_at(view, word_start);
     auto lexer = m_editor.get_lexer(view);
     auto category = SciUtils::get_style_category(lexer, style) ;
-    if (m_settings.check_only_comments_and_strings && 
-        (category != SciUtils::StyleCategory::comment &&
-         category != SciUtils::StyleCategory::string
-        ))
+    if (category == SciUtils::StyleCategory::unknown)
+        return true;
+
+     if (!((category == SciUtils::StyleCategory::comment && m_settings.check_comments) ||
+         (category == SciUtils::StyleCategory::string && m_settings.check_strings) ||
+         ((category == SciUtils::StyleCategory::variable ||
+          category == SciUtils::StyleCategory::function) && m_settings.check_variable_functions)))
         return true;
 
     if (m_editor.is_style_hotspot(view, style))
