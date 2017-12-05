@@ -915,8 +915,8 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring word, long word_
 
      if (!((category == SciUtils::StyleCategory::comment && m_settings.check_comments) ||
          (category == SciUtils::StyleCategory::string && m_settings.check_strings) ||
-         ((category == SciUtils::StyleCategory::variable ||
-          category == SciUtils::StyleCategory::function) && m_settings.check_variable_functions)))
+         ((category == SciUtils::StyleCategory::idenitifier ||
+          category == SciUtils::StyleCategory::idenitifier) && m_settings.check_variable_functions)))
         return true;
 
     if (m_editor.is_style_hotspot(view, style))

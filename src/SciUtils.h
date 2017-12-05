@@ -7,8 +7,7 @@ namespace SciUtils
       text,     // should be spell-checked
       comment,  // 
       string,   // 
-      variable, //  
-      function, //
+      idenitifier, //  
       unknown,  // Should not be spell-checked
       
       COUNT,
