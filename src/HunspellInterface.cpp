@@ -320,7 +320,6 @@ std::basic_string<OutputCharType> DicInfo::convert_impl(const IconvWrapperT& con
         buf.resize((input.length() + 1) * sizeof (OutputCharType));
     if (conv.get() == iconv_t(-1))
     {
-        buf.front() = '\0';
         return {};
     }
     size_t in_size = (input.length() + 1) * sizeof (InputCharType);
@@ -328,9 +327,9 @@ std::basic_string<OutputCharType> DicInfo::convert_impl(const IconvWrapperT& con
     char* out_buf = buf.data();
     auto in_buf = input.data();
     size_t res = iconv(conv.get(), reinterpret_cast<const char **>(&in_buf), &in_size, &out_buf, &out_size);
-    if (res == (size_t)(-1))
+    if (res == static_cast<size_t>(-1))
     {
-        buf.front() = '\0';
+        return {};
     }
     return {reinterpret_cast<OutputCharType *>(buf.data())};
 }
