@@ -1060,7 +1060,7 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
 
     bool stop = false;
     long resulting_word_end = -1, resulting_word_start = -1;
-    auto text_len = text_to_check.str.length();
+    auto text_len = text_to_check.mapping.back ();
     std::vector<long> underline_buffer;
 
     auto sv = std::wstring_view(text_to_check.str);
