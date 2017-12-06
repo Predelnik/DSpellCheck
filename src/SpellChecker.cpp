@@ -392,7 +392,6 @@ void SpellChecker::find_prev_mistake()
 bool SpellChecker::is_word_under_cursor_correct(long& pos, long& length,
                                                 bool use_text_cursor)
 {
-    bool ret = true;
     POINT p;
     long init_char_pos;
     LRESULT selection_start = 0;
@@ -416,48 +415,40 @@ bool SpellChecker::is_word_under_cursor_correct(long& pos, long& length,
         init_char_pos = m_editor.get_current_pos(view);
     }
 
-    if (init_char_pos != -1)
+    if (init_char_pos == -1)
+        return true;
+    auto line = m_editor.line_from_position(view, init_char_pos);
+    auto offset = m_editor.get_line_start_position(view, line);
+    auto mapped_str = to_mapped_wstring(view, m_editor.get_line(view, line).data());
+    if (mapped_str.str.empty())
+        return true;
+    auto word = get_word_at(static_cast<long>(init_char_pos), mapped_str,
+                            static_cast<long>(offset));
+    if (word.empty())
+        return true;
+    cut_apostrophes(word);
+    pos = static_cast<long>(
+        mapped_str.to_original_index(static_cast<long>(word.data() - mapped_str.str.data())) + offset
+    );
+    long pos_end = mapped_str.to_original_index(
+        static_cast<long>(word.data() + word.length() - mapped_str.str.data())) + offset;
+    long word_len = pos_end - pos;
+    if (selection_start != selection_end &&
+        (selection_start != pos || selection_end != pos + word_len))
+        return true;
+    if (check_word(view, std::wstring(word), pos))
     {
-        auto line = m_editor.line_from_position(view, init_char_pos);
-        auto offset = m_editor.get_line_start_position(view, line);
-        auto mapped_str = to_mapped_wstring(view, m_editor.get_line(view, line).data());
-        auto word = get_word_at(static_cast<long>(init_char_pos), mapped_str,
-                                static_cast<long>(offset));
-        if (word.empty())
-        {
-            ret = true;
-        }
-        else
-        {
-            cut_apostrophes(word);
-            pos = static_cast<long>(
-                mapped_str.to_original_index(static_cast<long>(word.data() - mapped_str.str.data())) + offset
-            );
-            long pos_end = mapped_str.to_original_index(
-                static_cast<long>(word.data() + word.length() - mapped_str.str.data())) + offset;
-            long word_len = pos_end - pos;
-            if (selection_start != selection_end &&
-                (selection_start != pos || selection_end != pos + word_len))
-            {
-                return true;
-            }
-            if (check_word(view, std::wstring(word), pos))
-            {
-                ret = true;
-            }
-            else
-            {
-                ret = false;
-                length = word_len;
-            }
-        }
+        return true;
     }
-    return ret;
+    length = word_len;
+    return false;
 }
 
 std::wstring_view SpellChecker::get_word_at(long char_pos, const MappedWstring& text, long offset) const
 {
     auto index = text.from_original_index(char_pos - offset);
+    if (index >= text.str.length())
+        index = static_cast<long>(text.str.length()) - 1;
     auto begin = prev_token_begin(text.str, index);
     if (!begin)
         return {};
@@ -771,9 +762,9 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view, long* offset, 
 
 void SpellChecker::add_periods(const std::wstring_view& parent_string_view, std::wstring_view& target)
 {
-    ptrdiff_t start_offset = target.data () - parent_string_view.data ();
-    ptrdiff_t end_offset = start_offset + target.length ();
-    while (end_offset < static_cast<ptrdiff_t> (parent_string_view.length ()) && parent_string_view[end_offset] == '.')
+    ptrdiff_t start_offset = target.data() - parent_string_view.data();
+    ptrdiff_t end_offset = start_offset + target.length();
+    while (end_offset < static_cast<ptrdiff_t>(parent_string_view.length()) && parent_string_view[end_offset] == '.')
         ++end_offset;
     target = parent_string_view.substr(start_offset, end_offset - start_offset);
 }
@@ -909,7 +900,7 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring word, long word_
     // If word contains number then it's probably just a number or some crazy name
     auto style = m_editor.get_style_at(view, word_start);
     auto lexer = m_editor.get_lexer(view);
-    auto category = SciUtils::get_style_category(lexer, style) ;
+    auto category = SciUtils::get_style_category(lexer, style);
     if (category == SciUtils::StyleCategory::unknown)
         return true;
 
@@ -1099,11 +1090,10 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring& text_to_c
                 static_cast<long>(token.data() - text_to_check.str.data()))
         );
         auto word_end = static_cast<long>(offset + text_to_check.to_original_index(
-                static_cast<long>(token.data() - text_to_check.str.data() + token.length())));
-        add_periods (sv, token);
+            static_cast<long>(token.data() - text_to_check.str.data() + token.length())));
+        add_periods(sv, token);
         if (!check_word(view, std::wstring(token), word_start, &words_to_check))
         {
-
             words_to_check.back().word_start = word_start;
             words_to_check.back().word_end = word_end;
         }
