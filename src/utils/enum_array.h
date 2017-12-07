@@ -11,16 +11,16 @@ class enum_array : std::array<ValueT, Count>
 public:
     using self = enum_array;
     using parent_t = std::array<ValueT, Count>;
-    using parent_t::value_type;
-    using parent_t::size_type;
-    using parent_t::difference_type;
-    using parent_t::reference;
-    using parent_t::const_reference;
-    using parent_t::pointer;
-    using parent_t::const_pointer;
-    using parent_t::iterator;
-    using parent_t::const_iterator;
-    using parent_t::const_reverse_iterator;
+    using typename parent_t::value_type;
+    using typename parent_t::size_type;
+    using typename parent_t::difference_type;
+    using typename parent_t::reference;
+    using typename parent_t::const_reference;
+    using typename parent_t::pointer;
+    using typename parent_t::const_pointer;
+    using typename parent_t::iterator;
+    using typename parent_t::const_iterator;
+    using typename parent_t::const_reverse_iterator;
 
     reference at(EnumT index)
     {

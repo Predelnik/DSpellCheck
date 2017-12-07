@@ -68,9 +68,9 @@ HMENU SuggestionsButton::get_popup_menu() { return m_popup_menu; }
 
 int SuggestionsButton::get_result() { return m_menu_result; }
 
-SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface& npp): m_npp(npp),
-                                                                                        m_menu_result(0),
-                                                                                        m_popup_menu(nullptr)
+SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface& npp): m_menu_result(0),
+                                                                                        m_popup_menu(nullptr),
+                                                                                        m_npp(npp)
 {
     Window::init(h_inst, parent);
     m_state_pressed = false;

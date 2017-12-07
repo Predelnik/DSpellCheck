@@ -564,7 +564,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id)
                     m_editor.set_cursor_pos(view, m_word_under_cursor_pos + m_word_under_cursor_length);
                     recheck_visible_both_views();
                 }
-                else if ((result) <= static_cast<int>(m_last_suggestions.size()))
+                else if (result <= m_last_suggestions.size())
                 {
                     std::string encoded_str;
                     if (m_editor.get_encoding(view) == EditorCodepage::ansi)
@@ -873,14 +873,14 @@ void SpellChecker::apply_conversions(
     {
         if (m_settings.ignore_yo)
         {
-            if (c == L'¸')
-                c = L'å';
-            if (c == L'¨')
-                c = L'¸';
+            if (c == L'Ñ‘')
+                c = L'Ðµ';
+            if (c == L'Ð')
+                c = L'Ð•';
         }
         if (m_settings.convert_single_quotes)
         {
-            if (c == L'’')
+            if (c == L'â€™')
                 c = L'\'';
         }
     }

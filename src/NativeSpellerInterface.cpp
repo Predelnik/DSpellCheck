@@ -1,4 +1,4 @@
-#ifdef DSPELLCHECK_NEW_SDK
+#if defined (DSPELLCHECK_NEW_SDK) && !defined (__clang__)
 #include "NativeSpellerInterface.h"
 #include "CommonFunctions.h"
 #include "LanguageInfo.h"
@@ -92,12 +92,12 @@ static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const st
     {
         if (i == 0 || lstrcmpi  (words[i], words[i - 1]) != 0)
         {
-            coords.push_back({static_cast<int>(w.length()), i});
+            coords.push_back({{static_cast<int>(w.length()), i}});
             w += words[i];
             w += L" ";
         }
         else
-            coords.push_back({coords.back ()[0], i});
+            coords.push_back({{coords.back ()[0], i}});
     }
     CComPtr<IEnumSpellingError> err_enum;
     if (speller->Check(w.c_str(), &err_enum) != S_OK)
@@ -260,4 +260,5 @@ void NativeSpellerInterface::cleanup()
     m_ok = false;
     m_ptrs.reset();
 }
-#endif // DSPELLCHECK_NEW_SDK
+
+#endif // defined (DSPELLCHECK_NEW_SDK) && !defined (__clang__)

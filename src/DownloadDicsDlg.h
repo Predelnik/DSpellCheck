@@ -117,7 +117,6 @@ private:
     std::vector<LanguageInfo> m_current_langs_filtered;
     HBRUSH m_default_brush;
     COLORREF m_status_color;
-    HWND m_lib_combo;
     HWND m_h_file_list;
     HWND m_h_address = nullptr;
     HWND m_h_status;

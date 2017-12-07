@@ -2,7 +2,7 @@
 
 #include "SpellerInterface.h"
 
-#ifdef DSPELLCHECK_NEW_SDK
+#if defined (DSPELLCHECK_NEW_SDK) && !defined (__clang__)
 #include <atlbase.h>
 
 struct ISpellCheckerFactory;
@@ -41,6 +41,8 @@ private:
 #else
 class NativeSpellerInterface : public DummySpeller
 {
-    void cleanup ();
+public:
+    void cleanup () {}
+    void init () {}
 };
-#endif
+#endif // defined (DSPELLCHECK_NEW_SDK) && !defined (__clang__)
