@@ -447,7 +447,7 @@ bool SpellChecker::is_word_under_cursor_correct(long& pos, long& length,
 std::wstring_view SpellChecker::get_word_at(long char_pos, const MappedWstring& text, long offset) const
 {
     auto index = text.from_original_index(char_pos - offset);
-    if (index >= text.str.length())
+    if (index >= static_cast<long> (text.str.length()))
         index = static_cast<long>(text.str.length()) - 1;
     auto begin = prev_token_begin(text.str, index);
     if (!begin)
