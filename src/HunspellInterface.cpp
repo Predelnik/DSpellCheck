@@ -590,6 +590,7 @@ void HunspellInterface::set_additional_directory(const wchar_t* dir)
             AvailableLangInfo new_x;
             new_x.type = 1;
             new_x.name = file_name_without_ext.substr(file_name_without_ext.rfind(L'\\') + 1);
+            new_x.full_path = file.substr(0, file.length() - 4);
             if (m_dic_list.count(new_x) == 0)
                 m_dic_list.insert(new_x);
         }
