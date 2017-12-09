@@ -55,6 +55,7 @@ void insert_sugg_menu_item(HMENU menu, const wchar_t* text, BYTE id, int insert_
 
 struct WordToCheck
 {
+    std::wstring_view token;
     std::wstring str;
     long word_start;
     long word_end;
@@ -63,11 +64,10 @@ struct WordToCheck
 
 class SpellChecker {
     enum class CheckTextMode {
-        underline_errors = 0,
-        find_first = 1,
-        find_last = 2,
-        get_first = 3,
-        // Returns position of first (for recurring usage)
+        underline_errors,
+        find_first,
+        find_last,
+        find_all,
     };
 
 public:
@@ -121,7 +121,7 @@ private:
     void get_visible_limits(EditorViewType view, long& start, long& finish);
     MappedWstring get_visible_text(EditorViewType view, long* offset, bool not_intersection_only = false);
     void add_periods(const std::wstring_view& parent_string_view, std::wstring_view& target);
-    int check_text(EditorViewType view, const MappedWstring& text_to_check, long offset, CheckTextMode mode, size_t skip_chars = 0);
+    int check_text(EditorViewType view, const MappedWstring& text_to_check, long offset, CheckTextMode mode);
     void check_visible(EditorViewType view, bool not_intersection_only = false);
     void set_encoding_by_id(int enc_id);
     std::vector<SuggestionsMenuItem> fill_suggestions_menu(HMENU menu);
@@ -155,7 +155,7 @@ private:
     SettingsDlg* m_settings_dlg_instance;
     SuggestionsButton* m_suggestions_instance;
     EditorInterface &m_editor;
-    std::wstring_view last_result; // workaround for getting latest misspelling
+    std::vector<std::wstring_view> m_misspellings;
 
     std::unique_ptr<AspellInterface> m_aspell_speller;
     std::unique_ptr<HunspellInterface> m_hunspell_speller;
