@@ -220,13 +220,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notify_code)
     {
     case NPPN_SHUTDOWN:
         {
-            MSG msg;
-            while (PeekMessage(&msg, nullptr, WM_USER, 0xFFFF,
-                               PM_REMOVE)) // Clearing message queue to make sure that
-                // we're not stuck in SendMesage somewhere
-            {
-            };
-
             if (recheck_timer) KillTimer(nullptr, recheck_timer);
             if (ui_timer) KillTimer(nullptr, ui_timer);
             command_menu_clean_up();
