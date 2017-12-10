@@ -334,9 +334,11 @@ std::basic_string<OutputCharType> DicInfo::convert_impl(const IconvWrapperT& con
     return {reinterpret_cast<OutputCharType *>(buf.data())};
 }
 
-bool HunspellInterface::speller_check_word(const DicInfo& dic, const wchar_t* word)
+bool HunspellInterface::speller_check_word(const DicInfo& dic, WordForSpeller word)
 {
-    auto word_to_check = dic.to_dictionary_encoding(word);
+    if (word.data.ends_with_dot)
+        word.str += L".";
+    auto word_to_check = dic.to_dictionary_encoding(word.str.c_str ());
     if (word_to_check.empty())
         return true;
     // No additional check for memorized is needed since all words are already in
@@ -345,9 +347,9 @@ bool HunspellInterface::speller_check_word(const DicInfo& dic, const wchar_t* wo
     return dic.hunspell->spell(word_to_check);
 }
 
-bool HunspellInterface::check_word(const wchar_t* word)
+bool HunspellInterface::check_word(WordForSpeller word)
 {
-    if (m_ignored.find(word) != m_ignored.end())
+    if (m_ignored.find(word.str.c_str ()) != m_ignored.end())
         return true;
 
     bool res = false;

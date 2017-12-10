@@ -21,6 +21,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class LanguageInfo;
 
+class AdditionalWordData
+{
+public:
+    bool ends_with_dot = false; // could be useful for words like etc.
+};
+
+class WordForSpeller
+{
+public:
+    std::wstring str;
+    AdditionalWordData data;
+};
+
 class SpellerInterface
 {
 public:
@@ -31,9 +44,9 @@ public:
         const std::vector<std::wstring>& list) = 0; // Languages are from LangList
     void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
     // Implement either check_word or check_words or get the endless recursion
-    virtual bool check_word(const wchar_t* word); // Word in Utf-8 or ANSI
+    virtual bool check_word(WordForSpeller word);
     // Functions which should be implemented in case if words for some awkward reason could be faster checked in bulk
-    virtual std::vector<bool> check_words(const std::vector<const wchar_t*>& words);
+    virtual std::vector<bool> check_words(const std::vector<WordForSpeller>& words);
     virtual std::vector<std::wstring> get_suggestions(const wchar_t* word) = 0;
     virtual void add_to_dictionary(const wchar_t* word) = 0;
     virtual void ignore_all(const wchar_t* word) = 0;
@@ -54,7 +67,7 @@ public:
     {
     }
 
-    bool check_word(const wchar_t*) override;
+    bool check_word(WordForSpeller) override;
     std::vector<std::wstring> get_suggestions(const wchar_t*) override;
     void add_to_dictionary(const wchar_t*) override;
     void ignore_all(const wchar_t*) override;

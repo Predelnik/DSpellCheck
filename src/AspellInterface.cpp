@@ -172,12 +172,12 @@ void AspellInterface::set_allow_run_together(bool allow) {
     m_allow_run_together = allow;
 }
 
-bool AspellInterface::check_word(const wchar_t* word) {
+bool AspellInterface::check_word(WordForSpeller word) {
     if (!m_aspell_loaded)
         return true;
 
     bool res = false;
-    auto dst_word = to_utf8_string(word);
+    auto dst_word = to_utf8_string(word.str.c_str ());
 
     auto len = static_cast<int>(dst_word.length());
     if (!m_multi_mode) {

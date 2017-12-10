@@ -86,7 +86,7 @@ public:
   void set_language(const wchar_t* lang) override;
   void set_multiple_languages(
       const std::vector<std::wstring>& list) override;             // Languages are from LangList
-  bool check_word(const wchar_t* word) override; // Word in Utf-8 or ANSI
+  bool check_word(WordForSpeller word) override; // Word in Utf-8 or ANSI
   bool is_working() const override;
     std::vector<std::wstring> get_suggestions(const wchar_t* word) override;
   void add_to_dictionary(const wchar_t* word) override;
@@ -103,7 +103,7 @@ private:
   template <typename CharType>
   static void read_user_dic(std::unordered_set<std::basic_string<CharType>>& target, const wchar_t* path);
   DicInfo* create_hunspell(const AvailableLangInfo& info);
-  static bool speller_check_word(const DicInfo& dic, const wchar_t* word);
+  static bool speller_check_word(const DicInfo& dic, WordForSpeller word);
   void message_box_word_cannot_be_added();
 
 private:

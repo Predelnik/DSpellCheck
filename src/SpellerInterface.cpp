@@ -19,12 +19,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellerInterface.h"
 #include "LanguageInfo.h"
 
-bool SpellerInterface::check_word(const wchar_t* word)
+bool SpellerInterface::check_word(WordForSpeller word)
 {
     return check_words({word}).front();
 }
 
-std::vector<bool> SpellerInterface::check_words(const std::vector<const wchar_t*>& words)
+std::vector<bool> SpellerInterface::check_words(const std::vector<WordForSpeller>& words)
 {
     std::vector<bool> ret;
     ret.resize(words.size());
@@ -42,7 +42,7 @@ void DummySpeller::set_language(const wchar_t*)
 {
 }
 
-bool DummySpeller::check_word(const wchar_t*)
+bool DummySpeller::check_word(WordForSpeller)
 {
     return true;
 }

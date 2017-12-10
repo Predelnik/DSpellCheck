@@ -81,7 +81,7 @@ void NativeSpellerInterface::set_language(const wchar_t* lang)
     }
 }
 
-static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const std::vector<const wchar_t*>& words)
+static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const std::vector<WordForSpeller>& words)
 {
     if (!speller)
         return {};
@@ -90,10 +90,10 @@ static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const st
     std::vector<std::array<int, 2>> coords;
     for (int i = 0; i < static_cast<int>(words.size()); ++i)
     {
-        if (i == 0 || lstrcmpi  (words[i], words[i - 1]) != 0)
+        if (i == 0 || lstrcmpi  (words[i].str.c_str (), words[i - 1].str.c_str ()) != 0)
         {
             coords.push_back({{static_cast<int>(w.length()), i}});
-            w += words[i];
+            w += words[i].str;
             w += L" ";
         }
         else
@@ -116,7 +116,7 @@ static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const st
     return ret;
 }
 
-std::vector<bool> NativeSpellerInterface::check_words(const std::vector<const wchar_t*>& words)
+std::vector<bool> NativeSpellerInterface::check_words(const std::vector<WordForSpeller>& words)
 {
     if (!m_ok)
         return {};

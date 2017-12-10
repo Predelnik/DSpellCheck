@@ -25,11 +25,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CommonFunctions.h"
 #include "npp/EditorInterface.h"
 
+struct AspellSpeller;
+struct AspellWordList;
+
 class EditorInterface;
 class Settings;
-struct AspellSpeller;
 class LanguageInfo;
-struct AspellWordList;
 class SettingsDlg;
 class LangList;
 class SuggestionsButton;
@@ -39,6 +40,7 @@ class HunspellInterface;
 class SelectProxy;
 class MappedWstring;
 class NativeSpellerInterface;
+class WordForSpeller;
 
 struct SuggestionsMenuItem {
     std::wstring text;
@@ -52,15 +54,6 @@ struct SuggestionsMenuItem {
 
 void insert_sugg_menu_item(HMENU menu, const wchar_t* text, BYTE id, int insert_pos,
                            bool separator = false);
-
-struct WordToCheck
-{
-    std::wstring_view token;
-    std::wstring str;
-    long word_start;
-    long word_end;
-    bool is_correct;
-};
 
 class SpellChecker {
     enum class CheckTextMode {
@@ -108,6 +101,7 @@ public:
     void hide_suggestion_box();
     void find_next_mistake();
     void find_prev_mistake();
+    WordForSpeller to_word_for_speller(std::wstring_view word) const;
     void check_file_name();
 
     void lang_change();
@@ -117,7 +111,7 @@ private:
     void create_word_underline(EditorViewType view, long start, long end);
     void remove_underline(EditorViewType view, long start, long end);
     void clear_all_underlines(EditorViewType view);
-    bool check_word(EditorViewType view, std::wstring word, long word_start);
+    bool check_word(EditorViewType view, std::wstring_view word, long word_start);
     void get_visible_limits(EditorViewType view, long& start, long& finish);
     MappedWstring get_visible_text(EditorViewType view, long* offset, bool not_intersection_only = false);
     void add_periods(const std::wstring_view& parent_string_view, std::wstring_view& target);
@@ -130,7 +124,7 @@ private:
     std::wstring_view get_word_at(long char_pos, const MappedWstring& text, long offset) const;
     bool check_text_needed();
     void refresh_underline_style();
-    void apply_conversions(std::wstring& word);
+    void apply_conversions(std::wstring& word) const;
     void reset_hot_spot_cache();
     bool is_spellchecking_needed(EditorViewType view, std::wstring_view word, long word_start);
     void cut_apostrophes(std::wstring_view& word);
