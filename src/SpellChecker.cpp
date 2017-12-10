@@ -829,18 +829,20 @@ void SpellChecker::reset_hot_spot_cache() {
   memset(m_hot_spot_cache, -1, sizeof(m_hot_spot_cache));
 }
 
-bool SpellChecker::check_word(EditorViewType view, std::wstring word,
-                              long word_start,
-                              std::vector<WordToCheck> *words_to_check) {
-  if (!active_speller()->is_working() || word.empty())
-    return true;
+bool SpellChecker::is_spellchecking_needed(EditorViewType view,
+                                           std::wstring_view word,
+                                           long word_start) {
+  if (!active_speller()->is_working() || word.empty()) {
+    return false;
+  }
   // Well Numbers have same codes for ANSI and Unicode I guess, so
   // If word contains number then it's probably just a number or some crazy name
   auto style = m_editor.get_style_at(view, word_start);
   auto lexer = m_editor.get_lexer(view);
   auto category = SciUtils::get_style_category(lexer, style);
-  if (category == SciUtils::StyleCategory::unknown)
-    return true;
+  if (category == SciUtils::StyleCategory::unknown) {
+    return false;
+  }
 
   if (category != SciUtils::StyleCategory::text &&
       !((category == SciUtils::StyleCategory::comment &&
@@ -848,34 +850,27 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring word,
         (category == SciUtils::StyleCategory::string &&
          m_settings.check_strings) ||
         (category == SciUtils::StyleCategory::idenitifier &&
-         m_settings.check_variable_functions)))
-    return true;
-
-  if (m_editor.is_style_hotspot(view, style))
-    return true;
-
-  apply_conversions(word);
-
-  auto symbols_num = word.length();
-  if (symbols_num == 0) {
-    return true;
+         m_settings.check_variable_functions))) {
+    return false;
   }
 
-  if (m_settings.ignore_one_letter && symbols_num == 1) {
-    return true;
+  if (m_editor.is_style_hotspot(view, style)) {
+    return false;
   }
+
+  if (m_settings.ignore_one_letter && word.length() == 1)
+    return false;
 
   if (m_settings.ignore_containing_digit &&
-      wcspbrk(word.c_str(), L"0123456789") != nullptr) // Same for UTF-8 and not
-  {
-    return true;
+      word.find_first_of(L"0123456789") != std::wstring_view::npos) {
+    return false;
   }
 
-  if (m_settings.ignore_starting_with_capital ||
-      m_settings.ignore_having_a_capital || m_settings.ignore_all_capital) {
-    if (m_settings.ignore_starting_with_capital && IsCharUpper(word.front())) {
-      return true;
-    }
+  if (m_settings.ignore_starting_with_capital && IsCharUpper(word.front())) {
+    return false;
+  }
+
+  if (m_settings.ignore_having_a_capital || m_settings.ignore_all_capital) {
     if (m_settings.ignore_having_a_capital || m_settings.ignore_all_capital) {
       bool all_upper = IsCharUpper(word.front()), any_upper = false;
       for (auto c : std::wstring_view(word).substr(1)) {
@@ -886,35 +881,32 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring word,
       }
 
       if (!all_upper && any_upper && m_settings.ignore_having_a_capital)
-        return true;
+        return false;
 
       if (all_upper && m_settings.ignore_all_capital)
-        return true;
+        return false;
     }
   }
 
   if (m_settings.ignore_having_underscore &&
-      wcschr(word.c_str(), L'_') != nullptr)
-  // I guess the same for UTF-8 and ANSI
-  {
-    return true;
-  }
-
-  auto len = word.length();
+      word.find(L'_') != std::wstring_view::npos)
+    return false;
 
   if (m_settings.ignore_starting_or_ending_with_apostrophe) {
-    if (word[0] == '\'' || word[len - 1] == '\'') {
-      return true;
-    }
+    if (word.front() == '\'' || word.back() == '\'')
+      return false;
   }
 
-  if (!words_to_check)
-    return active_speller()->check_word(word.c_str());
-  else {
-    words_to_check->push_back({});
-    words_to_check->back ().str = std::move (word);
-    return false;
-  }
+  return true;
+}
+
+bool SpellChecker::check_word(EditorViewType view, std::wstring word,
+                              long word_start) {
+  if (!is_spellchecking_needed(view, word, word_start))
+    return true;
+
+  apply_conversions(word);
+  return active_speller()->check_word(word.c_str());
 }
 
 void SpellChecker::cut_apostrophes(std::wstring_view &word) {
@@ -1019,12 +1011,12 @@ int SpellChecker::check_text(EditorViewType view,
         offset +
         text_to_check.to_original_index(static_cast<long>(
             token.data() - text_to_check.str.data() + token.length())));
-    auto original_token = token;
-    add_periods(sv, token);
-    if (!check_word(view, std::wstring(token), word_start, &words_to_check)) {
-      words_to_check.back().word_start = word_start;
-      words_to_check.back().word_end = word_end;
-      words_to_check.back().token = original_token;
+    if (is_spellchecking_needed(view, token, word_start)) {
+      auto w = *words_to_check.insert(words_to_check.end(), {});
+      w.str = {token};
+      w.word_start = word_start;
+      w.word_end = word_end;
+      w.token = token;
     }
   }
   words_for_speller.resize(words_to_check.size());
@@ -1070,7 +1062,7 @@ int SpellChecker::check_text(EditorViewType view,
       } break;
       case CheckTextMode::find_all:
         m_misspellings.push_back(result.token);
-          break;
+        break;
       }
       if (stop)
         break;
@@ -1079,7 +1071,8 @@ int SpellChecker::check_text(EditorViewType view,
 
   if (mode == CheckTextMode::underline_errors) {
     long prev_pos = offset;
-    for (long i = 0; i < static_cast<long>(underline_buffer.size()) - 1; i += 2) {
+    for (long i = 0; i < static_cast<long>(underline_buffer.size()) - 1;
+         i += 2) {
       remove_underline(view, prev_pos, underline_buffer[i] - 1);
       create_word_underline(view, underline_buffer[i],
                             underline_buffer[i + 1] - 1);
@@ -1145,7 +1138,7 @@ void SpellChecker::copy_misspellings_to_clipboard() {
   m_misspellings.erase(it, m_misspellings.end());
   std::wstring str;
   for (auto &s : m_misspellings)
-      str += std::wstring {s} + L'\n';
+    str += std::wstring{s} + L'\n';
   m_misspellings.clear();
   const size_t len = (str.length() + 1) * 2;
   HGLOBAL h_mem = GlobalAlloc(GMEM_MOVEABLE, len);

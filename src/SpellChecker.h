@@ -117,7 +117,7 @@ private:
     void create_word_underline(EditorViewType view, long start, long end);
     void remove_underline(EditorViewType view, long start, long end);
     void clear_all_underlines(EditorViewType view);
-    bool check_word(EditorViewType view, std::wstring word, long word_start, std::vector<WordToCheck>* words_to_check = nullptr);
+    bool check_word(EditorViewType view, std::wstring word, long word_start);
     void get_visible_limits(EditorViewType view, long& start, long& finish);
     MappedWstring get_visible_text(EditorViewType view, long* offset, bool not_intersection_only = false);
     void add_periods(const std::wstring_view& parent_string_view, std::wstring_view& target);
@@ -132,6 +132,7 @@ private:
     void refresh_underline_style();
     void apply_conversions(std::wstring& word);
     void reset_hot_spot_cache();
+    bool is_spellchecking_needed(EditorViewType view, std::wstring_view word, long word_start);
     void cut_apostrophes(std::wstring_view& word);
     std::optional<long> next_token_end(std::wstring_view target, long index) const;
     std::optional<long> prev_token_begin(std::wstring_view target, long index) const;
