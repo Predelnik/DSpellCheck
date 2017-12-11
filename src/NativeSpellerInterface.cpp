@@ -94,6 +94,8 @@ static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const st
         {
             coords.push_back({{static_cast<int>(w.length()), i}});
             w += words[i].str;
+            if (words[i].data.ends_with_dot)
+                w += L".";
             w += L" ";
         }
         else
