@@ -1,0 +1,5 @@
+cmake_minimum_required (VERSION 3.7)
+project (catch)
+file (GLOB_RECURSE source_files *.cpp *.h)
+add_library (catch STATIC ${source_files})
+target_include_directories(catch PUBLIC .)
