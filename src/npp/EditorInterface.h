@@ -1,5 +1,5 @@
 #pragma once
-#include <assert.h>
+#include <cassert>
 // To mock things and stuff
 
 struct toolbarIcons;
@@ -103,10 +103,6 @@ public:
     int get_current_pos_in_line(EditorViewType view) const
     {
         return get_current_pos(view) - get_line_start_position(view, get_current_line_number(view));
-    }
-
-    virtual ~EditorInterface()
-    {
     }
 };
 

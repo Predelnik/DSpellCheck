@@ -30,7 +30,7 @@ class AspellInterface : public SpellerInterface {
   using SpellerPtr = std::unique_ptr<AspellSpeller, void (*)(AspellSpeller *)>;
 public:
   AspellInterface(HWND npp_window_arg); // Window for error reporting
-  ~AspellInterface();
+  ~AspellInterface() override;
   std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t* lang) override;
   void set_multiple_languages(

@@ -1,0 +1,5 @@
+cmake_minimum_required (VERSION 3.7)
+project (aspell)
+file (GLOB_RECURSE source_files *.cpp *.h)
+add_library (aspell STATIC ${source_files})
+target_include_directories(aspell PUBLIC .)

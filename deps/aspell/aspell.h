@@ -8,10 +8,10 @@
 
 #pragma once
 
-BOOL load_aspell(const wchar_t* path_arg);
+bool load_aspell(const wchar_t* path_arg);
 std::wstring get_actual_aspell_path(const std::wstring& supposed_path);
 std::wstring get_default_aspell_path ();
-void unload_aspell(void);
+void unload_aspell();
 void aspell_error_msg_box(HWND h_wnd, LPCSTR error);
 
 #ifdef __cplusplus

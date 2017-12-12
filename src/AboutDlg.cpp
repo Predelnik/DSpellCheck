@@ -34,7 +34,7 @@ void AboutDlg::do_dialog() {
 std::wstring get_product_and_version() {
   // get the filename of the executable containing the version resource
   std::vector<wchar_t> sz_filename (MAX_PATH + 1);
-  if (GetModuleFileName((HMODULE)get_h_module(), sz_filename.data (), MAX_PATH) == 0) {
+  if (GetModuleFileName(static_cast<HMODULE>(get_h_module()), sz_filename.data (), MAX_PATH) == 0) {
     return {};
   }
 
@@ -74,20 +74,20 @@ INT_PTR AboutDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   case WM_INITDIALOG: {
     Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), get_product_and_version ().c_str ());
   }
-    return true;
+    return TRUE;
   case WM_NOTIFY: {
-    switch (((LPNMHDR)l_param)->code) {
+    switch (reinterpret_cast<LPNMHDR>(l_param)->code) {
     case NM_CLICK: // Fall through to the next case.
     case NM_RETURN: {
-      PNMLINK p_nm_link = (PNMLINK)l_param;
+      auto p_nm_link = reinterpret_cast<PNMLINK>(l_param);
       LITEM item = p_nm_link->item;
 
       ShellExecute(nullptr, L"open", item.szUrl, nullptr, nullptr, SW_SHOW);
 
-      return true;
+      return TRUE;
     }
     }
-    return false;
+    return FALSE;
   }
   case WM_COMMAND: {
     switch (LOWORD(w_param)) {
@@ -95,10 +95,10 @@ INT_PTR AboutDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     case IDCANCEL:
       if (HIWORD(w_param) == BN_CLICKED) {
         display(false);
-        return true;
+        return TRUE;
       }
     }
   } break;
   }
-  return false;
+  return FALSE;
 }

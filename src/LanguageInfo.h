@@ -22,31 +22,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class LanguageInfo {
 public:
-    std::wstring orig_name;
-    std::wstring alias_name;
-    bool alias_applied;
-    bool for_all_users = false;
+  std::wstring orig_name;
+  std::wstring alias_name;
+  bool alias_applied;
+  bool for_all_users = false;
 
-    LanguageInfo(std::wstring_view name, bool use_alias = true, bool for_all_users_arg = false) {
-        alias_applied = false;
-        orig_name = name;
-        for_all_users = for_all_users_arg;
-        if (use_alias)
-            std::tie(alias_name, alias_applied) = apply_alias(name);
-        else
-            alias_name = name;
+  LanguageInfo(std::wstring_view name, bool use_alias = true,
+               bool for_all_users_arg = false) {
+    alias_applied = false;
+    orig_name = name;
+    for_all_users = for_all_users_arg;
+    if (use_alias) {
+      std::tie(alias_name, alias_applied) = apply_alias(name);
+    } else {
+      alias_name = name;
     }
+  }
 
-    const wchar_t *get_aliased_name(bool use_alias) {
-        return (use_alias ? alias_name : orig_name).c_str ();
-    }
+  const wchar_t *get_aliased_name(bool use_alias) {
+    return (use_alias ? alias_name : orig_name).c_str();
+  }
 };
 
-inline bool less_aliases(const LanguageInfo& a, const LanguageInfo& b) {
-    return (a.alias_applied ? a.alias_name : a.orig_name) <
-        (b.alias_applied ? b.alias_name : b.orig_name);
+inline bool less_aliases(const LanguageInfo &a, const LanguageInfo &b) {
+  return (a.alias_applied ? a.alias_name : a.orig_name) <
+         (b.alias_applied ? b.alias_name : b.orig_name);
 }
 
-inline bool less_original(const LanguageInfo& a, const LanguageInfo& b) {
-    return a.orig_name < b.orig_name;
+inline bool less_original(const LanguageInfo &a, const LanguageInfo &b) {
+  return a.orig_name < b.orig_name;
 }

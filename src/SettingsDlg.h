@@ -32,12 +32,12 @@ class LanguageInfo;
 class Settings;
 class SettingsDlg;
 class NppInteface;
-typedef HTHEME (WINAPI *OtdProc)(HWND, LPCWSTR);
+using OtdProc = HTHEME(WINAPI *)(HWND, LPCWSTR);
 
 class SimpleDlg : public StaticDialog {
 public:
     SimpleDlg(SettingsDlg& parent, const Settings &settings, NppInterface &npp);
-    ~SimpleDlg();
+    ~SimpleDlg() override;
     void apply_settings(Settings& settings);
     void update_language_controls(const Settings& settings
     );

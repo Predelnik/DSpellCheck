@@ -72,4 +72,4 @@ namespace WinApi
           this->add_items<EnumType>();
         }
     };
-}
+} // namespace WinApi

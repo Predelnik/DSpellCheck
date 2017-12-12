@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 static std::vector<char> convert(const char* source_enc, const char* target_enc, const void* source_data_ptr,
                                  size_t source_len, size_t max_dest_len) {
     std::vector<char> buf(max_dest_len);
-    char* out_buf = reinterpret_cast<char *>(buf.data());
+    auto out_buf = reinterpret_cast<char *>(buf.data());
     iconv_t converter = iconv_open(target_enc, source_enc);
     auto char_ptr = static_cast<const char *>(source_data_ptr);
     size_t res =
@@ -116,7 +116,7 @@ bool match_special_char(wchar_t* dest, const wchar_t*& source) {
     wchar_t c;
 
     bool m = true;
-    auto assign = [dest](wchar_t c) { if (dest) *dest = c; };
+    auto assign = [dest](wchar_t c) { if (dest != nullptr) *dest = c; };
 
     switch (c = *(source++)) {
     case L'a':
@@ -185,7 +185,7 @@ bool match_special_char(wchar_t* dest, const wchar_t*& source) {
 static size_t do_parse_string(wchar_t* dest, const wchar_t* source) {
     bool dry_run = dest == nullptr;
     wchar_t* res_string = dest;
-    while (*source) {
+    while (*source != L'\0') {
         const wchar_t* last_pos = source;
         if (*source == '\\') {
             ++source;
@@ -341,14 +341,14 @@ std::pair<std::wstring_view, bool> apply_alias(std::wstring_view str) {
     auto it = alias_map.find(str);
     if (it != alias_map.end())
         return {it->second, true};
-    else
-        return {str, false};
+    
+    return {str, false};
 }
 
 static bool try_to_create_dir(const wchar_t* path, bool silent, HWND npp_window) {
     if (!CreateDirectory(path, nullptr)) {
         if (!silent) {
-            if (!npp_window)
+            if (npp_window == nullptr)
                 return false;
 
             wchar_t message[DEFAULT_BUF_SIZE];

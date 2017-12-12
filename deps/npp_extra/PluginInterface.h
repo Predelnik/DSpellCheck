@@ -54,7 +54,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData);
 extern "C" __declspec(dllexport) const wchar_t* getName();
 extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int*);
 extern "C" __declspec(dllexport) void beNotified(SCNotification*);
-extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam);
+extern "C" __declspec(dllexport) LRESULT messageProc(UINT message, WPARAM w_param, LPARAM l_param);
 
 #ifdef UNICODE
 extern "C" __declspec(dllexport) BOOL isUnicode();

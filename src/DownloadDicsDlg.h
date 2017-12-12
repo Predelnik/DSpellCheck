@@ -76,7 +76,7 @@ class DownloadDicsDlg : public StaticDialog {
       refresh_timer_id = 0
     };
 public:
-    ~DownloadDicsDlg();
+    ~DownloadDicsDlg() override;
     DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings& settings);
     void do_dialog();
     // Maybe hunspell interface should be passed here

@@ -209,10 +209,10 @@ std::wstring get_actual_aspell_path(const std::wstring& supposed_path) {
   }
 }
 
-BOOL load_aspell(const wchar_t* path_arg) {
+bool load_aspell(const wchar_t* path_arg) {
   auto path = get_actual_aspell_path(path_arg);
   h_inst_lib = LoadLibrary(path.c_str ());
-  BOOL b_ret = FALSE;
+  bool b_ret = false;
 
   if (h_inst_lib != nullptr) {
     aspell_mutable_container_add =
@@ -525,9 +525,9 @@ BOOL load_aspell(const wchar_t* path_arg) {
             h_inst_lib, "aspell_string_pair_enumeration_assign");
 
     if (!new_aspell_config) // TODO: Add check for all used functions
-      return FALSE;
+      return false;
 
-    b_ret = TRUE;
+    b_ret = true;
   }
 
   return b_ret;

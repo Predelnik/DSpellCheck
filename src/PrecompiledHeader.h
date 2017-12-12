@@ -32,10 +32,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <cstring>
 #include <string>
 #include <string_view>
-#include <time.h>
+#include <ctime>
 #include <shlwapi.h>
 #include <windowsx.h>
-#include <wchar.h>
+#include <cwchar>
 #include <vector>
 #include <ppltasks.h>
 #include <regex>

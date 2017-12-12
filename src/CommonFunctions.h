@@ -57,7 +57,7 @@ bool check_for_directory_existence(std::wstring path, bool silent = true,
 inline void ltrim(std::wstring& s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](wchar_t ch)
     {
-        return !iswspace(ch);
+        return iswspace(ch) == FALSE;
     }));
 }
 
@@ -65,7 +65,7 @@ inline void ltrim(std::wstring& s) {
 inline void rtrim(std::wstring& s) {
     s.erase(std::find_if(s.rbegin(), s.rend(), [](wchar_t ch)
     {
-        return !iswspace(ch);
+        return iswspace(ch) == FALSE;
     }).base(), s.end());
 }
 
@@ -93,8 +93,7 @@ std::wstring read_ini_value(const wchar_t* app_name, const wchar_t* key_name, co
 class MoveOnlyFlag {
     using Self = MoveOnlyFlag;
 public:
-    MoveOnlyFlag() {
-    }
+    MoveOnlyFlag() = default;
 
     static Self create_valid() {
         Self out;
