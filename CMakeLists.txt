@@ -48,16 +48,19 @@ endif ()
 
 file (GLOB_RECURSE source_files src/*.cpp src/*.h src/*.rc)
 
-include (CMake/PrecompiledHeader.cmake)
 add_library (DSpellCheck SHARED ${source_files})
-add_precompiled_header(DSpellCheck src/PrecompiledHeader.h FORCEINCLUDE)
+if (MSVC)
+	target_compile_options (DSpellCheck PRIVATE "/YuPrecompiledHeader.h" "/FIPrecompiledHeader.h")
+	SET_SOURCE_FILES_PROPERTIES("src/PrecompiledHeader.cpp" PROPERTIES COMPILE_FLAGS "/Yc")
+endif ()
+
 
 set(DSpellCheck_DLL_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
 if (NOT ${DSpellCheck_DLL_OUTPUT_PATH} STREQUAL "")
     set_target_properties (DSpellCheck PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${DSpellCheck_DLL_OUTPUT_PATH}
         RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${DSpellCheck_DLL_OUTPUT_PATH}
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${DSpellCheck_DLL_OUTPUT_PATH})
+        RUNTIME_OUTPUT_DRECTORY_RELEASE ${DSpellCheck_DLL_OUTPUT_PATH})
 endif ()
 
 if ( NOT ${DSpellCheck_SANITIZE} STREQUAL none)
