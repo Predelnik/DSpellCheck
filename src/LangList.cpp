@@ -46,7 +46,7 @@ void LangList::do_dialog() {
 HWND LangList::get_list_box() { return m_h_lang_list; }
 
 void LangList::update_list() {
-    if (!m_h_lang_list)
+    if (m_h_lang_list == nullptr)
         return;
 
     ListBox_ResetContent(m_h_lang_list);
@@ -93,13 +93,13 @@ void LangList::apply() {
     m_settings.settings_changed ();
 }
 
-INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param, LPARAM) {
+INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
     switch (message) {
     case WM_INITDIALOG:
         {
             m_h_lang_list = ::GetDlgItem(_hSelf, IDC_LANGLIST);
             update_list();
-            return true;
+            return TRUE;
         }
     case WM_COMMAND:
         {
@@ -120,5 +120,5 @@ INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param, LPARAM) {
         }
         break;
     };
-    return false;
+    return FALSE;
 }

@@ -43,8 +43,8 @@ INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*lParam*
     m_h_desc_top = GetDlgItem(_hSelf, IDC_DESCTOP);
     m_h_desc_bottom = GetDlgItem(_hSelf, IDC_DESCBOTTOM);
     m_h_progress_bar = GetDlgItem(_hSelf, IDC_PROGRESSBAR);
-    SendMessage(m_h_progress_bar, PBM_SETRANGE, 0, (LPARAM)MAKELONG(0, 100));
-    return true;
+    SendMessage(m_h_progress_bar, PBM_SETRANGE, 0, static_cast<LPARAM>(MAKELONG(0, 100)));
+    return TRUE;
   }
   case WM_COMMAND:
     switch (LOWORD(w_param)) {
@@ -56,7 +56,7 @@ INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*lParam*
     };
     break;
   };
-  return false;
+  return FALSE;
 }
 
 
@@ -71,7 +71,7 @@ void ProgressDlg::set_marquee(bool animated) {
     dw_style = dw_style & (~PBS_MARQUEE);
 
   ::SetWindowLong(m_h_progress_bar, GWL_STYLE, dw_style);
-  SendMessage(m_h_progress_bar, PBM_SETMARQUEE, (int)animated, 0);
+  SendMessage(m_h_progress_bar, PBM_SETMARQUEE, static_cast<int>(animated), 0);
 }
 
 void ProgressDlg::update() {

@@ -33,7 +33,7 @@ public:
   );
 
 protected:
-  virtual INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
                               LPARAM l_param) override;
   void disable_controls();
 

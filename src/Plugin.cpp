@@ -71,7 +71,7 @@ std::unique_ptr<AboutDlg> about_dlg;
 std::unique_ptr<Settings> settings;
 HMENU langs_menu;
 int context_menu_id_start;
-int langs_menu_id_start = false;
+int langs_menu_id_start = 0;
 bool use_allocated_ids;
 std::unique_ptr<NppInterface> npp;
 
@@ -133,10 +133,6 @@ HANDLE get_h_module() { return h_module; }
 
 
 class MyStackWalker : public StackWalker {
-public:
-    MyStackWalker() : StackWalker() {
-    }
-
 protected:
     void OnOutput(LPCSTR sz_text) override {
         FILE* fp = _wfopen(L"DSpellCheck_Debug.log", L"a");
@@ -146,7 +142,7 @@ protected:
     }
 };
 
-int filter(unsigned int, struct _EXCEPTION_POINTERS* ep) {
+int filter(unsigned int, _EXCEPTION_POINTERS* ep) {
     MyStackWalker sw;
     sw.ShowCallstack(GetCurrentThread(), ep->ContextRecord);
     return EXCEPTION_CONTINUE_SEARCH;
@@ -233,10 +229,10 @@ void command_menu_init() {
 
     // get path of plugin configuration
     ::SendMessage(npp_data.npp_handle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH,
-                  (LPARAM)ini_file_path);
+                  reinterpret_cast<LPARAM>(ini_file_path));
 
     // if config path doesn't exist, we create it
-    if (PathFileExists(ini_file_path) == false) {
+    if (PathFileExists(ini_file_path) == FALSE) {
         ::CreateDirectory(ini_file_path, nullptr);
     }
 
@@ -329,7 +325,7 @@ HMENU get_dspellcheck_menu() {
             MENUITEMINFO mif;
             mif.fMask = MIIM_SUBMENU;
             mif.cbSize = sizeof(MENUITEMINFO);
-            bool res = GetMenuItemInfo(plugins_menu, i, true, &mif);
+            bool res = GetMenuItemInfo(plugins_menu, i, true, &mif) != FALSE;
 
             if (res)
                 dspellcheck_menu = static_cast<HMENU>(mif.hSubMenu);
@@ -341,11 +337,11 @@ HMENU get_dspellcheck_menu() {
 
 HMENU get_langs_sub_menu(HMENU dspellcheck_menu_arg) {
     HMENU dspellcheck_menu;
-    if (!dspellcheck_menu_arg)
+    if (dspellcheck_menu_arg == nullptr)
         dspellcheck_menu = get_dspellcheck_menu();
     else
         dspellcheck_menu = dspellcheck_menu_arg;
-    if (!dspellcheck_menu)
+    if (dspellcheck_menu == nullptr)
         return nullptr;
 
     MENUITEMINFO mif;
@@ -354,7 +350,7 @@ HMENU get_langs_sub_menu(HMENU dspellcheck_menu_arg) {
     mif.cbSize = sizeof(MENUITEMINFO);
 
     bool res =
-        GetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, true, &mif);
+        GetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, true, &mif) == FALSE;
     if (!res)
         return nullptr;
 
@@ -417,7 +413,7 @@ bool set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func, std::uniqu
     if (counter >= nb_func)
         return false;
 
-    if (!p_func) {
+    if (p_func == nullptr) {
         counter++;
         return false;
     }

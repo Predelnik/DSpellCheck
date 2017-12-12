@@ -25,7 +25,7 @@ struct ProgressData;
 class ProgressDlg : public StaticDialog {
 public:
   ProgressDlg();
-  ~ProgressDlg();
+  ~ProgressDlg() override;
 
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override; // NOLINT
   void init(HINSTANCE h_inst, HWND parent) override;

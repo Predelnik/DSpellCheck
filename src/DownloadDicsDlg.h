@@ -126,7 +126,7 @@ private:
     HWND m_h_install_system;
     HICON m_refresh_icon;
     bool m_cancel_pressed;
-    int m_check_if_saving_is_needed;
+    bool m_check_if_saving_is_needed;
     std::optional<TaskWrapper> m_ftp_operation_task;
 
     // Download State:
@@ -135,7 +135,7 @@ private:
         std::wstring file_name;
     };
 
-    int m_failure;
+    bool m_failure;
     int m_downloaded_count;
     int m_supposed_downloaded_count;
     std::wstring m_message;

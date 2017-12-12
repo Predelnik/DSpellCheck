@@ -46,9 +46,6 @@ public:
     IconvWrapperT (IconvWrapperT &&) = default;
     IconvWrapperT &operator= (IconvWrapperT &&) = default;
 
-    ~IconvWrapperT () {
-    }
-
 private:
     std::unique_ptr<void, void(*)(iconv_t)> m_conv;
 };
@@ -81,7 +78,7 @@ struct AvailableLangInfo {
 class HunspellInterface : public SpellerInterface {
 public:
   HunspellInterface(HWND npp_window_arg);
-  ~HunspellInterface();
+  ~HunspellInterface() override;
   std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t* lang) override;
   void set_multiple_languages(

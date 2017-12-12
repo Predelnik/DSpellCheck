@@ -90,7 +90,7 @@ FuncItem *get_func_item ();
 std::wstring get_default_hunspell_path ();
 void set_context_menu_id_start (int id);
 void set_langs_menu_id_start (int id);
-void set_use_allocated_ids (bool id);
+void set_use_allocated_ids (bool value);
 int get_context_menu_id_start ();
 int get_langs_menu_id_start ();
 bool get_use_allocated_ids ();
