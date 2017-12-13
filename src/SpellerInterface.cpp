@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "LanguageInfo.h"
 
 bool SpellerInterface::check_word(WordForSpeller word) {
-  return check_words({word}).front();
+  return check_words({std::move (word)}).front();
 }
 
 std::vector<bool>

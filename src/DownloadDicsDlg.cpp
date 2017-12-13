@@ -450,9 +450,6 @@ void DownloadDicsDlg::set_cancel_pressed(bool value) {
   finalize_downloading();
 }
 
-#define INITIAL_BUFFER_SIZE 50 * 1024
-#define INITIAL_SMALL_BUFFER_SIZE 10 * 1024
-
 std::optional<std::wstring> DownloadDicsDlg::current_address() const {
   if (m_h_address == nullptr)
     return std::nullopt;
@@ -594,6 +591,8 @@ ftp_web_proxy_login(const FtpOperationParams &params) {
   return win_inet_handle;
 }
 
+inline auto initial_buffer_size = 50 * 1024;
+
 std::variant<FtpWebOperationError, std::vector<std::wstring>>
 do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
   auto result = ftp_web_proxy_login(params);
@@ -608,12 +607,12 @@ do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
 
   auto url_handle = std::get<HINTERNET>(result);
 
-  std::vector<char> file_buffer(INITIAL_BUFFER_SIZE);
+  std::vector<char> file_buffer(initial_buffer_size);
   std::size_t cur_index = 0;
   DWORD bytes_read = 0;
   DWORD bytes_read_total = 0;
   DWORD bytes_to_read = 0;
-  unsigned int cur_buf_size = INITIAL_BUFFER_SIZE;
+  unsigned int cur_buf_size = initial_buffer_size;
   while (true) {
     InternetQueryDataAvailable(url_handle, &bytes_to_read, 0, 0);
     if (bytes_to_read == 0)
@@ -670,8 +669,8 @@ do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
 std::optional<FtpWebOperationError>
 do_download_file_web_proxy(FtpOperationParams params,
                            const std::wstring &target_path,
-                           std::shared_ptr<ProgressData> progress_data,
-                           concurrency::cancellation_token token) {
+                           ProgressData& progress_data,
+                           const concurrency::cancellation_token& token) {
   auto result = ftp_web_proxy_login(params);
   if (auto error = std::get_if<FtpWebOperationError>(&result))
     return *error;
@@ -720,7 +719,7 @@ do_download_file_web_proxy(FtpOperationParams params,
     write(file_handle, file_buffer.data(), bytes_read);
     bytes_read_total += bytes_read;
 
-    progress_data->set(
+    progress_data.set(
         0, wstring_printf(L"%d / ???   bytes downloaded", bytes_read_total),
         true);
   }
@@ -966,7 +965,7 @@ void DownloadDicsDlg::download_file_async_web_proxy(
         params = spawn_ftp_operation_params(full_path), target_location,
         progressData = get_progress()->get_progress_data()
       ](auto token) {
-        return do_download_file_web_proxy(params, target_location, progressData,
+        return do_download_file_web_proxy(params, target_location, *progressData,
                                           token);
       },
       [this](std::optional<FtpWebOperationError>) { on_file_downloaded(); });

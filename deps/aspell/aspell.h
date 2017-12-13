@@ -12,7 +12,7 @@ bool load_aspell(const wchar_t* path_arg);
 std::wstring get_actual_aspell_path(const std::wstring& supposed_path);
 std::wstring get_default_aspell_path ();
 void unload_aspell();
-void aspell_error_msg_box(HWND h_wnd, LPCSTR error);
+void aspell_error_msg_box(HWND h_wnd, LPCSTR sz_error_msg);
 
 #ifdef __cplusplus
 extern "C" {

@@ -358,13 +358,12 @@ void SpellChecker::find_prev_mistake() {
   }
 }
 
-WordForSpeller SpellChecker::to_word_for_speller (std::wstring_view word) const
-{
-    WordForSpeller res;
-    res.data.ends_with_dot = *(word.data () + word.length ()) == '.';
-    res.str = {word};
-    apply_conversions(res.str);
-    return res;
+WordForSpeller SpellChecker::to_word_for_speller(std::wstring_view word) const {
+  WordForSpeller res;
+  res.data.ends_with_dot = *(word.data() + word.length()) == '.';
+  res.str = {word};
+  apply_conversions(res.str);
+  return res;
 }
 
 bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length,
@@ -502,9 +501,9 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
     return;
   int used_menu_id;
   if (get_use_allocated_ids()) {
-    used_menu_id =
-        (static_cast<int>(menu_id) < get_langs_menu_id_start() ? DSPELLCHECK_MENU_ID
-                                                  : LANGUAGE_MENU_ID);
+    used_menu_id = (static_cast<int>(menu_id) < get_langs_menu_id_start()
+                        ? DSPELLCHECK_MENU_ID
+                        : LANGUAGE_MENU_ID);
   } else {
     used_menu_id = HIBYTE(menu_id);
   }
@@ -707,7 +706,7 @@ void SpellChecker::get_visible_limits(EditorViewType view, long &start,
   } else {
     finish = m_editor.get_active_document_length(view);
   }
-  }
+}
 
 MappedWstring SpellChecker::get_visible_text(EditorViewType view, long *offset,
                                              bool /*not_intersection_only*/) {
@@ -818,8 +817,7 @@ void SpellChecker::native_reinit_settings() {
   }
 }
 
-void SpellChecker::apply_conversions(std::wstring &word) const
-{
+void SpellChecker::apply_conversions(std::wstring &word) const {
   for (auto &c : word) {
     if (m_settings.ignore_yo) {
       if (c == L'ё')
@@ -914,7 +912,7 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring_view word,
   if (!is_spellchecking_needed(view, word, word_start))
     return true;
 
-  return active_speller()->check_word(to_word_for_speller (word));
+  return active_speller()->check_word(to_word_for_speller(word));
 }
 
 void SpellChecker::cut_apostrophes(std::wstring_view &word) {
@@ -981,17 +979,15 @@ std::optional<long> SpellChecker::prev_token_begin(std::wstring_view target,
   return std::nullopt;
 }
 
-namespace 
-{
-struct WordData
-{
-    std::wstring_view token;
-    WordForSpeller word_for_speller;
-    long word_start;
-    long word_end;
-    bool is_correct;
+namespace {
+struct WordData {
+  std::wstring_view token;
+  WordForSpeller word_for_speller;
+  long word_start;
+  long word_end;
+  bool is_correct;
 };
-}  // namespace
+} // namespace
 
 int SpellChecker::check_text(EditorViewType view,
                              const MappedWstring &text_to_check, long offset,
@@ -1032,8 +1028,8 @@ int SpellChecker::check_text(EditorViewType view,
             token.data() - text_to_check.str.data() + token.length())));
     if (is_spellchecking_needed(view, token, word_start)) {
       words_to_check.emplace_back();
-      auto &w = words_to_check.back ();
-      w.word_for_speller = to_word_for_speller (token);
+      auto &w = words_to_check.back();
+      w.word_for_speller = to_word_for_speller(token);
       w.word_start = word_start;
       w.word_end = word_end;
       w.token = token;
@@ -1041,8 +1037,9 @@ int SpellChecker::check_text(EditorViewType view,
   }
   words_for_speller.resize(words_to_check.size());
   std::transform(words_to_check.begin(), words_to_check.end(),
-                 words_for_speller.begin(),
-                 [](auto &word) -> auto&& { return std::move (word.word_for_speller); });
+                 words_for_speller.begin(), [](auto &word) -> auto && {
+                   return std::move(word.word_for_speller);
+                 });
   auto spellcheck_result = active_speller()->check_words(words_for_speller);
   if (!spellcheck_result.empty()) {
     for (int i = 0; i < static_cast<int>(words_for_speller.size()); ++i)
@@ -1123,8 +1120,8 @@ MappedWstring SpellChecker::to_mapped_wstring(EditorViewType view,
                                               std::string_view str) {
   if (m_editor.get_encoding(view) == EditorCodepage::utf8)
     return utf8_to_mapped_wstring(str);
-  
-    return ::to_mapped_wstring(str);
+
+  return ::to_mapped_wstring(str);
 }
 
 void SpellChecker::recheck_visible(EditorViewType view,

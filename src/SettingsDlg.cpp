@@ -186,11 +186,11 @@ void SimpleDlg::fill_lib_info(int status, const Settings &settings) {
   ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
   ShowWindow(m_h_hunspell_path_type, is_hunspell);
   ShowWindow(m_h_system_path, 0);
-  auto is_native = settings.active_speller_lib_id == SpellerId::native ? TRUE : FALSE;
-  ShowWindow(m_h_lib_group_box, static_cast<int>(is_native) == 0);
-  ShowWindow(m_h_lib_path, static_cast<int>(is_native) == 0);
-  ShowWindow(m_h_reset_speller_path, static_cast<int>(is_native) == 0);
-  ShowWindow(m_browse_btn, static_cast<int>(is_native) == 0);
+  auto not_native = settings.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
+  ShowWindow(m_h_lib_group_box, not_native);
+  ShowWindow(m_h_lib_path, not_native);
+  ShowWindow(m_h_reset_speller_path, not_native);
+  ShowWindow(m_browse_btn, not_native);
 
   switch (settings.active_speller_lib_id) {
   case SpellerId::aspell:
@@ -682,15 +682,15 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
     }
     break;
   case WM_CTLCOLORBTN:
-    if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) == (HWND)l_param) {
-      auto h_dc = (HDC)w_param;
+    if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) == reinterpret_cast<HWND>(l_param)) {
+      auto h_dc = reinterpret_cast<HDC>(w_param);
       if (m_brush != nullptr)
         DeleteObject(m_brush);
 
       SetBkColor(h_dc, m_underline_color_btn);
       SetBkMode(h_dc, TRANSPARENT);
       m_brush = CreateSolidBrush(m_underline_color_btn);
-      return (INT_PTR)m_brush;
+      return reinterpret_cast<INT_PTR>(m_brush);
     }
     break;
   case WM_COMMAND:
@@ -921,7 +921,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     // This stuff is copied from npp source to make tabbed window looked totally
     // nice and white
     auto enable_dlg_theme =
-        (ETDTProc)::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0);
+        reinterpret_cast<ETDTProc>(::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0));
     if (enable_dlg_theme != nullptr)
       enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 
@@ -938,7 +938,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
                      _hSelf, nullptr);
   } break;
   case WM_NOTIFY: {
-    auto *nmhdr = (NMHDR *)l_param;
+    auto nmhdr = reinterpret_cast<NMHDR *>(l_param);
     if (nmhdr->code == TCN_SELCHANGE) {
       if (nmhdr->hwndFrom == m_controls_tab.getHSelf()) {
         m_controls_tab.clickedUpdate();

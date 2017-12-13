@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 
 #define SCE_ERROR_UNDERLINE (19) // Only index from 8 to 21 are free
-#define COUNTOF(A) sizeof(A) / sizeof((A)[0])
+#define COUNTOF(A) (sizeof((A)) / sizeof((A)[0]))
 #define DEFAULT_BUF_SIZE 4096
 
 
@@ -64,7 +64,4 @@ struct CallbackData {
 #define COLOR_NEUTRAL (RGB(0, 0, 0))
 
 // Custom WMs (Only for our windows and threads)
-#define WM_SHOWANDRECREATEMENU WM_USER + 1000
-#define TM_MODIFIED_ZONE_INFO WM_USER + 1001
-#define TM_CHANGE_DIR WM_USER + 1006
-#define TM_UPDATE_LANGS_MENU WM_USER + 1008
+#define WM_SHOWANDRECREATEMENU (WM_USER + 1000)

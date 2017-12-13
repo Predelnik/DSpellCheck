@@ -74,7 +74,7 @@ void load_settings ();
 void recheck_visible ();
 void init_classes ();
 void create_hooks ();
-LRESULT show_calculated_menu(const std::vector<SuggestionsMenuItem>&& menu_list);
+LRESULT show_calculated_menu(std::vector<SuggestionsMenuItem>&& menu_list);
 void add_icons ();
 bool get_auto_check_state ();
 void auto_check_state_received (bool state);

@@ -155,7 +155,7 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
 }
 
 LRESULT
-show_calculated_menu(const std::vector<SuggestionsMenuItem> &&menu_list) {
+show_calculated_menu(std::vector<SuggestionsMenuItem> &&menu_list) {
   cur_menu_list = std::move(menu_list);
   return ::CallWindowProc(wnd_proc_notepad, npp_data.npp_handle, WM_CONTEXTMENU,
                           last_hwnd, last_coords);

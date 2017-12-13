@@ -159,33 +159,34 @@ bool are_paths_equal(const wchar_t* path1, const wchar_t* path2)
 }
 
 template <typename CharType>
-static void write_user_dic(const std::unordered_set<std::basic_string<CharType>>& target, std::wstring path)
+static void write_user_dic(const std::unordered_set<std::basic_string<CharType>>& target, const wchar_t* path)
 {
     if (target.empty())
     {
-        SetFileAttributes(path.c_str(), FILE_ATTRIBUTE_NORMAL);
-        DeleteFile(path.c_str());
+        SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
+        DeleteFile(path);
         return;
     }
 
     // Wordset itself
     // being removed here as local variable, all strings are not copied
 
-    auto slash_pos = path.rfind(L'\\');
+    auto path_view = std::wstring_view (path);
+    auto slash_pos = path_view.rfind(L'\\');
     if (slash_pos == std::string::npos)
         return;
-    check_for_directory_existence(path.substr(0, slash_pos));
+    check_for_directory_existence(std::wstring {path_view.substr(0, slash_pos)});
 
-    SetFileAttributes(path.c_str(), FILE_ATTRIBUTE_NORMAL);
+    SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
 
-    FILE* fp = _wfopen(path.c_str(), L"w");
+    FILE* fp = _wfopen(path, L"w");
     if (!fp)
         return;
 
     std::vector<std::basic_string<CharType>> words(target.begin(), target.end());
     std::sort(words.begin(), words.end());
     fprintf(fp, "%zu\n", target.size());
-    for (auto word : words)
+    for (const auto &word : words)
         fprintf(fp, sizeof (CharType) == 1 ? "%s\n" : "%ws\n", word.c_str());
 
     fclose(fp);
@@ -203,12 +204,12 @@ HunspellInterface::~HunspellInterface()
     }
 
     if (!m_user_dic_path.empty())
-        write_user_dic(m_memorized, m_user_dic_path);
+        write_user_dic(m_memorized, m_user_dic_path.c_str ());
     for (auto& p : m_all_hunspells)
     {
         auto& hs = p.second;
         if (!hs.local_dic_path.empty())
-            write_user_dic(hs.local_dic, hs.local_dic_path);
+            write_user_dic(hs.local_dic, hs.local_dic_path.c_str ());
     }
 }
 
@@ -250,7 +251,7 @@ DicInfo* HunspellInterface::create_hunspell(const AvailableLangInfo& info)
 
     read_user_dic(new_dic.local_dic, new_dic.local_dic_path.c_str());
     {
-        for (auto word : m_memorized)
+        for (const auto &word : m_memorized)
         {
             auto conv_word = new_dic.to_dictionary_encoding(word);
             if (!conv_word.empty())
@@ -259,7 +260,7 @@ DicInfo* HunspellInterface::create_hunspell(const AvailableLangInfo& info)
         }
     }
     {
-        for (auto word : new_dic.local_dic)
+        for (const auto &word : new_dic.local_dic)
         {
             new_hunspell->add(word); // Adding all already memorized words from local
             // dictionary to Hunspell instance, local
