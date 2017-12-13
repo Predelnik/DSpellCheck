@@ -5,7 +5,7 @@
 template <typename HeldType>
 class TemporaryAcessor {
 public:
-    TemporaryAcessor(HeldType& held, std::function<void ()> finalizer) : m_held(held), m_finalizer(finalizer) {
+    TemporaryAcessor(HeldType& held, std::function<void ()> finalizer) : m_held(held), m_finalizer(std::move (finalizer)) {
     }
 
     auto &operator*() { return m_held; }

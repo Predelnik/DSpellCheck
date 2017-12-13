@@ -80,7 +80,7 @@ void Settings::save()
     path.remove_prefix(path.length() - path.rfind(L'\\'));
     check_for_directory_existence(std::wstring(path));
     // Cleaning settings file (or creating it)
-    if (_wfopen_s(&fp, m_ini_filepath.c_str(), L"w"))
+    if (_wfopen_s(&fp, m_ini_filepath.c_str(), L"w") != NULL)
     {
         MessageBox(nullptr,
                    wstring_printf(

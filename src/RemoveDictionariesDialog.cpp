@@ -54,7 +54,7 @@ void RemoveDictionariesDialog::do_dialog()
 
 void RemoveDictionariesDialog::update_list()
 {
-    if (!m_lang_list)
+    if (m_lang_list == nullptr)
         return;
 
     ListBox_ResetContent(m_lang_list);
@@ -78,7 +78,7 @@ void RemoveDictionariesDialog::remove_selected(SpellChecker* spell_checker_insta
         if (CheckedListBox_GetCheckState(m_lang_list, i) == BST_CHECKED)
         {
             wchar_t file_name[MAX_PATH];
-            for (int j = 0; j < 1 + m_settings.remove_system_dictionaries ? 1 : 0;
+            for (int j = 0; j < 1 + (m_settings.remove_system_dictionaries ? 1 : 0);
                  j++)
             {
                 *file_name = L'\0';
@@ -157,7 +157,7 @@ INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param,
             m_remove_system = ::GetDlgItem(_hSelf, IDC_REMOVE_SYSTEM);
             update_list();
             update_controls();
-            return true;
+            return TRUE;
         }
     case WM_COMMAND:
         {
@@ -191,5 +191,5 @@ INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param,
         }
         break;
     };
-    return false;
+    return FALSE;
 }

@@ -87,4 +87,4 @@ void ProgressDlg::set_top_message(const wchar_t* message) {
 
 ProgressDlg::ProgressDlg() : m_progress_data(std::make_shared<ProgressData> ()) {}
 
-ProgressDlg::~ProgressDlg() {}
+ProgressDlg::~ProgressDlg() = default;

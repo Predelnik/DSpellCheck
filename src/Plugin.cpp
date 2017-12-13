@@ -142,12 +142,6 @@ protected:
     }
 };
 
-int filter(unsigned int, _EXCEPTION_POINTERS* ep) {
-    MyStackWalker sw;
-    sw.ShowCallstack(GetCurrentThread(), ep->ContextRecord);
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
 void create_hooks() {
     h_mouse_hook = SetWindowsHookEx(WH_MOUSE, mouse_proc, nullptr, GetCurrentThreadId());
     // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0,
@@ -325,7 +319,7 @@ HMENU get_dspellcheck_menu() {
             MENUITEMINFO mif;
             mif.fMask = MIIM_SUBMENU;
             mif.cbSize = sizeof(MENUITEMINFO);
-            bool res = GetMenuItemInfo(plugins_menu, i, true, &mif) != FALSE;
+            bool res = GetMenuItemInfo(plugins_menu, i, TRUE, &mif) != FALSE;
 
             if (res)
                 dspellcheck_menu = static_cast<HMENU>(mif.hSubMenu);
@@ -350,7 +344,7 @@ HMENU get_langs_sub_menu(HMENU dspellcheck_menu_arg) {
     mif.cbSize = sizeof(MENUITEMINFO);
 
     bool res =
-        GetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, true, &mif) == FALSE;
+        GetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, TRUE, &mif) == FALSE;
     if (!res)
         return nullptr;
 

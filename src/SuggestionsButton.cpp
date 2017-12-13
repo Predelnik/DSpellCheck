@@ -42,16 +42,16 @@ bool reg_msg(HWND h_wnd, DWORD dw_msg_type)
     tme_event_track.cbSize = sizeof(TRACKMOUSEEVENT);
     tme_event_track.dwFlags = 0;
 
-    if (dw_msg_type & MOUSELEAVE)
+    if ((dw_msg_type & MOUSELEAVE) != 0u)
         tme_event_track.dwFlags |= TME_LEAVE;
-    if (dw_msg_type & MOUSEHOVER)
+    if ((dw_msg_type & MOUSEHOVER) != 0u)
         tme_event_track.dwFlags |= TME_HOVER;
 
     tme_event_track.hwndTrack = h_wnd;
     tme_event_track.dwHoverTime = HOVER_DEFAULT;
     //      tmeEventTrack.dwHoverTime = 10;
 
-    if (!TrackMouseEvent(&tme_event_track))
+    if (TrackMouseEvent(&tme_event_track) == 0)
     {
         wchar_t sz_error[64];
 
@@ -93,37 +93,37 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
         display(false);
         m_popup_menu = CreatePopupMenu();
 
-        return false;
+        return 0;
 
     case WM_MOUSEMOVE:
         m_state_hovered = true;
         reg_msg(_hSelf, MOUSELEAVE);
         RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
-        return false;
+        return 0;
 
     case WM_MOUSEHOVER:
-        return false;
+        return 0;
 
     case WM_LBUTTONDOWN:
         m_state_pressed = true;
         RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
-        return false;
+        return 0;
 
     case WM_LBUTTONUP:
         if (!m_state_pressed)
-            return false;
+            return 0;
         get_spell_checker()->show_suggestion_menu();
-        return false;
+        return 0;
 
     case WM_MOUSEWHEEL:
         ShowWindow(_hSelf, SW_HIDE);
         PostMessage(m_npp.get_scintilla_hwnd(m_npp.active_view()), message, w_param, l_param);
-        return false;
+        return 0;
 
     case WM_PAINT:
         {
             if (!isVisible())
-                return false;
+                return 0;
 
             id_img = IDR_DOWNARROW;
             if (m_state_pressed || m_state_menu)
@@ -135,7 +135,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
             HDC hdc_memory = ::CreateCompatibleDC(dc);
             HBITMAP h_bmp = LoadBitmap(_hInst, MAKEINTRESOURCE(id_img));
             GetObject(h_bmp, sizeof(bmp), &bmp);
-            HBITMAP h_old_bitmap = (HBITMAP)SelectObject(hdc_memory, h_bmp);
+            auto h_old_bitmap = static_cast<HBITMAP>(SelectObject(hdc_memory, h_bmp));
             SetStretchBltMode(dc, HALFTONE);
             RECT r;
             GetWindowRect(_hSelf, &r);
@@ -148,7 +148,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
             RECT rect;
             GetWindowRect(_hSelf, &rect);
             ValidateRect(_hSelf, &rect);
-            return false;
+            return 0;
         }
 
     case WM_SHOWANDRECREATEMENU:
@@ -168,20 +168,20 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
             m_state_menu = false;
             DestroyMenu(m_popup_menu);
             m_popup_menu = CreatePopupMenu();
-            return false;
+            return 0;
         }
 
     case WM_COMMAND:
         if (HIWORD(w_param) == 0)
             get_spell_checker()->process_menu_result(w_param);
 
-        return false;
+        return 0;
 
     case WM_MOUSELEAVE:
         m_state_hovered = false;
         m_state_pressed = false;
         RedrawWindow(_hSelf, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE);
-        return false;
+        return 0;
     }
-    return false;
+    return 0;
 }

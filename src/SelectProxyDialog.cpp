@@ -55,19 +55,20 @@ void SelectProxyDialog::apply_choice() {
 
 void SelectProxyDialog::disable_controls() {
     bool proxy_is_used = Button_GetCheck(m_use_proxy);
-    EnableWindow(m_proxy_anonymous, proxy_is_used);
-    EnableWindow(m_user_name, proxy_is_used);
-    EnableWindow(m_host_name, proxy_is_used);
-    EnableWindow(m_password, proxy_is_used);
-    EnableWindow(m_port, proxy_is_used);
+    auto show = proxy_is_used ? TRUE : FALSE;
+    EnableWindow(m_proxy_anonymous, show);
+    EnableWindow(m_user_name, show);
+    EnableWindow(m_host_name, show);
+    EnableWindow(m_password, show);
+    EnableWindow(m_port, show);
     m_proxy_type_cmb.set_enabled(proxy_is_used);
 
     if (proxy_is_used) {
-        bool login_used = !Button_GetCheck(m_proxy_anonymous);
+        auto login_used = Button_GetCheck(m_proxy_anonymous) ? FALSE : TRUE;
         bool anonymous_type = (m_proxy_type_cmb.current_data() == ProxyType::ftp_gateway);
         if (anonymous_type) {
-            login_used = false;
-            EnableWindow(m_proxy_anonymous, false);
+            login_used = FALSE;
+            EnableWindow(m_proxy_anonymous, FALSE);
         }
         EnableWindow(m_user_name, login_used);
         EnableWindow(m_password, login_used);
@@ -100,7 +101,7 @@ INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
             m_proxy_anonymous = ::GetDlgItem(_hSelf, IDC_ANONYMOUS_LOGIN);
             m_proxy_type_cmb.init (::GetDlgItem(_hSelf, IDC_PROXY_TYPE));
             update_controls();
-            return true;
+            return TRUE;
         }
     case WM_COMMAND:
         {
@@ -133,22 +134,22 @@ INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
                     wchar_t* end_ptr = nullptr;
                     wchar_t buf[DEFAULT_BUF_SIZE];
                     Edit_GetText(m_port, buf, DEFAULT_BUF_SIZE);
-                    if (!*buf)
-                        return false;
+                    if (*buf == L'\0')
+                        return FALSE;
 
                     int x = wcstol(buf, &end_ptr, 10);
-                    if (*end_ptr)
+                    if (*end_ptr != L'\0')
                         Edit_SetText(m_port, L"0");
                     else if (x > 65535)
                         Edit_SetText(m_port, L"65535");
                     else if (x < 0)
                         Edit_SetText(m_port, L"0");
 
-                    return false;
+                    return FALSE;
                 }
             }
         }
         break;
     }
-    return false;
+    return FALSE;
 }

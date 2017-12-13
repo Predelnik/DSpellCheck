@@ -15,7 +15,7 @@ public:
     void process(const wchar_t* name, EnumT& value, EnumT default_value) const
     {
         using UType = std::underlying_type_t<EnumT>;
-        UType u_value = static_cast<UType> (value);
+        auto u_value = static_cast<UType> (value);
         process (name, u_value, static_cast<UType> (default_value));
         value = static_cast<EnumT> (u_value);
     }

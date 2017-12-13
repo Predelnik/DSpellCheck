@@ -1,7 +1,7 @@
 #include "NppInterface.h"
 
 #include "Notepad_plus_msgs.h"
-#include <assert.h>
+#include <cassert>
 #include "PluginInterface.h"
 #include "menuCmdID.h"
 #include "MainDef.h"
@@ -32,7 +32,7 @@ int NppInterface::allocate_cmdid(int start_number)
 
 void NppInterface::set_menu_item_check(int cmd_id, bool checked)
 {
-    send_msg_to_npp(NPPM_SETMENUITEMCHECK, cmd_id, checked);
+    send_msg_to_npp(NPPM_SETMENUITEMCHECK, cmd_id, static_cast<LPARAM>(checked));
 }
 
 HMENU NppInterface::get_menu_handle(int menu_type) const
@@ -96,7 +96,7 @@ EditorViewType NppInterface::active_view() const
     send_msg_to_npp(NPPM_GETCURRENTSCINTILLA, 0, reinterpret_cast<LPARAM>(&cur_scintilla));
     if (cur_scintilla == 0)
         return EditorViewType::primary;
-    else if (cur_scintilla == 1)
+    if (cur_scintilla == 1)
         return EditorViewType::secondary;
 
     assert (false);
@@ -119,7 +119,7 @@ EditorCodepage NppInterface::get_encoding(EditorViewType view) const
     auto CodepageId = static_cast<int>(send_msg_to_scintilla(view, SCI_GETCODEPAGE, 0, 0));
     if (CodepageId == SC_CP_UTF8)
         return EditorCodepage::utf8;
-    else
+    
         return EditorCodepage::ansi;
 }
 
@@ -272,9 +272,9 @@ long NppInterface::get_line_length(EditorViewType view, int line) const
 
 std::vector<char> NppInterface::get_line(EditorViewType view, long line_number) const
 {
-    int buf_size = static_cast<int>(send_msg_to_scintilla(view, SCI_LINELENGTH, line_number) + 1);
+    auto buf_size = static_cast<int>(send_msg_to_scintilla(view, SCI_LINELENGTH, line_number) + 1);
     std::vector<char> buf(buf_size);
-    int ret = static_cast<int>(send_msg_to_scintilla(view, SCI_GETLINE, line_number,
+    auto ret = static_cast<int>(send_msg_to_scintilla(view, SCI_GETLINE, line_number,
                                                      reinterpret_cast<LPARAM>(buf.data()))
     );
     static_cast<void>(ret);
@@ -294,7 +294,7 @@ void NppInterface::add_toolbar_icon(int cmdId, const toolbarIcons* toolBarIconsP
 
 std::vector<char> NppInterface::selected_text(EditorViewType view) const
 {
-    int sel_buf_size = static_cast<int>(send_msg_to_scintilla(view, SCI_GETSELTEXT, 0, 0));
+    auto sel_buf_size = static_cast<int>(send_msg_to_scintilla(view, SCI_GETSELTEXT, 0, 0));
     if (sel_buf_size > 1) // Because it includes terminating '\0'
     {
         std::vector<char> buf(sel_buf_size);
@@ -421,7 +421,7 @@ std::vector<std::wstring> NppInterface::get_open_filenames(std::optional<EditorV
         }
 
     ASSERT_RETURN(enum_val >= 0, {});
-    int count = static_cast<int>(send_msg_to_npp(NPPM_GETNBOPENFILES, 0, enum_val));
+    auto count = static_cast<int>(send_msg_to_npp(NPPM_GETNBOPENFILES, 0, enum_val));
 
     auto paths = new wchar_t *[count];
     for (int i = 0; i < count; ++i)
@@ -452,7 +452,7 @@ std::vector<std::wstring> NppInterface::get_open_filenames(std::optional<EditorV
     std::vector<std::wstring> res;
     for (int i = 0; i < count; ++i)
     {
-        res.push_back(paths[i]);
+        res.emplace_back(paths[i]);
         delete[] paths[i];
     }
     delete[] paths;

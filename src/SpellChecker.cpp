@@ -56,7 +56,7 @@ SpellChecker::SpellChecker(NppData *npp_data_instance_arg,
   reset_hot_spot_cache();
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
   auto npp = dynamic_cast<NppInterface *>(&m_editor);
-  if (!npp)
+  if (npp == nullptr)
     return;
 
   bool res = npp->is_allocate_cmdid_supported();
@@ -69,7 +69,7 @@ SpellChecker::SpellChecker(NppData *npp_data_instance_arg,
   }
 }
 
-SpellChecker::~SpellChecker() {}
+SpellChecker::~SpellChecker() = default;
 
 void insert_sugg_menu_item(HMENU menu, const wchar_t *text, BYTE id,
                            int insert_pos, bool separator) {
@@ -90,9 +90,9 @@ void insert_sugg_menu_item(HMENU menu, const wchar_t *text, BYTE id,
     mi.cch = static_cast<int>(wcslen(text)) + 1;
   }
   if (insert_pos == -1)
-    InsertMenuItem(menu, GetMenuItemCount(menu), true, &mi);
+    InsertMenuItem(menu, GetMenuItemCount(menu), 1, &mi);
   else
-    InsertMenuItem(menu, insert_pos, true, &mi);
+    InsertMenuItem(menu, insert_pos, 1, &mi);
 }
 
 void SpellChecker::precalculate_menu() {
@@ -152,10 +152,10 @@ void SpellChecker::lang_change() { recheck_visible(m_editor.active_view()); }
 void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
   MENUITEMINFO mif;
   HMENU dspellcheck_menu = get_dspellcheck_menu();
-  if (!dspellcheck_menu)
+  if (dspellcheck_menu == nullptr)
     return;
   HMENU langs_sub_menu = get_langs_sub_menu(dspellcheck_menu);
-  if (langs_sub_menu)
+  if (langs_sub_menu != nullptr)
     DestroyMenu(langs_sub_menu);
   auto cur_lang = m_settings.get_current_language();
   HMENU new_menu = CreatePopupMenu();
@@ -217,7 +217,7 @@ void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
   mif.hSubMenu = new_menu;
   mif.fState = MFS_ENABLED;
 
-  SetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, true, &mif);
+  SetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, 1, &mif);
 }
 
 void SpellChecker::check_file_name() {
@@ -282,7 +282,7 @@ void SpellChecker::find_next_mistake() {
       // send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0,
       // reinterpret_cast<LPARAM>(&scn));
       bool result = check_text(view, text, static_cast<long>(iterator_pos),
-                               CheckTextMode::find_first);
+                               CheckTextMode::find_first) != 0;
       if (result)
         break;
 
@@ -335,7 +335,7 @@ void SpellChecker::find_prev_mistake() {
       // send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0,
       // reinterpret_cast<LPARAM>(&scn));
 
-      bool result = check_text(view, text, from, CheckTextMode::find_last);
+      bool result = check_text(view, text, from, CheckTextMode::find_last) != 0;
       if (result)
         break;
 
@@ -475,7 +475,7 @@ void SpellChecker::init_suggestions_box() {
   p.x = static_cast<LONG>(x_pos);
   p.y = static_cast<LONG>(y_pos);
   auto npp = dynamic_cast<NppInterface *>(&m_editor);
-  if (!npp)
+  if (npp == nullptr)
     return;
   RECT r;
   auto hwnd = npp->get_scintilla_hwnd(view);
@@ -489,7 +489,7 @@ void SpellChecker::init_suggestions_box() {
   MoveWindow(m_suggestions_instance->getHSelf(), p.x,
              p.y + static_cast<int>(text_height) - 3,
              m_settings.suggestion_button_size,
-             m_settings.suggestion_button_size, true);
+             m_settings.suggestion_button_size, 1);
   m_suggestions_instance->display(true, false);
 }
 
@@ -497,13 +497,13 @@ void SpellChecker::process_menu_result(WPARAM menu_id) {
   if ((!get_use_allocated_ids() && HIBYTE(menu_id) != DSPELLCHECK_MENU_ID &&
        HIBYTE(menu_id) != LANGUAGE_MENU_ID) ||
       (get_use_allocated_ids() &&
-       ((int)menu_id < get_context_menu_id_start() ||
-        (int)menu_id > get_context_menu_id_start() + 350)))
+       (static_cast<int>(menu_id) < get_context_menu_id_start() ||
+        static_cast<int>(menu_id) > get_context_menu_id_start() + 350)))
     return;
   int used_menu_id;
   if (get_use_allocated_ids()) {
     used_menu_id =
-        ((int)menu_id < get_langs_menu_id_start() ? DSPELLCHECK_MENU_ID
+        (static_cast<int>(menu_id) < get_langs_menu_id_start() ? DSPELLCHECK_MENU_ID
                                                   : LANGUAGE_MENU_ID);
   } else {
     used_menu_id = HIBYTE(menu_id);
@@ -662,7 +662,7 @@ void SpellChecker::on_settings_changed() {
   m_hunspell_speller->set_use_one_dic(m_settings.use_unified_dictionary);
   {
     auto npp = dynamic_cast<NppInterface *>(&m_editor);
-    if (npp)
+    if (npp != nullptr)
       npp->set_menu_item_check(get_func_item()[0].cmd_id,
                                m_settings.auto_check_text);
   }
@@ -707,8 +707,7 @@ void SpellChecker::get_visible_limits(EditorViewType view, long &start,
   } else {
     finish = m_editor.get_active_document_length(view);
   }
-  return;
-}
+  }
 
 MappedWstring SpellChecker::get_visible_text(EditorViewType view, long *offset,
                                              bool /*not_intersection_only*/) {
@@ -745,7 +744,7 @@ static void set_multiple_languages(std::wstring_view multi_string,
   std::vector<std::wstring> multi_lang_list;
   for (auto token :
        make_delimiter_tokenizer(multi_string, LR"(\|)").get_all_tokens())
-    multi_lang_list.push_back(std::wstring{token});
+    multi_lang_list.emplace_back(token);
 
   speller->set_multiple_languages(multi_lang_list);
 }
@@ -811,11 +810,11 @@ void SpellChecker::native_reinit_settings() {
 
   if (m_settings.native_speller_language != L"<MULTIPLE>") {
     m_native_speller->set_language(m_settings.native_speller_language.c_str());
-    m_native_speller->set_mode(false);
+    m_native_speller->set_mode(0);
   } else {
     set_multiple_languages(m_settings.native_speller_multi_languages,
                            m_native_speller.get());
-    m_native_speller->set_mode(true);
+    m_native_speller->set_mode(1);
   }
 }
 
@@ -992,13 +991,13 @@ struct WordData
     long word_end;
     bool is_correct;
 };
-}
+}  // namespace
 
 int SpellChecker::check_text(EditorViewType view,
                              const MappedWstring &text_to_check, long offset,
                              CheckTextMode mode) {
   if (text_to_check.str.empty())
-    return false;
+    return 0;
 
   bool stop = false;
   long resulting_word_end = -1, resulting_word_start = -1;
@@ -1022,8 +1021,7 @@ int SpellChecker::check_text(EditorViewType view,
   std::vector<WordData> words_to_check;
   words_to_check.clear();
   std::vector<WordForSpeller> words_for_speller;
-  for (int i = 0; i < static_cast<int>(tokens.size()); ++i) {
-    auto token = tokens[i];
+  for (auto token : tokens) {
     cut_apostrophes(token);
     auto word_start = static_cast<long>(
         offset + text_to_check.to_original_index(static_cast<long>(
@@ -1098,20 +1096,20 @@ int SpellChecker::check_text(EditorViewType view,
   }
   switch (mode) {
   case CheckTextMode::underline_errors:
-    return true;
+    return 1;
   case CheckTextMode::find_first:
-    return stop;
+    return static_cast<int>(stop);
   case CheckTextMode::find_all:
-    return true;
+    return 1;
   case CheckTextMode::find_last:
     if (resulting_word_start == -1)
-      return false;
+      return 0;
     else {
       m_editor.set_selection(view, resulting_word_start, resulting_word_end);
-      return true;
+      return 1;
     }
   };
-  return false;
+  return 0;
 }
 
 void SpellChecker::check_visible(EditorViewType view,
@@ -1125,7 +1123,7 @@ MappedWstring SpellChecker::to_mapped_wstring(EditorViewType view,
                                               std::string_view str) {
   if (m_editor.get_encoding(view) == EditorCodepage::utf8)
     return utf8_to_mapped_wstring(str);
-  else
+  
     return ::to_mapped_wstring(str);
 }
 

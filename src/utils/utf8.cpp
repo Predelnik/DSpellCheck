@@ -24,7 +24,7 @@ char* utf8_dec(const char* string, const char* current)
     while (string <= temp && (!utf8_is_lead(*temp)))
         temp--;
 
-    return (char *)temp;
+    return const_cast<char *>(temp);
 }
 
 const char* utf8_inc(const char* string)
@@ -41,7 +41,7 @@ int utf8_symbol_len(char c)
 {
     if ((c & 0x80) == 0)
         return 1;
-    else if ((c & 0xC0) > 0 && (c & 0x20) == 0)
+    if ((c & 0xC0) > 0 && (c & 0x20) == 0)
         return 2;
     else if ((c & 0xE0) > 0 && (c & 0x10) == 0)
         return 3;
@@ -65,8 +65,8 @@ bool utf8_first_chars_equal(const char* str1, const char* str2)
 
 const char* utf8_pbrk(const char* s, const char* set)
 {
-    for (; *s; s = utf8_inc(s))
-        for (auto x = set; *x; x = utf8_inc(x))
+    for (; *s != 0; s = utf8_inc(s))
+        for (auto x = set; *x != 0; x = utf8_inc(x))
             if (utf8_first_chars_equal(s, x))
                 return s;
     return nullptr;
@@ -75,10 +75,10 @@ const char* utf8_pbrk(const char* s, const char* set)
 char* utf8_chr(const char* s, const char* sfc) // Char is first from the string
 // sfc (string with first char)
 {
-    while (*s)
+    while (*s != 0)
     {
-        if (s && utf8_first_chars_equal(s, sfc))
-            return (char *)s;
+        if ((s != nullptr) && utf8_first_chars_equal(s, sfc))
+            return const_cast<char *>(s);
         s = utf8_inc(s);
     }
     return nullptr;
@@ -88,7 +88,7 @@ size_t utf8_length(const char* string)
 {
     auto it = string;
     size_t size = 0;
-    while (*it)
+    while (*it != 0)
     {
         size++;
         it = utf8_inc(it);

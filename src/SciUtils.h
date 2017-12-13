@@ -14,4 +14,4 @@ namespace SciUtils
     };
 
     StyleCategory get_style_category(LRESULT lexer, LRESULT style);
-}
+} // namespace SciUtils

@@ -7,16 +7,16 @@ ToolbarIconsWrapper::ToolbarIconsWrapper() : m_icons{std::make_unique<ToolbarIco
 }
 
 ToolbarIconsWrapper::~ToolbarIconsWrapper() {
-    if (m_icons->hToolbarBmp)
+    if (m_icons->hToolbarBmp != nullptr)
         DeleteObject(m_icons->hToolbarBmp);
 
-    if (m_icons->hToolbarIcon)
+    if (m_icons->hToolbarIcon != nullptr)
         DeleteObject(m_icons->hToolbarBmp);
 }
 
 ToolbarIconsWrapper::
 ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR name, UINT type, int cx, int cy, UINT fu_load) : ToolbarIconsWrapper() {
-    m_icons->hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)h_inst, name, type, cx, cy, fu_load);
+    m_icons->hToolbarBmp = static_cast<HBITMAP>(::LoadImage(h_inst, name, type, cx, cy, fu_load));
 }
 
 const ToolbarIcons* ToolbarIconsWrapper::get() {

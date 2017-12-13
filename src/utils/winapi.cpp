@@ -19,7 +19,7 @@ bool move_file_and_reset_security_descriptor(const wchar_t* from, const wchar_t*
     SetNamedSecurityInfo(const_cast<wchar_t *>(to), SE_FILE_OBJECT,
                          DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION,
                          nullptr, nullptr, static_cast<PACL>(&g_null_acl), nullptr);
-    return ret;
+    return ret != 0;
 }
 
 #ifdef _DEBUG
@@ -34,8 +34,7 @@ static std::wstring get_class_name(HWND hwnd) {
 
 namespace WinApi
 {
-    WinBase::~WinBase() {
-    }
+    WinBase::~WinBase() = default;
 
     void WinBase::set_enabled(bool enabled) {
         EnableWindow(m_hwnd, enabled ? TRUE : FALSE);
@@ -57,4 +56,4 @@ namespace WinApi
                 return i;
         return std::nullopt;
     }
-}
+}  // namespace WinApi

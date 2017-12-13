@@ -100,7 +100,7 @@ public:
     void apply_settings(Settings& settings);
     void set_delimeters_edit(const wchar_t* delimiters);
     void set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg,
-                             bool remove_single_apostrophe);
+                             bool remove_boundary_apostrophes);
     int get_recheck_delay();
     void set_recheck_delay(int delay);
     void set_sugg_box_settings(LRESULT size, LRESULT trans);

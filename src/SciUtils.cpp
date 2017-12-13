@@ -1315,4 +1315,4 @@ namespace SciUtils
         };
         return s::unknown;
     }
-}
+} // namespace SciUtils

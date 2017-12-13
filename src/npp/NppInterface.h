@@ -10,7 +10,7 @@ struct NppData;
 class NppInterface : public EditorInterface
 {
 public:
-    explicit NppInterface(const NppData* npp_data);
+    explicit NppInterface(const NppData* nppData);
     std::wstring get_npp_directory();
     bool is_allocate_cmdid_supported() const;
     int allocate_cmdid(int start_number);
@@ -24,7 +24,7 @@ public:
     void activate_document(const std::wstring& filepath, EditorViewType view) override;
     void switch_to_file(const std::wstring& path) override;
     void move_active_document_to_other_view() override;
-    void add_toolbar_icon(int cmd_id, const toolbarIcons* tool_bar_icons_ptr) override;
+    void add_toolbar_icon(int cmdId, const toolbarIcons* toolBarIconsPtr) override;
 
     // const
     std::vector<std::wstring> get_open_filenames(std::optional<EditorViewType> view = {}) const override;
@@ -63,9 +63,9 @@ public:
 
 private:
     // these functions are const per se
-    LRESULT send_msg_to_npp(UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
-    LRESULT send_msg_to_scintilla(EditorViewType view, UINT msg, WPARAM w_param = 0, LPARAM lParam = 0) const;
-    void post_msg_to_scintilla(EditorViewType view, UINT msg, WPARAM w_param = 0, LPARAM lParam = 0) const;
+    LRESULT send_msg_to_npp(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0) const;
+    LRESULT send_msg_to_scintilla(EditorViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
+    void post_msg_to_scintilla(EditorViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
     std::wstring get_dir_msg(UINT msg) const;
     void do_command(int id);
 
