@@ -750,23 +750,23 @@ static void set_multiple_languages(std::wstring_view multi_string,
 
 // Here parameter is in ANSI (may as well be utf-8 cause only English I guess)
 void SpellChecker::update_aspell_language_options() {
-  if (m_settings.aspell_language == L"<MULTIPLE>") {
-    set_multiple_languages(m_settings.aspell_multi_languages,
+  if (m_settings.speller_language[SpellerId::aspell] == L"<MULTIPLE>") {
+    set_multiple_languages(m_settings.speller_multi_languages[SpellerId::aspell],
                            m_aspell_speller.get());
     m_aspell_speller->set_mode(1);
   } else {
-    m_aspell_speller->set_language(m_settings.aspell_language.c_str());
+    m_aspell_speller->set_language(m_settings.speller_language[SpellerId::aspell].c_str());
     active_speller()->set_mode(0);
   }
 }
 
 void SpellChecker::update_hunspell_language_options() {
-  if (m_settings.hunspell_language == L"<MULTIPLE>") {
-    set_multiple_languages(m_settings.hunspell_multi_languages.c_str(),
+  if (m_settings.speller_language[SpellerId::hunspell] == L"<MULTIPLE>") {
+    set_multiple_languages(m_settings.speller_multi_languages[SpellerId::hunspell].c_str(),
                            m_hunspell_speller.get());
     m_hunspell_speller->set_mode(1);
   } else {
-    m_hunspell_speller->set_language(m_settings.hunspell_language.c_str());
+    m_hunspell_speller->set_language(m_settings.speller_language[SpellerId::hunspell].c_str());
     m_hunspell_speller->set_mode(0);
   }
 }
@@ -775,10 +775,10 @@ bool SpellChecker::hunspell_reinit_settings() {
   m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
   m_hunspell_speller->set_additional_directory(
       m_settings.hunspell_system_path.c_str());
-  if (m_settings.hunspell_language != L"<MULTIPLE>")
-    m_hunspell_speller->set_language(m_settings.hunspell_language.c_str());
+  if (m_settings.speller_language[SpellerId::hunspell] != L"<MULTIPLE>")
+    m_hunspell_speller->set_language(m_settings.speller_language[SpellerId::hunspell].c_str());
   else
-    set_multiple_languages(m_settings.hunspell_multi_languages.c_str(),
+    set_multiple_languages(m_settings.speller_multi_languages[SpellerId::hunspell].c_str(),
                            m_hunspell_speller.get());
   return true;
 }
@@ -788,10 +788,10 @@ bool SpellChecker::aspell_reinit_settings() {
   m_aspell_speller->set_allow_run_together(
       m_settings.aspell_allow_run_together_words);
 
-  if (m_settings.aspell_language != L"<MULTIPLE>") {
-    m_aspell_speller->set_language(m_settings.aspell_language.c_str());
+  if (m_settings.speller_language[SpellerId::aspell] != L"<MULTIPLE>") {
+    m_aspell_speller->set_language(m_settings.speller_language[SpellerId::aspell].c_str());
   } else
-    set_multiple_languages(m_settings.aspell_multi_languages,
+    set_multiple_languages(m_settings.speller_multi_languages[SpellerId::aspell],
                            m_aspell_speller.get());
   return true;
 }
@@ -807,11 +807,11 @@ void SpellChecker::update_suggestion_box() {
 void SpellChecker::native_reinit_settings() {
   m_native_speller->init();
 
-  if (m_settings.native_speller_language != L"<MULTIPLE>") {
-    m_native_speller->set_language(m_settings.native_speller_language.c_str());
+  if (m_settings.speller_language[SpellerId::native] != L"<MULTIPLE>") {
+    m_native_speller->set_language(m_settings.speller_language[SpellerId::native].c_str());
     m_native_speller->set_mode(0);
   } else {
-    set_multiple_languages(m_settings.native_speller_multi_languages,
+    set_multiple_languages(m_settings.speller_multi_languages[SpellerId::native],
                            m_native_speller.get());
     m_native_speller->set_mode(1);
   }

@@ -2,6 +2,7 @@
 
 #include "lsignal.h"
 #include "utils/TemporaryAcessor.h"
+#include "utils/enum_array.h"
 
 class IniWorker;
 
@@ -63,13 +64,7 @@ public:
     std::wstring aspell_path;
     std::wstring hunspell_user_path;
     std::wstring hunspell_system_path;
-    std::wstring aspell_multi_languages;
-    std::wstring hunspell_multi_languages;
     SuggestionMode suggestions_mode = SuggestionMode::button;
-    std::wstring aspell_language;
-    std::wstring hunspell_language;
-    std::wstring native_speller_language;
-    std::wstring native_speller_multi_languages;
     std::wstring delimiters;
     int suggestion_count = 0;
     bool ignore_yo = false;
@@ -113,6 +108,8 @@ public:
     TokenizationStyle tokenization_style = TokenizationStyle::by_delimiters;
     std::wstring delimiter_exclusions;
     bool split_camel_case;
+    enum_array<SpellerId, std::wstring> speller_language;
+    enum_array<SpellerId, std::wstring> speller_multi_languages;
 
     mutable lsignal::signal<void()> settings_changed;
 

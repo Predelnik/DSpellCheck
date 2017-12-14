@@ -122,22 +122,11 @@ void SimpleDlg::apply_settings(Settings &settings) {
   int cur_sel = ComboBox_GetCurSel(m_h_combo_language);
 
   if (IsWindowEnabled(m_h_combo_language) != FALSE) {
-    *[&]() -> std::wstring * {
-      switch (settings.active_speller_lib_id) {
-      case SpellerId::aspell:
-        return &settings.aspell_language;
-      case SpellerId::hunspell:
-        return &settings.hunspell_language;
-      case SpellerId::native:
-        return &settings.native_speller_language;
-      case SpellerId::COUNT:
-        break;
-      }
-      return nullptr;
-    }() = cur_sel == lang_count - 1 ? L"<MULTIPLE>"
-                                    : get_spell_checker()
-                                          ->get_available_languages()[cur_sel]
-                                          .orig_name.c_str();
+    settings.get_current_language() =
+        (cur_sel == lang_count - 1 ? L"<MULTIPLE>"
+                                   : get_spell_checker()
+                                         ->get_available_languages()[cur_sel]
+                                         .orig_name.c_str());
   }
   settings.suggestion_count =
       (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
@@ -172,13 +161,16 @@ void SimpleDlg::apply_settings(Settings &settings) {
 }
 
 void SimpleDlg::fill_lib_info(int status, const Settings &settings) {
-  ShowWindow(m_h_aspell_run_together_cb,
-             static_cast<int>(settings.active_speller_lib_id == SpellerId::aspell));
+  ShowWindow(
+      m_h_aspell_run_together_cb,
+      static_cast<int>(settings.active_speller_lib_id == SpellerId::aspell));
 
-  auto is_aspell = settings.active_speller_lib_id == SpellerId::aspell ? TRUE : FALSE;
+  auto is_aspell =
+      settings.active_speller_lib_id == SpellerId::aspell ? TRUE : FALSE;
   ShowWindow(m_h_lib_link, is_aspell);
   ShowWindow(m_h_aspell_status, is_aspell);
-  auto is_hunspell = settings.active_speller_lib_id == SpellerId::hunspell ? TRUE : FALSE;
+  auto is_hunspell =
+      settings.active_speller_lib_id == SpellerId::hunspell ? TRUE : FALSE;
   ShowWindow(m_h_download_dics, is_hunspell);
   ShowWindow(m_h_remove_dics, is_hunspell);
   ShowWindow(m_h_decode_names, is_hunspell);
@@ -186,7 +178,8 @@ void SimpleDlg::fill_lib_info(int status, const Settings &settings) {
   ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
   ShowWindow(m_h_hunspell_path_type, is_hunspell);
   ShowWindow(m_h_system_path, 0);
-  auto not_native = settings.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
+  auto not_native =
+      settings.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
   ShowWindow(m_h_lib_group_box, not_native);
   ShowWindow(m_h_lib_path, not_native);
   ShowWindow(m_h_reset_speller_path, not_native);
@@ -583,9 +576,13 @@ const wchar_t *const indic_names[] = {
 void AdvancedDlg::setup_delimiter_line_edit_visiblity() {
   ShowWindow(m_delimiter_exclusions_le,
              m_tokenization_style_cmb.current_data() ==
-                 TokenizationStyle::by_non_alphabetic ? TRUE : FALSE);
+                     TokenizationStyle::by_non_alphabetic
+                 ? TRUE
+                 : FALSE);
   ShowWindow(m_h_edit_delimiters, m_tokenization_style_cmb.current_data() ==
-                                      TokenizationStyle::by_delimiters ? TRUE : FALSE);
+                                          TokenizationStyle::by_delimiters
+                                      ? TRUE
+                                      : FALSE);
 }
 
 INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
@@ -682,7 +679,8 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
     }
     break;
   case WM_CTLCOLORBTN:
-    if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) == reinterpret_cast<HWND>(l_param)) {
+    if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) ==
+        reinterpret_cast<HWND>(l_param)) {
       auto h_dc = reinterpret_cast<HDC>(w_param);
       if (m_brush != nullptr)
         DeleteObject(m_brush);
@@ -906,8 +904,10 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_advanced_dlg.init(_hInst, _hSelf);
     m_advanced_dlg.create(IDD_ADVANCED, false, false);
 
-    m_window_vector.emplace_back(&m_simple_dlg, TEXT("Simple"), TEXT("Simple Options"));
-    m_window_vector.emplace_back(&m_advanced_dlg, TEXT("Advanced"), TEXT("Advanced Options"));
+    m_window_vector.emplace_back(&m_simple_dlg, TEXT("Simple"),
+                                 TEXT("Simple Options"));
+    m_window_vector.emplace_back(&m_advanced_dlg, TEXT("Advanced"),
+                                 TEXT("Advanced Options"));
     m_controls_tab.createTabs(m_window_vector);
     m_controls_tab.display();
     RECT rc;
@@ -920,8 +920,8 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     // This stuff is copied from npp source to make tabbed window looked totally
     // nice and white
-    auto enable_dlg_theme =
-        reinterpret_cast<ETDTProc>(::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0));
+    auto enable_dlg_theme = reinterpret_cast<ETDTProc>(
+        ::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0));
     if (enable_dlg_theme != nullptr)
       enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 
