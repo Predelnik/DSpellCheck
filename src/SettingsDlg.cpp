@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "LanguageInfo.h"
 #include "Settings.h"
+#include "SpellerContainer.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/winapi.h"
@@ -51,16 +52,15 @@ void SimpleDlg::disable_language_combo(bool disable) {
   EnableWindow(m_h_remove_dics, enable);
 }
 
-void SimpleDlg::update_language_controls(const Settings &settings) {
+void SimpleDlg::update_language_controls(
+    const Settings &settings, const SpellerContainer &speller_container) {
   if (m_h_combo_language == nullptr)
     return;
 
   ComboBox_ResetContent(m_h_combo_language);
-  auto langs = get_spell_checker()->get_available_languages();
-
   int selected_index = 0;
 
-  auto langs_available = get_spell_checker()->get_available_languages();
+  auto langs_available = speller_container.get_available_languages();
 
   int i = 0;
   for (auto &lang : langs_available) {
@@ -79,7 +79,7 @@ void SimpleDlg::update_language_controls(const Settings &settings) {
     ComboBox_AddString(m_h_combo_language, L"Multiple Languages...");
 
   ComboBox_SetCurSel(m_h_combo_language, selected_index);
-  EnableWindow(m_h_combo_language, langs.empty() ? FALSE : TRUE);
+  EnableWindow(m_h_combo_language, langs_available.empty() ? FALSE : TRUE);
 }
 
 static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t *psz_text) {
@@ -117,16 +117,17 @@ SimpleDlg::~SimpleDlg() {
     FreeLibrary(m_h_ux_theme);
 }
 
-void SimpleDlg::apply_settings(Settings &settings) {
+void SimpleDlg::apply_settings(Settings &settings,
+                               const SpellerContainer &speller_container) {
   int lang_count = ComboBox_GetCount(m_h_combo_language);
   int cur_sel = ComboBox_GetCurSel(m_h_combo_language);
 
   if (IsWindowEnabled(m_h_combo_language) != FALSE) {
     settings.get_current_language() =
-        (cur_sel == lang_count - 1 ? L"<MULTIPLE>"
-                                   : get_spell_checker()
-                                         ->get_available_languages()[cur_sel]
-                                         .orig_name.c_str());
+        (cur_sel == lang_count - 1
+             ? L"<MULTIPLE>"
+             : speller_container.get_available_languages()[cur_sel]
+                   .orig_name.c_str());
   }
   settings.suggestion_count =
       (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
@@ -831,14 +832,16 @@ SimpleDlg *SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
 AdvancedDlg *SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
 
 SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp,
-                         const Settings &settings)
+                         const Settings &settings,
+                         const SpellerContainer &speller_container)
     : m_npp(npp), m_simple_dlg(*this, settings, m_npp),
-      m_advanced_dlg(settings), m_settings(settings) {
+      m_advanced_dlg(settings), m_settings(settings),
+      m_speller_container(speller_container) {
   Window::init(h_inst, parent);
   m_settings.settings_changed.connect([this] { update_controls(); });
-  get_spell_checker()->speller_status_changed.connect([this] {
-    m_simple_dlg.update_language_controls(m_settings);
-    m_simple_dlg.update_lib_status(m_settings);
+  m_speller_container.speller_status_changed.connect([this] {
+    m_simple_dlg.update_language_controls(m_settings, m_speller_container);
+    m_simple_dlg.fill_lib_info(m_speller_container.get_aspell_status(), m_settings);
   });
 }
 
@@ -850,12 +853,12 @@ void SettingsDlg::destroy() {
 // Send appropriate event and set some npp thread properties
 void SettingsDlg::apply_settings() {
   auto mut_settings = m_settings.modify();
-  m_simple_dlg.apply_settings(*mut_settings);
+  m_simple_dlg.apply_settings(*mut_settings, m_speller_container);
   m_advanced_dlg.apply_settings(*mut_settings);
 }
 
 void SettingsDlg::update_controls() {
-  m_simple_dlg.update_controls(m_settings);
+  m_simple_dlg.update_controls(m_settings, m_speller_container);
   m_advanced_dlg.update_controls(m_settings);
 }
 
@@ -868,13 +871,9 @@ void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) {
   return Window::init(h_inst, parent);
 }
 
-void SimpleDlg::update_lib_status(const Settings &settings) {
-  fill_lib_info(get_spell_checker()->get_aspell_status(), settings);
-}
-
-void SimpleDlg::update_controls(const Settings &settings) {
+void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer& speller_container) {
   m_speller_cmb.set_index(settings.active_speller_lib_id);
-  update_lib_status(settings);
+  fill_lib_info(speller_container.get_aspell_status(), settings);
   fill_sugestions_num(settings.suggestion_count);
   set_file_types(settings.check_those, settings.file_types.c_str());
   Button_SetCheck(m_h_check_comments,
@@ -926,7 +925,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
       enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 
     update_controls();
-    m_simple_dlg.update_language_controls(m_settings);
+    m_simple_dlg.update_language_controls(m_settings, m_speller_container);
 
     return 1;
   }
@@ -951,7 +950,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     switch (LOWORD(w_param)) {
     case 0: // Menu
     {
-      get_spell_checker()->copy_misspellings_to_clipboard();
+      copy_misspellings_to_clipboard();
     } break;
     case IDAPPLY:
       if (HIWORD(w_param) == BN_CLICKED) {

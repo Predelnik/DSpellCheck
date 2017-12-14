@@ -169,7 +169,7 @@ void DownloadDicsDlg::finalize_downloading() {
   }
   for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
     CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);
-  get_spell_checker()->on_settings_changed();
+  m_settings.settings_changed ();
 }
 
 static const auto buf_size_for_copy = 10240;

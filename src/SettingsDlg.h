@@ -32,14 +32,15 @@ class LanguageInfo;
 class Settings;
 class SettingsDlg;
 class NppInteface;
+class SpellerContainer;
 using OtdProc = HTHEME(WINAPI *)(HWND, LPCWSTR);
 
 class SimpleDlg : public StaticDialog {
 public:
     SimpleDlg(SettingsDlg& parent, const Settings &settings, NppInterface &npp);
     ~SimpleDlg() override;
-    void apply_settings(Settings& settings);
-    void update_language_controls(const Settings& settings
+    void apply_settings(Settings& settings, const SpellerContainer& speller_container);
+    void update_language_controls(const Settings& settings, const SpellerContainer& speller_container
     );
     void fill_sugestions_num(int suggestions_num);
     void fill_lib_info(int status, const Settings& settings);
@@ -49,8 +50,7 @@ public:
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent);
-    void update_lib_status(const Settings& settings);
-    void update_controls(const Settings& settings);
+    void update_controls(const Settings& settings, const SpellerContainer& speller_container);
 
 protected:
 
@@ -148,7 +148,7 @@ public:
     UINT do_dialog();
     SimpleDlg* get_simple_dlg();
     AdvancedDlg* get_advanced_dlg();
-    SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings& settings);
+    SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings& settings, const SpellerContainer &speller_container);
 
 private:
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
@@ -164,6 +164,7 @@ private:
     WindowVector m_window_vector;
     ControlsTab m_controls_tab;
     const Settings& m_settings;
+    const SpellerContainer &m_speller_container;
 
     friend class SimpleDlg;
 };

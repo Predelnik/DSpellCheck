@@ -3,21 +3,12 @@
 #include "lsignal.h"
 #include "utils/TemporaryAcessor.h"
 #include "utils/enum_array.h"
+#include "SpellerId.h"
 
 class IniWorker;
 
 const wchar_t *default_delimiters ();
 const wchar_t *default_delimiter_exclusions ();
-
-enum class SpellerId {
-    aspell,
-    hunspell,
-    native,
-
-    // ReSharper disable once CppInconsistentNaming
-    COUNT,
-};
-const wchar_t *gui_string (SpellerId value);
 
 enum class SuggestionMode {
   button,

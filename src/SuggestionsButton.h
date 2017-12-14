@@ -19,20 +19,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
 
-#include "StaticDialog/StaticDialog.h"
 #include "PluginInterface.h"
+#include "StaticDialog/StaticDialog.h"
 
+class SpellChecker;
 class NppInterface;
+class Settings;
 
 class SuggestionsButton : public StaticDialog {
 public:
   void do_dialog();
   HMENU get_popup_menu();
   int get_result();
-  SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface& npp);
+  SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface &npp,
+                    SpellChecker &spell_checker,
+                    const Settings &settings);
+  void show_suggestion_menu();
+  void on_settings_changed();
+  void set_transparency();
 
 protected:
-  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
+                              LPARAM l_param) override;
 
 private:
   int m_menu_result;
@@ -42,4 +50,6 @@ private:
   HMENU m_popup_menu;
   NppData m_npp_data_instance;
   NppInterface &m_npp;
+  SpellChecker &m_spell_checker;
+  const Settings &m_settings;
 };

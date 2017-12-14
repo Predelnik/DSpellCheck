@@ -5,6 +5,7 @@
 #include "utils/IniWorker.h"
 #include "utils/string_utils.h"
 #include <cassert>
+#include "SpellerId.h"
 
 const wchar_t *default_delimiters() {
   return L",.!?\":;{}()[]\\/"
