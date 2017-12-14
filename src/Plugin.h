@@ -44,7 +44,7 @@ class RemoveDictionariesDialog;
 // Initialization of your plugin data
 // It will be called while plugin loading
 //
-void plugin_init(HANDLE h_module_arg);
+void set_hmodule(HANDLE h_module_arg);
 
 //
 // Cleaning of your plugin
