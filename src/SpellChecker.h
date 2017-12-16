@@ -63,20 +63,15 @@ class SpellChecker {
   };
 
 public:
-  SpellChecker(NppData *npp_data_instance_arg,
-               const Settings *settings, EditorInterface &editor,
+  SpellChecker(const Settings *settings, EditorInterface &editor,
                SpellerContainer &speller_container);
   ~SpellChecker();
   void recheck_visible_both_views();
-  void show_suggestion_menu();
   void precalculate_menu();
   void recheck_visible(EditorViewType view, bool not_intersection_only = false);
   MappedWstring to_mapped_wstring(EditorViewType view, std::string_view str) const;
 
-  void update_suggestion_box();
-
   void do_plugin_menu_inclusion(bool invalidate = false);
-  void set_suggestions_box_transparency();
   void process_menu_result(WPARAM menu_id);
   void copy_misspellings_to_clipboard();
   void update_delimiters();
@@ -133,7 +128,6 @@ private:
   long m_word_under_cursor_pos;
   long m_word_under_cursor_length;
   long m_current_position;
-  NppData *m_npp_data_instance;
   MappedWstring m_selected_word;
   SettingsDlg *m_settings_dlg_instance;  
   EditorInterface &m_editor;

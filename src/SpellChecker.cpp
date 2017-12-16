@@ -40,13 +40,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "npp/NppInterface.h"
 #include "utils/string_utils.h"
 
-SpellChecker::SpellChecker(NppData *npp_data_instance_arg,
-                           const Settings *settings, EditorInterface &editor,
+SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor,
                            SpellerContainer &speller_container)
     : m_settings(*settings), m_editor(editor),
       m_speller_container(speller_container) {
   m_current_position = 0;
-  m_npp_data_instance = npp_data_instance_arg;
   m_word_under_cursor_length = 0;
   m_word_under_cursor_pos = 0;
   m_word_under_cursor_is_correct = true;
@@ -239,10 +237,6 @@ void SpellChecker::find_next_mistake() {
       m_editor.force_style_update(view, from, to);
       SCNotification scn;
       scn.nmhdr.code = SCN_SCROLLED;
-      // This was workaround for hotspots
-      // TODO: check if it's still needed
-      // send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0,
-      // reinterpret_cast<LPARAM>(&scn));
       bool result = check_text(view, text, static_cast<long>(iterator_pos),
                                CheckTextMode::find_first) != 0;
       if (result)
@@ -292,11 +286,6 @@ void SpellChecker::find_prev_mistake() {
       m_editor.force_style_update(view, from + offset, to);
       SCNotification scn;
       scn.nmhdr.code = SCN_SCROLLED;
-      // This was workaround for hotspots
-      // TODO: check if it's still needed
-      // send_msg_to_npp(m_npp_data_instance, WM_NOTIFY, 0,
-      // reinterpret_cast<LPARAM>(&scn));
-
       bool result = check_text(view, text, from, CheckTextMode::find_last) != 0;
       if (result)
         break;
@@ -533,7 +522,7 @@ SpellChecker::fill_suggestions_menu(HMENU menu) {
   auto view = m_editor.active_view();
   m_editor.set_selection(view, pos, pos + m_word_under_cursor_length);
   std::vector<SuggestionsMenuItem> suggestion_menu_items;
-  auto text = m_editor.get_text_range(
+  auto text = m_editor.get_text_range( 
       view, m_word_under_cursor_pos,
       m_word_under_cursor_pos + static_cast<long>(m_word_under_cursor_length));
 
