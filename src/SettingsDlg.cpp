@@ -919,6 +919,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     m_simple_dlg.init_settings(_hInst, _hSelf);
     m_simple_dlg.create(IDD_SIMPLE, false, false);
+    m_simple_dlg.init_speller_id_combobox (m_speller_container);
     m_simple_dlg.display();
     m_advanced_dlg.init(_hInst, _hSelf);
     m_advanced_dlg.create(IDD_ADVANCED, false, false);
@@ -932,7 +933,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     RECT rc;
     getClientRect(rc);
     m_controls_tab.reSizeTo(rc);
-    rc.bottom -= 30;
+    //rc.bottom -= 15;
 
     m_simple_dlg.reSizeTo(rc);
     m_advanced_dlg.reSizeTo(rc);
@@ -946,7 +947,6 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     update_controls();
     m_simple_dlg.update_language_controls(m_settings, m_speller_container);
-    m_simple_dlg.init_speller_id_combobox (m_speller_container);
     return 1;
   }
   case WM_CONTEXTMENU: {

@@ -626,6 +626,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   } break;
 
   case SCN_UPDATEUI:
+    if (!spell_checker)
+        break;
     if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 &&
         (recheck_done || first_restyle) &&
         !restyling_caused_recheck_was_done) // If restyling wasn't caused by
@@ -715,7 +717,8 @@ extern "C" __declspec(dllexport) LRESULT
   // NOLINT
   switch (message) {
   case WM_MOVE:
-    suggestions_button->display(false);
+    if (suggestions_button)
+      suggestions_button->display(false);
     return FALSE;
   case WM_COMMAND: {
     if (HIWORD(w_param) == 0 && get_use_allocated_ids()) {
