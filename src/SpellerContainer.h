@@ -10,6 +10,12 @@ class HunspellInterface;
 class NativeSpellerInterface;
 class SpellerInterface;
 
+enum class AspellStatus {
+  working,
+  no_dictionaries,
+  not_working,
+};
+
 class SpellerContainer {
   using self = SpellerContainer;
 
@@ -23,7 +29,7 @@ public:
   };
   const SpellerInterface &active_speller() const;
   SpellerInterface &active_speller();
-  int get_aspell_status() const;
+  AspellStatus get_aspell_status() const;
   void cleanup();
 
 public:

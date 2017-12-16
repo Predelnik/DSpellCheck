@@ -161,7 +161,8 @@ void SimpleDlg::apply_settings(Settings &settings,
       Button_GetCheck(m_h_aspell_run_together_cb) == BST_CHECKED;
 }
 
-void SimpleDlg::fill_lib_info(int status, const Settings &settings) {
+void SimpleDlg::fill_lib_info(AspellStatus aspell_status,
+                              const Settings &settings) {
   ShowWindow(
       m_h_aspell_run_together_cb,
       static_cast<int>(settings.active_speller_lib_id == SpellerId::aspell));
@@ -189,15 +190,19 @@ void SimpleDlg::fill_lib_info(int status, const Settings &settings) {
   switch (settings.active_speller_lib_id) {
   case SpellerId::aspell:
 
-    if (status == 2) {
+    switch (aspell_status) {
+    case AspellStatus::working:
       m_aspell_status_color = COLOR_OK;
       Static_SetText(m_h_aspell_status, L"Aspell Status: OK");
-    } else if (status == 1) {
+      break;
+    case AspellStatus::no_dictionaries:
       m_aspell_status_color = COLOR_FAIL;
       Static_SetText(m_h_aspell_status, L"Aspell Status: No Dictionaries");
-    } else {
+      break;
+    case AspellStatus::not_working:
       m_aspell_status_color = COLOR_FAIL;
       Static_SetText(m_h_aspell_status, L"Aspell Status: Fail");
+      break;
     }
     Edit_SetText(m_h_lib_path,
                  get_actual_aspell_path(settings.aspell_path).c_str());
@@ -841,7 +846,8 @@ SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp,
   m_settings.settings_changed.connect([this] { update_controls(); });
   m_speller_container.speller_status_changed.connect([this] {
     m_simple_dlg.update_language_controls(m_settings, m_speller_container);
-    m_simple_dlg.fill_lib_info(m_speller_container.get_aspell_status(), m_settings);
+    m_simple_dlg.fill_lib_info(m_speller_container.get_aspell_status(),
+                               m_settings);
   });
 }
 
@@ -871,7 +877,8 @@ void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) {
   return Window::init(h_inst, parent);
 }
 
-void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer& speller_container) {
+void SimpleDlg::update_controls(const Settings &settings,
+                                const SpellerContainer &speller_container) {
   m_speller_cmb.set_index(settings.active_speller_lib_id);
   fill_lib_info(speller_container.get_aspell_status(), settings);
   fill_sugestions_num(settings.suggestion_count);

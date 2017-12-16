@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Settings.h"
 #include "utils/winapi.h"
 
+enum class AspellStatus;
 class HunspellInterface;
 class SpellChecker;
 class NppInterface;
@@ -43,7 +44,7 @@ public:
     void update_language_controls(const Settings& settings, const SpellerContainer& speller_container
     );
     void fill_sugestions_num(int suggestions_num);
-    void fill_lib_info(int status, const Settings& settings);
+    void fill_lib_info(AspellStatus aspell_status, const Settings& settings);
     void disable_language_combo(bool disable);
     void set_file_types(bool check_those, const wchar_t* file_types);
     void set_sugg_type(SuggestionMode mode);    
