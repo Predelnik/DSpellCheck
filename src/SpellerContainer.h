@@ -26,7 +26,9 @@ public:
   std::vector<LanguageInfo> get_available_languages() const;
   HunspellInterface &get_hunspell_speller() const {
     return *m_hunspell_speller;
-  };
+  }
+
+    const NativeSpellerInterface& native_speller() const;
   const SpellerInterface &active_speller() const;
   SpellerInterface &active_speller();
   AspellStatus get_aspell_status() const;

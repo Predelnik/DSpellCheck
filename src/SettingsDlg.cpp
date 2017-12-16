@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "resource.h"
 #include "utils/winapi.h"
 #include <uxtheme.h>
+#include "NativeSpellerInterface.h"
 
 SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings,
                      NppInterface &npp)
@@ -54,6 +55,7 @@ void SimpleDlg::disable_language_combo(bool disable) {
 
 void SimpleDlg::update_language_controls(
     const Settings &settings, const SpellerContainer &speller_container) {
+
   if (m_h_combo_language == nullptr)
     return;
 
@@ -291,6 +293,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     m_h_lib_link = ::GetDlgItem(_hSelf, IDC_LIB_LINK);
     m_suggestion_mode_cmb.init(GetDlgItem(_hSelf, IDC_SUGG_TYPE));
     m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
+    
     m_h_lib_group_box = ::GetDlgItem(_hSelf, IDC_LIB_GROUPBOX);
     m_h_download_dics = ::GetDlgItem(_hSelf, IDC_DOWNLOADDICS);
     m_h_remove_dics = ::GetDlgItem(_hSelf, IDC_REMOVE_DICS);
@@ -332,7 +335,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
       break;
     case IDC_LIBRARY:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        m_parent.apply_lib_change(m_speller_cmb.current_data());
+        m_parent.apply_lib_change(static_cast<SpellerId> (m_speller_cmb.current_data()));
       }
       break;
     case IDC_HUNSPELL_PATH_TYPE:
@@ -879,7 +882,7 @@ void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) {
 
 void SimpleDlg::update_controls(const Settings &settings,
                                 const SpellerContainer &speller_container) {
-  m_speller_cmb.set_index(settings.active_speller_lib_id);
+  m_speller_cmb.set_current_index(*m_speller_cmb.find_by_data(static_cast<int> (settings.active_speller_lib_id)));
   fill_lib_info(speller_container.get_aspell_status(), settings);
   fill_sugestions_num(settings.suggestion_count);
   set_file_types(settings.check_those, settings.file_types.c_str());
@@ -895,6 +898,16 @@ void SimpleDlg::update_controls(const Settings &settings,
   set_one_user_dic(settings.use_unified_dictionary);
   Button_SetCheck(m_h_aspell_run_together_cb,
                   settings.aspell_allow_run_together_words);
+}
+
+void SimpleDlg::init_speller_id_combobox(const SpellerContainer& speller_container)
+{
+  for (auto id : enum_range<SpellerId> ())
+      {
+          if (id == SpellerId::native && !speller_container.native_speller ().is_working ())
+              continue;
+          m_speller_cmb.add_item(gui_string (id), static_cast<int> (id));
+      }
 }
 
 INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
@@ -933,7 +946,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     update_controls();
     m_simple_dlg.update_language_controls(m_settings, m_speller_container);
-
+    m_simple_dlg.init_speller_id_combobox (m_speller_container);
     return 1;
   }
   case WM_CONTEXTMENU: {

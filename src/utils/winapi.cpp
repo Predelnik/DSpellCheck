@@ -56,4 +56,9 @@ namespace WinApi
                 return i;
         return std::nullopt;
     }
+
+    void ComboBox::clear()
+    {
+        ComboBox_ResetContent(m_hwnd);
+    }
 }  // namespace WinApi

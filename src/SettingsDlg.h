@@ -52,6 +52,7 @@ public:
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent);
     void update_controls(const Settings& settings, const SpellerContainer& speller_container);
+    void init_speller_id_combobox(const SpellerContainer& speller_container);
 
 protected:
 
@@ -88,7 +89,7 @@ private:
     HWND m_h_system_path = nullptr;
     HWND m_h_aspell_run_together_cb = nullptr;
     HWND m_browse_btn = nullptr;
-    WinApi::EnumComboBox<SpellerId> m_speller_cmb;
+    WinApi::ComboBox m_speller_cmb;
     WinApi::EnumComboBox<SuggestionMode> m_suggestion_mode_cmb;
 
     HMODULE m_h_ux_theme;

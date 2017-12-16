@@ -52,6 +52,11 @@ std::vector<LanguageInfo> SpellerContainer::get_available_languages() const {
   return langs;
 }
 
+const NativeSpellerInterface& SpellerContainer::native_speller() const
+{
+    return *m_native_speller;
+}
+
 const SpellerInterface &SpellerContainer::active_speller() const {
   return const_cast<self *>(this)->active_speller();
 }

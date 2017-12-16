@@ -6,6 +6,7 @@
 #include <time.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <tchar.h>
 
 //#define USE_BOOST_SMART_PTR
 //#define USE_STD_SMART_PTR // since C++11
@@ -84,10 +85,6 @@
 #endif
    #define tcsncpy wcsncpy
    #define ttol wcstol
-
-   #ifndef _T
-   #define _T(x) L ## x
-   #endif
 #else
    typedef std::string tstring;
    typedef std::ostream tostream;
