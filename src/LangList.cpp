@@ -62,7 +62,7 @@ void LangList::update_list() {
 
   CheckedListBox_EnableCheckAll(get_lang_list()->get_list_box(), BST_UNCHECKED);
   for (auto &token : make_delimiter_tokenizer(
-                         m_settings.get_current_multi_languages(), LR"(\|)")
+                         m_settings.get_active_multi_languages(), LR"(\|)")
                          .get_all_tokens()) {
     int index = -1;
     int i = 0;
@@ -93,8 +93,8 @@ void LangList::apply() {
       buf += langs[i].orig_name;
     }
   }
-  m_settings.get_current_multi_languages() = buf;
-  m_settings.get_current_language() = L"<MULTIPLE>";
+  m_settings.get_active_multi_languages() = buf;
+  m_settings.get_active_language() = L"<MULTIPLE>";
   m_settings.settings_changed();
 }
 

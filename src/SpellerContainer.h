@@ -15,12 +15,7 @@ class SpellerContainer {
 
 public:
   explicit SpellerContainer(const Settings *settings, const NppData *npp_data);
-  void native_reinit_settings();
   ~SpellerContainer();
-  void update_aspell_language_options();
-  void update_hunspell_language_options();
-  bool hunspell_reinit_settings();
-  bool aspell_reinit_settings();
   void init_speller();
   std::vector<LanguageInfo> get_available_languages() const;
   HunspellInterface &get_hunspell_speller() const {
@@ -32,7 +27,7 @@ public:
   void cleanup();
 
 public:
-    mutable lsignal::signal<void()> speller_status_changed;
+  mutable lsignal::signal<void()> speller_status_changed;
 
 private:
   void create_spellers(const NppData &npp_data);

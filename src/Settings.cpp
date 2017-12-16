@@ -132,20 +132,20 @@ void Settings::load() {
   settings_changed();
 }
 
-std::wstring &Settings::get_current_language() {
+std::wstring &Settings::get_active_language() {
   return speller_language[active_speller_lib_id];
 }
 
-const std::wstring &Settings::get_current_language() const {
-  return const_cast<Self *>(this)->get_current_language();
+const std::wstring &Settings::get_active_language() const {
+  return const_cast<Self *>(this)->get_active_language();
 }
 
-std::wstring &Settings::get_current_multi_languages() {
+std::wstring &Settings::get_active_multi_languages() {
   return speller_multi_languages[active_speller_lib_id];
 }
 
-const std::wstring &Settings::get_current_multi_languages() const {
-  return const_cast<Self *>(this)->get_current_multi_languages();
+const std::wstring &Settings::get_active_multi_languages() const {
+  return const_cast<Self *>(this)->get_active_multi_languages();
 }
 
 TemporaryAcessor<Settings::Self> Settings::modify() const {

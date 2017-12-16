@@ -76,100 +76,44 @@ SpellerContainer::SpellerContainer(const Settings *settings,
 }
 
 static void set_multiple_languages(std::wstring_view multi_string,
-                                   SpellerInterface *speller) {
+                                   SpellerInterface &speller) {
   std::vector<std::wstring> multi_lang_list;
   for (auto token :
        make_delimiter_tokenizer(multi_string, LR"(\|)").get_all_tokens())
     multi_lang_list.emplace_back(token);
 
-  speller->set_multiple_languages(multi_lang_list);
-}
-
-void SpellerContainer::native_reinit_settings() {
-  m_native_speller->init();
-
-  if (m_settings.speller_language[SpellerId::native] != L"<MULTIPLE>") {
-    m_native_speller->set_language(
-        m_settings.speller_language[SpellerId::native].c_str());
-    m_native_speller->set_mode(0);
-  } else {
-    set_multiple_languages(
-        m_settings.speller_multi_languages[SpellerId::native],
-        m_native_speller.get());
-    m_native_speller->set_mode(1);
-  }
+  speller.set_multiple_languages(multi_lang_list);
 }
 
 SpellerContainer::~SpellerContainer() = default;
 
-void SpellerContainer::update_aspell_language_options() {
-  if (m_settings.speller_language[SpellerId::aspell] == L"<MULTIPLE>") {
-    set_multiple_languages(
-        m_settings.speller_multi_languages[SpellerId::aspell],
-        m_aspell_speller.get());
-    m_aspell_speller->set_mode(1);
-  } else {
-    m_aspell_speller->set_language(
-        m_settings.speller_language[SpellerId::aspell].c_str());
-    active_speller().set_mode(0);
-  }
-}
-
-void SpellerContainer::update_hunspell_language_options() {
-  if (m_settings.speller_language[SpellerId::hunspell] == L"<MULTIPLE>") {
-    set_multiple_languages(
-        m_settings.speller_multi_languages[SpellerId::hunspell].c_str(),
-        m_hunspell_speller.get());
-    m_hunspell_speller->set_mode(1);
-  } else {
-    m_hunspell_speller->set_language(
-        m_settings.speller_language[SpellerId::hunspell].c_str());
-    m_hunspell_speller->set_mode(0);
-  }
-}
-
-bool SpellerContainer::hunspell_reinit_settings() {
-  m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
-  m_hunspell_speller->set_additional_directory(
-      m_settings.hunspell_system_path.c_str());
-  if (m_settings.speller_language[SpellerId::hunspell] != L"<MULTIPLE>")
-    m_hunspell_speller->set_language(
-        m_settings.speller_language[SpellerId::hunspell].c_str());
-  else
-    set_multiple_languages(
-        m_settings.speller_multi_languages[SpellerId::hunspell].c_str(),
-        m_hunspell_speller.get());
-  return true;
-}
-
-bool SpellerContainer::aspell_reinit_settings() {
-  m_aspell_speller->init(m_settings.aspell_path.c_str());
-  m_aspell_speller->set_allow_run_together(
-      m_settings.aspell_allow_run_together_words);
-
-  if (m_settings.speller_language[SpellerId::aspell] != L"<MULTIPLE>") {
-    m_aspell_speller->set_language(
-        m_settings.speller_language[SpellerId::aspell].c_str());
-  } else
-    set_multiple_languages(
-        m_settings.speller_multi_languages[SpellerId::aspell],
-        m_aspell_speller.get());
-  return true;
-}
-
 void SpellerContainer::init_speller() {
   switch (m_settings.active_speller_lib_id) {
   case SpellerId::native:
-    native_reinit_settings();
+    m_native_speller->init();
     break;
   case SpellerId::aspell:
-    aspell_reinit_settings();
+    m_aspell_speller->init(m_settings.aspell_path.c_str());
+    m_aspell_speller->set_allow_run_together(
+        m_settings.aspell_allow_run_together_words);
     break;
   case SpellerId::hunspell:
-    hunspell_reinit_settings();
+    m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
+    m_hunspell_speller->set_additional_directory(
+        m_settings.hunspell_system_path.c_str());
     break;
   case SpellerId::COUNT:
     break;
   default:;
+  }
+
+  if (auto language = m_settings.get_active_language();
+      language != L"<MULTIPLE>") {
+    active_speller().set_language(language.c_str());
+    m_native_speller->set_mode(0);
+  } else {
+    set_multiple_languages(m_settings.get_active_multi_languages(),
+                           active_speller());
+    m_native_speller->set_mode(1);
   }
 }

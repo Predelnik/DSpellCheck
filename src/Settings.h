@@ -45,10 +45,10 @@ public:
     void process(IniWorker& worker);
     void save ();
     void load ();
-    std::wstring &get_current_language ();
-    const std::wstring &get_current_language () const;
-    std::wstring &get_current_multi_languages();
-    const std::wstring& get_current_multi_languages() const;
+    std::wstring &get_active_language ();
+    const std::wstring &get_active_language () const;
+    std::wstring &get_active_multi_languages();
+    const std::wstring& get_active_multi_languages() const;
     TemporaryAcessor<Self> modify() const;
 public:
     bool auto_check_text = false;

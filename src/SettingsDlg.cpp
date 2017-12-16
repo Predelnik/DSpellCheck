@@ -64,7 +64,7 @@ void SimpleDlg::update_language_controls(
 
   int i = 0;
   for (auto &lang : langs_available) {
-    if (settings.get_current_language() == lang.orig_name)
+    if (settings.get_active_language() == lang.orig_name)
       selected_index = i;
 
     ComboBox_AddString(
@@ -72,7 +72,7 @@ void SimpleDlg::update_language_controls(
         lang.get_aliased_name(settings.use_language_name_aliases));
     ++i;
   }
-  if (settings.get_current_language() == L"<MULTIPLE>")
+  if (settings.get_active_language() == L"<MULTIPLE>")
     selected_index = i;
 
   if (!langs_available.empty())
@@ -123,7 +123,7 @@ void SimpleDlg::apply_settings(Settings &settings,
   int cur_sel = ComboBox_GetCurSel(m_h_combo_language);
 
   if (IsWindowEnabled(m_h_combo_language) != FALSE) {
-    settings.get_current_language() =
+    settings.get_active_language() =
         (cur_sel == lang_count - 1
              ? L"<MULTIPLE>"
              : speller_container.get_available_languages()[cur_sel]

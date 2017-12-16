@@ -121,7 +121,7 @@ void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
   HMENU langs_sub_menu = get_langs_sub_menu(dspellcheck_menu);
   if (langs_sub_menu != nullptr)
     DestroyMenu(langs_sub_menu);
-  auto cur_lang = m_settings.get_current_language();
+  auto cur_lang = m_settings.get_active_language();
   HMENU new_menu = CreatePopupMenu();
   if (!invalidate) {
     auto langs = m_speller_container.get_available_languages();
@@ -505,7 +505,7 @@ void SpellChecker::process_menu_result(WPARAM menu_id)  {
     do_plugin_menu_inclusion(true);
 
     auto mut_settings = m_settings.modify();
-    mut_settings->get_current_language() = lang_string;
+    mut_settings->get_active_language() = lang_string;
     break;
   }
   default:
