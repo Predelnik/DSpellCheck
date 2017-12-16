@@ -371,8 +371,8 @@ void init_classes() {
   speller_container =
       std::make_unique<SpellerContainer>(settings.get(), &npp_data);
 
-  spell_checker = std::make_unique<SpellChecker>(&npp_data, settings.get(),
-                                                 *npp, *speller_container);
+  spell_checker =
+      std::make_unique<SpellChecker>(settings.get(), *npp, *speller_container);
 
   suggestions_button = std::make_unique<SuggestionsButton>(
       static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp,
