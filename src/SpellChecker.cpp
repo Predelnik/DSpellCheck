@@ -17,8 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "AspellInterface.h"
-#include "HunspellInterface.h"
 #include "NativeSpellerInterface.h"
 #include "SpellerInterface.h"
 
@@ -640,16 +638,6 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view, long *offset,
   return to_mapped_wstring(view, m_editor.get_text_range(view, from, to));
 }
 
-void SpellChecker::add_periods(const std::wstring_view &parent_string_view,
-                               std::wstring_view &target) {
-  ptrdiff_t start_offset = target.data() - parent_string_view.data();
-  ptrdiff_t end_offset = start_offset + target.length();
-  while (end_offset < static_cast<ptrdiff_t>(parent_string_view.length()) &&
-         parent_string_view[end_offset] == '.')
-    ++end_offset;
-  target = parent_string_view.substr(start_offset, end_offset - start_offset);
-}
-
 void SpellChecker::clear_all_underlines(EditorViewType view) {
   auto length = m_editor.get_active_document_length(view);
   if (length > 0) {
@@ -679,7 +667,8 @@ void SpellChecker::reset_hot_spot_cache() {
 
 bool SpellChecker::is_spellchecking_needed(EditorViewType view,
                                            std::wstring_view word,
-                                           long word_start) {
+                                           long word_start) const
+{
   if (!m_speller_container.active_speller().is_working() || word.empty()) {
     return false;
   }

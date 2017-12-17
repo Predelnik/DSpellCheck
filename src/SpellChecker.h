@@ -21,8 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // Class that will do most of the job with spellchecker
 
 #include "CommonFunctions.h"
-#include "MainDef.h"
-#include "lsignal.h"
 #include "npp/EditorInterface.h"
 
 struct AspellSpeller;
@@ -92,8 +90,6 @@ private:
   void get_visible_limits(EditorViewType view, long &start, long &finish);
   MappedWstring get_visible_text(EditorViewType view, long *offset,
                                  bool not_intersection_only = false);
-  void add_periods(const std::wstring_view &parent_string_view,
-                   std::wstring_view &target);
   int check_text(EditorViewType view, const MappedWstring &text_to_check,
                  long offset, CheckTextMode mode);
   void check_visible(EditorViewType view, bool not_intersection_only = false);
@@ -107,7 +103,7 @@ private:
   void apply_conversions(std::wstring &word) const;
   void reset_hot_spot_cache();
   bool is_spellchecking_needed(EditorViewType view, std::wstring_view word,
-                               long word_start);
+                               long word_start) const;
   void cut_apostrophes(std::wstring_view &word);
   std::optional<long> next_token_end(std::wstring_view target,
                                      long index) const;
