@@ -180,7 +180,7 @@ void Settings::process(IniWorker &worker) {
   }
   worker.process(L"Tokenization_Style", tokenization_style,
                  TokenizationStyle::by_non_alphabetic);
-  worker.process(L"Split_CamelCase", split_camel_case, true);
+  worker.process(L"Split_CamelCase", split_camel_case, false);
   worker.process(L"Delimiter_Exclusions", delimiter_exclusions,
                  default_delimiter_exclusions());
   worker.process(L"Delimiters", delimiters, default_delimiters(), true);
