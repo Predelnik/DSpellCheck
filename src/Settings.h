@@ -90,6 +90,7 @@ public:
     bool remove_system_dictionaries = false;
     bool use_language_name_aliases = false;
     bool use_proxy = false;
+    int word_minimum_length = 0;
     std::wstring proxy_user_name;
     std::wstring proxy_host_name;
     std::wstring proxy_password;

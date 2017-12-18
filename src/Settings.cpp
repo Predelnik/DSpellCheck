@@ -203,6 +203,7 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Ignore_Have_Capital", ignore_having_a_capital, true);
   worker.process(L"Ignore_All_Capital", ignore_all_capital, true);
   worker.process(L"Ignore_One_Letter", ignore_one_letter, false);
+  worker.process(L"Word_Minimum_Length", word_minimum_length, false);
   worker.process(L"Ignore_With_", ignore_having_underscore, true);
   worker.process(L"United_User_Dictionary(Hunspell)", use_unified_dictionary,
                  false);

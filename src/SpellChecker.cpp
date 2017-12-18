@@ -428,7 +428,7 @@ void SpellChecker::init_suggestions_box(SuggestionsButton &suggestion_button) {
   suggestion_button.display(true, false);
 }
 
-void SpellChecker::process_menu_result(WPARAM menu_id)  {
+void SpellChecker::process_menu_result(WPARAM menu_id) {
   if ((!get_use_allocated_ids() && HIBYTE(menu_id) != DSPELLCHECK_MENU_ID &&
        HIBYTE(menu_id) != LANGUAGE_MENU_ID) ||
       (get_use_allocated_ids() &&
@@ -520,7 +520,7 @@ SpellChecker::fill_suggestions_menu(HMENU menu) {
   auto view = m_editor.active_view();
   m_editor.set_selection(view, pos, pos + m_word_under_cursor_length);
   std::vector<SuggestionsMenuItem> suggestion_menu_items;
-  auto text = m_editor.get_text_range( 
+  auto text = m_editor.get_text_range(
       view, m_word_under_cursor_pos,
       m_word_under_cursor_pos + static_cast<long>(m_word_under_cursor_length));
 
@@ -667,8 +667,7 @@ void SpellChecker::reset_hot_spot_cache() {
 
 bool SpellChecker::is_spellchecking_needed(EditorViewType view,
                                            std::wstring_view word,
-                                           long word_start) const
-{
+                                           long word_start) const {
   if (!m_speller_container.active_speller().is_working() || word.empty()) {
     return false;
   }
@@ -694,6 +693,9 @@ bool SpellChecker::is_spellchecking_needed(EditorViewType view,
   if (m_editor.is_style_hotspot(view, style)) {
     return false;
   }
+
+  if (word.length() < m_settings.word_minimum_length)
+    return false;
 
   if (m_settings.ignore_one_letter && word.length() == 1)
     return false;
