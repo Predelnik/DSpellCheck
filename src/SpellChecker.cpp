@@ -233,8 +233,6 @@ void SpellChecker::find_next_mistake() {
               .value_or(text.str.size() - 1);
       text.str.erase(index, text.str.size() - index);
       m_editor.force_style_update(view, from, to);
-      SCNotification scn;
-      scn.nmhdr.code = SCN_SCROLLED;
       bool result = check_text(view, text, static_cast<long>(iterator_pos),
                                CheckTextMode::find_first) != 0;
       if (result)
@@ -280,10 +278,8 @@ void SpellChecker::find_prev_mistake() {
     if (from < to) {
       auto text =
           to_mapped_wstring(view, m_editor.get_text_range(view, from, to));
-      auto offset = next_token_end(text.str, 0).value_or(0);
+      auto offset = prev_token_begin(text.str, 0).value_or(0);
       m_editor.force_style_update(view, from + offset, to);
-      SCNotification scn;
-      scn.nmhdr.code = SCN_SCROLLED;
       bool result = check_text(view, text, from, CheckTextMode::find_last) != 0;
       if (result)
         break;
@@ -588,7 +584,6 @@ void SpellChecker::on_settings_changed() {
   }
   refresh_underline_style();
   check_file_name();
-  refresh_underline_style();
   recheck_visible_both_views();
   do_plugin_menu_inclusion();
   update_delimiters();
