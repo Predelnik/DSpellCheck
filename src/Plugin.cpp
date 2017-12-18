@@ -351,7 +351,7 @@ HMENU get_langs_sub_menu(HMENU dspellcheck_menu_arg) {
 
   bool res = GetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, TRUE,
                              &mif) == FALSE;
-  if (!res)
+  if (res)
     return nullptr;
 
   return mif.hSubMenu; // TODO: CHECK IS THIS CORRECT FIX
