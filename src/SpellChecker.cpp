@@ -111,12 +111,13 @@ void SpellChecker::recheck_visible_both_views() {
 
 void SpellChecker::lang_change() { recheck_visible(m_editor.active_view()); }
 
+// TODO: move this out of SpellChecker
 void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
   MENUITEMINFO mif;
-  HMENU dspellcheck_menu = get_dspellcheck_menu();
+  HMENU dspellcheck_menu = get_this_plugin_menu();
   if (dspellcheck_menu == nullptr)
     return;
-  HMENU langs_sub_menu = get_langs_sub_menu(dspellcheck_menu);
+  HMENU langs_sub_menu = get_langs_sub_menu();
   if (langs_sub_menu != nullptr)
     DestroyMenu(langs_sub_menu);
   auto cur_lang = m_settings.get_active_language();
@@ -179,7 +180,7 @@ void SpellChecker::do_plugin_menu_inclusion(bool invalidate) {
   mif.hSubMenu = new_menu;
   mif.fState = MFS_ENABLED;
 
-  SetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, 1, &mif);
+  SetMenuItemInfo(dspellcheck_menu, quick_lang_change_item_index, TRUE, &mif);
 }
 
 void SpellChecker::check_file_name() {

@@ -28,9 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 struct SuggestionsMenuItem;
 const wchar_t npp_plugin_name[] = TEXT("DSpellCheck");
 
-const int nb_func = 8;
-#define QUICK_LANG_CHANGE_ITEM 3
+const int nb_func = 10;
 
+extern int quick_lang_change_item_index;
 enum class CustomGuiMessage;
 class LangList;
 class NppInterface;
@@ -65,7 +65,8 @@ void command_menu_clean_up();
 //
 // Function which sets your command
 //
-bool set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func, std::unique_ptr<ShortcutKey> sk = nullptr, bool check0_n_init = false);
+int set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func, int id = 0,
+                     std::unique_ptr<ShortcutKey> sk = nullptr, bool check0_n_init = false);
 
 void set_delimiters (const char *str);
 const char *get_delimiters ();
@@ -77,8 +78,8 @@ LRESULT show_calculated_menu(std::vector<SuggestionsMenuItem>&& menu_list);
 void add_icons ();
 bool get_auto_check_state ();
 void auto_check_state_received (bool state);
-HMENU get_dspellcheck_menu ();
-HMENU get_langs_sub_menu (HMENU dspellcheck_menu_arg = nullptr);
+HMENU get_this_plugin_menu ();
+HMENU get_langs_sub_menu ();
 HANDLE get_h_module ();
 LangList *get_lang_list ();
 RemoveDictionariesDialog *get_remove_dics ();

@@ -215,6 +215,11 @@ void quick_lang_change_context() {
                  nullptr);
 }
 
+int quick_lang_change_item_index = -1;
+static int copy_all_misspellings_index = -1;
+static int reload_user_dictionaries_index = -1;
+static int additional_actions_item_index = -1;
+
 //
 // Initialization of your plug-in commands
 // You should fill your plug-ins commands here
@@ -258,7 +263,7 @@ void command_menu_init() {
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'a' - 'a';
     set_next_command(TEXT("Spell Check Document Automatically"),
-                     switch_auto_check_text, std::move(sh_key), false);
+                     switch_auto_check_text, 0, std::move(sh_key), false);
   }
   {
     auto sh_key = std::make_unique<ShortcutKey>();
@@ -266,7 +271,7 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'n' - 'a';
-    set_next_command(TEXT("Find Next Misspelling"), find_next_mistake,
+    set_next_command(TEXT("Find Next Misspelling"), find_next_mistake, 0,
                      std::move(sh_key), false);
   }
   {
@@ -275,7 +280,7 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'b' - 'a';
-    set_next_command(TEXT("Find Previous Misspelling"), find_prev_mistake,
+    set_next_command(TEXT("Find Previous Misspelling"), find_prev_mistake, 0,
                      std::move(sh_key), false);
   }
 
@@ -285,14 +290,25 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'd' - 'a';
-    set_next_command(TEXT("Change Current Language"), quick_lang_change_context,
-                     std::move(sh_key), false);
+    quick_lang_change_item_index = set_next_command(
+        TEXT("Change Current Language"), quick_lang_change_context,
+        quick_lang_change_item_index, std::move(sh_key), false);
   }
-  set_next_command(TEXT("---"), nullptr, nullptr, false);
 
-  set_next_command(TEXT("Settings..."), start_settings, nullptr, false);
-  set_next_command(TEXT("Online Manual"), start_manual, nullptr, false);
-  set_next_command(TEXT("About"), start_about_dlg, nullptr, false);
+  set_next_command(TEXT("---"), nullptr, 0, nullptr, false);
+
+  set_next_command(TEXT("Settings..."), start_settings, 0, nullptr, false);
+  additional_actions_item_index =
+      set_next_command(TEXT("Additional Actions"), []() {},
+                       additional_actions_item_index, nullptr, false);
+  copy_all_misspellings_index = set_next_command(
+      TEXT("Copy All Misspelling to Clipboard"), copy_misspellings_to_clipboard,
+      copy_all_misspellings_index, nullptr, false);
+  reload_user_dictionaries_index =
+      set_next_command(TEXT("Reload User Dictionaries"), []() {},
+                       quick_lang_change_item_index, nullptr, false);
+  set_next_command(TEXT("Online Manual"), start_manual, 0, nullptr, false);
+  set_next_command(TEXT("About"), start_about_dlg, 0, nullptr, false);
 }
 
 void add_icons() {
@@ -315,7 +331,11 @@ static std::wstring get_menu_item_text(HMENU menu, UINT index) {
   return buf.data();
 }
 
-HMENU get_dspellcheck_menu() {
+static HMENU dspellcheck_menu_cached = nullptr;
+
+HMENU get_this_plugin_menu() {
+  if (dspellcheck_menu_cached)
+    return dspellcheck_menu_cached;
   HMENU plugins_menu = npp->get_menu_handle(NPPPLUGINMENU);
   HMENU dspellcheck_menu = nullptr;
   int count = GetMenuItemCount(plugins_menu);
@@ -332,15 +352,11 @@ HMENU get_dspellcheck_menu() {
       break;
     }
   }
-  return dspellcheck_menu;
+  return dspellcheck_menu_cached = dspellcheck_menu;
 }
 
-HMENU get_langs_sub_menu(HMENU dspellcheck_menu_arg) {
-  HMENU dspellcheck_menu;
-  if (dspellcheck_menu_arg == nullptr)
-    dspellcheck_menu = get_dspellcheck_menu();
-  else
-    dspellcheck_menu = dspellcheck_menu_arg;
+HMENU get_submenu(int item_index) {
+  auto dspellcheck_menu = get_this_plugin_menu();
   if (dspellcheck_menu == nullptr)
     return nullptr;
 
@@ -349,13 +365,14 @@ HMENU get_langs_sub_menu(HMENU dspellcheck_menu_arg) {
   mif.fMask = MIIM_SUBMENU;
   mif.cbSize = sizeof(MENUITEMINFO);
 
-  bool res = GetMenuItemInfo(dspellcheck_menu, QUICK_LANG_CHANGE_ITEM, TRUE,
-                             &mif) == FALSE;
+  bool res = GetMenuItemInfo(dspellcheck_menu, item_index, TRUE, &mif) == FALSE;
   if (res)
     return nullptr;
 
-  return mif.hSubMenu; // TODO: CHECK IS THIS CORRECT FIX
+  return mif.hSubMenu;
 }
+
+HMENU get_langs_sub_menu() { return get_submenu(quick_lang_change_item_index); }
 
 void init_classes() {
   INITCOMMONCONTROLSEX icc;
@@ -416,8 +433,8 @@ static int counter = 0;
 
 std::vector<std::unique_ptr<ShortcutKey>> shortcut_storage;
 
-bool set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
-                      std::unique_ptr<ShortcutKey> sk, bool check0_n_init) {
+int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func, int id,
+                     std::unique_ptr<ShortcutKey> sk, bool check0_n_init) {
   if (counter >= nb_func)
     return false;
 
@@ -429,11 +446,44 @@ bool set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
   lstrcpy(func_item[counter].item_name, cmd_name);
   func_item[counter].p_func = p_func;
   func_item[counter].init2_check = check0_n_init;
+  func_item[counter].cmd_id = id;
   shortcut_storage.push_back(std::move(sk));
   func_item[counter].p_sh_key = shortcut_storage.back().get();
   counter++;
 
-  return true;
+  return counter - 1;
+}
+
+void rearrange_menu() {
+  auto plugin_menu = get_this_plugin_menu();
+  auto submenu = CreatePopupMenu();
+  auto list = {copy_all_misspellings_index, reload_user_dictionaries_index};
+  for (auto index : list) {
+    MENUITEMINFO info;
+    info.cbSize = sizeof(info);
+    info.dwTypeData = nullptr;
+    info.fMask = MIIM_STRING | MIIM_ID | MIIM_STATE | MIIM_DATA; // everything
+    auto get_info = [&]{ GetMenuItemInfo(plugin_menu, index, TRUE, &info); };
+    get_info ();
+    std::vector<wchar_t> buf (info.cch + 1);
+    ++info.cch; // the worst API ever?
+    info.dwTypeData = buf.data ();
+    get_info ();
+    InsertMenuItem(submenu, GetMenuItemCount(submenu), TRUE, &info);
+  }
+  int removed_cnt = 0;
+  for (auto index : list) {
+    RemoveMenu(plugin_menu, index - removed_cnt, MF_BYPOSITION);
+    ++removed_cnt;
+  }
+
+  MENUITEMINFO mif;
+  mif.fMask = MIIM_SUBMENU | MIIM_STATE;
+  mif.cbSize = sizeof(MENUITEMINFO);
+  mif.hSubMenu = submenu;
+  mif.fState = MFS_ENABLED;
+
+  SetMenuItemInfo(plugin_menu, additional_actions_item_index, TRUE, &mif);
 }
 
 extern FuncItem func_item[nb_func]; // NOLINT
@@ -615,6 +665,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     spell_checker->recheck_visible_both_views();
     restyling_caused_recheck_was_done = false;
     suggestions_button->set_transparency();
+    rearrange_menu();
   } break;
 
   case NPPN_BUFFERACTIVATED: {
@@ -627,7 +678,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 
   case SCN_UPDATEUI:
     if (!spell_checker)
-        break;
+      break;
     if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 &&
         (recheck_done || first_restyle) &&
         !restyling_caused_recheck_was_done) // If restyling wasn't caused by
