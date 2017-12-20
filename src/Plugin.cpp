@@ -41,6 +41,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/raii.h"
+#include "HunspellInterface.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -178,6 +179,12 @@ void copy_misspellings_to_clipboard() {
   spell_checker->copy_misspellings_to_clipboard();
 }
 
+void reload_hunspell_dictionaries ()
+{
+    speller_container->get_hunspell_speller().reset_spellers ();
+    settings->settings_changed ();
+}
+
 DWORD get_custom_gui_message_id(CustomGuiMessage message_id) {
   return custom_gui_message_ids[static_cast<int>(message_id)];
 }
@@ -263,7 +270,7 @@ void command_menu_init() {
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'a' - 'a';
     set_next_command(TEXT("Spell Check Document Automatically"),
-                     switch_auto_check_text, 0, std::move(sh_key), false);
+                     switch_auto_check_text, std::move(sh_key), false);
   }
   {
     auto sh_key = std::make_unique<ShortcutKey>();
@@ -271,8 +278,8 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'n' - 'a';
-    set_next_command(TEXT("Find Next Misspelling"), find_next_mistake, 0,
-                     std::move(sh_key), false);
+    set_next_command(TEXT("Find Next Misspelling"), find_next_mistake, std::move(sh_key),
+                     false);
   }
   {
     auto sh_key = std::make_unique<ShortcutKey>();
@@ -280,8 +287,8 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'b' - 'a';
-    set_next_command(TEXT("Find Previous Misspelling"), find_prev_mistake, 0,
-                     std::move(sh_key), false);
+    set_next_command(TEXT("Find Previous Misspelling"), find_prev_mistake, std::move(sh_key),
+                     false);
   }
 
   {
@@ -292,23 +299,23 @@ void command_menu_init() {
     sh_key->key = 0x41 + 'd' - 'a';
     quick_lang_change_item_index = set_next_command(
         TEXT("Change Current Language"), quick_lang_change_context,
-        quick_lang_change_item_index, std::move(sh_key), false);
+        std::move(sh_key), false);
   }
 
-  set_next_command(TEXT("---"), nullptr, 0, nullptr, false);
+  set_next_command(TEXT("---"), nullptr, nullptr, false);
 
-  set_next_command(TEXT("Settings..."), start_settings, 0, nullptr, false);
+  set_next_command(TEXT("Settings..."), start_settings, nullptr, false);
   additional_actions_item_index =
       set_next_command(TEXT("Additional Actions"), []() {},
-                       additional_actions_item_index, nullptr, false);
+                       nullptr, false);
   copy_all_misspellings_index = set_next_command(
       TEXT("Copy All Misspelling to Clipboard"), copy_misspellings_to_clipboard,
-      copy_all_misspellings_index, nullptr, false);
+      nullptr, false);
   reload_user_dictionaries_index =
-      set_next_command(TEXT("Reload User Dictionaries"), []() {},
-                       quick_lang_change_item_index, nullptr, false);
-  set_next_command(TEXT("Online Manual"), start_manual, 0, nullptr, false);
-  set_next_command(TEXT("About"), start_about_dlg, 0, nullptr, false);
+      set_next_command(TEXT("Reload Hunspell Dictionaries"), reload_hunspell_dictionaries,
+                       nullptr, false);
+  set_next_command(TEXT("Online Manual"), start_manual, nullptr, false);
+  set_next_command(TEXT("About"), start_about_dlg, nullptr, false);
 }
 
 void add_icons() {
@@ -433,7 +440,7 @@ static int counter = 0;
 
 std::vector<std::unique_ptr<ShortcutKey>> shortcut_storage;
 
-int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func, int id,
+int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
                      std::unique_ptr<ShortcutKey> sk, bool check0_n_init) {
   if (counter >= nb_func)
     return false;
@@ -446,7 +453,6 @@ int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func, int id,
   lstrcpy(func_item[counter].item_name, cmd_name);
   func_item[counter].p_func = p_func;
   func_item[counter].init2_check = check0_n_init;
-  func_item[counter].cmd_id = id;
   shortcut_storage.push_back(std::move(sk));
   func_item[counter].p_sh_key = shortcut_storage.back().get();
   counter++;
@@ -454,6 +460,7 @@ int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func, int id,
   return counter - 1;
 }
 
+// TODO: make rearranging menu more robust. Possibly use menu item names
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();

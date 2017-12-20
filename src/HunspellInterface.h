@@ -95,6 +95,7 @@ public:
   void update_on_dic_removal(wchar_t *path, bool &need_single_lang_reset,
                           bool &need_multi_lang_reset);
   bool get_lang_only_system(const wchar_t* lang) const;
+  void reset_spellers ();
 
 private:
   template <typename CharType>
@@ -118,4 +119,5 @@ private:
   std::wstring m_user_dic_path;        // For now only default one.
   std::wstring m_system_wrong_dic_path; // Only for reading and then removing
   HWND m_npp_window;
+  std::set<std::wstring, std::less<>> m_common_dictionaries_loaded;
 };
