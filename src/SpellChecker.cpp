@@ -690,7 +690,7 @@ bool SpellChecker::is_spellchecking_needed(EditorViewType view,
     return false;
   }
 
-  if (word.length() < m_settings.word_minimum_length)
+  if (static_cast<int> (word.length()) < m_settings.word_minimum_length)
     return false;
 
   if (m_settings.ignore_one_letter && word.length() == 1)
