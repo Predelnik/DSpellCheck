@@ -933,8 +933,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     RECT rc;
     getClientRect(rc);
     m_controls_tab.reSizeTo(rc);
-    //rc.bottom -= 15;
-
+    rc.bottom -= 35; 
     m_simple_dlg.reSizeTo(rc);
     m_advanced_dlg.reSizeTo(rc);
 
