@@ -56,12 +56,19 @@ def zip(src, dst):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--new-minor', action="store_true", dest="new_minor", help="Deploy new minor version", default=False)
+parser.add_argument('--new-major', action="store_true", dest="new_major", help="Deploy new major version", default=False)
 parser.add_argument('--update-pm', action="store_true", dest="update_pm", help="Update plugin manager (done automatically if new minor version is set)", default=False)
 parser.add_argument('-v', '--verbose', action="store_true", dest="verbose", help="Verbose output", default=False)
 options = parser.parse_args()
 if options.new_minor:
 	ver = get_rc_version ().split ('.')
 	ver[-1]=str (int (ver[-1]) + 1)
+	replace_rc_version (ver)
+	print ('Version increased to {}'.format ('.'.join (ver)))
+if options.new_major:
+	ver = get_rc_version ().split ('.')
+	ver[-2]=str (int (ver[-2]) + 1)
+	ver[-1]='0'
 	replace_rc_version (ver)
 	print ('Version increased to {}'.format ('.'.join (ver)))
 x64_binary_path = ''
