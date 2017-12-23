@@ -201,14 +201,14 @@ std::vector<LanguageInfo> HunspellInterface::get_language_list() const {
 }
 
 DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &info) {
-  auto aff_buf = info.full_path + L".aff";
   {
-    auto it = m_all_hunspells.find(aff_buf);
+    auto it = m_all_hunspells.find(info.full_path);
     if (it != m_all_hunspells.end()) {
       return &it->second;
     }
   }
-  std::wstring dic_buf = info.full_path + L".dic";
+  auto aff_buf = info.full_path + L".aff";
+  auto dic_buf = info.full_path + L".dic";
   auto aff_buf_ansi = to_string(aff_buf.c_str());
   auto dic_buf_ansi = to_string(dic_buf.c_str());
   auto new_hunspell =
