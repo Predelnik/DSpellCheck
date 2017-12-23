@@ -63,7 +63,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 {
     EDITTEXT        IDC_DELIMITERS, 7, 21, 156, 13, ES_AUTOHSCROLL, WS_EX_LEFT
     PUSHBUTTON      "Reset", IDC_DEFAULT_DELIMITERS, 165, 20, 28, 14, 0, WS_EX_LEFT
-    AUTOCHECKBOX    "Starting and finishing apostrophes belong to delimiters", IDC_REMOVE_ENDING_APOSTROPHE, 5, 49, 184, 8, 0, WS_EX_LEFT
+    AUTOCHECKBOX    "Treat starting/ending apostrophe as delimiter", IDC_REMOVE_ENDING_APOSTROPHE, 5, 49, 156, 8, 0, WS_EX_LEFT
     LTEXT           "Typing Recheck Delay (ms):", IDC_STATIC, 5, 64, 90, 8, SS_LEFT, WS_EX_LEFT
     EDITTEXT        IDC_RECHECK_DELAY, 153, 62, 40, 12, ES_AUTOHSCROLL | ES_NUMBER, WS_EX_LEFT
     LTEXT           "Buffer Size for Find Next/Prev. Mistake (Kb):", IDC_STATIC, 5, 80, 156, 8, SS_LEFT, WS_EX_LEFT
