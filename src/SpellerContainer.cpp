@@ -72,7 +72,6 @@ void SpellerContainer::init_spellers(const NppData &npp_data) {
 }
 
 void SpellerContainer::on_settings_changed() {
-  m_hunspell_speller->set_use_one_dic(m_settings.use_unified_dictionary);
   init_speller();
   speller_status_changed();
 }
@@ -108,6 +107,7 @@ void SpellerContainer::init_speller() {
         m_settings.aspell_allow_run_together_words);
     break;
   case SpellerId::hunspell:
+    m_hunspell_speller->set_use_one_dic(m_settings.use_unified_dictionary);
     m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
     m_hunspell_speller->set_additional_directory(
         m_settings.hunspell_system_path.c_str());
@@ -120,11 +120,11 @@ void SpellerContainer::init_speller() {
   if (auto language = m_settings.get_active_language();
       language != L"<MULTIPLE>") {
     active_speller().set_language(language.c_str());
-    m_native_speller->set_mode(0);
+    active_speller().set_mode(0);
   } else {
     set_multiple_languages(m_settings.get_active_multi_languages(),
                            active_speller());
-    m_native_speller->set_mode(1);
+    active_speller().set_mode(1);
   }
 }
 

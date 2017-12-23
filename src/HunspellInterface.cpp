@@ -310,7 +310,7 @@ bool HunspellInterface::speller_check_word(const DicInfo &dic,
     word.str += L".";
   auto word_to_check = dic.to_dictionary_encoding(word.str.c_str());
   if (word_to_check.empty())
-    return true;
+    return false;
   // No additional check for memorized is needed since all words are already in
   // dictionary
 
