@@ -17,18 +17,19 @@ enum class AspellStatus {
 };
 
 class SpellerContainer {
-  using self = SpellerContainer;
+  using Self = SpellerContainer;
 
 public:
   explicit SpellerContainer(const Settings *settings, const NppData *npp_data);
   ~SpellerContainer();
   void init_speller();
+  TemporaryAcessor<Self> modify() const;
   std::vector<LanguageInfo> get_available_languages() const;
   HunspellInterface &get_hunspell_speller() const {
     return *m_hunspell_speller;
   }
 
-    const NativeSpellerInterface& native_speller() const;
+  const NativeSpellerInterface &native_speller() const;
   const SpellerInterface &active_speller() const;
   SpellerInterface &active_speller();
   AspellStatus get_aspell_status() const;

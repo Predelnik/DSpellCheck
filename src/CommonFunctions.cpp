@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Plugin.h"
 #include <cassert>
 #include "utils/utf8.h"
+#include "MappedWString.h"
 
 static std::vector<char> convert(const char* source_enc, const char* target_enc, const void* source_data_ptr,
                                  size_t source_len, size_t max_dest_len) {

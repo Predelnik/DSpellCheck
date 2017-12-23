@@ -118,7 +118,7 @@ static std::vector<bool> check_words_by_speller(ISpellChecker* speller, const st
     return ret;
 }
 
-std::vector<bool> NativeSpellerInterface::check_words(const std::vector<WordForSpeller>& words)
+std::vector<bool> NativeSpellerInterface::check_words(const std::vector<WordForSpeller>& words) const
 {
     if (!m_ok)
         return {};
@@ -147,10 +147,10 @@ std::vector<bool> NativeSpellerInterface::check_words(const std::vector<WordForS
 
 void NativeSpellerInterface::add_to_dictionary(const wchar_t* word)
 {
-    if (!m_ok || !last_used_speller)
+    if (!m_ok || !m_last_used_speller)
         return;
 
-    last_used_speller->Add(word);
+    m_last_used_speller->Add(word);
 }
 
 void NativeSpellerInterface::ignore_all(const wchar_t* word)
@@ -158,7 +158,7 @@ void NativeSpellerInterface::ignore_all(const wchar_t* word)
     if (!m_ok || !m_ptrs->m_speller)
         return;
 
-    last_used_speller->Ignore(word);
+    m_last_used_speller->Ignore(word);
 }
 
 bool NativeSpellerInterface::is_working() const
@@ -223,7 +223,7 @@ static std::vector<std::wstring> get_speller_suggestions(ISpellChecker* speller,
     return ret;
 }
 
-std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t* word)
+std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t* word) const
 {
     if (!m_ok)
         return {};
@@ -231,7 +231,7 @@ std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t*
     switch (m_multi_mode)
     {
     case 0:
-        last_used_speller = m_ptrs->m_speller;
+        m_last_used_speller = m_ptrs->m_speller;
         return get_speller_suggestions(m_ptrs->m_speller, word);
     case 1:
         {
@@ -242,7 +242,7 @@ std::vector<std::wstring> NativeSpellerInterface::get_suggestions(const wchar_t*
                 if (list.size() > longest.size())
                 {
                     longest = list;
-                    last_used_speller = speller;
+                    m_last_used_speller = speller;
                 }
             }
             return longest;

@@ -1,11 +1,11 @@
 #include "Settings.h"
 #include "CommonFunctions.h"
 #include "Scintilla.h"
+#include "SpellerId.h"
 #include "aspell.h"
 #include "utils/IniWorker.h"
 #include "utils/string_utils.h"
 #include <cassert>
-#include "SpellerId.h"
 
 const wchar_t *default_delimiters() {
   return L",.!?\":;{}()[]\\/"
@@ -234,3 +234,4 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Proxy_Is_Anonymous", proxy_is_anonymous, true);
   worker.process(L"Proxy_Type", proxy_type, ProxyType::web_proxy);
 }
+

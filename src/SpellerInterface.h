@@ -41,12 +41,12 @@ public:
       const std::vector<std::wstring> &list) = 0; // Languages are from LangList
   void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
   // Implement either check_word or check_words or get the endless recursion
-  virtual bool check_word(WordForSpeller word);
+  virtual bool check_word(WordForSpeller word) const;
   // Functions which should be implemented in case if words for some awkward
   // reason could be faster checked in bulk
   virtual std::vector<bool>
-  check_words(const std::vector<WordForSpeller> &words);
-  virtual std::vector<std::wstring> get_suggestions(const wchar_t *word) = 0;
+  check_words(const std::vector<WordForSpeller> &words) const;
+  virtual std::vector<std::wstring> get_suggestions(const wchar_t *word) const = 0;
   virtual void add_to_dictionary(const wchar_t *word) = 0;
   virtual void ignore_all(const wchar_t *word) = 0;
   virtual bool is_working() const = 0;
@@ -63,8 +63,8 @@ public:
 
   void set_multiple_languages(const std::vector<std::wstring> &langs) override;
 
-  bool check_word(WordForSpeller word) override;
-  std::vector<std::wstring> get_suggestions(const wchar_t *word) override;
+  bool check_word(WordForSpeller word) const override;
+  std::vector<std::wstring> get_suggestions(const wchar_t *word) const override;
   void add_to_dictionary(const wchar_t *word) override;
   void ignore_all(const wchar_t *word) override;
   bool is_working() const override;

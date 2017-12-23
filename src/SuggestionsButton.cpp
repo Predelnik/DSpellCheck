@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
+#include "ContextMenuHandler.h"
 
 #define MOUSELEAVE 0x0001
 #define MOUSEHOVER 0x0002
@@ -66,11 +67,10 @@ HMENU SuggestionsButton::get_popup_menu() { return m_popup_menu; }
 int SuggestionsButton::get_result() { return m_menu_result; }
 
 SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
-                                     NppInterface &npp,
-                                     SpellChecker &spell_checker,
+                                     NppInterface &npp, ContextMenuHandler &context_menu_handler,
                                      const Settings &settings)
     : m_menu_result(0), m_popup_menu(nullptr), m_npp(npp),
-      m_spell_checker(spell_checker), m_settings (settings) {
+      m_context_menu_handler(context_menu_handler), m_settings (settings) {
   Window::init(h_inst, parent);
   m_state_pressed = false;
   m_state_hovered = false;
@@ -78,7 +78,7 @@ SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
 }
 
 void SuggestionsButton::show_suggestion_menu() {
-  m_spell_checker.fill_suggestions_menu(get_popup_menu());
+  m_context_menu_handler.fill_suggestions_menu(get_popup_menu());
   SendMessage(getHSelf(), WM_SHOWANDRECREATEMENU, 0, 0);
 }
 
@@ -194,7 +194,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
 
   case WM_COMMAND:
     if (HIWORD(w_param) == 0)
-      m_spell_checker.process_menu_result(w_param);
+      m_context_menu_handler.process_menu_result(w_param);
 
     return 0;
 

@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "SuggestionsButton.h"
 
+#include "HunspellInterface.h"
 #include "Settings.h"
 #include "SpellerContainer.h"
 #include "StackWalker.h"
@@ -41,7 +42,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/raii.h"
-#include "HunspellInterface.h"
+#include "ContextMenuHandler.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -69,6 +70,7 @@ DWORD custom_gui_message_ids[static_cast<int>(CustomGuiMessage::max)] = {0};
 bool do_close_tag = false;
 std::unique_ptr<SpellChecker> spell_checker;
 std::unique_ptr<SpellerContainer> speller_container;
+std::unique_ptr<ContextMenuHandler> context_menu_handler;
 std::unique_ptr<SettingsDlg> settings_dlg;
 std::unique_ptr<SuggestionsButton> suggestions_button;
 std::unique_ptr<LangList> lang_list_instance;
@@ -95,7 +97,7 @@ HHOOK h_mouse_hook = nullptr;
 LRESULT CALLBACK mouse_proc(int n_code, WPARAM w_param, LPARAM l_param) {
   switch (w_param) {
   case WM_MOUSEMOVE:
-    spell_checker->init_suggestions_box(*suggestions_button);
+    context_menu_handler->init_suggestions_box(*suggestions_button);
     break;
   default:
     break;
@@ -179,10 +181,9 @@ void copy_misspellings_to_clipboard() {
   spell_checker->copy_misspellings_to_clipboard();
 }
 
-void reload_hunspell_dictionaries ()
-{
-    speller_container->get_hunspell_speller().reset_spellers ();
-    settings->settings_changed ();
+void reload_hunspell_dictionaries() {
+  speller_container->get_hunspell_speller().reset_spellers();
+  settings->settings_changed();
 }
 
 DWORD get_custom_gui_message_id(CustomGuiMessage message_id) {
@@ -278,8 +279,8 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'n' - 'a';
-    set_next_command(TEXT("Find Next Misspelling"), find_next_mistake, std::move(sh_key),
-                     false);
+    set_next_command(TEXT("Find Next Misspelling"), find_next_mistake,
+                     std::move(sh_key), false);
   }
   {
     auto sh_key = std::make_unique<ShortcutKey>();
@@ -287,8 +288,8 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'b' - 'a';
-    set_next_command(TEXT("Find Previous Misspelling"), find_prev_mistake, std::move(sh_key),
-                     false);
+    set_next_command(TEXT("Find Previous Misspelling"), find_prev_mistake,
+                     std::move(sh_key), false);
   }
 
   {
@@ -297,23 +298,22 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'd' - 'a';
-    quick_lang_change_item_index = set_next_command(
-        TEXT("Change Current Language"), quick_lang_change_context,
-        std::move(sh_key), false);
+    quick_lang_change_item_index =
+        set_next_command(TEXT("Change Current Language"),
+                         quick_lang_change_context, std::move(sh_key), false);
   }
 
   set_next_command(TEXT("---"), nullptr, nullptr, false);
 
   set_next_command(TEXT("Settings..."), start_settings, nullptr, false);
   additional_actions_item_index =
-      set_next_command(TEXT("Additional Actions"), []() {},
-                       nullptr, false);
-  copy_all_misspellings_index = set_next_command(
-      TEXT("Copy All Misspelling to Clipboard"), copy_misspellings_to_clipboard,
-      nullptr, false);
+      set_next_command(TEXT("Additional Actions"), []() {}, nullptr, false);
+  copy_all_misspellings_index =
+      set_next_command(TEXT("Copy All Misspelling to Clipboard"),
+                       copy_misspellings_to_clipboard, nullptr, false);
   reload_user_dictionaries_index =
-      set_next_command(TEXT("Reload Hunspell Dictionaries"), reload_hunspell_dictionaries,
-                       nullptr, false);
+      set_next_command(TEXT("Reload Hunspell Dictionaries"),
+                       reload_hunspell_dictionaries, nullptr, false);
   set_next_command(TEXT("Online Manual"), start_manual, nullptr, false);
   set_next_command(TEXT("About"), start_about_dlg, nullptr, false);
 }
@@ -398,9 +398,12 @@ void init_classes() {
   spell_checker =
       std::make_unique<SpellChecker>(settings.get(), *npp, *speller_container);
 
+  context_menu_handler = std::make_unique<ContextMenuHandler>(
+      *settings, *speller_container, *npp, *spell_checker);
+
   suggestions_button = std::make_unique<SuggestionsButton>(
       static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp,
-      *spell_checker, *settings);
+      *context_menu_handler, *settings);
   suggestions_button->do_dialog();
 
   settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module),
@@ -470,12 +473,12 @@ void rearrange_menu() {
     info.cbSize = sizeof(info);
     info.dwTypeData = nullptr;
     info.fMask = MIIM_STRING | MIIM_ID | MIIM_STATE | MIIM_DATA; // everything
-    auto get_info = [&]{ GetMenuItemInfo(plugin_menu, index, TRUE, &info); };
-    get_info ();
-    std::vector<wchar_t> buf (info.cch + 1);
+    auto get_info = [&] { GetMenuItemInfo(plugin_menu, index, TRUE, &info); };
+    get_info();
+    std::vector<wchar_t> buf(info.cch + 1);
     ++info.cch; // the worst API ever?
-    info.dwTypeData = buf.data ();
-    get_info ();
+    info.dwTypeData = buf.data();
+    get_info();
     InsertMenuItem(submenu, GetMenuItemCount(submenu), TRUE, &info);
   }
   int removed_cnt = 0;
@@ -544,7 +547,7 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
   case WM_COMMAND:
     if (HIWORD(w_param) == 0) {
       if (!get_use_allocated_ids())
-        spell_checker->process_menu_result(w_param);
+        context_menu_handler->process_menu_result(w_param);
 
       if (LOWORD(w_param) == IDM_FILE_PRINTNOW ||
           LOWORD(w_param) == IDM_FILE_PRINT) {
@@ -571,7 +574,7 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
     last_hwnd = w_param;
     last_coords = l_param;
     suggestions_button->display(false);
-    spell_checker->precalculate_menu();
+    context_menu_handler->precalculate_menu();
     return TRUE;
   case WM_DISPLAYCHANGE: {
     suggestions_button->display(false);
@@ -664,7 +667,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     register_custom_messages();
     init_classes();
     check_queue.clear();
-    spell_checker->check_file_name();
     create_hooks();
     recheck_timer =
         SetTimer(npp_data.npp_handle, 0, USER_TIMER_MAXIMUM, do_recheck);
@@ -677,7 +679,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 
   case NPPN_BUFFERACTIVATED: {
     if (spell_checker != nullptr) {
-      spell_checker->check_file_name();
       recheck_visible();
       restyling_caused_recheck_was_done = false;
     }
@@ -781,7 +782,7 @@ extern "C" __declspec(dllexport) LRESULT
   case WM_COMMAND: {
     if (HIWORD(w_param) == 0 && get_use_allocated_ids()) {
       init_needed_dialogs(w_param);
-      spell_checker->process_menu_result(w_param);
+      context_menu_handler->process_menu_result(w_param);
     }
   } break;
   }

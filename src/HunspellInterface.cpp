@@ -317,7 +317,7 @@ bool HunspellInterface::speller_check_word(const DicInfo &dic,
   return dic.hunspell->spell(word_to_check);
 }
 
-bool HunspellInterface::check_word(WordForSpeller word) {
+bool HunspellInterface::check_word(WordForSpeller word) const {
   if (m_ignored.find(word.str) != m_ignored.end())
     return true;
 
@@ -463,7 +463,7 @@ void HunspellInterface::ignore_all(const wchar_t *word) {
 }
 
 std::vector<std::wstring>
-HunspellInterface::get_suggestions(const wchar_t *word) {
+HunspellInterface::get_suggestions(const wchar_t *word) const {
   std::vector<std::string> list;
   m_last_selected_speller = m_singular_speller;
 

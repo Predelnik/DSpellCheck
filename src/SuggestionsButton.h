@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class SpellChecker;
 class NppInterface;
 class Settings;
+class ContextMenuHandler;
 
 class SuggestionsButton : public StaticDialog {
 public:
@@ -32,7 +33,7 @@ public:
   HMENU get_popup_menu();
   int get_result();
   SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface &npp,
-                    SpellChecker &spell_checker,
+                    ContextMenuHandler &context_menu_handler,
                     const Settings &settings);
   void show_suggestion_menu();
   void on_settings_changed();
@@ -50,6 +51,6 @@ private:
   HMENU m_popup_menu;
   NppData m_npp_data_instance;
   NppInterface &m_npp;
-  SpellChecker &m_spell_checker;
   const Settings &m_settings;
+  ContextMenuHandler &m_context_menu_handler;
 };

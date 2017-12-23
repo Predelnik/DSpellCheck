@@ -52,13 +52,12 @@ std::vector<LanguageInfo> SpellerContainer::get_available_languages() const {
   return langs;
 }
 
-const NativeSpellerInterface& SpellerContainer::native_speller() const
-{
-    return *m_native_speller;
+const NativeSpellerInterface &SpellerContainer::native_speller() const {
+  return *m_native_speller;
 }
 
 const SpellerInterface &SpellerContainer::active_speller() const {
-  return const_cast<self *>(this)->active_speller();
+  return const_cast<Self *>(this)->active_speller();
 }
 
 void SpellerContainer::cleanup() { m_native_speller->cleanup(); }
@@ -82,7 +81,7 @@ SpellerContainer::SpellerContainer(const Settings *settings,
                                    const NppData *npp_data)
     : m_settings(*settings) {
   init_spellers(*npp_data);
-  m_native_speller->init (); // just to allow checking if it's available or not
+  m_native_speller->init(); // just to allow checking if it's available or not
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
 }
 
@@ -127,4 +126,10 @@ void SpellerContainer::init_speller() {
                            active_speller());
     m_native_speller->set_mode(1);
   }
+}
+
+TemporaryAcessor<SpellerContainer::Self> SpellerContainer::modify() const {
+  auto non_const_this = const_cast<Self *>(this);
+  return {*non_const_this,
+          [non_const_this]() { non_const_this->speller_status_changed(); }};
 }

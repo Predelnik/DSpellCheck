@@ -36,9 +36,9 @@ public:
   void set_multiple_languages(
       const std::vector<std::wstring>& list) override; // Languages are from LangList
   bool
-  check_word(WordForSpeller word) override; // Word in Utf-8 or ANSI (For now only Utf-8)
+  check_word(WordForSpeller word) const override; // Word in Utf-8 or ANSI (For now only Utf-8)
   bool is_working() const override;
-    std::vector<std::wstring> get_suggestions(const wchar_t* word) override;
+    std::vector<std::wstring> get_suggestions(const wchar_t* word) const override;
   void add_to_dictionary(const wchar_t* word) override;
   void ignore_all(const wchar_t* word) override;
   void set_allow_run_together (bool allow);
@@ -50,7 +50,7 @@ private:
     void setup_aspell_config(AspellConfig* spell_config);
 
 private:
-  AspellSpeller *m_last_selected_speller;
+  mutable AspellSpeller *m_last_selected_speller;
   SpellerPtr m_single_speller;
   std::vector<SpellerPtr> m_spellers;
   bool m_allow_run_together;

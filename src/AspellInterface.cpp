@@ -106,7 +106,7 @@ void AspellInterface::set_multiple_languages(
 }
 
 std::vector<std::wstring>
-AspellInterface::get_suggestions(const wchar_t *word) {
+AspellInterface::get_suggestions(const wchar_t *word) const {
   const AspellWordList *word_list = nullptr;
   auto target_word = to_utf8_string(word);
 
@@ -180,7 +180,7 @@ void AspellInterface::set_allow_run_together(bool allow) {
   m_allow_run_together = allow;
 }
 
-bool AspellInterface::check_word(WordForSpeller word) {
+bool AspellInterface::check_word(WordForSpeller word) const {
   if (!m_aspell_loaded) {
     return true;
   }
