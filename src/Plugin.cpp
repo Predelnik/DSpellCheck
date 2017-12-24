@@ -225,6 +225,7 @@ void quick_lang_change_context() {
 
 int quick_lang_change_item_index = -1;
 static int copy_all_misspellings_index = -1;
+static int settings_item_index = -1;
 static int reload_user_dictionaries_index = -1;
 static int additional_actions_item_index = -1;
 
@@ -305,9 +306,8 @@ void command_menu_init() {
 
   set_next_command(TEXT("---"), nullptr, nullptr, false);
 
-  set_next_command(TEXT("Settings..."), start_settings, nullptr, false);
-  additional_actions_item_index =
-      set_next_command(TEXT("Additional Actions"), []() {}, nullptr, false);
+  settings_item_index =
+      set_next_command(TEXT("Settings..."), start_settings, nullptr, false);
   copy_all_misspellings_index =
       set_next_command(TEXT("Copy All Misspelling to Clipboard"),
                        copy_misspellings_to_clipboard, nullptr, false);
@@ -443,7 +443,7 @@ static int counter = 0;
 
 std::vector<std::unique_ptr<ShortcutKey>> shortcut_storage;
 
-int set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func,
+int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
                      std::unique_ptr<ShortcutKey> sk, bool check0_n_init) {
   if (counter >= nb_func) {
     assert(false); // Less actions specified in nb_func constant than added
@@ -489,13 +489,16 @@ void rearrange_menu() {
     ++removed_cnt;
   }
 
-  MENUITEMINFO mif;
-  mif.fMask = MIIM_SUBMENU | MIIM_STATE;
-  mif.cbSize = sizeof(MENUITEMINFO);
-  mif.hSubMenu = submenu;
-  mif.fState = MFS_ENABLED;
-
-  SetMenuItemInfo(plugin_menu, additional_actions_item_index, TRUE, &mif);
+  {
+    MENUITEMINFO mif;
+    mif.fMask = MIIM_SUBMENU | MIIM_STATE | MIIM_STRING;
+    mif.cbSize = sizeof(MENUITEMINFO);
+    mif.dwTypeData = const_cast<wchar_t *>(L"Additional Actions");
+    mif.cch = static_cast<UINT> (wcslen(mif.dwTypeData)) + 1;
+    mif.hSubMenu = submenu;
+    mif.fState = MFS_ENABLED;
+    InsertMenuItem(plugin_menu, settings_item_index, TRUE, &mif);
+  }
 }
 
 extern FuncItem func_item[nb_func]; // NOLINT
