@@ -119,8 +119,7 @@ void Settings::save() {
         L"Saving of Settings Failed", MB_OK | MB_ICONHAND);
     return;
   }
-  WORD bom = 0xFEFF;
-  fwrite(&bom, sizeof(bom), 1, fp);
+  write_unicode_bom (fp);
   fclose(fp);
   IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::save);
   process(worker);

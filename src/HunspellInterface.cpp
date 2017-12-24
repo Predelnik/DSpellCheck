@@ -167,8 +167,13 @@ write_user_dic(const std::unordered_set<std::basic_string<CharType>> &target,
   std::vector<std::basic_string<CharType>> words(target.begin(), target.end());
   std::sort(words.begin(), words.end());
   fprintf(fp, "%zu\n", target.size());
-  for (const auto &word : words)
-    fprintf(fp, sizeof(CharType) == 1 ? "%s\n" : "%ws\n", word.c_str());
+  if constexpr (sizeof(CharType) == 2) {
+    for (const auto &word : words)
+      fprintf(fp, "%s\n", to_utf8_string(word).c_str());
+  } else {
+    for (const auto &word : words)
+      fprintf(fp, "%s\n", word.c_str());
+  }
 
   fclose(fp);
 }
@@ -360,10 +365,10 @@ void HunspellInterface::read_user_dic(
         target.insert(buf);
       }
     } else {
-      wchar_t buf[DEFAULT_BUF_SIZE];
-      while (fgetws(buf, DEFAULT_BUF_SIZE, fp)) {
-        buf[wcslen(buf) - 1] = L'\0';
-        target.insert(buf);
+      char buf[DEFAULT_BUF_SIZE];
+      while (fgets(buf, DEFAULT_BUF_SIZE, fp)) {
+        buf[strlen(buf) - 1] = '\0';
+        target.insert(utf8_to_wstring(buf));
       }
     }
   }
@@ -381,11 +386,10 @@ void HunspellInterface::message_box_word_cannot_be_added() {
              L"Word cannot be added", MB_OK | MB_ICONWARNING);
 }
 
-void HunspellInterface::reset_spellers()
-{
-    // these triggers reload of all hunspells and user dictionaries
-    m_all_hunspells.clear ();
-    m_common_dictionaries_loaded.clear ();
+void HunspellInterface::reset_spellers() {
+  // these triggers reload of all hunspells and user dictionaries
+  m_all_hunspells.clear();
+  m_common_dictionaries_loaded.clear();
 }
 
 void HunspellInterface::add_to_dictionary(const wchar_t *word) {
@@ -497,11 +501,11 @@ void HunspellInterface::set_directory(const wchar_t *dir) {
   if (m_user_dic_path.back() != L'\\')
     m_user_dic_path += L"\\";
   m_user_dic_path += L"UserDic.dic"; // Should be tunable really
-  if (m_common_dictionaries_loaded.count (m_user_dic_path) == 0) {
+  if (m_common_dictionaries_loaded.count(m_user_dic_path) == 0) {
     read_user_dic(
         m_memorized,
         m_user_dic_path.c_str()); // We should load user dictionary first.
-      m_common_dictionaries_loaded.insert (m_user_dic_path);
+    m_common_dictionaries_loaded.insert(m_user_dic_path);
   }
 
   m_dic_dir = dir;

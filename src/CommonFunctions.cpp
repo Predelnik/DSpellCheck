@@ -390,6 +390,12 @@ void replace_all(std::string& str, std::string_view from, std::string_view to) {
     }
 }
 
+void write_unicode_bom (FILE *fp)
+{
+    WORD bom = 0xFEFF;
+    fwrite(&bom, sizeof(bom), 1, fp);
+}
+
 std::wstring read_ini_value(const wchar_t* app_name, const wchar_t* key_name, const wchar_t* default_value,
                             const wchar_t* file_name) {
     constexpr int initial_buffer_size = 64;
