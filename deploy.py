@@ -75,6 +75,9 @@ x64_binary_path = ''
 
 for arch in ['x64', 'x86']:
 	dir = 'build-deploy-msvc2017-{}'.format (arch)
+	if call(['cmake', '..'], stdout= (None if options.verbose else FNULL), cwd=dir) != 0:
+		print ('Error: Cmake error')
+		sys.exit (1)
 	build_args = ['cmake', '--build', dir, '--config', 'RelWithDebInfo']
 	FNULL = open(os.devnull, 'w')
 	print ('Building {} version...'.format (arch))
