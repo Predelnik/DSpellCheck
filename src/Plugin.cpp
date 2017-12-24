@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SpellChecker.h"
 #include "SuggestionsButton.h"
 
+#include "ContextMenuHandler.h"
 #include "HunspellInterface.h"
 #include "Settings.h"
 #include "SpellerContainer.h"
@@ -42,7 +43,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/raii.h"
-#include "ContextMenuHandler.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -443,14 +443,16 @@ static int counter = 0;
 
 std::vector<std::unique_ptr<ShortcutKey>> shortcut_storage;
 
-int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
+int set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func,
                      std::unique_ptr<ShortcutKey> sk, bool check0_n_init) {
-  if (counter >= nb_func)
-    return false;
+  if (counter >= nb_func) {
+    assert(false); // Less actions specified in nb_func constant than added
+    return -1;
+  }
 
   if (p_func == nullptr) {
     counter++;
-    return false;
+    return counter - 1;
   }
 
   lstrcpy(func_item[counter].item_name, cmd_name);
