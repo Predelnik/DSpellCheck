@@ -948,13 +948,6 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_simple_dlg.update_language_controls(m_settings, m_speller_container);
     return 1;
   }
-  case WM_CONTEXTMENU: {
-    HMENU menu = CreatePopupMenu();
-    AppendMenu(menu, MF_STRING, 0,
-               L"Copy All Misspelled Words in Current Document to Clipboard");
-    TrackPopupMenuEx(menu, 0, GET_X_LPARAM(l_param), GET_Y_LPARAM(l_param),
-                     _hSelf, nullptr);
-  } break;
   case WM_NOTIFY: {
     auto nmhdr = reinterpret_cast<NMHDR *>(l_param);
     if (nmhdr->code == TCN_SELCHANGE) {
