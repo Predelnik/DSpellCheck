@@ -632,8 +632,24 @@ void SpellChecker::copy_misspellings_to_clipboard() {
       SpellCheckerHelpers::to_mapped_wstring(m_editor, view, buf.data());
   m_misspellings.clear();
   check_text(view, mapped_str, 0, CheckTextMode::find_all);
-  std::sort(m_misspellings.begin(), m_misspellings.end());
-  auto it = std::unique(m_misspellings.begin(), m_misspellings.end());
+  std::sort(m_misspellings.begin(), m_misspellings.end(),
+            [](const auto &lhs, const auto &rhs) {
+              return std::lexicographical_compare(
+                  lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
+                  [](wchar_t lhs, wchar_t rhs) {
+                    return CharUpper(reinterpret_cast<LPWSTR>(lhs)) <
+                           CharUpper(reinterpret_cast<LPWSTR>(rhs));
+                  });
+            });
+  auto it = std::unique(
+      m_misspellings.begin(), m_misspellings.end(),
+      [](const auto &lhs, const auto &rhs) {
+        return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
+                          [](wchar_t lhs, wchar_t rhs) {
+                            return CharUpper(reinterpret_cast<LPWSTR>(lhs)) ==
+                                   CharUpper(reinterpret_cast<LPWSTR>(rhs));
+                          });
+      });
   m_misspellings.erase(it, m_misspellings.end());
   std::wstring str;
   for (auto &s : m_misspellings)
