@@ -208,11 +208,9 @@ void WINAPI uiUpdate (HWND, UINT, UINT_PTR, DWORD)  {
 }
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
-  /*
-  // DEBUG_CODE:
-  long CurPos = SendMsgToEditor(&nppData, SCI_GETCURRENTPOS);
-  int Style = SendMsgToEditor(&nppData, SCI_GETSTYLEAT, CurPos);
-  */
+  if (notifyCode->nmhdr.code != NPPN_READY && !GetSpellChecker ())
+      return;
+
   switch (notifyCode->nmhdr.code) {
   case NPPN_SHUTDOWN: {
     SendEvent(EID_KILLTHREAD);
