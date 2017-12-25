@@ -390,6 +390,7 @@ void HunspellInterface::reset_spellers() {
   // these triggers reload of all hunspells and user dictionaries
   m_all_hunspells.clear();
   m_common_dictionaries_loaded.clear();
+  m_memorized.clear ();
 }
 
 void HunspellInterface::add_to_dictionary(const wchar_t *word) {
