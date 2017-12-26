@@ -17,6 +17,10 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
+v.1.3.4
+* Fix exception on exit on some systems (#118)
+* Fix recursive scanning for dictionaries (#113)
+
 v1.3.3
 * Fix non-ASCII delimiters saving/restoring (#108)
 * Fix crash in case if settings file cannot be written (#110)
