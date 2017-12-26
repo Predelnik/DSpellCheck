@@ -698,6 +698,7 @@ void HunspellInterface::SetAdditionalDirectory(wchar_t *Dir) {
       AvailableLangInfo NewX;
       NewX.Type = 1;
       NewX.Name = TBuf;
+      NewX.full_path = Buf;
       if (DicList->find(NewX) == DicList->end())
         DicList->insert(NewX);
       else
