@@ -494,7 +494,7 @@ void rearrange_menu() {
     mif.fMask = MIIM_SUBMENU | MIIM_STATE | MIIM_STRING;
     mif.cbSize = sizeof(MENUITEMINFO);
     mif.dwTypeData = const_cast<wchar_t *>(L"Additional Actions");
-    mif.cch = static_cast<UINT> (wcslen(mif.dwTypeData)) + 1;
+    mif.cch = static_cast<UINT>(wcslen(mif.dwTypeData)) + 1;
     mif.hSubMenu = submenu;
     mif.fState = MFS_ENABLED;
     InsertMenuItem(plugin_menu, settings_item_index, TRUE, &mif);
@@ -683,15 +683,15 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   } break;
 
   case NPPN_BUFFERACTIVATED: {
-    if (spell_checker != nullptr) {
-      recheck_visible();
-      restyling_caused_recheck_was_done = false;
-    }
+    if (!spell_checker)
+      return;
+    recheck_visible();
+    restyling_caused_recheck_was_done = false;
   } break;
 
   case SCN_UPDATEUI:
     if (!spell_checker)
-      break;
+      return;
     if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 &&
         (recheck_done || first_restyle) &&
         !restyling_caused_recheck_was_done) // If restyling wasn't caused by
@@ -712,6 +712,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     break;
 
   case SCN_MODIFIED:
+    if (!spell_checker)
+      return;
     if ((notify_code->modificationType &
          (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0) {
       if (recheck_timer != NULL) {
@@ -723,6 +725,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     break;
 
   case NPPN_LANGCHANGED: {
+    if (!spell_checker)
+      return;
     spell_checker->lang_change();
   } break;
 
