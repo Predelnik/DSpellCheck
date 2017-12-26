@@ -208,9 +208,6 @@ void WINAPI uiUpdate (HWND, UINT, UINT_PTR, DWORD)  {
 }
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
-  if (notifyCode->nmhdr.code != NPPN_READY && !GetSpellChecker ())
-      return;
-
   switch (notifyCode->nmhdr.code) {
   case NPPN_SHUTDOWN: {
     SendEvent(EID_KILLTHREAD);
@@ -250,6 +247,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
   } break;
 
   case NPPN_BUFFERACTIVATED: {
+    if (!GetSpellChecker ())
+      return;
+
     SendEvent(EID_CHECK_FILE_NAME);
     // SendEvent (EID_HIDE_SUGGESTIONS_BOX);
     RecheckVisible();
@@ -257,6 +257,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
   } break;
 
   case SCN_UPDATEUI:
+    if (!GetSpellChecker ())
+      return;
+
     if (notifyCode->updated & (SC_UPDATE_CONTENT) && (recheckDone || firstRestyle) &&
         !restylingCausedRecheckWasDone ) // If restyling wasn't caused by user input...
     {
@@ -274,6 +277,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     break;
 
   case SCN_MODIFIED:
+    if (!GetSpellChecker ())
+      return;
     if (notifyCode->modificationType &
         (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) {
       long Start = 0, End = 0;
@@ -294,6 +299,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode) {
     break;
 
   case NPPN_LANGCHANGED: {
+    if (!GetSpellChecker ())
+      return;
     SendEvent(EID_LANG_CHANGE);
   } break;
 
