@@ -9,6 +9,7 @@
 #include "SuggestionsButton.h"
 #include "npp/EditorInterface.h"
 #include "npp/NppInterface.h"
+#include "resource.h"
 
 void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
   MENUITEMINFO mif;
@@ -44,13 +45,13 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
                  get_use_allocated_ids()
                      ? MULTIPLE_LANGS + get_langs_menu_id_start()
                      : MAKEWORD(MULTIPLE_LANGS, LANGUAGE_MENU_ID),
-                 L"Multiple Languages");
+                 rc_str(IDS_MULTIPLE_LANGUAGES));
       AppendMenu(new_menu, MF_SEPARATOR, 0, nullptr);
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
                      ? CUSTOMIZE_MULTIPLE_DICS + get_langs_menu_id_start()
                      : MAKEWORD(CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID),
-                 L"Set Multiple Languages...");
+                 rc_str(IDS_SET_MULTIPLE_LANG));
       if (m_settings.active_speller_lib_id ==
           SpellerId::hunspell) // Only Hunspell supported
       {
@@ -58,19 +59,19 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
                    get_use_allocated_ids()
                        ? DOWNLOAD_DICS + get_langs_menu_id_start()
                        : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
-                   L"Download More Languages...");
+                   rc_str(IDS_DOWNLOAD_LANGS));
         AppendMenu(new_menu, MF_STRING,
                    get_use_allocated_ids()
                        ? REMOVE_DICS + get_langs_menu_id_start()
                        : MAKEWORD(REMOVE_DICS, LANGUAGE_MENU_ID),
-                   L"Remove Unneeded Languages...");
+                   rc_str(IDS_REMOVE_LANG));
       }
     } else if (m_settings.active_speller_lib_id == SpellerId::hunspell)
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
                      ? DOWNLOAD_DICS + get_langs_menu_id_start()
                      : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
-                 L"Download Languages...");
+                 rc_str(IDS_DOWNLOAD_LANG));
   }
 
   mif.fMask = MIIM_SUBMENU | MIIM_STATE;

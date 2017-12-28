@@ -249,7 +249,26 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE
 {
-    IDS_TEST                      "Sample text"
+    IDS_TEST                      L"Sample text"
+    IDS_CANT_CREATE_DIR_PS        L"Can't create directory %s"
+    IDS_STATUS_HTML_PARSING_FAIL  L"Status: HTML cannot be parsed"
+    IDS_STATUS_LOADING            L"Status: Loading..."
+    IDS_STATUS_LIST_SUCCESS       L"Status: List of available files was successfully loaded"
+    IDS_STATUS_PROXY_AUTH_REQUIRED L"Status: Proxy authorization required"
+    IDS_MULTIPLE_LANGUAGES        L"Multiple Languages"
+    IDS_SET_MULTIPLE_LANG         L"Set Multiple Languages..."
+    IDS_ERROR_IN_DIR_CREATE       L"Error in directory creation"
+    IDS_STATUS_FILE_CANNOT_BE_WRITTEN L"Status: Target file cannot be written"
+    IDS_DOWNLOAD_LANGS            L"Download More Languages..."
+    IDS_STATUS_DOWNLOAD_CANCELLED L"Status: Download Cancelled"
+    IDS_DOWNLOAD_LANG             L"Download Languages..."
+    IDS_STATUS_BAD_CONNECTION     L"Status: Connection cannot be established"
+    IDS_STATUS_CANT_LIST_FILES    L"Status: Can't list directory files"
+    IDS_STATUS_HTTP_CLIENT_INIT_FAIL L"Status: HTTP client cannot be initialize"
+    IDS_REMOVE_LANG               L"Remove Unneeded Languages..."
+    IDS_STATUS_URL_OPEN_FAIL      L"Status: URL cannot be opneed"
+    IDS_STATUS_HTTP_CODE_QUERY_FAIL L"Status: Querying status code failed"
+    IDS_STATUS_DIRECTORY_EMPTY    L"Status: Directory doesn't contain any zipped files"
 }
 
 

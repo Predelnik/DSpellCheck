@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <cassert>
 #include "utils/utf8.h"
 #include "MappedWString.h"
+#include "resource.h"
 
 static std::vector<char> convert(const char* source_enc, const char* target_enc, const void* source_data_ptr,
                                  size_t source_len, size_t max_dest_len) {
@@ -342,7 +343,7 @@ std::pair<std::wstring_view, bool> apply_alias(std::wstring_view str) {
     auto it = alias_map.find(str);
     if (it != alias_map.end())
         return {it->second, true};
-    
+
     return {str, false};
 }
 
@@ -353,8 +354,8 @@ static bool try_to_create_dir(const wchar_t* path, bool silent, HWND npp_window)
                 return false;
 
             wchar_t message[DEFAULT_BUF_SIZE];
-            swprintf(message, L"Can't create directory %s", path);
-            MessageBox(npp_window, message, L"Error in directory creation",
+            swprintf(message, rc_str(IDS_CANT_CREATE_DIR_PS), path);
+            MessageBox(npp_window, message, rc_str(IDS_ERROR_IN_DIR_CREATE),
                        MB_OK | MB_ICONERROR);
         }
         return false;
