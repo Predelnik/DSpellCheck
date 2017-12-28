@@ -650,6 +650,13 @@ void WINAPI ui_update(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
   get_download_dics()->ui_update();
 }
 
+const wchar_t *rc_str (UINT string_id)
+{
+    const wchar_t *ret = nullptr;
+    LoadString (static_cast<HINSTANCE> (h_module), string_id, reinterpret_cast<LPWSTR> (&ret), 0);
+    return ret;
+}
+
 // ReSharper disable once CppInconsistentNaming
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   notify(notify_code);

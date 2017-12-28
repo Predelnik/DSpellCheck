@@ -33,8 +33,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/winapi.h"
-#include <uxtheme.h>
+#include <Uxtheme.h>
+#include "plugin.h"
 #include "NativeSpellerInterface.h"
+#include <cassert>
 
 SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings,
                      NppInterface &npp)
@@ -293,7 +295,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     m_h_lib_link = ::GetDlgItem(_hSelf, IDC_LIB_LINK);
     m_suggestion_mode_cmb.init(GetDlgItem(_hSelf, IDC_SUGG_TYPE));
     m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
-    
+
     m_h_lib_group_box = ::GetDlgItem(_hSelf, IDC_LIB_GROUPBOX);
     m_h_download_dics = ::GetDlgItem(_hSelf, IDC_DOWNLOADDICS);
     m_h_remove_dics = ::GetDlgItem(_hSelf, IDC_REMOVE_DICS);
@@ -933,7 +935,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     RECT rc;
     getClientRect(rc);
     m_controls_tab.reSizeTo(rc);
-    rc.bottom -= 35; 
+    rc.bottom -= 35;
     m_simple_dlg.reSizeTo(rc);
     m_advanced_dlg.reSizeTo(rc);
 
