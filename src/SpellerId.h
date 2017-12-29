@@ -9,4 +9,4 @@ enum class SpellerId {
     COUNT,
 };
 
-const wchar_t *gui_string (SpellerId value);
+std::wstring gui_string(SpellerId value);

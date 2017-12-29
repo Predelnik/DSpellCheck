@@ -378,12 +378,8 @@ void HunspellInterface::read_user_dic(
 
 void HunspellInterface::message_box_word_cannot_be_added() {
   MessageBox(m_npp_window,
-             L"Sadly, this word contains symbols out of current dictionary "
-             L"encoding, thus it cannot be added to user dictionary. You "
-             L"can convert this dictionary to UTF-8 (don't forget to change "
-             L"the line `SET {encoding}` in .aff file) or choose the "
-             L"different one with appropriate encoding.",
-             L"Word cannot be added", MB_OK | MB_ICONWARNING);
+             rc_str(IDC_ERROR_BAD_ENCODING).c_str (),
+             rc_str(IDS_WORD_CANT_BE_ADDED).c_str (), MB_OK | MB_ICONWARNING);
 }
 
 void HunspellInterface::reset_spellers() {
@@ -415,11 +411,8 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
         _wopen(dic_path.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
     if (local_dic_file_handle == -1) {
       MessageBox(m_npp_window,
-                 L"User dictionary cannot be written, please check if you "
-                 L"have access for writing into your dictionary directory, "
-                 L"otherwise you can change it or run Notepad++ as "
-                 L"administrator.",
-                 L"User dictionary cannot be saved", MB_OK | MB_ICONWARNING);
+                 rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str (),
+                 rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str (), MB_OK | MB_ICONWARNING);
     } else {
       _close(local_dic_file_handle);
     }
@@ -430,11 +423,8 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
         _wopen(dic_path.c_str(), _O_APPEND | _O_BINARY | _O_WRONLY);
     if (local_dic_file_handle == -1) {
       MessageBox(m_npp_window,
-                 L"User dictionary cannot be written, please check if you "
-                 L"have access for writing into your dictionary directory, "
-                 L"otherwise you can change it or run Notepad++ as "
-                 L"administrator.",
-                 L"User dictionary cannot be saved", MB_OK | MB_ICONWARNING);
+                 rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str (),
+                 rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str (), MB_OK | MB_ICONWARNING);
     } else
       _close(local_dic_file_handle);
   }

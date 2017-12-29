@@ -271,7 +271,7 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'a' - 'a';
-    set_next_command(TEXT("Spell Check Document Automatically"),
+    set_next_command(rc_str (IDS_AUTO_SPELL_CHECK).c_str (),
                      switch_auto_check_text, std::move(sh_key), false);
   }
   {
@@ -280,7 +280,7 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'n' - 'a';
-    set_next_command(TEXT("Find Next Misspelling"), find_next_mistake,
+    set_next_command(rc_str (IDS_FIND_NEXT_ERROR).c_str (), find_next_mistake,
                      std::move(sh_key), false);
   }
   {
@@ -289,7 +289,7 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'b' - 'a';
-    set_next_command(TEXT("Find Previous Misspelling"), find_prev_mistake,
+    set_next_command(rc_str (IDS_FIND_PREV_ERROR).c_str (), find_prev_mistake,
                      std::move(sh_key), false);
   }
 
@@ -300,22 +300,22 @@ void command_menu_init() {
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'd' - 'a';
     quick_lang_change_item_index =
-        set_next_command(TEXT("Change Current Language"),
+        set_next_command(rc_str (IDS_CHANGE_CURRENT_LANG).c_str (),
                          quick_lang_change_context, std::move(sh_key), false);
   }
 
-  set_next_command(TEXT("---"), nullptr, nullptr, false);
+  set_next_command(L"---", nullptr, nullptr, false);
 
   settings_item_index =
-      set_next_command(TEXT("Settings..."), start_settings, nullptr, false);
+      set_next_command(rc_str (IDS_SETTINGS).c_str (), start_settings, nullptr, false);
   copy_all_misspellings_index =
-      set_next_command(TEXT("Copy All Misspelling to Clipboard"),
+      set_next_command(rc_str (IDS_COPY_ALL_MISSPELLED).c_str (),
                        copy_misspellings_to_clipboard, nullptr, false);
   reload_user_dictionaries_index =
-      set_next_command(TEXT("Reload Hunspell Dictionaries"),
+      set_next_command(rc_str (IDS_RELOAD_HUNSPELL).c_str (),
                        reload_hunspell_dictionaries, nullptr, false);
-  set_next_command(TEXT("Online Manual"), start_manual, nullptr, false);
-  set_next_command(TEXT("About"), start_about_dlg, nullptr, false);
+  set_next_command(rc_str (IDS_ONLINE_MANUAL).c_str (), start_manual, nullptr, false);
+  set_next_command(rc_str (IDS_ABOUT).c_str (), start_about_dlg, nullptr, false);
 }
 
 void add_icons() {
@@ -493,7 +493,8 @@ void rearrange_menu() {
     MENUITEMINFO mif;
     mif.fMask = MIIM_SUBMENU | MIIM_STATE | MIIM_STRING;
     mif.cbSize = sizeof(MENUITEMINFO);
-    mif.dwTypeData = const_cast<wchar_t *>(L"Additional Actions");
+    auto action_name = rc_str(IDS_ADDITIONAL_ACTIONS);
+    mif.dwTypeData = const_cast<wchar_t *>(action_name.c_str ());
     mif.cch = static_cast<UINT>(wcslen(mif.dwTypeData)) + 1;
     mif.hSubMenu = submenu;
     mif.fState = MFS_ENABLED;
@@ -650,11 +651,16 @@ void WINAPI ui_update(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
   get_download_dics()->ui_update();
 }
 
-const wchar_t *rc_str (UINT string_id)
+std::wstring_view rc_str_view (UINT string_id)
 {
     const wchar_t *ret = nullptr;
-    LoadString (static_cast<HINSTANCE> (h_module), string_id, reinterpret_cast<LPWSTR> (&ret), 0);
-    return ret;
+    auto len = LoadString (static_cast<HINSTANCE> (h_module), string_id, reinterpret_cast<LPWSTR> (&ret), 0);
+    return {ret, static_cast<size_t> (len)};
+}
+
+std::wstring rc_str (UINT string_id)
+{
+    return std::wstring {rc_str_view (string_id)};
 }
 
 // ReSharper disable once CppInconsistentNaming

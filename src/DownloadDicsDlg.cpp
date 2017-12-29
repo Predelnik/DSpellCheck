@@ -750,7 +750,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring> &list) {
   }
 
   if (count == 0) {
-    return update_status(rc_str(IDS_STATUS_DIRECTORY_EMPTY),
+    return update_status(rc_str(IDS_STATUS_DIRECTORY_EMPTY).c_str (),
                          COLOR_WARN);
   }
 
@@ -764,7 +764,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring> &list) {
   if (m_check_if_saving_is_needed) {
     add_user_server(*current_address());
   }
-  update_status(rc_str(IDS_STATUS_LIST_SUCCESS),
+  update_status(rc_str(IDS_STATUS_LIST_SUCCESS).c_str (),
                 COLOR_OK);
   EnableWindow(m_h_install_selected, TRUE);
 }
@@ -849,12 +849,12 @@ void DownloadDicsDlg::process_file_list_error(FtpOperationErrorType error) {
   case FtpOperationErrorType::none:
     break;
   case FtpOperationErrorType::login_failed:
-    return update_status(rc_str(IDS_STATUS_BAD_CONNECTION),
+    return update_status(rc_str(IDS_STATUS_BAD_CONNECTION).c_str (),
                          COLOR_FAIL);
   case FtpOperationErrorType::download_failed:
-    return update_status(rc_str(IDS_STATUS_CANT_LIST_FILES), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_CANT_LIST_FILES).c_str (), COLOR_FAIL);
   case FtpOperationErrorType::download_cancelled:
-    return update_status(rc_str(IDS_STATUS_DOWNLOAD_CANCELLED), COLOR_WARN);
+    return update_status(rc_str(IDS_STATUS_DOWNLOAD_CANCELLED).c_str (), COLOR_WARN);
   }
 }
 
@@ -864,31 +864,31 @@ void DownloadDicsDlg::process_file_list_error(
   case FtpWebOperationErrorType::none:
     break;
   case FtpWebOperationErrorType::http_client_cannot_be_initialized:
-    return update_status(rc_str(IDS_STATUS_HTTP_CLIENT_INIT_FAIL),
+    return update_status(rc_str(IDS_STATUS_HTTP_CLIENT_INIT_FAIL).c_str (),
                          COLOR_FAIL);
   case FtpWebOperationErrorType::url_cannot_be_opened:
-    return update_status(rc_str(IDS_STATUS_URL_OPEN_FAIL), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_URL_OPEN_FAIL).c_str (), COLOR_FAIL);
   case FtpWebOperationErrorType::querying_status_code_failed:
-    return update_status(rc_str(IDS_STATUS_HTTP_CODE_QUERY_FAIL), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_HTTP_CODE_QUERY_FAIL).c_str (), COLOR_FAIL);
   case FtpWebOperationErrorType::proxy_authorization_required:
-    return update_status(rc_str(IDS_STATUS_PROXY_AUTH_REQUIRED), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_PROXY_AUTH_REQUIRED).c_str (), COLOR_FAIL);
   case FtpWebOperationErrorType::http_error:
     return update_status(
         wstring_printf(L"Status: HTTP error %d", error.status_code).c_str(),
         COLOR_FAIL);
   case FtpWebOperationErrorType::html_cannot_be_parsed:
-    return update_status(rc_str(IDS_STATUS_HTML_PARSING_FAIL), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_HTML_PARSING_FAIL).c_str (), COLOR_FAIL);
   case FtpWebOperationErrorType::file_is_not_writeable:
-    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str (), COLOR_FAIL);
   case FtpWebOperationErrorType::download_cancelled:
-    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN), COLOR_WARN);
+    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str (), COLOR_WARN);
   }
 }
 
 void DownloadDicsDlg::prepare_file_list_update() {
   EnableWindow(m_h_install_selected, FALSE);
   m_status_color = COLOR_NEUTRAL;
-  Static_SetText(m_h_status, rc_str(IDS_STATUS_LOADING));
+  Static_SetText(m_h_status, rc_str(IDS_STATUS_LOADING).c_str ());
   ListBox_ResetContent(m_h_file_list);
   m_current_langs.clear();
   ;

@@ -69,7 +69,8 @@ int set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func,
                      std::unique_ptr<ShortcutKey> sk = nullptr, bool check0_n_init = false);
 
 void set_delimiters (const char *str);
-const wchar_t *rc_str (UINT string_id);
+std::wstring rc_str (UINT string_id);
+std::wstring_view rc_str_view (UINT string_id);
 const char *get_delimiters ();
 void set_encoding_by_id (int enc_id);
 void recheck_visible ();

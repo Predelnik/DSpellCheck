@@ -41,7 +41,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <regex>
 #pragma warning(push)
 #pragma warning(disable: 4091)
-#include <Shlobj.h>
+#include "Shlobj.h"
 #pragma warning(pop)
+
+#include "Plugin.h"  // plugin should be available everywhere to provide acess to rc_str function
+#include "resource.h" // resource should be available everywhere to have acess to string ids
 
 using namespace std::literals;

@@ -113,7 +113,7 @@ void RemoveDictionariesDialog::remove_selected() {
     update_list();
     m_settings.settings_changed();
     wchar_t buf[DEFAULT_BUF_SIZE];
-    swprintf(buf, L"%d dictionary(ies) has(ve) been successfully removed",
+    swprintf(buf, rc_str(IDS_PD_DICTIONARIES_REMOVED).c_str (),
              count);
     MessageBox(_hParent, buf, L"Dictionaries were removed",
                MB_OK | MB_ICONINFORMATION);

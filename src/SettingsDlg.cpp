@@ -19,23 +19,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "SettingsDlg.h"
 
-#include "CommonFunctions.h"
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
 #include "Plugin.h"
 #include "RemoveDictionariesDialog.h"
-#include "SpellChecker.h"
 #include "aspell.h"
 
 #include "LanguageInfo.h"
+#include "NativeSpellerInterface.h"
 #include "Settings.h"
 #include "SpellerContainer.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/winapi.h"
 #include <Uxtheme.h>
-#include "plugin.h"
-#include "NativeSpellerInterface.h"
 #include <cassert>
 
 SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings,
@@ -80,7 +77,8 @@ void SimpleDlg::update_language_controls(
     selected_index = i;
 
   if (!langs_available.empty())
-    ComboBox_AddString(m_h_combo_language, L"Multiple Languages...");
+    ComboBox_AddString(m_h_combo_language,
+                       rc_str(IDS_MULTIPLE_LANGUAGES).c_str());
 
   ComboBox_SetCurSel(m_h_combo_language, selected_index);
   EnableWindow(m_h_combo_language, langs_available.empty() ? FALSE : TRUE);
@@ -197,27 +195,28 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status,
     switch (aspell_status) {
     case AspellStatus::working:
       m_aspell_status_color = COLOR_OK;
-      Static_SetText(m_h_aspell_status, L"Aspell Status: OK");
+      Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_STATUS_OK).c_str());
       break;
     case AspellStatus::no_dictionaries:
       m_aspell_status_color = COLOR_FAIL;
-      Static_SetText(m_h_aspell_status, L"Aspell Status: No Dictionaries");
+      Static_SetText(m_h_aspell_status,
+                     rc_str(IDS_ASPELL_STATUS_NO_DICTS).c_str());
       break;
     case AspellStatus::not_working:
       m_aspell_status_color = COLOR_FAIL;
-      Static_SetText(m_h_aspell_status, L"Aspell Status: Fail");
+      Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_STATUS_FAIL).c_str());
       break;
     }
     Edit_SetText(m_h_lib_path,
                  get_actual_aspell_path(settings.aspell_path).c_str());
 
-    Static_SetText(m_h_lib_group_box, L"Aspell Location");
+    Static_SetText(m_h_lib_group_box, rc_str(IDS_ASPELL_LOCATION).c_str());
     break;
   case SpellerId::hunspell: {
     auto is_lib_path = ComboBox_GetCurSel(m_h_hunspell_path_type) == 0;
     ShowWindow(m_h_lib_path, static_cast<int>(is_lib_path));
     ShowWindow(m_h_system_path, static_cast<int>(!is_lib_path));
-    Static_SetText(m_h_lib_group_box, L"Hunspell Settings");
+    Static_SetText(m_h_lib_group_box, rc_str(IDS_HUNSPELL_SETTINGS).c_str());
     Edit_SetText(m_h_lib_path, settings.hunspell_user_path.c_str());
   } break;
   case SpellerId::native:
@@ -310,8 +309,10 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         ::GetDlgItem(_hSelf, IDC_ASPELL_RUNTOGETHER_CB);
     m_browse_btn = ::GetDlgItem(_hSelf, IDC_BROWSEASPELLPATH);
 
-    ComboBox_AddString(m_h_hunspell_path_type, L"For Current User");
-    ComboBox_AddString(m_h_hunspell_path_type, L"For All Users");
+    ComboBox_AddString(m_h_hunspell_path_type,
+                       rc_str(IDS_FOR_CURRENT_USER).c_str());
+    ComboBox_AddString(m_h_hunspell_path_type,
+                       rc_str(IDS_FOR_ALL_USERS).c_str());
     ComboBox_SetCurSel(m_h_hunspell_path_type, 0);
     ShowWindow(m_h_lib_path, 1);
     ShowWindow(m_h_system_path, 0);
@@ -337,7 +338,8 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
       break;
     case IDC_LIBRARY:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        m_parent.apply_lib_change(static_cast<SpellerId> (m_speller_cmb.current_data()));
+        m_parent.apply_lib_change(
+            static_cast<SpellerId>(m_speller_cmb.current_data()));
       }
       break;
     case IDC_HUNSPELL_PATH_TYPE:
@@ -414,10 +416,11 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         std::vector<wchar_t> filename(MAX_PATH);
         auto lib_path = get_edit_text(m_h_lib_path);
         std::copy(lib_path.begin(), lib_path.end(), filename.begin());
+        auto filter = rc_str(IDS_ASPELL_LIBRARY_DLL_FILTER);
         // TODO: add possibility to use modern browse dialog
         ofn.lpstrFile = filename.data();
         ofn.nMaxFile = DEFAULT_BUF_SIZE;
-        ofn.lpstrFilter = L"Aspell Library (*.dll)\0*.dll\0";
+        ofn.lpstrFilter = filter.c_str();
         ofn.nFilterIndex = 1;
         ofn.lpstrFileTitle = nullptr;
         ofn.nMaxFileTitle = 0;
@@ -435,8 +438,9 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         LPITEMIDLIST pidl_root = nullptr;
         SHGetFolderLocation(_hSelf, 0, nullptr, NULL, &pidl_root);
 
+        auto title = rc_str(IDS_PICK_A_DIRECTORY);
         bi.pidlRoot = pidl_root;
-        bi.lpszTitle = L"Pick a Directory";
+        bi.lpszTitle = title.c_str();
         bi.pszDisplayName = path.data();
         bi.ulFlags = BIF_RETURNONLYFSDIRS;
         bi.lpfn = browse_callback_proc;
@@ -579,10 +583,14 @@ void AdvancedDlg::update_controls(const Settings &settings) {
   setup_delimiter_line_edit_visiblity();
 }
 
-const wchar_t *const indic_names[] = {
-    L"Plain",        L"Squiggle", L"TT",   L"Diagonal",
-    L"Strike",       L"Hidden",   L"Box",  L"Round Box",
-    L"Straight Box", L"Dash",     L"Dots", L"Squiggle Low"};
+const std::vector<std::wstring> &get_indic_names() {
+  static std::vector<std::wstring> indic_names = {
+      rc_str(IDS_PLAIN),    rc_str(IDS_SQUIGGLE),  rc_str(IDS_TT),
+      rc_str(IDS_DIAGONAL), rc_str(IDS_STRIKE),    rc_str(IDS_HIDDEN),
+      rc_str(IDS_BOX),      rc_str(IDS_ROUND_BOX), rc_str(IDS_STRAIGHT_BOX),
+      rc_str(IDS_DASH),     rc_str(IDS_DOTS),      rc_str(IDS_SQUIGGLE_LOW)};
+  return indic_names;
+}
 
 void AdvancedDlg::setup_delimiter_line_edit_visiblity() {
   ShowWindow(m_delimiter_exclusions_le,
@@ -636,7 +644,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     m_brush = nullptr;
 
-    SetWindowText(m_h_ignore_yo, L"Cyrillic: Count io (\u0451) as e");
+    SetWindowText(m_h_ignore_yo, rc_str(IDS_CYRILLIC_YO_AS_YE).c_str());
     create_tool_tip(IDC_DELIMITERS, _hSelf,
                     L"Standard white-space symbols such as New Line ('\\n'), "
                     L"Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are "
@@ -659,8 +667,8 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
         L"dictionary manually, please uncheck");
 
     ComboBox_ResetContent(m_h_underline_style);
-    for (auto name : indic_names)
-      ComboBox_AddString(m_h_underline_style, name);
+    for (auto name : get_indic_names ())
+      ComboBox_AddString(m_h_underline_style, name.c_str());
     return TRUE;
   }
   case WM_CLOSE: {
@@ -884,7 +892,8 @@ void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) {
 
 void SimpleDlg::update_controls(const Settings &settings,
                                 const SpellerContainer &speller_container) {
-  m_speller_cmb.set_current_index(*m_speller_cmb.find_by_data(static_cast<int> (settings.active_speller_lib_id)));
+  m_speller_cmb.set_current_index(*m_speller_cmb.find_by_data(
+      static_cast<int>(settings.active_speller_lib_id)));
   fill_lib_info(speller_container.get_aspell_status(), settings);
   fill_sugestions_num(settings.suggestion_count);
   set_file_types(settings.check_those, settings.file_types.c_str());
@@ -902,14 +911,14 @@ void SimpleDlg::update_controls(const Settings &settings,
                   settings.aspell_allow_run_together_words);
 }
 
-void SimpleDlg::init_speller_id_combobox(const SpellerContainer& speller_container)
-{
-  for (auto id : enum_range<SpellerId> ())
-      {
-          if (id == SpellerId::native && !speller_container.native_speller ().is_working ())
-              continue;
-          m_speller_cmb.add_item(gui_string (id), static_cast<int> (id));
-      }
+void SimpleDlg::init_speller_id_combobox(
+    const SpellerContainer &speller_container) {
+  for (auto id : enum_range<SpellerId>()) {
+    if (id == SpellerId::native &&
+        !speller_container.native_speller().is_working())
+      continue;
+    m_speller_cmb.add_item(gui_string(id).c_str(), static_cast<int>(id));
+  }
 }
 
 INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
@@ -921,7 +930,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     m_simple_dlg.init_settings(_hInst, _hSelf);
     m_simple_dlg.create(IDD_SIMPLE, false, false);
-    m_simple_dlg.init_speller_id_combobox (m_speller_container);
+    m_simple_dlg.init_speller_id_combobox(m_speller_container);
     m_simple_dlg.display();
     m_advanced_dlg.init(_hInst, _hSelf);
     m_advanced_dlg.create(IDD_ADVANCED, false, false);

@@ -45,13 +45,13 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
                  get_use_allocated_ids()
                      ? MULTIPLE_LANGS + get_langs_menu_id_start()
                      : MAKEWORD(MULTIPLE_LANGS, LANGUAGE_MENU_ID),
-                 rc_str(IDS_MULTIPLE_LANGUAGES));
+                 rc_str(IDS_MULTIPLE_LANGUAGES).c_str ());
       AppendMenu(new_menu, MF_SEPARATOR, 0, nullptr);
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
                      ? CUSTOMIZE_MULTIPLE_DICS + get_langs_menu_id_start()
                      : MAKEWORD(CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID),
-                 rc_str(IDS_SET_MULTIPLE_LANG));
+                 rc_str(IDS_SET_MULTIPLE_LANG).c_str ());
       if (m_settings.active_speller_lib_id ==
           SpellerId::hunspell) // Only Hunspell supported
       {
@@ -59,19 +59,19 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
                    get_use_allocated_ids()
                        ? DOWNLOAD_DICS + get_langs_menu_id_start()
                        : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
-                   rc_str(IDS_DOWNLOAD_LANGS));
+                   rc_str(IDS_DOWNLOAD_LANGS).c_str ());
         AppendMenu(new_menu, MF_STRING,
                    get_use_allocated_ids()
                        ? REMOVE_DICS + get_langs_menu_id_start()
                        : MAKEWORD(REMOVE_DICS, LANGUAGE_MENU_ID),
-                   rc_str(IDS_REMOVE_LANG));
+                   rc_str(IDS_REMOVE_LANG).c_str ());
       }
     } else if (m_settings.active_speller_lib_id == SpellerId::hunspell)
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
                      ? DOWNLOAD_DICS + get_langs_menu_id_start()
                      : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
-                 rc_str(IDS_DOWNLOAD_LANG));
+                 rc_str(IDS_DOWNLOAD_LANG).c_str ());
   }
 
   mif.fMask = MIIM_SUBMENU | MIIM_STATE;

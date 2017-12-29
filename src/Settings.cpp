@@ -17,50 +17,50 @@ const wchar_t *default_delimiters() {
 
 const wchar_t *default_delimiter_exclusions() { return L"'"; }
 
-const wchar_t *gui_string(ProxyType value) {
+std::wstring gui_string(ProxyType value) {
   switch (value) {
   case ProxyType::web_proxy:
-    return L"FTP Web Proxy";
+    return rc_str(IDS_FTP_WEB_PROXY);
   case ProxyType::ftp_gateway:
-    return L"FTP Gateway";
+    return rc_str(IDS_FTP_GATEWAY);
   case ProxyType::COUNT:
     break;
   }
   return nullptr;
 }
 
-const wchar_t *gui_string(TokenizationStyle value) {
+std::wstring gui_string(TokenizationStyle value) {
   switch (value) {
   case TokenizationStyle::by_non_alphabetic:
-    return L"Split Words by Non-Alphabetic Characters Except:";
+    return rc_str(IDS_SPLIT_WORDS_BY_NON_ALPHA);
   case TokenizationStyle::by_delimiters:
-    return L"Split Words by the Following Delimiters:";
+    return rc_str(IDS_SPLIT_WORDS_BY_DELIMS);
   case TokenizationStyle::COUNT:
     break;
   }
   return nullptr;
 }
 
-const wchar_t *gui_string(SuggestionMode value) {
+std::wstring gui_string(SuggestionMode value) {
   switch (value) {
   case SuggestionMode::button:
-    return L"Special Suggestion Button";
+    return rc_str(IDS_SPECIAL_SUGGESTION_BUTTON);
   case SuggestionMode::context_menu:
-    return L"Use N++ Context Menu";
+    return rc_str(IDS_USE_NPP_CONTEXT_MENU);
   case SuggestionMode::COUNT:
     break;
   }
   return nullptr;
 }
 
-const wchar_t *gui_string(SpellerId value) {
+std::wstring gui_string(SpellerId value) {
   switch (value) {
   case SpellerId::aspell:
-    return L"Aspell";
+    return rc_str(IDS_ASPELL);
   case SpellerId::hunspell:
-    return L"Hunspell";
+    return rc_str(IDS_HUNSPELL);
   case SpellerId::native:
-    return L"Native (Windows)";
+    return rc_str(IDS_NATIVE_WINDOWS);
   case SpellerId::COUNT:
     break;
   default:;

@@ -17,7 +17,8 @@ enum class SuggestionMode {
   // ReSharper disable once CppInconsistentNaming
   COUNT,
 };
-const wchar_t *gui_string (SuggestionMode value);
+
+std::wstring gui_string(SuggestionMode value);
 
 enum class ProxyType {
     web_proxy,
@@ -26,7 +27,8 @@ enum class ProxyType {
     // ReSharper disable once CppInconsistentNaming
     COUNT,
 };
-const wchar_t *gui_string (ProxyType value);
+
+std::wstring gui_string(ProxyType value);
 
 enum class TokenizationStyle {
     by_non_alphabetic,
@@ -36,7 +38,7 @@ enum class TokenizationStyle {
     COUNT,
 };
 
-const wchar_t* gui_string(TokenizationStyle value);
+std::wstring gui_string(TokenizationStyle value);
 
 class Settings {
     using Self = Settings;

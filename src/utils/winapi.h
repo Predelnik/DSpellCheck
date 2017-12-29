@@ -28,7 +28,7 @@ public:
   template <typename EnumType> void add_items() {
     static_assert(std::is_enum_v<EnumType>);
     for (auto val : enum_range<EnumType>()) {
-      add_item(gui_string(val), static_cast<int>(val));
+      add_item(gui_string(val).c_str (), static_cast<int>(val));
     }
   }
 
