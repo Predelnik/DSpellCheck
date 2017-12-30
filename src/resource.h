@@ -83,7 +83,7 @@
 #define IDC_HUNSPELL_PATH_GROUPBOX              1041
 #define IDC_RESETSPELLERPATH                    40000
 #define IDC_TOKENIZATION_STYLE_CMB              40000
-#define IDS_TEST                                40000
+#define IDS_DICT_PS_EXISTS_BODY                 40000
 #define IDC_ASPELL_RUNTOGETHER_CB               40001
 #define IDC_DELIMITERS                          40001
 #define IDS_CANT_CREATE_DIR_PS                  40001
@@ -158,3 +158,17 @@
 #define IDS_RELOAD_HUNSPELL                     40064
 #define IDS_ONLINE_MANUAL                       40065
 #define IDS_ABOUT                               40066
+#define IDS_DICT_EXISTS_HEADER                  40067
+#define IDS_DICTS_COPIED                        40068
+#define IDS_TEMPORARY_PATH_INVALID_HEADER       40069
+#define IDS_TEMPORARY_PATH_INVALID_BODY         40070
+#define IDS_NO_DICTS_DOWNLOADED                 40071
+#define IDS_CANT_CREATE_DOWNLOAD_DIR            40072
+#define IDS_CANT_WRITE_DICT_FILES               40073
+#define IDS_DICTS_DOWNLOADED                    40074
+#define IDS_ZERO_DICTS_DOWNLOAD                 40075
+#define IDS_EXTRACTING_PS                       40076
+#define IDS_DOWNLOADING_PS                      40077
+#define IDS_PD_OF_PD_BYTES_DOWNLOADED_PD        40078
+#define IDS_PD_BYTES_DOWNLOADED                 40079
+#define IDS_STATUS_HTTP_ERROR_PD                40080

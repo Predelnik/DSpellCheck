@@ -249,7 +249,6 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE
 {
-    IDS_TEST                      "Sample text"
     IDS_CANT_CREATE_DIR_PS        "Can't create directory %s"
     IDS_STATUS_HTML_PARSING_FAIL  "Status: HTML cannot be parsed"
     IDS_STATUS_LOADING            "Status: Loading..."
@@ -316,6 +315,21 @@ STRINGTABLE
     IDS_RELOAD_HUNSPELL           "Reload Hunspell Dictionaries"
     IDS_ONLINE_MANUAL             "Online Manual"
     IDS_ABOUT                     "About"
+    IDS_DICT_PS_EXISTS_BODY       "Looks like %s dictionary is already present. Do you want to replace it?"
+    IDS_DICT_EXISTS_HEADER        "Dictionary already exists"
+    IDS_DICTS_COPIED              "Dictionaries copied:\n"
+    IDS_TEMPORARY_PATH_INVALID_HEADER "Temporary Path is Broken"
+    IDS_TEMPORARY_PATH_INVALID_BODY "Path defined as temporary dir doesn't exist and couldn't be created, probably one of subdirectories have limited access, please make temporary path valid."
+    IDS_NO_DICTS_DOWNLOADED       "Dictionaries Haven't Been Downloaded"
+    IDS_CANT_CREATE_DOWNLOAD_DIR  "Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"
+    IDS_CANT_WRITE_DICT_FILES     "Access denied to dictionaries directory, either try to run Notepad++ as administrator or select some different, accessible dictionary path"
+    IDS_DICTS_DOWNLOADED          "Dictionaries Downloaded"
+    IDS_ZERO_DICTS_DOWNLOAD       "Sadly, no dictionaries were copied, please try again"
+    IDS_EXTRACTING_PS             "Extracting %s..."
+    IDS_DOWNLOADING_PS            "Downloading %s..."
+    IDS_PD_OF_PD_BYTES_DOWNLOADED_PD "%d / %d bytes downloaded (%d %%)"
+    IDS_PD_BYTES_DOWNLOADED       "%d / ???   bytes downloaded"
+    IDS_STATUS_HTTP_ERROR_PD      "Status: HTTP error %d"
 }
 
 

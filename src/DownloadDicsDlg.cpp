@@ -85,11 +85,10 @@ LRESULT DownloadDicsDlg::ask_replacement_message(const wchar_t *dic_name) {
   std::wstring name;
   std::tie(name, std::ignore) = apply_alias(dic_name);
   return MessageBox(_hParent,
-                    wstring_printf(L"Looks like %s dictionary is already "
-                                   L"present. Do you want to replace it?",
+                    wstring_printf(rc_str (IDS_DICT_PS_EXISTS_BODY).c_str (),
                                    name.c_str())
                         .c_str(),
-                    L"Dictionary already exists", MB_YESNO);
+                    rc_str (IDS_DICT_EXISTS_HEADER).c_str (), MB_YESNO);
 }
 
 static std::wstring get_temp_path() {
@@ -102,16 +101,14 @@ bool DownloadDicsDlg::prepare_downloading() {
   m_downloaded_count = 0;
   m_supposed_downloaded_count = 0;
   m_failure = false;
-  m_message = L"Dictionaries copied:\n";
+  m_message = rc_str (IDS_DICTS_COPIED);
   m_to_download.clear();
 
   // If path isn't exist we're gonna try to create it else it's finish
   if (!check_for_directory_existence(get_temp_path(), false, _hParent)) {
     MessageBox(_hParent,
-               L"Path defined as temporary dir doesn't exist and couldn't "
-               L"be created, probably one of subdirectories have limited "
-               L"access, please make temporary path valid.",
-               L"Temporary Path is Broken", MB_OK | MB_ICONEXCLAMATION);
+               rc_str (IDS_TEMPORARY_PATH_INVALID_BODY).c_str (),
+               rc_str (IDS_TEMPORARY_PATH_INVALID_HEADER).c_str (), MB_OK | MB_ICONEXCLAMATION);
     return false;
   }
   m_cancel_pressed = false;
@@ -128,11 +125,8 @@ bool DownloadDicsDlg::prepare_downloading() {
                      // else it's finish
   {
     MessageBox(_hParent,
-               L"Directory for dictionaries doesn't exist and couldn't be "
-               L"created, probably one of subdirectories have limited "
-               L"access, please choose accessible directory for "
-               L"dictionaries",
-               L"Dictionaries Haven't Been Downloaded",
+               rc_str (IDS_CANT_CREATE_DOWNLOAD_DIR).c_str (),
+               rc_str (IDS_NO_DICTS_DOWNLOADED).c_str (),
                MB_OK | MB_ICONEXCLAMATION);
     return false;
   }
@@ -153,19 +147,17 @@ void DownloadDicsDlg::finalize_downloading() {
   get_progress()->display(false);
   if (m_failure) {
     MessageBox(_hParent,
-               L"Access denied to dictionaries directory, either try to run "
-               L"Notepad++ as administrator or select some different, "
-               L"accessible dictionary path",
-               L"Dictionaries Haven't Been Downloaded",
+               rc_str (IDS_CANT_WRITE_DICT_FILES).c_str (),
+               rc_str (IDS_NO_DICTS_DOWNLOADED).c_str (),
                MB_OK | MB_ICONEXCLAMATION);
   } else if (m_downloaded_count > 0) {
-    MessageBox(_hParent, m_message.c_str(), L"Dictionaries Downloaded",
+    MessageBox(_hParent, m_message.c_str(), rc_str (IDS_DICTS_DOWNLOADED).c_str (),
                MB_OK | MB_ICONINFORMATION);
   } else if (m_supposed_downloaded_count > 0) // Otherwise - silent
   {
     MessageBox(
-        _hParent, L"Sadly, no dictionaries were copied, please try again",
-        L"Dictionaries Haven't Been Downloaded", MB_OK | MB_ICONEXCLAMATION);
+        _hParent, rc_str (IDS_ZERO_DICTS_DOWNLOAD).c_str (),
+        rc_str (IDS_NO_DICTS_DOWNLOADED).c_str (), MB_OK | MB_ICONEXCLAMATION);
   }
   for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
     CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);
@@ -219,7 +211,7 @@ void DownloadDicsDlg::on_file_downloaded() {
       if (local_dic_file_handle == -1)
         continue;
 
-      swprintf(prog_message, L"Extracting %s...", dic_file_name.c_str());
+      swprintf(prog_message, IDS_EXTRACTING_PS, dic_file_name.c_str());
       get_progress()->set_top_message(prog_message);
       DWORD bytes_total = 0;
       int bytes_copied;
@@ -353,7 +345,7 @@ void DownloadDicsDlg::start_next_download() {
     return finalize_downloading();
 
   get_progress()->set_top_message(
-      wstring_printf(L"Downloading %s...", m_cur->file_name.c_str()).c_str());
+      wstring_printf(rc_str (IDS_DOWNLOADING_PS).c_str (), m_cur->file_name.c_str()).c_str());
   if (PathFileExists(m_cur->target_path.c_str())) {
     SetFileAttributes(m_cur->target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
     DeleteFile(m_cur->target_path.c_str());
@@ -438,7 +430,7 @@ public:
     m_bytes_received += l_received_bytes;
     m_progress_data->set(
         m_bytes_received * 100 / m_target_size,
-        wstring_printf(L"%d / %d bytes downloaded (%d %%)", m_bytes_received,
+        wstring_printf(rc_str (IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str (), m_bytes_received,
                        m_target_size, m_bytes_received * 100 / m_target_size));
   }
 };
@@ -720,7 +712,7 @@ do_download_file_web_proxy(FtpOperationParams params,
     bytes_read_total += bytes_read;
 
     progress_data.set(
-        0, wstring_printf(L"%d / ???   bytes downloaded", bytes_read_total),
+        0, wstring_printf(rc_str (IDS_PD_BYTES_DOWNLOADED).c_str (), bytes_read_total),
         true);
   }
   _close(file_handle);
@@ -874,7 +866,7 @@ void DownloadDicsDlg::process_file_list_error(
     return update_status(rc_str(IDS_STATUS_PROXY_AUTH_REQUIRED).c_str (), COLOR_FAIL);
   case FtpWebOperationErrorType::http_error:
     return update_status(
-        wstring_printf(L"Status: HTTP error %d", error.status_code).c_str(),
+        wstring_printf(rc_str (IDS_STATUS_HTTP_ERROR_PD).c_str (), error.status_code).c_str(),
         COLOR_FAIL);
   case FtpWebOperationErrorType::html_cannot_be_parsed:
     return update_status(rc_str(IDS_STATUS_HTML_PARSING_FAIL).c_str (), COLOR_FAIL);
