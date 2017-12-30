@@ -330,6 +330,12 @@ STRINGTABLE
     IDS_PD_OF_PD_BYTES_DOWNLOADED_PD "%d / %d bytes downloaded (%d %%)"
     IDS_PD_BYTES_DOWNLOADED       "%d / ???   bytes downloaded"
     IDS_STATUS_HTTP_ERROR_PD      "Status: HTTP error %d"
+    IDS_DELIMITER_TOOLTIP         "Standard white-space symbols such as New Line ('\\n'), Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are always counted as delimiters"
+    IDS_RECHECK_DELAY_TOOLTIP     "Delay between the end of typing and rechecking the the text after it"
+    IDS_FIRST_CAPITAL_IGNORE_TOOLTIP "Remember that words at the beginning of sentences would also be ignored that way."
+    IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP "Words like this sadly cannot be added to Aspell user dictionary"
+    IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP "Words like this are mostly mean plural possessive form in English, if you want to add such forms of words to dictionary manually, please uncheck"
+    IDS_PS_OF_PS_BYTES_EXTRACTED_PS "L""%d / %d bytes extracted (%d %%)"""
 }
 
 

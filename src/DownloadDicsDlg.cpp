@@ -221,7 +221,7 @@ void DownloadDicsDlg::on_file_downloaded() {
                   static_cast<unsigned int>(file_copy_buf.size()))) != 0) {
         _write(local_dic_file_handle, file_copy_buf.data(), bytes_copied);
         bytes_total += bytes_copied;
-        swprintf(prog_message, L"%d / %d bytes extracted (%d %%)", bytes_total,
+        swprintf(prog_message, rc_str (IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str (), bytes_total,
                  f_info.uncompressed_size,
                  bytes_total * 100 / f_info.uncompressed_size);
         get_progress()->get_progress_data()->set(

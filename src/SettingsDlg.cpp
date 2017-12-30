@@ -646,28 +646,20 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     SetWindowText(m_h_ignore_yo, rc_str(IDS_CYRILLIC_YO_AS_YE).c_str());
     create_tool_tip(IDC_DELIMITERS, _hSelf,
-                    L"Standard white-space symbols such as New Line ('\\n'), "
-                    L"Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are "
-                    L"always counted as delimiters");
+                    rc_str (IDS_DELIMITER_TOOLTIP).c_str ());
     create_tool_tip(IDC_RECHECK_DELAY, _hSelf,
-                    L"Delay between the end of typing "
-                    L"and rechecking the the text "
-                    L"after it");
+                    rc_str (IDS_RECHECK_DELAY_TOOLTIP).c_str ());
     create_tool_tip(IDC_IGNORE_CSTART, _hSelf,
-                    L"Remember that words at the "
-                    L"beginning of sentences would "
-                    L"also be ignored that way.");
+                    rc_str (IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str ());
     create_tool_tip(
         IDC_IGNORE_SE_APOSTROPHE, _hSelf,
-        L"Words like this sadly cannot be added to Aspell user dictionary");
+        rc_str (IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str ());
     create_tool_tip(
         IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
-        L"Words like this are mostly mean plural possessive form in "
-        L"English, if you want to add such forms of words to "
-        L"dictionary manually, please uncheck");
+        rc_str (IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str ());
 
     ComboBox_ResetContent(m_h_underline_style);
-    for (auto name : get_indic_names ())
+    for (const auto &name : get_indic_names ())
       ComboBox_AddString(m_h_underline_style, name.c_str());
     return TRUE;
   }
