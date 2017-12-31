@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "hunspell/hunspell.hxx"
 
 #include <fcntl.h>
+#include <fstream>
 #include <io.h>
 
 static std::vector<std::wstring>
@@ -141,14 +142,8 @@ bool are_paths_equal(const wchar_t *path1, const wchar_t *path2) {
 
 template <typename CharType>
 static void
-write_user_dic(const std::unordered_set<std::basic_string<CharType>> &target,
+write_user_dic(const std::unordered_set<std::basic_string<CharType>> &new_words,
                const wchar_t *path) {
-  if (target.empty()) {
-    SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
-    DeleteFile(path);
-    return;
-  }
-
   // Wordset itself
   // being removed here as local variable, all strings are not copied
 
@@ -160,19 +155,27 @@ write_user_dic(const std::unordered_set<std::basic_string<CharType>> &target,
 
   SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
 
-  FILE *fp = _wfopen(path, L"w");
+  std::basic_ifstream<CharType> input(path);
+  std::vector<std::basic_string<CharType>> lines;
+  {
+    std::basic_string<CharType> line;
+    std::getline(input, line);
+    for (; std::getline(input, line);)
+      lines.push_back(line);
+  }
+
+  lines.insert(lines.end(), new_words.begin(), new_words.end());
+  auto fp = _wfopen(path, L"w");
   if (!fp)
     return;
 
-  std::vector<std::basic_string<CharType>> words(target.begin(), target.end());
-  std::sort(words.begin(), words.end());
-  fprintf(fp, "%zu\n", target.size());
+  fprintf(fp, "%zu\n", lines.size());
   if constexpr (sizeof(CharType) == 2) {
-    for (const auto &word : words)
-      fprintf(fp, "%s\n", to_utf8_string(word).c_str());
+    for (const auto &line : lines)
+      fprintf(fp, "%s\n", to_utf8_string(line).c_str());
   } else {
-    for (const auto &word : words)
-      fprintf(fp, "%s\n", word.c_str());
+    for (const auto &line : lines)
+      fprintf(fp, "%s\n", line.c_str());
   }
 
   fclose(fp);
@@ -189,11 +192,11 @@ HunspellInterface::~HunspellInterface() {
   }
 
   if (!m_user_dic_path.empty())
-    write_user_dic(m_memorized, m_user_dic_path.c_str());
+    write_user_dic(m_new_common_words, m_user_dic_path.c_str());
   for (auto &p : m_all_hunspells) {
     auto &hs = p.second;
     if (!hs.local_dic_path.empty())
-      write_user_dic(hs.local_dic, hs.local_dic_path.c_str());
+      write_user_dic(hs.new_words, hs.local_dic_path.c_str());
   }
 }
 
@@ -229,10 +232,11 @@ DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &info) {
   new_dic.converter = {dic_enconding, "UCS-2LE"};
   new_dic.back_converter = {"UCS-2LE", dic_enconding};
   new_dic.local_dic_path += m_dic_dir + L"\\"s + info.name + L".usr";
+  new_hunspell->add_dic(to_string(new_dic.local_dic_path).c_str());
+  new_hunspell->add_dic(to_string(m_user_dic_path).c_str());
 
-  read_user_dic(new_dic.local_dic, new_dic.local_dic_path.c_str());
   {
-    for (const auto &word : m_memorized) {
+    for (const auto &word : m_new_common_words) {
       auto conv_word = new_dic.to_dictionary_encoding(word);
       if (!conv_word.empty())
         new_hunspell->add(conv_word); // Adding all already memorized words to
@@ -240,7 +244,7 @@ DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &info) {
     }
   }
   {
-    for (const auto &word : new_dic.local_dic) {
+    for (const auto &word : new_dic.new_words) {
       new_hunspell->add(word); // Adding all already memorized words from local
                                // dictionary to Hunspell instance, local
                                // dictionaries are in dictionary encoding
@@ -345,48 +349,14 @@ bool HunspellInterface::check_word(WordForSpeller word) const {
   return res;
 }
 
-template <typename CharType>
-void HunspellInterface::read_user_dic(
-    std::unordered_set<std::basic_string<CharType>> &target,
-    const wchar_t *path) {
-  int word_num = 0;
-  FILE *fp = _wfopen(path, L"r");
-  if (!fp) {
-    return;
-  }
-  {
-    if (fscanf(fp, "%d\n", &word_num) != 1) {
-      return;
-    }
-    if constexpr (std::is_same_v<CharType, char>) {
-      char buf[DEFAULT_BUF_SIZE];
-      while (fgets(buf, DEFAULT_BUF_SIZE, fp)) {
-        buf[strlen(buf) - 1] = '\0';
-        target.insert(buf);
-      }
-    } else {
-      char buf[DEFAULT_BUF_SIZE];
-      while (fgets(buf, DEFAULT_BUF_SIZE, fp)) {
-        buf[strlen(buf) - 1] = '\0';
-        target.insert(utf8_to_wstring(buf));
-      }
-    }
-  }
-
-  fclose(fp);
-}
-
 void HunspellInterface::message_box_word_cannot_be_added() {
-  MessageBox(m_npp_window,
-             rc_str(IDC_ERROR_BAD_ENCODING).c_str (),
-             rc_str(IDS_WORD_CANT_BE_ADDED).c_str (), MB_OK | MB_ICONWARNING);
+  MessageBox(m_npp_window, rc_str(IDC_ERROR_BAD_ENCODING).c_str(),
+             rc_str(IDS_WORD_CANT_BE_ADDED).c_str(), MB_OK | MB_ICONWARNING);
 }
 
 void HunspellInterface::reset_spellers() {
   // these triggers reload of all hunspells and user dictionaries
   m_all_hunspells.clear();
-  m_common_dictionaries_loaded.clear();
-  m_memorized.clear ();
 }
 
 void HunspellInterface::add_to_dictionary(const wchar_t *word) {
@@ -410,9 +380,9 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
     int local_dic_file_handle =
         _wopen(dic_path.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
     if (local_dic_file_handle == -1) {
-      MessageBox(m_npp_window,
-                 rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str (),
-                 rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str (), MB_OK | MB_ICONWARNING);
+      MessageBox(m_npp_window, rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str(),
+                 rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str(),
+                 MB_OK | MB_ICONWARNING);
     } else {
       _close(local_dic_file_handle);
     }
@@ -422,15 +392,15 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
     int local_dic_file_handle =
         _wopen(dic_path.c_str(), _O_APPEND | _O_BINARY | _O_WRONLY);
     if (local_dic_file_handle == -1) {
-      MessageBox(m_npp_window,
-                 rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str (),
-                 rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str (), MB_OK | MB_ICONWARNING);
+      MessageBox(m_npp_window, rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str(),
+                 rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str(),
+                 MB_OK | MB_ICONWARNING);
     } else
       _close(local_dic_file_handle);
   }
 
   if (m_use_one_dic) {
-    m_memorized.insert(word);
+    m_new_common_words.insert(word);
     for (auto &p : m_all_hunspells) {
       auto conv_word = p.second.to_dictionary_encoding(word);
       if (!conv_word.empty())
@@ -442,7 +412,7 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
     }
   } else {
     auto conv_word = m_last_selected_speller->to_dictionary_encoding(word);
-    m_last_selected_speller->local_dic.insert(conv_word);
+    m_last_selected_speller->new_words.insert(conv_word);
     if (!conv_word.empty())
       m_last_selected_speller->hunspell->add(conv_word);
     else
@@ -492,13 +462,6 @@ void HunspellInterface::set_directory(const wchar_t *dir) {
   if (m_user_dic_path.back() != L'\\')
     m_user_dic_path += L"\\";
   m_user_dic_path += L"UserDic.dic"; // Should be tunable really
-  if (m_common_dictionaries_loaded.count(m_user_dic_path) == 0) {
-    read_user_dic(
-        m_memorized,
-        m_user_dic_path.c_str()); // We should load user dictionary first.
-    m_common_dictionaries_loaded.insert(m_user_dic_path);
-  }
-
   m_dic_dir = dir;
 
   m_dic_list.clear();
@@ -550,9 +513,6 @@ void HunspellInterface::set_additional_directory(const wchar_t *dir) {
   if (m_system_wrong_dic_path.back() != L'\\')
     m_system_wrong_dic_path += L"\\";
   m_system_wrong_dic_path += L"UserDic.dic"; // Should be tunable really
-  read_user_dic(
-      m_memorized,
-      m_system_wrong_dic_path.c_str()); // We should load user dictionary first.
 }
 
 bool HunspellInterface::get_lang_only_system(const wchar_t *lang) const {

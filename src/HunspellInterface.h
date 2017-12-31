@@ -55,7 +55,7 @@ struct DicInfo {
   IconvWrapperT converter;
   IconvWrapperT back_converter;
   std::wstring local_dic_path;
-  std::unordered_set<std::string> local_dic; // Stored in Dictionary encoding
+  std::unordered_set<std::string> new_words; // Stored in Dictionary encoding
   std::string to_dictionary_encoding (std::wstring_view input) const;
   std::wstring from_dictionary_encoding (std::string_view input) const;
 private:
@@ -98,8 +98,6 @@ public:
   void reset_spellers ();
 
 private:
-  template <typename CharType>
-  static void read_user_dic(std::unordered_set<std::basic_string<CharType>>& target, const wchar_t* path);
   DicInfo* create_hunspell(const AvailableLangInfo& info);
   static bool speller_check_word(const DicInfo& dic, WordForSpeller word);
   void message_box_word_cannot_be_added();
@@ -114,10 +112,9 @@ private:
   DicInfo *m_singular_speller;
   mutable DicInfo *m_last_selected_speller;
   std::vector<DicInfo *> m_spellers;
-  std::unordered_set<std::wstring> m_memorized;
+  std::unordered_set<std::wstring> m_new_common_words;
   std::unordered_set<std::wstring> m_ignored;
   std::wstring m_user_dic_path;        // For now only default one.
   std::wstring m_system_wrong_dic_path; // Only for reading and then removing
   HWND m_npp_window;
-  std::set<std::wstring, std::less<>> m_common_dictionaries_loaded;
 };
