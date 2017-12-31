@@ -416,11 +416,15 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         std::vector<wchar_t> filename(MAX_PATH);
         auto lib_path = get_edit_text(m_h_lib_path);
         std::copy(lib_path.begin(), lib_path.end(), filename.begin());
-        auto filter = rc_str(IDS_ASPELL_LIBRARY_DLL_FILTER);
+        auto aspell_library_desc = rc_str(IDS_ASPELL_LIBRARY);
+        std::vector<wchar_t> buf;
+        buf.insert (buf.end (), aspell_library_desc.begin (), aspell_library_desc.end());
+        wchar_t rest[] = L" (*.dll)\0*.dll\0\0";
+        buf.insert (buf.end (), std::begin (rest), std::end (rest));
         // TODO: add possibility to use modern browse dialog
         ofn.lpstrFile = filename.data();
         ofn.nMaxFile = DEFAULT_BUF_SIZE;
-        ofn.lpstrFilter = filter.c_str();
+        ofn.lpstrFilter = buf.data();
         ofn.nFilterIndex = 1;
         ofn.lpstrFileTitle = nullptr;
         ofn.nMaxFileTitle = 0;
