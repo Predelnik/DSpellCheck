@@ -58,9 +58,6 @@ struct DicInfo {
   std::unordered_set<std::string> new_words; // Stored in Dictionary encoding
   std::string to_dictionary_encoding (std::wstring_view input) const;
   std::wstring from_dictionary_encoding (std::string_view input) const;
-private:
-  template <typename CharType, typename InputCharType>
-  std::basic_string<CharType> convert_impl (const IconvWrapperT& conv, std::basic_string_view<InputCharType> input) const;
 };
 
 
@@ -98,6 +95,7 @@ public:
   void reset_spellers ();
 
 private:
+  std::wstring create_encoded_dict_version(const wchar_t* dict_path, const char* target_encoding);
   DicInfo* create_hunspell(const AvailableLangInfo& info);
   static bool speller_check_word(const DicInfo& dic, WordForSpeller word);
   void message_box_word_cannot_be_added();

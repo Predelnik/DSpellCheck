@@ -71,6 +71,30 @@ list_files(const wchar_t *path, const wchar_t *mask, const wchar_t *filter) {
   return out;
 }
 
+template <typename OutputCharType, typename InputCharType>
+static std::basic_string<OutputCharType>
+convert_impl(const IconvWrapperT &conv,
+             std::basic_string_view<InputCharType> input) {
+  static std::vector<char> buf;
+  if constexpr (std::is_same_v<OutputCharType, char>)
+    buf.resize((input.length() + 1) * 6);
+  else
+    buf.resize((input.length() + 1) * sizeof(OutputCharType));
+  if (conv.get() == iconv_t(-1)) {
+    return {};
+  }
+  size_t in_size = (input.length() + 1) * sizeof(InputCharType);
+  size_t out_size = buf.size();
+  char *out_buf = buf.data();
+  auto in_buf = input.data();
+  size_t res = iconv(conv.get(), reinterpret_cast<const char **>(&in_buf),
+                     &in_size, &out_buf, &out_size);
+  if (res == static_cast<size_t>(-1)) {
+    return {};
+  }
+  return {reinterpret_cast<OutputCharType *>(buf.data())};
+}
+
 std::string DicInfo::to_dictionary_encoding(std::wstring_view input) const {
   return convert_impl<char>(converter, input);
 }
@@ -155,29 +179,29 @@ write_user_dic(const std::unordered_set<std::basic_string<CharType>> &new_words,
 
   SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
 
-  std::basic_ifstream<CharType> input(path);
-  std::vector<std::basic_string<CharType>> lines;
+  std::ifstream input(path);
+  std::vector<std::string> lines;
   {
-    std::basic_string<CharType> line;
+    std::string line;
     std::getline(input, line);
     for (; std::getline(input, line);)
       lines.push_back(line);
   }
 
-  lines.insert(lines.end(), new_words.begin(), new_words.end());
+  if constexpr (sizeof(CharType) == 2) {
+    std::transform(new_words.begin(), new_words.end(),
+                   std::back_inserter(lines),
+                   [](const std::wstring &s) { return to_utf8_string(s); });
+  } else {
+    lines.insert(lines.end(), new_words.begin(), new_words.end());
+  }
   auto fp = _wfopen(path, L"w");
   if (!fp)
     return;
 
   fprintf(fp, "%zu\n", lines.size());
-  if constexpr (sizeof(CharType) == 2) {
-    for (const auto &line : lines)
-      fprintf(fp, "%s\n", to_utf8_string(line).c_str());
-  } else {
-    for (const auto &line : lines)
-      fprintf(fp, "%s\n", line.c_str());
-  }
-
+  for (const auto &line : lines)
+    fprintf(fp, "%s\n", line.c_str());
   fclose(fp);
 }
 
@@ -223,17 +247,24 @@ DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &info) {
       std::make_unique<Hunspell>(aff_buf_ansi.c_str(), dic_buf_ansi.c_str());
   auto new_name = aff_buf.substr(0, aff_buf.length() - 4);
   DicInfo new_dic;
-  const char *dic_enconding = new_hunspell->get_dic_encoding();
-  if (stricmp(dic_enconding, "Microsoft-cp1251") == 0)
-    dic_enconding =
-        "cp1251"; // Queer fix for encoding which isn't being guessed
+  const char *dic_encoding = new_hunspell->get_dic_encoding();
+  if (stricmp(dic_encoding, "Microsoft-cp1251") == 0)
+    dic_encoding = "cp1251"; // Queer fix for encoding which isn't being guessed
   // correctly by libiconv TODO: Find other possible
   // such failures
-  new_dic.converter = {dic_enconding, "UCS-2LE"};
-  new_dic.back_converter = {"UCS-2LE", dic_enconding};
+  new_dic.converter = {dic_encoding, "UCS-2LE"};
+  new_dic.back_converter = {"UCS-2LE", dic_encoding};
   new_dic.local_dic_path += m_dic_dir + L"\\"s + info.name + L".usr";
   new_hunspell->add_dic(to_string(new_dic.local_dic_path).c_str());
-  new_hunspell->add_dic(to_string(m_user_dic_path).c_str());
+  if ("UTF-8"sv == dic_encoding) {
+    auto encoded_path =
+        create_encoded_dict_version(m_user_dic_path.c_str(), dic_encoding);
+    if (!encoded_path.empty()) {
+      new_hunspell->add_dic(to_string(encoded_path).c_str());
+      DeleteFile(encoded_path.c_str());
+    }
+  } else
+      new_hunspell->add_dic(to_string(m_user_dic_path).c_str());
 
   {
     for (const auto &word : m_new_common_words) {
@@ -289,30 +320,6 @@ void HunspellInterface::set_multiple_languages(
   }
 }
 
-template <typename OutputCharType, typename InputCharType>
-std::basic_string<OutputCharType>
-DicInfo::convert_impl(const IconvWrapperT &conv,
-                      std::basic_string_view<InputCharType> input) const {
-  static std::vector<char> buf;
-  if constexpr (std::is_same_v<OutputCharType, char>)
-    buf.resize((input.length() + 1) * 6);
-  else
-    buf.resize((input.length() + 1) * sizeof(OutputCharType));
-  if (conv.get() == iconv_t(-1)) {
-    return {};
-  }
-  size_t in_size = (input.length() + 1) * sizeof(InputCharType);
-  size_t out_size = buf.size();
-  char *out_buf = buf.data();
-  auto in_buf = input.data();
-  size_t res = iconv(conv.get(), reinterpret_cast<const char **>(&in_buf),
-                     &in_size, &out_buf, &out_size);
-  if (res == static_cast<size_t>(-1)) {
-    return {};
-  }
-  return {reinterpret_cast<OutputCharType *>(buf.data())};
-}
-
 bool HunspellInterface::speller_check_word(const DicInfo &dic,
                                            WordForSpeller word) {
   if (word.data.ends_with_dot)
@@ -357,6 +364,22 @@ void HunspellInterface::message_box_word_cannot_be_added() {
 void HunspellInterface::reset_spellers() {
   // these triggers reload of all hunspells and user dictionaries
   m_all_hunspells.clear();
+}
+
+std::wstring
+HunspellInterface::create_encoded_dict_version(const wchar_t *dict_path,
+                                               const char *target_encoding) {
+  std::ifstream is(dict_path);
+  std::string line;
+  auto tmp_filename = _wtmpnam(nullptr);
+  std::ofstream os(tmp_filename);
+  while (std::getline(is, line)) {
+    auto result = convert_impl<char>(IconvWrapperT{target_encoding, "UTF-8"},
+                                     std::string_view(line));
+    if (!result.empty())
+      os << result << '\n';
+  }
+  return tmp_filename;
 }
 
 void HunspellInterface::add_to_dictionary(const wchar_t *word) {
