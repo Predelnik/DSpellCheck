@@ -348,7 +348,7 @@ HMENU get_this_plugin_menu() {
   int count = GetMenuItemCount(plugins_menu);
   for (int i = 0; i < count; i++) {
     auto str = get_menu_item_text(plugins_menu, i);
-    if (str == npp_plugin_name) {
+    if (str == getName ()) {
       MENUITEMINFO mif;
       mif.fMask = MIIM_SUBMENU;
       mif.cbSize = sizeof(MENUITEMINFO);
@@ -620,8 +620,11 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) {
                          reinterpret_cast<LPARAM>(sub_wnd_proc_notepad)));
 }
 
+
+
 extern "C" __declspec(dllexport) const wchar_t *getName() {
-  return npp_plugin_name;
+  static std::wstring plugin_name = rc_str (IDS_PLUGIN_NAME);
+  return plugin_name.c_str ();
 }
 
 extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {

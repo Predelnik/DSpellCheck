@@ -268,14 +268,14 @@ ContextMenuHandler::fill_suggestions_menu(HMENU menu) {
   }
 
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
-  auto menu_string = wstring_printf(L"Ignore \"%s\" for Current Session",
+  auto menu_string = wstring_printf(rc_str (IDS_IGNORE_PS_FOR_CURRENT_SESSION).c_str (),
                                     m_selected_word.str.c_str());
   if (m_settings.suggestions_mode == SuggestionMode::button)
     insert_sugg_menu_item(menu, menu_string.c_str(), MID_IGNOREALL, -1);
   else
     suggestion_menu_items.emplace_back(menu_string.c_str(), MID_IGNOREALL);
   menu_string =
-      wstring_printf(L"Add \"%s\" to Dictionary", m_selected_word.str.c_str());
+      wstring_printf(rc_str (IDS_ADD_PS_TO_DICTIONARY).c_str (), m_selected_word.str.c_str());
   ;
   if (m_settings.suggestions_mode == SuggestionMode::button)
     insert_sugg_menu_item(menu, menu_string.c_str(), MID_ADDTODICTIONARY, -1);

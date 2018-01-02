@@ -931,10 +931,10 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_advanced_dlg.init(_hInst, _hSelf);
     m_advanced_dlg.create(IDD_ADVANCED, false, false);
 
-    m_window_vector.emplace_back(&m_simple_dlg, TEXT("Simple"),
-                                 TEXT("Simple Options"));
-    m_window_vector.emplace_back(&m_advanced_dlg, TEXT("Advanced"),
-                                 TEXT("Advanced Options"));
+    m_window_vector.emplace_back(&m_simple_dlg, rc_str (IDS_SIMPLE_TAB_TEXT).c_str (),
+                                 L"Simple Options");
+    m_window_vector.emplace_back(&m_advanced_dlg, rc_str (IDS_ADVANCED_TAB_TEXT).c_str (),
+                                 L"Advanced Options");
     m_controls_tab.createTabs(m_window_vector);
     m_controls_tab.display();
     RECT rc;

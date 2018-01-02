@@ -58,7 +58,7 @@ std::wstring get_product_and_version() {
                     static_cast<UINT *>(&ui_ver_len)) == 0) {
     return {};
   }
-  return wstring_printf (L"Version: %u.%u.%u.%u",
+  return wstring_printf (rc_str (IDS_VERSION_PU_PU_PU_PU).c_str (),
            HIWORD(p_fixed_info->dwProductVersionMS),
            LOWORD(p_fixed_info->dwProductVersionMS),
            HIWORD(p_fixed_info->dwProductVersionLS),

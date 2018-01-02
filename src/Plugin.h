@@ -26,7 +26,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "SettingsDlg.h"
 
 struct SuggestionsMenuItem;
-const wchar_t npp_plugin_name[] = TEXT("DSpellCheck");
 
 const int nb_func = 10;
 
