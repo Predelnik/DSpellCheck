@@ -128,10 +128,8 @@ AspellInterface::get_suggestions(const wchar_t *word) const {
       }
     }
   }
-  if (word_list != nullptr)
-  {
+  if (!word_list)
     return {};
-  }
 
   AspellStringEnumeration *els = aspell_word_list_elements(word_list);
   const char *suggestion;
