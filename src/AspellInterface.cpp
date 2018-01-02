@@ -189,8 +189,8 @@ bool AspellInterface::check_word(WordForSpeller word) const {
   auto dst_word = to_utf8_string(word.str.c_str());
 
   auto len = static_cast<int>(dst_word.length());
-  if (m_multi_mode != 0) {
-    if (m_single_speller != nullptr) {
+  if (m_multi_mode == 0) {
+    if (m_single_speller == nullptr) {
       return true;
     }
 
