@@ -180,11 +180,11 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
     p.y = 0;
     ClientToScreen(_hSelf, &p);
     m_state_menu = true;
-    SetForegroundWindow(m_npp_data_instance.npp_handle);
+    SetForegroundWindow(m_npp.app_handle ());
     m_menu_result =
         TrackPopupMenuEx(m_popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
                          p.y, _hSelf, &tpm_params);
-    PostMessage(m_npp_data_instance.npp_handle, WM_NULL, 0, 0);
+    PostMessage(m_npp.app_handle (), WM_NULL, 0, 0);
     SetFocus(m_npp.get_scintilla_hwnd(m_npp.active_view()));
     m_state_menu = false;
     DestroyMenu(m_popup_menu);
