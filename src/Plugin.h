@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 struct SuggestionsMenuItem;
 
-const int nb_func = 10;
+const int nb_func = 11;
 
 extern int quick_lang_change_item_index;
 enum class CustomGuiMessage;

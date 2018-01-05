@@ -104,6 +104,7 @@ public:
     bool split_camel_case;
     enum_array<SpellerId, std::wstring> speller_language;
     enum_array<SpellerId, std::wstring> speller_multi_languages;
+    bool write_debug_log;
 
     mutable lsignal::signal<void()> settings_changed;
 

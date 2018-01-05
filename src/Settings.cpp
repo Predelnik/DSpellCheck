@@ -232,5 +232,6 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Proxy_Port", proxy_port, 808);
   worker.process(L"Proxy_Is_Anonymous", proxy_is_anonymous, true);
   worker.process(L"Proxy_Type", proxy_type, ProxyType::web_proxy);
+  worker.process(L"Write_Debug_Log", write_debug_log, false);
 }
 

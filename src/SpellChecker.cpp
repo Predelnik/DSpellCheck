@@ -226,12 +226,6 @@ void SpellChecker::refresh_underline_style() {
 }
 
 void SpellChecker::on_settings_changed() {
-  {
-    auto npp = dynamic_cast<NppInterface *>(&m_editor);
-    if (npp != nullptr)
-      npp->set_menu_item_check(get_func_item()[0].cmd_id,
-                               m_settings.auto_check_text);
-  }
   refresh_underline_style();
   recheck_visible_both_views();
   update_delimiters();

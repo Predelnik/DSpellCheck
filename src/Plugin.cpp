@@ -79,7 +79,6 @@ std::unique_ptr<ProgressDlg> progress_dlg;
 std::unique_ptr<DownloadDicsDlg> download_dics_dlg;
 std::unique_ptr<AboutDlg> about_dlg;
 std::unique_ptr<Settings> settings;
-HMENU langs_menu;
 int context_menu_id_start;
 int langs_menu_id_start = 0;
 bool use_allocated_ids;
@@ -185,6 +184,11 @@ void switch_auto_check_text() {
   settings->save();
 }
 
+void switch_debug_logging() {
+  auto mut = settings->modify();
+  mut->write_debug_log = !mut->write_debug_log;
+}
+
 void start_settings() { settings_dlg->do_dialog(); }
 
 void start_manual() {
@@ -212,11 +216,13 @@ void quick_lang_change_context() {
                  nullptr);
 }
 
+static int auto_spellcheck_index = -1;
 int quick_lang_change_item_index = -1;
 static int copy_all_misspellings_index = -1;
 static int settings_item_index = -1;
 static int reload_user_dictionaries_index = -1;
 static int additional_actions_item_index = -1;
+static int switch_debug_logging_index = -1;
 
 //
 // Initialization of your plug-in commands
@@ -260,8 +266,9 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'a' - 'a';
-    set_next_command(rc_str (IDS_AUTO_SPELL_CHECK).c_str (),
-                     switch_auto_check_text, std::move(sh_key), false);
+    auto_spellcheck_index =
+        set_next_command(rc_str(IDS_AUTO_SPELL_CHECK).c_str(),
+                         switch_auto_check_text, std::move(sh_key), false);
   }
   {
     auto sh_key = std::make_unique<ShortcutKey>();
@@ -269,7 +276,7 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'n' - 'a';
-    set_next_command(rc_str (IDS_FIND_NEXT_ERROR).c_str (), find_next_mistake,
+    set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake,
                      std::move(sh_key), false);
   }
   {
@@ -278,7 +285,7 @@ void command_menu_init() {
     sh_key->is_ctrl = false;
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'b' - 'a';
-    set_next_command(rc_str (IDS_FIND_PREV_ERROR).c_str (), find_prev_mistake,
+    set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake,
                      std::move(sh_key), false);
   }
 
@@ -289,22 +296,26 @@ void command_menu_init() {
     sh_key->is_shift = false;
     sh_key->key = 0x41 + 'd' - 'a';
     quick_lang_change_item_index =
-        set_next_command(rc_str (IDS_CHANGE_CURRENT_LANG).c_str (),
+        set_next_command(rc_str(IDS_CHANGE_CURRENT_LANG).c_str(),
                          quick_lang_change_context, std::move(sh_key), false);
   }
 
   set_next_command(L"---", nullptr, nullptr, false);
 
-  settings_item_index =
-      set_next_command(rc_str (IDS_SETTINGS).c_str (), start_settings, nullptr, false);
+  settings_item_index = set_next_command(rc_str(IDS_SETTINGS).c_str(),
+                                         start_settings, nullptr, false);
   copy_all_misspellings_index =
-      set_next_command(rc_str (IDS_COPY_ALL_MISSPELLED).c_str (),
+      set_next_command(rc_str(IDS_COPY_ALL_MISSPELLED).c_str(),
                        copy_misspellings_to_clipboard, nullptr, false);
   reload_user_dictionaries_index =
-      set_next_command(rc_str (IDS_RELOAD_HUNSPELL).c_str (),
+      set_next_command(rc_str(IDS_RELOAD_HUNSPELL).c_str(),
                        reload_hunspell_dictionaries, nullptr, false);
-  set_next_command(rc_str (IDS_ONLINE_MANUAL).c_str (), start_manual, nullptr, false);
-  set_next_command(rc_str (IDS_ABOUT).c_str (), start_about_dlg, nullptr, false);
+  switch_debug_logging_index =
+      set_next_command(rc_str(IDS_SWITCH_DEBUG_LOGGING).c_str(),
+                       switch_debug_logging, nullptr, false);
+  set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual, nullptr,
+                   false);
+  set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg, nullptr, false);
 }
 
 void add_icons() {
@@ -337,7 +348,7 @@ HMENU get_this_plugin_menu() {
   int count = GetMenuItemCount(plugins_menu);
   for (int i = 0; i < count; i++) {
     auto str = get_menu_item_text(plugins_menu, i);
-    if (str == getName ()) {
+    if (str == getName()) {
       MENUITEMINFO mif;
       mif.fMask = MIIM_SUBMENU;
       mif.cbSize = sizeof(MENUITEMINFO);
@@ -370,6 +381,13 @@ HMENU get_submenu(int item_index) {
 
 HMENU get_langs_sub_menu() { return get_submenu(quick_lang_change_item_index); }
 
+void on_settings_changed() {
+  npp->set_menu_item_check(get_func_item()[auto_spellcheck_index].cmd_id,
+                           settings->auto_check_text);
+  npp->set_menu_item_check(get_func_item()[switch_debug_logging_index].cmd_id,
+                           settings->write_debug_log);
+}
+
 void init_classes() {
   INITCOMMONCONTROLSEX icc;
 
@@ -380,6 +398,7 @@ void init_classes() {
   InitCheckedListBox(static_cast<HINSTANCE>(h_module));
 
   settings = std::make_unique<Settings>(ini_file_path);
+  settings->settings_changed.connect(on_settings_changed);
 
   speller_container =
       std::make_unique<SpellerContainer>(settings.get(), &npp_data);
@@ -458,13 +477,14 @@ int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
-  auto list = {copy_all_misspellings_index, reload_user_dictionaries_index};
+  auto list = {copy_all_misspellings_index, reload_user_dictionaries_index,
+               switch_debug_logging_index};
   for (auto index : list) {
     MENUITEMINFO info;
     info.cbSize = sizeof(info);
     info.dwTypeData = nullptr;
     info.fMask = MIIM_STRING | MIIM_ID | MIIM_STATE | MIIM_DATA; // everything
-    auto get_info = [&] { GetMenuItemInfo(plugin_menu, index, TRUE, &info); };
+    auto get_info = [&] { GetMenuItemInfo(plugin_menu, get_func_item()[index].cmd_id, FALSE, &info); };
     get_info();
     std::vector<wchar_t> buf(info.cch + 1);
     ++info.cch; // the worst API ever?
@@ -483,7 +503,7 @@ void rearrange_menu() {
     mif.fMask = MIIM_SUBMENU | MIIM_STATE | MIIM_STRING;
     mif.cbSize = sizeof(MENUITEMINFO);
     auto action_name = rc_str(IDS_ADDITIONAL_ACTIONS);
-    mif.dwTypeData = const_cast<wchar_t *>(action_name.c_str ());
+    mif.dwTypeData = const_cast<wchar_t *>(action_name.c_str());
     mif.cch = static_cast<UINT>(wcslen(mif.dwTypeData)) + 1;
     mif.hSubMenu = submenu;
     mif.fState = MFS_ENABLED;
@@ -609,11 +629,9 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) {
                          reinterpret_cast<LPARAM>(sub_wnd_proc_notepad)));
 }
 
-
-
 extern "C" __declspec(dllexport) const wchar_t *getName() {
-  static std::wstring plugin_name = rc_str (IDS_PLUGIN_NAME);
-  return plugin_name.c_str ();
+  static std::wstring plugin_name = rc_str(IDS_PLUGIN_NAME);
+  return plugin_name.c_str();
 }
 
 extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
@@ -643,16 +661,15 @@ void WINAPI ui_update(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
   get_download_dics()->ui_update();
 }
 
-std::wstring_view rc_str_view (UINT string_id)
-{
-    const wchar_t *ret = nullptr;
-    auto len = LoadString (static_cast<HINSTANCE> (h_module), string_id, reinterpret_cast<LPWSTR> (&ret), 0);
-    return {ret, static_cast<size_t> (len)};
+std::wstring_view rc_str_view(UINT string_id) {
+  const wchar_t *ret = nullptr;
+  auto len = LoadString(static_cast<HINSTANCE>(h_module), string_id,
+                        reinterpret_cast<LPWSTR>(&ret), 0);
+  return {ret, static_cast<size_t>(len)};
 }
 
-std::wstring rc_str (UINT string_id)
-{
-    return std::wstring {rc_str_view (string_id)};
+std::wstring rc_str(UINT string_id) {
+  return std::wstring{rc_str_view(string_id)};
 }
 
 // ReSharper disable once CppInconsistentNaming
