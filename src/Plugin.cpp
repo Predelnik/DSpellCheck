@@ -38,7 +38,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "HunspellInterface.h"
 #include "Settings.h"
 #include "SpellerContainer.h"
-#include "StackWalker.h"
 #include "menuCmdID.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
@@ -141,16 +140,6 @@ ProgressDlg *get_progress() { return progress_dlg.get(); }
 DownloadDicsDlg *get_download_dics() { return download_dics_dlg.get(); }
 
 HANDLE get_h_module() { return h_module; }
-
-class MyStackWalker : public StackWalker {
-protected:
-  void OnOutput(LPCSTR sz_text) override {
-    FILE *fp = _wfopen(L"DSpellCheck_Debug.log", L"a");
-    fprintf(fp, "%s", sz_text);
-    fclose(fp);
-    StackWalker::OnOutput(sz_text);
-  }
-};
 
 void create_hooks() {
   h_mouse_hook =

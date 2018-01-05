@@ -1,5 +1,0 @@
-cmake_minimum_required (VERSION 3.7)
-project (StackWalker)
-file (GLOB_RECURSE source_files *.cpp *.h)
-add_library (StackWalker STATIC ${source_files})
-target_include_directories(StackWalker PUBLIC .)
