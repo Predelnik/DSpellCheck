@@ -150,6 +150,7 @@ void create_hooks() {
 void plugin_clean_up() {
   speller_container->cleanup();
   UnhookWindowsHookEx(h_mouse_hook);
+  DeleteFile (get_debug_log_path().c_str ());
 }
 
 void register_custom_messages() {
@@ -187,6 +188,15 @@ void switch_auto_check_text() {
 void switch_debug_logging() {
   auto mut = settings->modify();
   mut->write_debug_log = !mut->write_debug_log;
+  if (mut->write_debug_log)
+    {
+        DeleteFile (get_debug_log_path().c_str ());
+    }
+}
+
+void open_debug_log() {
+  ShellExecute(nullptr, L"open", get_debug_log_path().c_str(), nullptr, nullptr,
+               SW_SHOW);
 }
 
 void start_settings() { settings_dlg->do_dialog(); }
@@ -223,6 +233,7 @@ static int settings_item_index = -1;
 static int reload_user_dictionaries_index = -1;
 static int additional_actions_item_index = -1;
 static int switch_debug_logging_index = -1;
+static int open_debug_log_index = -1;
 
 //
 // Initialization of your plug-in commands
@@ -313,6 +324,8 @@ void command_menu_init() {
   switch_debug_logging_index =
       set_next_command(rc_str(IDS_SWITCH_DEBUG_LOGGING).c_str(),
                        switch_debug_logging, nullptr, false);
+  open_debug_log_index = set_next_command(rc_str(IDS_OPEN_DEBUG_LOG).c_str(),
+                                          open_debug_log, nullptr, false);
   set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual, nullptr,
                    false);
   set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg, nullptr, false);
@@ -473,18 +486,27 @@ int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
   return counter - 1;
 }
 
-// TODO: make rearranging menu more robust. Possibly use menu item names
+std::wstring get_debug_log_path() {
+  std::vector<wchar_t> buf(MAX_PATH);
+  GetTempPath(static_cast<DWORD>(buf.size()), buf.data());
+  std::wstring path = buf.data();
+  path += L"\\DSpellCheck_Debug_Log.txt";
+  return path;
+}
+
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
   auto list = {copy_all_misspellings_index, reload_user_dictionaries_index,
-               switch_debug_logging_index};
+               switch_debug_logging_index, open_debug_log_index};
   for (auto index : list) {
     MENUITEMINFO info;
     info.cbSize = sizeof(info);
     info.dwTypeData = nullptr;
     info.fMask = MIIM_STRING | MIIM_ID | MIIM_STATE | MIIM_DATA; // everything
-    auto get_info = [&] { GetMenuItemInfo(plugin_menu, get_func_item()[index].cmd_id, FALSE, &info); };
+    auto get_info = [&] {
+      GetMenuItemInfo(plugin_menu, get_func_item()[index].cmd_id, FALSE, &info);
+    };
     get_info();
     std::vector<wchar_t> buf(info.cch + 1);
     ++info.cch; // the worst API ever?
@@ -494,7 +516,7 @@ void rearrange_menu() {
   }
   int removed_cnt = 0;
   for (auto index : list) {
-    RemoveMenu(plugin_menu, index - removed_cnt, MF_BYPOSITION);
+    RemoveMenu(plugin_menu, get_func_item()[index].cmd_id, MF_BYCOMMAND);
     ++removed_cnt;
   }
 
@@ -507,7 +529,8 @@ void rearrange_menu() {
     mif.cch = static_cast<UINT>(wcslen(mif.dwTypeData)) + 1;
     mif.hSubMenu = submenu;
     mif.fState = MFS_ENABLED;
-    InsertMenuItem(plugin_menu, settings_item_index, TRUE, &mif);
+    InsertMenuItem(plugin_menu, get_func_item()[settings_item_index].cmd_id,
+                   FALSE, &mif);
   }
 }
 

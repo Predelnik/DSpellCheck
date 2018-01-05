@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 struct SuggestionsMenuItem;
 
-const int nb_func = 11;
+const int nb_func = 12;
 
 extern int quick_lang_change_item_index;
 enum class CustomGuiMessage;
@@ -98,6 +98,7 @@ bool get_use_allocated_ids ();
 const Settings& get_settings();
 DWORD get_custom_gui_message_id (CustomGuiMessage message_id);
 void register_custom_messages ();
+std::wstring get_debug_log_path();
 void init_npp_interface ();
 void notify (SCNotification* notify_code);
 NppInterface &npp_interface ();

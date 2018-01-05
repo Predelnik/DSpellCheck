@@ -84,11 +84,11 @@ void DownloadDicsDlg::indicate_that_saving_might_be_needed() {
 LRESULT DownloadDicsDlg::ask_replacement_message(const wchar_t *dic_name) {
   std::wstring name;
   std::tie(name, std::ignore) = apply_alias(dic_name);
-  return MessageBox(_hParent,
-                    wstring_printf(rc_str (IDS_DICT_PS_EXISTS_BODY).c_str (),
-                                   name.c_str())
-                        .c_str(),
-                    rc_str (IDS_DICT_EXISTS_HEADER).c_str (), MB_YESNO);
+  return MessageBox(
+      _hParent,
+      wstring_printf(rc_str(IDS_DICT_PS_EXISTS_BODY).c_str(), name.c_str())
+          .c_str(),
+      rc_str(IDS_DICT_EXISTS_HEADER).c_str(), MB_YESNO);
 }
 
 static std::wstring get_temp_path() {
@@ -101,14 +101,14 @@ bool DownloadDicsDlg::prepare_downloading() {
   m_downloaded_count = 0;
   m_supposed_downloaded_count = 0;
   m_failure = false;
-  m_message = rc_str (IDS_DICTS_COPIED);
+  m_message = rc_str(IDS_DICTS_COPIED);
   m_to_download.clear();
 
   // If path isn't exist we're gonna try to create it else it's finish
   if (!check_for_directory_existence(get_temp_path(), false, _hParent)) {
-    MessageBox(_hParent,
-               rc_str (IDS_TEMPORARY_PATH_INVALID_BODY).c_str (),
-               rc_str (IDS_TEMPORARY_PATH_INVALID_HEADER).c_str (), MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(_hParent, rc_str(IDS_TEMPORARY_PATH_INVALID_BODY).c_str(),
+               rc_str(IDS_TEMPORARY_PATH_INVALID_HEADER).c_str(),
+               MB_OK | MB_ICONEXCLAMATION);
     return false;
   }
   m_cancel_pressed = false;
@@ -124,9 +124,8 @@ bool DownloadDicsDlg::prepare_downloading() {
           _hParent)) // If path doesn't exist we're gonna try to create it
                      // else it's finish
   {
-    MessageBox(_hParent,
-               rc_str (IDS_CANT_CREATE_DOWNLOAD_DIR).c_str (),
-               rc_str (IDS_NO_DICTS_DOWNLOADED).c_str (),
+    MessageBox(_hParent, rc_str(IDS_CANT_CREATE_DOWNLOAD_DIR).c_str(),
+               rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(),
                MB_OK | MB_ICONEXCLAMATION);
     return false;
   }
@@ -146,22 +145,22 @@ bool DownloadDicsDlg::prepare_downloading() {
 void DownloadDicsDlg::finalize_downloading() {
   get_progress()->display(false);
   if (m_failure) {
-    MessageBox(_hParent,
-               rc_str (IDS_CANT_WRITE_DICT_FILES).c_str (),
-               rc_str (IDS_NO_DICTS_DOWNLOADED).c_str (),
+    MessageBox(_hParent, rc_str(IDS_CANT_WRITE_DICT_FILES).c_str(),
+               rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(),
                MB_OK | MB_ICONEXCLAMATION);
   } else if (m_downloaded_count > 0) {
-    MessageBox(_hParent, m_message.c_str(), rc_str (IDS_DICTS_DOWNLOADED).c_str (),
+    MessageBox(_hParent, m_message.c_str(),
+               rc_str(IDS_DICTS_DOWNLOADED).c_str(),
                MB_OK | MB_ICONINFORMATION);
   } else if (m_supposed_downloaded_count > 0) // Otherwise - silent
   {
-    MessageBox(
-        _hParent, rc_str (IDS_ZERO_DICTS_DOWNLOAD).c_str (),
-        rc_str (IDS_NO_DICTS_DOWNLOADED).c_str (), MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(_hParent, rc_str(IDS_ZERO_DICTS_DOWNLOAD).c_str(),
+               rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(),
+               MB_OK | MB_ICONEXCLAMATION);
   }
   for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
     CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);
-  m_settings.settings_changed ();
+  m_settings.settings_changed();
 }
 
 static const auto buf_size_for_copy = 10240;
@@ -221,8 +220,8 @@ void DownloadDicsDlg::on_file_downloaded() {
                   static_cast<unsigned int>(file_copy_buf.size()))) != 0) {
         _write(local_dic_file_handle, file_copy_buf.data(), bytes_copied);
         bytes_total += bytes_copied;
-        swprintf(prog_message, rc_str (IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str (), bytes_total,
-                 f_info.uncompressed_size,
+        swprintf(prog_message, rc_str(IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str(),
+                 bytes_total, f_info.uncompressed_size,
                  bytes_total * 100 / f_info.uncompressed_size);
         get_progress()->get_progress_data()->set(
             bytes_total * 100 / f_info.uncompressed_size, prog_message);
@@ -345,7 +344,9 @@ void DownloadDicsDlg::start_next_download() {
     return finalize_downloading();
 
   get_progress()->set_top_message(
-      wstring_printf(rc_str (IDS_DOWNLOADING_PS).c_str (), m_cur->file_name.c_str()).c_str());
+      wstring_printf(rc_str(IDS_DOWNLOADING_PS).c_str(),
+                     m_cur->file_name.c_str())
+          .c_str());
   if (PathFileExists(m_cur->target_path.c_str())) {
     SetFileAttributes(m_cur->target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
     DeleteFile(m_cur->target_path.c_str());
@@ -404,7 +405,7 @@ void DownloadDicsDlg::update_list_box() {
 }
 
 // Copy of CFile with ability to kick progress bar
-class Observer : public nsFTP::CFTPClient::CNotification {
+class ProgressObserver : public nsFTP::CFTPClient::CNotification {
   std::shared_ptr<ProgressData> m_progress_data;
   std::wstring m_target_path;
   long m_bytes_received = 0;
@@ -413,12 +414,13 @@ class Observer : public nsFTP::CFTPClient::CNotification {
   nsFTP::CFTPClient &m_client;
 
 public:
-  Observer(std::shared_ptr<ProgressData> progress_data,
-           std::wstring target_path, long target_size,
-           nsFTP::CFTPClient &client, concurrency::cancellation_token token)
+  ProgressObserver(std::shared_ptr<ProgressData> progress_data,
+                   std::wstring target_path, long target_size,
+                   nsFTP::CFTPClient &client,
+                   concurrency::cancellation_token token)
       : m_progress_data(std::move(progress_data)),
         m_target_path(std::move(target_path)), m_target_size(target_size),
-        m_token(std::move (token)), m_client(client) {}
+        m_token(std::move(token)), m_client(client) {}
 
   void OnBytesReceived(const nsFTP::TByteVector & /*vBuffer*/,
                        long l_received_bytes) override {
@@ -430,9 +432,61 @@ public:
     m_bytes_received += l_received_bytes;
     m_progress_data->set(
         m_bytes_received * 100 / m_target_size,
-        wstring_printf(rc_str (IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str (), m_bytes_received,
-                       m_target_size, m_bytes_received * 100 / m_target_size));
+        wstring_printf(rc_str(IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str(),
+                       m_bytes_received, m_target_size,
+                       m_bytes_received * 100 / m_target_size));
   }
+};
+
+struct LogObserver : public nsFTP::CFTPClient::CNotification {
+  LogObserver(const wchar_t *log_filename) : m_log_filename(log_filename) {}
+
+  void OnInternalError(const tstring &error_msg, const tstring &error_filename,
+                       DWORD line) override {
+    FILE *f;
+    _wfopen_s(&f, m_log_filename, L"a");
+    if (!f)
+      return;
+    wchar_t buf[DEFAULT_BUF_SIZE];
+    swprintf(buf, L"Fatal error %s in file %s on line %d\n", error_msg.c_str(),
+             error_filename.c_str(), line);
+    fwprintf(f, buf);
+    fclose(f);
+  }
+
+  void OnSendCommand(const nsFTP::CCommand &cmd,
+                     const nsFTP::CArg &args) override {
+    FILE *f;
+    _wfopen_s(&f, m_log_filename, L"a");
+    if (!f)
+      return;
+    std::wstring s = L"Command ";
+    s += cmd.AsString();
+    s += L" with args: ";
+    for (int i = 0; i < args.size(); ++i) {
+      s += args[i];
+      if (i != args.size() - 1)
+        s += L", ";
+    }
+    s += L'\n';
+    fwprintf(f, s.c_str());
+    fclose(f);
+  }
+
+  void OnResponse(const nsFTP::CReply &reply) override {
+    FILE *f;
+    _wfopen_s(&f, m_log_filename, L"a");
+    if (!f)
+      return;
+    wchar_t buf[DEFAULT_BUF_SIZE];
+    swprintf(buf, L"Got reply %s with value:\n%s\n", reply.Code().Value(),
+             reply.Value().c_str());
+    fwprintf(f, buf);
+    fclose(f);
+  }
+
+private:
+  const wchar_t *m_log_filename;
 };
 
 void DownloadDicsDlg::set_cancel_pressed(bool value) {
@@ -475,6 +529,11 @@ std::variant<FtpOperationErrorType, std::vector<std::wstring>>
 do_download_file_list_ftp(FtpOperationParams params) {
   nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(),
                            500);
+  auto log_observer =
+      std::make_unique<LogObserver>(params.debug_log_path.c_str ());
+  if (params.write_debug_log) {
+    client.AttachObserver(log_observer.get());
+  }
   if (!ftp_login(client, params))
     return FtpOperationErrorType::login_failed;
 
@@ -495,6 +554,11 @@ do_download_file(FtpOperationParams params, const std::wstring &target_path,
                  concurrency::cancellation_token token) {
   nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(),
                            500);
+  auto log_observer =
+      std::make_unique<LogObserver>(params.debug_log_path.c_str ());
+  if (params.write_debug_log) {
+    client.AttachObserver(log_observer.get());
+  }
   if (!ftp_login(client, params))
     return FtpOperationErrorType::login_failed;
 
@@ -502,7 +566,7 @@ do_download_file(FtpOperationParams params, const std::wstring &target_path,
   if (client.FileSize(params.path, file_size) != nsFTP::FTP_OK)
     return FtpOperationErrorType::download_failed;
 
-  auto progress_updater = std::make_unique<Observer>(
+  auto progress_updater = std::make_unique<ProgressObserver>(
       std::move(progress_data), target_path, file_size, client, token);
   client.AttachObserver(progress_updater.get());
 
@@ -658,11 +722,9 @@ do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
   return out;
 }
 
-std::optional<FtpWebOperationError>
-do_download_file_web_proxy(FtpOperationParams params,
-                           const std::wstring &target_path,
-                           ProgressData& progress_data,
-                           const concurrency::cancellation_token& token) {
+std::optional<FtpWebOperationError> do_download_file_web_proxy(
+    FtpOperationParams params, const std::wstring &target_path,
+    ProgressData &progress_data, const concurrency::cancellation_token &token) {
   auto result = ftp_web_proxy_login(params);
   if (auto error = std::get_if<FtpWebOperationError>(&result))
     return *error;
@@ -711,9 +773,10 @@ do_download_file_web_proxy(FtpOperationParams params,
     write(file_handle, file_buffer.data(), bytes_read);
     bytes_read_total += bytes_read;
 
-    progress_data.set(
-        0, wstring_printf(rc_str (IDS_PD_BYTES_DOWNLOADED).c_str (), bytes_read_total),
-        true);
+    progress_data.set(0,
+                      wstring_printf(rc_str(IDS_PD_BYTES_DOWNLOADED).c_str(),
+                                     bytes_read_total),
+                      true);
   }
   _close(file_handle);
   return std::nullopt;
@@ -742,7 +805,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring> &list) {
   }
 
   if (count == 0) {
-    return update_status(rc_str(IDS_STATUS_DIRECTORY_EMPTY).c_str (),
+    return update_status(rc_str(IDS_STATUS_DIRECTORY_EMPTY).c_str(),
                          COLOR_WARN);
   }
 
@@ -756,8 +819,7 @@ void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring> &list) {
   if (m_check_if_saving_is_needed) {
     add_user_server(*current_address());
   }
-  update_status(rc_str(IDS_STATUS_LIST_SUCCESS).c_str (),
-                COLOR_OK);
+  update_status(rc_str(IDS_STATUS_LIST_SUCCESS).c_str(), COLOR_OK);
   EnableWindow(m_h_install_selected, TRUE);
 }
 
@@ -841,12 +903,13 @@ void DownloadDicsDlg::process_file_list_error(FtpOperationErrorType error) {
   case FtpOperationErrorType::none:
     break;
   case FtpOperationErrorType::login_failed:
-    return update_status(rc_str(IDS_STATUS_BAD_CONNECTION).c_str (),
-                         COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_BAD_CONNECTION).c_str(), COLOR_FAIL);
   case FtpOperationErrorType::download_failed:
-    return update_status(rc_str(IDS_STATUS_CANT_LIST_FILES).c_str (), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_CANT_LIST_FILES).c_str(),
+                         COLOR_FAIL);
   case FtpOperationErrorType::download_cancelled:
-    return update_status(rc_str(IDS_STATUS_DOWNLOAD_CANCELLED).c_str (), COLOR_WARN);
+    return update_status(rc_str(IDS_STATUS_DOWNLOAD_CANCELLED).c_str(),
+                         COLOR_WARN);
   }
 }
 
@@ -856,38 +919,45 @@ void DownloadDicsDlg::process_file_list_error(
   case FtpWebOperationErrorType::none:
     break;
   case FtpWebOperationErrorType::http_client_cannot_be_initialized:
-    return update_status(rc_str(IDS_STATUS_HTTP_CLIENT_INIT_FAIL).c_str (),
+    return update_status(rc_str(IDS_STATUS_HTTP_CLIENT_INIT_FAIL).c_str(),
                          COLOR_FAIL);
   case FtpWebOperationErrorType::url_cannot_be_opened:
-    return update_status(rc_str(IDS_STATUS_URL_OPEN_FAIL).c_str (), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_URL_OPEN_FAIL).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::querying_status_code_failed:
-    return update_status(rc_str(IDS_STATUS_HTTP_CODE_QUERY_FAIL).c_str (), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_HTTP_CODE_QUERY_FAIL).c_str(),
+                         COLOR_FAIL);
   case FtpWebOperationErrorType::proxy_authorization_required:
-    return update_status(rc_str(IDS_STATUS_PROXY_AUTH_REQUIRED).c_str (), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_PROXY_AUTH_REQUIRED).c_str(),
+                         COLOR_FAIL);
   case FtpWebOperationErrorType::http_error:
     return update_status(
-        wstring_printf(rc_str (IDS_STATUS_HTTP_ERROR_PD).c_str (), error.status_code).c_str(),
+        wstring_printf(rc_str(IDS_STATUS_HTTP_ERROR_PD).c_str(),
+                       error.status_code)
+            .c_str(),
         COLOR_FAIL);
   case FtpWebOperationErrorType::html_cannot_be_parsed:
-    return update_status(rc_str(IDS_STATUS_HTML_PARSING_FAIL).c_str (), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_HTML_PARSING_FAIL).c_str(),
+                         COLOR_FAIL);
   case FtpWebOperationErrorType::file_is_not_writeable:
-    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str (), COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str(),
+                         COLOR_FAIL);
   case FtpWebOperationErrorType::download_cancelled:
-    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str (), COLOR_WARN);
+    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str(),
+                         COLOR_WARN);
   }
 }
 
 void DownloadDicsDlg::prepare_file_list_update() {
   EnableWindow(m_h_install_selected, FALSE);
   m_status_color = COLOR_NEUTRAL;
-  Static_SetText(m_h_status, rc_str(IDS_STATUS_LOADING).c_str ());
+  Static_SetText(m_h_status, rc_str(IDS_STATUS_LOADING).c_str());
   ListBox_ResetContent(m_h_file_list);
   m_current_langs.clear();
   ;
 }
 
 FtpOperationParams
-DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring &full_path) {
+DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring &full_path) const {
   FtpOperationParams params;
   std::tie(params.address, params.path) = ftp_split(full_path);
   params.use_proxy = m_settings.use_proxy;
@@ -896,6 +966,8 @@ DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring &full_path) {
   params.anonymous = m_settings.proxy_is_anonymous;
   params.proxy_username = m_settings.proxy_user_name;
   params.proxy_password = m_settings.proxy_password;
+  params.write_debug_log = m_settings.write_debug_log;
+  params.debug_log_path = get_debug_log_path ();
   return params;
 }
 
@@ -957,8 +1029,8 @@ void DownloadDicsDlg::download_file_async_web_proxy(
         params = spawn_ftp_operation_params(full_path), target_location,
         progressData = get_progress()->get_progress_data()
       ](auto token) {
-        return do_download_file_web_proxy(params, target_location, *progressData,
-                                          token);
+        return do_download_file_web_proxy(params, target_location,
+                                          *progressData, token);
       },
       [this](std::optional<FtpWebOperationError>) { on_file_downloaded(); });
 }
@@ -1024,8 +1096,8 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_h_show_only_known = ::GetDlgItem(_hSelf, IDC_SHOWONLYKNOWN);
     m_h_refresh = ::GetDlgItem(_hSelf, IDC_REFRESH);
     m_h_install_system = ::GetDlgItem(_hSelf, IDC_INSTALL_SYSTEM);
-    m_refresh_icon = static_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH),
-                                                  IMAGE_ICON, 16, 16, 0));
+    m_refresh_icon = static_cast<HICON>(
+        LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH), IMAGE_ICON, 16, 16, 0));
     SendMessage(m_h_refresh, BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON),
                 reinterpret_cast<LPARAM>(m_refresh_icon));
     reset_download_combobox();

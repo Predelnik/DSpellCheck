@@ -19,129 +19,135 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
 
-#include "StaticDialog\StaticDialog.h"
-#include <optional>
-#include "FTPFileStatus.h"
 #include "CommonFunctions.h"
+#include "FTPFileStatus.h"
+#include "StaticDialog\StaticDialog.h"
 #include "TaskWrapper.h"
+#include <optional>
 
 class LanguageInfo;
 
-void ftp_trim(std::wstring& ftp_address);
+void ftp_trim(std::wstring &ftp_address);
 
 enum class FtpOperationType {
-    fill_file_list = 0,
-    download_file,
+  fill_file_list = 0,
+  download_file,
 };
 
 enum class FtpWebOperationErrorType {
-    none,
-    http_client_cannot_be_initialized,
-    url_cannot_be_opened,
-    querying_status_code_failed,
-    proxy_authorization_required,
-    http_error,
-    html_cannot_be_parsed,
-    file_is_not_writeable,
-    download_cancelled,
+  none,
+  http_client_cannot_be_initialized,
+  url_cannot_be_opened,
+  querying_status_code_failed,
+  proxy_authorization_required,
+  http_error,
+  html_cannot_be_parsed,
+  file_is_not_writeable,
+  download_cancelled,
 };
 
 struct FtpWebOperationError {
-    FtpWebOperationErrorType type;
-    int status_code;
+  FtpWebOperationErrorType type;
+  int status_code;
 };
 
 enum class FtpOperationErrorType {
-    none,
-    login_failed,
-    download_failed,
-    download_cancelled,
+  none,
+  login_failed,
+  download_failed,
+  download_cancelled,
 };
 
 class SpellChecker;
 
 struct FtpOperationParams {
-    std::wstring address;
-    std::wstring path;
-    bool use_proxy;
-    std::wstring proxy_address;
-    int proxy_port;
-    bool anonymous;
-    std::wstring proxy_username;
-    std::wstring proxy_password;
+  std::wstring address;
+  std::wstring path;
+  bool use_proxy;
+  std::wstring proxy_address;
+  int proxy_port;
+  bool anonymous;
+  std::wstring proxy_username;
+  std::wstring proxy_password;
+  bool write_debug_log;
+  std::wstring debug_log_path;
 };
 
 class DownloadDicsDlg : public StaticDialog {
-    enum {
-      refresh_timer_id = 0
-    };
+  enum { refresh_timer_id = 0 };
+
 public:
-    ~DownloadDicsDlg() override;
-    DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings& settings);
-    void do_dialog();
-    // Maybe hunspell interface should be passed here
-    INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
-    void update_list_box();
-    void on_new_file_list(const std::vector<std::wstring>& list);
-    void preserve_current_address_index(Settings& settings);
-    void reset_download_combobox();
-    void add_user_server(std::wstring server);
-    void prepare_file_list_update();
-    FtpOperationParams spawn_ftp_operation_params(const std::wstring& full_path);
-    void update_file_list_async_web_proxy(const std::wstring& full_path);
-    void update_file_list_async(const std::wstring& full_path);
-    void download_file_async(const std::wstring& full_path, const std::wstring& target_location);
-    void download_file_async_web_proxy(const std::wstring& full_path, const std::wstring& target_location);
-    void do_ftp_operation(FtpOperationType type, const std::wstring& full_path,
-                          const std::wstring& file_name = L"", const std::wstring& location = L"");
-    void refresh();
-    void start_next_download();
-    void download_selected();
-    void fill_file_list();
-    void on_display_action();
-    void indicate_that_saving_might_be_needed();
-    void update_controls();
-    void update_settings(Settings& settings);
-    void set_cancel_pressed(bool value);
-    LRESULT ask_replacement_message(const wchar_t* dic_name);
-    bool prepare_downloading();
-    void finalize_downloading();
-    void on_file_downloaded();
-    std::optional<std::wstring> current_address() const;
-    void update_status(const wchar_t* text, COLORREF status_color);
-    static void ui_update();
-    void process_file_list_error(FtpOperationErrorType error);
-    void process_file_list_error(const FtpWebOperationError& error);
+  ~DownloadDicsDlg() override;
+  DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings &settings);
+  void do_dialog();
+  // Maybe hunspell interface should be passed here
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
+                              LPARAM l_param) override;
+  void update_list_box();
+  void on_new_file_list(const std::vector<std::wstring> &list);
+  void preserve_current_address_index(Settings &settings);
+  void reset_download_combobox();
+  void add_user_server(std::wstring server);
+  void prepare_file_list_update();
+  FtpOperationParams spawn_ftp_operation_params(const std::wstring &full_path) const;
+  void update_file_list_async_web_proxy(const std::wstring &full_path);
+  void update_file_list_async(const std::wstring &full_path);
+  void download_file_async(const std::wstring &full_path,
+                           const std::wstring &target_location);
+  void download_file_async_web_proxy(const std::wstring &full_path,
+                                     const std::wstring &target_location);
+  void do_ftp_operation(FtpOperationType type, const std::wstring &full_path,
+                        const std::wstring &file_name = L"",
+                        const std::wstring &location = L"");
+  void refresh();
+  void start_next_download();
+  void download_selected();
+  void fill_file_list();
+  void on_display_action();
+  void indicate_that_saving_might_be_needed();
+  void update_controls();
+  void update_settings(Settings &settings);
+  void set_cancel_pressed(bool value);
+  LRESULT ask_replacement_message(const wchar_t *dic_name);
+  bool prepare_downloading();
+  void finalize_downloading();
+  void on_file_downloaded();
+  std::optional<std::wstring> current_address() const;
+  void update_status(const wchar_t *text, COLORREF status_color);
+  static void ui_update();
+  void process_file_list_error(FtpOperationErrorType error);
+  void process_file_list_error(const FtpWebOperationError &error);
+
 private:
-    std::vector<LanguageInfo> m_current_langs;
-    std::vector<LanguageInfo> m_current_langs_filtered;
-    HBRUSH m_default_brush;
-    COLORREF m_status_color;
-    HWND m_h_file_list;
-    HWND m_h_address = nullptr;
-    HWND m_h_status;
-    HWND m_h_install_selected;
-    HWND m_h_show_only_known;
-    HWND m_h_refresh;
-    HWND m_h_install_system;
-    HICON m_refresh_icon;
-    bool m_cancel_pressed;
-    bool m_check_if_saving_is_needed;
-    std::optional<TaskWrapper> m_ftp_operation_task;
+  std::vector<LanguageInfo> m_current_langs;
+  std::vector<LanguageInfo> m_current_langs_filtered;
+  HBRUSH m_default_brush;
+  COLORREF m_status_color;
+  HWND m_h_file_list;
+  HWND m_h_address = nullptr;
+  HWND m_h_status;
+  HWND m_h_install_selected;
+  HWND m_h_show_only_known;
+  HWND m_h_refresh;
+  HWND m_h_install_system;
+  HICON m_refresh_icon;
+  bool m_cancel_pressed;
+  bool m_check_if_saving_is_needed;
+  std::optional<TaskWrapper> m_ftp_operation_task;
 
-    // Download State:
-    struct DownloadRequest {
-        std::wstring target_path;
-        std::wstring file_name;
-    };
+  // Download State:
+  struct DownloadRequest {
+    std::wstring target_path;
+    std::wstring file_name;
+  };
 
-    bool m_failure;
-    int m_downloaded_count;
-    int m_supposed_downloaded_count;
-    std::wstring m_message;
-    std::vector<DownloadRequest> m_to_download;
-    decltype (m_to_download)::iterator m_cur;
-    std::array<std::wstring, 3> m_default_server_names;
-    Settings& m_settings;
-    bool m_address_is_set = false;
+  bool m_failure;
+  int m_downloaded_count;
+  int m_supposed_downloaded_count;
+  std::wstring m_message;
+  std::vector<DownloadRequest> m_to_download;
+  decltype(m_to_download)::iterator m_cur;
+  std::array<std::wstring, 3> m_default_server_names;
+  Settings &m_settings;
+  bool m_address_is_set = false;
 };
