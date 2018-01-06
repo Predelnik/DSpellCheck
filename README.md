@@ -17,6 +17,23 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
+v1.4.0
+* Major internal code refactoring to make further changes and maintenance easier.
+* Enable Spelling in Comments and Delimiters for UDL (#73)
+* Updated Hunspell to 1.6.2
+* Fix problems with dictionaries inheriting wrong permissions on download. (#83)
+* Support "Allow Run-Together" option for Aspell.
+* Exclude words having all capital letters from having non-first capital letter (#74)
+* Support String/Comment detection for previously unsupported languages. (#71)
+* Add option to split words by any non-alphabetic/numeric characters except specified exclusions. (New default)
+* Support splitting of CamelCase words (disabled by default) (#89)
+* Support native windows spell-checking as the third spell-checker on Windows 8+ (#65)
+* Correctly handle period at the end of words like etc. (#48)
+* Add possibility to check variable/function names (disabled by default) (#37)
+* Add hidden option Word_Minimum_Length to disable checking of words with length less or equal to its value
+* Supported using any custom Hunspell syntax in user dictionaries.
+* Simplify external localization of plugin.
+
 v1.3.5
 * Fix disappearance of auto spell-checking icon.
 * Fix work of system-wide dictionaries.
