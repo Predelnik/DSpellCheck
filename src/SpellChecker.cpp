@@ -435,7 +435,7 @@ auto SpellChecker::non_alphabetic_tokenizer(std::wstring_view target) const {
 }
 
 auto SpellChecker::delimiter_tokenizer(std::wstring_view target) const {
-  return make_delimiter_tokenizer(target, m_settings.delimiters,
+  return make_delimiter_tokenizer(target, m_delimiters,
                                   m_settings.split_camel_case);
 }
 
