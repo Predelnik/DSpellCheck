@@ -15,7 +15,7 @@ const wchar_t *default_delimiters() {
          L"\u00A0\u0060\u2192\u00d7";
 }
 
-const wchar_t *default_delimiter_exclusions() { return L"'"; }
+const wchar_t *default_delimiter_exclusions() { return L"'_"; }
 
 std::wstring gui_string(ProxyType value) {
   switch (value) {
