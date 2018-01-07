@@ -18,7 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 // ReSharper disable once CppInconsistentNaming
-#include "Plugin.h"
+#include <Windows.h>
+void set_hmodule(HANDLE h_module_arg);
 
 bool APIENTRY DllMain(HANDLE h_module, DWORD reason_for_call,
                       LPVOID /*lpvReserved*/) {

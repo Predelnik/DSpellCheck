@@ -20,9 +20,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #pragma once
 #include "StaticDialog/StaticDialog.h"
 #include "CommonFunctions.h"
+#include "utils/winapi.h"
 
 class Settings;
 class SpellChecker;
+enum class ProxyType;
 
 class SelectProxyDialog : public StaticDialog {
 public:

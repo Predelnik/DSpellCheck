@@ -22,6 +22,8 @@
 #include "Scintilla.h"
 #endif //SCINTILLA_H
 
+#include <windows.h>
+
 
 const int nb_char = 64;
 

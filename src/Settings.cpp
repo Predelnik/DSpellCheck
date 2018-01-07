@@ -5,6 +5,7 @@
 #include "aspell.h"
 #include "utils/IniWorker.h"
 #include "utils/string_utils.h"
+#include "utils/enum_range.h"
 #include <cassert>
 
 const wchar_t *default_delimiters() {

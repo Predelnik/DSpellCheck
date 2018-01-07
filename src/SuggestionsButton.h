@@ -19,7 +19,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
 
-#include "PluginInterface.h"
 #include "StaticDialog/StaticDialog.h"
 
 class SpellChecker;
@@ -30,8 +29,8 @@ class ContextMenuHandler;
 class SuggestionsButton : public StaticDialog {
 public:
   void do_dialog();
-  HMENU get_popup_menu();
-  int get_result();
+  HMENU get_popup_menu() const;
+  int get_result() const;
   SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface &npp,
                     ContextMenuHandler &context_menu_handler,
                     const Settings &settings);

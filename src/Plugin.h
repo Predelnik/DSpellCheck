@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
-#include "SettingsDlg.h"
 
 struct SuggestionsMenuItem;
 
@@ -38,6 +37,7 @@ class SelectProxyDialog;
 class SpellChecker;
 class ProgressDlg;
 class RemoveDictionariesDialog;
+class Settings;
 
 //
 // Initialization of your plugin data

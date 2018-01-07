@@ -2,6 +2,8 @@
 #include "CommonFunctions.h"
 #include "SpellerId.h"
 #include "utils/enum_array.h"
+#include "utils/TemporaryAcessor.h"
+#include "lsignal.h"
 
 struct NppData;
 class Settings;
@@ -9,6 +11,7 @@ class AspellInterface;
 class HunspellInterface;
 class NativeSpellerInterface;
 class SpellerInterface;
+class LanguageInfo;
 
 enum class AspellStatus {
   working,

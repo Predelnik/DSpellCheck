@@ -11,6 +11,7 @@
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "SuggestionMenuItem.h"
+#include "Settings.h"
 
 void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
   MENUITEMINFO mif;

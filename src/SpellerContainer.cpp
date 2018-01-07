@@ -5,6 +5,8 @@
 #include "NativeSpellerInterface.h"
 #include "PrecompiledHeader.h"
 #include "utils/string_utils.h"
+#include "utils/enum_range.h"
+#include "Settings.h"
 
 void SpellerContainer::create_spellers(const NppData &npp_data) {
   m_aspell_speller = std::make_unique<AspellInterface>(npp_data.npp_handle);
