@@ -42,6 +42,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/raii.h"
+#include "SuggestionMenuItem.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>

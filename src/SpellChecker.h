@@ -41,17 +41,6 @@ class NativeSpellerInterface;
 class WordForSpeller;
 class SpellerContainer;
 
-struct SuggestionsMenuItem {
-  std::wstring text;
-  BYTE id;
-  bool separator;
-  SuggestionsMenuItem(const wchar_t *text_arg, int id_arg,
-                      bool separator_arg = false);
-};
-
-void insert_sugg_menu_item(HMENU menu, const wchar_t *text, BYTE id,
-                           int insert_pos, bool separator = false);
-
 class SpellChecker {
   enum class CheckTextMode {
     underline_errors,
@@ -109,7 +98,6 @@ private:
   std::wstring m_delimiters;
 
   long m_current_position;
-  SettingsDlg *m_settings_dlg_instance;
   EditorInterface &m_editor;
   std::vector<std::wstring_view> m_misspellings;
   const SpellerContainer &m_speller_container;

@@ -21,10 +21,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MainDef.h"
 #include "Plugin.h"
-#include "SpellChecker.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "ContextMenuHandler.h"
+#include "SuggestionMenuItem.h"
 
 #define MOUSELEAVE 0x0001
 #define MOUSEHOVER 0x0002
