@@ -361,7 +361,7 @@ bool SpellChecker::is_spellchecking_needed(EditorViewType view,
          m_settings.check_comments) ||
         (category == SciUtils::StyleCategory::string &&
          m_settings.check_strings) ||
-        (category == SciUtils::StyleCategory::idenitifier &&
+        (category == SciUtils::StyleCategory::identifier &&
          m_settings.check_variable_functions))) {
     return false;
   }

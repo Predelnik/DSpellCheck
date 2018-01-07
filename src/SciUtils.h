@@ -4,12 +4,12 @@ namespace SciUtils
 {
     enum class StyleCategory
     {
-      text,     // should be spell-checked
-      comment,  // 
-      string,   // 
-      idenitifier, //  
-      unknown,  // Should not be spell-checked
-      
+      text,       // should be spell-checked
+      comment,
+      string,
+      identifier,
+      unknown,    // Should not be spell-checked
+
       COUNT,
     };
 
