@@ -99,9 +99,9 @@ if ( NOT ${DSpellCheck_NEW_SDK_PATH} STREQUAL none)
 endif ()
 
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  target_compile_options (DSpellCheckStatic PRIVATE /permissive- /Zc:twoPhase-)
+  target_compile_options (DSpellCheckStatic PUBLIC /permissive- /Zc:twoPhase-)
 endif ()
-target_compile_options (DSpellCheckStatic PRIVATE /std:c++latest /EHsc)
+target_compile_options (DSpellCheckStatic PUBLIC /std:c++latest /EHsc)
 
 add_library (DSpellCheck SHARED src/DllMain.cpp)
 target_link_libraries (DSpellCheck DSpellCheckStatic)

@@ -1,5 +1,10 @@
 #pragma once
 #include <cassert>
+#include <string>
+#include <vector>
+#include <optional>
+#include <windows.h>
+
 // To mock things and stuff
 
 struct toolbarIcons;
@@ -23,7 +28,7 @@ enum class EditorCodepage
 class EditorRect
 {
 public:
-    int x; int y; 
+    int x; int y;
     int w; int h;
 };
 
@@ -76,7 +81,7 @@ public:
     virtual std::vector<char> get_line(EditorViewType view, long line_number) const = 0;
     virtual int get_current_pos(EditorViewType view) const = 0;
     virtual int get_current_line_number(EditorViewType view) const = 0;
-    virtual int get_text_height (EditorViewType view, int line) const = 0; 
+    virtual int get_text_height (EditorViewType view, int line) const = 0;
     virtual int line_from_position(EditorViewType view, int position) const = 0;
     virtual long get_line_start_position(EditorViewType view, int line) const = 0;
     virtual long get_line_end_position(EditorViewType view, int line) const = 0;
@@ -104,5 +109,6 @@ public:
     {
         return get_current_pos(view) - get_line_start_position(view, get_current_line_number(view));
     }
+    virtual ~EditorInterface () = default;
 };
 

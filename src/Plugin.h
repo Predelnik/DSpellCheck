@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
+#include <memory>
 
 struct SuggestionsMenuItem;
 
