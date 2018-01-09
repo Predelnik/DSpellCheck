@@ -4,9 +4,9 @@
 #include "LanguageInfo.h"
 #include "NativeSpellerInterface.h"
 #include "PrecompiledHeader.h"
-#include "utils/string_utils.h"
-#include "utils/enum_range.h"
 #include "Settings.h"
+#include "utils/enum_range.h"
+#include "utils/string_utils.h"
 
 void SpellerContainer::create_spellers(const NppData &npp_data) {
   m_aspell_speller = std::make_unique<AspellInterface>(npp_data.npp_handle);
@@ -65,7 +65,10 @@ const SpellerInterface &SpellerContainer::active_speller() const {
 void SpellerContainer::cleanup() { m_native_speller->cleanup(); }
 
 SpellerInterface &SpellerContainer::active_speller() {
-  return *m_spellers[m_settings.active_speller_lib_id];
+  if (!m_single_speller)
+    return *m_spellers[m_settings.active_speller_lib_id];
+
+  return *m_single_speller;
 }
 
 void SpellerContainer::init_spellers(const NppData &npp_data) {
@@ -86,6 +89,13 @@ SpellerContainer::SpellerContainer(const Settings *settings,
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
 }
 
+SpellerContainer::SpellerContainer(const Settings *settings,
+                                   std::unique_ptr<SpellerInterface> speller)
+    : m_settings(*settings), m_spellers({}) {
+  m_single_speller = std::move(speller);
+  m_settings.settings_changed.connect([this] { on_settings_changed(); });
+}
+
 static void set_multiple_languages(std::wstring_view multi_string,
                                    SpellerInterface &speller) {
   std::vector<std::wstring> multi_lang_list;
@@ -98,7 +108,10 @@ static void set_multiple_languages(std::wstring_view multi_string,
 
 SpellerContainer::~SpellerContainer() = default;
 
-void SpellerContainer::init_speller() {
+void SpellerContainer::apply_settings_to_active_speller() {
+  if (m_single_speller)
+    return;
+
   switch (m_settings.active_speller_lib_id) {
   case SpellerId::native:
     m_native_speller->init();
@@ -116,8 +129,11 @@ void SpellerContainer::init_speller() {
     break;
   case SpellerId::COUNT:
     break;
-  default:;
   }
+}
+
+void SpellerContainer::init_speller() {
+  apply_settings_to_active_speller();
 
   if (auto language = m_settings.get_active_language();
       language != L"<MULTIPLE>") {

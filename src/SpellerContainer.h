@@ -1,9 +1,9 @@
 #pragma once
 #include "CommonFunctions.h"
 #include "SpellerId.h"
-#include "utils/enum_array.h"
-#include "utils/TemporaryAcessor.h"
 #include "lsignal.h"
+#include "utils/TemporaryAcessor.h"
+#include "utils/enum_array.h"
 
 struct NppData;
 class Settings;
@@ -12,6 +12,7 @@ class HunspellInterface;
 class NativeSpellerInterface;
 class SpellerInterface;
 class LanguageInfo;
+class MockSpeller;
 
 enum class AspellStatus {
   working,
@@ -24,8 +25,11 @@ class SpellerContainer {
 
 public:
   explicit SpellerContainer(const Settings *settings, const NppData *npp_data);
+  SpellerContainer(const Settings *settings,
+                   std::unique_ptr<SpellerInterface> speller);
   ~SpellerContainer();
-  void init_speller();
+    void apply_settings_to_active_speller();
+    void init_speller();
   TemporaryAcessor<Self> modify() const;
   std::vector<LanguageInfo> get_available_languages() const;
   HunspellInterface &get_hunspell_speller() const {
@@ -53,4 +57,5 @@ private:
   std::unique_ptr<HunspellInterface> m_hunspell_speller;
   std::unique_ptr<NativeSpellerInterface> m_native_speller;
   enum_array<SpellerId, SpellerInterface *> m_spellers;
+  std::unique_ptr<SpellerInterface> m_single_speller;
 };
