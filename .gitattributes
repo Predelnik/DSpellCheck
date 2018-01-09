@@ -1,0 +1,3 @@
+*.rc diff=set diff
+resource.h diff=set diff
+
