@@ -110,11 +110,13 @@ AspellInterface::get_suggestions(const wchar_t *word) const {
   const AspellWordList *word_list = nullptr;
   auto target_word = to_utf8_string(word);
 
-  if (m_multi_mode != 0) {
+  switch (m_speller_mode) {
+  case SpellerMode::SingleLanguage:
     m_last_selected_speller = m_single_speller.get();
     word_list =
         aspell_speller_suggest(m_single_speller.get(), target_word.c_str(), -1);
-  } else {
+    break;
+  case SpellerMode::MultipleLanguages: {
     unsigned int max_size = 0;
     for (auto &speller : m_spellers) {
       const auto cur_word_list =
@@ -127,6 +129,8 @@ AspellInterface::get_suggestions(const wchar_t *word) const {
         word_list = cur_word_list;
       }
     }
+    break;
+  }
   }
   if (!word_list)
     return {};
@@ -187,22 +191,28 @@ bool AspellInterface::check_word(WordForSpeller word) const {
   auto dst_word = to_utf8_string(word.str.c_str());
 
   auto len = static_cast<int>(dst_word.length());
-  if (m_multi_mode == 0) {
+  switch (m_speller_mode) {
+  case SpellerMode::SingleLanguage: {
     if (m_single_speller == nullptr) {
       return true;
     }
 
-    res = aspell_speller_check(m_single_speller.get(), dst_word.c_str(), len) != 0;
-  } else {
+    res = aspell_speller_check(m_single_speller.get(), dst_word.c_str(), len) !=
+          0;
+  } break;
+  case SpellerMode::MultipleLanguages: {
     if (m_spellers.empty())
       return true;
 
     for (auto &speller : m_spellers) {
-      res = res || (aspell_speller_check(speller.get(), dst_word.c_str(), len) != 0);
+      res = res ||
+            (aspell_speller_check(speller.get(), dst_word.c_str(), len) != 0);
       if (res)
         break;
     }
+  } break;
   }
+
   return res;
 }
 
@@ -223,7 +233,8 @@ void AspellInterface::set_language(const wchar_t *lang) {
 
   if (aspell_error_number(possible_err) != 0) {
     auto lang_list = get_language_list();
-    if (!lang_list.empty() && (lang != nullptr || lang != lang_list.front().orig_name)) {
+    if (!lang_list.empty() &&
+        (lang != nullptr || lang != lang_list.front().orig_name)) {
       set_language(lang_list.front().orig_name.c_str());
     } else {
       m_single_speller.reset();

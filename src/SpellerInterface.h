@@ -33,26 +33,34 @@ public:
 };
 
 class SpellerInterface {
+
+public:
+  enum class SpellerMode {
+    SingleLanguage,
+    MultipleLanguages,
+  };
+
 public:
   virtual ~SpellerInterface() = default;
   virtual std::vector<LanguageInfo> get_language_list() const = 0;
   virtual void set_language(const wchar_t *lang) = 0;
   virtual void set_multiple_languages(
       const std::vector<std::wstring> &list) = 0; // Languages are from LangList
-  void set_mode(int multi) { m_multi_mode = multi; } // Multi - 1, Single - 0
+  void set_mode(SpellerMode multi) { m_speller_mode = multi; }
   // Implement either check_word or check_words or get the endless recursion
   virtual bool check_word(WordForSpeller word) const;
   // Functions which should be implemented in case if words for some awkward
   // reason could be faster checked in bulk
   virtual std::vector<bool>
   check_words(const std::vector<WordForSpeller> &words) const;
-  virtual std::vector<std::wstring> get_suggestions(const wchar_t *word) const = 0;
+  virtual std::vector<std::wstring>
+  get_suggestions(const wchar_t *word) const = 0;
   virtual void add_to_dictionary(const wchar_t *word) = 0;
   virtual void ignore_all(const wchar_t *word) = 0;
   virtual bool is_working() const = 0;
 
 protected:
-  int m_multi_mode = 0;
+  SpellerMode m_speller_mode = SpellerMode::SingleLanguage;
 };
 
 // speller that does not do anything and never works

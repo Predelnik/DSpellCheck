@@ -264,7 +264,7 @@ DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &info) {
       DeleteFile(encoded_path.c_str());
     }
   } else
-      new_hunspell->add_dic(to_string(m_user_dic_path).c_str());
+    new_hunspell->add_dic(to_string(m_user_dic_path).c_str());
 
   {
     for (const auto &word : m_new_common_words) {
@@ -338,12 +338,14 @@ bool HunspellInterface::check_word(WordForSpeller word) const {
     return true;
 
   bool res = false;
-  if (m_multi_mode == 0) {
+  switch (m_speller_mode) {
+  case SpellerMode::SingleLanguage: {
     if (m_singular_speller != nullptr)
       res = speller_check_word(*m_singular_speller, word);
     else
       res = true;
-  } else {
+  } break;
+  case SpellerMode::MultipleLanguages: {
     if (m_spellers.empty())
       return true;
 
@@ -352,6 +354,7 @@ bool HunspellInterface::check_word(WordForSpeller word) const {
       if (res)
         break;
     }
+  } break;
   }
   return res;
 }
@@ -455,10 +458,12 @@ HunspellInterface::get_suggestions(const wchar_t *word) const {
   std::vector<std::string> list;
   m_last_selected_speller = m_singular_speller;
 
-  if (m_multi_mode == 0) {
+  switch (m_speller_mode) {
+  case SpellerMode::SingleLanguage: {
     list = m_singular_speller->hunspell->suggest(
         m_singular_speller->to_dictionary_encoding(word));
-  } else {
+  } break;
+  case SpellerMode::MultipleLanguages: {
     for (auto speller : m_spellers) {
       auto cur_list =
           speller->hunspell->suggest(speller->to_dictionary_encoding(word));
@@ -467,6 +472,7 @@ HunspellInterface::get_suggestions(const wchar_t *word) const {
         m_last_selected_speller = speller;
       }
     }
+  } break;
   }
 
   std::vector<std::wstring> sugg_list(list.size());
