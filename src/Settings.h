@@ -43,7 +43,7 @@ std::wstring gui_string(TokenizationStyle value);
 class Settings {
     using Self = Settings;
 public:
-    Settings (std::wstring_view ini_filepath);
+    Settings (std::wstring_view ini_filepath = L"");
     void process(IniWorker& worker);
     void save ();
     void load ();

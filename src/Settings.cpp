@@ -4,8 +4,8 @@
 #include "SpellerId.h"
 #include "aspell.h"
 #include "utils/IniWorker.h"
-#include "utils/string_utils.h"
 #include "utils/enum_range.h"
+#include "utils/string_utils.h"
 #include <cassert>
 
 const wchar_t *default_delimiters() {
@@ -105,6 +105,8 @@ Settings::Settings(std::wstring_view ini_filepath)
 constexpr auto app_name = L"SpellCheck";
 
 void Settings::save() {
+  if (m_ini_filepath.empty())
+    return;
   FILE *fp;
   auto path = std::wstring_view(m_ini_filepath);
   path.remove_prefix(path.length() - path.rfind(L'\\'));
@@ -120,13 +122,15 @@ void Settings::save() {
         L"Saving of Settings Failed", MB_OK | MB_ICONHAND);
     return;
   }
-  write_unicode_bom (fp);
+  write_unicode_bom(fp);
   fclose(fp);
   IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::save);
   process(worker);
 }
 
 void Settings::load() {
+  if (m_ini_filepath.empty())
+    return;
   IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::load);
   process(worker);
   settings_changed();
@@ -235,4 +239,3 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Proxy_Type", proxy_type, ProxyType::web_proxy);
   worker.process(L"Write_Debug_Log", write_debug_log, false);
 }
-

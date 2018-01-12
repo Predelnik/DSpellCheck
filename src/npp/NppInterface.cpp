@@ -214,13 +214,13 @@ long NppInterface::get_document_line_count(EditorViewType view) const {
   return static_cast<long>(send_msg_to_scintilla(view, SCI_GETLINECOUNT));
 }
 
-std::vector<char>
+std::string
 NppInterface::get_active_document_text(EditorViewType view) const {
   auto buf_len = get_active_document_length(view) + 1;
   std::vector<char> buf(buf_len);
   send_msg_to_scintilla(view, SCI_GETTEXT, buf_len,
                         reinterpret_cast<LPARAM>(buf.data()));
-  return buf;
+  return buf.data ();
 }
 
 std::wstring NppInterface::get_full_current_path() const {
@@ -255,8 +255,8 @@ long NppInterface::get_line_length(EditorViewType view, int line) const {
   return static_cast<long>(send_msg_to_scintilla(view, SCI_LINELENGTH, line));
 }
 
-std::vector<char> NppInterface::get_line(EditorViewType view,
-                                         long line_number) const {
+std::string NppInterface::get_line(EditorViewType view,
+                                   long line_number) const {
   auto buf_size = static_cast<int>(
       send_msg_to_scintilla(view, SCI_LINELENGTH, line_number) + 1);
   std::vector<char> buf(buf_size);
@@ -264,7 +264,7 @@ std::vector<char> NppInterface::get_line(EditorViewType view,
       view, SCI_GETLINE, line_number, reinterpret_cast<LPARAM>(buf.data())));
   static_cast<void>(ret);
   assert(ret == buf_size - 1);
-  return buf;
+  return buf.data ();
 }
 
 void NppInterface::move_active_document_to_other_view() {
@@ -277,7 +277,7 @@ void NppInterface::add_toolbar_icon(int cmdId,
                   reinterpret_cast<LPARAM>(toolBarIconsPtr));
 }
 
-std::vector<char> NppInterface::selected_text(EditorViewType view) const {
+std::string NppInterface::selected_text(EditorViewType view) const {
   auto sel_buf_size =
       static_cast<int>(send_msg_to_scintilla(view, SCI_GETSELTEXT, 0, 0));
   if (sel_buf_size > 1) // Because it includes terminating '\0'
@@ -285,12 +285,12 @@ std::vector<char> NppInterface::selected_text(EditorViewType view) const {
     std::vector<char> buf(sel_buf_size);
     send_msg_to_scintilla(view, SCI_GETSELTEXT, 0,
                           reinterpret_cast<LPARAM>(buf.data()));
-    return buf;
+    return buf.data ();
   }
   return {};
 }
 
-std::vector<char> NppInterface::get_current_line(EditorViewType view) const {
+std::string NppInterface::get_current_line(EditorViewType view) const {
   return get_line(view, get_current_line_number(view));
 }
 

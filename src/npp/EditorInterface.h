@@ -76,9 +76,9 @@ public:
     virtual std::wstring active_document_path() const = 0;
     virtual std::wstring active_file_directory() const = 0;
     virtual std::wstring plugin_config_dir() const = 0;
-    virtual std::vector<char> selected_text(EditorViewType view) const = 0;
-    virtual std::vector<char> get_current_line(EditorViewType view) const = 0;
-    virtual std::vector<char> get_line(EditorViewType view, long line_number) const = 0;
+    virtual std::string selected_text(EditorViewType view) const = 0;
+    virtual std::string get_current_line(EditorViewType view) const = 0;
+    virtual std::string get_line(EditorViewType view, long line_number) const = 0;
     virtual int get_current_pos(EditorViewType view) const = 0;
     virtual int get_current_line_number(EditorViewType view) const = 0;
     virtual int get_text_height (EditorViewType view, int line) const = 0;
@@ -103,7 +103,7 @@ public:
     virtual long get_lines_on_screen (EditorViewType view) const = 0;
     virtual long get_document_line_from_visible (EditorViewType view, long visible_line) const = 0;
     virtual long get_document_line_count (EditorViewType view) const = 0;
-    virtual std::vector<char> get_active_document_text (EditorViewType view) const = 0;
+    virtual std::string get_active_document_text(EditorViewType view) const = 0;
 
     int get_current_pos_in_line(EditorViewType view) const
     {

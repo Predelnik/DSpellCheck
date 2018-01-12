@@ -33,8 +33,8 @@ public:
     EditorCodepage get_encoding(EditorViewType view) const override;
     std::wstring active_document_path() const override;
     std::wstring active_file_directory() const override;
-    std::vector<char> selected_text(EditorViewType view) const override;
-    std::vector<char> get_current_line(EditorViewType view) const override;
+    std::string selected_text(EditorViewType view) const override;
+    std::string get_current_line(EditorViewType view) const override;
     int get_current_pos(EditorViewType view) const override;
     int get_current_line_number(EditorViewType view) const override;
     int line_from_position(EditorViewType view, int position) const override;
@@ -54,7 +54,7 @@ public:
     long get_selection_start(EditorViewType view) const override;
     long get_selection_end(EditorViewType view) const override;
     long get_line_length(EditorViewType view, int line) const override;
-    std::vector<char> get_line(EditorViewType view, long line_number) const override;
+    std::string get_line(EditorViewType view, long line_number) const override;
 
     HMENU get_menu_handle(int menu_type) const;
 
@@ -84,7 +84,7 @@ public:
     long get_lines_on_screen(EditorViewType view) const override;
     long get_document_line_from_visible(EditorViewType view, long visible_line) const override;
     long get_document_line_count(EditorViewType view) const override;
-    std::vector<char> get_active_document_text(EditorViewType view) const override;
+    std::string get_active_document_text(EditorViewType view) const override;
     std::wstring get_full_current_path() const override;
 private:
     const NppData& m_npp_data;
