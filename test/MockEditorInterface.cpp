@@ -332,7 +332,7 @@ std::string MockEditorInterface::selected_text(EditorViewType view) const {
   if (!doc)
     return "";
   return convert_from_wstring(
-      view, doc->data.substr(doc->selection[0], doc->selection[1]).c_str());
+      view, doc->data.substr(doc->selection[0], doc->selection[1] - doc->selection[0]).c_str());
 }
 
 std::string MockEditorInterface::get_current_line(EditorViewType view) const {

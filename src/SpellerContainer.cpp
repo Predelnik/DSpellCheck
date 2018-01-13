@@ -94,6 +94,7 @@ SpellerContainer::SpellerContainer(const Settings *settings,
     : m_settings(*settings), m_spellers({}) {
   m_single_speller = std::move(speller);
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
+  on_settings_changed ();
 }
 
 static void set_multiple_languages(std::wstring_view multi_string,
