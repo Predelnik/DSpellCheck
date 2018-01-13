@@ -97,6 +97,7 @@ void SpellChecker::find_next_mistake() {
       auto index =
           prev_token_begin(text.str, static_cast<long>(text.str.size()) - 1)
               .value_or(text.str.size() - 1);
+      index = next_token_end (text.str, index).value_or (text.str.size() - 1);
       text.str.erase(index, text.str.size() - index);
       m_editor.force_style_update(view, from, to);
       bool result = check_text(view, text, static_cast<long>(iterator_pos),
