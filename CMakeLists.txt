@@ -47,7 +47,7 @@ if ( DSpellCheck_USE_VLD )
     add_definitions ("-DVLD_BUILD")
 endif ()
 
-file (GLOB_RECURSE source_files src/*.cpp src/*.h src/*.rc)
+file (GLOB_RECURSE source_files src/*.cpp src/*.h)
 list(REMOVE_ITEM source_files src/DllMain.cpp)
 
 add_library (DSpellCheckStatic STATIC ${source_files})
@@ -68,14 +68,6 @@ target_link_libraries(DSpellCheckStatic lsignal)
 target_link_libraries(DSpellCheckStatic aspell)
 target_link_libraries(DSpellCheckStatic shlwapi comctl32 version wininet Ws2_32)
 target_include_directories (DSpellCheckStatic PRIVATE src/Controls)
-
-set(DSpellCheck_DLL_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
-if (NOT ${DSpellCheck_DLL_OUTPUT_PATH} STREQUAL "")
-    set_target_properties (DSpellCheckStatic PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${DSpellCheck_DLL_OUTPUT_PATH}
-        RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${DSpellCheck_DLL_OUTPUT_PATH}
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${DSpellCheck_DLL_OUTPUT_PATH})
-endif ()
 
 if ( NOT ${DSpellCheck_SANITIZE} STREQUAL none)
   if ( ${DSpellCheck_SANITIZE} STREQUAL address)
@@ -103,8 +95,16 @@ if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif ()
 target_compile_options (DSpellCheckStatic PUBLIC /std:c++latest /EHsc)
 
-add_library (DSpellCheck SHARED src/DllMain.cpp)
+add_library (DSpellCheck SHARED src/DllMain.cpp src/DSpellCheck.rc)
 target_link_libraries (DSpellCheck DSpellCheckStatic)
+
+set(DSpellCheck_DLL_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
+if (NOT ${DSpellCheck_DLL_OUTPUT_PATH} STREQUAL "")
+    set_target_properties (DSpellCheck PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${DSpellCheck_DLL_OUTPUT_PATH}
+        RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${DSpellCheck_DLL_OUTPUT_PATH}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${DSpellCheck_DLL_OUTPUT_PATH})
+endif ()
 
 file (GLOB_RECURSE test_source_files test/*.cpp test/*.h)
 add_executable (DSpellCheckTest ${test_source_files})

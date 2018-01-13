@@ -52,7 +52,7 @@ void DownloadDicsDlg::do_dialog() {
 }
 
 void DownloadDicsDlg::fill_file_list() {
-  get_download_dics()->do_ftp_operation(FtpOperationType::fill_file_list,
+  do_ftp_operation(FtpOperationType::fill_file_list,
                                         *current_address());
 }
 
@@ -74,7 +74,10 @@ DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent,
                               L"mirror/OpenOffice/contrib/dictionaries/";
   m_default_server_names[2] =
       L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/";
-  m_settings.settings_changed.connect([this] { update_controls(); });
+  m_settings.settings_changed.connect([this] {
+    update_controls();
+    update_list_box();
+  });
 }
 
 void DownloadDicsDlg::indicate_that_saving_might_be_needed() {
@@ -463,9 +466,9 @@ struct LogObserver : public nsFTP::CFTPClient::CNotification {
     std::wstring s = L"Command ";
     s += cmd.AsString();
     s += L" with args: ";
-    for (int i = 0; i < static_cast<int> (args.size()); ++i) {
+    for (int i = 0; i < static_cast<int>(args.size()); ++i) {
       s += args[i];
-      if (i != static_cast<int> (args.size()) - 1)
+      if (i != static_cast<int>(args.size()) - 1)
         s += L", ";
     }
     s += L'\n';
@@ -530,7 +533,7 @@ do_download_file_list_ftp(FtpOperationParams params) {
   nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(),
                            500);
   auto log_observer =
-      std::make_unique<LogObserver>(params.debug_log_path.c_str ());
+      std::make_unique<LogObserver>(params.debug_log_path.c_str());
   if (params.write_debug_log) {
     client.AttachObserver(log_observer.get());
   }
@@ -555,7 +558,7 @@ do_download_file(FtpOperationParams params, const std::wstring &target_path,
   nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(),
                            500);
   auto log_observer =
-      std::make_unique<LogObserver>(params.debug_log_path.c_str ());
+      std::make_unique<LogObserver>(params.debug_log_path.c_str());
   if (params.write_debug_log) {
     client.AttachObserver(log_observer.get());
   }
@@ -851,7 +854,7 @@ void DownloadDicsDlg::preserve_current_address_index(Settings &settings) {
 
 void DownloadDicsDlg::reset_download_combobox() {
   HWND target_combobox =
-      GetDlgItem(get_download_dics()->getHSelf(), IDC_ADDRESS);
+      GetDlgItem(getHSelf(), IDC_ADDRESS);
   wchar_t buf[DEFAULT_BUF_SIZE];
   ComboBox_GetText(target_combobox, buf, DEFAULT_BUF_SIZE);
   if (m_address_is_set) {
@@ -956,8 +959,8 @@ void DownloadDicsDlg::prepare_file_list_update() {
   ;
 }
 
-FtpOperationParams
-DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring &full_path) const {
+FtpOperationParams DownloadDicsDlg::spawn_ftp_operation_params(
+    const std::wstring &full_path) const {
   FtpOperationParams params;
   std::tie(params.address, params.path) = ftp_split(full_path);
   params.use_proxy = m_settings.use_proxy;
@@ -967,7 +970,7 @@ DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring &full_path) const
   params.proxy_username = m_settings.proxy_user_name;
   params.proxy_password = m_settings.proxy_password;
   params.write_debug_log = m_settings.write_debug_log;
-  params.debug_log_path = get_debug_log_path ();
+  params.debug_log_path = get_debug_log_path();
   return params;
 }
 

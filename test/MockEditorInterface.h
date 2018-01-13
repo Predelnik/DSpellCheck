@@ -17,14 +17,15 @@ public:
   std::wstring path;
   std::wstring data;
   std::array<long, 2> selection;
-  EditorCodepage codepage;
+  EditorCodepage codepage = EditorCodepage::utf8;
   std::vector<MockedIndicatorInfo> indicator_info;
   std::vector<int> style;
   int lexer = 0;
   int hotspot_tyle = 123;
-  int current_indicator;
-  long current_pos;
+  int current_indicator = 0;
+  long current_pos = 0;
   std::array<long, 2> visible_lines;
+  void set_data(const std::wstring& data_arg);
 };
 
 class MockEditorInterface : public EditorInterface {
@@ -86,14 +87,15 @@ public:
   std::wstring get_full_current_path() const override;
   std::string get_text_range(EditorViewType view, long from,
                              long to) const override;
-    std::string
-    get_active_document_text(EditorViewType view) const override;
+  std::string get_active_document_text(EditorViewType view) const override;
   MockEditorInterface();
   ~MockEditorInterface();
+  void open_virtual_document(EditorViewType view, const std::wstring &path,
+                             const std::wstring &data);
 
 private:
-  MockedDocumentInfo &active_document(EditorViewType view);
-  const MockedDocumentInfo &active_document(EditorViewType view) const;
+  MockedDocumentInfo *active_document(EditorViewType view);
+  const MockedDocumentInfo *active_document(EditorViewType view) const;
   std::string convert_from_wstring(EditorViewType view,
                                    const wchar_t *str) const;
   std::wstring convert_to_wstring(EditorViewType view, const char *str) const;

@@ -24,7 +24,7 @@ struct ProgressData;
 
 class ProgressDlg : public StaticDialog {
 public:
-  ProgressDlg();
+  ProgressDlg(DownloadDicsDlg &download_dics_dlg);
   ~ProgressDlg() override;
 
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override; // NOLINT
@@ -42,4 +42,5 @@ private:
   HWND m_h_progress_bar = nullptr;
   bool m_marquee = false;
   std::wstring m_top_message;
+  DownloadDicsDlg &m_download_dics_dlg;
 };

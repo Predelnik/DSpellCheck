@@ -47,7 +47,7 @@ public:
     void fill_lib_info(AspellStatus aspell_status, const Settings& settings);
     void disable_language_combo(bool disable);
     void set_file_types(bool check_those, const wchar_t* file_types);
-    void set_sugg_type(SuggestionMode mode);    
+    void set_sugg_type(SuggestionMode mode);
     void set_decode_names(bool value);
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent);
@@ -151,6 +151,8 @@ public:
     SimpleDlg* get_simple_dlg();
     AdvancedDlg* get_advanced_dlg();
     SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings& settings, const SpellerContainer &speller_container);
+
+    lsignal::signal<void ()> download_dics_dlg_requested;
 
 private:
     INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;

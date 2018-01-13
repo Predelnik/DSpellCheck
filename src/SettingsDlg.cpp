@@ -403,7 +403,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     } break;
     case IDC_DOWNLOADDICS: {
       if (HIWORD(w_param) == BN_CLICKED) {
-        get_download_dics()->do_dialog();
+        m_parent.download_dics_dlg_requested();
       }
     } break;
     case IDC_BROWSEASPELLPATH:
@@ -418,9 +418,10 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         std::copy(lib_path.begin(), lib_path.end(), filename.begin());
         auto aspell_library_desc = rc_str(IDS_ASPELL_LIBRARY);
         std::vector<wchar_t> buf;
-        buf.insert (buf.end (), aspell_library_desc.begin (), aspell_library_desc.end());
+        buf.insert(buf.end(), aspell_library_desc.begin(),
+                   aspell_library_desc.end());
         wchar_t rest[] = L" (*.dll)\0*.dll\0\0";
-        buf.insert (buf.end (), std::begin (rest), std::end (rest));
+        buf.insert(buf.end(), std::begin(rest), std::end(rest));
         // TODO: add possibility to use modern browse dialog
         ofn.lpstrFile = filename.data();
         ofn.nMaxFile = DEFAULT_BUF_SIZE;
@@ -650,20 +651,18 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     SetWindowText(m_h_ignore_yo, rc_str(IDS_CYRILLIC_YO_AS_YE).c_str());
     create_tool_tip(IDC_DELIMITERS, _hSelf,
-                    rc_str (IDS_DELIMITER_TOOLTIP).c_str ());
+                    rc_str(IDS_DELIMITER_TOOLTIP).c_str());
     create_tool_tip(IDC_RECHECK_DELAY, _hSelf,
-                    rc_str (IDS_RECHECK_DELAY_TOOLTIP).c_str ());
+                    rc_str(IDS_RECHECK_DELAY_TOOLTIP).c_str());
     create_tool_tip(IDC_IGNORE_CSTART, _hSelf,
-                    rc_str (IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str ());
-    create_tool_tip(
-        IDC_IGNORE_SE_APOSTROPHE, _hSelf,
-        rc_str (IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str ());
-    create_tool_tip(
-        IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
-        rc_str (IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str ());
+                    rc_str(IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str());
+    create_tool_tip(IDC_IGNORE_SE_APOSTROPHE, _hSelf,
+                    rc_str(IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str());
+    create_tool_tip(IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
+                    rc_str(IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str());
 
     ComboBox_ResetContent(m_h_underline_style);
-    for (const auto &name : get_indic_names ())
+    for (const auto &name : get_indic_names())
       ComboBox_AddString(m_h_underline_style, name.c_str());
     return TRUE;
   }
@@ -931,9 +930,10 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_advanced_dlg.init(_hInst, _hSelf);
     m_advanced_dlg.create(IDD_ADVANCED, false, false);
 
-    m_window_vector.emplace_back(&m_simple_dlg, rc_str (IDS_SIMPLE_TAB_TEXT).c_str (),
-                                 L"Simple Options");
-    m_window_vector.emplace_back(&m_advanced_dlg, rc_str (IDS_ADVANCED_TAB_TEXT).c_str (),
+    m_window_vector.emplace_back(
+        &m_simple_dlg, rc_str(IDS_SIMPLE_TAB_TEXT).c_str(), L"Simple Options");
+    m_window_vector.emplace_back(&m_advanced_dlg,
+                                 rc_str(IDS_ADVANCED_TAB_TEXT).c_str(),
                                  L"Advanced Options");
     m_controls_tab.createTabs(m_window_vector);
     m_controls_tab.display();

@@ -1,12 +1,28 @@
-#include "catch.hpp"
-#include "SpellChecker.h"
-#include "MockSpeller.h"
 #include "MockEditorInterface.h"
+#include "MockSpeller.h"
 #include "Settings.h"
+#include "SpellChecker.h"
+#include "SpellerContainer.h"
+#include "catch.hpp"
 
-TEST_CASE ("Simple")
-{
-    MockSpeller speller;
-    Settings settings;
-    MockEditorInterface editor;
+void setup_speller(MockSpeller &speller) {
+  speller.set_inner_dict({{L"English",
+                           {L"This", L"is", L"tTest", L"Document", L"Please",
+                            L"bear", L"with", L"me"}}});
+}
+
+TEST_CASE("Simple") {
+  auto speller = std::make_unique<MockSpeller>();
+  setup_speller(*speller);
+  Settings settings;
+  settings.speller_language[SpellerId::aspell] = L"English";
+  MockEditorInterface editor;
+  editor.open_virtual_document(EditorViewType::primary, L"test.txt",
+                               LR"(This is test document.
+Please bear with me.
+adadsd.)");
+  SpellerContainer container(&settings, std::move(speller));
+  SpellChecker sc(&settings, editor, container);
+  sc.find_next_mistake();
+  CHECK(editor.selected_text(EditorViewType::primary) == "adadsd");
 }

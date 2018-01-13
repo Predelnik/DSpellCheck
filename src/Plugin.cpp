@@ -31,19 +31,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "ProgressDlg.h"
 #include "RemoveDictionariesDialog.h"
 #include "SelectProxyDialog.h"
+#include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "SuggestionsButton.h"
-#include "SettingsDlg.h"
 
 #include "ContextMenuHandler.h"
 #include "HunspellInterface.h"
 #include "Settings.h"
 #include "SpellerContainer.h"
+#include "SuggestionMenuItem.h"
 #include "menuCmdID.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/raii.h"
-#include "SuggestionMenuItem.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -152,7 +152,7 @@ void create_hooks() {
 void plugin_clean_up() {
   speller_container->cleanup();
   UnhookWindowsHookEx(h_mouse_hook);
-  DeleteFile (get_debug_log_path().c_str ());
+  DeleteFile(get_debug_log_path().c_str());
 }
 
 void register_custom_messages() {
@@ -190,10 +190,9 @@ void switch_auto_check_text() {
 void switch_debug_logging() {
   auto mut = settings->modify();
   mut->write_debug_log = !mut->write_debug_log;
-  if (mut->write_debug_log)
-    {
-        DeleteFile (get_debug_log_path().c_str ());
-    }
+  if (mut->write_debug_log) {
+    DeleteFile(get_debug_log_path().c_str());
+  }
 }
 
 void open_debug_log() {
@@ -432,26 +431,29 @@ void init_classes() {
   settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module),
                                                npp_data.npp_handle, *npp,
                                                *settings, *speller_container);
+  download_dics_dlg = std::make_unique<DownloadDicsDlg>(
+      static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings);
+
+  settings_dlg->download_dics_dlg_requested.connect(
+      []() { download_dics_dlg->do_dialog(); });
 
   about_dlg = std::make_unique<AboutDlg>();
   about_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
-  progress_dlg = std::make_unique<ProgressDlg>();
+  progress_dlg = std::make_unique<ProgressDlg>(*download_dics_dlg);
   progress_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
   lang_list_instance = std::make_unique<LangList>(
       static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings,
       *speller_container);
 
-  select_proxy_dlg = std::make_unique<SelectProxyDialog>(*settings);
+  select_proxy_dlg =
+      std::make_unique<SelectProxyDialog>(*settings, *download_dics_dlg);
   select_proxy_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
   remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>(
       static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings,
       *speller_container);
-
-  download_dics_dlg = std::make_unique<DownloadDicsDlg>(
-      static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings);
 
   settings->load();
   resources_inited = true;
@@ -683,7 +685,7 @@ void WINAPI do_recheck(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
 
 void WINAPI ui_update(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
                       DWORD /*dwTime*/) {
-  get_download_dics()->ui_update();
+  download_dics_dlg->ui_update();
 }
 
 std::wstring_view rc_str_view(UINT string_id) {
@@ -816,7 +818,7 @@ void init_needed_dialogs(WPARAM w_param) {
     else
       result = menu_id - get_langs_menu_id_start();
     if (result == DOWNLOAD_DICS)
-      get_download_dics()->do_dialog();
+      download_dics_dlg->do_dialog();
     else if (result == CUSTOMIZE_MULTIPLE_DICS) {
       get_lang_list()->do_dialog();
     } else if (result == REMOVE_DICS) {

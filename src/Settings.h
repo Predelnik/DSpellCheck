@@ -58,7 +58,7 @@ public:
     std::wstring hunspell_user_path;
     std::wstring hunspell_system_path;
     SuggestionMode suggestions_mode = SuggestionMode::button;
-    std::wstring delimiters;
+    std::wstring delimiters = default_delimiters ();
     int suggestion_count = 0;
     bool ignore_yo = false;
     bool convert_single_quotes = false;
@@ -82,7 +82,7 @@ public:
     SpellerId active_speller_lib_id = SpellerId::aspell;
     int suggestion_button_size = 0;
     int suggestion_button_opacity = 0;
-    int find_next_buffer_size = 0;
+    int find_next_buffer_size = 5;
     bool ftp_show_only_known_dictionaries = false;
     bool ftp_install_dictionaries_for_all_users = false;
     int recheck_delay = 0;
@@ -100,7 +100,7 @@ public:
     bool proxy_is_anonymous = false;
     ProxyType proxy_type = ProxyType::ftp_gateway;
     TokenizationStyle tokenization_style = TokenizationStyle::by_delimiters;
-    std::wstring delimiter_exclusions;
+    std::wstring delimiter_exclusions = default_delimiter_exclusions();
     bool split_camel_case;
     enum_array<SpellerId, std::wstring> speller_language;
     enum_array<SpellerId, std::wstring> speller_multi_languages;

@@ -87,7 +87,6 @@ LangList *get_lang_list ();
 RemoveDictionariesDialog *get_remove_dics ();
 SelectProxyDialog *get_select_proxy ();
 ProgressDlg *get_progress ();
-DownloadDicsDlg *get_download_dics ();
 FuncItem *get_func_item ();
 std::wstring get_default_hunspell_path ();
 void set_context_menu_id_start (int id);

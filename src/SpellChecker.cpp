@@ -51,17 +51,17 @@ SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor,
       [this] { recheck_visible_both_views(); });
 
   auto npp = dynamic_cast<NppInterface *>(&m_editor);
-  if (npp == nullptr)
-    return;
+  if (npp) {
+    bool res = npp->is_allocate_cmdid_supported();
 
-  bool res = npp->is_allocate_cmdid_supported();
-
-  if (res) {
-    set_use_allocated_ids(true);
-    auto id = npp->allocate_cmdid(350);
-    set_context_menu_id_start(id);
-    set_langs_menu_id_start(id + 103);
+    if (res) {
+      set_use_allocated_ids(true);
+      auto id = npp->allocate_cmdid(350);
+      set_context_menu_id_start(id);
+      set_langs_menu_id_start(id + 103);
+    }
   }
+  on_settings_changed();
 }
 
 SpellChecker::~SpellChecker() = default;
@@ -205,7 +205,6 @@ void SpellChecker::on_settings_changed() {
   refresh_underline_style();
   recheck_visible_both_views();
   update_delimiters();
-  get_download_dics()->update_list_box();
 }
 
 void SpellChecker::create_word_underline(EditorViewType view, long start,
@@ -461,7 +460,7 @@ int SpellChecker::check_text(EditorViewType view,
 
   bool stop = false;
   long resulting_word_end = -1, resulting_word_start = -1;
-  auto text_len = text_to_check.original_length ();
+  auto text_len = text_to_check.original_length();
   std::vector<long> underline_buffer;
 
   auto sv = std::wstring_view(text_to_check.str);
@@ -638,4 +637,3 @@ void SpellChecker::copy_misspellings_to_clipboard() {
 void SpellChecker::update_delimiters() {
   m_delimiters = L" \n\r\t\v" + parse_string(m_settings.delimiters.c_str());
 }
-

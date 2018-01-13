@@ -28,7 +28,7 @@ enum class ProxyType;
 
 class SelectProxyDialog : public StaticDialog {
 public:
-    explicit SelectProxyDialog (Settings &settings);
+    explicit SelectProxyDialog (Settings &settings, DownloadDicsDlg &download_dics_dlg);
   void do_dialog();
   void apply_choice();
   void update_controls(
@@ -46,6 +46,7 @@ protected:
   HWND m_password = nullptr;
   HWND m_use_proxy = nullptr;
   HWND m_proxy_anonymous = nullptr;
+  DownloadDicsDlg &m_download_dics_dlg;
 
   WinApi::EnumComboBox<ProxyType> m_proxy_type_cmb;
   Settings &m_settings;
