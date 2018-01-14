@@ -699,6 +699,17 @@ std::wstring rc_str(UINT string_id) {
   return std::wstring{rc_str_view(string_id)};
 }
 
+void init_menu_ids() {
+  bool res = npp->is_allocate_cmdid_supported();
+
+  if (res) {
+    set_use_allocated_ids(true);
+    auto id = npp->allocate_cmdid(350);
+    set_context_menu_id_start(id);
+    set_langs_menu_id_start(id + 103);
+  }
+}
+
 // ReSharper disable once CppInconsistentNaming
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   notify(notify_code);
@@ -720,6 +731,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case NPPN_READY: {
     register_custom_messages();
     init_classes();
+    init_menu_ids();
     check_queue.clear();
     create_hooks();
     recheck_timer =

@@ -49,18 +49,6 @@ SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor,
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
   m_speller_container.speller_status_changed.connect(
       [this] { recheck_visible_both_views(); });
-
-  auto npp = dynamic_cast<NppInterface *>(&m_editor);
-  if (npp) {
-    bool res = npp->is_allocate_cmdid_supported();
-
-    if (res) {
-      set_use_allocated_ids(true);
-      auto id = npp->allocate_cmdid(350);
-      set_context_menu_id_start(id);
-      set_langs_menu_id_start(id + 103);
-    }
-  }
   on_settings_changed();
 }
 
