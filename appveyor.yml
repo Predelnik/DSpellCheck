@@ -51,6 +51,7 @@ build_script:
 
 after_build:
     - cd "%APPVEYOR_BUILD_FOLDER%"\_build_%platform%\
+    - call "%CONFIGURATION%/DSpellCheckTest.exe"
     - ps: >-
         $dspellcheckFileName = "DSpellCheck.$env:PLATFORM.$env:CONFIGURATION.$env:PLATFORMTOOLSET.dll"
 
