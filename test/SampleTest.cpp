@@ -4,6 +4,7 @@
 #include "SpellChecker.h"
 #include "SpellerContainer.h"
 #include "catch.hpp"
+#include "utils/TemporaryAcessor.h"
 
 void setup_speller(MockSpeller &speller) {
   speller.set_inner_dict({{L"English",
@@ -25,4 +26,23 @@ adadsd.)");
   SpellChecker sc(&settings, editor, container);
   sc.find_next_mistake();
   CHECK(editor.selected_text(EditorViewType::primary) == "adadsd");
+  settings.modify()->tokenization_style = TokenizationStyle::by_delimiters;
+  CHECK(editor.selected_text(EditorViewType::primary) == "adadsd");
+  editor.set_active_document_text(EditorViewType::primary,
+                                  LR"(This is test document)");
+  sc.find_next_mistake();
+  CHECK(editor.selected_text(EditorViewType::primary).empty());
+  editor.set_active_document_text(EditorViewType::primary,
+                                LR"(
+wrongword
+This is test document
+badword)");
+  sc.find_next_mistake();
+  CHECK(editor.selected_text(EditorViewType::primary) == "wrongword");
+  sc.find_next_mistake();
+  CHECK(editor.selected_text(EditorViewType::primary) == "badword");
+  sc.find_prev_mistake();
+  CHECK(editor.selected_text(EditorViewType::primary) == "wrongword");
+    sc.find_prev_mistake();
+  CHECK(editor.selected_text(EditorViewType::primary) == "badword");
 }

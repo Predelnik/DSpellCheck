@@ -53,7 +53,7 @@ public:
     const std::wstring& get_active_multi_languages() const;
     TemporaryAcessor<Self> modify() const;
 public:
-    bool auto_check_text = false;
+    bool auto_check_text = true;
     std::wstring aspell_path;
     std::wstring hunspell_user_path;
     std::wstring hunspell_system_path;
@@ -99,7 +99,7 @@ public:
     int proxy_port = 0;
     bool proxy_is_anonymous = false;
     ProxyType proxy_type = ProxyType::ftp_gateway;
-    TokenizationStyle tokenization_style = TokenizationStyle::by_delimiters;
+    TokenizationStyle tokenization_style = TokenizationStyle::by_non_alphabetic;
     std::wstring delimiter_exclusions = default_delimiter_exclusions();
     bool split_camel_case;
     enum_array<SpellerId, std::wstring> speller_language;

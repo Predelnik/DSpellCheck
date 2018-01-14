@@ -23,9 +23,9 @@ public:
   int lexer = 0;
   int hotspot_tyle = 123;
   int current_indicator = 0;
-  long current_pos = 0;
   std::array<long, 2> visible_lines;
   void set_data(const std::wstring& data_arg);
+  long cursor_pos;
 };
 
 class MockEditorInterface : public EditorInterface {
@@ -92,6 +92,7 @@ public:
   ~MockEditorInterface();
   void open_virtual_document(EditorViewType view, const std::wstring &path,
                              const std::wstring &data);
+  void set_active_document_text(EditorViewType view, const std::wstring &text);
 
 private:
   MockedDocumentInfo *active_document(EditorViewType view);
