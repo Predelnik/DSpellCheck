@@ -3,6 +3,11 @@
 #include "CommonFunctions.h"
 #include "MainDef.h"
 
+struct CallbackData {
+  std::weak_ptr<void> alive_status;
+  std::function<void ()> callback;
+};
+
 struct TaskWrapper {
 private:
     using AliveStatusType = std::shared_ptr<concurrency::cancellation_token_source>;

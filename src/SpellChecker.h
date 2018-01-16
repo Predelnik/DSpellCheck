@@ -71,7 +71,7 @@ public:
 private:
   void create_word_underline(EditorViewType view, long start, long end) const;
   void remove_underline(EditorViewType view, long start, long end) const;
-  void clear_all_underlines(EditorViewType view);
+  void clear_all_underlines(EditorViewType view) const;
   bool check_word(EditorViewType view, std::wstring_view word, long word_start) const;
   void get_visible_limits(EditorViewType view, long &start, long &finish);
   MappedWstring get_visible_text(EditorViewType view, long *offset,

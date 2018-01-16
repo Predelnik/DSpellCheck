@@ -52,7 +52,8 @@ void MockEditorInterface::set_indicator_style(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  doc->indicator_info.resize(indicator_index + 1);
+  if (indicator_index >= doc->indicator_info.size())
+    doc->indicator_info.resize(indicator_index + 1);
   doc->indicator_info[indicator_index].style = style;
 }
 
@@ -62,7 +63,8 @@ void MockEditorInterface::set_indicator_foreground(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  doc->indicator_info.resize(indicator_index + 1);
+  if (indicator_index >= doc->indicator_info.size())
+    doc->indicator_info.resize(indicator_index + 1);
   doc->indicator_info[indicator_index].foreground = style;
 }
 
@@ -71,7 +73,8 @@ void MockEditorInterface::set_current_indicator(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  doc->indicator_info.resize(indicator_index + 1);
+  if (indicator_index >= doc->indicator_info.size())
+    doc->indicator_info.resize(indicator_index + 1);
   doc->current_indicator = indicator_index;
 }
 
@@ -81,7 +84,8 @@ void MockEditorInterface::indicator_fill_range(EditorViewType view, long from,
   if (!doc)
     return;
   auto &s = doc->indicator_info[doc->current_indicator].set_for;
-  s.resize(to + 1);
+  if (to >= s.size())
+    s.resize(to + 1);
   std::fill(s.begin() + from, s.begin() + to, true);
 }
 
@@ -91,7 +95,8 @@ void MockEditorInterface::indicator_clear_range(EditorViewType view, long from,
   if (!doc)
     return;
   auto &s = doc->indicator_info[doc->current_indicator].set_for;
-  s.resize(to + 1);
+  if (to >= s.size())
+    s.resize(to + 1);
   std::fill(s.begin() + from, s.begin() + to, false);
 }
 
@@ -373,7 +378,7 @@ std::string MockEditorInterface::get_text_range(EditorViewType view, long from,
   auto doc = active_document(view);
   if (!doc)
     return "";
-  return convert_from_wstring(view, doc->data.substr(from, to).c_str());
+  return convert_from_wstring(view, doc->data.substr(from, to - from).c_str());
 }
 
 std::string
@@ -409,6 +414,36 @@ void MockEditorInterface::set_active_document_text(EditorViewType view,
   auto doc = active_document(view);
   if (doc)
     doc->set_data(text);
+}
+
+std::vector<std::string>
+MockEditorInterface::get_underlined_words(EditorViewType view,
+                                          int indicator_id) const {
+  auto doc = active_document(view);
+  if (!doc)
+    return {};
+  if (indicator_id >= doc->indicator_info.size())
+    return {};
+  auto &target = doc->indicator_info[indicator_id].set_for;
+  auto it = target.begin(), jt = target.begin();
+  std::vector<std::string> result;
+  while (true) {
+    it = std::find(jt, target.end(), true);
+    if (it == target.end())
+      return result;
+    jt = std::find(it, target.end(), false);
+    result.push_back(get_text_range(view,
+                                    static_cast<long>(it - target.begin()),
+                                    static_cast<long>(jt - target.begin())));
+  }
+}
+
+void MockEditorInterface::make_all_visible(EditorViewType view) {
+  auto doc = active_document(view);
+  if (!doc)
+    return;
+
+  doc->visible_lines = {0, get_document_line_count(view)};
 }
 
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {

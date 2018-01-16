@@ -862,8 +862,8 @@ void DownloadDicsDlg::reset_download_combobox() {
     preserve_current_address_index(*mut_settings);
   }
   ComboBox_ResetContent(target_combobox);
-  for (int i = 0; i < static_cast<int>(COUNTOF(m_default_server_names)); i++) {
-    ComboBox_AddString(target_combobox, m_default_server_names[i].c_str());
+  for (auto &server_name : m_default_server_names) {
+    ComboBox_AddString(target_combobox, server_name.c_str());
   }
   for (auto &server_name : m_settings.server_names) {
     if (!server_name.empty())
@@ -874,7 +874,7 @@ void DownloadDicsDlg::reset_download_combobox() {
   else
     ComboBox_SetCurSel(target_combobox, m_settings.last_used_address_index -
                                             USER_SERVER_CONST +
-                                            COUNTOF(m_default_server_names));
+                                            m_default_server_names.size ());
   m_address_is_set = true;
 }
 

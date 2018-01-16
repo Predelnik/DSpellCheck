@@ -24,7 +24,7 @@ public:
   int hotspot_tyle = 123;
   int current_indicator = 0;
   std::array<long, 2> visible_lines;
-  void set_data(const std::wstring& data_arg);
+  void set_data(const std::wstring &data_arg);
   long cursor_pos;
 };
 
@@ -93,10 +93,12 @@ public:
   void open_virtual_document(EditorViewType view, const std::wstring &path,
                              const std::wstring &data);
   void set_active_document_text(EditorViewType view, const std::wstring &text);
+  std::vector<std::string> get_underlined_words (EditorViewType view, int indicator_id) const;
+  void make_all_visible (EditorViewType view);
 
 private:
-  MockedDocumentInfo *active_document(EditorViewType view);
   const MockedDocumentInfo *active_document(EditorViewType view) const;
+  MockedDocumentInfo *active_document(EditorViewType view);
   std::string convert_from_wstring(EditorViewType view,
                                    const wchar_t *str) const;
   std::wstring convert_to_wstring(EditorViewType view, const char *str) const;

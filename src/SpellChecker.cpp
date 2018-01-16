@@ -183,9 +183,9 @@ std::wstring_view SpellChecker::get_word_at(long char_pos,
 
 void SpellChecker::refresh_underline_style() {
   for (auto view : enum_range<EditorViewType>()) {
-    m_editor.set_indicator_style(view, SCE_ERROR_UNDERLINE,
+    m_editor.set_indicator_style(view, dspellchecker_indicator_id,
                                  m_settings.underline_style);
-    m_editor.set_indicator_foreground(view, SCE_ERROR_UNDERLINE,
+    m_editor.set_indicator_foreground(view, dspellchecker_indicator_id,
                                       m_settings.underline_color);
   }
 }
@@ -198,14 +198,14 @@ void SpellChecker::on_settings_changed() {
 
 void SpellChecker::create_word_underline(EditorViewType view, long start,
                                          long end) const {
-  m_editor.set_current_indicator(view, SCE_ERROR_UNDERLINE);
+  m_editor.set_current_indicator(view, dspellchecker_indicator_id);
   m_editor.indicator_fill_range(view, start, end);
 }
 
 void SpellChecker::remove_underline(EditorViewType view, long start, long end) const {
   if (end < start)
     return;
-  m_editor.set_current_indicator(view, SCE_ERROR_UNDERLINE);
+  m_editor.set_current_indicator(view, dspellchecker_indicator_id);
   m_editor.indicator_clear_range(view, start, end);
 }
 
@@ -241,11 +241,12 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view, long *offset,
       m_editor, view, m_editor.get_text_range(view, from, to));
 }
 
-void SpellChecker::clear_all_underlines(EditorViewType view) {
+void SpellChecker::clear_all_underlines(EditorViewType view) const
+{
   auto length = m_editor.get_active_document_length(view);
   if (length > 0) {
-    m_editor.set_current_indicator(view, SCE_ERROR_UNDERLINE);
-    m_editor.indicator_clear_range(view, 0, length - 1);
+    m_editor.set_current_indicator(view, dspellchecker_indicator_id);
+    m_editor.indicator_clear_range(view, 0, length);
   }
 }
 
@@ -537,12 +538,12 @@ int SpellChecker::check_text(EditorViewType view,
     long prev_pos = offset;
     for (long i = 0; i < static_cast<long>(underline_buffer.size()) - 1;
          i += 2) {
-      remove_underline(view, prev_pos, underline_buffer[i] - 1);
+      remove_underline(view, prev_pos, underline_buffer[i]);
       create_word_underline(view, underline_buffer[i],
-                            underline_buffer[i + 1] - 1);
+                            underline_buffer[i + 1]);
       prev_pos = underline_buffer[i + 1];
     }
-    remove_underline(view, prev_pos, offset + static_cast<long>(text_len) - 1);
+    remove_underline(view, prev_pos, offset + static_cast<long>(text_len));
   }
   switch (mode) {
   case CheckTextMode::underline_errors:

@@ -19,8 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
 
-#define SCE_ERROR_UNDERLINE (19) // Only index from 8 to 21 are free
-#define COUNTOF(A) (sizeof((A)) / sizeof((A)[0]))
+constexpr int dspellchecker_indicator_id = 19;
 #define DEFAULT_BUF_SIZE 4096
 
 
@@ -38,11 +37,6 @@ enum class CustomGuiMessage {
 };
 
 const wchar_t *const custom_gui_messsages_names[] = {L"DSpellCheck_GenericCallback" };
-
-struct CallbackData {
-  std::weak_ptr<void> alive_status;
-  std::function<void ()> callback;
-};
 
 // Global Menu ID
 #define DSPELLCHECK_MENU_ID 193

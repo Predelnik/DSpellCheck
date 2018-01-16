@@ -187,12 +187,12 @@ void NppInterface::set_current_indicator(EditorViewType view,
 
 void NppInterface::indicator_fill_range(EditorViewType view, long from,
                                         long to) {
-  post_msg_to_scintilla(view, SCI_INDICATORFILLRANGE, from, to - from + 1);
+  post_msg_to_scintilla(view, SCI_INDICATORFILLRANGE, from, to - from);
 }
 
 void NppInterface::indicator_clear_range(EditorViewType view, long from,
                                          long to) {
-  post_msg_to_scintilla(view, SCI_INDICATORCLEARRANGE, from, to - from + 1);
+  post_msg_to_scintilla(view, SCI_INDICATORCLEARRANGE, from, to - from);
 }
 
 long NppInterface::get_first_visible_line(EditorViewType view) const {
