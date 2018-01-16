@@ -85,7 +85,7 @@ void SpellChecker::find_next_mistake() {
       auto index =
           prev_token_begin(text.str, static_cast<long>(text.str.size()) - 1)
               .value_or(text.str.size() - 1);
-      index = next_token_end (text.str, index).value_or (text.str.size() - 1);
+      index = next_token_end(text.str, index).value_or(text.str.size() - 1);
       text.str.erase(index, text.str.size() - index);
       m_editor.force_style_update(view, from, to);
       bool result = check_text(view, text, static_cast<long>(iterator_pos),
@@ -197,12 +197,12 @@ void SpellChecker::on_settings_changed() {
 }
 
 void SpellChecker::create_word_underline(EditorViewType view, long start,
-                                         long end) {
+                                         long end) const {
   m_editor.set_current_indicator(view, SCE_ERROR_UNDERLINE);
   m_editor.indicator_fill_range(view, start, end);
 }
 
-void SpellChecker::remove_underline(EditorViewType view, long start, long end) {
+void SpellChecker::remove_underline(EditorViewType view, long start, long end) const {
   if (end < start)
     return;
   m_editor.set_current_indicator(view, SCE_ERROR_UNDERLINE);
@@ -443,7 +443,7 @@ struct WordData {
 
 int SpellChecker::check_text(EditorViewType view,
                              const MappedWstring &text_to_check, long offset,
-                             CheckTextMode mode) {
+                             CheckTextMode mode) const {
   if (text_to_check.str.empty())
     return 0;
 
@@ -583,7 +583,7 @@ void SpellChecker::recheck_visible(EditorViewType view,
     clear_all_underlines(view);
 }
 
-void SpellChecker::copy_misspellings_to_clipboard() {
+std::wstring SpellChecker::get_all_misspellings_as_string() const {
   auto view = m_editor.active_view();
   auto buf = m_editor.get_active_document_text(view);
   auto mapped_str =
@@ -613,14 +613,7 @@ void SpellChecker::copy_misspellings_to_clipboard() {
   for (auto &s : m_misspellings)
     str += std::wstring{s} + L'\n';
   m_misspellings.clear();
-  const size_t len = (str.length() + 1) * 2;
-  HGLOBAL h_mem = GlobalAlloc(GMEM_MOVEABLE, len);
-  memcpy(GlobalLock(h_mem), str.c_str(), len);
-  GlobalUnlock(h_mem);
-  OpenClipboard(nullptr);
-  EmptyClipboard();
-  SetClipboardData(CF_UNICODETEXT, h_mem);
-  CloseClipboard();
+  return str;
 }
 
 void SpellChecker::update_delimiters() {

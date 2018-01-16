@@ -169,7 +169,15 @@ void notify(SCNotification *notify_code) { npp->notify(notify_code); }
 NppInterface &npp_interface() { return *npp; }
 
 void copy_misspellings_to_clipboard() {
-  spell_checker->copy_misspellings_to_clipboard();
+  auto str = spell_checker->get_all_misspellings_as_string();
+  const size_t len = (str.length() + 1) * 2;
+  HGLOBAL h_mem = GlobalAlloc(GMEM_MOVEABLE, len);
+  memcpy(GlobalLock(h_mem), str.c_str(), len);
+  GlobalUnlock(h_mem);
+  OpenClipboard(nullptr);
+  EmptyClipboard();
+  SetClipboardData(CF_UNICODETEXT, h_mem);
+  CloseClipboard();
 }
 
 void reload_hunspell_dictionaries() {

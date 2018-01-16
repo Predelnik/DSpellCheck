@@ -58,7 +58,7 @@ public:
   void recheck_visible_both_views();
   void recheck_visible(EditorViewType view, bool not_intersection_only = false);
 
-  void copy_misspellings_to_clipboard();
+  std::wstring get_all_misspellings_as_string () const;
   void update_delimiters();
   void on_settings_changed();
   void find_next_mistake();
@@ -69,15 +69,15 @@ public:
                                     bool use_text_cursor = false) const;
 
 private:
-  void create_word_underline(EditorViewType view, long start, long end);
-  void remove_underline(EditorViewType view, long start, long end);
+  void create_word_underline(EditorViewType view, long start, long end) const;
+  void remove_underline(EditorViewType view, long start, long end) const;
   void clear_all_underlines(EditorViewType view);
   bool check_word(EditorViewType view, std::wstring_view word, long word_start) const;
   void get_visible_limits(EditorViewType view, long &start, long &finish);
   MappedWstring get_visible_text(EditorViewType view, long *offset,
                                  bool not_intersection_only = false);
   int check_text(EditorViewType view, const MappedWstring &text_to_check,
-                 long offset, CheckTextMode mode);
+                 long offset, CheckTextMode mode) const;
   void check_visible(EditorViewType view, bool not_intersection_only = false);
 
   std::wstring_view get_word_at(long char_pos, const MappedWstring &text,
@@ -101,6 +101,6 @@ private:
 
   long m_current_position;
   EditorInterface &m_editor;
-  std::vector<std::wstring_view> m_misspellings;
+  mutable std::vector<std::wstring_view> m_misspellings;
   const SpellerContainer &m_speller_container;
 };
