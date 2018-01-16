@@ -8,6 +8,8 @@ void MockedDocumentInfo::set_data(const std::wstring &data_arg) {
   style.resize(data.size());
   selection = {0, 0};
   cursor_pos = 0;
+  for (auto &info : indicator_info)
+    std::fill(info.set_for.begin(), info.set_for.end(), false);
 }
 
 void MockEditorInterface::move_active_document_to_other_view() {
@@ -162,11 +164,12 @@ long MockEditorInterface::get_line_end_position(EditorViewType view,
   if (!doc)
     return -1;
   size_t index = 0;
-  for (int i = 0; i < line; ++i) {
+  for (int i = 0; i < line + 1; ++i) {
     index = doc->data.find('\n', index);
     if (index == std::wstring::npos)
       return static_cast<long>(doc->data.size());
-    ++index;
+    if (i != line + 1)
+      ++index;
   }
   return static_cast<long>(index);
 }

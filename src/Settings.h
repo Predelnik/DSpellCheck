@@ -70,9 +70,9 @@ public:
     bool check_variable_functions = false;
     int underline_color = 0;
     int underline_style = 0;
-    bool ignore_containing_digit = false;
+    bool ignore_containing_digit = true;
     bool ignore_starting_with_capital = false;
-    bool ignore_having_a_capital = false;
+    bool ignore_having_a_capital = true;
     bool ignore_all_capital = false;
     bool ignore_one_letter = false;
     bool ignore_having_underscore = false;
@@ -101,7 +101,7 @@ public:
     ProxyType proxy_type = ProxyType::ftp_gateway;
     TokenizationStyle tokenization_style = TokenizationStyle::by_non_alphabetic;
     std::wstring delimiter_exclusions = default_delimiter_exclusions();
-    bool split_camel_case;
+    bool split_camel_case = false;
     enum_array<SpellerId, std::wstring> speller_language;
     enum_array<SpellerId, std::wstring> speller_multi_languages;
     bool write_debug_log;

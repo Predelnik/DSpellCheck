@@ -20,7 +20,7 @@ void MockSpeller::add_to_dictionary(const wchar_t *word) {
 
 void MockSpeller::ignore_all(const wchar_t *word) { m_ignored.insert(word); }
 
-bool MockSpeller::is_working() const { return true; }
+bool MockSpeller::is_working() const { return m_working; }
 
 std::vector<LanguageInfo> MockSpeller::get_language_list() const {
   std::vector<LanguageInfo> ret;
@@ -91,3 +91,5 @@ bool MockSpeller::check_word(WordForSpeller word) const {
   }
   return false;
 }
+
+void MockSpeller::set_working(bool working) { m_working = working; }
