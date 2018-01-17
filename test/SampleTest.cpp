@@ -123,11 +123,26 @@ wrongword
     mut->ignore_all_capital = false;
     mut->ignore_having_a_capital = false;
   }
-  CHECK(sc.get_all_misspellings_as_string() ==
-        LR"(Cas
+  CHECK(sc.get_all_misspellings_as_string() == LR"(Cas
 E
 Eird
 SCREAMING
 w
 )");
+  {
+    auto mut = settings.modify();
+    mut->ignore_one_letter = true;
+    mut->ignore_all_capital = true;
+    mut->ignore_starting_or_ending_with_apostrophe = true;
+  }
+  CHECK(sc.get_all_misspellings_as_string() == LR"(Cas
+Eird
+)");
+  editor.set_active_document_text(v, LR"(
+test
+'ignoreme
+abg
+)");
+  sc.recheck_visible_both_views();
+  CHECK(editor.get_underlined_words(v,dspellchecker_indicator_id) == std::vector<std::string>{"abg"});
 }
