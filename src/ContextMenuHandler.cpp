@@ -86,7 +86,7 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
 
 void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   if ((!get_use_allocated_ids() && HIBYTE(menu_id) != DSPELLCHECK_MENU_ID &&
-       HIBYTE(menu_id) != LANGUAGE_MENU_ID) ||
+       HIBYTE(menu_id) != get_func_item()[quick_lang_change_item_index].cmd_id) ||
       (get_use_allocated_ids() &&
        (static_cast<int>(menu_id) < get_context_menu_id_start() ||
         static_cast<int>(menu_id) > get_context_menu_id_start() + 350)))

@@ -384,7 +384,7 @@ HMENU get_this_plugin_menu() {
   return dspellcheck_menu_cached = dspellcheck_menu;
 }
 
-HMENU get_submenu(int item_index) {
+HMENU get_submenu(int item_id) {
   auto dspellcheck_menu = get_this_plugin_menu();
   if (dspellcheck_menu == nullptr)
     return nullptr;
@@ -394,14 +394,14 @@ HMENU get_submenu(int item_index) {
   mif.fMask = MIIM_SUBMENU;
   mif.cbSize = sizeof(MENUITEMINFO);
 
-  bool res = GetMenuItemInfo(dspellcheck_menu, item_index, TRUE, &mif) == FALSE;
+  bool res = GetMenuItemInfo(dspellcheck_menu, item_id, FALSE, &mif) == FALSE;
   if (res)
     return nullptr;
 
   return mif.hSubMenu;
 }
 
-HMENU get_langs_sub_menu() { return get_submenu(quick_lang_change_item_index); }
+HMENU get_langs_sub_menu() { return get_submenu(get_func_item()[quick_lang_change_item_index].cmd_id); }
 
 void on_settings_changed() {
   npp->set_menu_item_check(get_func_item()[auto_spellcheck_index].cmd_id,
@@ -654,10 +654,22 @@ show_calculated_menu(std::vector<SuggestionsMenuItem> &&menu_list) {
                           last_hwnd, last_coords);
 }
 
+void init_menu_ids() {
+  bool res = npp->is_allocate_cmdid_supported();
+
+  if (res) {
+    set_use_allocated_ids(true);
+    auto id = npp->allocate_cmdid(350);
+    set_context_menu_id_start(id);
+    set_langs_menu_id_start(id + 103);
+  }
+}
+
 // ReSharper disable CppInconsistentNaming
 extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) {
   npp_data = notpadPlusData;
   init_npp_interface();
+  init_menu_ids();
   command_menu_init();
   wnd_proc_notepad = reinterpret_cast<WNDPROC>(
       ::SetWindowLongPtr(npp_data.npp_handle, GWLP_WNDPROC,
@@ -707,17 +719,6 @@ std::wstring rc_str(UINT string_id) {
   return std::wstring{rc_str_view(string_id)};
 }
 
-void init_menu_ids() {
-  bool res = npp->is_allocate_cmdid_supported();
-
-  if (res) {
-    set_use_allocated_ids(true);
-    auto id = npp->allocate_cmdid(350);
-    set_context_menu_id_start(id);
-    set_langs_menu_id_start(id + 103);
-  }
-}
-
 // ReSharper disable once CppInconsistentNaming
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   notify(notify_code);
@@ -739,7 +740,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case NPPN_READY: {
     register_custom_messages();
     init_classes();
-    init_menu_ids();
     check_queue.clear();
     create_hooks();
     recheck_timer =
