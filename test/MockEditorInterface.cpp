@@ -54,7 +54,7 @@ void MockEditorInterface::set_indicator_style(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  if (indicator_index >= doc->indicator_info.size())
+  if (indicator_index >= static_cast<int> (doc->indicator_info.size()))
     doc->indicator_info.resize(indicator_index + 1);
   doc->indicator_info[indicator_index].style = style;
 }
@@ -65,7 +65,7 @@ void MockEditorInterface::set_indicator_foreground(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  if (indicator_index >= doc->indicator_info.size())
+  if (indicator_index >= static_cast<int> (doc->indicator_info.size()))
     doc->indicator_info.resize(indicator_index + 1);
   doc->indicator_info[indicator_index].foreground = style;
 }
@@ -75,7 +75,7 @@ void MockEditorInterface::set_current_indicator(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  if (indicator_index >= doc->indicator_info.size())
+  if (indicator_index >= static_cast<int> (doc->indicator_info.size()))
     doc->indicator_info.resize(indicator_index + 1);
   doc->current_indicator = indicator_index;
 }
@@ -86,7 +86,7 @@ void MockEditorInterface::indicator_fill_range(EditorViewType view, long from,
   if (!doc)
     return;
   auto &s = doc->indicator_info[doc->current_indicator].set_for;
-  if (to >= s.size())
+  if (to >= static_cast<int> (s.size()))
     s.resize(to + 1);
   std::fill(s.begin() + from, s.begin() + to, true);
 }
@@ -97,7 +97,7 @@ void MockEditorInterface::indicator_clear_range(EditorViewType view, long from,
   if (!doc)
     return;
   auto &s = doc->indicator_info[doc->current_indicator].set_for;
-  if (to >= s.size())
+  if (to >= static_cast<long> (s.size()))
     s.resize(to + 1);
   std::fill(s.begin() + from, s.begin() + to, false);
 }
@@ -425,7 +425,7 @@ MockEditorInterface::get_underlined_words(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return {};
-  if (indicator_id >= doc->indicator_info.size())
+  if (indicator_id >= static_cast<int> (doc->indicator_info.size()))
     return {};
   auto &target = doc->indicator_info[indicator_id].set_for;
   auto it = target.begin(), jt = target.begin();
