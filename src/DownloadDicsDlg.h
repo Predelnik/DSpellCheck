@@ -128,7 +128,7 @@ private:
   HWND m_h_status;
   HWND m_h_install_selected;
   HWND m_h_show_only_known;
-  HWND m_h_refresh;
+  HWND m_h_refresh_btn;
   HWND m_h_install_system;
   HICON m_refresh_icon;
   bool m_cancel_pressed;

@@ -921,7 +921,6 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
   switch (message) {
   case WM_INITDIALOG: {
     m_controls_tab.initTabBar(_hInst, _hSelf, false, true, false);
-    m_controls_tab.setFont(L"Tahoma", 13);
 
     m_simple_dlg.init_settings(_hInst, _hSelf);
     m_simple_dlg.create(IDD_SIMPLE, false, false);
@@ -940,7 +939,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     RECT rc;
     getClientRect(rc);
     m_controls_tab.reSizeTo(rc);
-    rc.bottom -= 35;
+    rc.bottom -= (rc.bottom - rc.top) / 10;
     m_simple_dlg.reSizeTo(rc);
     m_advanced_dlg.reSizeTo(rc);
 

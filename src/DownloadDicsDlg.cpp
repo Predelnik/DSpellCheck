@@ -1097,11 +1097,14 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_h_status = ::GetDlgItem(_hSelf, IDC_SERVER_STATUS);
     m_h_install_selected = ::GetDlgItem(_hSelf, IDOK);
     m_h_show_only_known = ::GetDlgItem(_hSelf, IDC_SHOWONLYKNOWN);
-    m_h_refresh = ::GetDlgItem(_hSelf, IDC_REFRESH);
+    m_h_refresh_btn = ::GetDlgItem(_hSelf, IDC_REFRESH);
     m_h_install_system = ::GetDlgItem(_hSelf, IDC_INSTALL_SYSTEM);
+    RECT rc;
+    GetClientRect (m_h_refresh_btn, &rc);
+    int icon_size = std::min (rc.bottom - rc.top, rc.right - rc.left) * 4 / 5;
     m_refresh_icon = static_cast<HICON>(
-        LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH), IMAGE_ICON, 16, 16, 0));
-    SendMessage(m_h_refresh, BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON),
+        LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH), IMAGE_ICON, icon_size, icon_size, 0));
+    SendMessage(m_h_refresh_btn, BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON),
                 reinterpret_cast<LPARAM>(m_refresh_icon));
     reset_download_combobox();
     fill_file_list();
