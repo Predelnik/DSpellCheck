@@ -83,7 +83,7 @@ public:
   std::string get_line(EditorViewType view, long line_number) const override;
   std::optional<long> char_position_from_point(EditorViewType view, int x,
                                                int y) const override;
-  HWND app_handle() const override;
+  HWND get_editor_handle() const override;
   std::wstring get_full_current_path() const override;
   std::string get_text_range(EditorViewType view, long from,
                              long to) const override;

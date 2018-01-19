@@ -367,7 +367,7 @@ MockEditorInterface::char_position_from_point(EditorViewType /*view*/,
   return std::nullopt;
 }
 
-HWND MockEditorInterface::app_handle() const { return nullptr; }
+HWND MockEditorInterface::get_editor_handle() const { return nullptr; }
 
 std::wstring MockEditorInterface::get_full_current_path() const {
   auto doc = active_document(m_active_view);

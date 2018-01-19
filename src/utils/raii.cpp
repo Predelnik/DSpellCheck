@@ -16,7 +16,10 @@ ToolbarIconsWrapper::~ToolbarIconsWrapper() {
 
 ToolbarIconsWrapper::
 ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR name, UINT type, int cx, int cy, UINT fu_load) : ToolbarIconsWrapper() {
-    m_icons->hToolbarBmp = static_cast<HBITMAP>(::LoadImage(h_inst, name, type, cx, cy, fu_load));
+    m_icons->hToolbarIcon = static_cast<HICON>(::LoadImage(h_inst, name, type, cx, cy, fu_load));
+    ICONINFO iconinfo;
+    GetIconInfo(m_icons->hToolbarIcon, &iconinfo);
+    m_icons->hToolbarBmp = iconinfo.hbmColor;
 }
 
 const ToolbarIcons* ToolbarIconsWrapper::get() {

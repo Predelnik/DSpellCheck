@@ -89,7 +89,7 @@ public:
     virtual std::optional<long> char_position_from_point(EditorViewType view, int x, int y) const = 0;
     virtual long get_selection_start (EditorViewType view) const = 0;
     virtual long get_selection_end (EditorViewType view) const = 0;
-    virtual HWND app_handle() const = 0 ;
+    virtual HWND get_editor_handle() const = 0 ;
     virtual int get_style_at (EditorViewType view, long position) const = 0;
     virtual std::wstring get_full_current_path () const = 0;
     // is current style used for links (hotspots):

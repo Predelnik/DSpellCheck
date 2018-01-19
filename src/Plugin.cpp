@@ -341,12 +341,14 @@ void command_menu_init() {
 }
 
 void add_icons() {
+  auto dpi = GetDeviceCaps(GetWindowDC(npp->get_editor_handle()), LOGPIXELSX);
+  int size = 16 * dpi / 96;
   static ToolbarIconsWrapper auto_check_icon{static_cast<HINSTANCE>(h_module),
-                                             MAKEINTRESOURCE(IDB_AUTOCHECK2),
-                                             IMAGE_BITMAP,
-                                             16,
-                                             16,
-                                             LR_LOADMAP3DCOLORS};
+                                             MAKEINTRESOURCE(IDI_AUTOCHECK),
+                                             IMAGE_ICON,
+                                             size,
+                                             size,
+                                             0};
   ::SendMessage(npp_data.npp_handle, NPPM_ADDTOOLBARICON,
                 static_cast<WPARAM>(func_item[0].cmd_id),
                 reinterpret_cast<LPARAM>(auto_check_icon.get()));
@@ -401,7 +403,9 @@ HMENU get_submenu(int item_id) {
   return mif.hSubMenu;
 }
 
-HMENU get_langs_sub_menu() { return get_submenu(get_func_item()[quick_lang_change_item_index].cmd_id); }
+HMENU get_langs_sub_menu() {
+  return get_submenu(get_func_item()[quick_lang_change_item_index].cmd_id);
+}
 
 void on_settings_changed() {
   npp->set_menu_item_check(get_func_item()[auto_spellcheck_index].cmd_id,

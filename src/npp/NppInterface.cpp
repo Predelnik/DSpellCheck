@@ -322,7 +322,7 @@ long NppInterface::get_line_end_position(EditorViewType view, int line) const {
       send_msg_to_scintilla(view, SCI_GETLINEENDPOSITION, line));
 }
 
-HWND NppInterface::app_handle() const { return m_npp_data.npp_handle; }
+HWND NppInterface::get_editor_handle() const { return m_npp_data.npp_handle; }
 
 void NppInterface::notify(SCNotification *notify_code) {
   switch (notify_code->nmhdr.code) {
