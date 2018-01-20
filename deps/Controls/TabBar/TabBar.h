@@ -67,8 +67,9 @@ public:
   int insertAtEnd(const wchar_t *subTabName);
   void activateAt(int index) const;
   void getCurrentTitle(wchar_t *title, int titleLen);
+    void setFont(HFONT font);
 
-  auto getCurrentTabIndex() const {
+    auto getCurrentTabIndex() const {
     return ::SendMessage(_hSelf, TCM_GETCURSEL, 0, 0);
   };
   void deletItemAt(size_t index);

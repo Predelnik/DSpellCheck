@@ -921,6 +921,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
   switch (message) {
   case WM_INITDIALOG: {
     m_controls_tab.initTabBar(_hInst, _hSelf, false, true, false);
+    m_controls_tab.setFont(reinterpret_cast<HFONT> (SendMessage (_hSelf, WM_GETFONT, 0, 0)));
 
     m_simple_dlg.init_settings(_hInst, _hSelf);
     m_simple_dlg.create(IDD_SIMPLE, false, false);

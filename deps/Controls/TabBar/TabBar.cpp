@@ -129,6 +129,11 @@ void TabBar::getCurrentTitle(wchar_t *title, int titleLen)
   ::SendMessage(_hSelf, TCM_GETITEM, getCurrentTabIndex(), reinterpret_cast<LPARAM>(&tci));
 }
 
+void TabBar::setFont (HFONT font)
+{
+    ::SendMessage(_hSelf, WM_SETFONT, reinterpret_cast<WPARAM>(font), 0);
+}
+
 void TabBar::setFont(const wchar_t* fontName, int fontSize)
 {
   if (_hFont)
