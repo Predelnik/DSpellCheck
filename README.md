@@ -33,6 +33,7 @@ v1.4.0
 * Add hidden option Word_Minimum_Length to disable checking of words with length less or equal to its value
 * Supported using any custom Hunspell syntax in user dictionaries.
 * Simplify external localization of plugin.
+* Fix plugin icons and issues in high-dpi mode.
 
 v1.3.5
 * Fix disappearance of auto spell-checking icon.
