@@ -177,4 +177,26 @@ abg
       sc.find_prev_mistake();
       CHECK(editor.selected_text(v) == "nurserymaid");
   }
+
+  {
+     std::wstring text = L"nurserymaid  ";
+     std::wstring more_text;
+     std::wstring_view arg = L"test ";
+    for (int i = 0; i < 12; ++i)
+        text.insert (text.end (), arg.begin (), arg.end ());
+     for (int i = 0; i < 16; ++i)
+       more_text.insert (more_text.end (), arg.begin (), arg.end ());
+     more_text.pop_back ();
+     for (int i = 0; i < 60; ++i)
+         {
+           text.insert (text.end (), more_text.begin (), more_text.end ());
+           text.push_back ('\n');
+         }
+     text.pop_back ();
+     editor.set_active_document_text(v, text);
+     sc.find_next_mistake();
+     CHECK(editor.selected_text(v) == "nurserymaid");
+     sc.find_next_mistake();
+     CHECK(editor.selected_text(v) == "nurserymaid");
+  }
 }
