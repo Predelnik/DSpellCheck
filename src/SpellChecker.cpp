@@ -128,7 +128,7 @@ void SpellChecker::find_prev_mistake() {
     if (from < to) {
       auto text = SpellCheckerHelpers::to_mapped_wstring(
           m_editor, view, m_editor.get_text_range(view, from, to));
-      auto offset = prev_token_begin(text.str, 0).value_or(0);
+      auto offset = next_token_end(text.str, 0).value_or(0);
       m_editor.force_style_update(view, from + offset, to);
       bool result = check_text(view, text, from, CheckTextMode::find_last) != 0;
       if (result)
