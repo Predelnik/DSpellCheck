@@ -77,10 +77,9 @@ void SpellChecker::find_next_mistake() {
     if (from < to) {
       auto text = SpellCheckerHelpers::to_mapped_wstring(
           m_editor, view, m_editor.get_text_range(view, from, to));
-      auto index =
-          prev_token_begin(text.str, static_cast<long>(text.str.size()) - 1)
-              .value_or(text.str.size() - 1);
-      index = next_token_end(text.str, index).value_or(text.str.size() - 1);
+      auto index = static_cast<long> (text.str.size());
+      if (to != doc_length && next_token_end(text.str, to) == index)
+          index = prev_token_begin(text.str, index - 1);
       text.str.erase(index, text.str.size() - index);
       m_editor.force_style_update(view, from, to);
       bool result = check_text(view, text, static_cast<long>(iterator_pos),
@@ -128,7 +127,7 @@ void SpellChecker::find_prev_mistake() {
     if (from < to) {
       auto text = SpellCheckerHelpers::to_mapped_wstring(
           m_editor, view, m_editor.get_text_range(view, from, to));
-      auto offset = next_token_end(text.str, 0).value_or(0);
+      auto offset = next_token_end(text.str, 0);
       m_editor.force_style_update(view, from + offset, to);
       bool result = check_text(view, text, from, CheckTextMode::find_last) != 0;
       if (result)
@@ -168,12 +167,8 @@ std::wstring_view SpellChecker::get_word_at(long char_pos,
   if (index >= static_cast<long>(text.str.length()))
     index = static_cast<long>(text.str.length()) - 1;
   auto begin = prev_token_begin(text.str, index);
-  if (!begin)
-    return {};
-  auto end = next_token_end(text.str, *begin);
-  if (!end)
-    return {};
-  return std::wstring_view(text.str).substr(*begin, *end - *begin);
+  auto end = next_token_end(text.str, begin);
+  return std::wstring_view(text.str).substr(begin, end - begin);
 }
 
 void SpellChecker::refresh_underline_style() {
@@ -399,8 +394,8 @@ auto SpellChecker::delimiter_tokenizer(std::wstring_view target) const {
                                   m_settings.split_camel_case);
 }
 
-std::optional<long> SpellChecker::next_token_end(std::wstring_view target,
-                                                 long index) const {
+long SpellChecker::next_token_end(std::wstring_view target,
+                                  long index) const {
   switch (m_settings.tokenization_style) {
   case TokenizationStyle::by_non_alphabetic:
     return non_alphabetic_tokenizer(target).next_token_end(index);
@@ -410,11 +405,11 @@ std::optional<long> SpellChecker::next_token_end(std::wstring_view target,
     break;
   }
   assert(false);
-  return std::nullopt;
+  return static_cast<long> (target.size ());
 }
 
-std::optional<long> SpellChecker::prev_token_begin(std::wstring_view target,
-                                                   long index) const {
+long SpellChecker::prev_token_begin(std::wstring_view target,
+                                    long index) const {
   switch (m_settings.tokenization_style) {
   case TokenizationStyle::by_non_alphabetic:
     return non_alphabetic_tokenizer(target).prev_token_begin(index);
@@ -424,7 +419,7 @@ std::optional<long> SpellChecker::prev_token_begin(std::wstring_view target,
     break;
   }
   assert(false);
-  return std::nullopt;
+  return 0;
 }
 
 namespace {

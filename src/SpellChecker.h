@@ -81,10 +81,10 @@ private:
   void reset_hot_spot_cache();
   bool is_spellchecking_needed(EditorViewType view, std::wstring_view word,
                                long word_start) const;
-  std::optional<long> next_token_end(std::wstring_view target,
-                                     long index) const;
-  std::optional<long> prev_token_begin(std::wstring_view target,
-                                       long index) const;
+    long next_token_end(std::wstring_view target,
+                        long index) const;
+    long prev_token_begin(std::wstring_view target,
+                          long index) const;
   auto non_alphabetic_tokenizer(std::wstring_view target) const;
   auto delimiter_tokenizer(std::wstring_view target) const;
 
