@@ -1102,6 +1102,8 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
         LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH), IMAGE_ICON, icon_size, icon_size, 0));
     SendMessage(m_h_refresh_btn, BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON),
                 reinterpret_cast<LPARAM>(m_refresh_icon));
+    WinApi::create_tooltip(IDC_REFRESH, _hSelf,
+                    rc_str(IDS_REFRESH_DICTIONARY_LIST_TOOLTIP).c_str());
     reset_download_combobox();
     fill_file_list();
     update_controls();

@@ -84,4 +84,5 @@ public:
 private:
   void init_impl() override { this->add_items<EnumType>(); }
 };
+    HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text);
 } // namespace WinApi

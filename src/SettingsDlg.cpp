@@ -79,36 +79,6 @@ void SimpleDlg::update_language_controls(
   EnableWindow(m_h_combo_language, langs_available.empty() ? FALSE : TRUE);
 }
 
-static HWND create_tool_tip(int tool_id, HWND h_dlg, const wchar_t *psz_text) {
-  if (tool_id == 0 || h_dlg == nullptr || psz_text == nullptr) {
-    return nullptr;
-  }
-  // Get the window of the tool.
-  HWND hwnd_tool = GetDlgItem(h_dlg, tool_id);
-
-  // Create the tooltip. g_hInst is the global instance handle.
-  HWND hwnd_tip = CreateWindowEx(
-      NULL, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_ALWAYSTIP, CW_USEDEFAULT,
-      CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, h_dlg, nullptr,
-      static_cast<HINSTANCE>(get_h_module()), nullptr);
-
-  if (hwnd_tool == nullptr || hwnd_tip == nullptr) {
-    return nullptr;
-  }
-
-  // Associate the tooltip with the tool.
-  TOOLINFO tool_info;
-  memset(&tool_info, 0, sizeof(tool_info));
-  tool_info.cbSize = sizeof(tool_info);
-  tool_info.hwnd = h_dlg;
-  tool_info.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
-  tool_info.uId = reinterpret_cast<UINT_PTR>(hwnd_tool);
-  tool_info.lpszText = const_cast<wchar_t *>(psz_text);
-  SendMessage(hwnd_tip, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&tool_info));
-
-  return hwnd_tip;
-}
-
 SimpleDlg::~SimpleDlg() {
   if (m_h_ux_theme != nullptr)
     FreeLibrary(m_h_ux_theme);
@@ -645,15 +615,15 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_brush = nullptr;
 
     SetWindowText(m_h_ignore_yo, rc_str(IDS_CYRILLIC_YO_AS_YE).c_str());
-    create_tool_tip(IDC_DELIMITERS, _hSelf,
+    WinApi::create_tooltip(IDC_DELIMITERS, _hSelf,
                     rc_str(IDS_DELIMITER_TOOLTIP).c_str());
-    create_tool_tip(IDC_RECHECK_DELAY, _hSelf,
+    WinApi::create_tooltip(IDC_RECHECK_DELAY, _hSelf,
                     rc_str(IDS_RECHECK_DELAY_TOOLTIP).c_str());
-    create_tool_tip(IDC_IGNORE_CSTART, _hSelf,
+    WinApi::create_tooltip(IDC_IGNORE_CSTART, _hSelf,
                     rc_str(IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str());
-    create_tool_tip(IDC_IGNORE_SE_APOSTROPHE, _hSelf,
+    WinApi::create_tooltip(IDC_IGNORE_SE_APOSTROPHE, _hSelf,
                     rc_str(IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str());
-    create_tool_tip(IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
+    WinApi::create_tooltip(IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
                     rc_str(IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str());
 
     ComboBox_ResetContent(m_h_underline_style);

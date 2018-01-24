@@ -185,3 +185,4 @@
 #define IDS_PLUGIN_NAME                         40091
 #define IDS_SWITCH_DEBUG_LOGGING                40092
 #define IDS_OPEN_DEBUG_LOG                      40093
+#define IDS_REFRESH_DICTIONARY_LIST_TOOLTIP     40094
