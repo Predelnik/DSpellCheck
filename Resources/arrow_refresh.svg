@@ -10,38 +10,15 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="256mm"
-   height="256mm"
-   viewBox="0 0 256 256"
+   width="256"
+   height="256"
+   viewBox="0 0 67.733331 67.733331"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    sodipodi:docname="arrow_refresh.svg">
   <defs
-     id="defs2">
-    <linearGradient
-       inkscape:collect="always"
-       id="linearGradient4529">
-      <stop
-         style="stop-color:#89c511;stop-opacity:1"
-         offset="0"
-         id="stop4525" />
-      <stop
-         style="stop-color:#e5f6b3;stop-opacity:1"
-         offset="1"
-         id="stop4527" />
-    </linearGradient>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient4529"
-       id="linearGradient4565"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-0.09921888,8.2847661)"
-       x1="114.24189"
-       y1="112.15311"
-       x2="93.0298"
-       y2="25.750122" />
-  </defs>
+     id="defs2" />
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -49,16 +26,13 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.45254834"
-     inkscape:cx="442.30168"
-     inkscape:cy="430.90195"
+     inkscape:zoom="0.7"
+     inkscape:cx="-96.973212"
+     inkscape:cy="-116.8573"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:snap-others="false"
-     inkscape:object-nodes="false"
-     inkscape:snap-nodes="false"
-     inkscape:snap-global="false"
+     units="px"
      inkscape:window-width="1920"
      inkscape:window-height="1017"
      inkscape:window-x="-8"
@@ -80,19 +54,19 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-41)">
+     transform="translate(0,-229.26668)">
     <path
-       style="fill:url(#linearGradient4565);fill-opacity:1;stroke:#488900;stroke-width:9.26041698;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 22.70221,164.67601 C 40.670798,97.639662 85.161549,80.743302 159.10348,88.111251 l -0.0269,-29.729502 64.74592,63.614651 -79.04052,38.93813 13.217,-36.06502 C 77.683617,121.99 77.115001,132.40464 22.7022,164.67601 Z"
-       id="path3710"
+       style="fill:#9bcb06;fill-opacity:1;stroke:#3e7703;stroke-width:1.58749998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 2.6726951,261.96623 C 3.6877446,237.31094 23.212596,238.24472 44.099473,239.24832 l 0.133634,-7.88445 13.229842,14.56619 -13.229841,13.89801 0.267269,-8.55262 c -18.038145,-1.33739 -27.402063,0.47775 -27.662396,11.22532 -3.611221,0.43518 -6.555072,0.18341 -14.1652859,-0.53454 z"
+       id="path826"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccccccc" />
     <use
        x="0"
        y="0"
-       xlink:href="#path3710"
-       id="use4557"
-       transform="rotate(180,133.18419,167.53574)"
+       xlink:href="#path826"
+       id="use828"
+       transform="rotate(-180,34.171232,262.98636)"
        width="100%"
        height="100%" />
   </g>
