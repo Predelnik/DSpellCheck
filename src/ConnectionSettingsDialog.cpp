@@ -12,7 +12,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "SelectProxyDialog.h"
+#include "ConnectionSettingsDialog.h"
 
 #include "DownloadDicsDlg.h"
 #include "MainDef.h"
@@ -23,22 +23,23 @@
 #include "resource.h"
 #include "utils/winapi.h"
 
-SelectProxyDialog::SelectProxyDialog(Settings &settings,
+ConnectionSettingsDialog::ConnectionSettingsDialog(Settings &settings,
                                      DownloadDicsDlg &download_dics_dlg)
     : m_download_dics_dlg(download_dics_dlg), m_settings(settings) {}
 
-void SelectProxyDialog::do_dialog() {
+void ConnectionSettingsDialog::do_dialog() {
   if (!isCreated()) {
-    create(IDD_DIALOG_SELECT_PROXY);
+    create(IDD_CONNECTION_SETTINGS_DIALOG);
   }
   goToCenter();
 }
 
-void SelectProxyDialog::apply_choice() {
+void ConnectionSettingsDialog::apply_choice() {
   auto mut_settings = m_settings.modify();
   mut_settings->proxy_user_name = get_edit_text(m_user_name);
   mut_settings->proxy_host_name = get_edit_text(m_host_name);
   mut_settings->proxy_password = get_edit_text(m_password);
+  mut_settings->ftp_use_passive_mode = Button_GetCheck(m_passive_mode_cb) == BST_CHECKED;
   mut_settings->use_proxy = Button_GetCheck(m_use_proxy) == BST_CHECKED;
   mut_settings->proxy_is_anonymous =
       Button_GetCheck(m_proxy_anonymous) == BST_CHECKED;
@@ -50,7 +51,7 @@ void SelectProxyDialog::apply_choice() {
   m_download_dics_dlg.refresh();
 }
 
-void SelectProxyDialog::disable_controls() {
+void ConnectionSettingsDialog::disable_controls() {
   bool proxy_is_used = Button_GetCheck(m_use_proxy);
   auto show = proxy_is_used ? TRUE : FALSE;
   EnableWindow(m_proxy_anonymous, show);
@@ -73,7 +74,7 @@ void SelectProxyDialog::disable_controls() {
   }
 }
 
-void SelectProxyDialog::update_controls() {
+void ConnectionSettingsDialog::update_controls() {
   Button_SetCheck(m_use_proxy,
                   m_settings.use_proxy ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_proxy_anonymous,
@@ -82,12 +83,13 @@ void SelectProxyDialog::update_controls() {
   Edit_SetText(m_host_name, m_settings.proxy_host_name.c_str());
   Edit_SetText(m_password, m_settings.proxy_password.c_str());
   Edit_SetText(m_port, std::to_wstring(m_settings.proxy_port).c_str());
+  Button_SetCheck (m_passive_mode_cb, m_settings.ftp_use_passive_mode);
   disable_controls();
   m_proxy_type_cmb.set_index(m_settings.proxy_type);
   m_proxy_type_cmb.set_index(m_settings.proxy_type);
 }
 
-INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
+INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
                                         LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {
@@ -98,6 +100,7 @@ INT_PTR SelectProxyDialog::run_dlg_proc(UINT message, WPARAM w_param,
     m_use_proxy = ::GetDlgItem(_hSelf, IDC_USEPROXY);
     m_proxy_anonymous = ::GetDlgItem(_hSelf, IDC_ANONYMOUS_LOGIN);
     m_proxy_type_cmb.init(::GetDlgItem(_hSelf, IDC_PROXY_TYPE));
+    m_passive_mode_cb = ::GetDlgItem(_hSelf, IDC_FTP_PASSIVE_MODE_CB);
     update_controls();
     return TRUE;
   }

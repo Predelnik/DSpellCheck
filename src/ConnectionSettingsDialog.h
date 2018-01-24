@@ -21,9 +21,9 @@ class Settings;
 class SpellChecker;
 enum class ProxyType;
 
-class SelectProxyDialog : public StaticDialog {
+class ConnectionSettingsDialog : public StaticDialog {
 public:
-    explicit SelectProxyDialog (Settings &settings, DownloadDicsDlg &download_dics_dlg);
+    explicit ConnectionSettingsDialog (Settings &settings, DownloadDicsDlg &download_dics_dlg);
   void do_dialog();
   void apply_choice();
   void update_controls(
@@ -38,6 +38,7 @@ protected:
   HWND m_port = nullptr;
   HWND m_user_name = nullptr;
   HWND m_host_name = nullptr;
+  HWND m_passive_mode_cb = nullptr;
   HWND m_password = nullptr;
   HWND m_use_proxy = nullptr;
   HWND m_proxy_anonymous = nullptr;

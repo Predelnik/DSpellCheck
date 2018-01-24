@@ -66,6 +66,7 @@ struct FtpOperationParams {
   std::wstring proxy_password;
   bool write_debug_log;
   std::wstring debug_log_path;
+  bool use_passive_mode;
 };
 
 class DownloadDicsDlg : public StaticDialog {

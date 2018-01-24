@@ -12,8 +12,8 @@
 #define IDD_DIALOGPROGRESS                      111
 #define IDD_REMOVE_DICS                         113
 #define IDI_REFRESH                             128
-#define IDD_DIALOG_SELECT_PROXY                 143
 #define IDI_AUTOCHECK                           147
+#define IDD_CONNECTION_SETTINGS_DIALOG          148
 #define IDC_VERSION                             1000
 #define IDC_IGNORE_ONE_LETTER                   1001
 #define IDC_REMOVE_LANGLIST                     1001
@@ -80,6 +80,7 @@
 #define IDC_LIB_GROUPBOX                        1040
 #define IDC_DESCTOP                             1041
 #define IDC_HUNSPELL_PATH_GROUPBOX              1041
+#define IDC_FTP_PASSIVE_MODE_CB                 40000
 #define IDC_RESETSPELLERPATH                    40000
 #define IDC_TOKENIZATION_STYLE_CMB              40000
 #define IDS_CANT_CREATE_DIR_PS                  40000

@@ -27,7 +27,7 @@
 #include "Plugin.h"
 #include "ProgressData.h"
 #include "ProgressDlg.h"
-#include "SelectProxyDialog.h"
+#include "ConnectionSettingsDialog.h"
 #include "Settings.h"
 #include "SpellChecker.h"
 #include "resource.h"
@@ -536,7 +536,7 @@ do_download_file_list_ftp(FtpOperationParams params) {
     return FtpOperationErrorType::login_failed;
 
   nsFTP::TFTPFileStatusShPtrVec list;
-  if (!client.List(params.path, list))
+  if (!client.List(params.path, list, params.use_passive_mode))
     return FtpOperationErrorType::download_failed;
 
   std::vector<std::wstring> ret(list.size());
@@ -569,7 +569,7 @@ do_download_file(FtpOperationParams params, const std::wstring &target_path,
   client.AttachObserver(progress_updater.get());
 
   if (!client.DownloadFile(params.path, target_path,
-                           nsFTP::CRepresentation(nsFTP::CType::Image()))) {
+                           nsFTP::CRepresentation(nsFTP::CType::Image()), params.use_passive_mode)) {
     if (PathFileExists(target_path.c_str())) {
       SetFileAttributes(target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
       DeleteFile(target_path.c_str());
@@ -966,6 +966,7 @@ FtpOperationParams DownloadDicsDlg::spawn_ftp_operation_params(
   params.proxy_password = m_settings.proxy_password;
   params.write_debug_log = m_settings.write_debug_log;
   params.debug_log_path = get_debug_log_path();
+  params.use_passive_mode = m_settings.ftp_use_passive_mode;
   return params;
 }
 

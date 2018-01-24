@@ -25,7 +25,7 @@
 #include "MainDef.h"
 #include "ProgressDlg.h"
 #include "RemoveDictionariesDialog.h"
-#include "SelectProxyDialog.h"
+#include "ConnectionSettingsDialog.h"
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "SuggestionsButton.h"
@@ -71,7 +71,7 @@ std::unique_ptr<SettingsDlg> settings_dlg;
 std::unique_ptr<SuggestionsButton> suggestions_button;
 std::unique_ptr<LangList> lang_list_instance;
 std::unique_ptr<RemoveDictionariesDialog> remove_dics_dlg;
-std::unique_ptr<SelectProxyDialog> select_proxy_dlg;
+std::unique_ptr<ConnectionSettingsDialog> select_proxy_dlg;
 std::unique_ptr<ProgressDlg> progress_dlg;
 std::unique_ptr<DownloadDicsDlg> download_dics_dlg;
 std::unique_ptr<AboutDlg> about_dlg;
@@ -129,7 +129,7 @@ LangList *get_lang_list() { return lang_list_instance.get(); }
 
 RemoveDictionariesDialog *get_remove_dics() { return remove_dics_dlg.get(); }
 
-SelectProxyDialog *get_select_proxy() { return select_proxy_dlg.get(); }
+ConnectionSettingsDialog *get_select_proxy() { return select_proxy_dlg.get(); }
 
 ProgressDlg *get_progress() { return progress_dlg.get(); }
 
@@ -455,7 +455,7 @@ void init_classes() {
       *speller_container);
 
   select_proxy_dlg =
-      std::make_unique<SelectProxyDialog>(*settings, *download_dics_dlg);
+      std::make_unique<ConnectionSettingsDialog>(*settings, *download_dics_dlg);
   select_proxy_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
   remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>(

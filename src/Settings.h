@@ -99,6 +99,7 @@ public:
     int find_next_buffer_size = 4;
     bool ftp_show_only_known_dictionaries = false;
     bool ftp_install_dictionaries_for_all_users = false;
+    bool ftp_use_passive_mode = true;
     int recheck_delay = 0;
     std::array<std::wstring, 3> server_names;
     int last_used_address_index = 0;
