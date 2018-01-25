@@ -251,6 +251,8 @@ bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length,
   LRESULT selection_start = 0;
   LRESULT selection_end = 0;
   auto view = m_editor.active_view();
+  length = 0;
+  pos = -1;
 
   if (!use_text_cursor) {
     if (GetCursorPos(&p) == 0)
