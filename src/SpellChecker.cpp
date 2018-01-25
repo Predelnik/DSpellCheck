@@ -182,8 +182,8 @@ void SpellChecker::refresh_underline_style() {
 
 void SpellChecker::on_settings_changed() {
   refresh_underline_style();
-  recheck_visible_both_views();
   update_delimiters();
+  recheck_visible_both_views();
 }
 
 void SpellChecker::create_word_underline(EditorViewType view, long start,
