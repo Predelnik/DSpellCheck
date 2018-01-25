@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #include "MainDef.h"
 #include "MockEditorInterface.h"
@@ -158,45 +159,56 @@ test
 abg
 )");
   sc.recheck_visible_both_views();
-  CHECK(editor.get_underlined_words(v,dspellchecker_indicator_id) == std::vector<std::string>{"abg"});
+  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+        std::vector<std::string>{"abg"});
 
   {
-      std::wstring text = L"nurserymaid ";
-      std::wstring more_text;
-      std::wstring_view arg = L"test ";
-      for (int i = 0; i < 16; ++i)
-        more_text.insert (more_text.end (), arg.begin (), arg.end ());
-      more_text.pop_back ();
-      for (int i = 0; i < 60; ++i)
-          {
-            text.insert (text.end (), more_text.begin (), more_text.end ());
-            text.push_back ('\n');
-          }
-      text.pop_back ();
-      editor.set_active_document_text(v, text);
-      sc.find_prev_mistake();
-      CHECK(editor.selected_text(v) == "nurserymaid");
+    std::wstring text = L"nurserymaid ";
+    std::wstring more_text;
+    std::wstring_view arg = L"test ";
+    for (int i = 0; i < 16; ++i)
+      more_text.insert(more_text.end(), arg.begin(), arg.end());
+    more_text.pop_back();
+    for (int i = 0; i < 60; ++i) {
+      text.insert(text.end(), more_text.begin(), more_text.end());
+      text.push_back('\n');
+    }
+    text.pop_back();
+    editor.set_active_document_text(v, text);
+    sc.find_prev_mistake();
+    CHECK(editor.selected_text(v) == "nurserymaid");
   }
 
   {
-     std::wstring text = L"nurserymaid  ";
-     std::wstring more_text;
-     std::wstring_view arg = L"test ";
+    std::wstring text = L"nurserymaid  ";
+    std::wstring more_text;
+    std::wstring_view arg = L"test ";
     for (int i = 0; i < 12; ++i)
-        text.insert (text.end (), arg.begin (), arg.end ());
-     for (int i = 0; i < 16; ++i)
-       more_text.insert (more_text.end (), arg.begin (), arg.end ());
-     more_text.pop_back ();
-     for (int i = 0; i < 60; ++i)
-         {
-           text.insert (text.end (), more_text.begin (), more_text.end ());
-           text.push_back ('\n');
-         }
-     text.pop_back ();
-     editor.set_active_document_text(v, text);
-     sc.find_next_mistake();
-     CHECK(editor.selected_text(v) == "nurserymaid");
-     sc.find_next_mistake();
-     CHECK(editor.selected_text(v) == "nurserymaid");
+      text.insert(text.end(), arg.begin(), arg.end());
+    for (int i = 0; i < 16; ++i)
+      more_text.insert(more_text.end(), arg.begin(), arg.end());
+    more_text.pop_back();
+    for (int i = 0; i < 60; ++i) {
+      text.insert(text.end(), more_text.begin(), more_text.end());
+      text.push_back('\n');
+    }
+    text.pop_back();
+    editor.set_active_document_text(v, text);
+    sc.find_next_mistake();
+    CHECK(editor.selected_text(v) == "nurserymaid");
+    sc.find_next_mistake();
+    CHECK(editor.selected_text(v) == "nurserymaid");
+  }
+  {
+    editor.set_active_document_text(v, L"abcdef");
+    sc.recheck_visible_both_views();
+    CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+        std::vector<std::string>{"abcdef"});
+    {
+      auto mut = settings.modify();
+      mut->tokenization_style = TokenizationStyle::by_delimiters;
+      mut->delimiters += L"abcdef";
+    }
+    CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id).empty ());
   }
 }
