@@ -1,4 +1,4 @@
-// This file is part of DSpellCheck Plug-in for Notepad++
+﻿// This file is part of DSpellCheck Plug-in for Notepad++
 // Copyright (C)2018 Sergey Semushin <Predelnik@gmail.com>
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -210,5 +210,14 @@ abg
       mut->delimiters += L"abcdef";
     }
     CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id).empty ());
+  }
+  {
+      {
+        auto mut = settings.modify();
+        mut->tokenization_style = TokenizationStyle::by_non_alphabetic;
+      }
+      editor.set_active_document_text(v, L"これはテストです"); // each one is delimiter
+      CHECK (sc.is_word_under_cursor_correct(pos, length, true));
+      CHECK (length == 0);
   }
 }
