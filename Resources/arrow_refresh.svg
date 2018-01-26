@@ -26,9 +26,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="384.05405"
-     inkscape:cy="98.02907"
+     inkscape:zoom="0.0875"
+     inkscape:cx="-1214.3288"
+     inkscape:cy="347.20507"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -37,7 +37,8 @@
      inkscape:window-height="1017"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     inkscape:snap-grids="true" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -46,7 +47,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -56,11 +57,11 @@
      id="layer1"
      transform="translate(0,-229.26668)">
     <path
-       style="fill:#9bcb06;fill-opacity:1;stroke:#224102;stroke-width:1.58749998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 2.6726951,261.96623 C 3.6877446,237.31094 23.212596,238.24472 44.099473,239.24832 l 0.133634,-7.88445 22.679247,13.43226 -22.679246,15.03194 0.267269,-8.55262 c -18.038145,-1.33739 -27.402063,0.47775 -27.662396,11.22532 -3.611221,0.43518 -6.555072,0.18341 -14.1652859,-0.53454 z"
+       style="fill:#9bcb06;fill-opacity:1;stroke:#224102;stroke-width:2.64583325;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 2.6726951,261.96623 C 3.6877446,237.31094 29.124951,237.3417 45.067341,239.54801 l -0.267266,-8.07344 21.711379,13.98973 -21.476533,16.50193 -0.133636,-11.09168 c -23.2499,-2.80738 -28.73841,0.61138 -28.998743,11.35895 -6.8184557,-0.0994 -7.2232462,-0.0839 -13.2298429,-0.26727 z"
        id="path826"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cccccccc" />
+       sodipodi:nodetypes="ccccccccc" />
     <use
        x="0"
        y="0"
