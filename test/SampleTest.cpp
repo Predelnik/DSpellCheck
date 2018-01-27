@@ -220,4 +220,10 @@ abg
       CHECK (sc.is_word_under_cursor_correct(pos, length, true));
       CHECK (length == 0);
   }
+  {
+      // check that right clicking when cursor after the word works
+      editor.set_active_document_text(v, L"abcdef test");
+      editor.set_cursor_pos(v, 6);
+      CHECK_FALSE (sc.is_word_under_cursor_correct(pos, length, true));
+  }
 }
