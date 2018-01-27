@@ -51,10 +51,13 @@ public:
   }
 
   long prev_token_begin(long index) {
-    if (index < 0)
-        return 0;
-    if (m_is_delimiter(m_target[index]))
-      return index;
+    if (index <= 0)
+      return 0;
+    if (m_is_delimiter(m_target[index])) {
+      if (m_is_delimiter(m_target[index - 1]))
+        return index;
+      else
+        --index;
     while (index >= 0 && !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case && index > 0 && IsCharLower(m_target[index - 1]) &&
           IsCharUpper(m_target[index]))
