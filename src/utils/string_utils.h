@@ -58,6 +58,7 @@ public:
         return index;
       else
         --index;
+    }
     while (index >= 0 && !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case && index > 0 && IsCharLower(m_target[index - 1]) &&
           IsCharUpper(m_target[index]))
@@ -69,8 +70,8 @@ public:
   }
 
   long next_token_end(long index) {
-    if (index >= static_cast<long> (m_target.length ()))
-      return static_cast<long> (m_target.length ());
+    if (index >= static_cast<long>(m_target.length()))
+      return static_cast<long>(m_target.length());
     while (index < static_cast<long>(m_target.length()) &&
            !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case &&
