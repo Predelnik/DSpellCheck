@@ -1025,9 +1025,9 @@ name_to_codepage(const char *name)
     int i;
 
     if (*name == '\0' ||
-	strcmp(name, "char") == 0)
+	stricmp(name, "char") == 0)
         return GetACP();
-    else if (strcmp(name, "wchar_t") == 0)
+    else if (stricmp(name, "wchar_t") == 0)
         return 1200;
     else if (_strnicmp(name, "cp", 2) == 0)
         return atoi(name + 2); /* CP123 */
