@@ -29,7 +29,8 @@ endif()
 
 add_definitions ("-D_CRT_NONSTDC_NO_DEPRECATE -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NON_CONFORMING_SWPRINTFS -D_CRT_SECURE_NO_DEPRECATE -D_WINSOCK_DEPRECATED_NO_WARNINGS")
 add_subdirectory (deps/Hunspell) #Thanks https://github.com/zdenop/hunspell-mingw
-add_subdirectory (deps/libiconv)
+# options for win-iconv, which sadly doesn't have prefixes
+add_subdirectory (deps/win-iconv)
 add_subdirectory (deps/minizip)
 add_subdirectory (deps/FtpClient)
 add_subdirectory (deps/Controls)
@@ -51,7 +52,7 @@ file (GLOB_RECURSE source_files src/*.cpp src/*.h)
 list(REMOVE_ITEM source_files src/DllMain.cpp)
 
 add_library (DSpellCheckStatic STATIC ${source_files})
-target_include_directories (DSpellCheckStatic PUBLIC src)
+target_include_directories (DSpellCheckStatic PUBLIC src deps/win-iconv)
 
 if (MSVC)
 	target_compile_options (DSpellCheckStatic PRIVATE "/YuPrecompiledHeader.h" "/FIPrecompiledHeader.h")
@@ -61,7 +62,7 @@ endif ()
 target_link_libraries(DSpellCheckStatic hunspell)
 target_link_libraries(DSpellCheckStatic minizip)
 target_link_libraries(DSpellCheckStatic ftpclient)
-target_link_libraries(DSpellCheckStatic libiconv)
+target_link_libraries(DSpellCheckStatic iconv-static)
 target_link_libraries(DSpellCheckStatic Controls)
 target_link_libraries(DSpellCheckStatic npp_extra)
 target_link_libraries(DSpellCheckStatic lsignal)
