@@ -252,5 +252,5 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Proxy_Is_Anonymous", proxy_is_anonymous, true);
   worker.process(L"Proxy_Type", proxy_type, ProxyType::web_proxy);
   worker.process(L"Write_Debug_Log", write_debug_log, false);
-  worker.process(L"FTP_use_passive_mode", write_debug_log, true);
+  worker.process(L"FTP_use_passive_mode", ftp_use_passive_mode, true);
 }
