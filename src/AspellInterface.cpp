@@ -142,8 +142,7 @@ AspellInterface::get_suggestions(const wchar_t *word) const {
 
 void AspellInterface::add_to_dictionary(const wchar_t *word) {
   auto target_word = to_utf8_string(word);
-  ;
-  if (m_last_selected_speller != nullptr)
+  if (!m_last_selected_speller)
     return;
   aspell_speller_add_to_personal(m_last_selected_speller, target_word.c_str(),
                                  static_cast<int>(target_word.length()) + 1);
@@ -158,7 +157,7 @@ void AspellInterface::add_to_dictionary(const wchar_t *word) {
 }
 
 void AspellInterface::ignore_all(const wchar_t *word) {
-  if (m_last_selected_speller != nullptr) {
+  if (!m_last_selected_speller) {
     return;
   }
 
