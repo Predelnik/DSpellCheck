@@ -20,7 +20,7 @@ def get_version_number (filename):
 version_str = re.compile (r'(\s*VALUE "FileVersion", ")([0-9.]*)(")')
 
 def get_rc_version ():
-	with open('src/DSpellCheck.rc') as f:
+	with open('src/DSpellCheck.rc', encoding='utf-16-le') as f:
 		for line in f:
 			m = version_str.match (line)
 			if m:
