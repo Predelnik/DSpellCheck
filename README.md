@@ -34,6 +34,8 @@ v1.4.0
 * Supported using any custom Hunspell syntax in user dictionaries.
 * Simplify external localization of plugin.
 * Fix plugin icons and issues in high-dpi mode.
+* Change usage libiconv to winiconv which should lower executable size.
+* Enable more optimization options during compilation.
 
 v1.3.5
 * Fix disappearance of auto spell-checking icon.
