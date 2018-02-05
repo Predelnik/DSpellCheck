@@ -35,8 +35,7 @@ re.compile (r'(\s*PRODUCTVERSION\s*)([0-9,]*)()')
 def replace_rc_version (version):
 	source_rc_path = 'src/DSpellCheck.rc'
 	target_rc_path = 'src/DSpellCheck.rc.tmp'
-	with open(target_rc_path, 'w') as fw:
-		with open(source_rc_path) as f:
+	with open(target_rc_path, 'w', encoding='utf-16-le') as fw, open(source_rc_path, 'r', encoding='utf-16-le') as f:
 			for line in f:
 				m = version_str.match (line)
 				if m:
