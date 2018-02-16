@@ -88,6 +88,8 @@ namespace SciUtils
         case SCLEX_XML:
             switch (style)
             {
+            case SCE_H_DEFAULT:
+                return s::text;
             case SCE_H_COMMENT:
             case SCE_H_XCCOMMENT:
             case SCE_H_SGML_COMMENT:
@@ -139,7 +141,7 @@ namespace SciUtils
             case SCE_PL_STRING_QW:
                 return s::string;
             case SCE_PL_IDENTIFIER:
-                return s::identifier; 
+                return s::identifier;
             default:
                 return s::unknown;
             };
@@ -462,7 +464,7 @@ namespace SciUtils
             }
         case SCLEX_PS:
             switch (style)
-            {           
+            {
             case SCE_PS_COMMENT:
             case SCE_PS_DSC_COMMENT:
                 return s::comment;
