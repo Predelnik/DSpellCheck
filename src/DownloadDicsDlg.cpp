@@ -67,8 +67,6 @@ DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent,
       L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
   m_default_server_names[1] = L"ftp://sunsite.informatik.rwth-aachen.de/pub/"
                               L"mirror/OpenOffice/contrib/dictionaries/";
-  m_default_server_names[2] =
-      L"ftp://gd.tuwien.ac.at/office/openoffice/contrib/dictionaries/";
   m_settings.settings_changed.connect([this] {
     update_controls();
     update_list_box();
