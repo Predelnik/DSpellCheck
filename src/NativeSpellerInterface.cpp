@@ -145,7 +145,7 @@ void NativeSpellerInterface::add_to_dictionary(const wchar_t *word) {
 }
 
 void NativeSpellerInterface::ignore_all(const wchar_t *word) {
-  if (!m_ok || !m_ptrs->m_speller)
+  if (!m_ok || !m_last_used_speller)
     return;
 
   m_last_used_speller->Ignore(word);
