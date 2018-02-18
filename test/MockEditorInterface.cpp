@@ -463,6 +463,22 @@ void MockEditorInterface::make_all_visible(EditorViewType view) {
   doc->visible_lines = {0, get_document_line_count(view)};
 }
 
+void MockEditorInterface::set_lexer(EditorViewType view, int lexer)
+{
+    auto doc = active_document(view);
+    if (!doc)
+        return;
+    doc->lexer = lexer;
+}
+
+void MockEditorInterface::set_whole_text_style(EditorViewType view, int style)
+{
+    auto doc = active_document(view);
+    if (!doc)
+        return;
+    std::fill (doc->style.begin (), doc->style.end (), style);
+}
+
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
   if (m_documents[view].empty())
     return nullptr;

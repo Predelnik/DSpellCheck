@@ -109,6 +109,8 @@ public:
   void set_active_document_text(EditorViewType view, const std::wstring &text);
   std::vector<std::string> get_underlined_words (EditorViewType view, int indicator_id) const;
   void make_all_visible (EditorViewType view);
+  void set_lexer (EditorViewType view, int lexer);
+  void set_whole_text_style (EditorViewType view, int style);
 
 private:
   const MockedDocumentInfo *active_document(EditorViewType view) const;

@@ -21,6 +21,7 @@
 #include "SpellerContainer.h"
 #include "catch.hpp"
 #include "utils/TemporaryAcessor.h"
+#include "SciLexer.h"
 
 void setup_speller(MockSpeller &speller) {
   speller.set_inner_dict({{L"English",
@@ -225,5 +226,12 @@ abg
       editor.set_active_document_text(v, L"abcdef test");
       editor.set_cursor_pos(v, 6);
       CHECK_FALSE (sc.is_word_under_cursor_correct(pos, length, true));
+  }
+    {
+      editor.set_active_document_text(v, L"abcdef test");
+      editor.set_lexer(v, SCLEX_HTML);
+      editor.set_whole_text_style(v, SCE_H_DEFAULT);
+      sc.recheck_visible_both_views();
+      CHECK (!editor.get_underlined_words(v, dspellchecker_indicator_id).empty ());
   }
 }
