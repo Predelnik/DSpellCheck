@@ -17,6 +17,9 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
+v1.4.1
+* Restore spell-checking of text inside HTML.
+
 v1.4.0
 * Major internal code refactoring to make further changes and maintenance easier.
 * Enable Spelling in Comments and Delimiters for UDL (#73)
