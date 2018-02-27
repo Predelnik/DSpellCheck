@@ -522,6 +522,7 @@ namespace SciUtils
             case SCE_YAML_COMMENT:
                 return s::comment;
             case SCE_YAML_TEXT:
+            case SCE_YAML_DEFAULT:
                 return s::text;
             default:
                 return s::unknown;
