@@ -16,12 +16,12 @@
 #include "MainDef.h"
 #include "MockEditorInterface.h"
 #include "MockSpeller.h"
+#include "SciLexer.h"
 #include "Settings.h"
 #include "SpellChecker.h"
 #include "SpellerContainer.h"
 #include "catch.hpp"
 #include "utils/TemporaryAcessor.h"
-#include "SciLexer.h"
 
 void setup_speller(MockSpeller &speller) {
   speller.set_inner_dict({{L"English",
@@ -204,34 +204,54 @@ abg
     editor.set_active_document_text(v, L"abcdef");
     sc.recheck_visible_both_views();
     CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
-        std::vector<std::string>{"abcdef"});
+          std::vector<std::string>{"abcdef"});
     {
       auto mut = settings.modify();
       mut->tokenization_style = TokenizationStyle::by_delimiters;
       mut->delimiters += L"abcdef";
     }
-    CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id).empty ());
+    CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
   }
   {
-      {
-        auto mut = settings.modify();
-        mut->tokenization_style = TokenizationStyle::by_non_alphabetic;
-      }
-      editor.set_active_document_text(v, L"これはテストです"); // each one is delimiter
-      CHECK (sc.is_word_under_cursor_correct(pos, length, true));
-      CHECK (length == 0);
-  }
-  {
-      // check that right clicking when cursor after the word works
-      editor.set_active_document_text(v, L"abcdef test");
-      editor.set_cursor_pos(v, 6);
-      CHECK_FALSE (sc.is_word_under_cursor_correct(pos, length, true));
-  }
     {
-      editor.set_active_document_text(v, L"abcdef test");
-      editor.set_lexer(v, SCLEX_HTML);
-      editor.set_whole_text_style(v, SCE_H_DEFAULT);
-      sc.recheck_visible_both_views();
-      CHECK (!editor.get_underlined_words(v, dspellchecker_indicator_id).empty ());
+      auto mut = settings.modify();
+      mut->tokenization_style = TokenizationStyle::by_non_alphabetic;
+    }
+    editor.set_active_document_text(
+        v, L"これはテストです"); // each one is delimiter
+    CHECK(sc.is_word_under_cursor_correct(pos, length, true));
+    CHECK(length == 0);
+  }
+  {
+    // check that right clicking when cursor after the word works
+    editor.set_active_document_text(v, L"abcdef test");
+    editor.set_cursor_pos(v, 6);
+    CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, true));
+  }
+}
+
+TEST_CASE("Language Styles") {
+  {
+    auto speller = std::make_unique<MockSpeller>();
+    setup_speller(*speller);
+    Settings settings;
+    settings.speller_language[SpellerId::aspell] = L"English";
+    MockEditorInterface editor;
+    auto v = EditorViewType::primary;
+    editor.open_virtual_document(v, L"test.txt", L"abcdef test");
+    SpellerContainer sp_container(&settings, std::move(speller));
+    SpellChecker sc(&settings, editor, sp_container);
+
+
+    editor.set_lexer(v, SCLEX_HTML);
+    editor.set_whole_text_style(v, SCE_H_DEFAULT);
+    editor.make_all_visible(v);
+    sc.recheck_visible_both_views();
+    CHECK(!editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
+
+    editor.set_lexer(v, SCLEX_YAML);
+    editor.set_whole_text_style(v, SCE_YAML_DEFAULT);
+    sc.recheck_visible_both_views();
+    CHECK(!editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
   }
 }
