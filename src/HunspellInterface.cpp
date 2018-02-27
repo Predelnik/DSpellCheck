@@ -251,7 +251,7 @@ DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &info) {
   new_dic.back_converter = {"UCS-2LE", dic_encoding};
   new_dic.local_dic_path += m_dic_dir + L"\\"s + info.name + L".usr";
   new_hunspell->add_dic(to_string(new_dic.local_dic_path).c_str());
-  if ("UTF-8"sv == dic_encoding) {
+  if ("UTF-8"sv != dic_encoding) {
     auto encoded_path =
         create_encoded_dict_version(m_user_dic_path.c_str(), dic_encoding);
     if (!encoded_path.empty()) {
