@@ -123,7 +123,7 @@ void Settings::save() {
     return;
   FILE *fp;
   auto path = std::wstring_view(m_ini_filepath);
-  path.remove_prefix(path.length() - path.rfind(L'\\'));
+  path.remove_suffix(path.length() - path.rfind(L'\\'));
   check_for_directory_existence(std::wstring(path));
   // Cleaning settings file (or creating it)
   if (_wfopen_s(&fp, m_ini_filepath.c_str(), L"w") != NULL) {
