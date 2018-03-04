@@ -10,6 +10,7 @@ import shutil
 import json
 import hashlib
 from bs4 import BeautifulSoup
+import datetime
 
 def get_version_number (filename):
 	info = GetFileVersionInfo (filename, "\\")
@@ -128,7 +129,7 @@ if options.new_minor or options.update_pm:
 		start_pos = readme_text.find (key)
 		start_pos += len (key) + 1
 		end_pos = readme_text.find ('\n\n', start_pos)
-		replace_text (plugin_node.latestUpdate, readme_text[start_pos:end_pos].replace ('\n', '\\n') + '\\n')
+		replace_text (plugin_node.latestUpdate, datetime.datetime.now().strftime ("%Y-%m-%d") + '\\n' + readme_text[start_pos:end_pos].replace ('\n', '\\n') + '\\n')
 		with open (plugins_xml_path, "w") as file:
 			file.write (plugins_xml_data)
 	
