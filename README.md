@@ -17,6 +17,11 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
+v1.4.2
+* Prevent creating of plugin settings directory with wrong path. (#131)
+* Restore spell-checking of YAML default style. (#129)
+* Fix adding words to unified user dictionary for dictionaries with non-UTF8 encoding. (#130)
+
 v1.4.1
 * Restore spell-checking of text inside HTML.
 
