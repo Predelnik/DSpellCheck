@@ -334,9 +334,8 @@ bool SpellChecker::is_spellchecking_needed(EditorViewType view,
     return false;
 
   if (m_settings.ignore_containing_digit &&
-      word.find_first_of(L"0123456789") != std::wstring_view::npos) {
+      std::find_if (word.begin (), word.end (), [](wchar_t wc){ return IsCharAlphaNumeric (wc) && !IsCharAlpha (wc);}) != word.end ())
     return false;
-  }
 
   if (m_settings.ignore_starting_with_capital && IsCharUpper(word.front())) {
     return false;
