@@ -165,6 +165,11 @@ namespace SciUtils
             {
             case SCE_PROPS_COMMENT:
                 return s::comment;
+            case SCE_PROPS_SECTION:
+            case SCE_PROPS_KEY:
+                return s::identifier;
+            case SCE_PROPS_DEFAULT:
+                return s::text;
             default:
                 return s::unknown;
             }
