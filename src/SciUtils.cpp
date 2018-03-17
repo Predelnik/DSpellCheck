@@ -14,10 +14,11 @@
 
 #include "SciUtils.h"
 #include "SciLexer.h"
+#include "Settings.h"
 
 namespace SciUtils
 {
-    StyleCategory get_style_category(LRESULT lexer, LRESULT style)
+    StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings& settings)
     {
         using s = StyleCategory;
         switch (lexer)
@@ -49,7 +50,7 @@ namespace SciUtils
             case SCE_USER_STYLE_IDENTIFIER:
                 return s::identifier;
             case SCE_USER_STYLE_DEFAULT:
-                return s::text;
+                return settings.check_default_udl_style ? s::text : s::identifier;
             default:
                 return s::unknown;
             };

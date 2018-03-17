@@ -93,6 +93,7 @@ public:
     bool ignore_starting_or_ending_with_apostrophe = false;
     bool use_unified_dictionary = false;
     bool aspell_allow_run_together_words = false;
+    bool check_default_udl_style = true;
     SpellerId active_speller_lib_id = SpellerId::aspell;
     int suggestion_button_size = 0;
     int suggestion_button_opacity = 0;

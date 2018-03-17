@@ -27,5 +27,5 @@ namespace SciUtils
       COUNT,
     };
 
-    StyleCategory get_style_category(LRESULT lexer, LRESULT style);
+    StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings& settings);
 } // namespace SciUtils

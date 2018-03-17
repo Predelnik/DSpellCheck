@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #include "SettingsDlg.h"
 
@@ -534,6 +535,8 @@ void AdvancedDlg::update_controls(const Settings &settings) {
   set_conversion_opts(settings.ignore_yo, settings.convert_single_quotes,
                       settings.remove_boundary_apostrophes);
   set_underline_settings(settings.underline_color, settings.underline_style);
+  Button_SetCheck(m_h_check_default_udl_style,
+                  settings.check_default_udl_style);
   set_ignore(settings.ignore_containing_digit,
              settings.ignore_starting_with_capital,
              settings.ignore_having_a_capital, settings.ignore_all_capital,
@@ -591,6 +594,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_h_ignore_c_start = ::GetDlgItem(_hSelf, IDC_IGNORE_CSTART);
     m_h_ignore_c_have = ::GetDlgItem(_hSelf, IDC_IGNORE_CHAVE);
     m_h_ignore_c_all = ::GetDlgItem(_hSelf, IDC_IGNORE_CALL);
+    m_h_check_default_udl_style = ::GetDlgItem(_hSelf, IDC_CHECK_DEFAULT_UDL_STYLE);
     m_h_ignore_one_letter = ::GetDlgItem(_hSelf, IDC_IGNORE_ONE_LETTER);
     m_h_ignore_ = ::GetDlgItem(_hSelf, IDC_IGNORE_);
     m_h_ignore_se_apostrophe = ::GetDlgItem(_hSelf, IDC_IGNORE_SE_APOSTROPHE);
@@ -608,15 +612,16 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     SetWindowText(m_h_ignore_yo, rc_str(IDS_CYRILLIC_YO_AS_YE).c_str());
     WinApi::create_tooltip(IDC_DELIMITERS, _hSelf,
-                    rc_str(IDS_DELIMITER_TOOLTIP).c_str());
+                           rc_str(IDS_DELIMITER_TOOLTIP).c_str());
     WinApi::create_tooltip(IDC_RECHECK_DELAY, _hSelf,
-                    rc_str(IDS_RECHECK_DELAY_TOOLTIP).c_str());
+                           rc_str(IDS_RECHECK_DELAY_TOOLTIP).c_str());
     WinApi::create_tooltip(IDC_IGNORE_CSTART, _hSelf,
-                    rc_str(IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str());
+                           rc_str(IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str());
     WinApi::create_tooltip(IDC_IGNORE_SE_APOSTROPHE, _hSelf,
-                    rc_str(IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str());
-    WinApi::create_tooltip(IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
-                    rc_str(IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str());
+                           rc_str(IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str());
+    WinApi::create_tooltip(
+        IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
+        rc_str(IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str());
 
     ComboBox_ResetContent(m_h_underline_style);
     for (const auto &name : get_indic_names())
@@ -753,6 +758,8 @@ void AdvancedDlg::apply_settings(Settings &settings) {
   settings.underline_color = m_underline_color_btn;
   settings.underline_style = ComboBox_GetCurSel(m_h_underline_style);
   settings.recheck_delay = get_recheck_delay();
+  settings.check_default_udl_style =
+      Button_GetCheck(m_h_check_default_udl_style) == BST_CHECKED;
   settings.ignore_containing_digit =
       Button_GetCheck(m_h_ignore_numbers) == BST_CHECKED;
   settings.ignore_starting_with_capital =
@@ -858,7 +865,8 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
   switch (message) {
   case WM_INITDIALOG: {
     m_controls_tab.initTabBar(_hInst, _hSelf, false, true, false);
-    m_controls_tab.setFont(reinterpret_cast<HFONT> (SendMessage (_hSelf, WM_GETFONT, 0, 0)));
+    m_controls_tab.setFont(
+        reinterpret_cast<HFONT>(SendMessage(_hSelf, WM_GETFONT, 0, 0)));
 
     m_simple_dlg.init_settings(_hInst, _hSelf);
     m_simple_dlg.create(IDD_SIMPLE, false, false);

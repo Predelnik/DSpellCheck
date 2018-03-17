@@ -308,7 +308,7 @@ bool SpellChecker::is_spellchecking_needed(EditorViewType view,
   // If word contains number then it's probably just a number or some crazy name
   auto style = m_editor.get_style_at(view, word_start);
   auto lexer = m_editor.get_lexer(view);
-  auto category = SciUtils::get_style_category(lexer, style);
+  auto category = SciUtils::get_style_category(lexer, style, m_settings);
   if (category == SciUtils::StyleCategory::unknown) {
     return false;
   }
