@@ -130,7 +130,6 @@ private:
     HWND m_h_ignore_se_apostrophe = nullptr;
     HWND m_h_slider_size = nullptr;
     HWND m_h_slider_sugg_button_opacity = nullptr;
-    HWND m_h_buffer_size = nullptr;
     HWND m_h_remove_boundary_apostrophes = nullptr;
     HWND m_delimiter_exclusions_le = nullptr;
     HWND m_split_camel_case_cb = nullptr;

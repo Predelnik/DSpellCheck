@@ -525,12 +525,6 @@ void AdvancedDlg::set_sugg_box_settings(LRESULT size, LRESULT trans) {
   SendMessage(m_h_slider_sugg_button_opacity, TBM_SETPOS, TRUE, trans);
 }
 
-void AdvancedDlg::set_buffer_size(int size) {
-  wchar_t buf[DEFAULT_BUF_SIZE];
-  _itow_s(size, buf, 10);
-  Edit_SetText(m_h_buffer_size, buf);
-}
-
 void AdvancedDlg::update_controls(const Settings &settings) {
   Edit_SetText(m_h_edit_delimiters, settings.delimiters.c_str());
   Edit_SetText(m_delimiter_exclusions_le,
@@ -548,7 +542,6 @@ void AdvancedDlg::update_controls(const Settings &settings) {
              settings.ignore_one_letter);
   set_sugg_box_settings(settings.suggestion_button_size,
                         settings.suggestion_button_opacity);
-  set_buffer_size(settings.find_next_buffer_size);
   m_tokenization_style_cmb.set_index(settings.tokenization_style);
   setup_delimiter_line_edit_visiblity();
 }
@@ -604,7 +597,6 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_h_slider_size = ::GetDlgItem(_hSelf, IDC_SLIDER_SIZE);
     m_h_slider_sugg_button_opacity =
         ::GetDlgItem(_hSelf, IDC_SLIDER_TRANSPARENCY);
-    m_h_buffer_size = ::GetDlgItem(_hSelf, IDC_BUFFER_SIZE);
     m_tokenization_style_cmb.init(
         ::GetDlgItem(_hSelf, IDC_TOKENIZATION_STYLE_CMB));
     SendMessage(m_h_slider_size, TBM_SETRANGE, TRUE, MAKELPARAM(5, 22));
@@ -707,23 +699,6 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
         return 1;
       }
       break;
-    case IDC_BUFFER_SIZE:
-      if (HIWORD(w_param) == EN_CHANGE) {
-        Edit_GetText(m_h_buffer_size, buf, DEFAULT_BUF_SIZE);
-        if (*buf == 0u)
-          return 1;
-
-        x = wcstol(buf, &end_ptr, 10);
-        if (*end_ptr != 0u)
-          Edit_SetText(m_h_buffer_size, L"1024");
-        else if (x > 10 * 1024)
-          Edit_SetText(m_h_buffer_size, L"10240");
-        else if (x < 1)
-          Edit_SetText(m_h_buffer_size, L"1");
-
-        return 1;
-      }
-      break;
     case IDC_UNDERLINE_COLOR:
       if (HIWORD(w_param) == BN_CLICKED) {
         CHOOSECOLOR cc;
@@ -797,9 +772,6 @@ void AdvancedDlg::apply_settings(Settings &settings) {
   settings.suggestion_button_opacity = static_cast<int>(
       SendMessage(m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0));
   settings.tokenization_style = m_tokenization_style_cmb.current_data();
-  wchar_t *end_ptr = nullptr;
-  settings.find_next_buffer_size =
-      wcstol(get_edit_text(m_h_buffer_size).c_str(), &end_ptr, 10);
   settings.delimiter_exclusions = get_edit_text(m_delimiter_exclusions_le);
   settings.split_camel_case =
       Button_GetCheck(m_split_camel_case_cb) == BST_CHECKED;

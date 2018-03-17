@@ -48,6 +48,8 @@ namespace SciUtils
                 return s::string;
             case SCE_USER_STYLE_IDENTIFIER:
                 return s::identifier;
+            case SCE_USER_STYLE_DEFAULT:
+                return s::text;
             default:
                 return s::unknown;
             };

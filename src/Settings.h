@@ -96,7 +96,6 @@ public:
     SpellerId active_speller_lib_id = SpellerId::aspell;
     int suggestion_button_size = 0;
     int suggestion_button_opacity = 0;
-    int find_next_buffer_size = 4;
     bool ftp_show_only_known_dictionaries = false;
     bool ftp_install_dictionaries_for_all_users = false;
     bool ftp_use_passive_mode = true;

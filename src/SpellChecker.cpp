@@ -68,7 +68,7 @@ void SpellChecker::find_next_mistake() {
   while (true) {
     auto from = static_cast<long>(iterator_pos);
     auto to = static_cast<long>(iterator_pos +
-                                m_settings.find_next_buffer_size * 1024);
+                                4096);
     int ignore_offsetting = 0;
     if (to > doc_length) {
       ignore_offsetting = 1;
@@ -116,7 +116,7 @@ void SpellChecker::find_prev_mistake() {
 
   while (true) {
     auto from = static_cast<long>(iterator_pos -
-                                  m_settings.find_next_buffer_size * 1024);
+                                  4096);
     auto to = static_cast<long>(iterator_pos);
     int ignore_offsetting = 0;
     if (from < 0) {
@@ -133,7 +133,7 @@ void SpellChecker::find_prev_mistake() {
       if (result)
         break;
 
-      iterator_pos -= (m_settings.find_next_buffer_size * 1024 -
+      iterator_pos -= (4096 -
                        text.to_original_index(offset));
     } else
       --iterator_pos;

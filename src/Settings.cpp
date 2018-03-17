@@ -230,7 +230,6 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Library", active_speller_lib_id, SpellerId::hunspell);
   worker.process(L"Suggestions_Button_Size", suggestion_button_size, 15);
   worker.process(L"Suggestions_Button_Opacity", suggestion_button_opacity, 70);
-  worker.process(L"Find_Next_Buffer_Size", find_next_buffer_size, 4);
   worker.process(L"Show_Only_Known", ftp_show_only_known_dictionaries, true);
   worker.process(L"Install_Dictionaries_For_All_Users",
                  ftp_install_dictionaries_for_all_users, false);
