@@ -25,6 +25,22 @@ void AboutDlg::do_dialog() {
   display();
 }
 
+#define STR_HELPER(x) L#x
+#define STR(x) STR_HELPER(x)
+
+void AboutDlg::update_compiler_version()
+{
+  std::wstring compiler_name = L"Unknown Compiler";
+#ifdef _MSC_FULL_VER
+  std::wstring ver_str = STR(_MSC_FULL_VER);
+  compiler_name = wstring_printf (L"MSVC cl %s.%s.%s.%02d", ver_str.substr(0, 2).c_str (), ver_str.substr(2, 2).c_str (), ver_str.substr(4, 5).c_str (), _MSC_BUILD);
+#endif
+  auto wnd = ::GetDlgItem (_hSelf, IDC_COMPILER_TEXT);
+  auto str = wstring_printf (rc_str(IDS_BUILT_WITH_PS).c_str (), compiler_name.c_str ());
+  auto ret = Static_SetText(wnd, str.c_str ());
+  (void) ret;
+}
+
 std::wstring get_product_and_version() {
   // get the filename of the executable containing the version resource
   std::vector<wchar_t> sz_filename (MAX_PATH + 1);
@@ -67,6 +83,7 @@ INT_PTR AboutDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
     Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), get_product_and_version ().c_str ());
+    update_compiler_version ();
   }
     return TRUE;
   case WM_NOTIFY: {
