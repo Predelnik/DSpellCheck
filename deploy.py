@@ -11,6 +11,7 @@ import json
 import hashlib
 from bs4 import BeautifulSoup
 import datetime
+from pygit2 import Repository, Config, Signature
 
 def get_version_number (filename):
 	info = GetFileVersionInfo (filename, "\\")
@@ -107,7 +108,8 @@ if options.new_minor or options.update_pm:
 	if 'NPP_PLUGINS_X64_PATH' in os.environ:
 		plugins_x64_path = os.environ['NPP_PLUGINS_X64_PATH']
 		print ('Applying change to npp-plugins-x64 source directory...')
-		plugins_xml_path = os.path.join (plugins_x64_path, 'plugins/plugins64.xml')
+		xml_path = 'plugins/plugins64.xml'
+		plugins_xml_path = os.path.join (plugins_x64_path, xml_path)
 		plugins_xml_data = ''
 		with open (plugins_xml_path, "r") as file:
 			plugins_xml_data = file.read()
@@ -132,8 +134,9 @@ if options.new_minor or options.update_pm:
 		replace_text (plugin_node.latestUpdate, datetime.datetime.now().strftime ("%Y-%m-%d") + '\\n' + readme_text[start_pos:end_pos].replace ('\n', '\\n') + '\\n')
 		with open (plugins_xml_path, "w") as file:
 			file.write (plugins_xml_data)
-	
-		validate_path = os.path.join (plugins_x64_path, 'plugins/validate.json')
+
+		json_path = 'plugins/validate.json'
+		validate_path = os.path.join (plugins_x64_path, json_path)
 		validate_data = None
 		validate_text = ''
 		with open(validate_path) as data_file:
@@ -146,6 +149,17 @@ if options.new_minor or options.update_pm:
 		validate_text = validate_text.replace (str_before[1:-1], str_after[1:-1])
 		with open (validate_path, "w") as file:
 			file.write (validate_text)
+
+		print ('Creating commit in npp-plugins-x64 repository...')
+		repo = Repository (plugins_x64_path)
+		index = repo.index
+		index.add_all ()
+		index.write ()
+		config = Config.get_global_config()
+		author = Signature(config['user.name'], config['user.email'])
+		commiter = author
+		tree = index.write_tree()
+		repo.create_commit ('refs/heads/master', author, commiter, 'Update DSpellCheck to {}'.format (ver), tree, [repo.head.get_object().hex])
 	else:
 		print ('%NPP_PLUGINS_X64_PATH% is not set up, nothing to update')
 

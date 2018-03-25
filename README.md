@@ -17,7 +17,7 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
-v.1.4.3
+v1.4.3
 * Update styles for rechecking .ini files (#54)
 * Make words with non-arabic numerics also ignored if corresponding option is on (#58)
 * Add check box for spell-checking/ignoring default style for UDL (turned on by default) (#132)
