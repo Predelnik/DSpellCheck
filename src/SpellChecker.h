@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #pragma once
 // Class that will do most of the job with spellchecker
@@ -51,9 +52,9 @@ public:
                const SpellerContainer &speller_container);
   ~SpellChecker();
   void recheck_visible_both_views();
-  void recheck_visible(EditorViewType view, bool not_intersection_only = false);
+  void recheck_visible(EditorViewType view);
 
-  std::wstring get_all_misspellings_as_string () const;
+  std::wstring get_all_misspellings_as_string() const;
   void update_delimiters();
   void on_settings_changed();
   void find_next_mistake();
@@ -67,13 +68,15 @@ private:
   void create_word_underline(EditorViewType view, long start, long end) const;
   void remove_underline(EditorViewType view, long start, long end) const;
   void clear_all_underlines(EditorViewType view) const;
-  bool check_word(EditorViewType view, std::wstring_view word, long word_start) const;
+  bool check_word(EditorViewType view, std::wstring_view word,
+                  long word_start) const;
   void get_visible_limits(EditorViewType view, long &start, long &finish);
-  MappedWstring get_visible_text(EditorViewType view, long *offset,
-                                 bool not_intersection_only = false);
+  long prev_token_begin_in_document(EditorViewType view, long start) const;
+  long next_token_end_in_document(EditorViewType view, long end) const;
+  MappedWstring get_visible_text(EditorViewType view);
   int check_text(EditorViewType view, const MappedWstring &text_to_check,
                  long offset, CheckTextMode mode) const;
-  void check_visible(EditorViewType view, bool not_intersection_only = false);
+  void check_visible(EditorViewType view);
 
   std::wstring_view get_word_at(long char_pos, const MappedWstring &text,
                                 long offset) const;
@@ -81,12 +84,11 @@ private:
   void reset_hot_spot_cache();
   bool is_spellchecking_needed(EditorViewType view, std::wstring_view word,
                                long word_start) const;
-    long next_token_end(std::wstring_view target,
-                        long index) const;
-    long prev_token_begin(std::wstring_view target,
-                          long index) const;
+  long next_token_end(std::wstring_view target, long index) const;
+  long prev_token_begin(std::wstring_view target, long index) const;
   auto non_alphabetic_tokenizer(std::wstring_view target) const;
   auto delimiter_tokenizer(std::wstring_view target) const;
+  MappedWstring get_document_mapped_wstring (EditorViewType view, long start, long end) const;
 
 private:
   // converted to corresponding symbols

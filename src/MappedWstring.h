@@ -20,6 +20,7 @@ public:
     long from_original_index(long cur_index) const { return !mapping.empty() ?
         static_cast<long> (std::lower_bound(mapping.begin (), mapping.end (), cur_index) - mapping.begin ()) : cur_index; }
     long original_length () const { return !mapping.empty () ? mapping.back () : static_cast<long> (str.size ());}
+    void append (const MappedWstring& other);
 public:
     std::wstring str;
     std::vector<long> mapping; // should have size str.length () or empty (if empty mapping is identity a<->a)

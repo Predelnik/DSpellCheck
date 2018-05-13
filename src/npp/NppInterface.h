@@ -64,7 +64,8 @@ public:
     long get_active_document_length(EditorViewType view) const override;
     std::string get_text_range(EditorViewType view, long from, long to) const override;
     void force_style_update(EditorViewType view, long from, long to) override;
-    std::optional<long> char_position_from_point(EditorViewType view, int x, int y) const override;
+    std::optional<long> char_position_from_global_point(EditorViewType view, int x, int y) const override;
+    long char_position_from_point(EditorViewType view, const POINT& pnt) const override;
     long get_selection_start(EditorViewType view) const override;
     long get_selection_end(EditorViewType view) const override;
     long get_line_length(EditorViewType view, int line) const override;
@@ -100,6 +101,7 @@ public:
     long get_document_line_count(EditorViewType view) const override;
     std::string get_active_document_text(EditorViewType view) const override;
     std::wstring get_full_current_path() const override;
+    RECT editor_rect(EditorViewType view) const override;
 private:
     const NppData& m_npp_data;
     mutable enum_array<EditorViewType, std::optional<int>> m_lexer_cache;

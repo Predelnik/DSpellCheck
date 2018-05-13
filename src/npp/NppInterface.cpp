@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #include "NppInterface.h"
 
@@ -228,13 +229,12 @@ long NppInterface::get_document_line_count(EditorViewType view) const {
   return static_cast<long>(send_msg_to_scintilla(view, SCI_GETLINECOUNT));
 }
 
-std::string
-NppInterface::get_active_document_text(EditorViewType view) const {
+std::string NppInterface::get_active_document_text(EditorViewType view) const {
   auto buf_len = get_active_document_length(view) + 1;
   std::vector<char> buf(buf_len);
   send_msg_to_scintilla(view, SCI_GETTEXT, buf_len,
                         reinterpret_cast<LPARAM>(buf.data()));
-  return buf.data ();
+  return buf.data();
 }
 
 std::wstring NppInterface::get_full_current_path() const {
@@ -244,8 +244,16 @@ std::wstring NppInterface::get_full_current_path() const {
   return full_path.data();
 }
 
-std::optional<long> NppInterface::char_position_from_point(EditorViewType view,
-                                                           int x, int y) const {
+RECT NppInterface::editor_rect(EditorViewType view) const {
+  RECT out;
+  GetWindowRect(get_scintilla_hwnd(view), &out);
+  OffsetRect(&out, -out.left, -out.top);
+  return out;
+}
+
+std::optional<long>
+NppInterface::char_position_from_global_point(EditorViewType view, int x,
+                                              int y) const {
   POINT p;
   p.x = x;
   p.y = y;
@@ -255,6 +263,12 @@ std::optional<long> NppInterface::char_position_from_point(EditorViewType view,
   ScreenToClient(hwnd, &p);
   return static_cast<long>(
       send_msg_to_scintilla(view, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y));
+}
+
+long NppInterface::char_position_from_point(EditorViewType view,
+                                            const POINT &pnt) const {
+  return static_cast<long>(send_msg_to_scintilla(
+      view, SCI_CHARPOSITIONFROMPOINT, pnt.x, pnt.y));
 }
 
 long NppInterface::get_selection_start(EditorViewType view) const {
@@ -278,7 +292,7 @@ std::string NppInterface::get_line(EditorViewType view,
       view, SCI_GETLINE, line_number, reinterpret_cast<LPARAM>(buf.data())));
   static_cast<void>(ret);
   assert(ret == buf_size - 1);
-  return buf.data ();
+  return buf.data();
 }
 
 void NppInterface::move_active_document_to_other_view() {
@@ -299,7 +313,7 @@ std::string NppInterface::selected_text(EditorViewType view) const {
     std::vector<char> buf(sel_buf_size);
     send_msg_to_scintilla(view, SCI_GETSELTEXT, 0,
                           reinterpret_cast<LPARAM>(buf.data()));
-    return buf.data ();
+    return buf.data();
   }
   return {};
 }

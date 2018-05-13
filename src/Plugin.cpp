@@ -773,7 +773,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
                 (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL)) != 0 &&
                recheck_done) // If scroll wasn't caused by user input...
     {
-      spell_checker->recheck_visible(npp_interface().active_view(), true);
+      spell_checker->recheck_visible(npp_interface().active_view());
       restyling_caused_recheck_was_done = false;
     }
     suggestions_button->display(false);

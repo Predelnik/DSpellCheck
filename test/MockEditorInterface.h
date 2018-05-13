@@ -95,7 +95,7 @@ public:
   std::string selected_text(EditorViewType view) const override;
   std::string get_current_line(EditorViewType view) const override;
   std::string get_line(EditorViewType view, long line_number) const override;
-  std::optional<long> char_position_from_point(EditorViewType view, int x,
+  std::optional<long> char_position_from_global_point(EditorViewType view, int x,
                                                int y) const override;
   HWND get_editor_handle() const override;
   std::wstring get_full_current_path() const override;

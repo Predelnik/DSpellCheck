@@ -376,7 +376,7 @@ std::string MockEditorInterface::get_line(EditorViewType view,
 }
 
 std::optional<long>
-MockEditorInterface::char_position_from_point(EditorViewType /*view*/,
+MockEditorInterface::char_position_from_global_point(EditorViewType /*view*/,
                                               int /*x*/, int /*y*/) const {
   return std::nullopt;
 }
