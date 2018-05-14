@@ -35,9 +35,9 @@ public:
   std::vector<MockedIndicatorInfo> indicator_info;
   std::vector<int> style;
   int lexer = 0;
-  int hotspot_tyle = 123;
+  int hotspot_style = 123;
   int current_indicator = 0;
-  std::array<long, 2> visible_lines;
+  std::array<long, 2> visible_lines = {0, 30};
   void set_data(const std::wstring &data_arg);
   long cursor_pos;
 };
@@ -102,6 +102,8 @@ public:
   std::string get_text_range(EditorViewType view, long from,
                              long to) const override;
   std::string get_active_document_text(EditorViewType view) const override;
+  long char_position_from_point(EditorViewType view, const POINT& pnt) const override;
+  RECT editor_rect(EditorViewType view) const override;
   MockEditorInterface();
   ~MockEditorInterface();
   void open_virtual_document(EditorViewType view, const std::wstring &path,
@@ -118,9 +120,10 @@ private:
   std::string convert_from_wstring(EditorViewType view,
                                    const wchar_t *str) const;
   std::wstring convert_to_wstring(EditorViewType view, const char *str) const;
-
 private:
   enum_array<EditorViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<EditorViewType, int> m_active_document_index;
   EditorViewType m_active_view = EditorViewType::primary;
+  static constexpr auto text_width = 13;
+  static constexpr auto text_height = 13;
 };

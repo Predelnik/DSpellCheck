@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #include "MockEditorInterface.h"
 #include "CommonFunctions.h"
@@ -68,7 +69,7 @@ void MockEditorInterface::set_indicator_style(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  if (indicator_index >= static_cast<int> (doc->indicator_info.size()))
+  if (indicator_index >= static_cast<int>(doc->indicator_info.size()))
     doc->indicator_info.resize(indicator_index + 1);
   doc->indicator_info[indicator_index].style = style;
 }
@@ -79,7 +80,7 @@ void MockEditorInterface::set_indicator_foreground(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  if (indicator_index >= static_cast<int> (doc->indicator_info.size()))
+  if (indicator_index >= static_cast<int>(doc->indicator_info.size()))
     doc->indicator_info.resize(indicator_index + 1);
   doc->indicator_info[indicator_index].foreground = style;
 }
@@ -89,7 +90,7 @@ void MockEditorInterface::set_current_indicator(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return;
-  if (indicator_index >= static_cast<int> (doc->indicator_info.size()))
+  if (indicator_index >= static_cast<int>(doc->indicator_info.size()))
     doc->indicator_info.resize(indicator_index + 1);
   doc->current_indicator = indicator_index;
 }
@@ -100,7 +101,7 @@ void MockEditorInterface::indicator_fill_range(EditorViewType view, long from,
   if (!doc)
     return;
   auto &s = doc->indicator_info[doc->current_indicator].set_for;
-  if (to >= static_cast<int> (s.size()))
+  if (to >= static_cast<int>(s.size()))
     s.resize(to + 1);
   std::fill(s.begin() + from, s.begin() + to, true);
 }
@@ -111,7 +112,7 @@ void MockEditorInterface::indicator_clear_range(EditorViewType view, long from,
   if (!doc)
     return;
   auto &s = doc->indicator_info[doc->current_indicator].set_for;
-  if (to >= static_cast<long> (s.size()))
+  if (to >= static_cast<long>(s.size()))
     s.resize(to + 1);
   std::fill(s.begin() + from, s.begin() + to, false);
 }
@@ -144,7 +145,7 @@ int MockEditorInterface::get_current_line_number(EditorViewType view) const {
 
 int MockEditorInterface::get_text_height(EditorViewType /*view*/,
                                          int /*line*/) const {
-  return 13;
+  return text_height;
 }
 
 int MockEditorInterface::line_from_position(EditorViewType view,
@@ -222,7 +223,7 @@ bool MockEditorInterface::is_style_hotspot(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return false;
-  return doc->hotspot_tyle == style;
+  return doc->hotspot_style == style;
 }
 
 long MockEditorInterface::get_active_document_length(
@@ -288,7 +289,7 @@ long MockEditorInterface::get_document_line_count(EditorViewType view) const {
   if (!doc)
     return -1;
   return static_cast<long>(std::count(
-      doc->data.begin(), doc->data.begin() + get_current_pos(view), '\n'));
+      doc->data.begin(), doc->data.end (), '\n'));
 }
 
 bool MockEditorInterface::open_document(std::wstring filename) {
@@ -375,9 +376,8 @@ std::string MockEditorInterface::get_line(EditorViewType view,
   return get_text_range(view, start, end);
 }
 
-std::optional<long>
-MockEditorInterface::char_position_from_global_point(EditorViewType /*view*/,
-                                              int /*x*/, int /*y*/) const {
+std::optional<long> MockEditorInterface::char_position_from_global_point(
+    EditorViewType /*view*/, int /*x*/, int /*y*/) const {
   return std::nullopt;
 }
 
@@ -404,6 +404,21 @@ MockEditorInterface::get_active_document_text(EditorViewType view) const {
   if (!doc)
     return "";
   return convert_from_wstring(view, doc->data.c_str());
+}
+
+long MockEditorInterface::char_position_from_point(EditorViewType view,
+                                                   const POINT &pnt) const {
+  auto doc = active_document(view);
+  if (!doc)
+    return -1;
+  return get_line_start_position(
+             view, get_document_line_from_visible(view, pnt.y / text_height)) +
+         pnt.x / text_width;
+}
+
+RECT MockEditorInterface::editor_rect(EditorViewType /*view*/) const {
+  RECT r = {0, 0, 10000, 10000};
+  return r;
 }
 
 MockEditorInterface::MockEditorInterface() {
@@ -439,7 +454,7 @@ MockEditorInterface::get_underlined_words(EditorViewType view,
   auto doc = active_document(view);
   if (!doc)
     return {};
-  if (indicator_id >= static_cast<int> (doc->indicator_info.size()))
+  if (indicator_id >= static_cast<int>(doc->indicator_info.size()))
     return {};
   auto &target = doc->indicator_info[indicator_id].set_for;
   auto it = target.begin(), jt = target.begin();
@@ -463,20 +478,18 @@ void MockEditorInterface::make_all_visible(EditorViewType view) {
   doc->visible_lines = {0, get_document_line_count(view)};
 }
 
-void MockEditorInterface::set_lexer(EditorViewType view, int lexer)
-{
-    auto doc = active_document(view);
-    if (!doc)
-        return;
-    doc->lexer = lexer;
+void MockEditorInterface::set_lexer(EditorViewType view, int lexer) {
+  auto doc = active_document(view);
+  if (!doc)
+    return;
+  doc->lexer = lexer;
 }
 
-void MockEditorInterface::set_whole_text_style(EditorViewType view, int style)
-{
-    auto doc = active_document(view);
-    if (!doc)
-        return;
-    std::fill (doc->style.begin (), doc->style.end (), style);
+void MockEditorInterface::set_whole_text_style(EditorViewType view, int style) {
+  auto doc = active_document(view);
+  if (!doc)
+    return;
+  std::fill(doc->style.begin(), doc->style.end(), style);
 }
 
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
