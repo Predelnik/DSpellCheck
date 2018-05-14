@@ -246,7 +246,7 @@ long SpellChecker::next_token_end_in_document(EditorViewType view,
         m_editor, view, m_editor.get_text_range(view, prev_end, end));
     // finding any start before start which starts a token
     auto index = next_token_end(mapped_str.str, 0);
-    if (index < mapped_str.str.length() - 1)
+    if (index < static_cast<long> (mapped_str.str.length()) - 1)
       return prev_end + mapped_str.to_original_index(index);
     prev_end = end;
     shift *= 2;
