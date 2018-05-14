@@ -70,7 +70,6 @@ private:
   void clear_all_underlines(EditorViewType view) const;
   bool check_word(EditorViewType view, std::wstring_view word,
                   long word_start) const;
-  void get_visible_limits(EditorViewType view, long &start, long &finish);
   long prev_token_begin_in_document(EditorViewType view, long start) const;
   long next_token_end_in_document(EditorViewType view, long end) const;
   MappedWstring get_visible_text(EditorViewType view);

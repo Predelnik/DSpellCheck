@@ -198,24 +198,6 @@ void SpellChecker::remove_underline(EditorViewType view, long start,
   m_editor.indicator_clear_range(view, start, end);
 }
 
-void SpellChecker::get_visible_limits(EditorViewType view, long &start,
-                                      long &finish) {
-  auto top = m_editor.get_first_visible_line(view);
-  auto bottom = top + m_editor.get_lines_on_screen(view);
-  top = m_editor.get_document_line_from_visible(view, top);
-  bottom = m_editor.get_document_line_from_visible(view, bottom);
-  auto line_count = m_editor.get_document_line_count(view);
-  start = m_editor.get_line_start_position(view, top);
-  // Not using end of line position cause utf-8 symbols could be more than one
-  // char
-  // So we use next line start as the end of our visible text
-  if (bottom + 1 < line_count) {
-    finish = m_editor.get_line_start_position(view, bottom + 1);
-  } else {
-    finish = m_editor.get_active_document_length(view);
-  }
-}
-
 long SpellChecker::prev_token_begin_in_document(EditorViewType view,
                                                 long start) const {
   long shift = 15;
@@ -240,13 +222,15 @@ long SpellChecker::next_token_end_in_document(EditorViewType view,
   long shift = 15;
   auto prev_end = end;
   auto length = m_editor.get_active_document_length(view);
+  if (end == length)
+    return end;
   while (end > 0) {
     end = std::min(end + shift, length);
     auto mapped_str = SpellCheckerHelpers::to_mapped_wstring(
         m_editor, view, m_editor.get_text_range(view, prev_end, end));
     // finding any start before start which starts a token
     auto index = next_token_end(mapped_str.str, 0);
-    if (index < static_cast<long> (mapped_str.str.length()) - 1)
+    if (index < static_cast<long> (mapped_str.str.length()))
       return prev_end + mapped_str.to_original_index(index);
     prev_end = end;
     shift *= 2;
@@ -259,7 +243,7 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view) {
   auto top_visible_line = m_editor.get_document_line_from_visible(
       view, m_editor.get_first_visible_line(view));
   auto bottom_visible_line = m_editor.get_document_line_from_visible(
-      view, top_visible_line + m_editor.get_lines_on_screen(view));
+      view, top_visible_line + m_editor.get_lines_on_screen(view) - 1);
   auto rect = m_editor.editor_rect(view);
   auto len = m_editor.get_active_document_length(view);
   MappedWstring result;
