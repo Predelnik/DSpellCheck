@@ -51,6 +51,7 @@ private:
     mutable ISpellChecker *m_last_used_speller = nullptr;
     bool m_ok = false;
     bool m_inited = false;
+    bool m_co_initialize_succesfull = false;
 };
 #else
 class NativeSpellerInterface : public DummySpeller

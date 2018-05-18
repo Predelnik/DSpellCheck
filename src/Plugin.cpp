@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #include "Plugin.h"
 
@@ -20,12 +21,12 @@
 
 #include "AboutDlg.h"
 #include "CheckedList/CheckedList.h"
+#include "ConnectionSettingsDialog.h"
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
 #include "MainDef.h"
 #include "ProgressDlg.h"
 #include "RemoveDictionariesDialog.h"
-#include "ConnectionSettingsDialog.h"
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "SuggestionsButton.h"
@@ -552,7 +553,6 @@ std::vector<std::pair<long, long>> check_queue;
 UINT_PTR ui_timer = 0u;
 UINT_PTR recheck_timer = 0u;
 bool recheck_done = true;
-WNDPROC wnd_proc_notepad = nullptr;
 bool restyling_caused_recheck_was_done =
     false; // Hack to avoid eternal cycle in case of scintilla bug
 bool first_restyle = true; // hack to successfully avoid checking hyperlinks
@@ -562,8 +562,10 @@ WPARAM last_hwnd = NULL;
 LPARAM last_coords = 0;
 std::vector<SuggestionsMenuItem> cur_menu_list;
 // Ok, trying to use window subclassing to handle messages
-LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
-                                      LPARAM l_param) {
+
+LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param,
+                                      LPARAM l_param, UINT_PTR /*u_id_subclass*/,
+                                      DWORD_PTR /*dw_ref_data*/) {
   LRESULT ret; // int->LRESULT, fix x64 issue, still compatible with x86
   switch (message) {
   case WM_INITMENUPOPUP: {
@@ -605,7 +607,7 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
 
         auto mut_settings = get_settings().modify();
         mut_settings->auto_check_text = false;
-        ret = ::CallWindowProc(wnd_proc_notepad, h_wnd, message, w_param,
+        ret = ::DefSubclassProc(h_wnd, message, w_param,
                                l_param);
         mut_settings->auto_check_text = prev_value;
 
@@ -642,14 +644,14 @@ LRESULT CALLBACK sub_wnd_proc_notepad(HWND h_wnd, UINT message, WPARAM w_param,
       return TRUE;
     }
   }
-  ret = ::CallWindowProc(wnd_proc_notepad, h_wnd, message, w_param, l_param);
+  ret = ::DefSubclassProc(h_wnd, message, w_param, l_param);
   return ret;
 }
 
 LRESULT
 show_calculated_menu(std::vector<SuggestionsMenuItem> &&menu_list) {
   cur_menu_list = std::move(menu_list);
-  return ::CallWindowProc(wnd_proc_notepad, npp_data.npp_handle, WM_CONTEXTMENU,
+  return ::DefSubclassProc(npp_data.npp_handle, WM_CONTEXTMENU,
                           last_hwnd, last_coords);
 }
 
@@ -670,9 +672,7 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData) {
   init_npp_interface();
   init_menu_ids();
   command_menu_init();
-  wnd_proc_notepad = reinterpret_cast<WNDPROC>(
-      ::SetWindowLongPtr(npp_data.npp_handle, GWLP_WNDPROC,
-                         reinterpret_cast<LPARAM>(sub_wnd_proc_notepad)));
+  SetWindowSubclass(npp_data.npp_handle, subclass_proc, 0, 0);
 }
 
 extern "C" __declspec(dllexport) const wchar_t *getName() {
@@ -730,10 +730,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     command_menu_clean_up();
 
     plugin_clean_up();
-    if (wnd_proc_notepad != nullptr)
-      // LONG_PTR is more x64 friendly, yet not affecting x86
-      ::SetWindowLongPtr(npp_data.npp_handle, GWLP_WNDPROC,
-                         (LONG_PTR)wnd_proc_notepad); // Removing subclassing
+    RemoveWindowSubclass(npp_data.npp_handle, subclass_proc, 0);
   } break;
 
   case NPPN_READY: {

@@ -32,14 +32,15 @@ public:
 };
 
 inline void HR(HRESULT const result) {
-  if (S_OK != result)
+  if (S_OK != result && S_FALSE != result/* false is not an error */)
     throw ComException{result};
 }
 
 void NativeSpellerInterface::init_impl() {
   try {
     HR(CoInitializeEx(nullptr, // reserved
-                      COINIT_MULTITHREADED));
+                      COINIT_APARTMENTTHREADED));
+    m_co_initialize_succesfull = true;
   } catch (const ComException &e) {
     if (e.code != RPC_E_CHANGED_MODE)
       throw e;
@@ -233,8 +234,13 @@ void NativeSpellerInterface::cleanup() {
   // exit and have to do it earlier In the future it could be resolved other way
   // if all the notifications from NPP will be processed as signals which will
   // be disconnected as the first cleanup step
-  m_ok = false;
-  m_ptrs.reset();
+  if (m_ok)
+  {
+    m_ok = false;
+    m_ptrs.reset();
+    if (m_co_initialize_succesfull)
+      CoUninitialize ();
+  }
 }
 
 #endif // defined (DSPELLCHECK_NEW_SDK) && !defined (__clang__)
