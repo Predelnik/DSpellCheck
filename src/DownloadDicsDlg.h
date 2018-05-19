@@ -143,7 +143,7 @@ private:
   std::wstring m_message;
   std::vector<DownloadRequest> m_to_download;
   decltype(m_to_download)::iterator m_cur;
-  std::array<std::wstring, 2> m_default_server_names;
+  std::array<std::wstring, 1> m_default_server_names;
   Settings &m_settings;
   bool m_address_is_set = false;
 };
