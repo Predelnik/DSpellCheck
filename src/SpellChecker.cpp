@@ -240,14 +240,15 @@ long SpellChecker::next_token_end_in_document(EditorViewType view,
 
 MappedWstring SpellChecker::get_visible_text(EditorViewType view) {
 
-  auto top_visible_line = m_editor.get_document_line_from_visible(
-      view, m_editor.get_first_visible_line(view));
-  auto bottom_visible_line = m_editor.get_document_line_from_visible(
+  auto top_visible_line = m_editor.get_first_visible_line(view);
+  auto top_visible_line_index = m_editor.get_document_line_from_visible(
+      view, top_visible_line);
+  auto bottom_visible_line_index = m_editor.get_document_line_from_visible(
       view, top_visible_line + m_editor.get_lines_on_screen(view) - 1);
   auto rect = m_editor.editor_rect(view);
   auto len = m_editor.get_active_document_length(view);
   MappedWstring result;
-  for (auto line = top_visible_line; line <= bottom_visible_line; ++line) {
+  for (auto line = top_visible_line_index; line <= bottom_visible_line_index; ++line) {
     auto start = m_editor.get_line_start_position(view, line);
     if (start >= len) // skipping possible empty lines when document is too short
       continue;
