@@ -255,18 +255,20 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view) {
     auto start_point = m_editor.get_point_from_position(view, start);
     if (start_point.y < rect.top) {
       start = m_editor.char_position_from_point(view, {0, 0});
+      start = prev_token_begin_in_document(view, start);
     } else if (start_point.x < rect.left) {
       start = m_editor.char_position_from_point(view, {0, start_point.y});
+      start = prev_token_begin_in_document(view, start);
     }
-    start = prev_token_begin_in_document(view, start);
     auto end = m_editor.get_line_end_position(view, line);
     auto end_point = m_editor.get_point_from_position(view, end);
     if (end_point.y > rect.bottom) {
       end = m_editor.char_position_from_point(view, {rect.right, rect.bottom});
+      end = next_token_end_in_document(view, end);
     } else if (end_point.x > rect.right) {
       end = m_editor.char_position_from_point(view, {rect.right, end_point.y});
+      end = next_token_end_in_document(view, end);
     }
-    end = next_token_end_in_document(view, end);
     auto new_str = get_document_mapped_wstring (view, start, end);
     result.append(new_str);
   }
