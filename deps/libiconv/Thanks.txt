@@ -1,2 +1,0 @@
-Biggest thanks to the author of this article and project from codeproject.com:
-http://www.codeproject.com/Articles/302012/How-to-Build-libiconv-with-Microsoft-Visual-Studio
