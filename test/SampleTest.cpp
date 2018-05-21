@@ -126,7 +126,6 @@ wrongword
   editor.set_active_document_text(v, LR"(
   abaas123asd
   wEirdCasE
-  SCREAMING
   )");
   sc.recheck_visible_both_views();
   CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
@@ -142,7 +141,6 @@ wrongword
   CHECK(sc.get_all_misspellings_as_string() == LR"(Cas
 E
 Eird
-SCREAMING
 w
 )");
   {
