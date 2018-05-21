@@ -34,8 +34,7 @@ public:
 
     for (int i = 0; i < static_cast<int>(m_target.size()); ++i) {
       if (!m_is_delimiter(m_target[i])) {
-        if (m_split_camel_case && i > token_begin && IsCharUpper(m_target[i]) &&
-            IsCharLower(m_target[i - 1])) {
+        if (m_split_camel_case && i > token_begin && IsCharUpper(m_target[i])) {
           token_end = i;
           finalize_word();
           token_begin = i;
@@ -60,7 +59,7 @@ public:
         --index;
     }
     while (index >= 0 && !m_is_delimiter(m_target[index])) {
-      if (m_split_camel_case && index > 0 && IsCharLower(m_target[index - 1]) &&
+      if (m_split_camel_case && index > 0 &&
           IsCharUpper(m_target[index]))
         return index;
       --index;
@@ -76,7 +75,7 @@ public:
            !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case &&
           index < static_cast<long>(m_target.length()) - 1 &&
-          IsCharUpper(m_target[index + 1]) && IsCharLower(m_target[index]))
+          IsCharUpper(m_target[index + 1]))
         return index + 1;
       ++index;
     }
