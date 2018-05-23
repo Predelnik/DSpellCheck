@@ -79,7 +79,6 @@ void SpellChecker::find_next_mistake() {
       if (to != doc_length && next_token_end(text.str, to) == index)
         index = prev_token_begin(text.str, index - 1);
       text.str.erase(index, text.str.size() - index);
-      m_editor.force_style_update(view, from, to);
       bool result = check_text(view, text, static_cast<long>(iterator_pos),
                                CheckTextMode::find_first) != 0;
       if (result)
@@ -123,7 +122,6 @@ void SpellChecker::find_prev_mistake() {
       auto text = SpellCheckerHelpers::to_mapped_wstring(
           m_editor, view, m_editor.get_text_range(view, from, to));
       auto offset = next_token_end(text.str, 0);
-      m_editor.force_style_update(view, from + offset, to);
       bool result = check_text(view, text, from, CheckTextMode::find_last) != 0;
       if (result)
         break;
