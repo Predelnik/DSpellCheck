@@ -19,7 +19,7 @@ Following main features:
 
 v1.4.4
 * Fix hang on exit if plugin NppMenuSearch is installed (#135)
-* Limit spell-checking to visible area in case if extremely long lines are present in file (#135)
+* Limit spell-checking to visible area in case if extremely long lines are present in file (#136)
 * Remove FTP server which stopped hosting dictionaries from default selection (#137)
 
 v1.4.3
