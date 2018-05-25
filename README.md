@@ -17,6 +17,11 @@ Following main features:
 - Support for downloading and removing Hunspell dictionaries through user friendly GUI interface
 - Ability to quickly change current language through context menu or DSpellCheck sub-menu.
 
+v1.4.4
+* Fix hang on exit if plugin NppMenuSearch is installed (#135)
+* Limit spell-checking to visible area in case if extremely long lines are present in file (#135)
+* Remove FTP server which stopped hosting dictionaries from default selection (#137)
+
 v1.4.3
 * Update styles for rechecking .ini files (#54)
 * Make words with non-arabic numerics also ignored if corresponding option is on (#58)
