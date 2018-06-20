@@ -45,8 +45,6 @@
 #include <vld.h>
 #endif // VLD_BUILD
 
-const wchar_t config_file_name[] = L"DSpellCheck.ini";
-
 FuncItem func_item[nb_func];
 bool resources_inited = false;
 

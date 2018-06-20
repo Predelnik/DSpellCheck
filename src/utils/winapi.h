@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #pragma once
 #include "enum_range.h"
@@ -42,7 +43,7 @@ public:
   template <typename EnumType> void add_items() {
     static_assert(std::is_enum_v<EnumType>);
     for (auto val : enum_range<EnumType>()) {
-      add_item(gui_string(val).c_str (), static_cast<int>(val));
+      add_item(gui_string(val).c_str(), static_cast<int>(val));
     }
   }
 
@@ -84,5 +85,6 @@ public:
 private:
   void init_impl() override { this->add_items<EnumType>(); }
 };
-    HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text);
+HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text);
+
 } // namespace WinApi
