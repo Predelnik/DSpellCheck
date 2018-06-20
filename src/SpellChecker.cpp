@@ -226,6 +226,8 @@ long SpellChecker::next_token_end_in_document(EditorViewType view,
     auto index = next_token_end(mapped_str.str, 0);
     if (index < static_cast<long> (mapped_str.str.length()))
       return prev_end + mapped_str.to_original_index(index);
+    if (end == length)
+      return end;
     prev_end = end;
     shift *= 2;
   }
