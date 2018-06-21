@@ -20,6 +20,7 @@
 #include "utils/utf8.h"
 #include "MappedWString.h"
 #include "resource.h"
+#include <numeric>
 
 static std::vector<char> convert(const char* source_enc, const char* target_enc, const void* source_data_ptr,
                                  size_t source_len, size_t max_dest_len) {
@@ -62,7 +63,11 @@ MappedWstring utf8_to_mapped_wstring(std::string_view str) {
 }
 
 MappedWstring to_mapped_wstring(std::string_view str) {
-    return {to_wstring(str), {}};
+    if (str.empty())
+      return {};
+    std::vector<long> mapping (str.length () + 1);
+    std::iota (mapping.begin (), mapping.end (), 0);
+    return {to_wstring(str), std::move (mapping)};
 }
 
 std::wstring to_wstring(std::string_view source) {
