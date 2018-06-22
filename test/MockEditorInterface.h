@@ -113,6 +113,7 @@ public:
   void make_all_visible (EditorViewType view);
   void set_lexer (EditorViewType view, int lexer);
   void set_whole_text_style (EditorViewType view, int style);
+  void set_codepage(EditorViewType view, EditorCodepage codepage);
 
 private:
   const MockedDocumentInfo *active_document(EditorViewType view) const;

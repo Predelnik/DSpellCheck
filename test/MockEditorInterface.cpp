@@ -492,6 +492,14 @@ void MockEditorInterface::set_whole_text_style(EditorViewType view, int style) {
   std::fill(doc->style.begin(), doc->style.end(), style);
 }
 
+void MockEditorInterface::set_codepage(EditorViewType view, EditorCodepage codepage)
+{
+  auto doc = active_document(view);
+  if (!doc)
+    return;
+  doc->codepage = codepage;
+}
+
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
   if (m_documents[view].empty())
     return nullptr;

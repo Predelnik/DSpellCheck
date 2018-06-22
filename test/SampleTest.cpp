@@ -228,6 +228,23 @@ abg
   }
 }
 
+TEST_CASE("ANSI") {
+  auto speller = std::make_unique<MockSpeller>();
+  setup_speller(*speller);
+  Settings settings;
+  settings.speller_language[SpellerId::aspell] = L"English";
+  MockEditorInterface editor;
+  auto v = EditorViewType::primary;
+  editor.open_virtual_document(v, L"test.txt", L"abcd\nefgh");
+  SpellerContainer sp_container(&settings, std::move(speller));
+  SpellChecker sc(&settings, editor, sp_container);
+
+  editor.set_codepage (v, EditorCodepage::ansi);
+  sc.recheck_visible_both_views();
+  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+          std::vector<std::string>{"abcd", "efgh"});
+}
+
 TEST_CASE("Language Styles") {
   {
     auto speller = std::make_unique<MockSpeller>();
