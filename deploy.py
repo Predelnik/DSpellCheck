@@ -111,7 +111,7 @@ if options.new_minor or options.update_pm:
 		xml_path = 'plugins/plugins64.xml'
 		plugins_xml_path = os.path.join (plugins_x64_path, xml_path)
 		plugins_xml_data = ''
-		with open (plugins_xml_path, "r") as file:
+		with open (plugins_xml_path, "r", encoding='utf-8') as file:
 			plugins_xml_data = file.read()
 		bs = BeautifulSoup(plugins_xml_data, features="xml")
 		plugin_node = bs.plugins.find("plugin", attrs={'name' : 'DSpellCheck'})
@@ -125,21 +125,21 @@ if options.new_minor or options.update_pm:
 		replace_text (plugin_node.x64Version, ver)
 		replace_text (plugin_node.download, 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_x64.zip'.format (ver))
 		readme_text = ''
-		with open ('readme.md', "r") as file:
+		with open ('readme.md', "r", encoding='utf-8') as file:
 			readme_text = file.read()
 		key = 'v{}'.format (ver)
 		start_pos = readme_text.find (key)
 		start_pos += len (key) + 1
 		end_pos = readme_text.find ('\n\n', start_pos)
 		replace_text (plugin_node.latestUpdate, datetime.datetime.now().strftime ("%Y-%m-%d") + '\\n' + readme_text[start_pos:end_pos].replace ('\n', '\\n') + '\\n')
-		with open (plugins_xml_path, "w") as file:
+		with open (plugins_xml_path, "w", encoding='utf-8') as file:
 			file.write (plugins_xml_data)
 
 		json_path = 'plugins/validate.json'
 		validate_path = os.path.join (plugins_x64_path, json_path)
 		validate_data = None
 		validate_text = ''
-		with open(validate_path) as data_file:
+		with open(validate_path, encoding='utf-8') as data_file:
 			validate_text = data_file.read ()
 			validate_data = json.loads(validate_text)
 		str_before = json.dumps (validate_data['DSpellCheck'])
@@ -147,7 +147,7 @@ if options.new_minor or options.update_pm:
 		validate_data['DSpellCheck'][hashlib.md5(open(x64_binary_path, 'rb').read()).hexdigest()] = 'DSpellCheck.dll'
 		str_after = json.dumps (validate_data['DSpellCheck'])
 		validate_text = validate_text.replace (str_before[1:-1], str_after[1:-1])
-		with open (validate_path, "w") as file:
+		with open (validate_path, "w", encoding='utf-8') as file:
 			file.write (validate_text)
 
 		print ('Creating commit in npp-plugins-x64 repository...')
