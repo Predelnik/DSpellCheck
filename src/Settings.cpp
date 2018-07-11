@@ -174,6 +174,13 @@ TemporaryAcessor<Settings::Self> Settings::modify() const {
           }};
 }
 
+std::wstring_view Settings::get_dictionary_download_path() const
+{
+	return   download_install_dictionaries_for_all_users
+		   ? hunspell_system_path
+		   : hunspell_user_path;
+}
+
 std::wstring Settings::get_default_hunspell_path() {
   return m_ini_filepath.substr(0, m_ini_filepath.rfind(L'\\')) + L"\\Hunspell";
 }
@@ -233,7 +240,7 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Suggestions_Button_Opacity", suggestion_button_opacity, 70);
   worker.process(L"Show_Only_Known", ftp_show_only_known_dictionaries, true);
   worker.process(L"Install_Dictionaries_For_All_Users",
-                 ftp_install_dictionaries_for_all_users, false);
+                 download_install_dictionaries_for_all_users, false);
   worker.process(L"Recheck_Delay", recheck_delay, 500);
   for (int i = 0; i < static_cast<int>(server_names.size()); ++i)
     worker.process(wstring_printf(L"Server_Address[%d]", i).c_str(),

@@ -66,6 +66,7 @@ public:
     std::wstring &get_active_multi_languages();
     const std::wstring& get_active_multi_languages() const;
     TemporaryAcessor<Self> modify() const;
+	std::wstring_view get_dictionary_download_path() const;
 public:
     bool auto_check_text = true;
     std::wstring aspell_path;
@@ -98,7 +99,7 @@ public:
     int suggestion_button_size = 0;
     int suggestion_button_opacity = 0;
     bool ftp_show_only_known_dictionaries = false;
-    bool ftp_install_dictionaries_for_all_users = false;
+    bool download_install_dictionaries_for_all_users = false;
     bool ftp_use_passive_mode = true;
     int recheck_delay = 0;
     std::array<std::wstring, 3> server_names;

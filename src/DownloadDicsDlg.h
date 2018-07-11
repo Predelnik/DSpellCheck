@@ -14,13 +14,23 @@
 
 #pragma once
 
-#include "CommonFunctions.h"
 #include "FTPFileStatus.h"
 #include "StaticDialog\StaticDialog.h"
 #include "TaskWrapper.h"
 #include <optional>
+#include "FileListProvider.h"
+
+enum class UrlType
+{
+	ftp,
+	ftp_web_proxy,
+	github,
+	unknown, 
+};
 
 class LanguageInfo;
+class GitHubFileListProvider;
+class SpellerContainer;
 
 void ftp_trim(std::wstring &ftp_address);
 
@@ -74,13 +84,13 @@ class DownloadDicsDlg : public StaticDialog {
 
 public:
   ~DownloadDicsDlg() override;
-  DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings &settings);
+  DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings &settings, SpellerContainer &speller_container);
   void do_dialog();
   // Maybe hunspell interface should be passed here
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
                               LPARAM l_param) override;
   void update_list_box();
-  void on_new_file_list(const std::vector<std::wstring> &list);
+  void on_new_file_list(std::vector<FileDescription> list);
   void preserve_current_address_index(Settings &settings);
   void reset_download_combobox();
   void add_user_server(std::wstring server);
@@ -97,6 +107,9 @@ public:
                         const std::wstring &location = L"");
   void refresh();
   void start_next_download();
+  UrlType selected_url_type();
+  void download_github_file(const std::wstring& title, const std::wstring& path);
+  void download_file();
   void download_selected();
   void fill_file_list();
   void on_display_action();
@@ -107,16 +120,15 @@ public:
   LRESULT ask_replacement_message(const wchar_t *dic_name);
   bool prepare_downloading();
   void finalize_downloading();
-  void on_file_downloaded();
+  void on_zip_file_downloaded();
   std::optional<std::wstring> current_address() const;
   void update_status(const wchar_t *text, COLORREF status_color);
   static void ui_update();
   void process_file_list_error(FtpOperationErrorType error);
   void process_file_list_error(const FtpWebOperationError &error);
 
-private:
-  std::vector<LanguageInfo> m_current_langs;
-  std::vector<LanguageInfo> m_current_langs_filtered;
+private: 
+  std::vector<FileDescription> m_current_list;
   HBRUSH m_default_brush;
   COLORREF m_status_color;
   HWND m_h_file_list;
@@ -131,19 +143,15 @@ private:
   bool m_check_if_saving_is_needed;
   std::optional<TaskWrapper> m_ftp_operation_task;
 
-  // Download State:
-  struct DownloadRequest {
-    std::wstring target_path;
-    std::wstring file_name;
-  };
-
   bool m_failure;
   int m_downloaded_count;
   int m_supposed_downloaded_count;
   std::wstring m_message;
-  std::vector<DownloadRequest> m_to_download;
+  std::vector<FileDescription> m_to_download;
   decltype(m_to_download)::iterator m_cur;
   std::array<std::wstring, 1> m_default_server_names;
   Settings &m_settings;
   bool m_address_is_set = false;
+  std::unique_ptr<GitHubFileListProvider> m_github_provider;
+  SpellerContainer &m_speller_container;
 };

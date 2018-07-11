@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #include <fcntl.h>
 #include <io.h>
@@ -20,17 +21,22 @@
 #include "Definements.h"
 #include "DownloadDicsDlg.h"
 
+#include "ConnectionSettingsDialog.h"
 #include "FTPClient.h"
 #include "FTPDataTypes.h"
+#include "GithubFileListProvider.h"
+#include "HunspellInterface.h"
 #include "LanguageInfo.h"
 #include "MainDef.h"
 #include "Plugin.h"
 #include "ProgressData.h"
 #include "ProgressDlg.h"
-#include "ConnectionSettingsDialog.h"
 #include "Settings.h"
+#include "SpellerContainer.h"
+#include "UrlHelpers.h"
 #include "resource.h"
 #include "unzip.h"
+#include "utils/string_utils.h"
 #include "utils/winapi.h"
 #include <Wininet.h>
 #include <variant>
@@ -46,8 +52,22 @@ void DownloadDicsDlg::do_dialog() {
 }
 
 void DownloadDicsDlg::fill_file_list() {
-  do_ftp_operation(FtpOperationType::fill_file_list,
-                                        *current_address());
+  auto url = *current_address();
+  prepare_file_list_update();
+  switch (selected_url_type()) {
+  case UrlType::ftp:
+    update_file_list_async(url);
+    break;
+  case UrlType::ftp_web_proxy:
+    update_file_list_async_web_proxy(url);
+    break;
+  case UrlType::github:
+    m_github_provider->set_root_path(url);
+    m_github_provider->update_file_list();
+    break;
+  case UrlType::unknown:
+    break;
+  }
 }
 
 void DownloadDicsDlg::on_display_action() { fill_file_list(); }
@@ -57,31 +77,30 @@ DownloadDicsDlg::~DownloadDicsDlg() {
     DestroyIcon(m_refresh_icon);
 }
 
-DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent,
-                                 Settings &settings)
-    : m_settings(settings) {
+DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, Settings &settings, SpellerContainer &speller_container)
+    : m_settings(settings), m_github_provider(std::make_unique<GitHubFileListProvider>(parent)), m_speller_container(speller_container) {
+  m_github_provider->file_list_received.connect([this](const std::vector<FileDescription> &list) { on_new_file_list(list); });
+  m_github_provider->file_downloaded.connect([this] {
+    m_message += prev(m_cur)->title + L'\n';
+    ++m_downloaded_count;
+    start_next_download();
+  });
   m_ftp_operation_task = TaskWrapper{parent};
   Window::init(h_inst, parent);
-  m_default_server_names[0] =
-      L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
+  m_default_server_names[0] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
   m_settings.settings_changed.connect([this] {
     update_controls();
     update_list_box();
   });
 }
 
-void DownloadDicsDlg::indicate_that_saving_might_be_needed() {
-  m_check_if_saving_is_needed = true;
-}
+void DownloadDicsDlg::indicate_that_saving_might_be_needed() { m_check_if_saving_is_needed = true; }
 
 LRESULT DownloadDicsDlg::ask_replacement_message(const wchar_t *dic_name) {
   std::wstring name;
-  std::tie(name, std::ignore) = apply_alias(dic_name);
-  return MessageBox(
-      _hParent,
-      wstring_printf(rc_str(IDS_DICT_PS_EXISTS_BODY).c_str(), name.c_str())
-          .c_str(),
-      rc_str(IDS_DICT_EXISTS_HEADER).c_str(), MB_YESNO);
+  if (m_settings.use_language_name_aliases)
+    std::tie(name, std::ignore) = apply_alias(dic_name);
+  return MessageBox(_hParent, wstring_printf(rc_str(IDS_DICT_PS_EXISTS_BODY).c_str(), name.c_str()).c_str(), rc_str(IDS_DICT_EXISTS_HEADER).c_str(), MB_YESNO);
 }
 
 static std::wstring get_temp_path() {
@@ -99,9 +118,7 @@ bool DownloadDicsDlg::prepare_downloading() {
 
   // If path isn't exist we're gonna try to create it else it's finish
   if (!check_for_directory_existence(get_temp_path(), false, _hParent)) {
-    MessageBox(_hParent, rc_str(IDS_TEMPORARY_PATH_INVALID_BODY).c_str(),
-               rc_str(IDS_TEMPORARY_PATH_INVALID_HEADER).c_str(),
-               MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(_hParent, rc_str(IDS_TEMPORARY_PATH_INVALID_BODY).c_str(), rc_str(IDS_TEMPORARY_PATH_INVALID_HEADER).c_str(), MB_OK | MB_ICONEXCLAMATION);
     return false;
   }
   m_cancel_pressed = false;
@@ -109,25 +126,17 @@ bool DownloadDicsDlg::prepare_downloading() {
   p->get_progress_data()->set(0, L"");
   get_progress()->update();
   p->set_top_message(L"");
-  if (!check_for_directory_existence(
-          m_settings.ftp_install_dictionaries_for_all_users
-              ? m_settings.hunspell_system_path
-              : m_settings.hunspell_user_path,
-          false,
-          _hParent)) // If path doesn't exist we're gonna try to create it
-                     // else it's finish
+  if (!check_for_directory_existence(m_settings.download_install_dictionaries_for_all_users ? m_settings.hunspell_system_path : m_settings.hunspell_user_path,
+                                     false,
+                                     _hParent)) // If path doesn't exist we're gonna try to create it
+                                                // else it's finish
   {
-    MessageBox(_hParent, rc_str(IDS_CANT_CREATE_DOWNLOAD_DIR).c_str(),
-               rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(),
-               MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(_hParent, rc_str(IDS_CANT_CREATE_DOWNLOAD_DIR).c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
     return false;
   }
   for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++) {
     if (CheckedListBox_GetCheckState(m_h_file_list, i) == BST_CHECKED) {
-      DownloadRequest req;
-      req.file_name = m_current_langs_filtered[i].orig_name + L".zip"s;
-      req.target_path = get_temp_path() + req.file_name;
-      m_to_download.push_back(req);
+      m_to_download.push_back(m_current_list[i]);
       ++m_supposed_downloaded_count;
     }
   }
@@ -138,18 +147,12 @@ bool DownloadDicsDlg::prepare_downloading() {
 void DownloadDicsDlg::finalize_downloading() {
   get_progress()->display(false);
   if (m_failure) {
-    MessageBox(_hParent, rc_str(IDS_CANT_WRITE_DICT_FILES).c_str(),
-               rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(),
-               MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(_hParent, rc_str(IDS_CANT_WRITE_DICT_FILES).c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
   } else if (m_downloaded_count > 0) {
-    MessageBox(_hParent, m_message.c_str(),
-               rc_str(IDS_DICTS_DOWNLOADED).c_str(),
-               MB_OK | MB_ICONINFORMATION);
+    MessageBox(_hParent, m_message.c_str(), rc_str(IDS_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONINFORMATION);
   } else if (m_supposed_downloaded_count > 0) // Otherwise - silent
   {
-    MessageBox(_hParent, rc_str(IDS_ZERO_DICTS_DOWNLOAD).c_str(),
-               rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(),
-               MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(_hParent, rc_str(IDS_ZERO_DICTS_DOWNLOAD).c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
   }
   for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
     CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);
@@ -158,11 +161,10 @@ void DownloadDicsDlg::finalize_downloading() {
 
 static const auto buf_size_for_copy = 10240;
 
-void DownloadDicsDlg::on_file_downloaded() {
+void DownloadDicsDlg::on_zip_file_downloaded() {
   wchar_t prog_message[DEFAULT_BUF_SIZE];
-  std::map<std::string, int>
-      files_found; // 0x01 - .aff found, 0x02 - .dic found
-  auto local_path_ansi = to_string(m_cur->target_path.c_str());
+  std::map<std::string, int> files_found; // 0x01 - .aff found, 0x02 - .dic found
+  auto local_path_ansi = to_string(m_cur->path.c_str());
   unzFile fp = unzOpen(local_path_ansi.c_str());
   unz_file_info f_info;
   if (unzGoToFirstFile(fp) != UNZ_OK)
@@ -172,21 +174,17 @@ void DownloadDicsDlg::on_file_downloaded() {
     {
       unzGetCurrentFileInfo(fp, &f_info, nullptr, 0, nullptr, 0, nullptr, 0);
       std::vector<char> buf(f_info.size_filename + 1);
-      unzGetCurrentFileInfo(fp, &f_info, buf.data(),
-                            static_cast<uLong>(buf.size()), nullptr, 0, nullptr,
-                            0);
+      unzGetCurrentFileInfo(fp, &f_info, buf.data(), static_cast<uLong>(buf.size()), nullptr, 0, nullptr, 0);
       dic_file_name_ansi = buf.data();
     }
 
     if (dic_file_name_ansi.length() < 4)
       continue;
-    const auto ext = std::string_view(dic_file_name_ansi)
-                         .substr(dic_file_name_ansi.length() - 4);
+    const auto ext = std::string_view(dic_file_name_ansi).substr(dic_file_name_ansi.length() - 4);
     bool is_aff_file = ext == ".aff";
     bool is_dic_file = ext == ".dic";
     if (is_aff_file || is_dic_file) {
-      auto filename =
-          dic_file_name_ansi.substr(0, dic_file_name_ansi.length() - 4);
+      auto filename = dic_file_name_ansi.substr(0, dic_file_name_ansi.length() - 4);
       files_found[filename] |= (is_aff_file ? 0x01 : 0x02);
       unzOpenCurrentFile(fp);
       auto dic_file_local_path = get_temp_path();
@@ -198,8 +196,7 @@ void DownloadDicsDlg::on_file_downloaded() {
         dic_file_local_path += L".dic";
 
       SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-      auto local_dic_file_handle =
-          _wopen(dic_file_local_path.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
+      auto local_dic_file_handle = _wopen(dic_file_local_path.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
       if (local_dic_file_handle == -1)
         continue;
 
@@ -208,16 +205,12 @@ void DownloadDicsDlg::on_file_downloaded() {
       DWORD bytes_total = 0;
       int bytes_copied;
       std::vector<char> file_copy_buf(buf_size_for_copy);
-      while ((bytes_copied = unzReadCurrentFile(
-                  fp, file_copy_buf.data(),
-                  static_cast<unsigned int>(file_copy_buf.size()))) != 0) {
+      while ((bytes_copied = unzReadCurrentFile(fp, file_copy_buf.data(), static_cast<unsigned int>(file_copy_buf.size()))) != 0) {
         _write(local_dic_file_handle, file_copy_buf.data(), bytes_copied);
         bytes_total += bytes_copied;
-        swprintf(prog_message, rc_str(IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str(),
-                 bytes_total, f_info.uncompressed_size,
+        swprintf(prog_message, rc_str(IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str(), bytes_total, f_info.uncompressed_size,
                  bytes_total * 100 / f_info.uncompressed_size);
-        get_progress()->get_progress_data()->set(
-            bytes_total * 100 / f_info.uncompressed_size, prog_message);
+        get_progress()->get_progress_data()->set(bytes_total * 100 / f_info.uncompressed_size, prog_message);
       }
       unzCloseCurrentFile(fp);
       _close(local_dic_file_handle);
@@ -225,10 +218,7 @@ void DownloadDicsDlg::on_file_downloaded() {
   } while (unzGoToNextFile(fp) == UNZ_OK);
   // Now we're gonna check what's exactly we extracted with using FilesFound
   // map
-  for (auto &p : files_found) {
-    auto &file_name_ansi = p.first; // TODO: change to structured binding when
-                                    // Resharper supports them
-    auto mask = p.second;
+  for (auto & [ file_name_ansi, mask ] : files_found) {
     auto file_name = to_wstring(file_name_ansi.c_str());
     if (mask != 0x03) // Some of .aff/.dic is missing
     {
@@ -241,15 +231,11 @@ void DownloadDicsDlg::on_file_downloaded() {
         dic_file_local_path += L".dic";
         break;
       }
-      SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-      DeleteFile(dic_file_local_path.c_str());
+      WinApi::remove_file(dic_file_local_path.c_str());
     } else {
       auto dic_file_local_path = get_temp_path();
       (dic_file_local_path += file_name) += L".aff";
-      std::wstring hunspell_dic_path =
-          m_settings.ftp_install_dictionaries_for_all_users
-              ? m_settings.hunspell_system_path
-              : m_settings.hunspell_user_path;
+      std::wstring hunspell_dic_path = m_settings.download_install_dictionaries_for_all_users ? m_settings.hunspell_system_path : m_settings.hunspell_user_path;
       hunspell_dic_path += L"\\";
       hunspell_dic_path += file_name;
       hunspell_dic_path += L".aff";
@@ -260,29 +246,21 @@ void DownloadDicsDlg::on_file_downloaded() {
         replace_question_was_asked = true;
         if (answer == IDNO) {
           confirmation = false;
-          SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-          DeleteFile(dic_file_local_path.c_str());
+          WinApi::remove_file(dic_file_local_path.c_str());
         } else {
-          SetFileAttributes(hunspell_dic_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-          DeleteFile(hunspell_dic_path.c_str());
+          m_speller_container.get_hunspell_speller().dictionary_removed(hunspell_dic_path);
+          WinApi::remove_file(hunspell_dic_path.c_str());
         }
       }
 
-      if (confirmation &&
-          !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(),
-                                                   hunspell_dic_path.c_str())) {
-        SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-        DeleteFile(dic_file_local_path.c_str());
+      if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
+        WinApi::remove_file(dic_file_local_path.c_str());
         m_failure = true;
       }
-      dic_file_local_path =
-          dic_file_local_path.substr(0, dic_file_local_path.length() - 4) +
-          L".dic";
-      hunspell_dic_path =
-          hunspell_dic_path.substr(0, hunspell_dic_path.length() - 4) + L".dic";
+      dic_file_local_path = dic_file_local_path.substr(0, dic_file_local_path.length() - 4) + L".dic";
+      hunspell_dic_path = hunspell_dic_path.substr(0, hunspell_dic_path.length() - 4) + L".dic";
       if (!confirmation) {
-        SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-        DeleteFile(dic_file_local_path.c_str());
+        WinApi::remove_file(dic_file_local_path.c_str());
       } else if (PathFileExists(hunspell_dic_path.c_str())) {
         bool res;
         if (replace_question_was_asked)
@@ -291,20 +269,15 @@ void DownloadDicsDlg::on_file_downloaded() {
           res = (ask_replacement_message(file_name.c_str()) == IDNO);
         }
         if (res) {
-          SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-          DeleteFile(dic_file_local_path.c_str());
+          WinApi::remove_file(dic_file_local_path.c_str());
           confirmation = false;
         } else {
-          SetFileAttributes(hunspell_dic_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-          DeleteFile(hunspell_dic_path.c_str());
+          WinApi::remove_file(hunspell_dic_path.c_str());
         }
       }
 
-      if (confirmation &&
-          !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(),
-                                                   hunspell_dic_path.c_str())) {
-        SetFileAttributes(dic_file_local_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-        DeleteFile(dic_file_local_path.c_str());
+      if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
+        WinApi::remove_file(dic_file_local_path.c_str());
         m_failure = true;
       }
       std::wstring converted_dic_name;
@@ -323,12 +296,11 @@ void DownloadDicsDlg::on_file_downloaded() {
 clean_and_continue:
   files_found.clear();
   unzClose(fp);
-  SetFileAttributes(m_cur->target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-  DeleteFile(m_cur->target_path.c_str()); // Removing downloaded .zip file
+  auto local_path = get_temp_path() + L"/" + m_cur->path;
+  WinApi::remove_file(local_path.c_str());
   if (m_failure)
     return finalize_downloading();
 
-  ++m_cur;
   start_next_download();
 }
 
@@ -336,16 +308,57 @@ void DownloadDicsDlg::start_next_download() {
   if (m_cur == m_to_download.end() || m_cancel_pressed)
     return finalize_downloading();
 
-  get_progress()->set_top_message(
-      wstring_printf(rc_str(IDS_DOWNLOADING_PS).c_str(),
-                     m_cur->file_name.c_str())
-          .c_str());
-  if (PathFileExists(m_cur->target_path.c_str())) {
-    SetFileAttributes(m_cur->target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-    DeleteFile(m_cur->target_path.c_str());
+  get_progress()->set_top_message(wstring_printf(rc_str(IDS_DOWNLOADING_PS).c_str(), m_cur->title.c_str()).c_str());
+  download_file();
+  ++m_cur;
+}
+
+UrlType DownloadDicsDlg::selected_url_type() {
+  const auto address = *current_address();
+  if (UrlHelpers::is_github_url(address))
+    return UrlType::github;
+
+  if (UrlHelpers::is_ftp_url(address)) {
+    if (m_settings.use_proxy && m_settings.proxy_type == ProxyType::web_proxy)
+      return UrlType::ftp_web_proxy;
+
+    return UrlType::ftp;
   }
-  do_ftp_operation(FtpOperationType::download_file, *current_address(),
-                   m_cur->file_name, m_cur->target_path);
+
+  return UrlType::unknown;
+}
+
+void DownloadDicsDlg::download_github_file(const std::wstring &title, const std::wstring &path) {
+  auto local_path = std::wstring(m_settings.get_dictionary_download_path());
+  auto local_name = local_path + L"\\" + path.substr(path.rfind(L'/'));
+  if (PathFileExists(local_name.c_str()))
+    if (ask_replacement_message(title.c_str()) == IDNO) {
+      --m_supposed_downloaded_count;
+      return;
+    } else {
+      m_speller_container.get_hunspell_speller().dictionary_removed(local_name);
+    }
+
+  m_github_provider->download_dictionary(path, local_path);
+}
+
+void DownloadDicsDlg::download_file() {
+  const auto ftp_path = *current_address() + m_cur->path;
+  const auto ftp_location = get_temp_path() + L"/" + m_cur->path;
+
+  switch (selected_url_type()) {
+  case UrlType::ftp:
+    download_file_async(ftp_path, ftp_location);
+    break;
+  case UrlType::ftp_web_proxy:
+    download_file_async_web_proxy(ftp_path, ftp_location);
+    break;
+  case UrlType::github:
+    download_github_file(m_cur->title, m_cur->path);
+    break;
+  case UrlType::unknown:
+    break;
+  }
 }
 
 void DownloadDicsDlg::download_selected() {
@@ -356,44 +369,32 @@ void DownloadDicsDlg::download_selected() {
 }
 
 void ftp_trim(std::wstring &ftp_address) {
-  trim(ftp_address);
+  trim_inplace(ftp_address);
   for (auto &c : ftp_address) {
     if (c == L'\\')
       c = L'/';
   }
   std::wstring ftp_prefix = L"ftp://";
   if (ftp_address.find(ftp_prefix) == 0)
-    ftp_address.erase(ftp_address.begin(),
-                      ftp_address.begin() + ftp_prefix.length());
+    ftp_address.erase(ftp_address.begin(), ftp_address.begin() + ftp_prefix.length());
 
-  std::transform(ftp_address.begin(),
-                 std::find(ftp_address.begin(), ftp_address.end(), L'/'),
-                 ftp_address.begin(),
+  std::transform(ftp_address.begin(), std::find(ftp_address.begin(), ftp_address.end(), L'/'), ftp_address.begin(),
                  &towlower); // In dir names upper/lower case could matter
 }
 
 std::pair<std::wstring, std::wstring> ftp_split(std::wstring full_path) {
   ftp_trim(full_path);
   auto it = std::find(full_path.begin(), full_path.end(), L'/');
-  return {{full_path.begin(), it},
-          {it != full_path.end() ? next(it) : it, full_path.end()}};
+  return {{full_path.begin(), it}, {it != full_path.end() ? next(it) : it, full_path.end()}};
 }
 
 void DownloadDicsDlg::update_list_box() {
-  if (m_h_file_list == nullptr || m_current_langs.empty())
+  if (m_h_file_list == nullptr || m_current_list.empty())
     return;
 
-  m_current_langs_filtered.clear();
-  for (auto &lang : m_current_langs) {
-    if (m_settings.ftp_show_only_known_dictionaries && !lang.alias_applied)
-      continue;
-    m_current_langs_filtered.push_back(lang);
-  }
   ListBox_ResetContent(m_h_file_list);
-  for (auto &lang : m_current_langs_filtered) {
-    ListBox_AddString(m_h_file_list, m_settings.use_language_name_aliases
-                                         ? lang.alias_name.c_str()
-                                         : lang.orig_name.c_str());
+  for (auto &info : m_current_list) {
+    ListBox_AddString(m_h_file_list, info.title.c_str());
   }
 }
 
@@ -407,48 +408,38 @@ class ProgressObserver : public nsFTP::CFTPClient::CNotification {
   nsFTP::CFTPClient &m_client;
 
 public:
-  ProgressObserver(std::shared_ptr<ProgressData> progress_data,
-                   std::wstring target_path, long target_size,
-                   nsFTP::CFTPClient &client,
+  ProgressObserver(std::shared_ptr<ProgressData> progress_data, std::wstring target_path, long target_size, nsFTP::CFTPClient &client,
                    concurrency::cancellation_token token)
-      : m_progress_data(std::move(progress_data)),
-        m_target_path(std::move(target_path)), m_target_size(target_size),
-        m_token(std::move(token)), m_client(client) {}
+      : m_progress_data(std::move(progress_data)), m_target_path(std::move(target_path)), m_target_size(target_size), m_token(std::move(token)),
+        m_client(client) {}
 
-  void OnBytesReceived(const nsFTP::TByteVector & /*vBuffer*/,
-                       long l_received_bytes) override {
+  void OnBytesReceived(const nsFTP::TByteVector & /*vBuffer*/, long l_received_bytes) override {
     if (m_token.is_canceled()) {
       DeleteFile(m_target_path.c_str());
       m_client.Logout();
       return;
     }
     m_bytes_received += l_received_bytes;
-    m_progress_data->set(
-        m_bytes_received * 100 / m_target_size,
-        wstring_printf(rc_str(IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str(),
-                       m_bytes_received, m_target_size,
-                       m_bytes_received * 100 / m_target_size));
+    m_progress_data->set(m_bytes_received * 100 / m_target_size, wstring_printf(rc_str(IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str(), m_bytes_received,
+                                                                                m_target_size, m_bytes_received * 100 / m_target_size));
   }
 };
 
 struct LogObserver : public nsFTP::CFTPClient::CNotification {
   LogObserver(const wchar_t *log_filename) : m_log_filename(log_filename) {}
 
-  void OnInternalError(const tstring &error_msg, const tstring &error_filename,
-                       DWORD line) override {
+  void OnInternalError(const tstring &error_msg, const tstring &error_filename, DWORD line) override {
     FILE *f;
     _wfopen_s(&f, m_log_filename, L"a");
     if (!f)
       return;
     wchar_t buf[DEFAULT_BUF_SIZE];
-    swprintf(buf, L"Fatal error %s in file %s on line %d\n", error_msg.c_str(),
-             error_filename.c_str(), line);
+    swprintf(buf, L"Fatal error %s in file %s on line %d\n", error_msg.c_str(), error_filename.c_str(), line);
     fwprintf(f, buf);
     fclose(f);
   }
 
-  void OnSendCommand(const nsFTP::CCommand &cmd,
-                     const nsFTP::CArg &args) override {
+  void OnSendCommand(const nsFTP::CCommand &cmd, const nsFTP::CArg &args) override {
     FILE *f;
     _wfopen_s(&f, m_log_filename, L"a");
     if (!f)
@@ -472,8 +463,7 @@ struct LogObserver : public nsFTP::CFTPClient::CNotification {
     if (!f)
       return;
     wchar_t buf[DEFAULT_BUF_SIZE];
-    swprintf(buf, L"Got reply %s with value:\n%s\n", reply.Code().Value(),
-             reply.Value().c_str());
+    swprintf(buf, L"Got reply %s with value:\n%s\n", reply.Code().Value(), reply.Value().c_str());
     fwprintf(f, buf);
     fclose(f);
   }
@@ -505,25 +495,19 @@ std::optional<std::wstring> DownloadDicsDlg::current_address() const {
   return buf.data();
 }
 
-static bool ftp_login(nsFTP::CFTPClient &client,
-                      const FtpOperationParams &params) {
+static bool ftp_login(nsFTP::CFTPClient &client, const FtpOperationParams &params) {
   std::unique_ptr<nsFTP::CLogonInfo> logon_info;
   if (!params.use_proxy)
     logon_info = std::make_unique<nsFTP::CLogonInfo>(params.address);
   else
-    logon_info = std::make_unique<nsFTP::CLogonInfo>(
-        params.address, USHORT(21), L"anonymous", L"", L"",
-        params.proxy_address, L"", L"", static_cast<USHORT>(params.proxy_port),
-        nsFTP::CFirewallType::UserWithNoLogon());
+    logon_info = std::make_unique<nsFTP::CLogonInfo>(params.address, USHORT(21), L"anonymous", L"", L"", params.proxy_address, L"", L"",
+                                                     static_cast<USHORT>(params.proxy_port), nsFTP::CFirewallType::UserWithNoLogon());
   return client.Login(*logon_info);
 }
 
-std::variant<FtpOperationErrorType, std::vector<std::wstring>>
-do_download_file_list_ftp(FtpOperationParams params) {
-  nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(),
-                           500);
-  auto log_observer =
-      std::make_unique<LogObserver>(params.debug_log_path.c_str());
+std::variant<FtpOperationErrorType, std::vector<std::wstring>> do_download_file_list_ftp(FtpOperationParams params) {
+  nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 500);
+  auto log_observer = std::make_unique<LogObserver>(params.debug_log_path.c_str());
   if (params.write_debug_log) {
     client.AttachObserver(log_observer.get());
   }
@@ -535,20 +519,14 @@ do_download_file_list_ftp(FtpOperationParams params) {
     return FtpOperationErrorType::download_failed;
 
   std::vector<std::wstring> ret(list.size());
-  std::transform(
-      list.begin(), list.end(), ret.begin(),
-      [](const nsFTP::TFTPFileStatusShPtr &status) { return status->Name(); });
+  std::transform(list.begin(), list.end(), ret.begin(), [](const nsFTP::TFTPFileStatusShPtr &status) { return status->Name(); });
   return ret;
 }
 
-std::optional<FtpOperationErrorType>
-do_download_file(FtpOperationParams params, const std::wstring &target_path,
-                 std::shared_ptr<ProgressData> progress_data,
-                 concurrency::cancellation_token token) {
-  nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(),
-                           500);
-  auto log_observer =
-      std::make_unique<LogObserver>(params.debug_log_path.c_str());
+std::optional<FtpOperationErrorType> do_download_file(FtpOperationParams params, const std::wstring &target_path, std::shared_ptr<ProgressData> progress_data,
+                                                      concurrency::cancellation_token token) {
+  nsFTP::CFTPClient client(nsSocket::CreateDefaultBlockingSocketInstance(), 500);
+  auto log_observer = std::make_unique<LogObserver>(params.debug_log_path.c_str());
   if (params.write_debug_log) {
     client.AttachObserver(log_observer.get());
   }
@@ -559,15 +537,12 @@ do_download_file(FtpOperationParams params, const std::wstring &target_path,
   if (client.FileSize(params.path, file_size) != nsFTP::FTP_OK)
     return FtpOperationErrorType::download_failed;
 
-  auto progress_updater = std::make_unique<ProgressObserver>(
-      std::move(progress_data), target_path, file_size, client, token);
+  auto progress_updater = std::make_unique<ProgressObserver>(std::move(progress_data), target_path, file_size, client, token);
   client.AttachObserver(progress_updater.get());
 
-  if (!client.DownloadFile(params.path, target_path,
-                           nsFTP::CRepresentation(nsFTP::CType::Image()), params.use_passive_mode)) {
+  if (!client.DownloadFile(params.path, target_path, nsFTP::CRepresentation(nsFTP::CType::Image()), params.use_passive_mode)) {
     if (PathFileExists(target_path.c_str())) {
-      SetFileAttributes(target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-      DeleteFile(target_path.c_str());
+      WinApi::remove_file(target_path.c_str());
       return FtpOperationErrorType::download_cancelled;
     }
   }
@@ -576,27 +551,18 @@ do_download_file(FtpOperationParams params, const std::wstring &target_path,
   return std::nullopt;
 }
 
-static std::variant<HINTERNET, FtpWebOperationError>
-open_url(HINTERNET win_inet_handle, const std::wstring &url,
-         const FtpOperationParams &params) {
+static std::variant<HINTERNET, FtpWebOperationError> open_url(HINTERNET win_inet_handle, const std::wstring &url, const FtpOperationParams &params) {
   const auto url_handle =
-      InternetOpenUrl(win_inet_handle, url.c_str(), nullptr, 0,
-                      INTERNET_FLAG_PASSIVE | INTERNET_FLAG_RELOAD |
-                          INTERNET_FLAG_PRAGMA_NOCACHE,
-                      0);
+      InternetOpenUrl(win_inet_handle, url.c_str(), nullptr, 0, INTERNET_FLAG_PASSIVE | INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE, 0);
   if (url_handle == nullptr)
-    return FtpWebOperationError{FtpWebOperationErrorType::url_cannot_be_opened,
-                                -1};
+    return FtpWebOperationError{FtpWebOperationErrorType::url_cannot_be_opened, -1};
 
   if (!params.anonymous) {
-    InternetSetOption(url_handle, INTERNET_OPTION_PROXY_USERNAME,
-                      const_cast<wchar_t *>(params.proxy_username.c_str()),
+    InternetSetOption(url_handle, INTERNET_OPTION_PROXY_USERNAME, const_cast<wchar_t *>(params.proxy_username.c_str()),
                       static_cast<DWORD>(params.proxy_username.length() + 1));
-    InternetSetOption(url_handle, INTERNET_OPTION_PROXY_PASSWORD,
-                      const_cast<wchar_t *>(params.proxy_password.c_str()),
+    InternetSetOption(url_handle, INTERNET_OPTION_PROXY_PASSWORD, const_cast<wchar_t *>(params.proxy_password.c_str()),
                       static_cast<DWORD>(params.proxy_password.length() + 1));
-    InternetSetOption(url_handle, INTERNET_OPTION_PROXY_SETTINGS_CHANGED,
-                      nullptr, 0);
+    InternetSetOption(url_handle, INTERNET_OPTION_PROXY_SETTINGS_CHANGED, nullptr, 0);
   }
   HttpSendRequest(url_handle, nullptr, 0, nullptr, 0);
 
@@ -604,53 +570,38 @@ open_url(HINTERNET win_inet_handle, const std::wstring &url,
   DWORD dummy = 0;
   DWORD size = sizeof(DWORD);
 
-  if (!HttpQueryInfo(url_handle,
-                     HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &code,
-                     &size, &dummy))
-    return FtpWebOperationError{
-        FtpWebOperationErrorType::querying_status_code_failed, -1};
+  if (!HttpQueryInfo(url_handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &code, &size, &dummy))
+    return FtpWebOperationError{FtpWebOperationErrorType::querying_status_code_failed, -1};
 
   if (code != HTTP_STATUS_OK) {
     if (code == HTTP_STATUS_PROXY_AUTH_REQ)
-      return FtpWebOperationError{
-          FtpWebOperationErrorType::proxy_authorization_required,
-          static_cast<int>(code)};
+      return FtpWebOperationError{FtpWebOperationErrorType::proxy_authorization_required, static_cast<int>(code)};
 
-    return FtpWebOperationError{FtpWebOperationErrorType::http_error,
-                                static_cast<int>(code)};
+    return FtpWebOperationError{FtpWebOperationErrorType::http_error, static_cast<int>(code)};
   }
   return url_handle;
 }
 
-static std::variant<HINTERNET, FtpWebOperationError>
-ftp_web_proxy_login(const FtpOperationParams &params) {
-  std::wstring proxy_final_string =
-      params.proxy_address + L":" + std::to_wstring(params.proxy_port);
-  const auto win_inet_handle =
-      InternetOpen(static_plugin_name, INTERNET_OPEN_TYPE_PROXY,
-                   proxy_final_string.c_str(), L"", 0);
+static std::variant<HINTERNET, FtpWebOperationError> ftp_web_proxy_login(const FtpOperationParams &params) {
+  std::wstring proxy_final_string = params.proxy_address + L":" + std::to_wstring(params.proxy_port);
+  const auto win_inet_handle = InternetOpen(static_plugin_name, INTERNET_OPEN_TYPE_PROXY, proxy_final_string.c_str(), L"", 0);
   if (win_inet_handle == nullptr)
-    return FtpWebOperationError{
-        FtpWebOperationErrorType::http_client_cannot_be_initialized, -1};
+    return FtpWebOperationError{FtpWebOperationErrorType::http_client_cannot_be_initialized, -1};
   DWORD time_out = 15000;
-  for (auto option :
-       {INTERNET_OPTION_CONNECT_TIMEOUT, INTERNET_OPTION_SEND_TIMEOUT,
-        INTERNET_OPTION_RECEIVE_TIMEOUT})
+  for (auto option : {INTERNET_OPTION_CONNECT_TIMEOUT, INTERNET_OPTION_SEND_TIMEOUT, INTERNET_OPTION_RECEIVE_TIMEOUT})
     InternetSetOption(win_inet_handle, option, &time_out, sizeof(DWORD));
   return win_inet_handle;
 }
 
 inline auto initial_buffer_size = 50 * 1024;
 
-std::variant<FtpWebOperationError, std::vector<std::wstring>>
-do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
+std::variant<FtpWebOperationError, std::vector<std::wstring>> do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
   auto result = ftp_web_proxy_login(params);
   if (auto error = std::get_if<FtpWebOperationError>(&result))
     return *error;
 
   auto handle = std::get<HINTERNET>(result);
-  result =
-      open_url(handle, L"ftp://" + params.address + L"/" + params.path, params);
+  result = open_url(handle, L"ftp://" + params.address + L"/" + params.path, params);
   if (auto error = std::get_if<FtpWebOperationError>(&result))
     return *error;
 
@@ -670,8 +621,7 @@ do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
       file_buffer.resize(file_buffer.size() * 2);
     }
 
-    InternetReadFile(url_handle, file_buffer.data() + cur_index, bytes_to_read,
-                     &bytes_read);
+    InternetReadFile(url_handle, file_buffer.data() + cur_index, bytes_to_read, &bytes_read);
     if (bytes_read == 0)
       break;
     bytes_read_total += bytes_read;
@@ -694,8 +644,7 @@ do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
       temp_cur_pos--;
 
     if (temp_cur_pos == nullptr)
-      return FtpWebOperationError{
-          FtpWebOperationErrorType::html_cannot_be_parsed, -1};
+      return FtpWebOperationError{FtpWebOperationErrorType::html_cannot_be_parsed, -1};
     temp_cur_pos++;
     cur_pos--;
     if (cur_pos <= temp_cur_pos) {
@@ -715,16 +664,14 @@ do_download_file_list_ftp_web_proxy(FtpOperationParams params) {
   return out;
 }
 
-std::optional<FtpWebOperationError> do_download_file_web_proxy(
-    FtpOperationParams params, const std::wstring &target_path,
-    ProgressData &progress_data, const concurrency::cancellation_token &token) {
+std::optional<FtpWebOperationError> do_download_file_web_proxy(FtpOperationParams params, const std::wstring &target_path, ProgressData &progress_data,
+                                                               const concurrency::cancellation_token &token) {
   auto result = ftp_web_proxy_login(params);
   if (auto error = std::get_if<FtpWebOperationError>(&result))
     return *error;
 
   auto handle = std::get<HINTERNET>(result);
-  result =
-      open_url(handle, L"ftp://" + params.address + L"/" + params.path, params);
+  result = open_url(handle, L"ftp://" + params.address + L"/" + params.path, params);
   if (auto error = std::get_if<FtpWebOperationError>(&result))
     return *error;
 
@@ -734,22 +681,18 @@ std::optional<FtpWebOperationError> do_download_file_web_proxy(
   DWORD bytes_to_read = 0;
   DWORD bytes_read;
   DWORD bytes_read_total = 0;
-  int file_handle =
-      _wopen(target_path.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
+  int file_handle = _wopen(target_path.c_str(), _O_CREAT | _O_BINARY | _O_WRONLY);
   if (file_handle == NULL)
-    return FtpWebOperationError{FtpWebOperationErrorType::file_is_not_writeable,
-                                -1};
+    return FtpWebOperationError{FtpWebOperationErrorType::file_is_not_writeable, -1};
 
   get_progress()->set_marquee(true);
   while (true) {
     if (token.is_canceled()) {
       _close(file_handle);
       if (PathFileExists(target_path.c_str())) {
-        SetFileAttributes(target_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-        DeleteFile(target_path.c_str());
+        WinApi::remove_file(target_path.c_str());
       }
-      return FtpWebOperationError{FtpWebOperationErrorType::download_cancelled,
-                                  -1};
+      return FtpWebOperationError{FtpWebOperationErrorType::download_cancelled, -1};
     }
     InternetQueryDataAvailable(url_handle, &bytes_to_read, 0, 0);
     if (bytes_to_read == 0)
@@ -758,55 +701,50 @@ std::optional<FtpWebOperationError> do_download_file_web_proxy(
       file_buffer.resize(bytes_to_read);
     }
 
-    InternetReadFile(url_handle, file_buffer.data(), bytes_to_read,
-                     &bytes_read);
+    InternetReadFile(url_handle, file_buffer.data(), bytes_to_read, &bytes_read);
     if (bytes_read == 0)
       break;
 
     write(file_handle, file_buffer.data(), bytes_read);
     bytes_read_total += bytes_read;
 
-    progress_data.set(0,
-                      wstring_printf(rc_str(IDS_PD_BYTES_DOWNLOADED).c_str(),
-                                     bytes_read_total),
-                      true);
+    progress_data.set(0, wstring_printf(rc_str(IDS_PD_BYTES_DOWNLOADED).c_str(), bytes_read_total), true);
   }
   _close(file_handle);
   return std::nullopt;
 }
 
-void DownloadDicsDlg::update_status(const wchar_t *text,
-                                    COLORREF status_color) {
+void DownloadDicsDlg::update_status(const wchar_t *text, COLORREF status_color) {
   m_status_color = status_color;
   Static_SetText(m_h_status, text);
 }
 
 void DownloadDicsDlg::ui_update() { get_progress()->update(); }
 
-void DownloadDicsDlg::on_new_file_list(const std::vector<std::wstring> &list) {
+void DownloadDicsDlg::on_new_file_list(std::vector<FileDescription> list) {
   int count = 0;
 
-  for (auto &filename : list) {
-    if (!PathMatchSpec(filename.c_str(), L"*.zip"))
-      continue;
-
+  for (auto &element : list) {
     count++;
-    auto name = filename;
-    name.erase(name.end() - 4, name.end());
-    LanguageInfo lang(name.c_str());
-    m_current_langs.push_back(lang);
+    auto name = element;
   }
 
   if (count == 0) {
-    return update_status(rc_str(IDS_STATUS_DIRECTORY_EMPTY).c_str(),
-                         COLOR_WARN);
+    return update_status(rc_str(IDS_STATUS_DIRECTORY_EMPTY).c_str(), COLOR_WARN);
   }
 
-  std::sort(m_current_langs.begin(), m_current_langs.end(),
-            [decode = m_settings.use_language_name_aliases](const auto &lhs,
-                                                            const auto &rhs) {
-              return decode ? less_aliases(lhs, rhs) : less_original(lhs, rhs);
-            });
+  m_current_list.clear();
+  for (auto &element : list) {
+    if (m_settings.use_language_name_aliases) {
+      auto r = apply_alias(element.title);
+      element.title = r.first;
+      if (m_settings.ftp_show_only_known_dictionaries && !r.second)
+        continue;
+    }
+    m_current_list.push_back(element);
+  }
+
+  std::sort(m_current_list.begin(), m_current_list.end(), [](const FileDescription &lhs, const FileDescription &rhs) { return lhs.title < rhs.title; });
   update_list_box(); // Used only here and on filter change
   // If it is success when we perhaps should add this address to our list.
   if (m_check_if_saving_is_needed) {
@@ -843,8 +781,7 @@ void DownloadDicsDlg::preserve_current_address_index(Settings &settings) {
 }
 
 void DownloadDicsDlg::reset_download_combobox() {
-  HWND target_combobox =
-      GetDlgItem(getHSelf(), IDC_ADDRESS);
+  HWND target_combobox = GetDlgItem(getHSelf(), IDC_ADDRESS);
   wchar_t buf[DEFAULT_BUF_SIZE];
   ComboBox_GetText(target_combobox, buf, DEFAULT_BUF_SIZE);
   if (m_address_is_set) {
@@ -862,9 +799,7 @@ void DownloadDicsDlg::reset_download_combobox() {
   if (m_settings.last_used_address_index < USER_SERVER_CONST)
     ComboBox_SetCurSel(target_combobox, m_settings.last_used_address_index);
   else
-    ComboBox_SetCurSel(target_combobox, m_settings.last_used_address_index -
-                                            USER_SERVER_CONST +
-                                            m_default_server_names.size ());
+    ComboBox_SetCurSel(target_combobox, m_settings.last_used_address_index - USER_SERVER_CONST + m_default_server_names.size());
   m_address_is_set = true;
 }
 
@@ -898,45 +833,32 @@ void DownloadDicsDlg::process_file_list_error(FtpOperationErrorType error) {
   case FtpOperationErrorType::login_failed:
     return update_status(rc_str(IDS_STATUS_BAD_CONNECTION).c_str(), COLOR_FAIL);
   case FtpOperationErrorType::download_failed:
-    return update_status(rc_str(IDS_STATUS_CANT_LIST_FILES).c_str(),
-                         COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_CANT_LIST_FILES).c_str(), COLOR_FAIL);
   case FtpOperationErrorType::download_cancelled:
-    return update_status(rc_str(IDS_STATUS_DOWNLOAD_CANCELLED).c_str(),
-                         COLOR_WARN);
+    return update_status(rc_str(IDS_STATUS_DOWNLOAD_CANCELLED).c_str(), COLOR_WARN);
   }
 }
 
-void DownloadDicsDlg::process_file_list_error(
-    const FtpWebOperationError &error) {
+void DownloadDicsDlg::process_file_list_error(const FtpWebOperationError &error) {
   switch (error.type) {
   case FtpWebOperationErrorType::none:
     break;
   case FtpWebOperationErrorType::http_client_cannot_be_initialized:
-    return update_status(rc_str(IDS_STATUS_HTTP_CLIENT_INIT_FAIL).c_str(),
-                         COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_HTTP_CLIENT_INIT_FAIL).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::url_cannot_be_opened:
     return update_status(rc_str(IDS_STATUS_URL_OPEN_FAIL).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::querying_status_code_failed:
-    return update_status(rc_str(IDS_STATUS_HTTP_CODE_QUERY_FAIL).c_str(),
-                         COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_HTTP_CODE_QUERY_FAIL).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::proxy_authorization_required:
-    return update_status(rc_str(IDS_STATUS_PROXY_AUTH_REQUIRED).c_str(),
-                         COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_PROXY_AUTH_REQUIRED).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::http_error:
-    return update_status(
-        wstring_printf(rc_str(IDS_STATUS_HTTP_ERROR_PD).c_str(),
-                       error.status_code)
-            .c_str(),
-        COLOR_FAIL);
+    return update_status(wstring_printf(rc_str(IDS_STATUS_HTTP_ERROR_PD).c_str(), error.status_code).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::html_cannot_be_parsed:
-    return update_status(rc_str(IDS_STATUS_HTML_PARSING_FAIL).c_str(),
-                         COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_HTML_PARSING_FAIL).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::file_is_not_writeable:
-    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str(),
-                         COLOR_FAIL);
+    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::download_cancelled:
-    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str(),
-                         COLOR_WARN);
+    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str(), COLOR_WARN);
   }
 }
 
@@ -945,12 +867,10 @@ void DownloadDicsDlg::prepare_file_list_update() {
   m_status_color = COLOR_NEUTRAL;
   Static_SetText(m_h_status, rc_str(IDS_STATUS_LOADING).c_str());
   ListBox_ResetContent(m_h_file_list);
-  m_current_langs.clear();
-  ;
+  m_current_list.clear();
 }
 
-FtpOperationParams DownloadDicsDlg::spawn_ftp_operation_params(
-    const std::wstring &full_path) const {
+FtpOperationParams DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring &full_path) const {
   FtpOperationParams params;
   std::tie(params.address, params.path) = ftp_split(full_path);
   params.use_proxy = m_settings.use_proxy;
@@ -965,88 +885,54 @@ FtpOperationParams DownloadDicsDlg::spawn_ftp_operation_params(
   return params;
 }
 
-void DownloadDicsDlg::update_file_list_async_web_proxy(
-    const std::wstring &full_path) {
+static std::vector<FileDescription> transform_zip_list(const std::vector<std::wstring> &list) {
+  std::vector<FileDescription> l;
+  for (auto &f : list) {
+    if (!PathMatchSpec(f.c_str(), L"*.zip"))
+      continue;
+    FileDescription fd;
+    fd.path = f;
+    fd.title = f.substr(0, f.length() - 4);
+    l.push_back(fd);
+  }
+  return l;
+}
+
+void DownloadDicsDlg::update_file_list_async_web_proxy(const std::wstring &full_path) {
   // temporary workaround for xsmf_control.h bug
-  static_assert(
-      std::is_copy_constructible_v<
-          std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
-  prepare_file_list_update();
-  m_ftp_operation_task->do_deferred(
-      [params = spawn_ftp_operation_params(full_path)](auto) {
-        return do_download_file_list_ftp_web_proxy(params);
-      },
-      [this](
-          std::variant<FtpWebOperationError, std::vector<std::wstring>> res) {
-        if (auto error = std::get_if<FtpWebOperationError>(&res)) {
-          return this->process_file_list_error(*error);
-        }
-        on_new_file_list(std::get<std::vector<std::wstring>>(res));
-      });
+  static_assert(std::is_copy_constructible_v<std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
+  m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path)](auto) { return do_download_file_list_ftp_web_proxy(params); },
+                                    [this](std::variant<FtpWebOperationError, std::vector<std::wstring>> res) {
+                                      if (auto error = std::get_if<FtpWebOperationError>(&res)) {
+                                        return this->process_file_list_error(*error);
+                                      }
+                                      auto &list = std::get<std::vector<std::wstring>>(res);
+                                      on_new_file_list(transform_zip_list(list));
+                                    });
 }
 
 void DownloadDicsDlg::update_file_list_async(const std::wstring &full_path) {
   // temporary workaround for xsmf_control.h bug
-  static_assert(
-      std::is_copy_constructible_v<
-          std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
-  prepare_file_list_update();
-  m_ftp_operation_task->do_deferred(
-      [params = spawn_ftp_operation_params(full_path)](auto) {
-        return do_download_file_list_ftp(params);
-      },
-      [this](
-          std::variant<FtpOperationErrorType, std::vector<std::wstring>> res) {
-        if (auto error = std::get_if<FtpOperationErrorType>(&res)) {
-          return this->process_file_list_error(*error);
-        }
-        on_new_file_list(std::get<std::vector<std::wstring>>(res));
-      });
+  static_assert(std::is_copy_constructible_v<std::variant<FtpOperationErrorType, std::vector<std::wstring>>>);
+  m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path)](auto) { return do_download_file_list_ftp(params); },
+                                    [this](std::variant<FtpOperationErrorType, std::vector<std::wstring>> res) {
+                                      if (auto error = std::get_if<FtpOperationErrorType>(&res)) {
+                                        return this->process_file_list_error(*error);
+                                      }
+                                      on_new_file_list(transform_zip_list(std::get<std::vector<std::wstring>>(res)));
+                                    });
 }
 
-void DownloadDicsDlg::download_file_async(const std::wstring &full_path,
-                                          const std::wstring &target_location) {
-  m_ftp_operation_task->do_deferred(
-      [
-        params = spawn_ftp_operation_params(full_path), target_location,
-        progressData = get_progress()->get_progress_data()
-      ](auto token) {
-        return do_download_file(params, target_location, progressData, token);
-      },
-      [this](std::optional<FtpOperationErrorType>) { on_file_downloaded(); });
+void DownloadDicsDlg::download_file_async(const std::wstring &full_path, const std::wstring &target_location) {
+  m_ftp_operation_task->do_deferred([ params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress()->get_progress_data() ](
+                                        auto token) { return do_download_file(params, target_location, progressData, token); },
+                                    [this](std::optional<FtpOperationErrorType>) { on_zip_file_downloaded(); });
 }
 
-void DownloadDicsDlg::download_file_async_web_proxy(
-    const std::wstring &full_path, const std::wstring &target_location) {
-  m_ftp_operation_task->do_deferred(
-      [
-        params = spawn_ftp_operation_params(full_path), target_location,
-        progressData = get_progress()->get_progress_data()
-      ](auto token) {
-        return do_download_file_web_proxy(params, target_location,
-                                          *progressData, token);
-      },
-      [this](std::optional<FtpWebOperationError>) { on_file_downloaded(); });
-}
-
-void DownloadDicsDlg::do_ftp_operation(FtpOperationType type,
-                                       const std::wstring &full_path,
-                                       const std::wstring &file_name,
-                                       const std::wstring &location) {
-  if (m_settings.use_proxy && m_settings.proxy_type == ProxyType::web_proxy)
-    switch (type) {
-    case FtpOperationType::fill_file_list:
-      return update_file_list_async_web_proxy(full_path);
-    case FtpOperationType::download_file:
-      return download_file_async_web_proxy(full_path + file_name, location);
-    }
-
-  switch (type) {
-  case FtpOperationType::fill_file_list:
-    return update_file_list_async(full_path);
-  case FtpOperationType::download_file:
-    return download_file_async(full_path + file_name, location);
-  }
+void DownloadDicsDlg::download_file_async_web_proxy(const std::wstring &full_path, const std::wstring &target_location) {
+  m_ftp_operation_task->do_deferred([ params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress()->get_progress_data() ](
+                                        auto token) { return do_download_file_web_proxy(params, target_location, *progressData, token); },
+                                    [this](std::optional<FtpWebOperationError>) { on_zip_file_downloaded(); });
 }
 
 void DownloadDicsDlg::refresh() {
@@ -1056,24 +942,16 @@ void DownloadDicsDlg::refresh() {
 }
 
 void DownloadDicsDlg::update_controls() {
-  Button_SetCheck(m_h_show_only_known,
-                  m_settings.ftp_show_only_known_dictionaries ? BST_CHECKED
-                                                              : BST_UNCHECKED);
-  Button_SetCheck(m_h_install_system,
-                  m_settings.ftp_install_dictionaries_for_all_users
-                      ? BST_CHECKED
-                      : BST_UNCHECKED);
+  Button_SetCheck(m_h_show_only_known, m_settings.ftp_show_only_known_dictionaries ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_install_system, m_settings.download_install_dictionaries_for_all_users ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void DownloadDicsDlg::update_settings(Settings &settings) {
-  settings.ftp_show_only_known_dictionaries =
-      Button_GetCheck(m_h_show_only_known) == BST_CHECKED;
-  settings.ftp_install_dictionaries_for_all_users =
-      Button_GetCheck(m_h_install_system) == BST_CHECKED;
+  settings.ftp_show_only_known_dictionaries = Button_GetCheck(m_h_show_only_known) == BST_CHECKED;
+  settings.download_install_dictionaries_for_all_users = Button_GetCheck(m_h_install_system) == BST_CHECKED;
 }
 
-INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
-                                      LPARAM l_param) {
+INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_TIMER: {
     switch (w_param) {
@@ -1091,14 +969,11 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_h_refresh_btn = ::GetDlgItem(_hSelf, IDC_REFRESH);
     m_h_install_system = ::GetDlgItem(_hSelf, IDC_INSTALL_SYSTEM);
     RECT rc;
-    GetClientRect (m_h_refresh_btn, &rc);
-    int icon_size = std::min (rc.bottom - rc.top, rc.right - rc.left) * 4 / 5;
-    m_refresh_icon = static_cast<HICON>(
-        LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH), IMAGE_ICON, icon_size, icon_size, 0));
-    SendMessage(m_h_refresh_btn, BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON),
-                reinterpret_cast<LPARAM>(m_refresh_icon));
-    WinApi::create_tooltip(IDC_REFRESH, _hSelf,
-                    rc_str(IDS_REFRESH_DICTIONARY_LIST_TOOLTIP).c_str());
+    GetClientRect(m_h_refresh_btn, &rc);
+    int icon_size = std::min(rc.bottom - rc.top, rc.right - rc.left) * 4 / 5;
+    m_refresh_icon = static_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_REFRESH), IMAGE_ICON, icon_size, icon_size, 0));
+    SendMessage(m_h_refresh_btn, BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(m_refresh_icon));
+    WinApi::create_tooltip(IDC_REFRESH, _hSelf, rc_str(IDS_REFRESH_DICTIONARY_LIST_TOOLTIP).c_str());
     reset_download_combobox();
     fill_file_list();
     update_controls();

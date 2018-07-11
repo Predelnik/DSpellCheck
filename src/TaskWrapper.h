@@ -16,6 +16,7 @@
 
 #include "CommonFunctions.h"
 #include "MainDef.h"
+#include <ppltasks.h>
 
 struct CallbackData {
   std::weak_ptr<void> alive_status;

@@ -438,7 +438,7 @@ void init_classes() {
                                                npp_data.npp_handle, *npp,
                                                *settings, *speller_container);
   download_dics_dlg = std::make_unique<DownloadDicsDlg>(
-      static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings);
+      static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
 
   settings_dlg->download_dics_dlg_requested.connect(
       []() { download_dics_dlg->do_dialog(); });

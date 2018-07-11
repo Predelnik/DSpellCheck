@@ -94,5 +94,6 @@ private:
 };
 
 // returns content of target text file or throws an exception
+void download_file(const WinInetUrlHandle &handle, std::ostream &stream);
 std::string download_text_file(const WinInetUrlHandle &handle);
 } // namespace WinInet

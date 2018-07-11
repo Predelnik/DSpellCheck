@@ -89,6 +89,7 @@ public:
                           bool &need_multi_lang_reset);
   bool get_lang_only_system(const wchar_t* lang) const;
   void reset_spellers ();
+  void dictionary_removed(const std::wstring& path);
 
 private:
   std::wstring create_encoded_dict_version(const wchar_t* dict_path, const char* target_encoding);

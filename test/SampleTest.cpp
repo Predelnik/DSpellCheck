@@ -23,6 +23,7 @@
 #include "SpellerContainer.h"
 #include "catch.hpp"
 #include "utils/TemporaryAcessor.h"
+#include "UrlHelpers.h"
 
 void setup_speller(MockSpeller &speller) {
   speller.set_inner_dict({{L"English",
@@ -271,9 +272,15 @@ TEST_CASE("Language Styles") {
   }
 }
 
-TEST_CASE("github") {
-  GitHubFileListProvider test;
-  test.set_root_path(
-      L"https://api.github.com/repos/predelnik/DSpellCheck/contents");
-  test.update_file_list();
+TEST_CASE ("GitHub")
+{
+	CHECK(UrlHelpers::is_github_url(L"github.com/predelnik/DSpellCheck"));
+	CHECK(UrlHelpers::is_github_url(L"https://gitHub.com/predelnik/DSpellCheck"));
+	CHECK_FALSE(UrlHelpers::is_github_url(L"http://www.gitHub.com/preDeEnik/DSpellCheck"));
+	CHECK_FALSE(UrlHelpers::is_github_url(L"asiodaosidaasoida"));
+	CHECK_FALSE(UrlHelpers::is_github_url(L"ftp://github.com/predelnik/DSpellCheck"));
+	CHECK(UrlHelpers::is_ftp_url(L"ftp://lol.com"));
+	CHECK_FALSE(UrlHelpers::is_ftp_url(L"aftp://lol.com"));
+	CHECK_FALSE(UrlHelpers::is_ftp_url(L"asdasdoaishdo"));
+	CHECK(UrlHelpers::github_url_to_api_recursive_tree_url(L"https://www.github.com/predelnik/DSpellCheck") == L"https://api.github.com/repos/predelnik/DSpellCheck/git/trees/master?recursive=1");
 }

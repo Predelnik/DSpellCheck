@@ -15,7 +15,6 @@
 #include "ProgressDlg.h"
 
 #include "DownloadDicsDlg.h"
-#include "Plugin.h"
 #include "ProgressData.h"
 #include "resource.h"
 

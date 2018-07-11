@@ -10,7 +10,8 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+// USA.
 
 #pragma once
 
@@ -59,8 +60,7 @@ public:
         --index;
     }
     while (index >= 0 && !m_is_delimiter(m_target[index])) {
-      if (m_split_camel_case && index > 0 &&
-          IsCharUpper(m_target[index]))
+      if (m_split_camel_case && index > 0 && IsCharUpper(m_target[index]))
         return index;
       --index;
     }
@@ -103,3 +103,75 @@ inline auto make_delimiter_tokenizer(std::wstring_view target,
       [=](wchar_t c) { return delimiters.find(c) != std::string_view::npos; },
       split_camel_case);
 }
+
+namespace detail
+{
+	template <typename CharType>
+	bool ends_with_helper(std::basic_string_view<CharType> const &target, std::basic_string_view<CharType> const &suffix) {
+		if (target.length() >= suffix.length()) {
+			return (0 == target.compare(target.length() - suffix.length(),
+				suffix.length(), suffix));
+		}
+		else {
+			return false;
+		}
+	}
+
+	template <typename CharType>
+	bool starts_with_helper(std::basic_string_view<CharType> const &target, std::basic_string_view<CharType> const &prefix) {
+		if (target.length() >= prefix.length()) {
+			return (0 == target.compare(0, prefix.length(), prefix));
+		}
+		else {
+			return false;
+		}
+	}
+
+	template <typename CharType>
+	std::basic_string_view<CharType> remove_prefix_equals_helper (std::basic_string_view<CharType> target, const std::basic_string_view<CharType> &prefix)
+	{
+		if (starts_with_helper(target, prefix))
+			target.remove_prefix(prefix.length());
+		return target;
+	}
+}
+inline bool starts_with(const std::string_view &target, const std::string_view &prefix) { return detail::starts_with_helper(target, prefix); }
+inline bool starts_with(const std::wstring_view &target, const std::wstring_view &prefix) { return detail::starts_with_helper(target, prefix); }
+inline bool ends_with(const std::string_view &target, const std::string_view &suffix) { return detail::ends_with_helper(target, suffix); }
+inline bool ends_with(const std::wstring_view &target, const std::wstring_view &suffix) { return detail::ends_with_helper(target, suffix); }
+
+inline std::string_view remove_prefix_equals(std::string_view target, const std::string_view &prefix) { return detail::remove_prefix_equals_helper(target, prefix);  }
+inline std::wstring_view remove_prefix_equals(std::wstring_view target, const std::wstring_view &prefix) { return detail::remove_prefix_equals_helper(target, prefix); }
+void to_lower_inplace(std::wstring &s);
+
+namespace detail
+{
+	inline bool is_space_helper (wchar_t c)
+	{
+		return iswspace (c);
+	}
+
+	inline bool is_space_helper(char c)
+	{
+		return isspace(c);
+	}
+}
+
+template <typename CharType>
+std::basic_string_view<CharType> trim (std::basic_string_view<CharType> sv)
+{
+	while (detail::is_space_helper(sv.front()))
+		sv.remove_prefix(1);
+	while (detail::is_space_helper(sv.back()))
+		sv.remove_suffix(1);
+	return sv;
+}
+
+// trim from start (in place)
+void ltrim_inplace(std::wstring& s);
+
+// trim from end (in place)
+void rtrim_inplace(std::wstring& s);
+
+// trim from both ends (in place)
+void trim_inplace(std::wstring& s);

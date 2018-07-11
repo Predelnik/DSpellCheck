@@ -100,4 +100,10 @@ HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text) {
 
   return hwnd_tip;
 }
+
+void remove_file(const wchar_t* path)
+{
+	SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
+	DeleteFile(path);
+}
 } // namespace WinApi

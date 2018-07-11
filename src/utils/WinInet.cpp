@@ -1,5 +1,6 @@
 #include "WinInet.h"
 #include "Win32Exception.h"
+#include <sstream>
 
 namespace WinInet {
 CreateWinInetHandle::operator WinInetHandle() const {
@@ -56,25 +57,31 @@ void WinInetUrlHandle::proxy_settings_changed() {
                     0);
 }
 
-std::string download_text_file(const WinInetUrlHandle &handle) {
-  DWORD bytes_to_read = 0, bytes_read_total = 0, cur_index = 0, bytes_read = 0;
-  static std::vector<char> file_buffer(4096);
-  while (true) {
-    InternetQueryDataAvailable(handle.get(), &bytes_to_read, 0, 0);
-    if (bytes_to_read == 0)
-      break;
-    if (bytes_read_total + bytes_to_read + 1 > file_buffer.size()) {
-      file_buffer.resize(bytes_read_total + bytes_to_read + 1);
-    }
+void download_file(const WinInetUrlHandle& handle, std::ostream& stream)
+{
+	constexpr DWORD buf_size = 1024 * 1024;
+	DWORD bytes_to_read = 0, bytes_read_total = 0, cur_index = 0, bytes_read = 0;
+	static std::vector<char> file_buffer(buf_size);
+	file_buffer.clear();
+	while (true) {
+		InternetQueryDataAvailable(handle.get(), &bytes_to_read, 0, 0);
+		if (bytes_to_read == 0)
+			break;
 
-    InternetReadFile(handle.get(), file_buffer.data() + cur_index,
-                     bytes_to_read, &bytes_read);
-    if (bytes_read == 0)
-      break;
-    bytes_read_total += bytes_read;
-    cur_index += bytes_read;
-  }
-  return file_buffer.data();
+		InternetReadFile(handle.get(), file_buffer.data(),
+			std::min (bytes_to_read, buf_size), &bytes_read);
+		if (bytes_read == 0)
+			break;
+		bytes_read_total += bytes_read;
+		cur_index += bytes_read;
+		stream.write(file_buffer.data (), bytes_read);
+	}
+}
+
+std::string download_text_file(const WinInetUrlHandle &handle) {
+	std::stringstream ss;
+	download_file(handle, ss);
+	return ss.str();
 }
 
 WinInetHandle::WinInetHandle() = default;

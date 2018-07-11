@@ -39,28 +39,6 @@ std::wstring parse_string(const wchar_t* source);
 bool check_for_directory_existence(std::wstring path, bool silent = true,
                                    HWND npp_window = nullptr);
 
-// trim from start (in place)
-inline void ltrim(std::wstring& s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](wchar_t ch)
-    {
-        return iswspace(ch) == FALSE;
-    }));
-}
-
-// trim from end (in place)
-inline void rtrim(std::wstring& s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](wchar_t ch)
-    {
-        return iswspace(ch) == FALSE;
-    }).base(), s.end());
-}
-
-// trim from both ends (in place)
-inline void trim(std::wstring& s) {
-    ltrim(s);
-    rtrim(s);
-}
-
 template <typename T>
 std::weak_ptr<T> weaken(std::shared_ptr<T> ptr) { return ptr; }
 

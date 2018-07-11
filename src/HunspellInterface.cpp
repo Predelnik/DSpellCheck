@@ -364,6 +364,9 @@ void HunspellInterface::reset_spellers() {
   m_all_hunspells.clear();
 }
 
+// drop cache if dictionary was removed
+void HunspellInterface::dictionary_removed(const std::wstring &path) { m_all_hunspells.erase(path);  }
+
 std::wstring
 HunspellInterface::create_encoded_dict_version(const wchar_t *dict_path,
                                                const char *target_encoding) {
