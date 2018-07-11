@@ -52,7 +52,7 @@ const wchar_t *const custom_gui_messsages_names[] = {L"DSpellCheck_GenericCallba
 #define COLOR_WARN (RGB(144, 144, 0))
 #define COLOR_NEUTRAL (RGB(0, 0, 0))
 
-constexpr auto plugin_name = L"DSpellCheck";
+constexpr auto static_plugin_name = L"DSpellCheck";
 constexpr auto config_file_name = L"DSpellCheck.ini";
 
 // Custom WMs (Only for our windows and threads)

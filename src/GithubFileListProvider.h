@@ -8,8 +8,6 @@ class GitHubFileListProvider : public FileListProvider
 public:
   GitHubFileListProvider ();
   void set_root_path (const std::wstring &root_path);
-
-private:
   void update_file_list() override;
   void download_file(const std::string& filename) override;
 

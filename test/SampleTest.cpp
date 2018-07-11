@@ -13,6 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 // USA.
 
+#include "GithubFileListProvider.h"
 #include "MainDef.h"
 #include "MockEditorInterface.h"
 #include "MockSpeller.h"
@@ -239,10 +240,10 @@ TEST_CASE("ANSI") {
   SpellerContainer sp_container(&settings, std::move(speller));
   SpellChecker sc(&settings, editor, sp_container);
 
-  editor.set_codepage (v, EditorCodepage::ansi);
+  editor.set_codepage(v, EditorCodepage::ansi);
   sc.recheck_visible_both_views();
   CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
-          std::vector<std::string>{"abcd", "efgh"});
+        std::vector<std::string>{"abcd", "efgh"});
 }
 
 TEST_CASE("Language Styles") {
@@ -257,7 +258,6 @@ TEST_CASE("Language Styles") {
     SpellerContainer sp_container(&settings, std::move(speller));
     SpellChecker sc(&settings, editor, sp_container);
 
-
     editor.set_lexer(v, SCLEX_HTML);
     editor.set_whole_text_style(v, SCE_H_DEFAULT);
     editor.make_all_visible(v);
@@ -269,4 +269,11 @@ TEST_CASE("Language Styles") {
     sc.recheck_visible_both_views();
     CHECK(!editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
   }
+}
+
+TEST_CASE("github") {
+  GitHubFileListProvider test;
+  test.set_root_path(
+      L"https://api.github.com/repos/predelnik/DSpellCheck/contents");
+  test.update_file_list();
 }

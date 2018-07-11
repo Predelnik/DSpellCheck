@@ -16,6 +16,7 @@
 #include "StaticDialog/StaticDialog.h"
 #include "CommonFunctions.h"
 #include "utils/winapi.h"
+#include "Settings.h"
 
 class Settings;
 class SpellChecker;

@@ -627,7 +627,7 @@ ftp_web_proxy_login(const FtpOperationParams &params) {
   std::wstring proxy_final_string =
       params.proxy_address + L":" + std::to_wstring(params.proxy_port);
   const auto win_inet_handle =
-      InternetOpen(plugin_name, INTERNET_OPEN_TYPE_PROXY,
+      InternetOpen(static_plugin_name, INTERNET_OPEN_TYPE_PROXY,
                    proxy_final_string.c_str(), L"", 0);
   if (win_inet_handle == nullptr)
     return FtpWebOperationError{

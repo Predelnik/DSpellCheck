@@ -1,5 +1,8 @@
 #pragma once
-#include <Wininet.h>
+#include <Windows.h>
+#include <WinInet.h>
+#include "move_only.h"
+#include "remap_rvalues_for.h"
 
 namespace WinInet {
 class WinInetHandle {
@@ -11,29 +14,34 @@ public:
   void set_connect_timeout(DWORD ms);
   void set_send_timeout(DWORD ms);
   void set_receive_timeout(DWORD ms);
+  WinInetHandle (WinInetHandle&&) = default;
+  WinInetHandle &operator=(WinInetHandle&&) = default;
   ~WinInetHandle();
-  HINTERNET get() const { return m_handle; }
+  HINTERNET get() const { return m_handle.get (); }
 
 private:
-  HINTERNET m_handle = nullptr;
+  move_only<HINTERNET> m_handle;
 };
 
 class CreateWinInetHandle {
   using Self = CreateWinInetHandle;
 
 public:
-  Self &agent(const wchar_t *agent) {
+  Self &agent(const wchar_t *agent) & {
     m_agent = agent;
     return *this;
   }
-  Self &access_type(DWORD access_type) {
+  REMAP_RVALUES_FOR (agent)
+  Self &access_type(DWORD access_type) & {
     m_access_type = access_type;
     return *this;
   }
-  Self &proxy_string(const wchar_t *proxy_string) {
+  REMAP_RVALUES_FOR (access_type)
+  Self &proxy_string(const wchar_t *proxy_string) & {
     m_proxy_string = proxy_string;
     return *this;
   }
+  REMAP_RVALUES_FOR (proxy_string)
   operator WinInetHandle() const;
 
 private:
@@ -46,7 +54,9 @@ class WinInetUrlHandle {
 public:
   WinInetUrlHandle(HINTERNET h_internet, const wchar_t *url,
                    std::wstring_view headers, DWORD flags, void *context);
-  HINTERNET get() const { return m_handle; };
+  WinInetUrlHandle (WinInetUrlHandle &&) = default;
+  WinInetUrlHandle &operator= (WinInetUrlHandle &&) = default;
+  HINTERNET get() const { return m_handle.get (); };
   void set_proxy_username(std::wstring_view username);
   void set_proxy_password(std::wstring_view password);
   ~WinInetUrlHandle();
@@ -55,7 +65,7 @@ private:
   void proxy_settings_changed();
 
 private:
-  HINTERNET m_handle;
+  move_only<HINTERNET> m_handle;
 };
 
 class WinInetOpenUrl {
