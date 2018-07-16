@@ -9,6 +9,7 @@
 #include "utils/WinInet.h"
 #include <fstream>
 #include "UrlHelpers.h"
+#include "ProgressData.h"
 
 GitHubFileListProvider::GitHubFileListProvider(HWND parent)
   : m_get_file_list_task(parent),
@@ -60,7 +61,7 @@ void GitHubFileListProvider::update_file_list() {
                                    });
 }
 
-void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepath, const std::wstring &target_path) {
+void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepath, const std::wstring &target_path, std::shared_ptr<ProgressData> progress_data) {
   m_download_file_task.do_deferred(
                                    [=](Concurrency::cancellation_token token)
                                    {
@@ -71,7 +72,14 @@ void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepat
                                        auto url_handle = WinInet::WinInetOpenUrl(inet, path.c_str());
                                        auto filename = path.substr(path.rfind(L'/'), std::wstring::npos);
                                        std::ofstream fs(target_path + filename, std::ios_base::out | std::ios_base::binary);
-                                       WinInet::download_file(url_handle, fs);
+                                        WinInet::download_file(url_handle, fs, [&](int bytes_read, int total_bytes)
+                                        {
+                                         if (token.is_canceled())
+                                           return false;
+
+                                          progress_data->set(bytes_read * 100 / total_bytes, wstring_printf (L"Downloading %s...", aff_filepath.c_str ()));
+                                          return true;
+                                        });
                                      };
                                      do_download(aff_filepath);
                                      do_download(aff_filepath.substr(0, aff_filepath.length() - 4) + L".dic");
@@ -82,3 +90,5 @@ void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepat
                                    }
                                   );
 }
+
+void GitHubFileListProvider::cancel_download() { m_download_file_task.cancel(); }

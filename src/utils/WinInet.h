@@ -93,7 +93,9 @@ private:
   void *m_context = nullptr;
 };
 
+// returns false if downloading was cancelled
+bool download_file(const WinInetUrlHandle &handle, std::ostream &stream, std::function<bool(int bytes_read, int total_bytes)> callback = {});
+
 // returns content of target text file or throws an exception
-void download_file(const WinInetUrlHandle &handle, std::ostream &stream);
 std::string download_text_file(const WinInetUrlHandle &handle);
 } // namespace WinInet

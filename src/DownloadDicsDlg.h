@@ -31,6 +31,7 @@ enum class UrlType
 class LanguageInfo;
 class GitHubFileListProvider;
 class SpellerContainer;
+class ProgressData;
 
 void ftp_trim(std::wstring &ftp_address);
 
@@ -108,7 +109,7 @@ public:
   void refresh();
   void start_next_download();
   UrlType selected_url_type();
-  void download_github_file(const std::wstring& title, const std::wstring& path);
+  void download_github_file(const std::wstring &title, const std::wstring &path, std::shared_ptr<ProgressData> progress_data);
   void download_file();
   void download_selected();
   void fill_file_list();

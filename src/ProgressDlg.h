@@ -16,7 +16,7 @@
 
 #include "StaticDialog\StaticDialog.h"
 
-struct ProgressData;
+class ProgressData;
 
 class ProgressDlg : public StaticDialog {
 public:

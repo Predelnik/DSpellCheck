@@ -14,7 +14,7 @@
 
 #pragma once
 
-struct ProgressData {
+class ProgressData {
 public:
     void set (int progress, const std::wstring &status, bool marquee = false);
     bool get_marquee() const;

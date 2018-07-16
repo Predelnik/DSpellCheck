@@ -328,7 +328,7 @@ UrlType DownloadDicsDlg::selected_url_type() {
   return UrlType::unknown;
 }
 
-void DownloadDicsDlg::download_github_file(const std::wstring &title, const std::wstring &path) {
+void DownloadDicsDlg::download_github_file(const std::wstring &title, const std::wstring &path, std::shared_ptr<ProgressData> progress_data) {
   auto local_path = std::wstring(m_settings.get_dictionary_download_path());
   auto local_name = local_path + L"\\" + path.substr(path.rfind(L'/'));
   if (PathFileExists(local_name.c_str()))
@@ -339,7 +339,7 @@ void DownloadDicsDlg::download_github_file(const std::wstring &title, const std:
       m_speller_container.get_hunspell_speller().dictionary_removed(local_name);
     }
 
-  m_github_provider->download_dictionary(path, local_path);
+  m_github_provider->download_dictionary(path, local_path, progress_data);
 }
 
 void DownloadDicsDlg::download_file() {
@@ -354,7 +354,7 @@ void DownloadDicsDlg::download_file() {
     download_file_async_web_proxy(ftp_path, ftp_location);
     break;
   case UrlType::github:
-    download_github_file(m_cur->title, m_cur->path);
+    download_github_file(m_cur->title, m_cur->path, get_progress()->get_progress_data());
     break;
   case UrlType::unknown:
     break;
@@ -476,6 +476,7 @@ void DownloadDicsDlg::set_cancel_pressed(bool value) {
   m_cancel_pressed = value;
   m_ftp_operation_task->cancel();
   m_cur = m_to_download.end();
+  m_github_provider->cancel_download();
   finalize_downloading();
 }
 

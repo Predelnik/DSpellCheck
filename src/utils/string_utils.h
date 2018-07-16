@@ -142,7 +142,8 @@ inline bool ends_with(const std::wstring_view &target, const std::wstring_view &
 
 inline std::string_view remove_prefix_equals(std::string_view target, const std::string_view &prefix) { return detail::remove_prefix_equals_helper(target, prefix);  }
 inline std::wstring_view remove_prefix_equals(std::wstring_view target, const std::wstring_view &prefix) { return detail::remove_prefix_equals_helper(target, prefix); }
-void to_lower_inplace(std::wstring &s);
+void to_lower_inplace(std::wstring& s);
+void to_upper_inplace(std::wstring& s);
 
 namespace detail
 {

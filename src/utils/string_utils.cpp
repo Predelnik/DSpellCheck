@@ -22,6 +22,8 @@ void to_lower_inplace(std::wstring& s)
 	std::transform(s.begin(), s.end (), s.begin (), &towlower);
 }
 
+void to_upper_inplace(std::wstring& s) { std::transform(s.begin(), s.end(), s.begin(), &towupper); }
+
 void ltrim_inplace(std::wstring& s)
 {
 	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](wchar_t ch)
