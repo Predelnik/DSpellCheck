@@ -164,7 +164,8 @@ static const auto buf_size_for_copy = 10240;
 void DownloadDicsDlg::on_zip_file_downloaded() {
   wchar_t prog_message[DEFAULT_BUF_SIZE];
   std::map<std::string, int> files_found; // 0x01 - .aff found, 0x02 - .dic found
-  auto local_path_ansi = to_string(m_cur->path.c_str());
+  auto downloaded = prev(m_cur);
+  const auto local_path_ansi = to_string (get_temp_path() + L"/" + downloaded->path);
   unzFile fp = unzOpen(local_path_ansi.c_str());
   unz_file_info f_info;
   if (unzGoToFirstFile(fp) != UNZ_OK)
@@ -296,7 +297,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
 clean_and_continue:
   files_found.clear();
   unzClose(fp);
-  auto local_path = get_temp_path() + L"/" + m_cur->path;
+  auto local_path = get_temp_path() + L"/" + downloaded->path;
   WinApi::remove_file(local_path.c_str());
   if (m_failure)
     return finalize_downloading();
@@ -331,13 +332,13 @@ UrlType DownloadDicsDlg::selected_url_type() {
 void DownloadDicsDlg::download_github_file(const std::wstring &title, const std::wstring &path, std::shared_ptr<ProgressData> progress_data) {
   auto local_path = std::wstring(m_settings.get_dictionary_download_path());
   auto local_name = local_path + L"\\" + path.substr(path.rfind(L'/'));
-  if (PathFileExists(local_name.c_str()))
+  if (PathFileExists(local_name.c_str())) {
     if (ask_replacement_message(title.c_str()) == IDNO) {
       --m_supposed_downloaded_count;
       return;
-    } else {
-      m_speller_container.get_hunspell_speller().dictionary_removed(local_name);
     }
+    m_speller_container.get_hunspell_speller().dictionary_removed(local_name);
+  }
 
   m_github_provider->download_dictionary(path, local_path, progress_data);
 }
