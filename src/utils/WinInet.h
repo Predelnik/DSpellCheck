@@ -5,26 +5,26 @@
 #include "remap_rvalues_for.h"
 
 namespace WinInet {
-class WinInetHandle {
+class GlobalHandle {
 public:
-  WinInetHandle ();
-  WinInetHandle(const wchar_t *agent, DWORD access_type,
+  GlobalHandle ();
+  GlobalHandle(const wchar_t *agent, DWORD access_type,
                 const wchar_t *proxy_string,
                 const wchar_t *proxy_bypass = nullptr, DWORD flags = 0);
   void set_connect_timeout(DWORD ms);
   void set_send_timeout(DWORD ms);
   void set_receive_timeout(DWORD ms);
-  WinInetHandle (WinInetHandle&&) = default;
-  WinInetHandle &operator=(WinInetHandle&&) = default;
-  ~WinInetHandle();
+  GlobalHandle (GlobalHandle&&) = default;
+  GlobalHandle &operator=(GlobalHandle&&) = default;
+  ~GlobalHandle();
   HINTERNET get() const { return m_handle.get (); }
 
 private:
   move_only<HINTERNET> m_handle;
 };
 
-class CreateWinInetHandle {
-  using Self = CreateWinInetHandle;
+class CreateGlobalHandle {
+  using Self = CreateGlobalHandle;
 
 public:
   Self &agent(const wchar_t *agent) & {
@@ -42,7 +42,7 @@ public:
     return *this;
   }
   REMAP_RVALUES_FOR (proxy_string)
-  operator WinInetHandle() const;
+  operator GlobalHandle() const;
 
 private:
   const wchar_t *m_agent = nullptr;
@@ -50,16 +50,16 @@ private:
   const wchar_t *m_proxy_string = nullptr;
 };
 
-class WinInetUrlHandle {
+class UrlHandle {
 public:
-  WinInetUrlHandle(HINTERNET h_internet, const wchar_t *url,
+  UrlHandle(HINTERNET h_internet, const wchar_t *url,
                    std::wstring_view headers, DWORD flags, void *context);
-  WinInetUrlHandle (WinInetUrlHandle &&) = default;
-  WinInetUrlHandle &operator= (WinInetUrlHandle &&) = default;
+  UrlHandle (UrlHandle &&) = default;
+  UrlHandle &operator= (UrlHandle &&) = default;
   HINTERNET get() const { return m_handle.get (); };
   void set_proxy_username(std::wstring_view username);
   void set_proxy_password(std::wstring_view password);
-  ~WinInetUrlHandle();
+  ~UrlHandle();
 
 private:
   void proxy_settings_changed();
@@ -72,30 +72,30 @@ class WinInetOpenUrl {
   using Self = WinInetOpenUrl;
 
 public:
-  WinInetOpenUrl(const WinInetHandle &inet_handle, const wchar_t *url)
+  WinInetOpenUrl(const GlobalHandle &inet_handle, const wchar_t *url)
       : m_inet_handle(inet_handle), m_url(url) {}
 
   void set_headers(std::wstring_view headers) { m_headers = headers; }
   void set_context(void *context) { m_context = context; }
   void set_flags(DWORD flags) { m_flags = flags; }
 
-  operator WinInetUrlHandle() {
-    WinInetUrlHandle handle(m_inet_handle.get(), m_url, m_headers, m_flags,
+  operator UrlHandle() {
+    UrlHandle handle(m_inet_handle.get(), m_url, m_headers, m_flags,
                             m_context);
     return handle;
   }
 
 private:
   std::wstring_view m_headers;
-  const WinInetHandle &m_inet_handle;
+  const GlobalHandle &m_inet_handle;
   const wchar_t *m_url;
   DWORD m_flags = 0;
   void *m_context = nullptr;
 };
 
 // returns false if downloading was cancelled
-bool download_file(const WinInetUrlHandle &handle, std::ostream &stream, std::function<bool(int bytes_read, int total_bytes)> callback = {});
+bool download_file(const UrlHandle &handle, std::ostream &stream, std::function<bool(int bytes_read, int total_bytes)> callback = {});
 
 // returns content of target text file or throws an exception
-std::string download_text_file(const WinInetUrlHandle &handle);
+std::string download_text_file(const UrlHandle &handle);
 } // namespace WinInet
