@@ -117,6 +117,7 @@ public:
   void indicate_that_saving_might_be_needed();
   void update_controls();
   void update_settings(Settings &settings);
+  void update_download_button_availability();
   void set_cancel_pressed(bool value);
   LRESULT ask_replacement_message(const wchar_t *dic_name);
   bool prepare_downloading();

@@ -40,7 +40,7 @@ void GitHubFileListProvider::update_file_list() {
       inet.set_receive_timeout(default_timeout);
       inet.set_send_timeout(default_timeout);
       const auto url_to_json = [&](const std::wstring &path) {
-        WinInet::UrlHandle url_handle = WinInet::WinInetOpenUrl(inet, path.c_str()).set_flags(INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE);
+        WinInet::UrlHandle url_handle = WinInet::WinInetOpenUrl(inet, path.c_str());
         if (!is_anon) {
           url_handle.set_proxy_username(proxy_name);
           url_handle.set_proxy_password(proxy_pwd);

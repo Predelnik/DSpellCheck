@@ -758,6 +758,7 @@ void DownloadDicsDlg::on_new_file_list(std::vector<FileDescription> list) {
   }
   update_status(rc_str(IDS_STATUS_LIST_SUCCESS).c_str(), COLOR_OK);
   EnableWindow(m_h_install_selected, TRUE);
+  update_download_button_availability();
 }
 
 void DownloadDicsDlg::preserve_current_address_index(Settings &settings) {
@@ -957,6 +958,14 @@ void DownloadDicsDlg::update_settings(Settings &settings) {
   settings.download_install_dictionaries_for_all_users = Button_GetCheck(m_h_install_system) == BST_CHECKED;
 }
 
+void DownloadDicsDlg::update_download_button_availability()
+{
+  int cnt = 0;
+  for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
+    cnt += ((CheckedListBox_GetCheckState(m_h_file_list, i) == BST_CHECKED) ? 1 : 0);
+  EnableWindow (m_h_install_selected, cnt > 0 ? TRUE : FALSE);
+}
+
 INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_TIMER: {
@@ -984,10 +993,16 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_par
     fill_file_list();
     update_controls();
     m_default_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+    update_download_button_availability();
   }
     return TRUE;
   case WM_COMMAND: {
     switch (LOWORD(w_param)) {
+    case IDC_FILE_LIST:
+      if (HIWORD(w_param) == LBCN_ITEMCHECK) {
+        update_download_button_availability();
+      }
+      break;
     case IDOK:
       if (HIWORD(w_param) == BN_CLICKED) {
         download_selected();
