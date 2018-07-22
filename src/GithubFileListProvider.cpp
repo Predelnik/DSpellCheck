@@ -8,10 +8,12 @@
 #include "json.hpp"
 #include "utils/Win32Exception.h"
 #include "utils/WinInet.h"
+#include "utils/overload.h"
 #include "utils/string_utils.h"
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <variant>
 
 constexpr auto dic_ext = ".dic"sv, aff_ext = ".aff"sv;
 constexpr auto dic_ext_w = L".dic"sv;
@@ -26,8 +28,9 @@ void GitHubFileListProvider::update_file_list() {
   std::wstring proxy_string;
   if (m_settings.use_proxy && m_settings.proxy_type == ProxyType::web_proxy)
     proxy_string = m_settings.proxy_host_name + L":" + std::to_wstring(m_settings.proxy_port);
+  using task_result_t = std::variant<std::monostate, std::vector<FileDescription>, Win32Exception>;
   auto task = [root_path = m_root_path, proxy_string, default_timeout, proxy_name = m_settings.proxy_user_name, proxy_pwd = m_settings.proxy_password,
-               is_anon = m_settings.proxy_is_anonymous](Concurrency::cancellation_token token) -> std::vector<FileDescription> {
+               is_anon = m_settings.proxy_is_anonymous](Concurrency::cancellation_token token) -> task_result_t {
     try {
       WinInet::GlobalHandle inet = WinInet::CreateGlobalHandle()
                                        .agent(static_plugin_name)
@@ -37,7 +40,7 @@ void GitHubFileListProvider::update_file_list() {
       inet.set_receive_timeout(default_timeout);
       inet.set_send_timeout(default_timeout);
       const auto url_to_json = [&](const std::wstring &path) {
-        WinInet::UrlHandle url_handle = WinInet::WinInetOpenUrl(inet, path.c_str());
+        WinInet::UrlHandle url_handle = WinInet::WinInetOpenUrl(inet, path.c_str()).set_flags(INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE);
         if (!is_anon) {
           url_handle.set_proxy_username(proxy_name);
           url_handle.set_proxy_password(proxy_pwd);
@@ -46,6 +49,15 @@ void GitHubFileListProvider::update_file_list() {
         return nlohmann::json::parse(text);
       };
 
+      auto rate_limit_data = url_to_json(L"https://api.github.com/rate_limit");
+      auto core_limit_data = rate_limit_data["resources"]["core"];
+      if (core_limit_data["remaining"] == 0) {
+        auto reset_secs = core_limit_data["reset"].get<time_t>();
+        std::wstringstream wss;
+        wss << std::put_time(std::localtime(&reset_secs), L"%H:%M");
+        return Win32Exception(to_string (wstring_printf(rc_str(IDS_GITHUB_API_RATE_LIMIT_EXCEEDED_PD_PS).c_str(), core_limit_data["limit"].get<int>(),
+                                             wss.str ().c_str ())));
+      }
       auto download_url = UrlHelpers::github_file_url_to_download_url(root_path);
       auto nodes = url_to_json(UrlHelpers::github_url_to_api_recursive_tree_url(root_path))["tree"];
       std::vector<FileDescription> result;
@@ -66,12 +78,15 @@ void GitHubFileListProvider::update_file_list() {
                           download_url + utf8_to_wstring(node["path"].get<std::string>().c_str())});
       }
       return result;
-    } catch (const Win32Exception &) {
-      // TODO: return std::variant
-      return {};
+    } catch (const Win32Exception &exception) {
+      return exception;
     }
   };
-  m_get_file_list_task.do_deferred(task, [this](std::vector<FileDescription> files) { file_list_received(std::move(files)); });
+  m_get_file_list_task.do_deferred(task, [this](task_result_t &&result) {
+    std::visit(overload([](std::monostate) {}, [this](std::vector<FileDescription> &&list) { file_list_received(std::move(list)); },
+                        [this](Win32Exception &&e) { error_happened(e.what()); }),
+               std::move(result));
+  });
 }
 
 void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepath, const std::wstring &target_path,
@@ -88,8 +103,7 @@ void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepat
               return false;
 
             auto percent = bytes_read * 100 / total_bytes;
-            progress_data->set(percent, wstring_printf (rc_str(IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str(), bytes_read,
-				total_bytes, percent));
+            progress_data->set(percent, wstring_printf(rc_str(IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str(), bytes_read, total_bytes, percent));
             return true;
           });
         };

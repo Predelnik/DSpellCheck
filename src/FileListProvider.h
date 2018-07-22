@@ -19,5 +19,6 @@ public:
   virtual ~FileListProvider() = default;
   lsignal::signal<void (std::vector<FileDescription>)> file_list_received;
   lsignal::signal<void()> file_downloaded;
+  lsignal::signal<void (const std::string &description)> error_happened;
 };
 

@@ -75,9 +75,12 @@ public:
   WinInetOpenUrl(const GlobalHandle &inet_handle, const wchar_t *url)
       : m_inet_handle(inet_handle), m_url(url) {}
 
-  void set_headers(std::wstring_view headers) { m_headers = headers; }
-  void set_context(void *context) { m_context = context; }
-  void set_flags(DWORD flags) { m_flags = flags; }
+  Self &set_headers(std::wstring_view headers) & { m_headers = headers; return *this; }
+  REMAP_RVALUES_FOR(set_headers);
+  Self &set_context(void *context) & { m_context = context; return *this; }
+  REMAP_RVALUES_FOR(set_context);
+  Self &set_flags(DWORD flags) & { m_flags = flags; return *this; }
+  REMAP_RVALUES_FOR(set_flags);
 
   operator UrlHandle() {
     UrlHandle handle(m_inet_handle.get(), m_url, m_headers, m_flags,

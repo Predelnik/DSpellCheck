@@ -50,7 +50,6 @@ std::wstring wstring_printf(const wchar_t* format, ArgTypes&&... args) {
     return buf.data();
 }
 
-void replace_all(std::string& str, std::string_view from, std::string_view to);
 std::wstring read_ini_value(const wchar_t* app_name, const wchar_t* key_name, const wchar_t* default_value,
                             const wchar_t* file_name);
 

@@ -176,3 +176,25 @@ void rtrim_inplace(std::wstring& s);
 
 // trim from both ends (in place)
 void trim_inplace(std::wstring& s);
+
+namespace detail
+{
+  template <typename T>
+  struct identity
+  {
+    using type = T;
+  };
+  template <typename T>
+  using identity_t = typename identity<T>::type;
+}
+
+template <typename CharType>
+void replace_all_inplace(std::basic_string<CharType>& str, const detail::identity_t<std::basic_string_view<CharType>> &from, const detail::identity_t<std::basic_string_view<CharType>> &to) {
+	if (from.empty())
+		return;
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+	}
+}

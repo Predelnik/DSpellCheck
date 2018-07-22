@@ -49,7 +49,7 @@ public:
             return;
 
         auto cb_data = std::make_unique<CallbackData>();
-        cb_data->callback = [guiCallback = std::move (guiCallback), ret = std::move (ret)](){ guiCallback (ret); };
+        cb_data->callback = [guiCallback = std::move (guiCallback), ret = std::move (ret)]()mutable{ guiCallback (std::move (ret)); };
         cb_data->alive_status = as;
          PostMessage(hwnd,
             get_custom_gui_message_id(CustomGuiMessage::generic_callback), reinterpret_cast<WPARAM> (cb_data.release ())

@@ -80,6 +80,10 @@ DownloadDicsDlg::~DownloadDicsDlg() {
 DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &settings, SpellerContainer &speller_container)
     : m_settings(settings), m_github_provider(std::make_unique<GitHubFileListProvider>(parent, settings)), m_speller_container(speller_container) {
   m_github_provider->file_list_received.connect([this](const std::vector<FileDescription> &list) { on_new_file_list(list); });
+  m_github_provider->error_happened.connect([this](const std::string &description) { 
+    auto wstr = to_wstring (description);   
+    replace_all_inplace (wstr, L"\r\n", L" ");
+    update_status(wstring_printf (rc_str(IDS_STATUS_NETWORK_ERROR_PS).c_str (), wstr.c_str()).c_str(), COLOR_FAIL); });
   m_github_provider->file_downloaded.connect([this] {
     m_message += prev(m_cur)->title + L'\n';
     ++m_downloaded_count;

@@ -410,16 +410,6 @@ bool check_for_directory_existence(std::wstring path, bool silent, HWND npp_wind
     return true;
 }
 
-void replace_all(std::string& str, std::string_view from, std::string_view to) {
-    if (from.empty())
-        return;
-    size_t start_pos = 0;
-    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-    }
-}
-
 void write_unicode_bom (FILE *fp)
 {
     WORD bom = 0xFEFF;

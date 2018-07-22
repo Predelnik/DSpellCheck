@@ -47,10 +47,10 @@ const wchar_t *const custom_gui_messsages_names[] = {L"DSpellCheck_GenericCallba
 
 #define USER_SERVER_CONST 100
 
-#define COLOR_OK (RGB(0, 144, 0))
-#define COLOR_FAIL (RGB(225, 0, 0))
-#define COLOR_WARN (RGB(144, 144, 0))
-#define COLOR_NEUTRAL (RGB(0, 0, 0))
+constexpr auto COLOR_OK = RGB(0, 144, 0);
+constexpr auto COLOR_FAIL = RGB(225, 0, 0);
+constexpr auto COLOR_WARN = RGB(144, 144, 0);
+constexpr auto COLOR_NEUTRAL = RGB(0, 0, 0);
 
 constexpr auto static_plugin_name = L"DSpellCheck";
 constexpr auto config_file_name = L"DSpellCheck.ini";
