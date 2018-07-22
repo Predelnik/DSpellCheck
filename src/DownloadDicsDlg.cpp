@@ -91,7 +91,8 @@ DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &
   });
   m_ftp_operation_task = TaskWrapper{parent};
   Window::init(h_inst, parent);
-  m_default_server_names[0] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
+  m_default_server_names[0] = L"https://github.com/LibreOffice/dictionaries";
+  m_default_server_names[1] = L"ftp://ftp.snt.utwente.nl/pub/software/openoffice/contrib/dictionaries/";
   m_settings.settings_changed.connect([this] {
     update_controls();
     update_list_box();
