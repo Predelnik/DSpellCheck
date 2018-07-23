@@ -9,6 +9,7 @@ class FileDescription
 public:
   std::wstring title;
   std::wstring path;
+  bool was_alias_applied = false;
 };
 
 class FileListProvider

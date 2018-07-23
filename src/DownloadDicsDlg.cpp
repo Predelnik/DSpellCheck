@@ -80,10 +80,11 @@ DownloadDicsDlg::~DownloadDicsDlg() {
 DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &settings, SpellerContainer &speller_container)
     : m_settings(settings), m_github_provider(std::make_unique<GitHubFileListProvider>(parent, settings)), m_speller_container(speller_container) {
   m_github_provider->file_list_received.connect([this](const std::vector<FileDescription> &list) { on_new_file_list(list); });
-  m_github_provider->error_happened.connect([this](const std::string &description) { 
-    auto wstr = to_wstring (description);   
-    replace_all_inplace (wstr, L"\r\n", L" ");
-    update_status(wstring_printf (rc_str(IDS_STATUS_NETWORK_ERROR_PS).c_str (), wstr.c_str()).c_str(), COLOR_FAIL); });
+  m_github_provider->error_happened.connect([this](const std::string &description) {
+    auto wstr = to_wstring(description);
+    replace_all_inplace(wstr, L"\r\n", L" ");
+    update_status(wstring_printf(rc_str(IDS_STATUS_NETWORK_ERROR_PS).c_str(), wstr.c_str()).c_str(), COLOR_FAIL);
+  });
   m_github_provider->file_downloaded.connect([this] {
     m_message += prev(m_cur)->title + L'\n';
     ++m_downloaded_count;
@@ -170,7 +171,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
   wchar_t prog_message[DEFAULT_BUF_SIZE];
   std::map<std::string, int> files_found; // 0x01 - .aff found, 0x02 - .dic found
   auto downloaded = prev(m_cur);
-  const auto local_path_ansi = to_string (get_temp_path() + L"/" + downloaded->path);
+  const auto local_path_ansi = to_string(get_temp_path() + L"/" + downloaded->path);
   unzFile fp = unzOpen(local_path_ansi.c_str());
   unz_file_info f_info;
   if (unzGoToFirstFile(fp) != UNZ_OK)
@@ -224,7 +225,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
   } while (unzGoToNextFile(fp) == UNZ_OK);
   // Now we're gonna check what's exactly we extracted with using FilesFound
   // map
-  for (auto & [ file_name_ansi, mask ] : files_found) {
+  for (auto &[file_name_ansi, mask] : files_found) {
     auto file_name = to_wstring(file_name_ansi.c_str());
     if (mask != 0x03) // Some of .aff/.dic is missing
     {
@@ -400,6 +401,8 @@ void DownloadDicsDlg::update_list_box() {
 
   ListBox_ResetContent(m_h_file_list);
   for (auto &info : m_current_list) {
+    if (m_settings.download_show_only_recognized_dictionaries && !info.was_alias_applied)
+      continue;
     ListBox_AddString(m_h_file_list, info.title.c_str());
   }
 }
@@ -742,12 +745,7 @@ void DownloadDicsDlg::on_new_file_list(std::vector<FileDescription> list) {
 
   m_current_list.clear();
   for (auto &element : list) {
-    if (m_settings.use_language_name_aliases) {
-      auto r = apply_alias(element.title);
-      element.title = r.first;
-      if (m_settings.ftp_show_only_known_dictionaries && !r.second)
-        continue;
-    }
+    std::tie(element.title, element.was_alias_applied) = apply_alias(element.title);
     m_current_list.push_back(element);
   }
 
@@ -932,13 +930,13 @@ void DownloadDicsDlg::update_file_list_async(const std::wstring &full_path) {
 }
 
 void DownloadDicsDlg::download_file_async(const std::wstring &full_path, const std::wstring &target_location) {
-  m_ftp_operation_task->do_deferred([ params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress()->get_progress_data() ](
+  m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress()->get_progress_data()](
                                         auto token) { return do_download_file(params, target_location, progressData, token); },
                                     [this](std::optional<FtpOperationErrorType>) { on_zip_file_downloaded(); });
 }
 
 void DownloadDicsDlg::download_file_async_web_proxy(const std::wstring &full_path, const std::wstring &target_location) {
-  m_ftp_operation_task->do_deferred([ params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress()->get_progress_data() ](
+  m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress()->get_progress_data()](
                                         auto token) { return do_download_file_web_proxy(params, target_location, *progressData, token); },
                                     [this](std::optional<FtpWebOperationError>) { on_zip_file_downloaded(); });
 }
@@ -950,21 +948,20 @@ void DownloadDicsDlg::refresh() {
 }
 
 void DownloadDicsDlg::update_controls() {
-  Button_SetCheck(m_h_show_only_known, m_settings.ftp_show_only_known_dictionaries ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_show_only_known, m_settings.download_show_only_recognized_dictionaries ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_install_system, m_settings.download_install_dictionaries_for_all_users ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void DownloadDicsDlg::update_settings(Settings &settings) {
-  settings.ftp_show_only_known_dictionaries = Button_GetCheck(m_h_show_only_known) == BST_CHECKED;
+  settings.download_show_only_recognized_dictionaries = Button_GetCheck(m_h_show_only_known) == BST_CHECKED;
   settings.download_install_dictionaries_for_all_users = Button_GetCheck(m_h_install_system) == BST_CHECKED;
 }
 
-void DownloadDicsDlg::update_download_button_availability()
-{
+void DownloadDicsDlg::update_download_button_availability() {
   int cnt = 0;
   for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
     cnt += ((CheckedListBox_GetCheckState(m_h_file_list, i) == BST_CHECKED) ? 1 : 0);
-  EnableWindow (m_h_install_selected, cnt > 0 ? TRUE : FALSE);
+  EnableWindow(m_h_install_selected, cnt > 0 ? TRUE : FALSE);
 }
 
 INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {

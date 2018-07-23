@@ -98,7 +98,7 @@ public:
     SpellerId active_speller_lib_id = SpellerId::aspell;
     int suggestion_button_size = 0;
     int suggestion_button_opacity = 0;
-    bool ftp_show_only_known_dictionaries = false;
+    bool download_show_only_recognized_dictionaries = false;
     bool download_install_dictionaries_for_all_users = false;
     bool ftp_use_passive_mode = true;
     int recheck_delay = 0;
