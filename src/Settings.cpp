@@ -181,6 +181,10 @@ std::wstring_view Settings::get_dictionary_download_path() const
 		   : hunspell_user_path;
 }
 
+void Settings::reset_hunspell_lang_to_default() {
+  speller_language[SpellerId::hunspell] = default_language (SpellerId::hunspell);
+}
+
 std::wstring Settings::get_default_hunspell_path() {
   return m_ini_filepath.substr(0, m_ini_filepath.rfind(L'\\')) + L"\\Hunspell";
 }

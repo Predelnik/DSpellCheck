@@ -66,7 +66,9 @@ public:
     std::wstring &get_active_multi_languages();
     const std::wstring& get_active_multi_languages() const;
     TemporaryAcessor<Self> modify() const;
-	std::wstring_view get_dictionary_download_path() const;
+    std::wstring_view get_dictionary_download_path() const;
+    void reset_hunspell_lang_to_default();
+
 public:
     bool auto_check_text = true;
     std::wstring aspell_path;
