@@ -238,7 +238,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         dic_file_local_path += L".dic";
         break;
       }
-      WinApi::remove_file(dic_file_local_path.c_str());
+      WinApi::delete_file(dic_file_local_path.c_str());
     } else {
       auto dic_file_local_path = get_temp_path();
       (dic_file_local_path += file_name) += L".aff";
@@ -253,21 +253,21 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         replace_question_was_asked = true;
         if (answer == IDNO) {
           confirmation = false;
-          WinApi::remove_file(dic_file_local_path.c_str());
+          WinApi::delete_file(dic_file_local_path.c_str());
         } else {
           m_speller_container.get_hunspell_speller().dictionary_removed(hunspell_dic_path);
-          WinApi::remove_file(hunspell_dic_path.c_str());
+          WinApi::delete_file(hunspell_dic_path.c_str());
         }
       }
 
       if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
-        WinApi::remove_file(dic_file_local_path.c_str());
+        WinApi::delete_file(dic_file_local_path.c_str());
         m_failure = true;
       }
       dic_file_local_path = dic_file_local_path.substr(0, dic_file_local_path.length() - 4) + L".dic";
       hunspell_dic_path = hunspell_dic_path.substr(0, hunspell_dic_path.length() - 4) + L".dic";
       if (!confirmation) {
-        WinApi::remove_file(dic_file_local_path.c_str());
+        WinApi::delete_file(dic_file_local_path.c_str());
       } else if (PathFileExists(hunspell_dic_path.c_str())) {
         bool res;
         if (replace_question_was_asked)
@@ -276,15 +276,15 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
           res = (ask_replacement_message(file_name.c_str()) == IDNO);
         }
         if (res) {
-          WinApi::remove_file(dic_file_local_path.c_str());
+          WinApi::delete_file(dic_file_local_path.c_str());
           confirmation = false;
         } else {
-          WinApi::remove_file(hunspell_dic_path.c_str());
+          WinApi::delete_file(hunspell_dic_path.c_str());
         }
       }
 
       if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
-        WinApi::remove_file(dic_file_local_path.c_str());
+        WinApi::delete_file(dic_file_local_path.c_str());
         m_failure = true;
       }
       std::wstring converted_dic_name;
@@ -304,7 +304,7 @@ clean_and_continue:
   files_found.clear();
   unzClose(fp);
   auto local_path = get_temp_path() + L"/" + downloaded->path;
-  WinApi::remove_file(local_path.c_str());
+  WinApi::delete_file(local_path.c_str());
   if (m_failure)
     return finalize_downloading();
 
@@ -424,7 +424,7 @@ public:
 
   void OnBytesReceived(const nsFTP::TByteVector & /*vBuffer*/, long l_received_bytes) override {
     if (m_token.is_canceled()) {
-      DeleteFile(m_target_path.c_str());
+      WinApi::delete_file(m_target_path.c_str());
       m_client.Logout();
       return;
     }
@@ -552,7 +552,7 @@ std::optional<FtpOperationErrorType> do_download_file(FtpOperationParams params,
 
   if (!client.DownloadFile(params.path, target_path, nsFTP::CRepresentation(nsFTP::CType::Image()), params.use_passive_mode)) {
     if (PathFileExists(target_path.c_str())) {
-      WinApi::remove_file(target_path.c_str());
+      WinApi::delete_file(target_path.c_str());
       return FtpOperationErrorType::download_cancelled;
     }
   }
@@ -700,7 +700,7 @@ std::optional<FtpWebOperationError> do_download_file_web_proxy(FtpOperationParam
     if (token.is_canceled()) {
       _close(file_handle);
       if (PathFileExists(target_path.c_str())) {
-        WinApi::remove_file(target_path.c_str());
+        WinApi::delete_file(target_path.c_str());
       }
       return FtpWebOperationError{FtpWebOperationErrorType::download_cancelled, -1};
     }

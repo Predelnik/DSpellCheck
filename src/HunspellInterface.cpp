@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <io.h>
+#include "utils/winapi.h"
 
 static std::vector<std::wstring>
 list_files(const wchar_t *path, const wchar_t *mask, const wchar_t *filter) {
@@ -206,8 +207,7 @@ HunspellInterface::~HunspellInterface() {
   if (!m_system_wrong_dic_path.empty() && !m_user_dic_path.empty() &&
       !are_paths_equal(m_system_wrong_dic_path.c_str(),
                        m_user_dic_path.c_str())) {
-    SetFileAttributes(m_system_wrong_dic_path.c_str(), FILE_ATTRIBUTE_NORMAL);
-    DeleteFile(m_system_wrong_dic_path.c_str());
+    WinApi::delete_file(m_system_wrong_dic_path.c_str());
   }
 
   if (!m_user_dic_path.empty())
@@ -256,7 +256,7 @@ DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &info) {
         create_encoded_dict_version(m_user_dic_path.c_str(), dic_encoding);
     if (!encoded_path.empty()) {
       new_hunspell->add_dic(to_string(encoded_path).c_str());
-      DeleteFile(encoded_path.c_str());
+      WinApi::delete_file(encoded_path.c_str());
     }
   } else
     new_hunspell->add_dic(to_string(m_user_dic_path).c_str());

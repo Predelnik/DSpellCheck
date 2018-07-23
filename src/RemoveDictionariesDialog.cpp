@@ -24,6 +24,7 @@
 #include "Settings.h"
 #include "SpellerContainer.h"
 #include "resource.h"
+#include "utils/winapi.h"
 
 RemoveDictionariesDialog::RemoveDictionariesDialog(
     HINSTANCE h_inst, HWND parent, const Settings &settings,
@@ -80,16 +81,12 @@ void RemoveDictionariesDialog::remove_selected() {
             file_name,
             m_speller_container.get_available_languages()[i].orig_name.c_str());
         wcscat(file_name, L".aff");
-        SetFileAttributes(file_name, FILE_ATTRIBUTE_NORMAL);
-        bool success = DeleteFile(file_name);
+        bool success = WinApi::delete_file(file_name);
         wcsncpy(file_name + wcslen(file_name) - 4, L".dic", 4);
-        SetFileAttributes(file_name, FILE_ATTRIBUTE_NORMAL);
-        success = success && DeleteFile(file_name);
+        success = success && WinApi::delete_file (file_name);
         if (m_settings.remove_user_dictionaries) {
-          wcsncpy(file_name + wcslen(file_name) - 4, L".usr", 4);
-          SetFileAttributes(file_name, FILE_ATTRIBUTE_NORMAL);
-          DeleteFile(file_name); // Success doesn't matter in that case, 'cause
-                                 // dictionary might not exist.
+          wcsncpy(file_name + wcslen(file_name) - 4, L".usr", 4); 
+          WinApi::delete_file (file_name);
         }
         if (success) {
           file_name[wcslen(file_name) - 4] = L'\0';

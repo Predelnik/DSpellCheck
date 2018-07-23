@@ -146,7 +146,7 @@ void create_hooks() {
 void plugin_clean_up() {
   speller_container->cleanup();
   UnhookWindowsHookEx(h_mouse_hook);
-  DeleteFile(get_debug_log_path().c_str());
+  WinApi::delete_file(get_debug_log_path().c_str());
 }
 
 void register_custom_messages() {
@@ -193,7 +193,7 @@ void switch_debug_logging() {
   auto mut = settings->modify();
   mut->write_debug_log = !mut->write_debug_log;
   if (mut->write_debug_log) {
-    DeleteFile(get_debug_log_path().c_str());
+    WinApi::delete_file(get_debug_log_path().c_str());
   }
 }
 

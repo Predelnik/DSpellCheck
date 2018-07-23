@@ -24,8 +24,7 @@ std::wstring get_edit_text(HWND edit) {
   return buf.data();
 }
 
-bool move_file_and_reset_security_descriptor(const wchar_t *from,
-                                             const wchar_t *to) {
+bool move_file_and_reset_security_descriptor(const wchar_t *from, const wchar_t *to) {
   // on why it is needed
   // https://blogs.msdn.microsoft.com/oldnewthing/20060824-16/?p=29973/
   auto ret = MoveFile(from, to);
@@ -33,10 +32,8 @@ bool move_file_and_reset_security_descriptor(const wchar_t *from,
   ACL g_null_acl;
   memset(&g_null_acl, 0, sizeof(g_null_acl));
   InitializeAcl(&g_null_acl, sizeof(g_null_acl), ACL_REVISION);
-  SetNamedSecurityInfo(
-      const_cast<wchar_t *>(to), SE_FILE_OBJECT,
-      DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION,
-      nullptr, nullptr, static_cast<PACL>(&g_null_acl), nullptr);
+  SetNamedSecurityInfo(const_cast<wchar_t *>(to), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION, nullptr, nullptr,
+                       static_cast<PACL>(&g_null_acl), nullptr);
   return ret != 0;
 }
 
@@ -50,9 +47,7 @@ std::wstring get_class_name(HWND hwnd) {
 namespace WinApi {
 WinBase::~WinBase() = default;
 
-void WinBase::set_enabled(bool enabled) {
-  EnableWindow(m_hwnd, enabled ? TRUE : FALSE);
-}
+void WinBase::set_enabled(bool enabled) { EnableWindow(m_hwnd, enabled ? TRUE : FALSE); }
 
 void WinBase::init(HWND hwnd) {
   m_hwnd = hwnd;
@@ -79,10 +74,8 @@ HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text) {
   HWND hwnd_tool = GetDlgItem(h_dlg, tool_id);
 
   // Create the tooltip. g_hInst is the global instance handle.
-  HWND hwnd_tip = CreateWindowEx(
-      NULL, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_ALWAYSTIP, CW_USEDEFAULT,
-      CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, h_dlg, nullptr,
-      static_cast<HINSTANCE>(get_h_module()), nullptr);
+  HWND hwnd_tip = CreateWindowEx(NULL, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_ALWAYSTIP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, h_dlg,
+                                 nullptr, static_cast<HINSTANCE>(get_h_module()), nullptr);
 
   if (hwnd_tool == nullptr || hwnd_tip == nullptr) {
     return nullptr;
@@ -101,9 +94,8 @@ HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text) {
   return hwnd_tip;
 }
 
-void remove_file(const wchar_t* path)
-{
-	SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
-	DeleteFile(path);
+bool delete_file(const wchar_t *path) {
+  SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
+  return DeleteFile(path);
 }
 } // namespace WinApi
