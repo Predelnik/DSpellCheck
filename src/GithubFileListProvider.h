@@ -3,6 +3,8 @@
 #include "FileListProvider.h"
 #include "TaskWrapper.h"
 
+class Settings;
+
 class GitHubFileListProvider : public FileListProvider {
 public:
   GitHubFileListProvider(HWND parent, const Settings &settings);
