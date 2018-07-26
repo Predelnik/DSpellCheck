@@ -50,8 +50,7 @@ struct DicInfo {
   std::unique_ptr<Hunspell> hunspell;
   IconvWrapperT converter;
   IconvWrapperT back_converter;
-  std::wstring local_dic_path;
-  std::unordered_set<std::string> new_words; // Stored in Dictionary encoding
+  std::wstring local_dic_path; 
   std::string to_dictionary_encoding (std::wstring_view input) const;
   std::wstring from_dictionary_encoding (std::string_view input) const;
 };
@@ -106,8 +105,7 @@ private:
   std::map<std::wstring, DicInfo> m_all_hunspells;
   DicInfo *m_singular_speller;
   mutable DicInfo *m_last_selected_speller;
-  std::vector<DicInfo *> m_spellers;
-  std::unordered_set<std::wstring> m_new_common_words;
+  std::vector<DicInfo *> m_spellers; 
   std::unordered_set<std::wstring> m_ignored;
   std::wstring m_user_dic_path;        // For now only default one.
   std::wstring m_system_wrong_dic_path; // Only for reading and then removing
