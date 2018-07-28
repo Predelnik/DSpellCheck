@@ -40,7 +40,8 @@ SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor,
                            const SpellerContainer &speller_container)
     : m_settings(*settings), m_editor(editor),
       m_speller_container(speller_container) {
-  m_current_position = 0; 
+  m_current_position = 0;
+  reset_hot_spot_cache();
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
   m_speller_container.speller_status_changed.connect(
       [this] { recheck_visible_both_views(); });
@@ -278,6 +279,10 @@ void SpellChecker::clear_all_underlines(EditorViewType view) const {
   }
 }
 
+void SpellChecker::reset_hot_spot_cache() {
+  memset(m_hot_spot_cache, -1, sizeof(m_hot_spot_cache));
+}
+
 bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length,
                                                 bool use_text_cursor) const {
   POINT p;
@@ -354,6 +359,10 @@ bool SpellChecker::is_spellchecking_needed(EditorViewType view,
          m_settings.check_strings) ||
         (category == SciUtils::StyleCategory::identifier &&
          m_settings.check_variable_functions))) {
+    return false;
+  }
+
+  if (m_editor.is_style_hotspot(view, style)) {
     return false;
   }
 

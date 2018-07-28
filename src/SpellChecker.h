@@ -80,6 +80,7 @@ private:
   std::wstring_view get_word_at(long char_pos, const MappedWstring &text,
                                 long offset) const;
   void refresh_underline_style();
+  void reset_hot_spot_cache();
   bool is_spellchecking_needed(EditorViewType view, std::wstring_view word,
                                long word_start) const;
   long next_token_end(std::wstring_view target, long index) const;
