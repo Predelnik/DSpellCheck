@@ -59,7 +59,7 @@ void update_word_count(const wchar_t *dictionary_path) {
   auto cur_cnt = strtol(data.data(), &end_ptr, 10);
   if (line_cnt != cur_cnt) {
     auto fp = _wfopen(dictionary_path, L"wb");
-    fprintf(fp, "%d\r\n", line_cnt);
+    fprintf(fp, "%Id\r\n", line_cnt);
     auto it = std::find(data.begin(), data.end(), '\n');
     if (it != data.end()) {
       auto cnt_len = (it - data.begin()) + 1;
