@@ -73,7 +73,7 @@ target_link_libraries(DSpellCheckStatic npp_extra)
 target_link_libraries(DSpellCheckStatic lsignal)
 target_link_libraries(DSpellCheckStatic aspell)
 target_link_libraries(DSpellCheckStatic json)
-target_link_libraries(DSpellCheckStatic shlwapi comctl32 version wininet Ws2_32)
+target_link_libraries(DSpellCheckStatic shlwapi comctl32 version wininet Ws2_32 dbghelp)
 target_include_directories (DSpellCheckStatic PRIVATE src/Controls)
 
 if ( NOT ${DSpellCheck_SANITIZE} STREQUAL none)

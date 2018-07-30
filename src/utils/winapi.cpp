@@ -14,6 +14,10 @@
 // USA.
 
 #include "winapi.h"
+#pragma warning(push)
+#pragma warning(disable : 4091)
+#include <DbgHelp.h>
+#pragma warning(pop)
 #include "Aclapi.h"
 #include <cassert>
 
@@ -97,5 +101,29 @@ HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text) {
 bool delete_file(const wchar_t *path) {
   SetFileAttributes(path, FILE_ATTRIBUTE_NORMAL);
   return DeleteFile(path);
+}
+
+std::optional<int> library_bitness(const wchar_t *path) {
+  auto h_file = CreateFile(path, GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
+  if (h_file == INVALID_HANDLE_VALUE)
+    return {};
+  auto h_map = CreateFileMapping(h_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
+  if (h_map == INVALID_HANDLE_VALUE) {
+    CloseHandle(h_file);
+    return {};
+  }
+  void *map_addr = MapViewOfFileEx(h_map, FILE_MAP_READ, 0, 0, 0, nullptr);
+  auto pe_hdr = ImageNtHeader(map_addr);
+  auto machine = pe_hdr->FileHeader.Machine;
+  CloseHandle(h_map);
+  CloseHandle(h_file);
+  switch (machine) {
+  case IMAGE_FILE_MACHINE_I386:
+  default:
+    return 32;
+  case IMAGE_FILE_MACHINE_IA64:
+  case IMAGE_FILE_MACHINE_AMD64:
+    return 64;
+  }
 }
 } // namespace WinApi

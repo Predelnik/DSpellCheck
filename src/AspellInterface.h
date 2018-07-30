@@ -14,6 +14,7 @@
 
 #pragma once
 #include "aspell.h"
+#include "SpellerContainer.h"
 
 struct AspellCanHaveError;
 struct AspellSpeller;
@@ -40,6 +41,7 @@ public:
   void set_allow_run_together (bool allow);
 
   bool init(const wchar_t* path_arg);
+  AspellStatus get_status() const;
 
 private:
   void send_aspell_error(AspellCanHaveError *error);
@@ -51,5 +53,6 @@ private:
   std::vector<SpellerPtr> m_spellers;
   bool m_allow_run_together;
   bool m_aspell_loaded;
+  bool m_correct_bitness = true;
   HWND m_npp_window; // For message boxes
 };

@@ -31,13 +31,10 @@
 #include <Uxtheme.h>
 #include <cassert>
 
-SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings,
-                     NppInterface &npp)
-    : m_npp(npp), m_settings(settings), m_parent(parent) {
+SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings, NppInterface &npp) : m_npp(npp), m_settings(settings), m_parent(parent) {
   m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
   if (m_h_ux_theme != nullptr)
-    m_open_theme_data = reinterpret_cast<OtdProc>(
-        ::GetProcAddress(m_h_ux_theme, "OpenThemeData"));
+    m_open_theme_data = reinterpret_cast<OtdProc>(::GetProcAddress(m_h_ux_theme, "OpenThemeData"));
 }
 
 void SimpleDlg::disable_language_combo(bool disable) {
@@ -48,8 +45,7 @@ void SimpleDlg::disable_language_combo(bool disable) {
   EnableWindow(m_h_remove_dics, enable);
 }
 
-void SimpleDlg::update_language_controls(
-    const Settings &settings, const SpellerContainer &speller_container) {
+void SimpleDlg::update_language_controls(const Settings &settings, const SpellerContainer &speller_container) {
 
   if (m_h_combo_language == nullptr)
     return;
@@ -64,17 +60,14 @@ void SimpleDlg::update_language_controls(
     if (settings.get_active_language() == lang.orig_name)
       selected_index = i;
 
-    ComboBox_AddString(
-        m_h_combo_language,
-        lang.get_aliased_name(settings.use_language_name_aliases));
+    ComboBox_AddString(m_h_combo_language, lang.get_aliased_name(settings.use_language_name_aliases));
     ++i;
   }
   if (settings.get_active_language() == L"<MULTIPLE>")
     selected_index = i;
 
   if (!langs_available.empty())
-    ComboBox_AddString(m_h_combo_language,
-                       rc_str(IDS_MULTIPLE_LANGUAGES).c_str());
+    ComboBox_AddString(m_h_combo_language, rc_str(IDS_MULTIPLE_LANGUAGES).c_str());
 
   ComboBox_SetCurSel(m_h_combo_language, selected_index);
   EnableWindow(m_h_combo_language, langs_available.empty() ? FALSE : TRUE);
@@ -85,20 +78,14 @@ SimpleDlg::~SimpleDlg() {
     FreeLibrary(m_h_ux_theme);
 }
 
-void SimpleDlg::apply_settings(Settings &settings,
-                               const SpellerContainer &speller_container) {
+void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &speller_container) {
   int lang_count = ComboBox_GetCount(m_h_combo_language);
   int cur_sel = ComboBox_GetCurSel(m_h_combo_language);
 
   if (IsWindowEnabled(m_h_combo_language) != FALSE) {
-    settings.get_active_language() =
-        (cur_sel == lang_count - 1
-             ? L"<MULTIPLE>"
-             : speller_container.get_available_languages()[cur_sel]
-                   .orig_name.c_str());
+    settings.get_active_language() = (cur_sel == lang_count - 1 ? L"<MULTIPLE>" : speller_container.get_available_languages()[cur_sel].orig_name.c_str());
   }
-  settings.suggestion_count =
-      (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
+  settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
   switch (settings.active_speller_lib_id) {
   case SpellerId::aspell:
     settings.aspell_path = get_edit_text(m_h_lib_path);
@@ -119,28 +106,19 @@ void SimpleDlg::apply_settings(Settings &settings,
   settings.suggestions_mode = m_suggestion_mode_cmb.current_data();
   settings.check_comments = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
   settings.check_strings = Button_GetCheck(m_h_check_strings) == BST_CHECKED;
-  settings.check_variable_functions =
-      Button_GetCheck(m_h_check_varfunc) == BST_CHECKED;
-  settings.use_language_name_aliases =
-      Button_GetCheck(m_h_decode_names) == BST_CHECKED;
-  settings.use_unified_dictionary =
-      Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
-  settings.aspell_allow_run_together_words =
-      Button_GetCheck(m_h_aspell_run_together_cb) == BST_CHECKED;
+  settings.check_variable_functions = Button_GetCheck(m_h_check_varfunc) == BST_CHECKED;
+  settings.use_language_name_aliases = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
+  settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
+  settings.aspell_allow_run_together_words = Button_GetCheck(m_h_aspell_run_together_cb) == BST_CHECKED;
 }
 
-void SimpleDlg::fill_lib_info(AspellStatus aspell_status,
-                              const Settings &settings) {
-  ShowWindow(
-      m_h_aspell_run_together_cb,
-      static_cast<int>(settings.active_speller_lib_id == SpellerId::aspell));
+void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settings) {
+  ShowWindow(m_h_aspell_run_together_cb, static_cast<int>(settings.active_speller_lib_id == SpellerId::aspell));
 
-  auto is_aspell =
-      settings.active_speller_lib_id == SpellerId::aspell ? TRUE : FALSE;
+  auto is_aspell = settings.active_speller_lib_id == SpellerId::aspell ? TRUE : FALSE;
   ShowWindow(m_h_lib_link, is_aspell);
   ShowWindow(m_h_aspell_status, is_aspell);
-  auto is_hunspell =
-      settings.active_speller_lib_id == SpellerId::hunspell ? TRUE : FALSE;
+  auto is_hunspell = settings.active_speller_lib_id == SpellerId::hunspell ? TRUE : FALSE;
   ShowWindow(m_h_download_dics, is_hunspell);
   ShowWindow(m_h_remove_dics, is_hunspell);
   ShowWindow(m_h_decode_names, is_hunspell);
@@ -148,8 +126,7 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status,
   ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
   ShowWindow(m_h_hunspell_path_type, is_hunspell);
   ShowWindow(m_h_system_path, 0);
-  auto not_native =
-      settings.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
+  auto not_native = settings.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
   ShowWindow(m_h_lib_group_box, not_native);
   ShowWindow(m_h_lib_path, not_native);
   ShowWindow(m_h_reset_speller_path, not_native);
@@ -165,16 +142,18 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status,
       break;
     case AspellStatus::no_dictionaries:
       m_aspell_status_color = COLOR_FAIL;
-      Static_SetText(m_h_aspell_status,
-                     rc_str(IDS_ASPELL_STATUS_NO_DICTS).c_str());
+      Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_STATUS_NO_DICTS).c_str());
       break;
     case AspellStatus::not_working:
       m_aspell_status_color = COLOR_FAIL;
       Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_STATUS_FAIL).c_str());
       break;
+    case AspellStatus::incorrect_bitness:
+      m_aspell_status_color = COLOR_FAIL;
+      Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_INCORRECT_BITNESS).c_str());
+      break;
     }
-    Edit_SetText(m_h_lib_path,
-                 get_actual_aspell_path(settings.aspell_path).c_str());
+    Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.aspell_path).c_str());
 
     Static_SetText(m_h_lib_group_box, rc_str(IDS_ASPELL_LOCATION).c_str());
     break;
@@ -212,20 +191,13 @@ void SimpleDlg::set_file_types(bool check_those, const wchar_t *file_types) {
   }
 }
 
-void SimpleDlg::set_sugg_type(SuggestionMode mode) {
-  m_suggestion_mode_cmb.set_index(mode);
-}
+void SimpleDlg::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_index(mode); }
 
-void SimpleDlg::set_decode_names(bool value) {
-  Button_SetCheck(m_h_decode_names, value ? BST_CHECKED : BST_UNCHECKED);
-}
+void SimpleDlg::set_decode_names(bool value) { Button_SetCheck(m_h_decode_names, value ? BST_CHECKED : BST_UNCHECKED); }
 
-void SimpleDlg::set_one_user_dic(bool value) {
-  Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED);
-}
+void SimpleDlg::set_one_user_dic(bool value) { Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED); }
 
-static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg,
-                                         LPARAM /*lParam*/, LPARAM lp_data) {
+static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/, LPARAM lp_data) {
   // If the BFFM_INITIALIZED message is received
   // set the path to the start path.
   switch (u_msg) {
@@ -266,19 +238,15 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     m_h_remove_dics = ::GetDlgItem(_hSelf, IDC_REMOVE_DICS);
     m_h_decode_names = ::GetDlgItem(_hSelf, IDC_DECODE_NAMES);
     m_h_one_user_dic = ::GetDlgItem(_hSelf, IDC_ONE_USER_DIC);
-    m_h_hunspell_path_group_box =
-        ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_GROUPBOX);
+    m_h_hunspell_path_group_box = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_GROUPBOX);
     m_h_hunspell_path_type = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_TYPE);
     m_h_reset_speller_path = ::GetDlgItem(_hSelf, IDC_RESETSPELLERPATH);
     m_h_system_path = ::GetDlgItem(_hSelf, IDC_SYSTEMPATH);
-    m_h_aspell_run_together_cb =
-        ::GetDlgItem(_hSelf, IDC_ASPELL_RUNTOGETHER_CB);
+    m_h_aspell_run_together_cb = ::GetDlgItem(_hSelf, IDC_ASPELL_RUNTOGETHER_CB);
     m_browse_btn = ::GetDlgItem(_hSelf, IDC_BROWSEASPELLPATH);
 
-    ComboBox_AddString(m_h_hunspell_path_type,
-                       rc_str(IDS_FOR_CURRENT_USER).c_str());
-    ComboBox_AddString(m_h_hunspell_path_type,
-                       rc_str(IDS_FOR_ALL_USERS).c_str());
+    ComboBox_AddString(m_h_hunspell_path_type, rc_str(IDS_FOR_CURRENT_USER).c_str());
+    ComboBox_AddString(m_h_hunspell_path_type, rc_str(IDS_FOR_ALL_USERS).c_str());
     ComboBox_SetCurSel(m_h_hunspell_path_type, 0);
     ShowWindow(m_h_lib_path, 1);
     ShowWindow(m_h_system_path, 0);
@@ -296,22 +264,19 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     switch (LOWORD(w_param)) {
     case IDC_COMBO_LANGUAGE:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        if (ComboBox_GetCurSel(m_h_combo_language) ==
-            ComboBox_GetCount(m_h_combo_language) - 1) {
+        if (ComboBox_GetCurSel(m_h_combo_language) == ComboBox_GetCount(m_h_combo_language) - 1) {
           get_lang_list()->do_dialog();
         }
       }
       break;
     case IDC_LIBRARY:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        m_parent.apply_lib_change(
-            static_cast<SpellerId>(m_speller_cmb.current_data()));
+        m_parent.apply_lib_change(static_cast<SpellerId>(m_speller_cmb.current_data()));
       }
       break;
     case IDC_HUNSPELL_PATH_TYPE:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0 ||
-            m_settings.active_speller_lib_id == SpellerId::aspell) {
+        if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0 || m_settings.active_speller_lib_id == SpellerId::aspell) {
           ShowWindow(m_h_lib_path, 1);
           ShowWindow(m_h_system_path, 0);
         } else {
@@ -359,8 +324,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
           break;
         }
 
-        if (m_settings.active_speller_lib_id == SpellerId::aspell ||
-            ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
+        if (m_settings.active_speller_lib_id == SpellerId::aspell || ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
           Edit_SetText(m_h_lib_path, path.c_str());
         else
           Edit_SetText(m_h_system_path, L".\\plugins\\config\\Hunspell");
@@ -384,8 +348,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         std::copy(lib_path.begin(), lib_path.end(), filename.begin());
         auto aspell_library_desc = rc_str(IDS_ASPELL_LIBRARY);
         std::vector<wchar_t> buf;
-        buf.insert(buf.end(), aspell_library_desc.begin(),
-                   aspell_library_desc.end());
+        buf.insert(buf.end(), aspell_library_desc.begin(), aspell_library_desc.end());
         wchar_t rest[] = L" (*.dll)\0*.dll\0\0";
         buf.insert(buf.end(), std::begin(rest), std::end(rest));
         // TODO: add possibility to use modern browse dialog
@@ -450,8 +413,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
       auto p_nm_link = reinterpret_cast<PNMLINK>(l_param);
       LITEM item = p_nm_link->item;
 
-      if ((reinterpret_cast<LPNMHDR>(l_param)->hwndFrom == m_h_lib_link) &&
-          (item.iLink == 0)) {
+      if ((reinterpret_cast<LPNMHDR>(l_param)->hwndFrom == m_h_lib_link) && (item.iLink == 0)) {
         ShellExecute(nullptr, L"open", item.szUrl, nullptr, nullptr, SW_SHOW);
       }
 
@@ -462,8 +424,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     }
     break;
   case WM_CTLCOLORSTATIC:
-    if (GetDlgItem(_hSelf, IDC_ASPELL_STATUS) ==
-        reinterpret_cast<HWND>(l_param)) {
+    if (GetDlgItem(_hSelf, IDC_ASPELL_STATUS) == reinterpret_cast<HWND>(l_param)) {
       auto h_dc = reinterpret_cast<HDC>(w_param);
       HTHEME h_theme;
 
@@ -492,33 +453,21 @@ void AdvancedDlg::set_underline_settings(int color, int style) {
   ComboBox_SetCurSel(m_h_underline_style, style);
 }
 
-void AdvancedDlg::set_conversion_opts(bool convert_yo,
-                                      bool convert_single_quotes_arg,
-                                      bool remove_boundary_apostrophes) {
+void AdvancedDlg::set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg, bool remove_boundary_apostrophes) {
   Button_SetCheck(m_h_ignore_yo, convert_yo ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_convert_single_quotes,
-                  convert_single_quotes_arg ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_remove_boundary_apostrophes,
-                  remove_boundary_apostrophes ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_convert_single_quotes, convert_single_quotes_arg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_remove_boundary_apostrophes, remove_boundary_apostrophes ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void AdvancedDlg::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg,
-                             bool ignore_c_have_arg, bool ignore_c_all_arg,
-                             bool ignore_arg, bool ignore_sa_apostrophe_arg,
-                             bool ignore_one_letter) {
-  Button_SetCheck(m_h_ignore_numbers,
-                  ignore_numbers_arg ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_ignore_c_start,
-                  ignore_c_start_arg ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_ignore_c_have,
-                  ignore_c_have_arg ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_ignore_c_all,
-                  ignore_c_all_arg ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_ignore_one_letter,
-                  ignore_one_letter ? BST_CHECKED : BST_UNCHECKED);
+void AdvancedDlg::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg, bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
+                             bool ignore_sa_apostrophe_arg, bool ignore_one_letter) {
+  Button_SetCheck(m_h_ignore_numbers, ignore_numbers_arg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_ignore_c_start, ignore_c_start_arg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_ignore_c_have, ignore_c_have_arg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_ignore_c_all, ignore_c_all_arg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_ignore_one_letter, ignore_one_letter ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_ignore_, ignore_arg ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_ignore_se_apostrophe,
-                  ignore_sa_apostrophe_arg ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_ignore_se_apostrophe, ignore_sa_apostrophe_arg ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void AdvancedDlg::set_sugg_box_settings(LRESULT size, LRESULT trans) {
@@ -528,50 +477,32 @@ void AdvancedDlg::set_sugg_box_settings(LRESULT size, LRESULT trans) {
 
 void AdvancedDlg::update_controls(const Settings &settings) {
   Edit_SetText(m_h_edit_delimiters, settings.delimiters.c_str());
-  Edit_SetText(m_delimiter_exclusions_le,
-               m_settings.delimiter_exclusions.c_str());
+  Edit_SetText(m_delimiter_exclusions_le, m_settings.delimiter_exclusions.c_str());
   Button_SetCheck(m_split_camel_case_cb, m_settings.split_camel_case);
   set_recheck_delay(settings.recheck_delay);
-  set_conversion_opts(settings.ignore_yo, settings.convert_single_quotes,
-                      settings.remove_boundary_apostrophes);
+  set_conversion_opts(settings.ignore_yo, settings.convert_single_quotes, settings.remove_boundary_apostrophes);
   set_underline_settings(settings.underline_color, settings.underline_style);
-  Button_SetCheck(m_h_check_default_udl_style,
-                  settings.check_default_udl_style);
-  set_ignore(settings.ignore_containing_digit,
-             settings.ignore_starting_with_capital,
-             settings.ignore_having_a_capital, settings.ignore_all_capital,
-             settings.ignore_having_underscore,
-             settings.ignore_starting_or_ending_with_apostrophe,
-             settings.ignore_one_letter);
-  set_sugg_box_settings(settings.suggestion_button_size,
-                        settings.suggestion_button_opacity);
+  Button_SetCheck(m_h_check_default_udl_style, settings.check_default_udl_style);
+  set_ignore(settings.ignore_containing_digit, settings.ignore_starting_with_capital, settings.ignore_having_a_capital, settings.ignore_all_capital,
+             settings.ignore_having_underscore, settings.ignore_starting_or_ending_with_apostrophe, settings.ignore_one_letter);
+  set_sugg_box_settings(settings.suggestion_button_size, settings.suggestion_button_opacity);
   m_tokenization_style_cmb.set_index(settings.tokenization_style);
   setup_delimiter_line_edit_visiblity();
 }
 
 const std::vector<std::wstring> &get_indic_names() {
-  static std::vector<std::wstring> indic_names = {
-      rc_str(IDS_PLAIN),    rc_str(IDS_SQUIGGLE),  rc_str(IDS_TT),
-      rc_str(IDS_DIAGONAL), rc_str(IDS_STRIKE),    rc_str(IDS_HIDDEN),
-      rc_str(IDS_BOX),      rc_str(IDS_ROUND_BOX), rc_str(IDS_STRAIGHT_BOX),
-      rc_str(IDS_DASH),     rc_str(IDS_DOTS),      rc_str(IDS_SQUIGGLE_LOW)};
+  static std::vector<std::wstring> indic_names = {rc_str(IDS_PLAIN),        rc_str(IDS_SQUIGGLE), rc_str(IDS_TT),   rc_str(IDS_DIAGONAL),
+                                                  rc_str(IDS_STRIKE),       rc_str(IDS_HIDDEN),   rc_str(IDS_BOX),  rc_str(IDS_ROUND_BOX),
+                                                  rc_str(IDS_STRAIGHT_BOX), rc_str(IDS_DASH),     rc_str(IDS_DOTS), rc_str(IDS_SQUIGGLE_LOW)};
   return indic_names;
 }
 
 void AdvancedDlg::setup_delimiter_line_edit_visiblity() {
-  ShowWindow(m_delimiter_exclusions_le,
-             m_tokenization_style_cmb.current_data() ==
-                     TokenizationStyle::by_non_alphabetic
-                 ? TRUE
-                 : FALSE);
-  ShowWindow(m_h_edit_delimiters, m_tokenization_style_cmb.current_data() ==
-                                          TokenizationStyle::by_delimiters
-                                      ? TRUE
-                                      : FALSE);
+  ShowWindow(m_delimiter_exclusions_le, m_tokenization_style_cmb.current_data() == TokenizationStyle::by_non_alphabetic ? TRUE : FALSE);
+  ShowWindow(m_h_edit_delimiters, m_tokenization_style_cmb.current_data() == TokenizationStyle::by_delimiters ? TRUE : FALSE);
 }
 
-INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
-                                  LPARAM l_param) {
+INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   wchar_t *end_ptr = nullptr;
   wchar_t buf[DEFAULT_BUF_SIZE];
   int x;
@@ -579,14 +510,11 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
   case WM_INITDIALOG: {
     // Retrieving handles of dialog controls
     m_h_edit_delimiters = ::GetDlgItem(_hSelf, IDC_DELIMITERS);
-    m_delimiter_exclusions_le =
-        ::GetDlgItem(_hSelf, IDC_DELIMITER_EXCLUSIONS_LE);
+    m_delimiter_exclusions_le = ::GetDlgItem(_hSelf, IDC_DELIMITER_EXCLUSIONS_LE);
     m_h_default_delimiters = ::GetDlgItem(_hSelf, IDC_DEFAULT_DELIMITERS);
     m_h_ignore_yo = ::GetDlgItem(_hSelf, IDC_COUNT_YO_AS_YE);
-    m_h_convert_single_quotes =
-        ::GetDlgItem(_hSelf, IDC_COUNT_SINGLE_QUOTES_AS_APOSTROPHE);
-    m_h_remove_boundary_apostrophes =
-        ::GetDlgItem(_hSelf, IDC_REMOVE_ENDING_APOSTROPHE);
+    m_h_convert_single_quotes = ::GetDlgItem(_hSelf, IDC_COUNT_SINGLE_QUOTES_AS_APOSTROPHE);
+    m_h_remove_boundary_apostrophes = ::GetDlgItem(_hSelf, IDC_REMOVE_ENDING_APOSTROPHE);
     m_h_recheck_delay = ::GetDlgItem(_hSelf, IDC_RECHECK_DELAY);
     m_h_underline_color = ::GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR);
     m_h_underline_style = ::GetDlgItem(_hSelf, IDC_UNDERLINE_STYLE);
@@ -599,29 +527,20 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_h_ignore_ = ::GetDlgItem(_hSelf, IDC_IGNORE_);
     m_h_ignore_se_apostrophe = ::GetDlgItem(_hSelf, IDC_IGNORE_SE_APOSTROPHE);
     m_h_slider_size = ::GetDlgItem(_hSelf, IDC_SLIDER_SIZE);
-    m_h_slider_sugg_button_opacity =
-        ::GetDlgItem(_hSelf, IDC_SLIDER_TRANSPARENCY);
-    m_tokenization_style_cmb.init(
-        ::GetDlgItem(_hSelf, IDC_TOKENIZATION_STYLE_CMB));
+    m_h_slider_sugg_button_opacity = ::GetDlgItem(_hSelf, IDC_SLIDER_TRANSPARENCY);
+    m_tokenization_style_cmb.init(::GetDlgItem(_hSelf, IDC_TOKENIZATION_STYLE_CMB));
     SendMessage(m_h_slider_size, TBM_SETRANGE, TRUE, MAKELPARAM(5, 22));
-    SendMessage(m_h_slider_sugg_button_opacity, TBM_SETRANGE, TRUE,
-                MAKELPARAM(5, 100));
+    SendMessage(m_h_slider_sugg_button_opacity, TBM_SETRANGE, TRUE, MAKELPARAM(5, 100));
     m_split_camel_case_cb = ::GetDlgItem(_hSelf, IDC_CAMEL_CASE_SPLITTING_CB);
 
     m_brush = nullptr;
 
     SetWindowText(m_h_ignore_yo, rc_str(IDS_CYRILLIC_YO_AS_YE).c_str());
-    WinApi::create_tooltip(IDC_DELIMITERS, _hSelf,
-                           rc_str(IDS_DELIMITER_TOOLTIP).c_str());
-    WinApi::create_tooltip(IDC_RECHECK_DELAY, _hSelf,
-                           rc_str(IDS_RECHECK_DELAY_TOOLTIP).c_str());
-    WinApi::create_tooltip(IDC_IGNORE_CSTART, _hSelf,
-                           rc_str(IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str());
-    WinApi::create_tooltip(IDC_IGNORE_SE_APOSTROPHE, _hSelf,
-                           rc_str(IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str());
-    WinApi::create_tooltip(
-        IDC_REMOVE_ENDING_APOSTROPHE, _hSelf,
-        rc_str(IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str());
+    WinApi::create_tooltip(IDC_DELIMITERS, _hSelf, rc_str(IDS_DELIMITER_TOOLTIP).c_str());
+    WinApi::create_tooltip(IDC_RECHECK_DELAY, _hSelf, rc_str(IDS_RECHECK_DELAY_TOOLTIP).c_str());
+    WinApi::create_tooltip(IDC_IGNORE_CSTART, _hSelf, rc_str(IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str());
+    WinApi::create_tooltip(IDC_IGNORE_SE_APOSTROPHE, _hSelf, rc_str(IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str());
+    WinApi::create_tooltip(IDC_REMOVE_ENDING_APOSTROPHE, _hSelf, rc_str(IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str());
 
     ComboBox_ResetContent(m_h_underline_style);
     for (const auto &name : get_indic_names())
@@ -655,8 +574,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
     }
     break;
   case WM_CTLCOLORBTN:
-    if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) ==
-        reinterpret_cast<HWND>(l_param)) {
+    if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) == reinterpret_cast<HWND>(l_param)) {
       auto h_dc = reinterpret_cast<HDC>(w_param);
       if (m_brush != nullptr)
         DeleteObject(m_brush);
@@ -676,8 +594,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
       if (HIWORD(w_param) == BN_CLICKED) {
         switch (m_tokenization_style_cmb.current_data()) {
         case TokenizationStyle::by_non_alphabetic:
-          Edit_SetText(m_delimiter_exclusions_le,
-                       default_delimiter_exclusions());
+          Edit_SetText(m_delimiter_exclusions_le, default_delimiter_exclusions());
           break;
         case TokenizationStyle::by_delimiters:
           Edit_SetText(m_h_edit_delimiters, default_delimiters());
@@ -716,8 +633,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
         cc.Flags = CC_FULLOPEN | CC_RGBINIT;
         if (ChooseColor(&cc)) {
           m_underline_color_btn = cc.rgbResult;
-          RedrawWindow(m_h_underline_color, nullptr, nullptr,
-                       RDW_UPDATENOW | RDW_INVALIDATE | RDW_ERASE);
+          RedrawWindow(m_h_underline_color, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE | RDW_ERASE);
         }
       }
       break;
@@ -728,9 +644,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param,
   return 0;
 }
 
-void AdvancedDlg::set_delimeters_edit(const wchar_t *delimiters) {
-  Edit_SetText(m_h_edit_delimiters, delimiters);
-}
+void AdvancedDlg::set_delimeters_edit(const wchar_t *delimiters) { Edit_SetText(m_h_edit_delimiters, delimiters); }
 
 void AdvancedDlg::set_recheck_delay(int delay) {
   wchar_t buf[DEFAULT_BUF_SIZE];
@@ -751,55 +665,37 @@ AdvancedDlg::AdvancedDlg(const Settings &settings) : m_settings(settings) {}
 void AdvancedDlg::apply_settings(Settings &settings) {
   settings.delimiters = get_edit_text(m_h_edit_delimiters);
   settings.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
-  settings.convert_single_quotes =
-      Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
-  settings.remove_boundary_apostrophes =
-      Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED;
+  settings.convert_single_quotes = Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
+  settings.remove_boundary_apostrophes = Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED;
   settings.underline_color = m_underline_color_btn;
   settings.underline_style = ComboBox_GetCurSel(m_h_underline_style);
   settings.recheck_delay = get_recheck_delay();
-  settings.check_default_udl_style =
-      Button_GetCheck(m_h_check_default_udl_style) == BST_CHECKED;
-  settings.ignore_containing_digit =
-      Button_GetCheck(m_h_ignore_numbers) == BST_CHECKED;
-  settings.ignore_starting_with_capital =
-      Button_GetCheck(m_h_ignore_c_start) == BST_CHECKED;
-  settings.ignore_having_a_capital =
-      Button_GetCheck(m_h_ignore_c_have) == BST_CHECKED;
-  settings.ignore_all_capital =
-      Button_GetCheck(m_h_ignore_c_all) == BST_CHECKED;
-  settings.ignore_having_underscore =
-      Button_GetCheck(m_h_ignore_) == BST_CHECKED;
-  settings.ignore_starting_or_ending_with_apostrophe =
-      Button_GetCheck(m_h_ignore_se_apostrophe) == BST_CHECKED;
-  settings.ignore_one_letter =
-      Button_GetCheck(m_h_ignore_one_letter) == BST_CHECKED;
-  settings.suggestion_button_size =
-      static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0));
-  settings.suggestion_button_opacity = static_cast<int>(
-      SendMessage(m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0));
+  settings.check_default_udl_style = Button_GetCheck(m_h_check_default_udl_style) == BST_CHECKED;
+  settings.ignore_containing_digit = Button_GetCheck(m_h_ignore_numbers) == BST_CHECKED;
+  settings.ignore_starting_with_capital = Button_GetCheck(m_h_ignore_c_start) == BST_CHECKED;
+  settings.ignore_having_a_capital = Button_GetCheck(m_h_ignore_c_have) == BST_CHECKED;
+  settings.ignore_all_capital = Button_GetCheck(m_h_ignore_c_all) == BST_CHECKED;
+  settings.ignore_having_underscore = Button_GetCheck(m_h_ignore_) == BST_CHECKED;
+  settings.ignore_starting_or_ending_with_apostrophe = Button_GetCheck(m_h_ignore_se_apostrophe) == BST_CHECKED;
+  settings.ignore_one_letter = Button_GetCheck(m_h_ignore_one_letter) == BST_CHECKED;
+  settings.suggestion_button_size = static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0));
+  settings.suggestion_button_opacity = static_cast<int>(SendMessage(m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0));
   settings.tokenization_style = m_tokenization_style_cmb.current_data();
   settings.delimiter_exclusions = get_edit_text(m_delimiter_exclusions_le);
-  settings.split_camel_case =
-      Button_GetCheck(m_split_camel_case_cb) == BST_CHECKED;
+  settings.split_camel_case = Button_GetCheck(m_split_camel_case_cb) == BST_CHECKED;
 }
 
 SimpleDlg *SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
 
 AdvancedDlg *SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
 
-SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp,
-                         const Settings &settings,
-                         const SpellerContainer &speller_container)
-    : m_npp(npp), m_simple_dlg(*this, settings, m_npp),
-      m_advanced_dlg(settings), m_settings(settings),
-      m_speller_container(speller_container) {
+SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings &settings, const SpellerContainer &speller_container)
+    : m_npp(npp), m_simple_dlg(*this, settings, m_npp), m_advanced_dlg(settings), m_settings(settings), m_speller_container(speller_container) {
   Window::init(h_inst, parent);
   m_settings.settings_changed.connect([this] { update_controls(); });
   m_speller_container.speller_status_changed.connect([this] {
     m_simple_dlg.update_language_controls(m_settings, m_speller_container);
-    m_simple_dlg.fill_lib_info(m_speller_container.get_aspell_status(),
-                               m_settings);
+    m_simple_dlg.fill_lib_info(m_speller_container.get_aspell_status(), m_settings);
   });
 }
 
@@ -825,48 +721,35 @@ void SettingsDlg::apply_lib_change(SpellerId new_lib_id) {
   mut_settings->active_speller_lib_id = new_lib_id;
 }
 
-void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) {
-  return Window::init(h_inst, parent);
-}
+void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) { return Window::init(h_inst, parent); }
 
-void SimpleDlg::update_controls(const Settings &settings,
-                                const SpellerContainer &speller_container) {
-  m_speller_cmb.set_current_index(*m_speller_cmb.find_by_data(
-      static_cast<int>(settings.active_speller_lib_id)));
+void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer &speller_container) {
+  m_speller_cmb.set_current_index(*m_speller_cmb.find_by_data(static_cast<int>(settings.active_speller_lib_id)));
   fill_lib_info(speller_container.get_aspell_status(), settings);
   fill_sugestions_num(settings.suggestion_count);
   set_file_types(settings.check_those, settings.file_types.c_str());
-  Button_SetCheck(m_h_check_comments,
-                  settings.check_comments ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_check_strings,
-                  settings.check_strings ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_check_varfunc, settings.check_variable_functions
-                                         ? BST_CHECKED
-                                         : BST_UNCHECKED);
+  Button_SetCheck(m_h_check_comments, settings.check_comments ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_check_strings, settings.check_strings ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_check_varfunc, settings.check_variable_functions ? BST_CHECKED : BST_UNCHECKED);
   set_decode_names(settings.use_language_name_aliases);
   set_sugg_type(settings.suggestions_mode);
   set_one_user_dic(settings.use_unified_dictionary);
-  Button_SetCheck(m_h_aspell_run_together_cb,
-                  settings.aspell_allow_run_together_words);
+  Button_SetCheck(m_h_aspell_run_together_cb, settings.aspell_allow_run_together_words);
 }
 
-void SimpleDlg::init_speller_id_combobox(
-    const SpellerContainer &speller_container) {
+void SimpleDlg::init_speller_id_combobox(const SpellerContainer &speller_container) {
   for (auto id : enum_range<SpellerId>()) {
-    if (id == SpellerId::native &&
-        !speller_container.native_speller().is_working())
+    if (id == SpellerId::native && !speller_container.native_speller().is_working())
       continue;
     m_speller_cmb.add_item(gui_string(id).c_str(), static_cast<int>(id));
   }
 }
 
-INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
-                                  LPARAM l_param) {
+INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
     m_controls_tab.initTabBar(_hInst, _hSelf, false, true, false);
-    m_controls_tab.setFont(
-        reinterpret_cast<HFONT>(SendMessage(_hSelf, WM_GETFONT, 0, 0)));
+    m_controls_tab.setFont(reinterpret_cast<HFONT>(SendMessage(_hSelf, WM_GETFONT, 0, 0)));
 
     m_simple_dlg.init_settings(_hInst, _hSelf);
     m_simple_dlg.create(IDD_SIMPLE, false, false);
@@ -875,11 +758,8 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
     m_advanced_dlg.init(_hInst, _hSelf);
     m_advanced_dlg.create(IDD_ADVANCED, false, false);
 
-    m_window_vector.emplace_back(
-        &m_simple_dlg, rc_str(IDS_SIMPLE_TAB_TEXT).c_str(), L"Simple Options");
-    m_window_vector.emplace_back(&m_advanced_dlg,
-                                 rc_str(IDS_ADVANCED_TAB_TEXT).c_str(),
-                                 L"Advanced Options");
+    m_window_vector.emplace_back(&m_simple_dlg, rc_str(IDS_SIMPLE_TAB_TEXT).c_str(), L"Simple Options");
+    m_window_vector.emplace_back(&m_advanced_dlg, rc_str(IDS_ADVANCED_TAB_TEXT).c_str(), L"Advanced Options");
     m_controls_tab.createTabs(m_window_vector);
     m_controls_tab.display();
     RECT rc;
@@ -891,8 +771,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param,
 
     // This stuff is copied from npp source to make tabbed window looked totally
     // nice and white
-    auto enable_dlg_theme = reinterpret_cast<ETDTProc>(
-        ::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0));
+    auto enable_dlg_theme = reinterpret_cast<ETDTProc>(::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0));
     if (enable_dlg_theme != nullptr)
       enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 

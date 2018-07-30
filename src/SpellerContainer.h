@@ -32,6 +32,7 @@ enum class AspellStatus {
   working,
   no_dictionaries,
   not_working,
+  incorrect_bitness,
 };
 
 class SpellerContainer {

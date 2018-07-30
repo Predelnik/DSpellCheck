@@ -47,14 +47,7 @@ void SpellerContainer::fill_speller_ptr_array() {
 }
 
 AspellStatus SpellerContainer::get_aspell_status() const {
-  if (m_aspell_speller->is_working()) {
-    if (get_available_languages().empty())
-      return AspellStatus::no_dictionaries;
-
-    return AspellStatus::working;
-  }
-
-  return AspellStatus::not_working;
+  return m_aspell_speller->get_status ();
 }
 
 std::vector<LanguageInfo> SpellerContainer::get_available_languages() const {
