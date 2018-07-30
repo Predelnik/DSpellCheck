@@ -1,3 +1,9 @@
+v1.4.6
+* Support downloading of dictionaries from GitHub repositories. (#143, #61)
+* Add LibreOffice repository as a default server for dictionaries.
+* Make user dictionary files updated immediatel on adding new word to them (#142)
+* Make more explicit message about aspell DLL targeting incorrect architecture.
+
 v1.4.5
 * Exceptions on single line file which does not fit to the window (#139)
 * Erroneous underline positioning with ANSI-encoded files (#140)
