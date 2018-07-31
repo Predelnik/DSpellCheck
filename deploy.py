@@ -125,7 +125,7 @@ if options.new_minor or options.update_pm:
 		replace_text (plugin_node.x64Version, ver)
 		replace_text (plugin_node.download, 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_x64.zip'.format (ver))
 		readme_text = ''
-		with open ('readme.md', "r", encoding='utf-8') as file:
+		with open ('changes.md', "r", encoding='utf-8') as file:
 			readme_text = file.read()
 		key = 'v{}'.format (ver)
 		start_pos = readme_text.find (key)
