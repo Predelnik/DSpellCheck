@@ -39,11 +39,14 @@ void append_word_to_user_dictionary(const wchar_t *dictionary_path, const char *
 
 std::vector<char> read_file_data(const wchar_t *file_path) {
   auto fp = _wfopen(file_path, L"rb");
-  fseek(fp, 0, SEEK_END);
-  auto size = ftell(fp);
+  if (!fp)
+    return {};
+  _fseeki64(fp, 0, SEEK_END);
+  auto size = static_cast<size_t> (_ftelli64(fp));
   std::vector<char> res(size + 1);
-  fseek(fp, 0, SEEK_SET);
-  fread(res.data(), 1, res.size(), fp);
+  _fseeki64(fp, 0, SEEK_SET);
+  if (fread(res.data(), 1, size, fp) != size)
+    return {};
   fclose(fp);
   return res;
 }
@@ -53,6 +56,8 @@ void update_word_count(const wchar_t *dictionary_path) {
     return;
 
   auto data = read_file_data(dictionary_path);
+  if (data.empty())
+    return;
   auto line_cnt = std::count(data.begin(), data.end(), '\n') + 1 /*because number of lines = number of separators + 1 */
                   - 1 /* because e should ignore line with current count */ - 1 /* final line end*/;
   char *end_ptr;
