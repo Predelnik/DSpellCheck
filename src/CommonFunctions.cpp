@@ -301,7 +301,7 @@ static const std::unordered_map<std::wstring_view, std::wstring_view> alias_map 
     {L"GUG", L"Guarani"},
     {L"HE_IL", L"Hebrew"},
     {L"HI_IN", L"Hindi"},
-    {L"HIl_PH", L"Filipino"},
+    {L"HIl_PH", L"Hiligaynon"},
     {L"HR_HR", L"Croatian"},
     {L"HU_HU", L"Hungarian"},
     {L"IA", L"Interlingua"},
