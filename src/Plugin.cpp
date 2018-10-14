@@ -274,45 +274,17 @@ void command_menu_init() {
   //            bool check0nInit                // optional. Make this menu item
   //            be checked visually
   //            );
-  {
-    auto sh_key = std::make_unique<ShortcutKey>();
-    sh_key->is_alt = true;
-    sh_key->is_ctrl = false;
-    sh_key->is_shift = false;
-    sh_key->key = 0x41 + 'a' - 'a';
-    auto_spellcheck_index =
-        set_next_command(rc_str(IDS_AUTO_SPELL_CHECK).c_str(),
-                         switch_auto_check_text, std::move(sh_key), false);
-  }
-  {
-    auto sh_key = std::make_unique<ShortcutKey>();
-    sh_key->is_alt = true;
-    sh_key->is_ctrl = false;
-    sh_key->is_shift = false;
-    sh_key->key = 0x41 + 'n' - 'a';
-    set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake,
-                     std::move(sh_key), false);
-  }
-  {
-    auto sh_key = std::make_unique<ShortcutKey>();
-    sh_key->is_alt = true;
-    sh_key->is_ctrl = false;
-    sh_key->is_shift = false;
-    sh_key->key = 0x41 + 'b' - 'a';
-    set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake,
-                     std::move(sh_key), false);
-  }
+  auto_spellcheck_index =
+      set_next_command(rc_str(IDS_AUTO_SPELL_CHECK).c_str(),
+                       switch_auto_check_text, nullptr, false);
+  set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake,
+                   nullptr, false); 
+  set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake,
+                   nullptr, false);
 
-  {
-    auto sh_key = std::make_unique<ShortcutKey>();
-    sh_key->is_alt = true;
-    sh_key->is_ctrl = false;
-    sh_key->is_shift = false;
-    sh_key->key = 0x41 + 'd' - 'a';
-    quick_lang_change_item_index =
-        set_next_command(rc_str(IDS_CHANGE_CURRENT_LANG).c_str(),
-                         quick_lang_change_context, std::move(sh_key), false);
-  }
+  quick_lang_change_item_index =
+      set_next_command(rc_str(IDS_CHANGE_CURRENT_LANG).c_str(),
+                       quick_lang_change_context, nullptr, false);
 
   set_next_command(L"---", nullptr, nullptr, false);
 
