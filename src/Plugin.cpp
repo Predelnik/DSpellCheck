@@ -229,14 +229,21 @@ void quick_lang_change_context() {
                  nullptr);
 }
 
-static int auto_spellcheck_index = -1;
-int quick_lang_change_item_index = -1;
-static int copy_all_misspellings_index = -1;
-static int settings_item_index = -1;
-static int reload_user_dictionaries_index = -1;
-static int additional_actions_item_index = -1;
-static int switch_debug_logging_index = -1;
-static int open_debug_log_index = -1;
+enum class Action
+{
+  toggle_auto_spell_check,
+  quick_language_change,
+  copy_all_misspellings,
+  settings,
+  reload_user_dictionaries,
+  additional_actions,
+  toggle_debug_logging,
+  open_debug_log,
+
+  COUNT,
+};
+
+static enum_array<Action, int> action_index = [](){ enum_array<Action, int> val; val.fill (-1); return val; }();
 
 //
 // Initialization of your plug-in commands
@@ -274,11 +281,11 @@ void command_menu_init() {
   //            bool check0nInit                // optional. Make this menu item
   //            be checked visually
   //            );
-  auto_spellcheck_index =
+  action_index[Action::toggle_auto_spell_check] =
       set_next_command(rc_str(IDS_AUTO_SPELL_CHECK).c_str(),
                        switch_auto_check_text, nullptr, false);
   set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake,
-                   nullptr, false); 
+                   nullptr, false);
   set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake,
                    nullptr, false);
 
@@ -288,18 +295,18 @@ void command_menu_init() {
 
   set_next_command(L"---", nullptr, nullptr, false);
 
-  settings_item_index = set_next_command(rc_str(IDS_SETTINGS).c_str(),
+  action_index[Action::settings] = set_next_command(rc_str(IDS_SETTINGS).c_str(),
                                          start_settings, nullptr, false);
-  copy_all_misspellings_index =
+  action_index[Action::copy_all_misspellings] =
       set_next_command(rc_str(IDS_COPY_ALL_MISSPELLED).c_str(),
                        copy_misspellings_to_clipboard, nullptr, false);
-  reload_user_dictionaries_index =
+  action_index[Action::reload_user_dictionaries] =
       set_next_command(rc_str(IDS_RELOAD_HUNSPELL).c_str(),
                        reload_hunspell_dictionaries, nullptr, false);
-  switch_debug_logging_index =
+  action_index[Action::toggle_debug_logging] =
       set_next_command(rc_str(IDS_SWITCH_DEBUG_LOGGING).c_str(),
                        switch_debug_logging, nullptr, false);
-  open_debug_log_index = set_next_command(rc_str(IDS_OPEN_DEBUG_LOG).c_str(),
+  action_index[Action::open_debug_log] = set_next_command(rc_str(IDS_OPEN_DEBUG_LOG).c_str(),
                                           open_debug_log, nullptr, false);
   set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual, nullptr,
                    false);
@@ -374,9 +381,9 @@ HMENU get_langs_sub_menu() {
 }
 
 void on_settings_changed() {
-  npp->set_menu_item_check(get_func_item()[auto_spellcheck_index].cmd_id,
+  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_auto_spell_check]].cmd_id,
                            settings->auto_check_text);
-  npp->set_menu_item_check(get_func_item()[switch_debug_logging_index].cmd_id,
+  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_debug_logging]].cmd_id,
                            settings->write_debug_log);
 }
 
@@ -479,15 +486,15 @@ std::wstring get_debug_log_path() {
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
-  auto list = {copy_all_misspellings_index, reload_user_dictionaries_index,
-               switch_debug_logging_index, open_debug_log_index};
-  for (auto index : list) {
+  auto list = {Action::copy_all_misspellings, Action::reload_user_dictionaries,
+    Action::toggle_debug_logging, Action::open_debug_log};
+  for (auto action : list) {
     MENUITEMINFO info;
     info.cbSize = sizeof(info);
     info.dwTypeData = nullptr;
     info.fMask = MIIM_STRING | MIIM_ID | MIIM_STATE | MIIM_DATA; // everything
     auto get_info = [&] {
-      GetMenuItemInfo(plugin_menu, get_func_item()[index].cmd_id, FALSE, &info);
+      GetMenuItemInfo(plugin_menu, get_func_item()[action_index[action]].cmd_id, FALSE, &info);
     };
     get_info();
     std::vector<wchar_t> buf(info.cch + 1);
@@ -497,8 +504,8 @@ void rearrange_menu() {
     InsertMenuItem(submenu, GetMenuItemCount(submenu), TRUE, &info);
   }
   int removed_cnt = 0;
-  for (auto index : list) {
-    RemoveMenu(plugin_menu, get_func_item()[index].cmd_id, MF_BYCOMMAND);
+  for (auto action : list) {
+    RemoveMenu(plugin_menu, get_func_item()[action_index[action]].cmd_id, MF_BYCOMMAND);
     ++removed_cnt;
   }
 
@@ -511,7 +518,7 @@ void rearrange_menu() {
     mif.cch = static_cast<UINT>(wcslen(mif.dwTypeData)) + 1;
     mif.hSubMenu = submenu;
     mif.fState = MFS_ENABLED;
-    InsertMenuItem(plugin_menu, get_func_item()[settings_item_index].cmd_id,
+    InsertMenuItem(plugin_menu, get_func_item()[action_index[Action::settings]].cmd_id,
                    FALSE, &mif);
   }
 }
