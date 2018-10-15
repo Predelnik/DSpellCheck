@@ -283,34 +283,31 @@ void command_menu_init() {
   //            );
   action_index[Action::toggle_auto_spell_check] =
       set_next_command(rc_str(IDS_AUTO_SPELL_CHECK).c_str(),
-                       switch_auto_check_text, nullptr, false);
-  set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake,
-                   nullptr, false);
-  set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake,
-                   nullptr, false);
+                       switch_auto_check_text);
+  set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake);
+  set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake);
 
   quick_lang_change_item_index =
       set_next_command(rc_str(IDS_CHANGE_CURRENT_LANG).c_str(),
-                       quick_lang_change_context, nullptr, false);
+                       quick_lang_change_context);
 
-  set_next_command(L"---", nullptr, nullptr, false);
+  set_next_command(L"---", nullptr);
 
   action_index[Action::settings] = set_next_command(rc_str(IDS_SETTINGS).c_str(),
-                                         start_settings, nullptr, false);
+                                                    start_settings);
   action_index[Action::copy_all_misspellings] =
       set_next_command(rc_str(IDS_COPY_ALL_MISSPELLED).c_str(),
-                       copy_misspellings_to_clipboard, nullptr, false);
+                       copy_misspellings_to_clipboard);
   action_index[Action::reload_user_dictionaries] =
       set_next_command(rc_str(IDS_RELOAD_HUNSPELL).c_str(),
-                       reload_hunspell_dictionaries, nullptr, false);
+                       reload_hunspell_dictionaries);
   action_index[Action::toggle_debug_logging] =
       set_next_command(rc_str(IDS_SWITCH_DEBUG_LOGGING).c_str(),
-                       switch_debug_logging, nullptr, false);
+                       switch_debug_logging);
   action_index[Action::open_debug_log] = set_next_command(rc_str(IDS_OPEN_DEBUG_LOG).c_str(),
-                                          open_debug_log, nullptr, false);
-  set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual, nullptr,
-                   false);
-  set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg, nullptr, false);
+                                                          open_debug_log);
+  set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual);
+  set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg);
 }
 
 void add_icons() {
@@ -453,8 +450,7 @@ static int counter = 0;
 
 std::vector<std::unique_ptr<ShortcutKey>> shortcut_storage;
 
-int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
-                     std::unique_ptr<ShortcutKey> sk, bool check0_n_init) {
+int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func) {
   if (counter >= nb_func) {
     assert(false); // Less actions specified in nb_func constant than added
     return -1;
@@ -467,9 +463,8 @@ int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func,
 
   lstrcpy(func_item[counter].item_name, cmd_name);
   func_item[counter].p_func = p_func;
-  func_item[counter].init2_check = check0_n_init;
-  shortcut_storage.push_back(std::move(sk));
-  func_item[counter].p_sh_key = shortcut_storage.back().get();
+  func_item[counter].init2_check = false;
+  func_item[counter].p_sh_key = nullptr;
   counter++;
 
   return counter - 1;

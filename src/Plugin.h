@@ -60,8 +60,7 @@ void command_menu_clean_up();
 //
 // Function which sets your command
 //
-int set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func,
-                     std::unique_ptr<ShortcutKey> sk = nullptr, bool check0_n_init = false);
+int set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func);
 
 void set_delimiters (const char *str);
 std::wstring rc_str (UINT string_id);
