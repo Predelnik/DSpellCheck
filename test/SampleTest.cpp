@@ -21,9 +21,9 @@
 #include "Settings.h"
 #include "SpellChecker.h"
 #include "SpellerContainer.h"
+#include "UrlHelpers.h"
 #include "catch.hpp"
 #include "utils/TemporaryAcessor.h"
-#include "UrlHelpers.h"
 
 void setup_speller(MockSpeller &speller) {
   speller.set_inner_dict({{L"English",
@@ -66,6 +66,11 @@ badword)");
   CHECK(sc.get_all_misspellings_as_string() == LR"(badword
 wrongword
 )");
+  sc.erase_all_misspellings();
+  CHECK(editor.get_active_document_text(v) == R"(
+
+This is test document
+)");
   editor.set_active_document_text(v, LR"(
 wrongword
 This is test document
@@ -76,8 +81,8 @@ wrongword
 )");
   editor.make_all_visible(v);
   sc.recheck_visible_both_views(); // technically it should happen automatically
-                                   // if notificaitons were signals in
-                                   // editorinterface
+                                   // if notifications were signals in
+                                   // EditorInterface
   CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
   {
@@ -272,15 +277,19 @@ TEST_CASE("Language Styles") {
   }
 }
 
-TEST_CASE ("GitHub")
-{
-	CHECK(UrlHelpers::is_github_url(L"github.com/predelnik/DSpellCheck"));
-	CHECK(UrlHelpers::is_github_url(L"https://gitHub.com/predelnik/DSpellCheck"));
-	CHECK_FALSE(UrlHelpers::is_github_url(L"http://www.gitHub.com/preDeEnik/DSpellCheck"));
-	CHECK_FALSE(UrlHelpers::is_github_url(L"asiodaosidaasoida"));
-	CHECK_FALSE(UrlHelpers::is_github_url(L"ftp://github.com/predelnik/DSpellCheck"));
-	CHECK(UrlHelpers::is_ftp_url(L"ftp://lol.com"));
-	CHECK_FALSE(UrlHelpers::is_ftp_url(L"aftp://lol.com"));
-	CHECK_FALSE(UrlHelpers::is_ftp_url(L"asdasdoaishdo"));
-	CHECK(UrlHelpers::github_url_to_api_recursive_tree_url(L"https://www.github.com/predelnik/DSpellCheck") == L"https://api.github.com/repos/predelnik/DSpellCheck/git/trees/master?recursive=1");
+TEST_CASE("GitHub") {
+  CHECK(UrlHelpers::is_github_url(L"github.com/predelnik/DSpellCheck"));
+  CHECK(UrlHelpers::is_github_url(L"https://gitHub.com/predelnik/DSpellCheck"));
+  CHECK_FALSE(UrlHelpers::is_github_url(
+      L"http://www.gitHub.com/preDeEnik/DSpellCheck"));
+  CHECK_FALSE(UrlHelpers::is_github_url(L"asiodaosidaasoida"));
+  CHECK_FALSE(
+      UrlHelpers::is_github_url(L"ftp://github.com/predelnik/DSpellCheck"));
+  CHECK(UrlHelpers::is_ftp_url(L"ftp://lol.com"));
+  CHECK_FALSE(UrlHelpers::is_ftp_url(L"aftp://lol.com"));
+  CHECK_FALSE(UrlHelpers::is_ftp_url(L"asdasdoaishdo"));
+  CHECK(UrlHelpers::github_url_to_api_recursive_tree_url(
+            L"https://www.github.com/predelnik/DSpellCheck") ==
+        L"https://api.github.com/repos/predelnik/DSpellCheck/git/trees/"
+        L"master?recursive=1");
 }
