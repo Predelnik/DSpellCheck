@@ -95,12 +95,12 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
   mif.hSubMenu = new_menu;
   mif.fState = MFS_ENABLED;
 
-  SetMenuItemInfo(dspellcheck_menu, quick_lang_change_item_index, TRUE, &mif);
+  SetMenuItemInfo(dspellcheck_menu, action_index[Action::quick_language_change], TRUE, &mif);
 }
 
 void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   if ((!get_use_allocated_ids() && HIBYTE(menu_id) != DSPELLCHECK_MENU_ID &&
-       HIBYTE(menu_id) != get_func_item()[quick_lang_change_item_index].cmd_id) ||
+       HIBYTE(menu_id) != get_func_item()[action_index[Action::quick_language_change]].cmd_id) ||
       (get_use_allocated_ids() &&
        (static_cast<int>(menu_id) < get_context_menu_id_start() ||
         static_cast<int>(menu_id) > get_context_menu_id_start() + 350)))

@@ -19,12 +19,28 @@
 //
 #include "PluginInterface.h"
 #include <memory>
+#include "utils/enum_array.h"
 
 struct SuggestionsMenuItem;
 
 const int nb_func = 12;
 
-extern int quick_lang_change_item_index;
+enum class Action
+{
+  toggle_auto_spell_check,
+  quick_language_change,
+  copy_all_misspellings,
+  erase_all_misspellings,
+  settings,
+  reload_user_dictionaries,
+  additional_actions,
+  toggle_debug_logging,
+  open_debug_log,
+
+  COUNT,
+};
+extern enum_array<Action, int> action_index;
+
 enum class CustomGuiMessage;
 class LangList;
 class NppInterface;

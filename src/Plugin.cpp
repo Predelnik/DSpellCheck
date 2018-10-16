@@ -229,21 +229,8 @@ void quick_lang_change_context() {
                  nullptr);
 }
 
-enum class Action
-{
-  toggle_auto_spell_check,
-  quick_language_change,
-  copy_all_misspellings,
-  settings,
-  reload_user_dictionaries,
-  additional_actions,
-  toggle_debug_logging,
-  open_debug_log,
 
-  COUNT,
-};
-
-static enum_array<Action, int> action_index = [](){ enum_array<Action, int> val; val.fill (-1); return val; }();
+enum_array<Action, int> action_index = [](){ enum_array<Action, int> val; val.fill (-1); return val; }();
 
 //
 // Initialization of your plug-in commands
@@ -287,7 +274,7 @@ void command_menu_init() {
   set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake);
   set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake);
 
-  quick_lang_change_item_index =
+  action_index[Action::quick_language_change] =
       set_next_command(rc_str(IDS_CHANGE_CURRENT_LANG).c_str(),
                        quick_lang_change_context);
 
@@ -374,7 +361,7 @@ HMENU get_submenu(int item_id) {
 }
 
 HMENU get_langs_sub_menu() {
-  return get_submenu(get_func_item()[quick_lang_change_item_index].cmd_id);
+  return get_submenu(get_func_item()[action_index[Action::quick_language_change]].cmd_id);
 }
 
 void on_settings_changed() {
