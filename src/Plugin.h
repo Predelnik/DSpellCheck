@@ -23,7 +23,7 @@
 
 struct SuggestionsMenuItem;
 
-const int nb_func = 12;
+const int nb_func = 13;
 
 enum class Action
 {

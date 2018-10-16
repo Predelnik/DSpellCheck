@@ -162,6 +162,11 @@ void notify(SCNotification *notify_code) { npp->notify(notify_code); }
 
 NppInterface &npp_interface() { return *npp; }
 
+void erase_misspellings ()
+{
+  spell_checker->erase_all_misspellings ();
+}
+
 void copy_misspellings_to_clipboard() {
   auto str = spell_checker->get_all_misspellings_as_string();
   const size_t len = (str.length() + 1) * 2;
@@ -285,6 +290,9 @@ void command_menu_init() {
   action_index[Action::copy_all_misspellings] =
       set_next_command(rc_str(IDS_COPY_ALL_MISSPELLED).c_str(),
                        copy_misspellings_to_clipboard);
+  action_index[Action::erase_all_misspellings] =
+    set_next_command(rc_str(IDS_ERASE_ALL_MISSPELLED).c_str(),
+      erase_misspellings);
   action_index[Action::reload_user_dictionaries] =
       set_next_command(rc_str(IDS_RELOAD_HUNSPELL).c_str(),
                        reload_hunspell_dictionaries);
@@ -468,7 +476,7 @@ std::wstring get_debug_log_path() {
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
-  auto list = {Action::copy_all_misspellings, Action::reload_user_dictionaries,
+  auto list = {Action::copy_all_misspellings, Action::erase_all_misspellings, Action::reload_user_dictionaries,
     Action::toggle_debug_logging, Action::open_debug_log};
   for (auto action : list) {
     MENUITEMINFO info;

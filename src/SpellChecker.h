@@ -63,6 +63,7 @@ public:
   void lang_change();
   bool is_word_under_cursor_correct(long &pos, long &length,
                                     bool use_text_cursor = false) const;
+  void erase_all_misspellings();
 
 private:
   void create_word_underline(EditorViewType view, long start, long end) const;
