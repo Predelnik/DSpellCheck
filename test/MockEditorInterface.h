@@ -29,7 +29,7 @@ public:
 class MockedDocumentInfo {
 public:
   std::wstring path;
-  std::wstring data;
+  std::string data;
   std::array<long, 2> selection;
   EditorCodepage codepage = EditorCodepage::utf8;
   std::vector<MockedIndicatorInfo> indicator_info;
@@ -119,9 +119,6 @@ public:
 private:
   const MockedDocumentInfo *active_document(EditorViewType view) const;
   MockedDocumentInfo *active_document(EditorViewType view);
-  std::string convert_from_wstring(EditorViewType view,
-                                   const wchar_t *str) const;
-  std::wstring convert_to_wstring(EditorViewType view, const char *str) const;
 private:
   enum_array<EditorViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<EditorViewType, int> m_active_document_index;

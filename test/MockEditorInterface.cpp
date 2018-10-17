@@ -19,7 +19,16 @@
 #include <filesystem>
 
 void MockedDocumentInfo::set_data(const std::wstring &data_arg) {
-  data = data_arg;
+  switch (codepage)
+  {
+  case EditorCodepage::ansi:
+    data = to_string (data_arg);
+    break;
+  case EditorCodepage::utf8:
+    data = to_utf8_string (data_arg);
+    break;
+  case EditorCodepage::COUNT: break;
+  }
   style.resize(data.size());
   selection = {0, 0};
   cursor_pos = 0;
@@ -61,7 +70,7 @@ void MockEditorInterface::replace_selection(EditorViewType view,
   if (!doc)
     return;
   auto &d = doc->data;
-  d.replace(doc->selection[0], doc->selection[1], to_wstring(str));
+  d.replace(doc->selection[0], doc->selection[1], str);
 }
 
 void MockEditorInterface::set_indicator_style(EditorViewType view,
@@ -359,10 +368,7 @@ std::string MockEditorInterface::selected_text(EditorViewType view) const {
   auto doc = active_document(view);
   if (!doc || doc->selection[0] < 0 || doc->selection[1] < 0)
     return "";
-  return convert_from_wstring(
-      view,
-      doc->data.substr(doc->selection[0], doc->selection[1] - doc->selection[0])
-          .c_str());
+  return doc->data.substr(doc->selection[0], doc->selection[1] - doc->selection[0]);
 }
 
 std::string MockEditorInterface::get_current_line(EditorViewType view) const {
@@ -395,7 +401,7 @@ std::string MockEditorInterface::get_text_range(EditorViewType view, long from,
   auto doc = active_document(view);
   if (!doc)
     return "";
-  return convert_from_wstring(view, doc->data.substr(from, to - from).c_str());
+  return doc->data.substr(from, to - from);
 }
 
 std::string
@@ -403,7 +409,7 @@ MockEditorInterface::get_active_document_text(EditorViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return "";
-  return convert_from_wstring(view, doc->data.c_str());
+  return doc->data;
 }
 
 long MockEditorInterface::char_position_from_point(EditorViewType view,
@@ -507,6 +513,8 @@ void MockEditorInterface::delete_range(EditorViewType view, long start,
     return;
   doc->data.erase(doc->data.begin() + start,
                   doc->data.begin() + start + length);
+  doc->style.erase(doc->style.begin() + start,
+    doc->style.begin() + start + length);
 }
 
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
@@ -522,37 +530,3 @@ MockEditorInterface::active_document(EditorViewType view) const {
   return &m_documents[view][m_active_document_index[view]];
 }
 
-std::string
-MockEditorInterface::convert_from_wstring(EditorViewType view,
-                                          const wchar_t *str) const {
-  auto doc = active_document(view);
-  if (!doc)
-    return "";
-  switch (doc->codepage) {
-  case EditorCodepage::ansi:
-    return to_string(str);
-  case EditorCodepage::utf8:
-    return to_utf8_string(str);
-  case EditorCodepage::COUNT:
-    break;
-  }
-  assert(!"wrong codepage");
-  abort();
-}
-
-std::wstring MockEditorInterface::convert_to_wstring(EditorViewType view,
-                                                     const char *str) const {
-  auto doc = active_document(view);
-  if (!doc)
-    return L"";
-  switch (doc->codepage) {
-  case EditorCodepage::ansi:
-    return to_wstring(str);
-  case EditorCodepage::utf8:
-    return utf8_to_wstring(str);
-  case EditorCodepage::COUNT:
-    break;
-  }
-  assert(!"wrong codepage");
-  abort();
-}
