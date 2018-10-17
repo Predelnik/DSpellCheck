@@ -114,6 +114,7 @@ public:
   void set_lexer (EditorViewType view, int lexer);
   void set_whole_text_style (EditorViewType view, int style);
   void set_codepage(EditorViewType view, EditorCodepage codepage);
+  void delete_range(EditorViewType view, long start, long length) override;
 
 private:
   const MockedDocumentInfo *active_document(EditorViewType view) const;

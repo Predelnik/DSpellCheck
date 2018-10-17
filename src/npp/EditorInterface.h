@@ -77,6 +77,7 @@ public:
   }
 
   virtual void replace_selection(EditorViewType view, const char *str) = 0;
+  virtual void delete_range (EditorViewType view, long start, long length) = 0;
   virtual void set_indicator_style(EditorViewType view, int indicator_index,
                                    int style) = 0;
   virtual void set_indicator_foreground(EditorViewType view,

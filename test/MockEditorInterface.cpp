@@ -288,8 +288,8 @@ long MockEditorInterface::get_document_line_count(EditorViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
-  return static_cast<long>(std::count(
-      doc->data.begin(), doc->data.end (), '\n'));
+  return static_cast<long>(
+      std::count(doc->data.begin(), doc->data.end(), '\n'));
 }
 
 bool MockEditorInterface::open_document(std::wstring filename) {
@@ -492,12 +492,21 @@ void MockEditorInterface::set_whole_text_style(EditorViewType view, int style) {
   std::fill(doc->style.begin(), doc->style.end(), style);
 }
 
-void MockEditorInterface::set_codepage(EditorViewType view, EditorCodepage codepage)
-{
+void MockEditorInterface::set_codepage(EditorViewType view,
+                                       EditorCodepage codepage) {
   auto doc = active_document(view);
   if (!doc)
     return;
   doc->codepage = codepage;
+}
+
+void MockEditorInterface::delete_range(EditorViewType view, long start,
+                                       long length) {
+  auto doc = active_document(view);
+  if (!doc)
+    return;
+  doc->data.erase(doc->data.begin() + start,
+                  doc->data.begin() + start + length);
 }
 
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
