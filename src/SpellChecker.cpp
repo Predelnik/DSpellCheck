@@ -308,7 +308,22 @@ bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length, bool us
   return false;
 }
 
-void SpellChecker::erase_all_misspellings() {}
+void SpellChecker::erase_all_misspellings() {
+  auto view = m_editor.active_view();
+  auto buf = m_editor.get_active_document_text(view);
+  auto mapped_str = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, buf.data());
+  m_misspellings.clear();
+  if (!check_text(view, mapped_str, 0, CheckTextMode::find_all))
+    return;
+
+  auto chars_removed = 0l;
+  for (auto &misspelling : m_misspellings) {
+    auto start = mapped_str.to_original_index (static_cast<long> (misspelling.data() - mapped_str.str.data()));
+    auto original_len = mapped_str.to_original_index (static_cast<long> (misspelling.data() - mapped_str.str.data() + misspelling.length ())) - start;
+    m_editor.delete_range(view, start - chars_removed, original_len);
+    chars_removed += original_len;
+  }
+}
 
 bool SpellChecker::is_spellchecking_needed(EditorViewType view, std::wstring_view word, long word_start) const {
   if (!m_speller_container.active_speller().is_working() || word.empty()) {
