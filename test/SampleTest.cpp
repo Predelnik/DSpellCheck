@@ -1,4 +1,4 @@
-﻿// This file is part of DSpellCheck Plug-in for Notepad++
+// This file is part of DSpellCheck Plug-in for Notepad++
 // Copyright (C)2018 Sergey Semushin <Predelnik@gmail.com>
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -28,7 +28,7 @@
 void setup_speller(MockSpeller &speller) {
   speller.set_inner_dict({{L"English",
                            {L"This", L"is", L"test", L"document", L"Please",
-                            L"bear", L"with", L"me"}}});
+                            L"bear", L"with", L"me", L"И", L"ещё", L"немного", L"слов"}}});
 }
 
 TEST_CASE("Simple") {
@@ -70,6 +70,15 @@ wrongword
   CHECK(editor.get_active_document_text(v) == R"(
 
 This is test document
+)");
+  editor.set_active_document_text(v, LR"(
+нехорошееслово
+И ещё немного слов
+ошибочноеслово)");
+  sc.erase_all_misspellings();
+  CHECK(editor.get_active_document_text(v) == R"(
+
+И ещё немного слов
 )");
   editor.set_active_document_text(v, LR"(
 wrongword
