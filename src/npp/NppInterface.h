@@ -38,6 +38,17 @@ public:
   void switch_to_file(const std::wstring &path) override;
   void move_active_document_to_other_view() override;
   void add_toolbar_icon(int cmdId, const toolbarIcons *toolBarIconsPtr) override;
+  void set_selection(EditorViewType view, long from, long to) override;
+  void replace_selection(EditorViewType view, const char *str) override;
+  void set_indicator_style(EditorViewType view, int indicator_index, int style) override;
+  void set_indicator_foreground(EditorViewType view, int indicator_index, int style) override;
+  void set_current_indicator(EditorViewType view, int indicator_index) override;
+  void indicator_fill_range(EditorViewType view, long from, long to) override;
+  void indicator_clear_range(EditorViewType view, long from, long to) override;
+  void delete_range(EditorViewType view, long start, long length) override;
+  void begin_undo_action(EditorViewType view) override;
+  void end_undo_action(EditorViewType view) override;
+  void undo(EditorViewType view) override;
 
   // const
   std::vector<std::wstring> get_open_filenames(std::optional<EditorViewType> view = {}) const override;
@@ -69,6 +80,16 @@ public:
   long get_selection_end(EditorViewType view) const override;
   long get_line_length(EditorViewType view, int line) const override;
   std::string get_line(EditorViewType view, long line_number) const override;
+  long get_first_visible_line(EditorViewType view) const override;
+  long get_lines_on_screen(EditorViewType view) const override;
+  long get_document_line_from_visible(EditorViewType view, long visible_line) const override;
+  long get_document_line_count(EditorViewType view) const override;
+  std::string get_active_document_text(EditorViewType view) const override;
+  std::wstring get_full_current_path() const override;
+  RECT editor_rect(EditorViewType view) const override;
+  int get_text_height(EditorViewType view, int line) const override;
+  int get_point_x_from_position(EditorViewType view, long position) const override;
+  int get_point_y_from_position(EditorViewType view, long position) const override;
 
   HMENU get_menu_handle(int menu_type) const;
 
@@ -82,26 +103,6 @@ private:
   void post_msg_to_scintilla(EditorViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
   std::wstring get_dir_msg(UINT msg) const;
   void do_command(int id);
-
-public:
-  int get_text_height(EditorViewType view, int line) const override;
-  int get_point_x_from_position(EditorViewType view, long position) const override;
-  int get_point_y_from_position(EditorViewType view, long position) const override;
-  void set_selection(EditorViewType view, long from, long to) override;
-  void replace_selection(EditorViewType view, const char *str) override;
-  void set_indicator_style(EditorViewType view, int indicator_index, int style) override;
-  void set_indicator_foreground(EditorViewType view, int indicator_index, int style) override;
-  void set_current_indicator(EditorViewType view, int indicator_index) override;
-  void indicator_fill_range(EditorViewType view, long from, long to) override;
-  void indicator_clear_range(EditorViewType view, long from, long to) override;
-  long get_first_visible_line(EditorViewType view) const override;
-  long get_lines_on_screen(EditorViewType view) const override;
-  long get_document_line_from_visible(EditorViewType view, long visible_line) const override;
-  long get_document_line_count(EditorViewType view) const override;
-  std::string get_active_document_text(EditorViewType view) const override;
-  std::wstring get_full_current_path() const override;
-  RECT editor_rect(EditorViewType view) const override;
-  void delete_range(EditorViewType view, long start, long length) override;
 
 private:
   const NppData &m_npp_data;

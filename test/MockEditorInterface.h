@@ -29,16 +29,22 @@ public:
 class MockedDocumentInfo {
 public:
   std::wstring path;
-  std::string data;
-  std::array<long, 2> selection;
   EditorCodepage codepage = EditorCodepage::utf8;
   std::vector<MockedIndicatorInfo> indicator_info;
-  std::vector<int> style;
   int lexer = 0;
   int hotspot_style = 123;
   int current_indicator = 0;
   std::array<long, 2> visible_lines = {0, 30};
+  struct State {
+  std::string data;
+  std::array<long, 2> selection = {};
+  std::vector<int> style;
+  } cur;
+  std::vector<State> past;
+
   void set_data(const std::wstring &data_arg);
+  void erase(long start, long length);
+  void save_state ();
   long cursor_pos;
 };
 
@@ -115,6 +121,9 @@ public:
   void set_whole_text_style (EditorViewType view, int style);
   void set_codepage(EditorViewType view, EditorCodepage codepage);
   void delete_range(EditorViewType view, long start, long length) override;
+  void begin_undo_action(EditorViewType view) override;
+  void end_undo_action(EditorViewType view) override;
+  void undo(EditorViewType view) override;
 
 private:
   const MockedDocumentInfo *active_document(EditorViewType view) const;
@@ -122,6 +131,7 @@ private:
 private:
   enum_array<EditorViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<EditorViewType, int> m_active_document_index;
+  enum_array<EditorViewType, bool> m_save_undo;
   EditorViewType m_active_view = EditorViewType::primary;
   static constexpr auto text_width = 13;
   static constexpr auto text_height = 13;

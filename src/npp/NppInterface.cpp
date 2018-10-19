@@ -193,6 +193,18 @@ void NppInterface::delete_range(EditorViewType view, long start, long length) {
   send_msg_to_scintilla (view, SCI_DELETERANGE, start, length);
 }
 
+void NppInterface::begin_undo_action(EditorViewType view) {
+  send_msg_to_scintilla (view, SCI_BEGINUNDOACTION);
+}
+
+void NppInterface::end_undo_action(EditorViewType view) {
+  send_msg_to_scintilla (view, SCI_ENDUNDOACTION);
+}
+
+void NppInterface::undo(EditorViewType view) {
+  send_msg_to_scintilla (view, SCI_UNDO);
+}
+
 std::optional<long> NppInterface::char_position_from_global_point(EditorViewType view, int x, int y) const {
   POINT p;
   p.x = x;

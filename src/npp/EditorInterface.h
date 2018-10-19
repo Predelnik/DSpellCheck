@@ -88,6 +88,9 @@ public:
                                     long to) = 0;
   virtual void indicator_clear_range(EditorViewType view, long from,
                                      long to) = 0;
+  virtual void undo(EditorViewType view) = 0;
+  virtual void begin_undo_action (EditorViewType view) = 0;
+  virtual void end_undo_action (EditorViewType view) = 0;
 
   // const
   virtual std::vector<std::wstring>
