@@ -46,6 +46,7 @@ std::wstring gui_string(ProxyType value);
 
 enum class TokenizationStyle {
     by_non_alphabetic,
+    by_non_ansi,
     by_delimiters,
 
     // ReSharper disable once CppInconsistentNaming

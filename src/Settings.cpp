@@ -50,6 +50,8 @@ std::wstring gui_string(TokenizationStyle value) {
     return rc_str(IDS_SPLIT_WORDS_BY_NON_ALPHA);
   case TokenizationStyle::by_delimiters:
     return rc_str(IDS_SPLIT_WORDS_BY_DELIMS);
+  case TokenizationStyle::by_non_ansi:
+    return rc_str(IDS_SPLIT_WORDS_BY_NON_ANSI);
   case TokenizationStyle::COUNT:
     break;
   }

@@ -498,7 +498,7 @@ const std::vector<std::wstring> &get_indic_names() {
 }
 
 void AdvancedDlg::setup_delimiter_line_edit_visiblity() {
-  ShowWindow(m_delimiter_exclusions_le, m_tokenization_style_cmb.current_data() == TokenizationStyle::by_non_alphabetic ? TRUE : FALSE);
+  ShowWindow(m_delimiter_exclusions_le, m_tokenization_style_cmb.current_data() != TokenizationStyle::by_delimiters ? TRUE : FALSE);
   ShowWindow(m_h_edit_delimiters, m_tokenization_style_cmb.current_data() == TokenizationStyle::by_delimiters ? TRUE : FALSE);
 }
 
@@ -594,6 +594,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
       if (HIWORD(w_param) == BN_CLICKED) {
         switch (m_tokenization_style_cmb.current_data()) {
         case TokenizationStyle::by_non_alphabetic:
+        case TokenizationStyle::by_non_ansi:
           Edit_SetText(m_delimiter_exclusions_le, default_delimiter_exclusions());
           break;
         case TokenizationStyle::by_delimiters:

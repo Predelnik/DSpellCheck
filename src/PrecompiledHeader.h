@@ -20,6 +20,7 @@
 
 #include <array>
 #include <map>
+#include <numeric>
 #include <set>
 #include <unordered_set>
 #include <optional>

@@ -87,6 +87,7 @@ private:
   long next_token_end(std::wstring_view target, long index) const;
   long prev_token_begin(std::wstring_view target, long index) const;
   auto non_alphabetic_tokenizer(std::wstring_view target) const;
+  auto non_ansi_tokenizer(std::wstring_view target) const;
   auto delimiter_tokenizer(std::wstring_view target) const;
   MappedWstring get_document_mapped_wstring (EditorViewType view, long start, long end) const;
 

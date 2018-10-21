@@ -36,6 +36,10 @@
 #include "npp/NppInterface.h"
 #include "utils/string_utils.h"
 
+#include <cctype>
+
+#include <experimental/string>
+
 SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor, const SpellerContainer &speller_container)
     : m_settings(*settings), m_editor(editor), m_speller_container(speller_container) {
   m_current_position = 0;
@@ -141,7 +145,7 @@ void SpellChecker::find_prev_mistake() {
 WordForSpeller SpellChecker::to_word_for_speller(std::wstring_view word) const {
   WordForSpeller res;
   res.data.ends_with_dot = *(word.data() + word.length()) == '.';
-  res.str = {word};
+  res.str = word;
   SpellCheckerHelpers::apply_word_conversions(m_settings, res.str);
   return res;
 }
@@ -319,8 +323,8 @@ void SpellChecker::erase_all_misspellings() {
   m_editor.begin_undo_action(view);
   auto chars_removed = 0l;
   for (auto &misspelling : m_misspellings) {
-    auto start = mapped_str.to_original_index (static_cast<long> (misspelling.data() - mapped_str.str.data()));
-    auto original_len = mapped_str.to_original_index (static_cast<long> (misspelling.data() - mapped_str.str.data() + misspelling.length ())) - start;
+    auto start = mapped_str.to_original_index(static_cast<long>(misspelling.data() - mapped_str.str.data()));
+    auto original_len = mapped_str.to_original_index(static_cast<long>(misspelling.data() - mapped_str.str.data() + misspelling.length())) - start;
     m_editor.delete_range(view, start - chars_removed, original_len);
     chars_removed += original_len;
   }
@@ -406,12 +410,34 @@ auto SpellChecker::non_alphabetic_tokenizer(std::wstring_view target) const {
                                   m_settings.split_camel_case);
 }
 
+auto SpellChecker::non_ansi_tokenizer(std::wstring_view target) const {
+
+  return make_condition_tokenizer(target,
+                                  [this](wchar_t c) {
+                                    static const auto ansi_str = []() {
+                                      constexpr auto char_cnt = 256;
+                                      std::string s;
+                                      for (int i = 1; i < char_cnt; ++i)
+                                        s.push_back(static_cast<char>(i));
+                                      auto ws = to_wstring(s);
+                                      std::experimental::erase_if(ws, [](wchar_t c) { return !IsCharAlphaNumeric(c); });
+                                      std::sort(ws.begin(), ws.end());
+                                      return ws;
+                                    }();
+                                    return !std::binary_search(ansi_str.begin(), ansi_str.end(), c) &&
+                                           m_settings.delimiter_exclusions.find(c) == std ::wstring_view::npos;
+                                  },
+                                  m_settings.split_camel_case);
+}
+
 auto SpellChecker::delimiter_tokenizer(std::wstring_view target) const { return make_delimiter_tokenizer(target, m_delimiters, m_settings.split_camel_case); }
 
 long SpellChecker::next_token_end(std::wstring_view target, long index) const {
   switch (m_settings.tokenization_style) {
   case TokenizationStyle::by_non_alphabetic:
     return non_alphabetic_tokenizer(target).next_token_end(index);
+  case TokenizationStyle::by_non_ansi:
+    return non_ansi_tokenizer(target).next_token_end(index);
   case TokenizationStyle::by_delimiters:
     return delimiter_tokenizer(target).next_token_end(index);
   case TokenizationStyle::COUNT:
@@ -425,6 +451,8 @@ long SpellChecker::prev_token_begin(std::wstring_view target, long index) const 
   switch (m_settings.tokenization_style) {
   case TokenizationStyle::by_non_alphabetic:
     return non_alphabetic_tokenizer(target).prev_token_begin(index);
+  case TokenizationStyle::by_non_ansi:
+    return non_ansi_tokenizer(target).prev_token_begin(index);
   case TokenizationStyle::by_delimiters:
     return delimiter_tokenizer(target).prev_token_begin(index);
   case TokenizationStyle::COUNT:
@@ -468,6 +496,9 @@ int SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_c
     break;
   case TokenizationStyle::by_delimiters:
     tokens = delimiter_tokenizer(sv).get_all_tokens();
+    break;
+  case TokenizationStyle::by_non_ansi:
+    tokens = non_ansi_tokenizer(sv).get_all_tokens();
     break;
   case TokenizationStyle::COUNT:
     break;
