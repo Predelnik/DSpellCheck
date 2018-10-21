@@ -74,8 +74,8 @@ private:
   long prev_token_begin_in_document(EditorViewType view, long start) const;
   long next_token_end_in_document(EditorViewType view, long end) const;
   MappedWstring get_visible_text(EditorViewType view);
-  int check_text(EditorViewType view, const MappedWstring &text_to_check,
-                 long offset, CheckTextMode mode) const;
+  bool check_text(EditorViewType view, const MappedWstring &text_to_check,
+                  long offset, CheckTextMode mode) const;
   void check_visible(EditorViewType view);
 
   std::wstring_view get_word_at(long char_pos, const MappedWstring &text,
