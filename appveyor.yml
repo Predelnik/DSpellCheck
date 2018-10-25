@@ -53,13 +53,6 @@ after_build:
     - cd "%APPVEYOR_BUILD_FOLDER%"\_build_%platform%\
     - call "%CONFIGURATION%/DSpellCheckTest.exe"
     - ps: >-
-        $dspellcheckFileName = "DSpellCheck.$env:PLATFORM.$env:CONFIGURATION.$env:PLATFORMTOOLSET.dll"
-
-        if ($env:PLATFORM -eq "x64") {
-            Push-AppveyorArtifact "$env:CONFIGURATION\DSpellCheck.dll" -FileName DSpellCheck.dll
-        }
-
-        if ($env:PLATFORM -eq "Win32") {
-            Push-AppveyorArtifact "$env:CONFIGURATION\DSpellCheck.dll" -FileName DSpellCheck.dll
-        }
+        $dspellcheckFileName = "DSpellCheck.$env:PLATFORM.$env:CONFIGURATION.$env:PLATFORMTOOLSET.dll";
+        Push-AppveyorArtifact "$env:CONFIGURATION\DSpellCheck.dll" -FileName DSpellCheck.dll
 
