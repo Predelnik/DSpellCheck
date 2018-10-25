@@ -307,6 +307,10 @@ bool NppInterface::is_style_hotspot(EditorViewType view, int style) const {
 long NppInterface::get_active_document_length(EditorViewType view) const { return static_cast<long>(send_msg_to_scintilla(view, SCI_GETLENGTH)); }
 
 std::string NppInterface::get_text_range(EditorViewType view, long from, long to) const {
+  if (from > to) {
+    assert (false); // Incorrect request to Scintilla. Prevent possible crash.
+    return {};
+  }
   Sci_TextRange range;
   range.chrg.cpMin = from;
   range.chrg.cpMax = to;
