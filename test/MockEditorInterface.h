@@ -124,6 +124,7 @@ public:
   void begin_undo_action(EditorViewType view) override;
   void end_undo_action(EditorViewType view) override;
   void undo(EditorViewType view) override;
+  bool is_line_visible(EditorViewType view, long line) const override;
 
 private:
   const MockedDocumentInfo *active_document(EditorViewType view) const;

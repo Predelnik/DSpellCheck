@@ -547,6 +547,11 @@ void MockEditorInterface::undo(EditorViewType view) {
   }
 }
 
+bool MockEditorInterface::is_line_visible(EditorViewType /*view*/, long /*line*/) const
+{
+  return true;
+}
+
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
   if (m_documents[view].empty())
     return nullptr;

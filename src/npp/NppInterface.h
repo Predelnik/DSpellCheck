@@ -90,6 +90,7 @@ public:
   int get_text_height(EditorViewType view, int line) const override;
   int get_point_x_from_position(EditorViewType view, long position) const override;
   int get_point_y_from_position(EditorViewType view, long position) const override;
+  bool is_line_visible(EditorViewType view, long line) const override;
 
   HMENU get_menu_handle(int menu_type) const;
 
@@ -103,7 +104,6 @@ private:
   void post_msg_to_scintilla(EditorViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
   std::wstring get_dir_msg(UINT msg) const;
   void do_command(int id);
-
 private:
   const NppData &m_npp_data;
   mutable enum_array<EditorViewType, std::optional<int>> m_lexer_cache;

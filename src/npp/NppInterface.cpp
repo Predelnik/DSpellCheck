@@ -141,6 +141,10 @@ int NppInterface::get_point_y_from_position(EditorViewType view, long position) 
   return static_cast<int>(send_msg_to_scintilla(view, SCI_POINTYFROMPOSITION, 0, position));
 }
 
+bool NppInterface::is_line_visible(EditorViewType view, long line) const {
+  return send_msg_to_scintilla(view, SCI_GETLINEVISIBLE, line);
+}
+
 void NppInterface::set_selection(EditorViewType view, long from, long to) { post_msg_to_scintilla(view, SCI_SETSEL, from, to); }
 
 void NppInterface::replace_selection(EditorViewType view, const char *str) { send_msg_to_scintilla(view, SCI_REPLACESEL, 0, reinterpret_cast<LPARAM>(str)); }

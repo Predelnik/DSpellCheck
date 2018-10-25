@@ -135,6 +135,7 @@ public:
             get_point_y_from_position(view, position)};
   }
   virtual long get_first_visible_line(EditorViewType view) const = 0;
+  virtual bool is_line_visible(EditorViewType view, long line) const = 0;
   virtual long get_lines_on_screen(EditorViewType view) const = 0;
   virtual long get_document_line_from_visible(EditorViewType view,
                                               long visible_line) const = 0;
