@@ -22,6 +22,7 @@
 #include "utils/enum_array.h"
 
 struct SuggestionsMenuItem;
+class AspellOptionsDialog;
 
 const int nb_func = 13;
 
@@ -95,6 +96,7 @@ HMENU get_langs_sub_menu ();
 HANDLE get_h_module ();
 LangList *get_lang_list ();
 RemoveDictionariesDialog *get_remove_dics ();
+AspellOptionsDialog *get_aspell_options_dlg ();
 ConnectionSettingsDialog *get_select_proxy ();
 ProgressDlg *get_progress ();
 FuncItem *get_func_item ();

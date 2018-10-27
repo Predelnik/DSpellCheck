@@ -30,6 +30,7 @@
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "SuggestionsButton.h"
+#include "AspellOptionsDialog.h"
 
 #include "ContextMenuHandler.h"
 #include "HunspellInterface.h"
@@ -70,6 +71,7 @@ std::unique_ptr<SettingsDlg> settings_dlg;
 std::unique_ptr<SuggestionsButton> suggestions_button;
 std::unique_ptr<LangList> lang_list_instance;
 std::unique_ptr<RemoveDictionariesDialog> remove_dics_dlg;
+std::unique_ptr<AspellOptionsDialog> aspell_options_dlg;
 std::unique_ptr<ConnectionSettingsDialog> select_proxy_dlg;
 std::unique_ptr<ProgressDlg> progress_dlg;
 std::unique_ptr<DownloadDicsDlg> download_dics_dlg;
@@ -127,6 +129,7 @@ void set_hmodule(HANDLE h_module_arg) {
 LangList *get_lang_list() { return lang_list_instance.get(); }
 
 RemoveDictionariesDialog *get_remove_dics() { return remove_dics_dlg.get(); }
+AspellOptionsDialog *get_aspell_options_dlg() { return aspell_options_dlg.get(); }
 
 ConnectionSettingsDialog *get_select_proxy() { return select_proxy_dlg.get(); }
 
@@ -431,6 +434,8 @@ void init_classes() {
   remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>(
       static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings,
       *speller_container);
+  aspell_options_dlg = std::make_unique<AspellOptionsDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
+    *settings);
 
   settings->load();
   resources_inited = true;

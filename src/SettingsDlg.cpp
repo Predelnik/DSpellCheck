@@ -21,6 +21,7 @@
 #include "RemoveDictionariesDialog.h"
 #include "aspell.h"
 
+#include "AspellOptionsDialog.h"
 #include "LanguageInfo.h"
 #include "NativeSpellerInterface.h"
 #include "Settings.h"
@@ -109,11 +110,9 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
   settings.check_variable_functions = Button_GetCheck(m_h_check_varfunc) == BST_CHECKED;
   settings.use_language_name_aliases = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
   settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
-  settings.aspell_allow_run_together_words = Button_GetCheck(m_h_aspell_run_together_cb) == BST_CHECKED;
 }
 
 void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settings) {
-  ShowWindow(m_h_aspell_run_together_cb, static_cast<int>(settings.active_speller_lib_id == SpellerId::aspell));
 
   auto is_aspell = settings.active_speller_lib_id == SpellerId::aspell ? TRUE : FALSE;
   ShowWindow(m_h_lib_link, is_aspell);
@@ -126,6 +125,7 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
   ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
   ShowWindow(m_h_hunspell_path_type, is_hunspell);
   ShowWindow(m_h_system_path, 0);
+  ShowWindow(m_configure_aspell_btn, static_cast<int>(settings.active_speller_lib_id == SpellerId::aspell));
   auto not_native = settings.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
   ShowWindow(m_h_lib_group_box, not_native);
   ShowWindow(m_h_lib_path, not_native);
@@ -242,7 +242,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     m_h_hunspell_path_type = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_TYPE);
     m_h_reset_speller_path = ::GetDlgItem(_hSelf, IDC_RESETSPELLERPATH);
     m_h_system_path = ::GetDlgItem(_hSelf, IDC_SYSTEMPATH);
-    m_h_aspell_run_together_cb = ::GetDlgItem(_hSelf, IDC_ASPELL_RUNTOGETHER_CB);
+    m_configure_aspell_btn = GetDlgItem(_hSelf, IDC_CONFIGURE_ASPELL);
     m_browse_btn = ::GetDlgItem(_hSelf, IDC_BROWSEASPELLPATH);
 
     ComboBox_AddString(m_h_hunspell_path_type, rc_str(IDS_FOR_CURRENT_USER).c_str());
@@ -301,6 +301,11 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
           Edit_SetText(m_h_suggestions_num, L"1");
 
         return TRUE;
+      }
+    } break;
+    case IDC_CONFIGURE_ASPELL: {
+      if (HIWORD(w_param) == BN_CLICKED) {
+        get_aspell_options_dlg()->do_dialog();
       }
     } break;
     case IDC_REMOVE_DICS:
@@ -735,7 +740,6 @@ void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer
   set_decode_names(settings.use_language_name_aliases);
   set_sugg_type(settings.suggestions_mode);
   set_one_user_dic(settings.use_unified_dictionary);
-  Button_SetCheck(m_h_aspell_run_together_cb, settings.aspell_allow_run_together_words);
 }
 
 void SimpleDlg::init_speller_id_combobox(const SpellerContainer &speller_container) {
