@@ -14,6 +14,7 @@
 #define IDI_REFRESH                             128
 #define IDI_AUTOCHECK                           147
 #define IDD_CONNECTION_SETTINGS_DIALOG          148
+#define IDD_ASPELL_OPTIONS                      150
 #define IDC_VERSION                             1000
 #define IDC_IGNORE_ONE_LETTER                   1001
 #define IDC_REMOVE_LANGLIST                     1001
@@ -79,12 +80,14 @@
 #define IDC_LIB_GROUPBOX                        1040
 #define IDC_DESCTOP                             1041
 #define IDC_HUNSPELL_PATH_GROUPBOX              1041
+#define IDC_ASPELL_RUNTOGETHER_CB               40000
 #define IDC_COMPILER_TEXT                       40000
 #define IDC_FTP_PASSIVE_MODE_CB                 40000
 #define IDC_RESETSPELLERPATH                    40000
 #define IDC_TOKENIZATION_STYLE_CMB              40000
 #define IDS_CANT_CREATE_DIR_PS                  40000
-#define IDC_ASPELL_RUNTOGETHER_CB               40001
+#define IDC_BROWSEPDICTIONARYPATH               40001
+#define IDC_CONFIGURE_ASPELL                    40001
 #define IDC_DELIMITERS                          40001
 #define IDS_STATUS_HTML_PARSING_FAIL            40001
 #define IDC_DELIMITER_EXCLUSIONS_LE             40002
