@@ -18,10 +18,11 @@
 
 // various winapi helpers
 std::wstring get_edit_text(HWND edit);
-bool move_file_and_reset_security_descriptor(const wchar_t *from,
-                                             const wchar_t *to);
+bool move_file_and_reset_security_descriptor(const wchar_t *from, const wchar_t *to);
 
 namespace WinApi {
+std::optional<std::wstring> browse_for_directory(HWND parent_wnd, const wchar_t *initial_path);
+
 class WinBase {
 public:
   virtual ~WinBase();
@@ -52,13 +53,9 @@ public:
     ComboBox_SetItemData(m_hwnd, ComboBox_GetCount(m_hwnd) - 1, data);
   }
 
-  int current_index() const {
-    return static_cast<int>(ComboBox_GetCurSel(m_hwnd));
-  }
+  int current_index() const { return static_cast<int>(ComboBox_GetCurSel(m_hwnd)); }
 
-  int current_data() const {
-    return static_cast<int>(ComboBox_GetItemData(m_hwnd, current_index()));
-  }
+  int current_data() const { return static_cast<int>(ComboBox_GetItemData(m_hwnd, current_index())); }
 
   void set_current_index(int index) { ComboBox_SetCurSel(m_hwnd, index); }
 
@@ -73,14 +70,9 @@ public:
   using Parent::init;
   using Parent::set_enabled;
 
-  EnumType current_data() const {
-    return static_cast<EnumType>(Parent::current_data());
-  }
+  EnumType current_data() const { return static_cast<EnumType>(Parent::current_data()); }
 
-  void set_index(EnumType value) {
-    set_current_index(
-        *find_by_data(static_cast<std::underlying_type_t<EnumType>>(value)));
-  }
+  void set_index(EnumType value) { set_current_index(*find_by_data(static_cast<std::underlying_type_t<EnumType>>(value))); }
 
 private:
   void init_impl() override { this->add_items<EnumType>(); }

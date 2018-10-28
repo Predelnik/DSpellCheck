@@ -197,22 +197,6 @@ void SimpleDlg::set_decode_names(bool value) { Button_SetCheck(m_h_decode_names,
 
 void SimpleDlg::set_one_user_dic(bool value) { Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED); }
 
-static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/, LPARAM lp_data) {
-  // If the BFFM_INITIALIZED message is received
-  // set the path to the start path.
-  switch (u_msg) {
-  case BFFM_INITIALIZED: {
-    if (NULL != lp_data) {
-      SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lp_data);
-    }
-  }
-  default:
-    break;
-  }
-
-  return 0; // The function should always return 0.
-}
-
 INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   wchar_t *end_ptr;
 
@@ -369,37 +353,15 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
           Edit_SetText(m_h_lib_path, filename.data());
       } break;
       case SpellerId::hunspell: {
-        // Thanks to http://vcfaq.mvps.org/sdk/20.htm
-        BROWSEINFO bi;
-        memset(&bi, 0, sizeof(bi));
-        std::vector<wchar_t> path;
+          auto lib_path = get_edit_text(m_h_lib_path);
+          std::vector<wchar_t> final_path(MAX_PATH);
 
-        LPITEMIDLIST pidl_root = nullptr;
-        SHGetFolderLocation(_hSelf, 0, nullptr, NULL, &pidl_root);
+          auto npp_path = m_npp.get_npp_directory();
+          PathCombine(final_path.data(), npp_path.data(), lib_path.c_str());
 
-        auto title = rc_str(IDS_PICK_A_DIRECTORY);
-        bi.pidlRoot = pidl_root;
-        bi.lpszTitle = title.c_str();
-        bi.pszDisplayName = path.data();
-        bi.ulFlags = BIF_RETURNONLYFSDIRS;
-        bi.lpfn = browse_callback_proc;
-        auto lib_path = get_edit_text(m_h_lib_path);
-        std::vector<wchar_t> final_path(MAX_PATH);
-
-        auto npp_path = m_npp.get_npp_directory();
-        PathCombine(final_path.data(), npp_path.data(), lib_path.c_str());
-        bi.lParam = reinterpret_cast<LPARAM>(final_path.data());
-        LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-        if (pidl != nullptr) {
-          // get the name of the folder
-          std::vector<wchar_t> sz_path(MAX_PATH);
-          SHGetPathFromIDList(pidl, sz_path.data());
-          Edit_SetText(m_h_lib_path, sz_path.data());
-          CoTaskMemFree(pidl);
-          // free memory used
-
-          CoUninitialize();
-        }
+          auto path = WinApi::browse_for_directory (_hSelf, final_path.data ());
+          if (path)
+            Edit_SetText(m_h_lib_path, path->data ());
       } break;
       case SpellerId::COUNT:
         break;

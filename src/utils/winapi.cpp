@@ -41,6 +41,22 @@ bool move_file_and_reset_security_descriptor(const wchar_t *from, const wchar_t 
   return ret != 0;
 }
 
+static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/, LPARAM lp_data) {
+  // If the BFFM_INITIALIZED message is received
+  // set the path to the start path.
+  switch (u_msg) {
+  case BFFM_INITIALIZED: {
+    if (NULL != lp_data) {
+      SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lp_data);
+    }
+  }
+  default:
+    break;
+  }
+
+  return 0; // The function should always return 0.
+}
+
 std::wstring get_class_name(HWND hwnd) {
   static const int max_class_name = 256;
   std::vector<wchar_t> buf(max_class_name);
@@ -49,6 +65,37 @@ std::wstring get_class_name(HWND hwnd) {
 }
 
 namespace WinApi {
+std::optional<std::wstring> browse_for_directory(HWND parent_wnd, const wchar_t *initial_path) {
+  // Thanks to http://vcfaq.mvps.org/sdk/20.htm
+  BROWSEINFO bi;
+  memset(&bi, 0, sizeof(bi));
+  std::vector<wchar_t> path;
+
+  LPITEMIDLIST pidl_root = nullptr;
+  SHGetFolderLocation(parent_wnd, 0, nullptr, NULL, &pidl_root);
+
+  auto title = rc_str(IDS_PICK_A_DIRECTORY);
+  bi.pidlRoot = pidl_root;
+  bi.lpszTitle = title.c_str();
+  bi.pszDisplayName = path.data();
+  bi.ulFlags = BIF_RETURNONLYFSDIRS;
+  bi.lpfn = browse_callback_proc;
+  bi.lParam = reinterpret_cast<LPARAM>(initial_path);
+  LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
+  std::optional<std::wstring> ret;
+  if (pidl != nullptr) {
+    // get the name of the folder
+    std::vector<wchar_t> sz_path(MAX_PATH);
+    if (SHGetPathFromIDList(pidl, sz_path.data()))
+      ret = sz_path.data();
+    CoTaskMemFree(pidl);
+    // free memory used
+
+    CoUninitialize();
+  }
+  return ret;
+}
+
 WinBase::~WinBase() = default;
 
 void WinBase::set_enabled(bool enabled) { EnableWindow(m_hwnd, enabled ? TRUE : FALSE); }
