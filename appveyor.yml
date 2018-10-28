@@ -40,7 +40,7 @@ build_script:
 - ps: |
     md _build_$env:PLATFORM -Force | Out-Null
     cd _build_$env:PLATFORM
-    & cmake -G "$generator" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" ..
+    & cmake -G "$generator" -T"$env:PLATFORMTOOLSET" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" ..
     if ($LastExitCode -ne 0) {
         throw "Exec: $ErrorMessage"
     }
