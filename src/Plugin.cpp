@@ -435,7 +435,7 @@ void init_classes() {
       static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings,
       *speller_container);
   aspell_options_dlg = std::make_unique<AspellOptionsDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
-    *settings);
+    *settings, *speller_container);
 
   settings->load();
   resources_inited = true;

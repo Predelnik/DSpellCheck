@@ -1,28 +1,34 @@
 #include "AspellOptionsDialog.h"
 #include "Settings.h"
+#include "SpellerContainer.h"
 #include "utils/WinApi.h"
 
-AspellOptionsDialog::AspellOptionsDialog(HINSTANCE h_inst, HWND parent, Settings& settings) : m_settings (settings) {
-  Window::init (h_inst, parent);
+AspellOptionsDialog::AspellOptionsDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &spellers)
+    : m_settings(settings), m_spellers(spellers) {
+  Window::init(h_inst, parent);
 }
 
 void AspellOptionsDialog::do_dialog() {
   if (!isCreated()) {
     create(IDD_ASPELL_OPTIONS);
   }
+  update_controls();
   goToCenter();
   display();
 }
 
 void AspellOptionsDialog::apply_choice() {
   auto s = m_settings.modify();
-  s->aspell_allow_run_together_words = Button_GetCheck (m_allow_run_together_cb) == BST_CHECKED;
-  s->aspell_personal_dictionary_path = get_edit_text (m_aspell_personal_path_le);
+  s->aspell_allow_run_together_words = Button_GetCheck(m_allow_run_together_cb) == BST_CHECKED;
+  s->aspell_personal_dictionary_path = get_edit_text(m_aspell_personal_path_le);
+  if (s->aspell_personal_dictionary_path == m_spellers.get_aspell_default_personal_dictionary_path())
+    s->aspell_personal_dictionary_path = L"";
 }
 
 void AspellOptionsDialog::update_controls() {
   Button_SetCheck(m_allow_run_together_cb, m_settings.aspell_allow_run_together_words ? BST_CHECKED : BST_UNCHECKED);
-  Edit_SetText(m_aspell_personal_path_le, m_settings.aspell_personal_dictionary_path.c_str ());
+  Edit_SetText(m_aspell_personal_path_le, m_settings.aspell_personal_dictionary_path.empty() ? m_spellers.get_aspell_default_personal_dictionary_path().c_str()
+                                                                                             : m_settings.aspell_personal_dictionary_path.c_str());
 }
 
 INT_PTR __stdcall AspellOptionsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
@@ -36,9 +42,9 @@ INT_PTR __stdcall AspellOptionsDialog::run_dlg_proc(UINT message, WPARAM w_param
     case IDC_BROWSEPDICTIONARYPATH:
       if (HIWORD(w_param) == BN_CLICKED) {
         auto cur_path = get_edit_text(m_aspell_personal_path_le);
-        auto path = WinApi::browse_for_directory (_hSelf, cur_path.data ());
+        auto path = WinApi::browse_for_directory(_hSelf, cur_path.data());
         if (path)
-          Edit_SetText(m_aspell_personal_path_le, path->data ());
+          Edit_SetText(m_aspell_personal_path_le, path->data());
       }
       break;
     case IDOK:

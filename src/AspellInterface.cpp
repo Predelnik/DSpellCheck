@@ -17,9 +17,9 @@
 #include "LanguageInfo.h"
 #include "MainDef.h"
 #include "Plugin.h"
+#include "Settings.h"
 #include "aspell.h"
 #include "utils/winapi.h"
-#include "Settings.h"
 
 AspellInterface::~AspellInterface() = default;
 
@@ -73,8 +73,8 @@ void AspellInterface::send_aspell_error(AspellCanHaveError *error) {
 void AspellInterface::setup_aspell_config(AspellConfig *spell_config) {
   aspell_config_replace(spell_config, "encoding", "utf-8");
   aspell_config_replace(spell_config, "run-together", m_settings.aspell_allow_run_together_words ? "true" : "false");
-  if (!m_settings.aspell_personal_dictionary_path.empty ())
-    aspell_config_replace(spell_config, "home-dir", to_string (m_settings.aspell_personal_dictionary_path).c_str ());
+  if (!m_settings.aspell_personal_dictionary_path.empty())
+    aspell_config_replace(spell_config, "home-dir", to_string(m_settings.aspell_personal_dictionary_path).c_str());
 }
 
 void AspellInterface::set_multiple_languages(const std::vector<std::wstring> &list) {
@@ -84,16 +84,16 @@ void AspellInterface::set_multiple_languages(const std::vector<std::wstring> &li
 
   m_spellers.clear();
   for (auto &lang : list) {
-    AspellConfig *spell_config = new_aspell_config();
-    setup_aspell_config(spell_config);
-    aspell_config_replace(spell_config, "lang", to_string(lang.c_str()).c_str());
-    AspellCanHaveError *possible_err = new_aspell_speller(spell_config);
+    auto spell_config = wrap_config(new_aspell_config());
+    setup_aspell_config(spell_config.get());
+    aspell_config_replace(spell_config.get(), "lang", to_string(lang.c_str()).c_str());
+    AspellCanHaveError *possible_err = new_aspell_speller(spell_config.get());
     if (aspell_error_number(possible_err) == 0) {
       m_spellers.push_back(wrap_speller(to_aspell_speller(possible_err)));
     } else
       send_aspell_error(possible_err);
 
-    delete_aspell_config(spell_config);
+    delete_aspell_config(spell_config.get());
   }
 }
 
@@ -220,6 +220,11 @@ AspellStatus AspellInterface::get_status() const {
   if (!m_correct_bitness)
     return AspellStatus::incorrect_bitness;
   return AspellStatus::not_working;
+}
+
+std::wstring AspellInterface::get_default_personal_dictionary_path() const {
+  auto cfg = wrap_config(new_aspell_config());
+  return to_wstring(aspell_config_get_default(cfg.get(), "home-dir"));
 }
 
 void AspellInterface::set_language(const wchar_t *lang) {

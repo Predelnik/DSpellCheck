@@ -42,6 +42,7 @@ public:
 
   bool init(const wchar_t* path_arg);
   AspellStatus get_status() const;
+  std::wstring get_default_personal_dictionary_path() const;
 
 private:
   void send_aspell_error(AspellCanHaveError *error);

@@ -50,6 +50,10 @@ AspellStatus SpellerContainer::get_aspell_status() const {
   return m_aspell_speller->get_status ();
 }
 
+std::wstring SpellerContainer::get_aspell_default_personal_dictionary_path() const {
+  return m_aspell_speller->get_default_personal_dictionary_path ();
+}
+
 std::vector<LanguageInfo> SpellerContainer::get_available_languages() const {
   if (!active_speller().is_working())
     return {};

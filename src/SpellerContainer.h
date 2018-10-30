@@ -55,6 +55,7 @@ public:
   const SpellerInterface &active_speller() const;
   SpellerInterface &active_speller();
   AspellStatus get_aspell_status() const;
+  std::wstring get_aspell_default_personal_dictionary_path() const;
   void cleanup();
 
 public:
