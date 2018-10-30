@@ -72,7 +72,8 @@ public:
 
 public:
     bool auto_check_text = true;
-    std::wstring aspell_path;
+    std::wstring aspell_dll_path;
+    std::wstring aspell_personal_dictionary_path;
     std::wstring hunspell_user_path;
     std::wstring hunspell_system_path;
     SuggestionMode suggestions_mode = SuggestionMode::button;

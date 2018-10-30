@@ -89,7 +89,7 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
   settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
   switch (settings.active_speller_lib_id) {
   case SpellerId::aspell:
-    settings.aspell_path = get_edit_text(m_h_lib_path);
+    settings.aspell_dll_path = get_edit_text(m_h_lib_path);
     break;
   case SpellerId::hunspell:
     settings.hunspell_user_path = get_edit_text(m_h_lib_path);
@@ -153,7 +153,7 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
       Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_INCORRECT_BITNESS).c_str());
       break;
     }
-    Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.aspell_path).c_str());
+    Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.aspell_dll_path).c_str());
 
     Static_SetText(m_h_lib_group_box, rc_str(IDS_ASPELL_LOCATION).c_str());
     break;

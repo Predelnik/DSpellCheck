@@ -23,7 +23,7 @@
 #include "utils/string_utils.h"
 
 void SpellerContainer::create_spellers(const NppData &npp_data) {
-  m_aspell_speller = std::make_unique<AspellInterface>(npp_data.npp_handle);
+  m_aspell_speller = std::make_unique<AspellInterface>(npp_data.npp_handle, m_settings);
   m_hunspell_speller = std::make_unique<HunspellInterface>(npp_data.npp_handle);
   m_native_speller = std::make_unique<NativeSpellerInterface>();
 }
@@ -125,9 +125,7 @@ void SpellerContainer::apply_settings_to_active_speller() {
     m_native_speller->init();
     break;
   case SpellerId::aspell:
-    m_aspell_speller->init(m_settings.aspell_path.c_str());
-    m_aspell_speller->set_allow_run_together(
-        m_settings.aspell_allow_run_together_words);
+    m_aspell_speller->init(m_settings.aspell_dll_path.c_str());
     break;
   case SpellerId::hunspell:
     m_hunspell_speller->set_use_one_dic(m_settings.use_unified_dictionary);

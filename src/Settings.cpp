@@ -192,7 +192,8 @@ std::wstring Settings::get_default_hunspell_path() {
 }
 
 void Settings::process(IniWorker &worker) {
-  worker.process(L"Aspell_Path", aspell_path, get_default_aspell_path());
+  worker.process(L"Aspell_Path", aspell_dll_path, get_default_aspell_path());
+  worker.process(L"Aspell_Personal_Dictionary_Path", aspell_personal_dictionary_path, L"");
   worker.process(L"User_Hunspell_Path", hunspell_user_path,
                  get_default_hunspell_path());
   worker.process(L"System_Hunspell_Path", hunspell_system_path,

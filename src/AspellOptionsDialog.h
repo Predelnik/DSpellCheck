@@ -12,6 +12,7 @@ protected:
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
     LPARAM l_param) override;
   HWND m_allow_run_together_cb;
+  HWND m_aspell_personal_path_le;
 
 protected:
   Settings &m_settings;

@@ -18,6 +18,7 @@
 
 struct AspellCanHaveError;
 struct AspellSpeller;
+class Settings;
 
 #include "SpellerInterface.h"
 
@@ -26,7 +27,7 @@ class LanguageInfo;
 class AspellInterface : public SpellerInterface {
   using SpellerPtr = std::unique_ptr<AspellSpeller, void (*)(AspellSpeller *)>;
 public:
-  AspellInterface(HWND npp_window_arg); // Window for error reporting
+  AspellInterface(HWND npp_window_arg, const Settings &settings); // Window for error reporting
   ~AspellInterface() override;
   std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t* lang) override;
@@ -38,7 +39,6 @@ public:
     std::vector<std::wstring> get_suggestions(const wchar_t* word) const override;
   void add_to_dictionary(const wchar_t* word) override;
   void ignore_all(const wchar_t* word) override;
-  void set_allow_run_together (bool allow);
 
   bool init(const wchar_t* path_arg);
   AspellStatus get_status() const;
@@ -51,8 +51,8 @@ private:
   mutable AspellSpeller *m_last_selected_speller;
   SpellerPtr m_single_speller;
   std::vector<SpellerPtr> m_spellers;
-  bool m_allow_run_together;
   bool m_aspell_loaded;
   bool m_correct_bitness = true;
   HWND m_npp_window; // For message boxes
+  const Settings &m_settings;
 };

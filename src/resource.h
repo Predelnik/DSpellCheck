@@ -93,6 +93,7 @@
 #define IDC_DELIMITER_EXCLUSIONS_LE             40002
 #define IDC_LIB_CODE_GB                         40002
 #define IDS_STATUS_LOADING                      40002
+#define IDC_ASPELL_PERSONAL_PATH_LE             40003
 #define IDC_CAMEL_CASE_SPLITTING_CB             40003
 #define IDS_STATUS_LIST_SUCCESS                 40003
 #define IDC_CHECKFUNCVAR_CB                     40004

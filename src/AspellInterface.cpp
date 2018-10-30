@@ -19,6 +19,7 @@
 #include "Plugin.h"
 #include "aspell.h"
 #include "utils/winapi.h"
+#include "Settings.h"
 
 AspellInterface::~AspellInterface() = default;
 
@@ -32,7 +33,7 @@ auto wrap_config(AspellConfig *raw_ptr) {
 }
 } // namespace
 
-AspellInterface::AspellInterface(HWND npp_window_arg) : m_single_speller(wrap_speller(nullptr)) {
+AspellInterface::AspellInterface(HWND npp_window_arg, const Settings &settings) : m_single_speller(wrap_speller(nullptr)), m_settings(settings) {
   m_npp_window = npp_window_arg;
   m_last_selected_speller = nullptr;
   m_aspell_loaded = false;
@@ -71,7 +72,9 @@ void AspellInterface::send_aspell_error(AspellCanHaveError *error) {
 
 void AspellInterface::setup_aspell_config(AspellConfig *spell_config) {
   aspell_config_replace(spell_config, "encoding", "utf-8");
-  aspell_config_replace(spell_config, "run-together", m_allow_run_together ? "true" : "false");
+  aspell_config_replace(spell_config, "run-together", m_settings.aspell_allow_run_together_words ? "true" : "false");
+  if (!m_settings.aspell_personal_dictionary_path.empty ())
+    aspell_config_replace(spell_config, "home-dir", to_string (m_settings.aspell_personal_dictionary_path).c_str ());
 }
 
 void AspellInterface::set_multiple_languages(const std::vector<std::wstring> &list) {
@@ -156,8 +159,6 @@ void AspellInterface::ignore_all(const wchar_t *word) {
   }
   m_last_selected_speller = nullptr;
 }
-
-void AspellInterface::set_allow_run_together(bool allow) { m_allow_run_together = allow; }
 
 bool AspellInterface::check_word(WordForSpeller word) const {
   if (!m_aspell_loaded) {
