@@ -1,7 +1,15 @@
+v1.4.7
+* Remove hotkeys enabled by default because they collide with useful actions in some localizations (#150). Please configure them yourself through Settings->Shortcut Mapper if you need them.
+* Fix exception triggered by horizontal scrolling when some lines are collapsed (#151)
+* Separate Aspell Options to different dialog. Add option to configure personal (additional) dictionaries directory. (#152)
+* Add third option to split words: by non-alpha/numeric characters from ANSI (current non-unicode locale in windows system) + all non ANSI characters with possible exclusions. (#149)
+* Add option to remove all misspelled words to Additional Actions. (#147)
+* Correct name for HIL_PH language abbreviation. (#145)
+
 v1.4.6
 * Support downloading of dictionaries from GitHub repositories. (#143, #61)
 * Add LibreOffice repository as a default server for dictionaries.
-* Make user dictionary files updated immediatel on adding new word to them (#142)
+* Make user dictionary files updated immediately on adding new word to them (#142)
 * Make more explicit message about aspell DLL targeting incorrect architecture.
 
 v1.4.5
