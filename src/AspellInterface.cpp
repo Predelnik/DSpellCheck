@@ -92,8 +92,6 @@ void AspellInterface::set_multiple_languages(const std::vector<std::wstring> &li
       m_spellers.push_back(wrap_speller(to_aspell_speller(possible_err)));
     } else
       send_aspell_error(possible_err);
-
-    delete_aspell_config(spell_config.get());
   }
 }
 
