@@ -1,3 +1,6 @@
+v1.4.8
+* Fix crash when spell-checking multiple languages with Aspell.
+
 v1.4.7
 * Remove hotkeys enabled by default because they collide with useful actions in some localizations (#150). Please configure them yourself through Settings->Shortcut Mapper if you need them.
 * Fix exception triggered by horizontal scrolling when some lines are collapsed (#151)
