@@ -57,7 +57,7 @@ int utf8_symbol_len(char c) {
     return 5;
   if ((c & 0xFC) > 0 && (c & 0x02) == 0)
     return 6;
-  return 0;
+  return 1; // to avoid unnecessary endless loops, skipping bad symbol
 }
 
 bool utf8_first_chars_equal(const char *str1, const char *str2) {
