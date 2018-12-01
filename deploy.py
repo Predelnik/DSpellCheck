@@ -74,6 +74,8 @@ if options.new_major:
 	print ('Version increased to {}'.format ('.'.join (ver)))
 x64_binary_path = ''
 x86_binary_path = ''
+x64_zip_path = ''
+x86_zip_path = ''
 
 for arch in ['x64', 'x86']:
 	dir = 'build-deploy-msvc2017-{}'.format (arch)
@@ -104,6 +106,10 @@ for arch in ['x64', 'x86']:
 			.format (target_zip_path))
 		sys.exit (1)
 	zip (binary_path, target_zip_path)
+	if arch == 'x64':
+		x64_zip_path = target_zip_path
+	else:
+		x86_zip_path = target_zip_path
 	print ('Copying PDB...')
 	shutil.copy (pdb_path, target_pdb_path)
 
@@ -173,7 +179,7 @@ if options.new_minor or options.update_pm:
 	if  'NPP_PLUGIN_LIST_PATH' in os.environ:
 		plugin_list_path = os.environ['NPP_PLUGIN_LIST_PATH']
 		print ('Applying change to nppPluginList source directory...')
-		for t in [('src/pl.x64.json', x64_binary_path, 'x64'), ('src/pl.x86.json', x86_binary_path, 'x86')]:
+		for t in [('src/pl.x64.json', x64_zip_path, 'x64'), ('src/pl.x86.json', x86_zip_path, 'x86')]:
 			plugins_json_path = os.path.join (plugin_list_path, t[0])
 			json_data = None
 			with open(plugins_json_path, encoding='utf-8') as data_file:
