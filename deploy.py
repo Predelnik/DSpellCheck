@@ -73,6 +73,7 @@ if options.new_major:
 	replace_rc_version (ver)
 	print ('Version increased to {}'.format ('.'.join (ver)))
 x64_binary_path = ''
+x86_binary_path = ''
 
 for arch in ['x64', 'x86']:
 	dir = 'build-deploy-msvc2017-{}'.format (arch)
@@ -85,6 +86,8 @@ for arch in ['x64', 'x86']:
 	binary_path = os.path.join (dir, 'RelWithDebInfo', 'DSpellCheck.dll')
 	if arch == 'x64':
 		x64_binary_path = binary_path
+	else:
+		x86_binary_path = binary_path
 	pdb_path = os.path.join (dir, 'RelWithDebInfo', 'DSpellCheck.pdb')
 	if call(build_args, stdout= (None if options.verbose else FNULL)) != 0:
 		print ('Error: Build error')
@@ -105,6 +108,19 @@ for arch in ['x64', 'x86']:
 	shutil.copy (pdb_path, target_pdb_path)
 
 if options.new_minor or options.update_pm:
+	ver = get_rc_version ()
+
+	def create_commit(repo_path):
+		repo = Repository (repo_path)
+		index = repo.index
+		index.add_all ()
+		index.write ()
+		config = Config.get_global_config()
+		author = Signature(config['user.name'], config['user.email'])
+		commiter = author
+		tree = index.write_tree()
+		repo.create_commit ('refs/heads/master', author, commiter, 'Update DSpellCheck to {}'.format (ver), tree, [repo.head.get_object().hex])
+
 	if 'NPP_PLUGINS_X64_PATH' in os.environ:
 		plugins_x64_path = os.environ['NPP_PLUGINS_X64_PATH']
 		print ('Applying change to npp-plugins-x64 source directory...')
@@ -151,17 +167,31 @@ if options.new_minor or options.update_pm:
 			file.write (validate_text)
 
 		print ('Creating commit in npp-plugins-x64 repository...')
-		repo = Repository (plugins_x64_path)
-		index = repo.index
-		index.add_all ()
-		index.write ()
-		config = Config.get_global_config()
-		author = Signature(config['user.name'], config['user.email'])
-		commiter = author
-		tree = index.write_tree()
-		repo.create_commit ('refs/heads/master', author, commiter, 'Update DSpellCheck to {}'.format (ver), tree, [repo.head.get_object().hex])
+		create_commit (plugins_x64_path)
 	else:
 		print ('%NPP_PLUGINS_X64_PATH% is not set up, nothing to update')
+	if  'NPP_PLUGIN_LIST_PATH' in os.environ:
+		plugin_list_path = os.environ['NPP_PLUGIN_LIST_PATH']
+		print ('Applying change to nppPluginList source directory...')
+		for t in [('src/pl.x64.json', x64_binary_path, 'x64'), ('src/pl.x86.json', x86_binary_path, 'x86')]:
+			plugins_json_path = os.path.join (plugin_list_path, t[0])
+			json_data = None
+			with open(plugins_json_path, encoding='utf-8') as data_file:
+				json_data = json.loads(data_file.read ())
+			plugin_node = None
+			for node in json_data["npp-plugins"]:
+				if node["display-name"] == "DSpellCheck":
+					plugin_node = node
+					break
+			plugin_node["version"] = ver
+			plugin_node["id"] = hashlib.sha256(open(t[1], 'rb').read()).hexdigest()
+			plugin_node["repository"] = 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_{}.zip'.format (ver, t[2])
+			json.dump (json_data, open (plugins_json_path, "w", encoding='utf-8'), indent='\t', ensure_ascii=False)
+
+		print ('Creating commit in nppPluginList repository...')
+		create_commit (plugin_list_path)
+	else:
+		print ('%NPP_PLUGIN_LIST_PATH% is not set up, nothing to update')
 
 successString = 'Success!'
 try:
