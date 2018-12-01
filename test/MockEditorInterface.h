@@ -43,6 +43,7 @@ public:
   std::vector<State> past;
 
   void set_data(const std::wstring &data_arg);
+  void set_data_raw(const std::string& data_arg);
   void erase(long start, long length);
   void save_state ();
   long cursor_pos;
@@ -115,6 +116,7 @@ public:
   void open_virtual_document(EditorViewType view, const std::wstring &path,
                              const std::wstring &data);
   void set_active_document_text(EditorViewType view, const std::wstring &text);
+  void set_active_document_text_raw(EditorViewType view, const std::string& text);
   std::vector<std::string> get_underlined_words (EditorViewType view, int indicator_id) const;
   void make_all_visible (EditorViewType view);
   void set_lexer (EditorViewType view, int lexer);

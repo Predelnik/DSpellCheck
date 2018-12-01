@@ -21,14 +21,18 @@
 void MockedDocumentInfo::set_data(const std::wstring &data_arg) {
   switch (codepage) {
   case EditorCodepage::ansi:
-    cur.data = to_string(data_arg);
+    set_data_raw (to_string(data_arg));
     break;
   case EditorCodepage::utf8:
-    cur.data = to_utf8_string(data_arg);
+    set_data_raw (to_utf8_string(data_arg));
     break;
   case EditorCodepage::COUNT:
     break;
   }
+}
+
+void MockedDocumentInfo::set_data_raw(const std::string &data_arg) {
+  cur.data = data_arg;
   cur.style.resize(cur.data.size());
   cur.selection = {0, 0};
   cursor_pos = 0;
@@ -462,6 +466,13 @@ void MockEditorInterface::set_active_document_text(EditorViewType view,
   auto doc = active_document(view);
   if (doc)
     doc->set_data(text);
+}
+
+void MockEditorInterface::set_active_document_text_raw(EditorViewType view,
+  const std::string &text) {
+  auto doc = active_document(view);
+  if (doc)
+    doc->set_data_raw(text);
 }
 
 std::vector<std::string>

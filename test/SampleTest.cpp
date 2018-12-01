@@ -247,6 +247,11 @@ abg
     editor.set_cursor_pos(v, 6);
     CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, true));
   }
+  {
+    // check for wrong utf-8 characters
+    editor.set_active_document_text_raw(v, "abcdef\xBE\xE3");
+    sc.recheck_visible_both_views();
+  }
 }
 
 TEST_CASE("ANSI") {
