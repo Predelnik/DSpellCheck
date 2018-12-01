@@ -1,3 +1,6 @@
+v1.4.9
+* Fix hang when spell-checking file containing invalid utf-8 characters.
+
 v1.4.8
 * Fix crash when spell-checking multiple languages with Aspell.
 
