@@ -196,41 +196,58 @@ std::vector<LanguageInfo> HunspellInterface::get_language_list() const {
   return list;
 }
 
-DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &info) {
+DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &lang_info) {
   {
-    auto it = m_all_hunspells.find(info.full_path);
+    auto it = m_all_hunspells.find(lang_info.full_path);
     if (it != m_all_hunspells.end()) {
       return &it->second;
     }
   }
-  auto aff_buf = info.full_path + L".aff";
-  auto dic_buf = info.full_path + L".dic";
-  auto aff_buf_ansi = to_string(aff_buf.c_str());
-  auto dic_buf_ansi = to_string(dic_buf.c_str());
-  auto new_hunspell = std::make_unique<Hunspell>(aff_buf_ansi.c_str(), dic_buf_ansi.c_str());
-  auto new_name = aff_buf.substr(0, aff_buf.length() - 4);
-  DicInfo new_dic;
-  const char *dic_encoding = new_hunspell->get_dic_encoding();
-  if (stricmp(dic_encoding, "Microsoft-cp1251") == 0)
-    dic_encoding = "cp1251"; // Queer fix for encoding which isn't being guessed
-  // correctly by libiconv TODO: Find other possible
-  // such failures
-  new_dic.converter = {dic_encoding, "UCS-2LE"};
-  new_dic.back_converter = {"UCS-2LE", dic_encoding};
-  new_dic.local_dic_path += m_dic_dir + L"\\"s + info.name + L".usr";
-  update_word_count(new_dic.local_dic_path.c_str());
-  new_hunspell->add_dic(to_string(new_dic.local_dic_path).c_str());
-  if ("UTF-8"sv != dic_encoding) {
-    auto encoded_path = create_encoded_dict_version(m_user_dic_path.c_str(), dic_encoding);
-    if (!encoded_path.empty()) {
-      new_hunspell->add_dic(to_string(encoded_path).c_str());
-      WinApi::delete_file(encoded_path.c_str());
-    }
-  } else
-    new_hunspell->add_dic(to_string(m_user_dic_path).c_str());
-  new_dic.hunspell = std::move(new_hunspell);
-  auto &target = m_all_hunspells[new_name];
-  target = std::move(new_dic);
+
+  DicInfo new_empty_dic;
+
+  new_empty_dic.loading_task = TaskWrapper(m_npp_window);
+  new_empty_dic.loading_task->do_deferred(
+      [lang_info, dic_dir = m_dic_dir, user_dict_path = m_user_dic_path](concurrency::cancellation_token)
+  {
+    auto aff_path = lang_info.full_path + L".aff";
+    auto dic_path = lang_info.full_path + L".dic";
+    auto aff_buf_ansi = to_string(aff_path.c_str());
+    auto dic_buf_ansi = to_string(dic_path.c_str());
+    auto new_name = aff_path.substr(0, aff_path.length() - 4);
+    // shared_ptr is used only as a workaround due to the fact that TaskWrapper uses std::function
+    // TODO: use some unique_function implementation in TaskWrapper and remove shared_ptr usage here.
+    auto new_dic = std::make_shared<DicInfo>();
+    new_dic->local_dic_path = dic_dir + L"\\"s + lang_info.name + L".usr";
+    auto new_hunspell = std::make_unique<Hunspell>(aff_buf_ansi.c_str(), dic_buf_ansi.c_str());
+    const char *dic_encoding = new_hunspell->get_dic_encoding();
+    if (stricmp(dic_encoding, "Microsoft-cp1251") == 0)
+      dic_encoding = "cp1251"; // Queer fix for encoding which isn't being guessed
+    // correctly by libiconv TODO: Find other possible
+    // such failures
+    new_dic->converter = {dic_encoding, "UCS-2LE"};
+    new_dic->back_converter = {"UCS-2LE", dic_encoding};
+    update_word_count(new_dic->local_dic_path.c_str());
+    new_hunspell->add_dic(to_string(new_dic->local_dic_path).c_str());
+    if ("UTF-8"sv != dic_encoding) {
+      auto encoded_path = create_encoded_dict_version(user_dict_path.c_str(), dic_encoding);
+      if (!encoded_path.empty()) {
+        new_hunspell->add_dic(to_string(encoded_path).c_str());
+        WinApi::delete_file(encoded_path.c_str());
+      }
+    } else
+      new_hunspell->add_dic(to_string(user_dict_path).c_str());
+    new_dic->hunspell = std::move(new_hunspell);
+    return new_dic;
+  },
+      [path = lang_info.full_path, this](std::shared_ptr<DicInfo> dic_info)
+  {
+    m_all_hunspells[path] = std::move(*dic_info);
+    speller_loaded();
+  });
+
+  auto &target = m_all_hunspells[lang_info.full_path];
+  target = std::move(new_empty_dic);
   return &target;
 }
 
@@ -267,6 +284,8 @@ void HunspellInterface::set_multiple_languages(const std::vector<std::wstring> &
 }
 
 bool HunspellInterface::speller_check_word(const DicInfo &dic, WordForSpeller word) {
+  if (!dic.is_loaded())
+    return true;
   if (word.data.ends_with_dot)
     word.str += L".";
   auto word_to_check = dic.to_dictionary_encoding(word.str.c_str());
@@ -344,7 +363,7 @@ std::wstring HunspellInterface::create_encoded_dict_version(const wchar_t *dict_
 }
 
 void HunspellInterface::add_to_dictionary(const wchar_t *word) {
-  if (m_last_selected_speller == nullptr)
+  if (m_last_selected_speller == nullptr || !m_last_selected_speller->is_loaded())
     return;
 
   std::wstring dic_path;
@@ -367,7 +386,7 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
   };
 
   if (!PathFileExists(dic_path.c_str())) {
-    auto last_slash_pos = dic_path.rfind(L"\\");
+    auto last_slash_pos = dic_path.rfind(L'\\');
     if (last_slash_pos == std::wstring::npos)
       return;
     auto dir = dic_path.substr(0, last_slash_pos);
@@ -399,7 +418,7 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
 }
 
 void HunspellInterface::ignore_all(const wchar_t *word) {
-  if (m_last_selected_speller == nullptr)
+  if (m_last_selected_speller == nullptr || !m_last_selected_speller->is_loaded())
     return;
 
   m_ignored.insert(word);
@@ -407,14 +426,19 @@ void HunspellInterface::ignore_all(const wchar_t *word) {
 
 std::vector<std::wstring> HunspellInterface::get_suggestions(const wchar_t *word) const {
   std::vector<std::string> list;
-  m_last_selected_speller = m_singular_speller;
+  m_last_selected_speller = nullptr;
 
   switch (m_speller_mode) {
   case SpellerMode::SingleLanguage: {
+    m_last_selected_speller = m_singular_speller;
+    if (!m_singular_speller->is_loaded())
+      return {};
     list = m_singular_speller->hunspell->suggest(m_singular_speller->to_dictionary_encoding(word));
   } break;
   case SpellerMode::MultipleLanguages: {
     for (auto speller : m_spellers) {
+      if (!speller->is_loaded())
+        continue;
       auto cur_list = speller->hunspell->suggest(speller->to_dictionary_encoding(word));
       if (cur_list.size() > list.size()) {
         list = std::move(cur_list);
@@ -423,6 +447,9 @@ std::vector<std::wstring> HunspellInterface::get_suggestions(const wchar_t *word
     }
   } break;
   }
+
+  if (!m_last_selected_speller)
+    return {};
 
   std::vector<std::wstring> sugg_list(list.size());
   std::transform(list.begin(), list.end(), sugg_list.begin(), [this](const std::string &s) { return m_last_selected_speller->from_dictionary_encoding(s); });

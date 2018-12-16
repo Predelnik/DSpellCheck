@@ -17,6 +17,7 @@
 #include "CommonFunctions.h"
 #include "MainDef.h"
 #include <ppltasks.h>
+#include "utils/move_only.h"
 
 struct CallbackData {
   std::weak_ptr<void> alive_status;
@@ -26,9 +27,12 @@ struct CallbackData {
 struct TaskWrapper {
 private:
     using AliveStatusType = std::shared_ptr<concurrency::cancellation_token_source>;
+    using Self = TaskWrapper;
 
 public:
     explicit TaskWrapper(HWND target_hwnd);
+    TaskWrapper(Self &&) = default;
+    Self &operator=(Self &&) = default;
     ~TaskWrapper ();
     void reset_alive_status ();
     void cancel ();
@@ -60,4 +64,5 @@ public:
 private:
     HWND m_target_hwnd;
     AliveStatusType m_alive_status;
+    move_only<bool> m_valid;
 };

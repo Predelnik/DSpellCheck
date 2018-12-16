@@ -14,10 +14,11 @@
 
 #include "TaskWrapper.h"
 
-TaskWrapper::TaskWrapper(HWND target_hwnd): m_target_hwnd(target_hwnd)  {
+TaskWrapper::TaskWrapper(HWND target_hwnd): m_target_hwnd(target_hwnd), m_valid(true)  {
 }
 
 TaskWrapper::~TaskWrapper() {
+  if (m_valid.get())
     cancel ();
 }
 
