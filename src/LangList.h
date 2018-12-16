@@ -21,7 +21,7 @@ class SpellerContainer;
 
 class LangList : public StaticDialog {
 public:
-  LangList(HINSTANCE h_inst, HWND parent, Settings &settings,
+  LangList(HINSTANCE h_inst, HWND parent, const Settings &settings,
            const SpellerContainer &speller_container);
   void do_dialog();
   HWND get_list_box();
@@ -34,6 +34,6 @@ protected:
 
 private:
   HWND m_h_lang_list = nullptr;
-  Settings &m_settings;
+  const Settings &m_settings;
   const SpellerContainer &m_speller_container;
 };

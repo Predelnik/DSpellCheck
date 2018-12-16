@@ -20,17 +20,15 @@
 
 #include "LanguageInfo.h"
 #include "Settings.h"
+#include "SpellerContainer.h"
 #include "resource.h"
 #include "utils/string_utils.h"
-#include "SpellerContainer.h"
 
-LangList::LangList(HINSTANCE h_inst, HWND parent, Settings &settings,
-                   const SpellerContainer &speller_container)
+LangList::LangList(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
     : m_settings(settings), m_speller_container(speller_container) {
   Window::init(h_inst, parent);
   m_settings.settings_changed.connect([this] { update_list(); });
-  m_speller_container.speller_status_changed.connect(
-      [this] { update_list(); });
+  m_speller_container.speller_status_changed.connect([this] { update_list(); });
 }
 
 void LangList::do_dialog() {
@@ -51,14 +49,11 @@ void LangList::update_list() {
   ListBox_ResetContent(m_h_lang_list);
   auto langs = m_speller_container.get_available_languages();
   for (auto &lang : langs) {
-    ListBox_AddString(m_h_lang_list, lang.get_aliased_name(
-                                         m_settings.use_language_name_aliases));
+    ListBox_AddString(m_h_lang_list, lang.get_aliased_name(m_settings.use_language_name_aliases));
   }
 
   CheckedListBox_EnableCheckAll(get_lang_list()->get_list_box(), BST_UNCHECKED);
-  for (auto &token : make_delimiter_tokenizer(
-                         m_settings.get_active_multi_languages(), LR"(\|)")
-                         .get_all_tokens()) {
+  for (auto &token : make_delimiter_tokenizer(m_settings.get_active_multi_languages(), LR"(\|)").get_all_tokens()) {
     int index = -1;
     int i = 0;
     for (auto &lang : langs) {
@@ -88,13 +83,14 @@ void LangList::apply() {
       buf += langs[i].orig_name;
     }
   }
-  m_settings.get_active_multi_languages() = buf;
-  m_settings.get_active_language() = L"<MULTIPLE>";
-  m_settings.settings_changed();
+  {
+    auto mut = m_settings.modify();
+    mut->get_active_multi_languages() = buf;
+    mut->get_active_language() = L"<MULTIPLE>";
+  }
 }
 
-INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param,
-                               LPARAM /*l_param*/) {
+INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
   switch (message) {
   case WM_INITDIALOG: {
     m_h_lang_list = ::GetDlgItem(_hSelf, IDC_LANGLIST);
