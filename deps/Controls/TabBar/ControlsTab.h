@@ -29,6 +29,7 @@
 #define CONTROLS_TAB_H
 
 #include <vector>
+#include <string>
 
 #ifndef TAB_BAR_H
 #include "TabBar.h"
