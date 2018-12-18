@@ -405,14 +405,14 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, long 
 }
 
 auto SpellChecker::non_alphabetic_tokenizer(std::wstring_view target) const {
-  return make_condition_tokenizer(target,
-                                  [this](wchar_t c) { return !IsCharAlphaNumeric(c) && m_settings.delimiter_exclusions.find(c) == std ::wstring_view::npos; },
-                                  m_settings.split_camel_case);
+  return Tokenizer(target,
+                   [this](wchar_t c) { return !IsCharAlphaNumeric(c) && m_settings.delimiter_exclusions.find(c) == std ::wstring_view::npos; },
+                   m_settings.split_camel_case);
 }
 
 auto SpellChecker::non_ansi_tokenizer(std::wstring_view target) const {
 
-  return make_condition_tokenizer(target,
+  return Tokenizer(target,
     [this](wchar_t c)
   {
     static const auto ansi_str = []()

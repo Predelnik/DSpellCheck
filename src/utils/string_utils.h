@@ -88,17 +88,10 @@ private:
   bool m_split_camel_case;
 };
 
-template <typename IsDelimiterType>
-auto make_condition_tokenizer(std::wstring_view target,
-                              IsDelimiterType is_delimiter,
-                              bool split_camel_case = false) {
-  return Tokenizer<IsDelimiterType>(target, is_delimiter, split_camel_case);
-}
-
 inline auto make_delimiter_tokenizer(std::wstring_view target,
                                      std::wstring_view delimiters,
                                      bool split_camel_case = false) {
-  return make_condition_tokenizer(
+  return Tokenizer(
       target,
       [=](wchar_t c) { return delimiters.find(c) != std::string_view::npos; },
       split_camel_case);
