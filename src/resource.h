@@ -42,7 +42,6 @@
 #define IDC_ADDRESS                             1009
 #define IDC_PORT                                1009
 #define IDD_SETTINGS                            1009
-#define IDC_DECODE_NAMES                        1010
 #define IDC_FILE_LIST                           1010
 #define IDC_PASSWORD                            1010
 #define IDC_COUNT_YO_AS_YE                      1011
@@ -95,6 +94,7 @@
 #define IDS_STATUS_LOADING                      40002
 #define IDC_ASPELL_PERSONAL_PATH_LE             40003
 #define IDC_CAMEL_CASE_SPLITTING_CB             40003
+#define IDC_LANGUAGE_NAME_STYLE                 40003
 #define IDS_STATUS_LIST_SUCCESS                 40003
 #define IDC_CHECKFUNCVAR_CB                     40004
 #define IDC_CHECK_DEFAULT_UDL_STYLE             40004
@@ -197,3 +197,7 @@
 #define IDS_ASPELL_INCORRECT_BITNESS            40098
 #define IDS_ERASE_ALL_MISSPELLED                40099
 #define IDS_SPLIT_WORDS_BY_NON_ANSI             40100
+#define IDS_LANGUAGE_NAME_STYLE_ORIGINAL        40101
+#define IDS_LANGUAGE_NAME_STYLE_ENGLISH         40102
+#define IDS_LANGUAGE_NAME_STYLE_LOCALIZED       40103
+#define IDS_LANGUAGE_NAME_STYLE_NATIVE          40104

@@ -61,7 +61,7 @@ void SimpleDlg::update_language_controls(const Settings &settings, const Speller
     if (settings.get_active_language() == lang.orig_name)
       selected_index = i;
 
-    ComboBox_AddString(m_h_combo_language, lang.get_aliased_name(settings.use_language_name_aliases));
+    ComboBox_AddString(m_h_combo_language, lang.get_aliased_name(m_settings.language_name_style != LanguageNameStyle::original));
     ++i;
   }
   if (settings.get_active_language() == L"<MULTIPLE>")
@@ -108,8 +108,8 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
   settings.check_comments = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
   settings.check_strings = Button_GetCheck(m_h_check_strings) == BST_CHECKED;
   settings.check_variable_functions = Button_GetCheck(m_h_check_varfunc) == BST_CHECKED;
-  settings.use_language_name_aliases = Button_GetCheck(m_h_decode_names) == BST_CHECKED;
   settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
+  settings.language_name_style = m_language_name_style_cmb.current_data();
 }
 
 void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settings) {
@@ -120,7 +120,6 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
   auto is_hunspell = settings.active_speller_lib_id == SpellerId::hunspell ? TRUE : FALSE;
   ShowWindow(m_h_download_dics, is_hunspell);
   ShowWindow(m_h_remove_dics, is_hunspell);
-  ShowWindow(m_h_decode_names, is_hunspell);
   ShowWindow(m_h_one_user_dic, is_hunspell);
   ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
   ShowWindow(m_h_hunspell_path_type, is_hunspell);
@@ -193,7 +192,6 @@ void SimpleDlg::set_file_types(bool check_those, const wchar_t *file_types) {
 
 void SimpleDlg::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_index(mode); }
 
-void SimpleDlg::set_decode_names(bool value) { Button_SetCheck(m_h_decode_names, value ? BST_CHECKED : BST_UNCHECKED); }
 
 void SimpleDlg::set_one_user_dic(bool value) { Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED); }
 
@@ -216,11 +214,11 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     m_h_lib_link = ::GetDlgItem(_hSelf, IDC_LIB_LINK);
     m_suggestion_mode_cmb.init(GetDlgItem(_hSelf, IDC_SUGG_TYPE));
     m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
+    m_language_name_style_cmb.init(GetDlgItem(_hSelf, IDC_LANGUAGE_NAME_STYLE));
 
     m_h_lib_group_box = ::GetDlgItem(_hSelf, IDC_LIB_GROUPBOX);
     m_h_download_dics = ::GetDlgItem(_hSelf, IDC_DOWNLOADDICS);
     m_h_remove_dics = ::GetDlgItem(_hSelf, IDC_REMOVE_DICS);
-    m_h_decode_names = ::GetDlgItem(_hSelf, IDC_DECODE_NAMES);
     m_h_one_user_dic = ::GetDlgItem(_hSelf, IDC_ONE_USER_DIC);
     m_h_hunspell_path_group_box = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_GROUPBOX);
     m_h_hunspell_path_type = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_TYPE);
@@ -699,9 +697,9 @@ void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer
   Button_SetCheck(m_h_check_comments, settings.check_comments ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_check_strings, settings.check_strings ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_check_varfunc, settings.check_variable_functions ? BST_CHECKED : BST_UNCHECKED);
-  set_decode_names(settings.use_language_name_aliases);
   set_sugg_type(settings.suggestions_mode);
   set_one_user_dic(settings.use_unified_dictionary);
+  m_language_name_style_cmb.set_index(settings.language_name_style);
 }
 
 void SimpleDlg::init_speller_id_combobox(const SpellerContainer &speller_container) {

@@ -43,7 +43,6 @@ public:
     void disable_language_combo(bool disable);
     void set_file_types(bool check_those, const wchar_t* file_types);
     void set_sugg_type(SuggestionMode mode);
-    void set_decode_names(bool value);
     void set_one_user_dic(bool value);
     void init_settings(HINSTANCE h_inst, HWND parent);
     void update_controls(const Settings& settings, const SpellerContainer& speller_container);
@@ -76,7 +75,6 @@ private:
     HWND m_h_lib_group_box = nullptr;
     HWND m_h_download_dics = nullptr;
     HWND m_h_remove_dics = nullptr;
-    HWND m_h_decode_names = nullptr;
     HWND m_h_one_user_dic = nullptr;
     HWND m_h_hunspell_path_group_box = nullptr;
     HWND m_h_reset_speller_path = nullptr;
@@ -86,6 +84,7 @@ private:
     HWND m_browse_btn = nullptr;
     WinApi::ComboBox m_speller_cmb;
     WinApi::EnumComboBox<SuggestionMode> m_suggestion_mode_cmb;
+    WinApi::EnumComboBox<LanguageNameStyle> m_language_name_style_cmb;
 
     HMODULE m_h_ux_theme;
     OtdProc m_open_theme_data;

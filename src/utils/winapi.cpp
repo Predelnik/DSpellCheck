@@ -20,6 +20,7 @@
 #pragma warning(pop)
 #include "Aclapi.h"
 #include <cassert>
+#include "string_utils.h"
 
 std::wstring get_edit_text(HWND edit) {
   auto length = Edit_GetTextLength(edit);
@@ -172,5 +173,28 @@ std::optional<int> library_bitness(const wchar_t *path) {
   case IMAGE_FILE_MACHINE_AMD64:
     return 64;
   }
+}
+
+std::wstring get_locale_info(const wchar_t *locale_name, LCTYPE type)
+{
+  static auto kernel32_handle = GetModuleHandle(L"kernel32.dll");
+  static auto IsValidLocaleName = reinterpret_cast<BOOL (*)(LPCWSTR)>(GetProcAddress(kernel32_handle, "IsValidLocaleName"));
+  static auto GetLocaleInfoEx = reinterpret_cast<BOOL (*)(LPCWSTR, LCTYPE, LPWSTR, int)>(GetProcAddress(kernel32_handle, "GetLocaleInfoEx"));
+  if (!IsValidLocaleName || !GetLocaleInfoEx)
+    return locale_name;
+
+  if (!IsValidLocaleName(locale_name))
+    return {};
+  auto len = GetLocaleInfoEx(locale_name, type, nullptr, 0);
+  if (len == 0)
+    return {};
+
+  std::vector<wchar_t> buf(len);
+  GetLocaleInfoEx(locale_name, type, buf.data(), len);
+  std::wstring ret = buf.data();
+  // Locales which give unknown locale etc. Somehow still pass IsValidLocaleName. Go figure.
+  if (starts_with(ret, L"Unknown Locale"))
+    return {};
+  return ret;
 }
 } // namespace WinApi

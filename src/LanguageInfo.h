@@ -19,19 +19,13 @@ class LanguageInfo {
 public:
   std::wstring orig_name;
   std::wstring alias_name;
-  bool alias_applied;
   bool for_all_users = false;
 
-  LanguageInfo(std::wstring_view name, bool use_alias = true,
+  LanguageInfo(std::wstring_view name, LanguageNameStyle language_name_style,
                bool for_all_users_arg = false) {
-    alias_applied = false;
     orig_name = name;
     for_all_users = for_all_users_arg;
-    if (use_alias) {
-      std::tie(alias_name, alias_applied) = apply_alias(name);
-    } else {
-      alias_name = name;
-    }
+    alias_name = apply_alias(name, language_name_style);
   }
 
   const wchar_t *get_aliased_name(bool use_alias) {
@@ -40,8 +34,7 @@ public:
 };
 
 inline bool less_aliases(const LanguageInfo &a, const LanguageInfo &b) {
-  return (a.alias_applied ? a.alias_name : a.orig_name) <
-         (b.alias_applied ? b.alias_name : b.orig_name);
+  return a.alias_name < b.alias_name;
 }
 
 inline bool less_original(const LanguageInfo &a, const LanguageInfo &b) {

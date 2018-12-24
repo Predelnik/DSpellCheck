@@ -49,7 +49,7 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
             new_menu, MF_STRING | checked,
             get_use_allocated_ids() ? i + get_langs_menu_id_start()
                                     : MAKEWORD(i, LANGUAGE_MENU_ID),
-            m_settings.use_language_name_aliases ? lang.alias_name.c_str()
+            m_settings.language_name_style != LanguageNameStyle::original ? lang.alias_name.c_str()
                                                  : lang.orig_name.c_str());
         if (!res)
           return;

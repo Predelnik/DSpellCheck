@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <io.h>
+#include "Settings.h"
 
 namespace {
 void append_word_to_user_dictionary(const wchar_t *dictionary_path, const char *word) {
@@ -139,7 +140,7 @@ std::string DicInfo::to_dictionary_encoding(std::wstring_view input) const { ret
 
 std::wstring DicInfo::from_dictionary_encoding(std::string_view input) const { return convert_impl<wchar_t>(back_converter, input); }
 
-HunspellInterface::HunspellInterface(HWND npp_window_arg) : m_use_one_dic(false) {
+HunspellInterface::HunspellInterface(HWND npp_window_arg, const Settings &settings) : m_use_one_dic(false), m_settings(settings)  {
   m_npp_window = npp_window_arg;
   m_singular_speller = {};
   m_last_selected_speller = {};
@@ -191,7 +192,7 @@ bool are_paths_equal(const wchar_t *path1, const wchar_t *path2) {
 std::vector<LanguageInfo> HunspellInterface::get_language_list() const {
   std::vector<LanguageInfo> list;
   for (auto &dic : m_dic_list) {
-    list.emplace_back(dic.name, true, get_lang_only_system(dic.name.c_str()));
+    list.emplace_back(dic.name, m_settings.language_name_style, get_lang_only_system(dic.name.c_str()));
   }
   return list;
 }

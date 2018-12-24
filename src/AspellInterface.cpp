@@ -58,7 +58,7 @@ std::vector<LanguageInfo> AspellInterface::get_language_list() const {
   const AspellDictInfo *entry;
   std::vector<LanguageInfo> names;
   while ((entry = aspell_dict_info_enumeration_next(dels)) != nullptr) {
-    names.emplace_back(to_wstring(entry->name), false);
+    names.emplace_back(to_wstring(entry->name), m_settings.language_name_style);
   }
   std::sort(names.begin(), names.end(), less_original);
   return names;

@@ -18,6 +18,7 @@
 #include <memory>
 
 class MappedWstring;
+enum class LanguageNameStyle;
 
 struct NppData;
 
@@ -32,7 +33,7 @@ std::wstring utf8_to_wstring(const char* source);
 std::string utf8_to_string(const char* source);
 void write_unicode_bom (FILE *fp);
 
-std::pair<std::wstring_view, bool> apply_alias(std::wstring_view str);
+std::wstring apply_alias(std::wstring_view str, LanguageNameStyle style);
 
 std::wstring parse_string(const wchar_t* source);
 

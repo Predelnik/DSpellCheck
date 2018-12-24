@@ -24,6 +24,17 @@ class IniWorker;
 const wchar_t *default_delimiters ();
 const wchar_t *default_delimiter_exclusions ();
 
+enum class LanguageNameStyle {
+  original,
+  english,
+  native,
+  localized,
+
+  COUNT,
+};
+
+std::wstring gui_string(LanguageNameStyle value);
+
 enum class SuggestionMode {
   button,
   context_menu,
@@ -110,7 +121,6 @@ public:
     int last_used_address_index = 0;
     bool remove_user_dictionaries = false;
     bool remove_system_dictionaries = false;
-    bool use_language_name_aliases = false;
     bool use_proxy = false;
     int word_minimum_length = 0;
     std::wstring proxy_user_name;
@@ -125,6 +135,7 @@ public:
     enum_array<SpellerId, std::wstring> speller_language;
     enum_array<SpellerId, std::wstring> speller_multi_languages;
     bool write_debug_log;
+    LanguageNameStyle language_name_style;
 
     mutable lsignal::signal<void()> settings_changed;
 

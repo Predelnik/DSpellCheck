@@ -27,7 +27,7 @@ class NativeSpellerInterface : public SpellerInterface
 {
 public:
     void init (); // init should be done after initialization, not after construction
-    NativeSpellerInterface ();
+    NativeSpellerInterface (const Settings &settings);
     void set_language(const wchar_t* lang) override;
     std::vector<bool> check_words(const std::vector<WordForSpeller>& words) const override;
     void add_to_dictionary(const wchar_t* word) override;
@@ -50,8 +50,9 @@ private:
     std::unique_ptr<ptrs> m_ptrs;
     mutable ISpellChecker *m_last_used_speller = nullptr;
     bool m_ok = false;
-    bool m_inited = false;
-    bool m_co_initialize_succesfull = false;
+    bool m_init = false;
+    bool m_co_initialize_successful = false;
+    const Settings &m_settings;
 };
 #else
 class NativeSpellerInterface : public DummySpeller

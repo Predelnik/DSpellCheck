@@ -103,9 +103,7 @@ DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &
 void DownloadDicsDlg::indicate_that_saving_might_be_needed() { m_check_if_saving_is_needed = true; }
 
 LRESULT DownloadDicsDlg::ask_replacement_message(const wchar_t *dic_name) {
-  std::wstring name;
-  if (m_settings.use_language_name_aliases)
-    std::tie(name, std::ignore) = apply_alias(dic_name);
+  std::wstring name = apply_alias(dic_name, m_settings.language_name_style);
   return MessageBox(_hParent, wstring_printf(rc_str(IDS_DICT_PS_EXISTS_BODY).c_str(), name.c_str()).c_str(), rc_str(IDS_DICT_EXISTS_HEADER).c_str(), MB_YESNO);
 }
 
@@ -287,8 +285,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         WinApi::delete_file(dic_file_local_path.c_str());
         m_failure = true;
       }
-      std::wstring converted_dic_name;
-      std::tie(converted_dic_name, std::ignore) = apply_alias(file_name);
+      auto converted_dic_name = apply_alias(file_name, m_settings.language_name_style);
       if (m_failure)
         goto clean_and_continue;
 
@@ -745,7 +742,7 @@ void DownloadDicsDlg::on_new_file_list(std::vector<FileDescription> list) {
 
   m_current_list.clear();
   for (auto &element : list) {
-    std::tie(element.title, element.was_alias_applied) = apply_alias(element.title);
+    element.title = apply_alias(element.title, m_settings.language_name_style);
     m_current_list.push_back(element);
   }
 

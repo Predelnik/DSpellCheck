@@ -32,6 +32,23 @@ const wchar_t *default_delimiters() {
 
 const wchar_t *default_delimiter_exclusions() { return L"'’_"; }
 
+std::wstring gui_string(LanguageNameStyle value)
+{
+  switch (value) 
+  {
+  case LanguageNameStyle::original:
+    return rc_str(IDS_LANGUAGE_NAME_STYLE_ORIGINAL);
+  case LanguageNameStyle::english:
+    return rc_str(IDS_LANGUAGE_NAME_STYLE_ENGLISH);
+  case LanguageNameStyle::localized:
+    return rc_str(IDS_LANGUAGE_NAME_STYLE_LOCALIZED);
+  case LanguageNameStyle::native:
+    return rc_str(IDS_LANGUAGE_NAME_STYLE_NATIVE);
+  case LanguageNameStyle::COUNT: break;
+  }
+  return nullptr;
+}
+
 std::wstring gui_string(ProxyType value) {
   switch (value) {
   case ProxyType::web_proxy:
@@ -115,8 +132,7 @@ static const wchar_t *default_language(SpellerId value) {
   return nullptr;
 }
 
-Settings::Settings(std::wstring_view ini_filepath)
-    : m_ini_filepath(ini_filepath) {}
+Settings::Settings(std::wstring_view ini_filepath) : m_ini_filepath(ini_filepath) {}
 
 constexpr auto app_name = L"SpellCheck";
 
@@ -129,13 +145,12 @@ void Settings::save() {
   check_for_directory_existence(std::wstring(path));
   // Cleaning settings file (or creating it)
   if (_wfopen_s(&fp, m_ini_filepath.c_str(), L"w") != NULL) {
-    MessageBox(
-        nullptr,
-        wstring_printf(L"Setting file %s cannot be written. All settings will "
-                       L"be lost when you close Notepad++.",
-                       m_ini_filepath.c_str())
-            .c_str(),
-        L"Saving of Settings Failed", MB_OK | MB_ICONHAND);
+    MessageBox(nullptr,
+               wstring_printf(L"Setting file %s cannot be written. All settings will "
+                              L"be lost when you close Notepad++.",
+                              m_ini_filepath.c_str())
+                   .c_str(),
+               L"Saving of Settings Failed", MB_OK | MB_ICONHAND);
     return;
   }
   write_unicode_bom(fp);
@@ -152,21 +167,13 @@ void Settings::load() {
   settings_changed();
 }
 
-std::wstring &Settings::get_active_language() {
-  return speller_language[active_speller_lib_id];
-}
+std::wstring &Settings::get_active_language() { return speller_language[active_speller_lib_id]; }
 
-const std::wstring &Settings::get_active_language() const {
-  return const_cast<Self *>(this)->get_active_language();
-}
+const std::wstring &Settings::get_active_language() const { return const_cast<Self *>(this)->get_active_language(); }
 
-std::wstring &Settings::get_active_multi_languages() {
-  return speller_multi_languages[active_speller_lib_id];
-}
+std::wstring &Settings::get_active_multi_languages() { return speller_multi_languages[active_speller_lib_id]; }
 
-const std::wstring &Settings::get_active_multi_languages() const {
-  return const_cast<Self *>(this)->get_active_multi_languages();
-}
+const std::wstring &Settings::get_active_multi_languages() const { return const_cast<Self *>(this)->get_active_multi_languages(); }
 
 TemporaryAcessor<Settings::Self> Settings::modify() const {
   auto non_const_this = const_cast<Self *>(this);
@@ -176,58 +183,39 @@ TemporaryAcessor<Settings::Self> Settings::modify() const {
           }};
 }
 
-std::wstring_view Settings::get_dictionary_download_path() const
-{
-	return   download_install_dictionaries_for_all_users
-		   ? hunspell_system_path
-		   : hunspell_user_path;
+std::wstring_view Settings::get_dictionary_download_path() const {
+  return download_install_dictionaries_for_all_users ? hunspell_system_path : hunspell_user_path;
 }
 
-void Settings::reset_hunspell_lang_to_default() {
-  speller_language[SpellerId::hunspell] = default_language (SpellerId::hunspell);
-}
+void Settings::reset_hunspell_lang_to_default() { speller_language[SpellerId::hunspell] = default_language(SpellerId::hunspell); }
 
-std::wstring Settings::get_default_hunspell_path() {
-  return m_ini_filepath.substr(0, m_ini_filepath.rfind(L'\\')) + L"\\Hunspell";
-}
+std::wstring Settings::get_default_hunspell_path() { return m_ini_filepath.substr(0, m_ini_filepath.rfind(L'\\')) + L"\\Hunspell"; }
 
 void Settings::process(IniWorker &worker) {
   worker.process(L"Aspell_Path", aspell_dll_path, get_default_aspell_path());
   worker.process(L"Aspell_Personal_Dictionary_Path", aspell_personal_dictionary_path, L"");
-  worker.process(L"User_Hunspell_Path", hunspell_user_path,
-                 get_default_hunspell_path());
-  worker.process(L"System_Hunspell_Path", hunspell_system_path,
-                 L".\\plugins\\config\\Hunspell");
-  worker.process(L"Aspell_Allow_Run_Together_Words",
-                 aspell_allow_run_together_words, false);
-  worker.process(L"Suggestions_Control", suggestions_mode,
-                 SuggestionMode::context_menu);
+  worker.process(L"User_Hunspell_Path", hunspell_user_path, get_default_hunspell_path());
+  worker.process(L"System_Hunspell_Path", hunspell_system_path, L".\\plugins\\config\\Hunspell");
+  worker.process(L"Aspell_Allow_Run_Together_Words", aspell_allow_run_together_words, false);
+  worker.process(L"Suggestions_Control", suggestions_mode, SuggestionMode::context_menu);
   worker.process(L"Autocheck", auto_check_text, true);
   for (auto id : enum_range<SpellerId>()) {
-    worker.process(
-        wstring_printf(L"%s_Multiple_Languages", to_string(id)).c_str(),
-        speller_multi_languages[id], L"");
-    worker.process(wstring_printf(L"%s_Language", to_string(id)).c_str(),
-                   speller_language[id], default_language(id));
+    worker.process(wstring_printf(L"%s_Multiple_Languages", to_string(id)).c_str(), speller_multi_languages[id], L"");
+    worker.process(wstring_printf(L"%s_Language", to_string(id)).c_str(), speller_language[id], default_language(id));
   }
-  worker.process(L"Tokenization_Style", tokenization_style,
-                 TokenizationStyle::by_non_alphabetic);
+  worker.process(L"Tokenization_Style", tokenization_style, TokenizationStyle::by_non_alphabetic);
   worker.process(L"Split_CamelCase", split_camel_case, false);
-  worker.process(L"Delimiter_Exclusions", delimiter_exclusions,
-                 default_delimiter_exclusions());
+  worker.process(L"Delimiter_Exclusions", delimiter_exclusions, default_delimiter_exclusions());
   worker.process(L"Delimiters", delimiters, default_delimiters(), true);
   worker.process(L"Suggestions_Number", suggestion_count, 5);
   worker.process(L"Ignore_Yo", ignore_yo, false);
-  worker.process(L"Convert_Single_Quotes_To_Apostrophe", convert_single_quotes,
-                 true);
-  worker.process(L"Remove_Ending_And_Beginning_Apostrophe",
-                 remove_boundary_apostrophes, true);
+  worker.process(L"Convert_Single_Quotes_To_Apostrophe", convert_single_quotes, true);
+  worker.process(L"Remove_Ending_And_Beginning_Apostrophe", remove_boundary_apostrophes, true);
   worker.process(L"Check_Those_\\_Not_Those", check_those, true);
   worker.process(L"File_Types", file_types, L"*.*");
   worker.process(L"Check_Comments", check_comments, true);
   worker.process(L"Check_String", check_strings, true);
-  worker.process(L"Check_Variable_Function_Names", check_variable_functions,
-                 false);
+  worker.process(L"Check_Variable_Function_Names", check_variable_functions, false);
   worker.process(L"Underline_Color", underline_color, 0x0000ff); // red
   worker.process(L"Underline_Style", underline_style, INDIC_SQUIGGLE);
   worker.process(L"Ignore_Having_Number", ignore_containing_digit, true);
@@ -238,26 +226,26 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Word_Minimum_Length", word_minimum_length, false);
   worker.process(L"Check_Default_UDL_style", check_default_udl_style, true);
   worker.process(L"Ignore_With_", ignore_having_underscore, true);
-  worker.process(L"United_User_Dictionary(Hunspell)", use_unified_dictionary,
-                 false);
-  worker.process(L"Ignore_That_Start_or_End_with_",
-                 ignore_starting_or_ending_with_apostrophe, false);
+  worker.process(L"United_User_Dictionary(Hunspell)", use_unified_dictionary, false);
+  worker.process(L"Ignore_That_Start_or_End_with_", ignore_starting_or_ending_with_apostrophe, false);
   worker.process(L"Library", active_speller_lib_id, SpellerId::hunspell);
   worker.process(L"Suggestions_Button_Size", suggestion_button_size, 15);
   worker.process(L"Suggestions_Button_Opacity", suggestion_button_opacity, 70);
   worker.process(L"Show_Only_Known", download_show_only_recognized_dictionaries, true);
-  worker.process(L"Install_Dictionaries_For_All_Users",
-                 download_install_dictionaries_for_all_users, false);
+  worker.process(L"Install_Dictionaries_For_All_Users", download_install_dictionaries_for_all_users, false);
   worker.process(L"Recheck_Delay", recheck_delay, 500);
   for (int i = 0; i < static_cast<int>(server_names.size()); ++i)
-    worker.process(wstring_printf(L"Server_Address[%d]", i).c_str(),
-                   server_names[i], L"");
+    worker.process(wstring_printf(L"Server_Address[%d]", i).c_str(), server_names[i], L"");
   worker.process(L"Last_Used_Address_Index", last_used_address_index, 0);
-  worker.process(L"Remove_User_Dics_On_Dic_Remove", remove_user_dictionaries,
-                 false);
-  worker.process(L"Remove_Dics_For_All_Users", remove_system_dictionaries,
-                 false);
-  worker.process(L"Decode_Language_Names", use_language_name_aliases, true);
+  worker.process(L"Remove_User_Dics_On_Dic_Remove", remove_user_dictionaries, false);
+  worker.process(L"Remove_Dics_For_All_Users", remove_system_dictionaries, false);
+  worker.process(L"Language_Name_Style", language_name_style, LanguageNameStyle::english);
+  if (worker.get_action() == IniWorker::Action::load) {
+    bool use_language_name_aliases;
+    worker.process(L"Decode_Language_Names", use_language_name_aliases, true);
+    if (!use_language_name_aliases)
+      language_name_style = LanguageNameStyle::original;
+  }
   worker.process(L"Use_Proxy", use_proxy, false);
   worker.process(L"Proxy_User_Name", proxy_user_name, L"anonymous");
   worker.process(L"Proxy_Host_Name", proxy_host_name, L"");

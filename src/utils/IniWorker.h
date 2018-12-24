@@ -36,6 +36,7 @@ public:
     void process_utf8(const wchar_t* name, std::string& value, const char* default_value, bool in_quotes = false) const;
 
     void process(const wchar_t* name, bool& value, bool default_value) const;
+    Action get_action() const { return m_action; }
 
 private:
     std::wstring m_app_name;

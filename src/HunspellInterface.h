@@ -25,6 +25,7 @@
 class LanguageInfo;
 
 class Hunspell;
+class Settings;
 
 class IconvWrapperT {
   static void close_iconv(iconv_t conv) {
@@ -64,7 +65,7 @@ struct AvailableLangInfo {
 
 class HunspellInterface : public SpellerInterface {
 public:
-  HunspellInterface(HWND npp_window_arg);
+  HunspellInterface(HWND npp_window_arg, const Settings &settings);
   ~HunspellInterface() override;
   std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t *lang) override;
@@ -103,6 +104,7 @@ private:
   std::wstring m_user_dic_path;         // For now only default one.
   std::wstring m_system_wrong_dic_path; // Only for reading and then removing
   HWND m_npp_window;
+  const Settings &m_settings;
 
 public:
   mutable lsignal::signal<void()> speller_loaded;

@@ -12,6 +12,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include "Settings.h"
 #if defined(DSPELLCHECK_NEW_SDK) && !defined(__clang__)
 #include "NativeSpellerInterface.h"
 #include "CommonFunctions.h"
@@ -40,7 +41,7 @@ void NativeSpellerInterface::init_impl() {
   try {
     HR(CoInitializeEx(nullptr, // reserved
                       COINIT_APARTMENTTHREADED));
-    m_co_initialize_succesfull = true;
+    m_co_initialize_successful = true;
   } catch (const ComException &e) {
     if (e.code != RPC_E_CHANGED_MODE)
       throw e;
@@ -52,10 +53,10 @@ void NativeSpellerInterface::init_impl() {
 }
 
 void NativeSpellerInterface::init() {
-  if (m_inited)
+  if (m_init)
     return;
 
-  m_inited = true;
+  m_init = true;
 
   try {
     init_impl();
@@ -65,7 +66,7 @@ void NativeSpellerInterface::init() {
   m_ok = true;
 }
 
-NativeSpellerInterface::NativeSpellerInterface() {
+NativeSpellerInterface::NativeSpellerInterface(const Settings &settings) : m_settings (settings) {
   m_ptrs = std::make_unique<ptrs>();
 }
 
@@ -164,7 +165,7 @@ std::vector<LanguageInfo> NativeSpellerInterface::get_language_list() const {
     ptr->Next(1, &ws, &fetched);
     if (fetched == 0)
       break;
-    res.push_back(LanguageInfo(ws));
+    res.push_back(LanguageInfo(ws, m_settings.language_name_style));
   }
   return res;
 }
@@ -238,7 +239,7 @@ void NativeSpellerInterface::cleanup() {
   {
     m_ok = false;
     m_ptrs.reset();
-    if (m_co_initialize_succesfull)
+    if (m_co_initialize_successful)
       CoUninitialize ();
   }
 }

@@ -24,8 +24,8 @@
 
 void SpellerContainer::create_spellers(const NppData &npp_data) {
   m_aspell_speller = std::make_unique<AspellInterface>(npp_data.npp_handle, m_settings);
-  m_hunspell_speller = std::make_unique<HunspellInterface>(npp_data.npp_handle);
-  m_native_speller = std::make_unique<NativeSpellerInterface>();
+  m_hunspell_speller = std::make_unique<HunspellInterface>(npp_data.npp_handle, m_settings);
+  m_native_speller = std::make_unique<NativeSpellerInterface>(m_settings);
   m_hunspell_speller->speller_loaded.connect([this] { speller_status_changed(); });
 }
 
@@ -56,7 +56,7 @@ std::vector<LanguageInfo> SpellerContainer::get_available_languages() const {
     return {};
 
   auto langs = active_speller().get_language_list();
-  std::sort(langs.begin(), langs.end(), m_settings.use_language_name_aliases ? less_aliases : less_original);
+  std::sort(langs.begin(), langs.end(), m_settings.language_name_style != LanguageNameStyle::original ? less_aliases : less_original);
   return langs;
 }
 
