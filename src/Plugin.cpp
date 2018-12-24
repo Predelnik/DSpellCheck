@@ -41,6 +41,7 @@
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/raii.h"
+#include "utils/winapi.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>

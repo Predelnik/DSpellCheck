@@ -15,8 +15,8 @@
 #pragma once
 #include "StaticDialog/StaticDialog.h"
 #include "CommonFunctions.h"
-#include "utils/winapi.h"
 #include "Settings.h"
+#include "utils/WinApiControls.h"
 
 class Settings;
 class SpellChecker;

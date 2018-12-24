@@ -39,6 +39,7 @@
 #include <cctype>
 
 #include <experimental/string>
+#include "utils/enum_range.h"
 
 SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor, const SpellerContainer &speller_container)
     : m_settings(*settings), m_editor(editor), m_speller_container(speller_container) {

@@ -15,10 +15,9 @@
 #pragma once
 
 #include "StaticDialog/StaticDialog.h"
-#include "PluginInterface.h"
 #include "TabBar/ControlsTab.h"
 #include "Settings.h"
-#include "utils/winapi.h"
+#include "utils/WinApiControls.h"
 
 enum class AspellStatus;
 class HunspellInterface;

@@ -58,6 +58,7 @@ static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*
   return 0; // The function should always return 0.
 }
 
+namespace WinApi {
 std::wstring get_class_name(HWND hwnd) {
   static const int max_class_name = 256;
   std::vector<wchar_t> buf(max_class_name);
@@ -65,7 +66,6 @@ std::wstring get_class_name(HWND hwnd) {
   return {buf.data()};
 }
 
-namespace WinApi {
 std::optional<std::wstring> browse_for_directory(HWND parent_wnd, const wchar_t *initial_path) {
   // Thanks to http://vcfaq.mvps.org/sdk/20.htm
   BROWSEINFO bi;
@@ -96,27 +96,6 @@ std::optional<std::wstring> browse_for_directory(HWND parent_wnd, const wchar_t 
   }
   return ret;
 }
-
-WinBase::~WinBase() = default;
-
-void WinBase::set_enabled(bool enabled) { EnableWindow(m_hwnd, enabled ? TRUE : FALSE); }
-
-void WinBase::init(HWND hwnd) {
-  m_hwnd = hwnd;
-  check_hwnd();
-  init_impl();
-}
-
-void ComboBox::check_hwnd() { assert(get_class_name(m_hwnd) == L"ComboBox"); }
-
-std::optional<int> ComboBox::find_by_data(int data) {
-  for (int i = 0; i < ComboBox_GetCount(m_hwnd); ++i)
-    if (ComboBox_GetItemData(m_hwnd, i) == data)
-      return i;
-  return std::nullopt;
-}
-
-void ComboBox::clear() { ComboBox_ResetContent(m_hwnd); }
 
 HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text) {
   if (tool_id == 0 || h_dlg == nullptr || psz_text == nullptr) {
