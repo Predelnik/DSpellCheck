@@ -1,8 +1,7 @@
 #pragma once
 #include "enum_range.h"
 
-namespace WinApi
-{
+namespace WinApi {
 class WinBase {
 public:
   virtual ~WinBase();
@@ -21,6 +20,10 @@ class ComboBox : public WinBase {
   void check_hwnd() override;
 
 public:
+  template <typename EnumType> void add_item(EnumType val) {
+    add_item(gui_string(val).c_str(), static_cast<int>(val));
+  }
+
   template <typename EnumType> void add_items() {
     static_assert(std::is_enum_v<EnumType>);
     for (auto val : enum_range<EnumType>()) {
@@ -49,6 +52,8 @@ template <typename EnumType> class EnumComboBox : protected ComboBox {
 public:
   using Parent::init;
   using Parent::set_enabled;
+  using Parent::clear;
+  using Parent::add_item;
 
   EnumType current_data() const { return static_cast<EnumType>(Parent::current_data()); }
 
@@ -57,4 +62,4 @@ public:
 private:
   void init_impl() override { this->add_items<EnumType>(); }
 };
-}
+} // namespace WinApi

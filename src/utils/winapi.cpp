@@ -19,8 +19,8 @@
 #include <DbgHelp.h>
 #pragma warning(pop)
 #include "Aclapi.h"
-#include <cassert>
 #include "string_utils.h"
+#include <cassert>
 
 std::wstring get_edit_text(HWND edit) {
   auto length = Edit_GetTextLength(edit);
@@ -154,17 +154,33 @@ std::optional<int> library_bitness(const wchar_t *path) {
   }
 }
 
-std::wstring get_locale_info(const wchar_t *locale_name, LCTYPE type)
-{
+template <typename T> static void extract_function(T &target, HMODULE handle, const char *proc_name) {
+  target = reinterpret_cast<T>(GetProcAddress(handle, proc_name));
+}
+
+struct locale_info_handles {
+  BOOL (*IsValidLocaleName)(LPCWSTR);
+  BOOL (*GetLocaleInfoEx)(LPCWSTR, LCTYPE, LPWSTR, int);
+};
+
+const locale_info_handles &get_locale_info_handles() {
   static auto kernel32_handle = GetModuleHandle(L"kernel32.dll");
-  static auto IsValidLocaleName = reinterpret_cast<BOOL (*)(LPCWSTR)>(GetProcAddress(kernel32_handle, "IsValidLocaleName"));
-  static auto GetLocaleInfoEx = reinterpret_cast<BOOL (*)(LPCWSTR, LCTYPE, LPWSTR, int)>(GetProcAddress(kernel32_handle, "GetLocaleInfoEx"));
-  if (!IsValidLocaleName || !GetLocaleInfoEx)
+  static locale_info_handles handles;
+  extract_function(handles.IsValidLocaleName, kernel32_handle, "IsValidLocaleName");
+  extract_function(handles.GetLocaleInfoEx, kernel32_handle, "GetLocaleInfoEx");
+  return handles;
+}
+
+bool is_locale_info_available() { return get_locale_info_handles().IsValidLocaleName && get_locale_info_handles().GetLocaleInfoEx; }
+
+std::wstring get_locale_info(const wchar_t *locale_name, LCTYPE type) {
+  if (!is_locale_info_available ())
     return locale_name;
 
-  if (!IsValidLocaleName(locale_name))
+  auto &handles = get_locale_info_handles();
+  if (!handles.IsValidLocaleName(locale_name))
     return {};
-  auto len = GetLocaleInfoEx(locale_name, type, nullptr, 0);
+  auto len = handles.GetLocaleInfoEx(locale_name, type, nullptr, 0);
   if (len == 0)
     return {};
 

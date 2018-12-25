@@ -28,5 +28,6 @@ HWND create_tooltip(int tool_id, HWND h_dlg, const wchar_t *psz_text);
 bool delete_file(const wchar_t *path);
 std::optional<int> library_bitness(const wchar_t *path);
 
+bool is_locale_info_available();
 std::wstring get_locale_info(const wchar_t *locale_name, LCTYPE type);
 } // namespace WinApi

@@ -192,7 +192,6 @@ void SimpleDlg::set_file_types(bool check_those, const wchar_t *file_types) {
 
 void SimpleDlg::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_index(mode); }
 
-
 void SimpleDlg::set_one_user_dic(bool value) { Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED); }
 
 INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
@@ -215,6 +214,24 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     m_suggestion_mode_cmb.init(GetDlgItem(_hSelf, IDC_SUGG_TYPE));
     m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
     m_language_name_style_cmb.init(GetDlgItem(_hSelf, IDC_LANGUAGE_NAME_STYLE));
+    m_language_name_style_cmb.clear();
+    for (auto val : enum_range<LanguageNameStyle>()) {
+      if ([&]() {
+        switch (val) {
+        case LanguageNameStyle::original:
+        case LanguageNameStyle::english:
+          return true;
+        case LanguageNameStyle::native:
+        case LanguageNameStyle::localized:
+          return WinApi::is_locale_info_available();
+          break;
+        case LanguageNameStyle::COUNT:
+          break;
+        }
+            return false;
+      }())
+        m_language_name_style_cmb.add_item(val);
+    }
 
     m_h_lib_group_box = ::GetDlgItem(_hSelf, IDC_LIB_GROUPBOX);
     m_h_download_dics = ::GetDlgItem(_hSelf, IDC_DOWNLOADDICS);
@@ -351,15 +368,15 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
           Edit_SetText(m_h_lib_path, filename.data());
       } break;
       case SpellerId::hunspell: {
-          auto lib_path = get_edit_text(m_h_lib_path);
-          std::vector<wchar_t> final_path(MAX_PATH);
+        auto lib_path = get_edit_text(m_h_lib_path);
+        std::vector<wchar_t> final_path(MAX_PATH);
 
-          auto npp_path = m_npp.get_npp_directory();
-          PathCombine(final_path.data(), npp_path.data(), lib_path.c_str());
+        auto npp_path = m_npp.get_npp_directory();
+        PathCombine(final_path.data(), npp_path.data(), lib_path.c_str());
 
-          auto path = WinApi::browse_for_directory (_hSelf, final_path.data ());
-          if (path)
-            Edit_SetText(m_h_lib_path, path->data ());
+        auto path = WinApi::browse_for_directory(_hSelf, final_path.data());
+        if (path)
+          Edit_SetText(m_h_lib_path, path->data());
       } break;
       case SpellerId::COUNT:
         break;
