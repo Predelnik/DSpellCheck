@@ -51,7 +51,7 @@ void RemoveDictionariesDialog::update_list() {
   ListBox_ResetContent(m_lang_list);
   for (auto &lang : m_speller_container.get_available_languages())
     ListBox_AddString(m_lang_list,
-                      (std::wstring(lang.get_aliased_name(m_settings.language_name_style != LanguageNameStyle::original)) + (lang.for_all_users ? L" [!For All Users]" : L"")).c_str());
+                      (std::wstring(lang.alias_name) + (lang.for_all_users ? L" [!For All Users]" : L"")).c_str());
 }
 
 HWND RemoveDictionariesDialog::get_list_box() { return m_lang_list; }

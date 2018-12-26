@@ -6,7 +6,9 @@ class WinBase {
 public:
   virtual ~WinBase();
   void set_enabled(bool enabled);
+  bool is_enabled() const;
   void init(HWND hwnd);
+  explicit operator bool () const;
 
 private:
   virtual void check_hwnd() = 0;
@@ -36,14 +38,14 @@ public:
     ComboBox_SetItemData(m_hwnd, ComboBox_GetCount(m_hwnd) - 1, data);
   }
 
-  int current_index() const { return static_cast<int>(ComboBox_GetCurSel(m_hwnd)); }
-
-  int current_data() const { return static_cast<int>(ComboBox_GetItemData(m_hwnd, current_index())); }
-
-  void set_current_index(int index) { ComboBox_SetCurSel(m_hwnd, index); }
+  int current_index() const;
+  std::wstring current_text () const;
+  int current_data() const;
+  void set_current_index(int index);
 
   std::optional<int> find_by_data(int data);
   void clear();
+  int count() const;
 };
 
 template <typename EnumType> class EnumComboBox : protected ComboBox {

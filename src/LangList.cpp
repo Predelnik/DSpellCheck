@@ -49,7 +49,7 @@ void LangList::update_list() {
   ListBox_ResetContent(m_h_lang_list);
   auto langs = m_speller_container.get_available_languages();
   for (auto &lang : langs) {
-    ListBox_AddString(m_h_lang_list, lang.get_aliased_name(m_settings.language_name_style != LanguageNameStyle::original));
+    ListBox_AddString(m_h_lang_list, lang.alias_name.c_str ());
   }
 
   CheckedListBox_EnableCheckAll(get_lang_list()->get_list_box(), BST_UNCHECKED);

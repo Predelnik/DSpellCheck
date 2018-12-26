@@ -63,7 +63,6 @@ private:
     HWND m_h_aspell_status = nullptr;
     HWND m_h_lib_path = nullptr;
     HWND m_h_suggestions_num = nullptr;
-    HWND m_h_combo_language = nullptr;
     HWND m_h_check_not_those = nullptr;
     HWND m_h_check_only_those = nullptr;
     HWND m_h_file_types = nullptr;
@@ -82,6 +81,7 @@ private:
     HWND m_configure_aspell_btn = nullptr;
     HWND m_browse_btn = nullptr;
     WinApi::ComboBox m_speller_cmb;
+    WinApi::ComboBox m_language_cmb;
     WinApi::EnumComboBox<SuggestionMode> m_suggestion_mode_cmb;
     WinApi::EnumComboBox<LanguageNameStyle> m_language_name_style_cmb;
 
@@ -162,6 +162,7 @@ private:
     ControlsTab m_controls_tab;
     const Settings& m_settings;
     const SpellerContainer &m_speller_container;
+    std::wstring selected_lang;
 
     friend class SimpleDlg;
 };

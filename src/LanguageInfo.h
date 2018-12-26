@@ -27,10 +27,6 @@ public:
     for_all_users = for_all_users_arg;
     alias_name = apply_alias(name, language_name_style);
   }
-
-  const wchar_t *get_aliased_name(bool use_alias) {
-    return (use_alias ? alias_name : orig_name).c_str();
-  }
 };
 
 inline bool less_aliases(const LanguageInfo &a, const LanguageInfo &b) {

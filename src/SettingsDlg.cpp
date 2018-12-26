@@ -40,18 +40,18 @@ SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings, NppInterface
 
 void SimpleDlg::disable_language_combo(bool disable) {
   auto enable = disable ? FALSE : TRUE;
-  ComboBox_ResetContent(m_h_combo_language);
-  EnableWindow(m_h_combo_language, enable);
+  m_language_cmb.clear();
+  m_language_cmb.set_enabled(enable);
   ListBox_ResetContent(get_remove_dics()->get_list_box());
   EnableWindow(m_h_remove_dics, enable);
 }
 
 void SimpleDlg::update_language_controls(const Settings &settings, const SpellerContainer &speller_container) {
 
-  if (m_h_combo_language == nullptr)
+  if (!m_language_cmb)
     return;
 
-  ComboBox_ResetContent(m_h_combo_language);
+  m_language_cmb.clear ();
   int selected_index = 0;
 
   auto langs_available = speller_container.get_available_languages();
@@ -61,17 +61,17 @@ void SimpleDlg::update_language_controls(const Settings &settings, const Speller
     if (settings.get_active_language() == lang.orig_name)
       selected_index = i;
 
-    ComboBox_AddString(m_h_combo_language, lang.get_aliased_name(m_settings.language_name_style != LanguageNameStyle::original));
+    m_language_cmb.add_item(lang.alias_name.c_str (), i);
     ++i;
   }
   if (settings.get_active_language() == L"<MULTIPLE>")
     selected_index = i;
 
   if (!langs_available.empty())
-    ComboBox_AddString(m_h_combo_language, rc_str(IDS_MULTIPLE_LANGUAGES).c_str());
+    m_language_cmb.add_item (rc_str(IDS_MULTIPLE_LANGUAGES).c_str(), -1);
 
-  ComboBox_SetCurSel(m_h_combo_language, selected_index);
-  EnableWindow(m_h_combo_language, langs_available.empty() ? FALSE : TRUE);
+  m_language_cmb.set_current_index(selected_index);
+  m_language_cmb.set_enabled(!langs_available.empty());
 }
 
 SimpleDlg::~SimpleDlg() {
@@ -80,10 +80,10 @@ SimpleDlg::~SimpleDlg() {
 }
 
 void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &speller_container) {
-  int lang_count = ComboBox_GetCount(m_h_combo_language);
-  int cur_sel = ComboBox_GetCurSel(m_h_combo_language);
+  int lang_count = m_language_cmb.count ();
+  int cur_sel = m_language_cmb.current_index();
 
-  if (IsWindowEnabled(m_h_combo_language) != FALSE) {
+  if (m_language_cmb.is_enabled ()) {
     settings.get_active_language() = (cur_sel == lang_count - 1 ? L"<MULTIPLE>" : speller_container.get_available_languages()[cur_sel].orig_name.c_str());
   }
   settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
@@ -200,7 +200,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
     // Retrieving handles of dialog controls
-    m_h_combo_language = ::GetDlgItem(_hSelf, IDC_COMBO_LANGUAGE);
+    m_language_cmb.init (GetDlgItem(_hSelf, IDC_COMBO_LANGUAGE));
     m_h_suggestions_num = ::GetDlgItem(_hSelf, IDC_SUGGESTIONS_NUM);
     m_h_aspell_status = ::GetDlgItem(_hSelf, IDC_ASPELL_STATUS);
     m_h_lib_path = ::GetDlgItem(_hSelf, IDC_ASPELLPATH);
@@ -263,7 +263,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     switch (LOWORD(w_param)) {
     case IDC_COMBO_LANGUAGE:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        if (ComboBox_GetCurSel(m_h_combo_language) == ComboBox_GetCount(m_h_combo_language) - 1) {
+        if (m_language_cmb.current_data() == -1) {
           get_lang_list()->do_dialog();
         }
       }
