@@ -80,7 +80,7 @@ private:
     HWND m_h_system_path = nullptr;
     HWND m_configure_aspell_btn = nullptr;
     HWND m_browse_btn = nullptr;
-    WinApi::ComboBox m_speller_cmb;
+    WinApi::EnumComboBox<SpellerId> m_speller_cmb;
     WinApi::ComboBox m_language_cmb;
     WinApi::EnumComboBox<SuggestionMode> m_suggestion_mode_cmb;
     WinApi::EnumComboBox<LanguageNameStyle> m_language_name_style_cmb;

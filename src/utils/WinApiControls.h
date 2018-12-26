@@ -59,7 +59,7 @@ public:
 
   EnumType current_data() const { return static_cast<EnumType>(Parent::current_data()); }
 
-  void set_index(EnumType value) { set_current_index(*find_by_data(static_cast<std::underlying_type_t<EnumType>>(value))); }
+  void set_current(EnumType value) { set_current_index(*find_by_data(static_cast<std::underlying_type_t<EnumType>>(value))); }
 
 private:
   void init_impl() override { this->add_items<EnumType>(); }

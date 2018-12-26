@@ -85,8 +85,8 @@ void ConnectionSettingsDialog::update_controls() {
   Edit_SetText(m_port, std::to_wstring(m_settings.proxy_port).c_str());
   Button_SetCheck (m_passive_mode_cb, m_settings.ftp_use_passive_mode);
   disable_controls();
-  m_proxy_type_cmb.set_index(m_settings.proxy_type);
-  m_proxy_type_cmb.set_index(m_settings.proxy_type);
+  m_proxy_type_cmb.set_current(m_settings.proxy_type);
+  m_proxy_type_cmb.set_current(m_settings.proxy_type);
 }
 
 INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,

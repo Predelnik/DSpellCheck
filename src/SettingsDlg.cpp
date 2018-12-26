@@ -190,7 +190,7 @@ void SimpleDlg::set_file_types(bool check_those, const wchar_t *file_types) {
   }
 }
 
-void SimpleDlg::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_index(mode); }
+void SimpleDlg::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_current(mode); }
 
 void SimpleDlg::set_one_user_dic(bool value) { Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED); }
 
@@ -270,7 +270,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
       break;
     case IDC_LIBRARY:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        m_parent.apply_lib_change(static_cast<SpellerId>(m_speller_cmb.current_data()));
+        m_parent.apply_lib_change(m_speller_cmb.current_data());
       }
       break;
     case IDC_HUNSPELL_PATH_TYPE:
@@ -468,7 +468,7 @@ void AdvancedDlg::update_controls(const Settings &settings) {
   set_ignore(settings.ignore_containing_digit, settings.ignore_starting_with_capital, settings.ignore_having_a_capital, settings.ignore_all_capital,
              settings.ignore_having_underscore, settings.ignore_starting_or_ending_with_apostrophe, settings.ignore_one_letter);
   set_sugg_box_settings(settings.suggestion_button_size, settings.suggestion_button_opacity);
-  m_tokenization_style_cmb.set_index(settings.tokenization_style);
+  m_tokenization_style_cmb.set_current(settings.tokenization_style);
   setup_delimiter_line_edit_visiblity();
 }
 
@@ -707,7 +707,7 @@ void SettingsDlg::apply_lib_change(SpellerId new_lib_id) {
 void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) { return Window::init(h_inst, parent); }
 
 void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer &speller_container) {
-  m_speller_cmb.set_current_index(*m_speller_cmb.find_by_data(static_cast<int>(settings.active_speller_lib_id)));
+  m_speller_cmb.set_current(settings.active_speller_lib_id);
   fill_lib_info(speller_container.get_aspell_status(), settings);
   fill_sugestions_num(settings.suggestion_count);
   set_file_types(settings.check_those, settings.file_types.c_str());
@@ -716,14 +716,15 @@ void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer
   Button_SetCheck(m_h_check_varfunc, settings.check_variable_functions ? BST_CHECKED : BST_UNCHECKED);
   set_sugg_type(settings.suggestions_mode);
   set_one_user_dic(settings.use_unified_dictionary);
-  m_language_name_style_cmb.set_index(settings.language_name_style);
+  m_language_name_style_cmb.set_current(settings.language_name_style);
 }
 
 void SimpleDlg::init_speller_id_combobox(const SpellerContainer &speller_container) {
+  m_speller_cmb.clear ();
   for (auto id : enum_range<SpellerId>()) {
     if (id == SpellerId::native && !speller_container.native_speller().is_working())
       continue;
-    m_speller_cmb.add_item(gui_string(id).c_str(), static_cast<int>(id));
+    m_speller_cmb.add_item(id);
   }
 }
 
