@@ -35,7 +35,7 @@ public:
     SimpleDlg(SettingsDlg& parent, const Settings &settings, NppInterface &npp);
     ~SimpleDlg() override;
     void apply_settings(Settings& settings, const SpellerContainer& speller_container);
-    void update_language_controls(const Settings& settings, const SpellerContainer& speller_container
+    void update_language_controls(const Settings& settings, const SpellerContainer& speller_container, const std::wstring& selected_language_name
     );
     void fill_sugestions_num(int suggestions_num);
     void fill_lib_info(AspellStatus aspell_status, const Settings& settings);
@@ -153,6 +153,7 @@ private:
     void apply_settings();
     void update_controls();
     void apply_lib_change (SpellerId new_lib_id);
+    void store_selected_language_name (int language_index);
 
 private:
     NppInterface &m_npp;
@@ -162,7 +163,7 @@ private:
     ControlsTab m_controls_tab;
     const Settings& m_settings;
     const SpellerContainer &m_speller_container;
-    std::wstring selected_lang;
+    std::wstring m_selected_language_name;
 
     friend class SimpleDlg;
 };

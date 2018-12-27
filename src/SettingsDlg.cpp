@@ -46,7 +46,7 @@ void SimpleDlg::disable_language_combo(bool disable) {
   EnableWindow(m_h_remove_dics, enable);
 }
 
-void SimpleDlg::update_language_controls(const Settings &settings, const SpellerContainer &speller_container) {
+void SimpleDlg::update_language_controls(const Settings &settings, const SpellerContainer &speller_container, const std::wstring& selected_language_name) {
 
   if (!m_language_cmb)
     return;
@@ -57,14 +57,17 @@ void SimpleDlg::update_language_controls(const Settings &settings, const Speller
   auto langs_available = speller_container.get_available_languages();
 
   int i = 0;
+  const auto &target_language = selected_language_name.empty () ? settings.get_active_language() : selected_language_name;
+
   for (auto &lang : langs_available) {
-    if (settings.get_active_language() == lang.orig_name)
+    if (target_language == lang.orig_name) {
       selected_index = i;
+    }
 
     m_language_cmb.add_item(lang.alias_name.c_str (), i);
     ++i;
   }
-  if (settings.get_active_language() == multiple_language_alias)
+  if (target_language == multiple_language_alias)
     selected_index = i;
 
   if (!langs_available.empty())
@@ -263,9 +266,16 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     switch (LOWORD(w_param)) {
     case IDC_COMBO_LANGUAGE:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
+        m_parent.store_selected_language_name (m_language_cmb.current_data());
         if (m_language_cmb.current_data() == -1) {
           get_lang_list()->do_dialog();
         }
+      }
+      break;
+    case IDC_LANGUAGE_NAME_STYLE:
+      if (HIWORD(w_param) == CBN_SELCHANGE) {
+        auto mut = m_settings.modify();
+        mut->language_name_style = m_language_name_style_cmb.current_data();
       }
       break;
     case IDC_LIBRARY:
@@ -677,7 +687,7 @@ SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const
   Window::init(h_inst, parent);
   m_settings.settings_changed.connect([this] { update_controls(); });
   m_speller_container.speller_status_changed.connect([this] {
-    m_simple_dlg.update_language_controls(m_settings, m_speller_container);
+    m_simple_dlg.update_language_controls(m_settings, m_speller_container, m_selected_language_name);
     m_simple_dlg.fill_lib_info(m_speller_container.get_aspell_status(), m_settings);
   });
 }
@@ -702,6 +712,10 @@ void SettingsDlg::update_controls() {
 void SettingsDlg::apply_lib_change(SpellerId new_lib_id) {
   auto mut_settings = m_settings.modify();
   mut_settings->active_speller_lib_id = new_lib_id;
+}
+
+void SettingsDlg::store_selected_language_name(int language_index) {
+  m_selected_language_name = language_index != -1 ? m_speller_container.active_speller().get_language_list()[language_index].orig_name : multiple_language_alias;
 }
 
 void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) { return Window::init(h_inst, parent); }
@@ -759,7 +773,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
       enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
 
     update_controls();
-    m_simple_dlg.update_language_controls(m_settings, m_speller_container);
+    m_simple_dlg.update_language_controls(m_settings, m_speller_container, m_selected_language_name);
     return 1;
   }
   case WM_NOTIFY: {
