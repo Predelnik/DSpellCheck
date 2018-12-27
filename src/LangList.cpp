@@ -23,6 +23,7 @@
 #include "SpellerContainer.h"
 #include "resource.h"
 #include "utils/string_utils.h"
+#include "MainDef.h"
 
 LangList::LangList(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
     : m_settings(settings), m_speller_container(speller_container) {
@@ -86,7 +87,7 @@ void LangList::apply() {
   {
     auto mut = m_settings.modify();
     mut->get_active_multi_languages() = buf;
-    mut->get_active_language() = L"<MULTIPLE>";
+    mut->get_active_language() = multiple_language_alias;
   }
 }
 

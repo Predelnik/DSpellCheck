@@ -64,7 +64,7 @@ void SimpleDlg::update_language_controls(const Settings &settings, const Speller
     m_language_cmb.add_item(lang.alias_name.c_str (), i);
     ++i;
   }
-  if (settings.get_active_language() == L"<MULTIPLE>")
+  if (settings.get_active_language() == multiple_language_alias)
     selected_index = i;
 
   if (!langs_available.empty())
@@ -84,7 +84,7 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
   int cur_sel = m_language_cmb.current_index();
 
   if (m_language_cmb.is_enabled ()) {
-    settings.get_active_language() = (cur_sel == lang_count - 1 ? L"<MULTIPLE>" : speller_container.get_available_languages()[cur_sel].orig_name.c_str());
+    settings.get_active_language() = (cur_sel == lang_count - 1 ? multiple_language_alias : speller_container.get_available_languages()[cur_sel].orig_name.c_str());
   }
   settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
   switch (settings.active_speller_lib_id) {

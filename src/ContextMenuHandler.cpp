@@ -55,7 +55,7 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
           return;
         ++i;
       }
-      int checked = (cur_lang == L"<MULTIPLE>") ? (MFT_RADIOCHECK | MF_CHECKED)
+      int checked = (cur_lang == multiple_language_alias) ? (MFT_RADIOCHECK | MF_CHECKED)
                                                 : MF_UNCHECKED;
       AppendMenu(new_menu, MF_STRING | checked,
                  get_use_allocated_ids()
@@ -162,7 +162,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
 
     std::wstring lang_string;
     if (result == MULTIPLE_LANGS) {
-      lang_string = L"<MULTIPLE>";
+      lang_string = multiple_language_alias;
     } else if (result == CUSTOMIZE_MULTIPLE_DICS || result == DOWNLOAD_DICS ||
                result == REMOVE_DICS) {
       // All actions are done in GUI thread in that case

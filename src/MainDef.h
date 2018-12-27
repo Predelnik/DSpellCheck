@@ -54,6 +54,7 @@ constexpr auto COLOR_NEUTRAL = RGB(0, 0, 0);
 
 constexpr auto static_plugin_name = L"DSpellCheck";
 constexpr auto config_file_name = L"DSpellCheck.ini";
+constexpr auto multiple_language_alias = L"<MULTIPLE>";
 
 // Custom WMs (Only for our windows and threads)
 #define WM_SHOWANDRECREATEMENU (WM_USER + 1000)

@@ -129,7 +129,7 @@ void SpellerContainer::apply_settings_to_active_speller() {
 void SpellerContainer::init_speller() {
   apply_settings_to_active_speller();
 
-  if (auto language = m_settings.get_active_language(); language != L"<MULTIPLE>") {
+  if (auto language = m_settings.get_active_language(); language != multiple_language_alias) {
     active_speller().set_language(language.c_str());
     active_speller().set_mode(SpellerInterface::SpellerMode::SingleLanguage);
   } else {
