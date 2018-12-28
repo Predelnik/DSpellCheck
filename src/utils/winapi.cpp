@@ -159,8 +159,8 @@ template <typename T> static void extract_function(T &target, HMODULE handle, co
 }
 
 struct locale_info_handles {
-  BOOL (*IsValidLocaleName)(LPCWSTR);
-  BOOL (*GetLocaleInfoEx)(LPCWSTR, LCTYPE, LPWSTR, int);
+  decltype (&::IsValidLocaleName) IsValidLocaleName;
+  decltype (&::GetLocaleInfoEx) GetLocaleInfoEx;
 };
 
 const locale_info_handles &get_locale_info_handles() {
