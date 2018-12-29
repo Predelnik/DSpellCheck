@@ -18,6 +18,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+class Settings;
+
 class MockSpeller : public SpellerInterface {
 public:
   using Dict =
@@ -26,7 +28,7 @@ public:
       std::wstring,
       std::unordered_map<std::wstring, std::vector<std::wstring>>>;
   ;
-  MockSpeller();
+  MockSpeller(const Settings &settings);
   virtual ~MockSpeller();
   void set_language(const wchar_t *lang) override;
   void add_to_dictionary(const wchar_t *word) override;
@@ -50,4 +52,5 @@ private:
   Dict m_inner_dict;
   SuggestionsDict m_sugg_dict;
   bool m_working = true;
+  const Settings &m_settings;
 };

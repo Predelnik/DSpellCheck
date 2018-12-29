@@ -14,8 +14,9 @@
 
 #include "MockSpeller.h"
 #include "LanguageInfo.h"
+#include "Settings.h"
 
-MockSpeller::MockSpeller() = default;
+MockSpeller::MockSpeller(const Settings &settings) : m_settings (settings) {}
 MockSpeller::~MockSpeller() = default;
 
 void MockSpeller::set_language(const wchar_t *lang) { m_current_lang = lang; }
@@ -39,7 +40,7 @@ bool MockSpeller::is_working() const { return m_working; }
 std::vector<LanguageInfo> MockSpeller::get_language_list() const {
   std::vector<LanguageInfo> ret;
   for (auto &p : m_inner_dict)
-    ret.emplace_back(p.first);
+    ret.emplace_back(p.first, m_settings.language_name_style);
   return ret;
 }
 

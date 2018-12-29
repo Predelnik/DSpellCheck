@@ -32,9 +32,9 @@ void setup_speller(MockSpeller &speller) {
 }
 
 TEST_CASE("Simple") {
-  auto speller = std::make_unique<MockSpeller>();
-  setup_speller(*speller);
   Settings settings;
+  auto speller = std::make_unique<MockSpeller>(settings);
+  setup_speller(*speller);
   settings.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
   auto v = EditorViewType::primary;
@@ -255,9 +255,9 @@ abg
 }
 
 TEST_CASE("ANSI") {
-  auto speller = std::make_unique<MockSpeller>();
-  setup_speller(*speller);
   Settings settings;
+  auto speller = std::make_unique<MockSpeller>(settings);
+  setup_speller(*speller);
   settings.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
   auto v = EditorViewType::primary;
@@ -273,9 +273,9 @@ TEST_CASE("ANSI") {
 
 TEST_CASE("Language Styles") {
   {
-    auto speller = std::make_unique<MockSpeller>();
-    setup_speller(*speller);
     Settings settings;
+    auto speller = std::make_unique<MockSpeller>(settings);
+    setup_speller(*speller);
     settings.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
     auto v = EditorViewType::primary;
