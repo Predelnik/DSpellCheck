@@ -238,10 +238,23 @@ void ContextMenuHandler::init_suggestions_box(
   GetWindowRect(hwnd, &r);
 
   ClientToScreen(hwnd, &p);
-  if (r.top > p.y + text_height - 3 || r.left > p.x ||
-      r.bottom < p.y + text_height - 3 + m_settings.suggestion_button_size ||
-      r.right < p.x + m_settings.suggestion_button_size)
+
+  if (p.y + text_height - 3 + m_settings.suggestion_button_size >= r.bottom)
+    {
+      if (p.x > m_settings.suggestion_button_size) {
+        p.y -= m_settings.suggestion_button_size;
+        p.x -= m_settings.suggestion_button_size;
+      }
+      else
+        p.y -= (text_height + m_settings.suggestion_button_size);
+    }
+
+  if (p.x + m_settings.suggestion_button_size > r.right)
+    p.x -= m_settings.suggestion_button_size;
+
+  if (r.top > p.y + text_height - 3 || r.left > p.x)
     return;
+
   MoveWindow(suggestion_button.getHSelf(), p.x,
              p.y + static_cast<int>(text_height) - 3,
              m_settings.suggestion_button_size,
