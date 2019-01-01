@@ -42,7 +42,6 @@ private:
   bool m_state_pressed;
   bool m_state_hovered;
   bool m_state_menu;
-  HMENU m_popup_menu;
   NppInterface &m_npp;
   const Settings &m_settings;
   ContextMenuHandler &m_context_menu_handler;

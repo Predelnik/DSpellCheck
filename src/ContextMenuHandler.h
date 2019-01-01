@@ -28,8 +28,9 @@ public:
                      const SpellerContainer &speller_container,
                      EditorInterface &editor,
                      const SpellChecker &spell_checker);
-  std::vector<SuggestionsMenuItem> fill_suggestions_menu(HMENU menu);
+  [[nodiscard]] std::vector<MenuItem> get_suggestion_menu_items();
   void process_menu_result(WPARAM menu_id);
+  void update_word_under_cursor_data();
   void precalculate_menu();
   void init_suggestions_box(SuggestionsButton &suggestion_button);
 

@@ -14,13 +14,25 @@
 
 #pragma once
 
-struct SuggestionsMenuItem {
+struct MenuItem {
   std::wstring text;
   BYTE id;
   bool separator;
-  SuggestionsMenuItem(const wchar_t *text_arg, int id_arg,
+  MenuItem(const wchar_t *text_arg, int id_arg,
                       bool separator_arg = false);
-};
+  void append_to_menu (HMENU menu, int insert_pos = -1) const;
 
-void insert_sugg_menu_item(HMENU menu, const wchar_t *text, BYTE id,
-                           int insert_pos, bool separator = false);
+  template <typename Range>
+  static void append_to_menu (HMENU menu, const Range &range)
+  {
+    for (auto &item : range)
+      item.append_to_menu (menu);
+  }
+
+  template <typename Range>
+  static void prepend_to_menu (HMENU menu, const Range &range)
+  {
+    for (auto it = range.rbegin (); it != range.rend (); ++it)
+      it->append_to_menu (menu, 0);
+  }
+};

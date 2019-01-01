@@ -12,19 +12,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "SuggestionMenuItem.h"
+#include "MenuItem.h"
 #include "MainDef.h"
 
-SuggestionsMenuItem::SuggestionsMenuItem(const wchar_t *text_arg, int id_arg,
+MenuItem::MenuItem(const wchar_t *text_arg, int id_arg,
                                          bool separator_arg /*= false*/) {
   text = text_arg;
   id = static_cast<BYTE>(id_arg);
   separator = separator_arg;
 }
 
-void insert_sugg_menu_item(HMENU menu, const wchar_t *text, BYTE id,
-                           int insert_pos, bool separator) {
-  MENUITEMINFO mi;
+void MenuItem::append_to_menu(HMENU menu, int insert_pos) const {
+MENUITEMINFO mi;
   memset(&mi, 0, sizeof(mi));
   mi.cbSize = sizeof(MENUITEMINFO);
   if (separator) {
@@ -37,8 +36,8 @@ void insert_sugg_menu_item(HMENU menu, const wchar_t *text, BYTE id,
     else
       mi.wID = get_context_menu_id_start() + id;
 
-    mi.dwTypeData = const_cast<wchar_t *>(text);
-    mi.cch = static_cast<int>(wcslen(text)) + 1;
+    mi.dwTypeData = const_cast<wchar_t *>(text.data ());
+    mi.cch = static_cast<int>(text.length ()) + 1;
   }
   if (insert_pos == -1)
     InsertMenuItem(menu, GetMenuItemCount(menu), 1, &mi);

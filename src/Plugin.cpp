@@ -36,7 +36,7 @@
 #include "HunspellInterface.h"
 #include "Settings.h"
 #include "SpellerContainer.h"
-#include "SuggestionMenuItem.h"
+#include "MenuItem.h"
 #include "menuCmdID.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
@@ -171,6 +171,24 @@ void erase_misspellings ()
   spell_checker->erase_all_misspellings ();
 }
 
+void show_spell_check_menu_at_cursor ()
+{
+  auto menu = CreatePopupMenu();
+  context_menu_handler->update_word_under_cursor_data ();
+  MenuItem::append_to_menu (menu, context_menu_handler->get_suggestion_menu_items());
+
+  tagTPMPARAMS tpm_params;
+  tpm_params.cbSize = sizeof(tagTPMPARAMS);
+  auto v = npp->active_view();
+  auto start = npp->get_selection_start(v);
+  auto x = npp->get_point_x_from_position(v, start);
+  auto y = npp->get_point_y_from_position(v, start);
+  POINT pnt {x, y};
+  ClientToScreen (npp->get_scintilla_hwnd(v), &pnt);
+  TrackPopupMenuEx(menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, pnt.x,
+                         pnt.y, npp->get_scintilla_hwnd(v), &tpm_params);
+}
+
 void copy_misspellings_to_clipboard() {
   auto str = spell_checker->get_all_misspellings_as_string();
   const size_t len = (str.length() + 1) * 2;
@@ -297,6 +315,9 @@ void command_menu_init() {
   action_index[Action::erase_all_misspellings] =
     set_next_command(rc_str(IDS_ERASE_ALL_MISSPELLED).c_str(),
       erase_misspellings);
+  action_index[Action::show_spell_check_menu_at_cursor] =
+    set_next_command(rc_str(IDS_SHOW_SPELL_CHECK_MENU_AT_CURSOR).c_str (),
+      show_spell_check_menu_at_cursor);
   action_index[Action::reload_user_dictionaries] =
       set_next_command(rc_str(IDS_RELOAD_HUNSPELL).c_str(),
                        reload_hunspell_dictionaries);
@@ -482,7 +503,7 @@ std::wstring get_debug_log_path() {
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
-  auto list = {Action::copy_all_misspellings, Action::erase_all_misspellings, Action::reload_user_dictionaries,
+  auto list = {Action::copy_all_misspellings, Action::erase_all_misspellings, Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries,
     Action::toggle_debug_logging, Action::open_debug_log};
   for (auto action : list) {
     MENUITEMINFO info;
@@ -533,7 +554,7 @@ bool first_restyle = true; // hack to successfully avoid checking hyperlinks
 
 WPARAM last_hwnd = NULL;
 LPARAM last_coords = 0;
-std::vector<SuggestionsMenuItem> cur_menu_list;
+std::vector<MenuItem> cur_menu_list;
 // Ok, trying to use window subclassing to handle messages
 
 LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param,
@@ -557,12 +578,7 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param,
 
       const auto menu = reinterpret_cast<HMENU>(w_param);
       if (file_menu_item.hSubMenu != menu && get_langs_sub_menu() != menu) {
-        int i = 0;
-        for (auto &item : cur_menu_list) {
-          insert_sugg_menu_item(menu, item.text.c_str(), item.id, i,
-                                item.separator);
-          ++i;
-        }
+        MenuItem::prepend_to_menu(menu, cur_menu_list);
       }
     }
     cur_menu_list.clear();
@@ -622,7 +638,7 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param,
 }
 
 LRESULT
-show_calculated_menu(std::vector<SuggestionsMenuItem> &&menu_list) {
+show_calculated_menu(std::vector<MenuItem> &&menu_list) {
   cur_menu_list = std::move(menu_list);
   return ::DefSubclassProc(npp_data.npp_handle, WM_CONTEXTMENU,
                           last_hwnd, last_coords);

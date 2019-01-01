@@ -228,9 +228,10 @@ DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &lang_info) 
     // such failures
     new_dic->converter = {dic_encoding, "UCS-2LE"};
     new_dic->back_converter = {"UCS-2LE", dic_encoding};
-    update_word_count(new_dic->local_dic_path.c_str());
-    if (PathFileExists (new_dic->local_dic_path.c_str ()))
+    if (PathFileExists (new_dic->local_dic_path.c_str ())) {
+      update_word_count(new_dic->local_dic_path.c_str());
       new_hunspell->add_dic(to_string(new_dic->local_dic_path).c_str());
+    }
     if (PathFileExists (user_dict_path.c_str ())) {
         if ("UTF-8"sv != dic_encoding) {
           auto encoded_path = create_encoded_dict_version(user_dict_path.c_str(), dic_encoding);

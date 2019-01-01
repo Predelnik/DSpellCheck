@@ -21,10 +21,9 @@
 #include <memory>
 #include "utils/enum_array.h"
 
-struct SuggestionsMenuItem;
+struct MenuItem;
 class AspellOptionsDialog;
 
-const int nb_func = 13;
 
 enum class Action
 {
@@ -33,6 +32,7 @@ enum class Action
   copy_all_misspellings,
   erase_all_misspellings,
   settings,
+  show_spell_check_menu_at_cursor,
   reload_user_dictionaries,
   additional_actions,
   toggle_debug_logging,
@@ -40,6 +40,8 @@ enum class Action
 
   COUNT,
 };
+const int nb_func = static_cast<int> (Action::COUNT) + 4;
+
 extern enum_array<Action, int> action_index;
 
 enum class CustomGuiMessage;
@@ -87,7 +89,7 @@ void set_encoding_by_id (int enc_id);
 void recheck_visible ();
 void init_classes ();
 void create_hooks ();
-LRESULT show_calculated_menu(std::vector<SuggestionsMenuItem>&& menu_list);
+LRESULT show_calculated_menu(std::vector<MenuItem>&& menu_list);
 void add_icons ();
 bool get_auto_check_state ();
 void auto_check_state_received (bool state);

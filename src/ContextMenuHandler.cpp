@@ -24,7 +24,7 @@
 #include "npp/EditorInterface.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
-#include "SuggestionMenuItem.h"
+#include "MenuItem.h"
 #include "Settings.h"
 
 void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
@@ -181,19 +181,23 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   }
 }
 
-void ContextMenuHandler::precalculate_menu() {
-  std::vector<SuggestionsMenuItem> suggestion_menu_items;
-  if (SpellCheckerHelpers::is_spell_checking_needed (m_editor, m_settings) &&
-      m_settings.suggestions_mode == SuggestionMode::context_menu) {
-    long pos, length;
+void ContextMenuHandler::update_word_under_cursor_data () {
+  long pos, length;
     m_word_under_cursor_is_correct =
         m_spell_checker.is_word_under_cursor_correct(pos, length, true);
     if (!m_word_under_cursor_is_correct) {
       m_word_under_cursor_pos = pos;
       m_word_under_cursor_length = length;
-      suggestion_menu_items = fill_suggestions_menu(nullptr);
     }
-  }
+}
+
+void ContextMenuHandler::precalculate_menu() {
+  std::vector<MenuItem> suggestion_menu_items;
+  if (SpellCheckerHelpers::is_spell_checking_needed (m_editor, m_settings) &&
+      m_settings.suggestions_mode == SuggestionMode::context_menu) {
+      update_word_under_cursor_data ();
+      suggestion_menu_items = get_suggestion_menu_items();
+    }
   show_calculated_menu(std::move(suggestion_menu_items));
 }
 
@@ -245,15 +249,15 @@ void ContextMenuHandler::init_suggestions_box(
   suggestion_button.display(true, false);
 }
 
-std::vector<SuggestionsMenuItem>
-ContextMenuHandler::fill_suggestions_menu(HMENU menu) {
+std::vector<MenuItem>
+ContextMenuHandler::get_suggestion_menu_items() {
   if (!m_speller_container.active_speller().is_working())
     return {}; // Word is already off-screen
 
   int pos = m_word_under_cursor_pos;
   auto view = m_editor.active_view();
   m_editor.set_selection(view, pos, pos + m_word_under_cursor_length);
-  std::vector<SuggestionsMenuItem> suggestion_menu_items;
+  std::vector<MenuItem> suggestion_menu_items;
   auto text = m_editor.get_text_range(
       view, m_word_under_cursor_pos,
       m_word_under_cursor_pos + static_cast<long>(m_word_under_cursor_length));
@@ -270,34 +274,22 @@ ContextMenuHandler::fill_suggestions_menu(HMENU menu) {
       break;
 
     auto item = m_last_suggestions[i].c_str();
-    if (m_settings.suggestions_mode == SuggestionMode::button)
-      insert_sugg_menu_item(menu, item, static_cast<BYTE>(i + 1), -1);
-    else
-      suggestion_menu_items.emplace_back(item, static_cast<BYTE>(i + 1));
+    suggestion_menu_items.emplace_back(item, static_cast<BYTE>(i + 1));
   }
 
   if (!m_last_suggestions.empty()) {
-    if (m_settings.suggestions_mode == SuggestionMode::button)
-      insert_sugg_menu_item(menu, L"", 0, 103, true);
-    else
-      suggestion_menu_items.emplace_back(L"", 0, true);
+    suggestion_menu_items.emplace_back(L"", 0, true);
   }
 
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
   auto menu_string = wstring_printf(rc_str (IDS_IGNORE_PS_FOR_CURRENT_SESSION).c_str (),
                                     m_selected_word.str.c_str());
-  if (m_settings.suggestions_mode == SuggestionMode::button)
-    insert_sugg_menu_item(menu, menu_string.c_str(), MID_IGNOREALL, -1);
-  else
-    suggestion_menu_items.emplace_back(menu_string.c_str(), MID_IGNOREALL);
+  suggestion_menu_items.emplace_back(menu_string.c_str(), MID_IGNOREALL);
   menu_string =
       wstring_printf(rc_str (IDS_ADD_PS_TO_DICTIONARY).c_str (), m_selected_word.str.c_str());
   ;
-  if (m_settings.suggestions_mode == SuggestionMode::button)
-    insert_sugg_menu_item(menu, menu_string.c_str(), MID_ADDTODICTIONARY, -1);
-  else
-    suggestion_menu_items.emplace_back(menu_string.c_str(),
-                                       MID_ADDTODICTIONARY);
+  suggestion_menu_items.emplace_back(menu_string.c_str(),
+                                     MID_ADDTODICTIONARY);
 
   if (m_settings.suggestions_mode == SuggestionMode::context_menu)
     suggestion_menu_items.emplace_back(L"", 0, true);

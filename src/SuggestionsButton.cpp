@@ -19,7 +19,7 @@
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "ContextMenuHandler.h"
-#include "SuggestionMenuItem.h"
+#include "MenuItem.h"
 #include "Settings.h"
 
 #define MOUSELEAVE 0x0001
@@ -58,14 +58,12 @@ bool reg_msg(HWND h_wnd, DWORD dw_msg_type) {
   return true;
 }
 
-HMENU SuggestionsButton::get_popup_menu() const { return m_popup_menu; }
-
 int SuggestionsButton::get_result() const { return m_menu_result; }
 
 SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
                                      NppInterface &npp, ContextMenuHandler &context_menu_handler,
                                      const Settings &settings)
-    : m_menu_result(0), m_popup_menu(nullptr), m_npp(npp),
+    : m_menu_result(0), m_npp(npp),
       m_settings (settings), m_context_menu_handler(context_menu_handler) {
   Window::init(h_inst, parent);
   m_state_pressed = false;
@@ -74,7 +72,6 @@ SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
 }
 
 void SuggestionsButton::show_suggestion_menu() {
-  m_context_menu_handler.fill_suggestions_menu(get_popup_menu());
   SendMessage(getHSelf(), WM_SHOWANDRECREATEMENU, 0, 0);
 }
 
@@ -108,8 +105,6 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
   case WM_INITDIALOG:
 
     display(false);
-    m_popup_menu = CreatePopupMenu();
-
     return 0;
 
   case WM_MOUSEMOVE:
@@ -176,15 +171,16 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
     p.y = 0;
     ClientToScreen(_hSelf, &p);
     m_state_menu = true;
+    HMENU popup_menu = CreatePopupMenu();
+    MenuItem::append_to_menu(popup_menu, m_context_menu_handler.get_suggestion_menu_items());
     SetForegroundWindow(m_npp.get_editor_handle ());
     m_menu_result =
-        TrackPopupMenuEx(m_popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
+        TrackPopupMenuEx(popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
                          p.y, _hSelf, &tpm_params);
     PostMessage(m_npp.get_editor_handle (), WM_NULL, 0, 0);
     SetFocus(m_npp.get_scintilla_hwnd(m_npp.active_view()));
     m_state_menu = false;
-    DestroyMenu(m_popup_menu);
-    m_popup_menu = CreatePopupMenu();
+    DestroyMenu(popup_menu);
     return 0;
   }
 
