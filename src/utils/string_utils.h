@@ -50,7 +50,7 @@ public:
     return ret;
   }
 
-  long prev_token_begin(long index) {
+  long prev_token_begin(long index) const {
     if (index <= 0)
       return 0;
     if (m_is_delimiter(m_target[index])) {
@@ -68,7 +68,7 @@ public:
     return index;
   }
 
-  long next_token_end(long index) {
+  long next_token_end(long index) const {
     if (index >= static_cast<long>(m_target.length()))
       return static_cast<long>(m_target.length());
     while (index < static_cast<long>(m_target.length()) &&
@@ -99,34 +99,34 @@ inline auto make_delimiter_tokenizer(std::wstring_view target,
 
 namespace detail
 {
-	template <typename CharType>
-	bool ends_with_helper(std::basic_string_view<CharType> const &target, std::basic_string_view<CharType> const &suffix) {
-		if (target.length() >= suffix.length()) {
-			return (0 == target.compare(target.length() - suffix.length(),
-				suffix.length(), suffix));
-		}
-		else {
-			return false;
-		}
-	}
+    template <typename CharType>
+    bool ends_with_helper(std::basic_string_view<CharType> const &target, std::basic_string_view<CharType> const &suffix) {
+        if (target.length() >= suffix.length()) {
+            return (0 == target.compare(target.length() - suffix.length(),
+                suffix.length(), suffix));
+        }
+        else {
+            return false;
+        }
+    }
 
-	template <typename CharType>
-	bool starts_with_helper(std::basic_string_view<CharType> const &target, std::basic_string_view<CharType> const &prefix) {
-		if (target.length() >= prefix.length()) {
-			return (0 == target.compare(0, prefix.length(), prefix));
-		}
-		else {
-			return false;
-		}
-	}
+    template <typename CharType>
+    bool starts_with_helper(std::basic_string_view<CharType> const &target, std::basic_string_view<CharType> const &prefix) {
+        if (target.length() >= prefix.length()) {
+            return (0 == target.compare(0, prefix.length(), prefix));
+        }
+        else {
+            return false;
+        }
+    }
 
-	template <typename CharType>
-	std::basic_string_view<CharType> remove_prefix_equals_helper (std::basic_string_view<CharType> target, const std::basic_string_view<CharType> &prefix)
-	{
-		if (starts_with_helper(target, prefix))
-			target.remove_prefix(prefix.length());
-		return target;
-	}
+    template <typename CharType>
+    std::basic_string_view<CharType> remove_prefix_equals_helper (std::basic_string_view<CharType> target, const std::basic_string_view<CharType> &prefix)
+    {
+        if (starts_with_helper(target, prefix))
+            target.remove_prefix(prefix.length());
+        return target;
+    }
 }
 inline bool starts_with(const std::string_view &target, const std::string_view &prefix) { return detail::starts_with_helper(target, prefix); }
 inline bool starts_with(const std::wstring_view &target, const std::wstring_view &prefix) { return detail::starts_with_helper(target, prefix); }
@@ -140,25 +140,25 @@ void to_upper_inplace(std::wstring& s);
 
 namespace detail
 {
-	inline bool is_space_helper (wchar_t c)
-	{
-		return iswspace (c);
-	}
+    inline bool is_space_helper (wchar_t c)
+    {
+        return iswspace (c);
+    }
 
-	inline bool is_space_helper(char c)
-	{
-		return isspace(c);
-	}
+    inline bool is_space_helper(char c)
+    {
+        return isspace(c);
+    }
 }
 
 template <typename CharType>
 std::basic_string_view<CharType> trim (std::basic_string_view<CharType> sv)
 {
-	while (detail::is_space_helper(sv.front()))
-		sv.remove_prefix(1);
-	while (detail::is_space_helper(sv.back()))
-		sv.remove_suffix(1);
-	return sv;
+    while (detail::is_space_helper(sv.front()))
+        sv.remove_prefix(1);
+    while (detail::is_space_helper(sv.back()))
+        sv.remove_suffix(1);
+    return sv;
 }
 
 // trim from start (in place)
@@ -183,11 +183,11 @@ namespace detail
 
 template <typename CharType>
 void replace_all_inplace(std::basic_string<CharType>& str, const detail::identity_t<std::basic_string_view<CharType>> &from, const detail::identity_t<std::basic_string_view<CharType>> &to) {
-	if (from.empty())
-		return;
-	size_t start_pos = 0;
-	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-		str.replace(start_pos, from.length(), to);
-		start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-	}
+    if (from.empty())
+        return;
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
 }

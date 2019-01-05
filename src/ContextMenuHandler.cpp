@@ -150,6 +150,24 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
           encoded_str = to_utf8_string(m_last_suggestions[result - 1]);
 
         m_editor.replace_selection(view, encoded_str.c_str());
+      } else if (result <= MID_REPLACE_ALL_START + m_last_suggestions.size()) {
+        std::string encoded_suggestion;
+        if (m_editor.get_encoding(view) == EditorCodepage::ansi)
+          encoded_suggestion = to_string(m_last_suggestions[result - MID_REPLACE_ALL_START - 1].c_str());
+        else
+          encoded_suggestion = to_utf8_string(m_last_suggestions[result - MID_REPLACE_ALL_START - 1]);
+        long pos = 0;
+        auto misspelled_text = m_editor.selected_text(view);
+        m_editor.begin_undo_action(view);
+        while (true) {
+          pos = m_editor.find_next(view, pos, misspelled_text.c_str ());
+          if (pos >= 0) {
+            m_editor.replace_text(view, pos, static_cast<long> (pos + encoded_suggestion.length()), encoded_suggestion);
+            pos = pos + static_cast<long> (encoded_suggestion.length()) - static_cast<long> (misspelled_text.length());
+          } else
+            break;
+        }
+        m_editor.end_undo_action(view);
       }
     }
   } break;
@@ -291,7 +309,11 @@ ContextMenuHandler::get_suggestion_menu_items() {
   }
 
   if (!m_last_suggestions.empty()) {
-    suggestion_menu_items.emplace_back(L"", 0, true);
+    MenuItem replace_all_item (L"<Placeholder>", -1);
+    replace_all_item.children = suggestion_menu_items;
+    std::for_each (replace_all_item.children.begin (), replace_all_item.children.end (), [](auto &item){ item.id += MID_REPLACE_ALL_START;});
+    suggestion_menu_items.push_back (std::move (replace_all_item));
+    suggestion_menu_items.emplace_back(MenuItem::Separator{});
   }
 
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
@@ -305,7 +327,7 @@ ContextMenuHandler::get_suggestion_menu_items() {
                                      MID_ADDTODICTIONARY);
 
   if (m_settings.suggestions_mode == SuggestionMode::context_menu)
-    suggestion_menu_items.emplace_back(L"", 0, true);
+    suggestion_menu_items.emplace_back(MenuItem::Separator{});
 
   return suggestion_menu_items;
 }

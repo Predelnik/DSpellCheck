@@ -145,6 +145,21 @@ bool NppInterface::is_line_visible(EditorViewType view, long line) const {
   return send_msg_to_scintilla(view, SCI_GETLINEVISIBLE, line);
 }
 
+long NppInterface::find_next(EditorViewType view, long from_position, const char* needle) 
+{
+  Sci_TextToFind ttf;
+  ttf.chrg.cpMin = from_position;
+  ttf.chrg.cpMax = get_active_document_length(view);
+  ttf.lpstrText = needle;
+  return static_cast<long> (send_msg_to_scintilla(view, SCI_FINDTEXT, 0, reinterpret_cast<LPARAM> (&ttf)));
+}
+
+void NppInterface::replace_text(EditorViewType view, long from, long to, std::string_view replacement) {
+  send_msg_to_scintilla (view, SCI_SETTARGETSTART, from);
+  send_msg_to_scintilla (view, SCI_SETTARGETEND, to - 1);
+  send_msg_to_scintilla (view, SCI_REPLACETARGET, replacement.size(), reinterpret_cast<LPARAM> (replacement.data()));
+}
+
 void NppInterface::set_selection(EditorViewType view, long from, long to) { post_msg_to_scintilla(view, SCI_SETSEL, from, to); }
 
 void NppInterface::replace_selection(EditorViewType view, const char *str) { send_msg_to_scintilla(view, SCI_REPLACESEL, 0, reinterpret_cast<LPARAM>(str)); }

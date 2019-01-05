@@ -91,6 +91,8 @@ public:
   int get_point_x_from_position(EditorViewType view, long position) const override;
   int get_point_y_from_position(EditorViewType view, long position) const override;
   bool is_line_visible(EditorViewType view, long line) const override;
+  long find_next(EditorViewType view, long from_position, const char* needle) override;
+  void replace_text(EditorViewType view, long from, long to, std::string_view replacement) override;
 
   HMENU get_menu_handle(int menu_type) const;
 

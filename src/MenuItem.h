@@ -15,11 +15,18 @@
 #pragma once
 
 struct MenuItem {
+  struct Separator {};
+
   std::wstring text;
   BYTE id;
   bool separator;
+  std::vector<MenuItem> children;
   MenuItem(const wchar_t *text_arg, int id_arg,
                       bool separator_arg = false);
+  MenuItem(const Separator&) : MenuItem(L"", -1, true)
+  {
+    
+  }
   void append_to_menu (HMENU menu, int insert_pos = -1) const;
 
   template <typename Range>

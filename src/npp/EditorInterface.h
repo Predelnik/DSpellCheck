@@ -72,6 +72,7 @@ public:
                                 const toolbarIcons *tool_bar_icons_ptr) = 0;
   virtual void force_style_update(EditorViewType view, long from, long to) = 0;
   virtual void set_selection(EditorViewType view, long from, long to) = 0;
+  virtual long find_next(EditorViewType view, long from_position, const char* needle) = 0;
   void set_cursor_pos(EditorViewType view, long cursor_pos) {
     set_selection(view, cursor_pos, cursor_pos);
   }
@@ -91,6 +92,7 @@ public:
   virtual void undo(EditorViewType view) = 0;
   virtual void begin_undo_action (EditorViewType view) = 0;
   virtual void end_undo_action (EditorViewType view) = 0;
+  virtual void replace_text(EditorViewType view, long from, long to, std::string_view replacement) = 0;
 
   // const
   virtual std::vector<std::wstring>

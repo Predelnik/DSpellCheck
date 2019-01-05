@@ -31,6 +31,13 @@ MENUITEMINFO mi;
   } else {
     mi.fType = MFT_STRING;
     mi.fMask = MIIM_ID | MIIM_TYPE;
+    if (!children.empty ()) {
+      mi.fMask |= MIIM_SUBMENU;
+      mi.hSubMenu = CreatePopupMenu();
+      for (auto &child : children) {
+        child.append_to_menu (mi.hSubMenu);
+      }
+    }
     if (!get_use_allocated_ids())
       mi.wID = MAKEWORD(id, DSPELLCHECK_MENU_ID);
     else

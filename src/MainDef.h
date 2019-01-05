@@ -38,6 +38,7 @@ const wchar_t *const custom_gui_messsages_names[] = {L"DSpellCheck_GenericCallba
 #define LANGUAGE_MENU_ID 197
 
 // Menu item IDs
+#define MID_REPLACE_ALL_START 50 
 #define MID_ADDTODICTIONARY 101
 #define MID_IGNOREALL 102
 #define MULTIPLE_LANGS 201

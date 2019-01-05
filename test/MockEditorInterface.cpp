@@ -563,6 +563,17 @@ bool MockEditorInterface::is_line_visible(EditorViewType /*view*/, long /*line*/
   return true;
 }
 
+long MockEditorInterface::find_next(EditorViewType /*view*/, long /*from_position*/, const char* /*needle*/)
+{
+  // Unimplemented
+  return 0;
+}
+
+void MockEditorInterface::replace_text(EditorViewType /*view*/, long /*from*/, long /*to*/, std::string_view /*replacement*/)
+{
+  // Unimplemented
+}
+
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
   if (m_documents[view].empty())
     return nullptr;

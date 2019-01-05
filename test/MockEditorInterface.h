@@ -127,10 +127,13 @@ public:
   void end_undo_action(EditorViewType view) override;
   void undo(EditorViewType view) override;
   bool is_line_visible(EditorViewType view, long line) const override;
+  long find_next(EditorViewType view, long from_position, const char* needle) override;
+  void replace_text(EditorViewType view, long from, long to, std::string_view replacement) override;
 
 private:
   const MockedDocumentInfo *active_document(EditorViewType view) const;
   MockedDocumentInfo *active_document(EditorViewType view);
+
 private:
   enum_array<EditorViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<EditorViewType, int> m_active_document_index;
