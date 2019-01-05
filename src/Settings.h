@@ -18,6 +18,10 @@
 #include "utils/TemporaryAcessor.h"
 #include "utils/enum_array.h"
 #include "SpellerId.h"
+#include "utils/string_utils.h"
+#include "CommonFunctions.h"
+
+#include <experimental/string>
 
 class IniWorker;
 
@@ -70,7 +74,55 @@ class Settings {
     using Self = Settings;
 public:
     Settings (std::wstring_view ini_filepath = L"");
+    void on_settings_changed();
+    void update_processed_delimiters();
     void process(IniWorker& worker);
+    auto delimiter_tokenizer(std::wstring_view target) const
+    {
+      return make_delimiter_tokenizer(target, m_processed_delimiters, split_camel_case);
+    }
+
+    auto non_alphabetic_tokenizer(std::wstring_view target) const {
+      return Tokenizer(target,
+                       [this](wchar_t c) { return !IsCharAlphaNumeric(c) && delimiter_exclusions.find(c) == std ::wstring_view::npos; },
+                       split_camel_case);
+    }
+
+    template <typename FunctionType>
+    auto do_with_tokenizer (std::wstring_view target, const FunctionType &function) const {
+        switch (tokenization_style) {
+        case TokenizationStyle::by_non_alphabetic:
+          return function (this->non_alphabetic_tokenizer(target));
+        case TokenizationStyle::by_non_ansi:
+          return function (this->non_ansi_tokenizer(target));
+        case TokenizationStyle::by_delimiters:
+          return function (this->delimiter_tokenizer(target));
+        case TokenizationStyle::COUNT:
+          break;
+        }
+      std::abort();
+    }
+
+  auto non_ansi_tokenizer(std::wstring_view target) const {
+  return Tokenizer(target,
+    [this](wchar_t c)
+  {
+      static const auto ansi_str = []()
+      {
+        constexpr auto char_cnt = 256;
+        std::string s;
+        for (int i = 1; i < char_cnt; ++i)
+          s.push_back (static_cast<char> (i));
+        auto ws = to_wstring (s);
+        std::experimental::erase_if (ws, [](wchar_t c){ return !IsCharAlphaNumeric (c); });
+        std::sort (ws.begin (), ws.end ());
+        return ws;
+      }();
+      return !std::binary_search (ansi_str.begin (), ansi_str.end (), c) && delimiter_exclusions.find(c) == std ::wstring_view::npos;
+    },
+      split_camel_case);
+  }
+
     void save ();
     void load ();
     std::wstring &get_active_language ();
@@ -82,6 +134,7 @@ public:
     void reset_hunspell_lang_to_default();
 
 public:
+    // Settings:
     bool auto_check_text = true;
     std::wstring aspell_dll_path;
     std::wstring aspell_personal_dictionary_path;
@@ -136,6 +189,9 @@ public:
     enum_array<SpellerId, std::wstring> speller_multi_languages;
     bool write_debug_log;
     LanguageNameStyle language_name_style;
+
+    // Derivatives:
+    std::wstring m_processed_delimiters;
 
     mutable lsignal::signal<void()> settings_changed;
 

@@ -132,7 +132,16 @@ static const wchar_t *default_language(SpellerId value) {
   return nullptr;
 }
 
-Settings::Settings(std::wstring_view ini_filepath) : m_ini_filepath(ini_filepath) {}
+Settings::Settings(std::wstring_view ini_filepath) : m_ini_filepath(ini_filepath)
+{
+  settings_changed.connect([this] { on_settings_changed(); });
+}
+
+void Settings::on_settings_changed() {
+  update_processed_delimiters ();
+}
+
+void Settings::update_processed_delimiters() { m_processed_delimiters = L" \n\r\t\v" + parse_string(delimiters.c_str()); }
 
 constexpr auto app_name = L"SpellCheck";
 

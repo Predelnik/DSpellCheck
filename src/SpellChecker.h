@@ -55,7 +55,6 @@ public:
   void recheck_visible(EditorViewType view);
 
   std::wstring get_all_misspellings_as_string() const;
-  void update_delimiters();
   void on_settings_changed();
   void find_next_mistake();
   void find_prev_mistake();
@@ -86,16 +85,12 @@ private:
                                long word_start) const;
   long next_token_end(std::wstring_view target, long index) const;
   long prev_token_begin(std::wstring_view target, long index) const;
-  auto non_alphabetic_tokenizer(std::wstring_view target) const;
-  auto non_ansi_tokenizer(std::wstring_view target) const;
-  auto delimiter_tokenizer(std::wstring_view target) const;
   MappedWstring get_document_mapped_wstring (EditorViewType view, long start, long end) const;
 
 private:
   // converted to corresponding symbols
   LRESULT m_hot_spot_cache[256]; // STYLE_MAX = 255
   const Settings &m_settings;
-  std::wstring m_delimiters;
 
   long m_current_position;
   EditorInterface &m_editor;

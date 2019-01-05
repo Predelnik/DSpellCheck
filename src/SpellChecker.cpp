@@ -18,27 +18,16 @@
 
 #include "CommonFunctions.h"
 #include "DownloadDicsDlg.h"
-#include "LanguageInfo.h"
 #include "MainDef.h"
-#include "MappedWString.h"
-#include "Plugin.h"
-#include "PluginInterface.h"
+#include "MappedWstring.h"
 #include "SciUtils.h"
-#include "Scintilla.h"
 #include "Settings.h"
-#include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "SpellCheckerHelpers.h"
 #include "SpellerContainer.h"
-#include "SpellerId.h"
-#include "SuggestionsButton.h"
 #include "npp/EditorInterface.h"
 #include "npp/NppInterface.h"
-#include "utils/string_utils.h"
 
-#include <cctype>
-
-#include <experimental/string>
 #include "utils/enum_range.h"
 
 SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor, const SpellerContainer &speller_container)
@@ -167,7 +156,6 @@ void SpellChecker::refresh_underline_style() {
 
 void SpellChecker::on_settings_changed() {
   refresh_underline_style();
-  update_delimiters();
   recheck_visible_both_views();
 }
 
@@ -405,63 +393,12 @@ bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, long 
   return m_speller_container.active_speller().check_word(to_word_for_speller(word));
 }
 
-auto SpellChecker::non_alphabetic_tokenizer(std::wstring_view target) const {
-  return Tokenizer(target,
-                   [this](wchar_t c) { return !IsCharAlphaNumeric(c) && m_settings.delimiter_exclusions.find(c) == std ::wstring_view::npos; },
-                   m_settings.split_camel_case);
-}
-
-auto SpellChecker::non_ansi_tokenizer(std::wstring_view target) const {
-
-  return Tokenizer(target,
-    [this](wchar_t c)
-  {
-    static const auto ansi_str = []()
-    {
-      constexpr auto char_cnt = 256;
-      std::string s;
-      for (int i = 1; i < char_cnt; ++i)
-        s.push_back (static_cast<char> (i));
-      auto ws = to_wstring (s);
-      std::experimental::erase_if (ws, [](wchar_t c){ return !IsCharAlphaNumeric (c); });
-      std::sort (ws.begin (), ws.end ());
-      return ws;
-    }();
-    return !std::binary_search (ansi_str.begin (), ansi_str.end (), c) && m_settings.delimiter_exclusions.find(c) == std ::wstring_view::npos;
-  },
-    m_settings.split_camel_case);
-}
-
-auto SpellChecker::delimiter_tokenizer(std::wstring_view target) const { return make_delimiter_tokenizer(target, m_delimiters, m_settings.split_camel_case); }
-
 long SpellChecker::next_token_end(std::wstring_view target, long index) const {
-  switch (m_settings.tokenization_style) {
-  case TokenizationStyle::by_non_alphabetic:
-    return non_alphabetic_tokenizer(target).next_token_end(index);
-  case TokenizationStyle::by_non_ansi:
-    return non_ansi_tokenizer(target).next_token_end(index);
-  case TokenizationStyle::by_delimiters:
-    return delimiter_tokenizer(target).next_token_end(index);
-  case TokenizationStyle::COUNT:
-    break;
-  }
-  assert(false);
-  return static_cast<long>(target.size());
+  return m_settings.do_with_tokenizer (target, [index](const auto &tokenizer){ return tokenizer.next_token_end (index); });
 }
 
 long SpellChecker::prev_token_begin(std::wstring_view target, long index) const {
-  switch (m_settings.tokenization_style) {
-  case TokenizationStyle::by_non_alphabetic:
-    return non_alphabetic_tokenizer(target).prev_token_begin(index);
-  case TokenizationStyle::by_non_ansi:
-    return non_ansi_tokenizer(target).prev_token_begin(index);
-  case TokenizationStyle::by_delimiters:
-    return delimiter_tokenizer(target).prev_token_begin(index);
-  case TokenizationStyle::COUNT:
-    break;
-  }
-  assert(false);
-  return 0;
+  return m_settings.do_with_tokenizer (target, [index](const auto &tokenizer){ return tokenizer.prev_token_begin (index); });
 }
 
 MappedWstring SpellChecker::get_document_mapped_wstring(EditorViewType view, long start, long end) const {
@@ -492,19 +429,7 @@ bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_
 
   auto sv = std::wstring_view(text_to_check.str);
   std::vector<std::wstring_view> tokens;
-  switch (m_settings.tokenization_style) {
-  case TokenizationStyle::by_non_alphabetic:
-    tokens = non_alphabetic_tokenizer(sv).get_all_tokens();
-    break;
-  case TokenizationStyle::by_delimiters:
-    tokens = delimiter_tokenizer(sv).get_all_tokens();
-    break;
-  case TokenizationStyle::by_non_ansi:
-    tokens = non_ansi_tokenizer(sv).get_all_tokens();
-    break;
-  case TokenizationStyle::COUNT:
-    break;
-  }
+  m_settings.do_with_tokenizer(sv, [&](const auto &tokenizer){ tokens = tokenizer.get_all_tokens (); });
 
   std::vector<bool> results(tokens.size());
   std::vector<WordData> words_to_check;
@@ -635,4 +560,3 @@ std::wstring SpellChecker::get_all_misspellings_as_string() const {
   return str;
 }
 
-void SpellChecker::update_delimiters() { m_delimiters = L" \n\r\t\v" + parse_string(m_settings.delimiters.c_str()); }
