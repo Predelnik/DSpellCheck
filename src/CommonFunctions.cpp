@@ -85,8 +85,6 @@ std::string to_string(std::wstring_view source) {
   return bytes.data();
 }
 
-constexpr size_t max_utf8_char_length = 6;
-
 std::string to_utf8_string(std::string_view source) {
   auto bytes = convert("CHAR", "UTF-8//IGNORE", source.data(), source.length(), max_utf8_char_length * (source.length() + 1));
   if (bytes.empty())

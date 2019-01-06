@@ -19,6 +19,9 @@
 #include <string>
 #include <vector>
 #include <windows.h>
+#include <algorithm>
+#include "CommonFunctions.h"
+#include "utils/utf8.h"
 
 // To mock things and stuff
 
@@ -149,5 +152,9 @@ public:
     return get_current_pos(view) -
            get_line_start_position(view, get_current_line_number(view));
   }
+
+  long get_prev_valid_begin_pos(EditorViewType view, long pos) const;
+  long get_next_valid_end_pos(EditorViewType view, long pos) const;
+
   virtual ~EditorInterface() = default;
 };
