@@ -162,7 +162,19 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
         while (true) {
           pos = m_editor.find_next(view, pos, misspelled_text.c_str ());
           if (pos >= 0) {
-            m_editor.replace_text(view, pos, static_cast<long> (pos + encoded_suggestion.length()), encoded_suggestion);
+            auto start_pos = m_editor.get_prev_valid_begin_pos(view, pos);
+            auto end_pos = m_editor.get_next_valid_end_pos(view, static_cast<long> (pos + misspelled_text.length()));
+            auto rng = m_editor.get_text_range(view, start_pos, end_pos);
+            auto mapped_wstr = SpellCheckerHelpers::to_mapped_wstring (m_editor, view, rng);
+            if (!m_settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer)
+            {
+              return (start_pos == pos || tokenizer.prev_token_begin (static_cast<long> (mapped_wstr.str.length ()) - 2) == 1) &&
+                     (end_pos == pos + misspelled_text.length() || tokenizer.next_token_end (1) == static_cast<long> (mapped_wstr.str.length ()) - 1);
+            })) {
+              pos = pos + static_cast<long> (misspelled_text.length());
+              continue;
+            }
+            m_editor.replace_text(view, pos, static_cast<long> (pos + misspelled_text.length()), encoded_suggestion);
             pos = pos + static_cast<long> (encoded_suggestion.length()) - static_cast<long> (misspelled_text.length());
           } else
             break;

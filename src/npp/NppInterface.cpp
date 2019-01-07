@@ -156,7 +156,7 @@ long NppInterface::find_next(EditorViewType view, long from_position, const char
 
 void NppInterface::replace_text(EditorViewType view, long from, long to, std::string_view replacement) {
   send_msg_to_scintilla (view, SCI_SETTARGETSTART, from);
-  send_msg_to_scintilla (view, SCI_SETTARGETEND, to - 1);
+  send_msg_to_scintilla (view, SCI_SETTARGETEND, to);
   send_msg_to_scintilla (view, SCI_REPLACETARGET, replacement.size(), reinterpret_cast<LPARAM> (replacement.data()));
 }
 
