@@ -321,8 +321,9 @@ ContextMenuHandler::get_suggestion_menu_items() {
   }
 
   if (!m_last_suggestions.empty()) {
-    MenuItem replace_all_item (L"<Placeholder>", -1);
+    MenuItem replace_all_item (rc_str (IDS_REPLACE_ALL).c_str(), -1);
     replace_all_item.children = suggestion_menu_items;
+    suggestion_menu_items.emplace_back(MenuItem::Separator{});
     std::for_each (replace_all_item.children.begin (), replace_all_item.children.end (), [](auto &item){ item.id += MID_REPLACE_ALL_START;});
     suggestion_menu_items.push_back (std::move (replace_all_item));
     suggestion_menu_items.emplace_back(MenuItem::Separator{});
