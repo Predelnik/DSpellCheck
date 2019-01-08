@@ -80,4 +80,31 @@ MappedWstring to_mapped_wstring(const EditorInterface &editor,
 
   return ::to_mapped_wstring(str);
 }
+
+void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Settings& settings, const char* from, const char* to) {
+  long pos = 0;
+  editor.begin_undo_action(view);
+  auto from_len = strlen (from), to_len = strlen (to);
+  while (true) {
+    pos = editor.find_next(view, pos, from);
+    if (pos >= 0) {
+      auto start_pos = editor.get_prev_valid_begin_pos(view, pos);
+      auto end_pos = editor.get_next_valid_end_pos(view, static_cast<long> (pos + from_len));
+      auto rng = editor.get_text_range(view, start_pos, end_pos);
+      auto mapped_wstr = SpellCheckerHelpers::to_mapped_wstring (editor, view, rng);
+      if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer)
+      {
+        return (start_pos == pos || tokenizer.prev_token_begin (static_cast<long> (mapped_wstr.str.length ()) - 2) == 1) &&
+               (end_pos == pos + from_len || tokenizer.next_token_end (1) == static_cast<long> (mapped_wstr.str.length ()) - 1);
+      })) {
+        pos = pos + static_cast<long> (from_len);
+        continue;
+      }
+      editor.replace_text(view, pos, static_cast<long> (pos + from_len), to);
+      pos = pos + static_cast<long> (to_len) - static_cast<long> (from_len);
+    } else
+      break;
+  }
+  editor.end_undo_action(view);
+}
 } // namespace SpellCheckerHelpers

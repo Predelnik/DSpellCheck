@@ -26,5 +26,6 @@ void apply_word_conversions(const Settings &settings, std::wstring &word);
 void cut_apostrophes(const Settings &settings, std::wstring_view &word);
 MappedWstring to_mapped_wstring(const EditorInterface &editor,
                                 EditorViewType view, std::string_view str);
-
+// Replace all tokens equal `from` to `to`. Settings are required for tokenization style.
+void replace_all_tokens (EditorInterface& editor, EditorViewType view, const Settings &settings, const char* from, const char* to);
 } // namespace SpellCheckerHelpers

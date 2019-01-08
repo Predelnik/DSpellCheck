@@ -155,6 +155,7 @@ public:
 
   long get_prev_valid_begin_pos(EditorViewType view, long pos) const;
   long get_next_valid_end_pos(EditorViewType view, long pos) const;
+  std::string to_editor_encoding (EditorViewType view, std::wstring_view str) const;
 
   virtual ~EditorInterface() = default;
 };

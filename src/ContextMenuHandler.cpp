@@ -151,35 +151,9 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
 
         m_editor.replace_selection(view, encoded_str.c_str());
       } else if (result <= MID_REPLACE_ALL_START + m_last_suggestions.size()) {
-        std::string encoded_suggestion;
-        if (m_editor.get_encoding(view) == EditorCodepage::ansi)
-          encoded_suggestion = to_string(m_last_suggestions[result - MID_REPLACE_ALL_START - 1].c_str());
-        else
-          encoded_suggestion = to_utf8_string(m_last_suggestions[result - MID_REPLACE_ALL_START - 1]);
-        long pos = 0;
+        auto encoded_suggestion = m_editor.to_editor_encoding(view, m_last_suggestions[result - MID_REPLACE_ALL_START - 1]);
         auto misspelled_text = m_editor.selected_text(view);
-        m_editor.begin_undo_action(view);
-        while (true) {
-          pos = m_editor.find_next(view, pos, misspelled_text.c_str ());
-          if (pos >= 0) {
-            auto start_pos = m_editor.get_prev_valid_begin_pos(view, pos);
-            auto end_pos = m_editor.get_next_valid_end_pos(view, static_cast<long> (pos + misspelled_text.length()));
-            auto rng = m_editor.get_text_range(view, start_pos, end_pos);
-            auto mapped_wstr = SpellCheckerHelpers::to_mapped_wstring (m_editor, view, rng);
-            if (!m_settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer)
-            {
-              return (start_pos == pos || tokenizer.prev_token_begin (static_cast<long> (mapped_wstr.str.length ()) - 2) == 1) &&
-                     (end_pos == pos + misspelled_text.length() || tokenizer.next_token_end (1) == static_cast<long> (mapped_wstr.str.length ()) - 1);
-            })) {
-              pos = pos + static_cast<long> (misspelled_text.length());
-              continue;
-            }
-            m_editor.replace_text(view, pos, static_cast<long> (pos + misspelled_text.length()), encoded_suggestion);
-            pos = pos + static_cast<long> (encoded_suggestion.length()) - static_cast<long> (misspelled_text.length());
-          } else
-            break;
-        }
-        m_editor.end_undo_action(view);
+        SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), encoded_suggestion.c_str ());
       }
     }
   } break;

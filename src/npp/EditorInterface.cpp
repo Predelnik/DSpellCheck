@@ -23,3 +23,12 @@ long EditorInterface::get_next_valid_end_pos(EditorViewType view, long pos) cons
   auto text = get_text_range(view, pos + 1, pos + 2);
   return pos + utf8_symbol_len(*text.begin());
 }
+
+std::string EditorInterface::to_editor_encoding(EditorViewType view, std::wstring_view str) const {
+  switch (get_encoding(view)) {
+  case EditorCodepage::ansi: return to_string (str);
+  case EditorCodepage::utf8: return to_utf8_string(str);
+  case EditorCodepage::COUNT: break;
+  }
+  std::abort ();
+}
