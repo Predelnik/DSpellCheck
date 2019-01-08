@@ -226,7 +226,8 @@ void ContextMenuHandler::precalculate_menu() {
   if (SpellCheckerHelpers::is_spell_checking_needed (m_editor, m_settings) &&
       m_settings.suggestions_mode == SuggestionMode::context_menu) {
       update_word_under_cursor_data ();
-      suggestion_menu_items = get_suggestion_menu_items();
+      if (!m_word_under_cursor_is_correct)
+        suggestion_menu_items = get_suggestion_menu_items();
     }
   show_calculated_menu(std::move(suggestion_menu_items));
 }
