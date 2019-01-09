@@ -84,7 +84,8 @@ MappedWstring to_mapped_wstring(const EditorInterface &editor,
 void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Settings& settings, const char* from, const char* to) {
   long pos = 0;
   editor.begin_undo_action(view);
-  long from_len = strlen (from), to_len = strlen (to);
+  auto from_len = static_cast<long> (strlen (from));
+  auto to_len = static_cast<long> (strlen (to));
   while (true) {
     pos = editor.find_next(view, pos, from);
     if (pos >= 0) {
