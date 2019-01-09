@@ -83,6 +83,7 @@ void MockEditorInterface::replace_selection(EditorViewType view,
     return;
   auto &d = doc->cur.data;
   d.replace(doc->cur.selection[0], doc->cur.selection[1], str);
+  doc->cur.style.resize (doc->cur.data.length ());
 }
 
 void MockEditorInterface::set_indicator_style(EditorViewType view,
@@ -563,15 +564,27 @@ bool MockEditorInterface::is_line_visible(EditorViewType /*view*/, long /*line*/
   return true;
 }
 
-long MockEditorInterface::find_next(EditorViewType /*view*/, long /*from_position*/, const char* /*needle*/)
+long MockEditorInterface::find_next(EditorViewType view, long from_position, const char* needle)
 {
-  // Unimplemented
-  return 0;
+  auto doc = active_document(view);
+  if (!doc)
+    return -1;
+
+  auto pos = doc->cur.data.find (needle, from_position);
+  if (pos == std::string::npos)
+    return -1;
+
+  return static_cast<long> (pos);
 }
 
-void MockEditorInterface::replace_text(EditorViewType /*view*/, long /*from*/, long /*to*/, std::string_view /*replacement*/)
+void MockEditorInterface::replace_text(EditorViewType view, long from, long to, std::string_view replacement)
 {
-  // Unimplemented
+  auto doc = active_document(view);
+  if (!doc)
+    return;
+  auto &d = doc->cur.data;
+  d.replace(from, to - from, replacement);
+  doc->cur.style.resize (doc->cur.data.length ());
 }
 
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {

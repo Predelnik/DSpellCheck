@@ -24,6 +24,7 @@
 #include "UrlHelpers.h"
 #include "catch.hpp"
 #include "utils/TemporaryAcessor.h"
+#include "SpellCheckerHelpers.h"
 
 void setup_speller(MockSpeller &speller) {
   speller.set_inner_dict({{L"English",
@@ -251,6 +252,11 @@ abg
     // check for wrong utf-8 characters
     editor.set_active_document_text_raw(v, "abcdef\xBE\xE3");
     sc.recheck_visible_both_views();
+  }
+  {
+    editor.set_active_document_text(v, L"token token token nottoken token token");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", "bar");
+    CHECK (editor.get_active_document_text(v) == "bar bar bar nottoken bar bar");
   }
 }
 
