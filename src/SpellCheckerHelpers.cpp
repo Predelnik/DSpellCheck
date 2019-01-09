@@ -102,7 +102,7 @@ void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Sett
         continue;
       }
       editor.replace_text(view, pos, static_cast<long> (pos + from_len), to);
-      pos = pos + static_cast<long> (to_len) - static_cast<long> (from_len);
+      pos = pos + static_cast<long> (to_len);
     } else
       break;
   }

@@ -14,8 +14,9 @@ long EditorInterface::get_prev_valid_begin_pos(EditorViewType view, long pos) co
 }
 
 long EditorInterface::get_next_valid_end_pos(EditorViewType view, long pos) const {
-  if (pos == get_active_document_length(view) - 1)
-    return pos;
+  auto doc_len = get_active_document_length(view);
+  if (pos >= doc_len)
+    return doc_len;
 
   if (get_encoding(view) == EditorCodepage::ansi)
     return pos + 1;
