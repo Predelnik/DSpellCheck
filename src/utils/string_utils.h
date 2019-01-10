@@ -191,3 +191,5 @@ void replace_all_inplace(std::basic_string<CharType>& str, const detail::identit
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }
 }
+
+size_t find_case_insensitive(const std::string_view &str_haystack, const std::string_view &str_needle);

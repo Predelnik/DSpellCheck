@@ -17,6 +17,7 @@
 #include "CommonFunctions.h"
 #include "utils/enum_range.h"
 #include <filesystem>
+#include "utils/string_utils.h"
 
 void MockedDocumentInfo::set_data(const std::wstring &data_arg) {
   switch (codepage) {
@@ -570,11 +571,11 @@ long MockEditorInterface::find_next(EditorViewType view, long from_position, con
   if (!doc)
     return -1;
 
-  auto pos = doc->cur.data.find (needle, from_position);
+  auto pos = find_case_insensitive (std::string_view (doc->cur.data).substr(from_position), needle);
   if (pos == std::string::npos)
     return -1;
 
-  return static_cast<long> (pos);
+  return static_cast<long> (pos) + from_position;
 }
 
 void MockEditorInterface::replace_text(EditorViewType view, long from, long to, std::string_view replacement)
