@@ -306,7 +306,7 @@ TEST_CASE("UTF-8 shenanigans") {
     CHECK(editor.get_next_valid_end_pos(v, 4) == 6);
     // moving around word 'нетривиальными'
     CHECK(editor.get_prev_valid_begin_pos(v, 28) == 27);
-    CHECK(editor.get_next_valid_end_pos(v, 55) == 56);
+    CHECK(editor.get_next_valid_end_pos(v, 56) == 57);
     // and a bit further
     CHECK(editor.get_prev_valid_begin_pos(v, 27) == 25);
     CHECK(editor.get_next_valid_end_pos(v, 56) == 57);

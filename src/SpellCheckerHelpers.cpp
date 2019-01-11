@@ -95,8 +95,15 @@ void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Sett
       auto mapped_wstr = SpellCheckerHelpers::to_mapped_wstring (editor, view, rng);
       if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer)
       {
-        return (start_pos == pos || tokenizer.prev_token_begin (static_cast<long> (mapped_wstr.str.length ()) - 2) == 1) &&
-               (end_pos == pos + from_len || tokenizer.next_token_end (1) == static_cast<long> (mapped_wstr.str.length ()) - 1);
+        if (start_pos != pos) {
+          if (tokenizer.prev_token_begin (static_cast<long> (mapped_wstr.str.length ()) - 2) != 1)
+            return false;
+        }
+        if (end_pos != pos + from_len) {
+          if (tokenizer.next_token_end (1) != static_cast<long> (mapped_wstr.str.length ()) - 1)
+            return false;
+        }
+        return true;
       })) {
         pos = pos + static_cast<long> (from_len);
         continue;

@@ -21,7 +21,7 @@ long EditorInterface::get_next_valid_end_pos(EditorViewType view, long pos) cons
   if (get_encoding(view) == EditorCodepage::ansi)
     return pos + 1;
 
-  auto text = get_text_range(view, pos + 1, pos + 2);
+  auto text = get_text_range(view, pos, pos + 1);
   return pos + utf8_symbol_len(*text.begin());
 }
 
