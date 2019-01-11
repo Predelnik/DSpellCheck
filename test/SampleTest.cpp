@@ -350,3 +350,18 @@ TEST_CASE("GitHub") {
         L"https://api.github.com/repos/predelnik/DSpellCheck/git/trees/"
         L"master?recursive=1");
 }
+
+TEST_CASE ("string_case") {
+  CHECK(get_string_case_type(L"asda") == string_case_type::lower);
+  CHECK(get_string_case_type(L"Asda") == string_case_type::title);
+  CHECK(get_string_case_type(L"ASDA") == string_case_type::upper);
+  CHECK(get_string_case_type(L"AsDA") == string_case_type::mixed);
+  using namespace std::string_literals;
+  auto str = L"ArArAr"s;
+  apply_case_type (str, string_case_type::lower);
+  CHECK (str == L"ararar");
+  apply_case_type (str, string_case_type::upper);
+  CHECK (str == L"ARARAR");
+  apply_case_type (str, string_case_type::title);
+  CHECK (str == L"Ararar");
+}

@@ -193,3 +193,16 @@ void replace_all_inplace(std::basic_string<CharType>& str, const detail::identit
 }
 
 size_t find_case_insensitive(const std::string_view &str_haystack, const std::string_view &str_needle);
+
+enum class string_case_type
+{
+  lower,
+  upper,
+  title,
+  mixed,
+};
+
+string_case_type get_string_case_type(const std::wstring_view &sv);
+void apply_case_type (std::wstring &str, string_case_type type);
+wchar_t make_upper (wchar_t c);
+wchar_t make_lower (wchar_t c);

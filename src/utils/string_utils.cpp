@@ -16,6 +16,7 @@
 #include "string_utils.h"
 
 #include <algorithm>
+#include <cassert>
 
 void to_lower_inplace(std::wstring &s) {
   std::transform(s.begin(), s.end(), s.begin(), &towlower);
@@ -52,4 +53,46 @@ size_t find_case_insensitive(const std::string_view &str_haystack, const std::st
   if (it == str_haystack.end ())
     return std::string_view::npos;
   return it - str_haystack.begin ();
+}
+
+string_case_type get_string_case_type(const std::wstring_view &sv) {
+  if (sv.empty ())
+    return string_case_type::mixed;
+  size_t lower_count = std::count_if (sv.begin (), sv.end (), &IsCharLower);
+  if (lower_count == 0)
+    return string_case_type::upper;
+  if (lower_count == sv.length ())
+    return string_case_type::lower;
+  if (lower_count == sv.length () - 1 && IsCharUpper (sv.front ()))
+    return string_case_type::title;
+
+  return string_case_type::mixed;
+}
+
+void apply_case_type(std::wstring& str, string_case_type type) {
+  if (str.empty ())
+    return;
+  std::transform(str.begin (), str.end (), str.begin (), [&](wchar_t wc) -> wchar_t {
+    switch (type)
+    {
+    case string_case_type::lower:
+    case string_case_type::title:
+      return make_lower (wc);
+    case string_case_type::upper:
+      return make_upper (wc);
+    case string_case_type::mixed: assert (!"Inapplicable for mixed case"); break;
+    }
+    return wc;
+  }
+  );
+  if (type == string_case_type::title)
+    str.front () = make_upper(str.front());
+}
+
+wchar_t make_upper(wchar_t c) {
+  return static_cast<wchar_t> (reinterpret_cast<std::size_t> (CharUpper (reinterpret_cast<LPWSTR>(c))));
+}
+
+wchar_t make_lower(wchar_t c) {
+  return static_cast<wchar_t> (reinterpret_cast<std::size_t> (CharLower (reinterpret_cast<LPWSTR>(c))));
 }
