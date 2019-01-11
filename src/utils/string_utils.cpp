@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 
 void to_lower_inplace(std::wstring &s) {
   std::transform(s.begin(), s.end(), s.begin(), &towlower);
