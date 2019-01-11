@@ -266,6 +266,10 @@ abg
     editor.set_active_document_text(v, L"token token stillToken notoken andOneMoreToken");
     SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", "foobar");
     CHECK (editor.get_active_document_text(v) == "foobar foobar stillfoobar notoken andOneMorefoobar");
+
+    editor.set_active_document_text(v, L"token⸺token⸺token⸺nottoken⸺token⸺token");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", "bar");
+    CHECK (editor.get_active_document_text(v) == "bar⸺bar⸺bar⸺nottoken⸺bar⸺bar");
   }
 }
 
