@@ -81,11 +81,13 @@ MappedWstring to_mapped_wstring(const EditorInterface &editor,
   return ::to_mapped_wstring(str);
 }
 
-void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Settings& settings, const char* from, const char* to) {
+void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Settings& settings, const char* from, std::wstring to) {
   long pos = 0;
   editor.begin_undo_action(view);
   auto from_len = static_cast<long> (strlen (from));
-  auto to_len = static_cast<long> (strlen (to));
+  if (from_len == 0)
+    return;
+
   while (true) {
     pos = editor.find_next(view, pos, from);
     if (pos >= 0) {
@@ -93,23 +95,34 @@ void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Sett
       auto end_pos = editor.get_next_valid_end_pos(view, static_cast<long> (pos + from_len));
       auto rng = editor.get_text_range(view, start_pos, end_pos);
       auto mapped_wstr = SpellCheckerHelpers::to_mapped_wstring (editor, view, rng);
+      size_t word_start = 1;
+      size_t word_end = mapped_wstr.str.length() - 1;
       if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer)
       {
         if (start_pos != pos) {
           if (tokenizer.prev_token_begin (static_cast<long> (mapped_wstr.str.length ()) - 2) != 1)
             return false;
-        }
+        } else
+          --word_start;
         if (end_pos != pos + from_len) {
           if (tokenizer.next_token_end (1) != static_cast<long> (mapped_wstr.str.length ()) - 1)
             return false;
-        }
+        } else
+          ++word_end;
         return true;
       })) {
         pos = pos + static_cast<long> (from_len);
         continue;
       }
-      editor.replace_text(view, pos, static_cast<long> (pos + from_len), to);
-      pos = pos + static_cast<long> (to_len);
+      auto src_case_type = get_string_case_type(std::wstring_view (mapped_wstr.str).substr(word_start, word_end - word_start));
+      if (src_case_type == string_case_type::mixed) {
+        pos = pos + static_cast<long> (from_len);
+        continue;
+      } else
+        apply_case_type (to, src_case_type);
+      auto encoded_to = editor.to_editor_encoding(view, to);
+      editor.replace_text(view, pos, static_cast<long> (pos + from_len), encoded_to);
+      pos = pos + static_cast<long> (encoded_to.length());
     } else
       break;
   }

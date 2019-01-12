@@ -151,9 +151,8 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
 
         m_editor.replace_selection(view, encoded_str.c_str());
       } else if (result <= MID_REPLACE_ALL_START + m_last_suggestions.size()) {
-        auto encoded_suggestion = m_editor.to_editor_encoding(view, m_last_suggestions[result - MID_REPLACE_ALL_START - 1]);
         auto misspelled_text = m_editor.selected_text(view);
-        SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), encoded_suggestion.c_str ());
+        SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), m_last_suggestions[result - MID_REPLACE_ALL_START - 1]);
       }
     }
   } break;
