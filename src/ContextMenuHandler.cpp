@@ -295,12 +295,11 @@ ContextMenuHandler::get_suggestion_menu_items() {
   }
 
   if (!m_last_suggestions.empty()) {
-    MenuItem replace_all_item (rc_str (IDS_REPLACE_ALL).c_str(), -1);
+    MenuItem replace_all_item (wstring_printf (rc_str (IDS_REPLACE_ALL_PS).c_str (), m_selected_word.str.c_str ()).c_str(), -1);
     replace_all_item.children = suggestion_menu_items;
     suggestion_menu_items.emplace_back(MenuItem::Separator{});
     std::for_each (replace_all_item.children.begin (), replace_all_item.children.end (), [](auto &item){ item.id += MID_REPLACE_ALL_START;});
     suggestion_menu_items.push_back (std::move (replace_all_item));
-    suggestion_menu_items.emplace_back(MenuItem::Separator{});
   }
 
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
