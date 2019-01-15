@@ -315,9 +315,6 @@ void command_menu_init() {
   action_index[Action::erase_all_misspellings] =
     set_next_command(rc_str(IDS_ERASE_ALL_MISSPELLED).c_str(),
       erase_misspellings);
-  action_index[Action::show_spell_check_menu_at_cursor] =
-    set_next_command(rc_str(IDS_SHOW_SPELL_CHECK_MENU_AT_CURSOR).c_str (),
-      show_spell_check_menu_at_cursor);
   action_index[Action::reload_user_dictionaries] =
       set_next_command(rc_str(IDS_RELOAD_HUNSPELL).c_str(),
                        reload_hunspell_dictionaries);
@@ -328,6 +325,10 @@ void command_menu_init() {
                                                           open_debug_log);
   set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual);
   set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg);
+  action_index[Action::show_spell_check_menu_at_cursor] =
+    set_next_command(rc_str(IDS_SHOW_SPELL_CHECK_MENU_AT_CURSOR).c_str (),
+      show_spell_check_menu_at_cursor);
+  // add further set_next_command at the bottom to avoid breaking configured hotkeys
 }
 
 void add_icons() {
