@@ -72,15 +72,6 @@ void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
   }
 }
 
-MappedWstring to_mapped_wstring(const EditorInterface &editor,
-                                EditorViewType view,
-                                std::string_view str) {
-  if (editor.get_encoding(view) == EditorCodepage::utf8)
-    return utf8_to_mapped_wstring(str);
-
-  return ::to_mapped_wstring(str);
-}
-
 void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Settings& settings, const char* from, std::wstring to) {
   long pos = 0;
   editor.begin_undo_action(view);
@@ -93,8 +84,7 @@ void replace_all_tokens(EditorInterface& editor, EditorViewType view, const Sett
     if (pos >= 0) {
       auto start_pos = editor.get_prev_valid_begin_pos(view, pos);
       auto end_pos = editor.get_next_valid_end_pos(view, static_cast<long> (pos + from_len));
-      auto rng = editor.get_text_range(view, start_pos, end_pos);
-      auto mapped_wstr = SpellCheckerHelpers::to_mapped_wstring (editor, view, rng);
+      auto mapped_wstr = editor.get_mapped_wstring_range(view, start_pos, end_pos);
       long word_start = 0;
       long word_end = static_cast<long> (mapped_wstr.str.length());
       if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer)

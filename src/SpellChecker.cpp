@@ -64,7 +64,7 @@ void SpellChecker::find_next_mistake() {
       to = static_cast<long>(doc_length);
     }
     if (from < to) {
-      auto text = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, m_editor.get_text_range(view, from, to));
+      auto text = m_editor.get_mapped_wstring_range(view, from, to);
       auto index = static_cast<long>(text.str.size());
       if (to != doc_length && next_token_end(text.str, to) == index)
         index = prev_token_begin(text.str, index - 1);
@@ -107,7 +107,7 @@ void SpellChecker::find_prev_mistake() {
     }
 
     if (from < to) {
-      auto text = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, m_editor.get_text_range(view, from, to));
+      auto text = m_editor.get_mapped_wstring_range(view, from, to);
       auto offset = next_token_end(text.str, 0);
       if (check_text(view, text, from, CheckTextMode::find_last))
         break;
@@ -176,7 +176,7 @@ long SpellChecker::prev_token_begin_in_document(EditorViewType view, long start)
   auto prev_start = start + 1;
   while (start > 0) {
     start = std::max(start - shift, 0l);
-    auto mapped_str = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, m_editor.get_text_range(view, start, prev_start));
+    auto mapped_str = m_editor.get_mapped_wstring_range(view, start, prev_start);
     // finding any start before start which starts a token
     auto index = prev_token_begin(mapped_str.str, static_cast<long>(mapped_str.str.length()) - 1);
     if (index > 0)
@@ -195,7 +195,7 @@ long SpellChecker::next_token_end_in_document(EditorViewType view, long end) con
     return end;
   while (end > 0) {
     end = std::min(end + shift, length);
-    auto mapped_str = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, m_editor.get_text_range(view, prev_end, end));
+    auto mapped_str = m_editor.get_mapped_wstring_range(view, prev_end, end);
     // finding any start before start which starts a token
     auto index = next_token_end(mapped_str.str, 0);
     if (index < static_cast<long>(mapped_str.str.length()))
@@ -282,7 +282,7 @@ bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length, bool us
     return true;
   auto line = m_editor.line_from_position(view, init_char_pos);
   auto offset = m_editor.get_line_start_position(view, line);
-  auto mapped_str = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, m_editor.get_line(view, line).data());
+  auto mapped_str = m_editor.get_mapped_wstring_line(view, line);
   if (mapped_str.str.empty())
     return true;
   auto word = get_word_at(static_cast<long>(init_char_pos), mapped_str, static_cast<long>(offset));
@@ -303,8 +303,7 @@ bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length, bool us
 
 void SpellChecker::erase_all_misspellings() {
   auto view = m_editor.active_view();
-  auto buf = m_editor.get_active_document_text(view);
-  auto mapped_str = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, buf.data());
+  auto mapped_str = m_editor.to_mapped_wstring(view, m_editor.get_active_document_text(view));
   m_misspellings.clear();
   if (!check_text(view, mapped_str, 0, CheckTextMode::find_all))
     return;
@@ -402,7 +401,7 @@ long SpellChecker::prev_token_begin(std::wstring_view target, long index) const 
 }
 
 MappedWstring SpellChecker::get_document_mapped_wstring(EditorViewType view, long start, long end) const {
-  auto result = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, m_editor.get_text_range(view, start, end));
+  auto result = m_editor.get_mapped_wstring_range(view, start, end);
   for (auto &val : result.mapping)
     val += start;
   return result;
@@ -539,7 +538,7 @@ void SpellChecker::recheck_visible(EditorViewType view) {
 std::wstring SpellChecker::get_all_misspellings_as_string() const {
   auto view = m_editor.active_view();
   auto buf = m_editor.get_active_document_text(view);
-  auto mapped_str = SpellCheckerHelpers::to_mapped_wstring(m_editor, view, buf.data());
+  auto mapped_str = m_editor.to_mapped_wstring(view, buf.data());
   m_misspellings.clear();
   if (!check_text(view, mapped_str, 0, CheckTextMode::find_all))
     return {};

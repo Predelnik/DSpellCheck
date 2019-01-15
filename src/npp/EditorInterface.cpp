@@ -1,4 +1,5 @@
 #include "EditorInterface.h"
+#include "MappedWString.h"
 
 long EditorInterface::get_prev_valid_begin_pos(EditorViewType view, long pos) const {
   if (pos == 0)
@@ -32,4 +33,19 @@ std::string EditorInterface::to_editor_encoding(EditorViewType view, std::wstrin
   case EditorCodepage::COUNT: break;
   }
   std::abort ();
+}
+
+MappedWstring EditorInterface::to_mapped_wstring(EditorViewType view, const std::string& str) const {
+  if (get_encoding(view) == EditorCodepage::utf8)
+    return utf8_to_mapped_wstring(str);
+
+  return ::to_mapped_wstring(str);
+}
+
+MappedWstring EditorInterface::get_mapped_wstring_range(EditorViewType view, long from, long to) const {
+  return to_mapped_wstring (view, get_text_range(view, from, to));
+}
+
+MappedWstring EditorInterface::get_mapped_wstring_line(EditorViewType view, long line) const {
+  return to_mapped_wstring (view, get_line(view, line));;
 }

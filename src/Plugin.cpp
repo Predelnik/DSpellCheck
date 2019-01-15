@@ -195,7 +195,7 @@ void replace_with_1st_suggestion ()
   long pos, length;
   if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
     auto view = npp->active_view();
-    auto wstr = SpellCheckerHelpers::to_mapped_wstring(*npp, view, npp->get_text_range(view, pos, pos + length));
+    auto wstr = npp->get_mapped_wstring_range(view, pos, pos + length);
     auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str ());
     if (!suggestions.empty())
       npp->replace_text(view, pos, pos + length, npp->to_editor_encoding(view, suggestions.front ()));
