@@ -37,6 +37,7 @@ enum class Action
   additional_actions,
   toggle_debug_logging,
   open_debug_log,
+  replace_with_1st_suggestion,
 
   COUNT,
 };

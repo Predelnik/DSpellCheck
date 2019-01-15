@@ -42,6 +42,7 @@
 #include "resource.h"
 #include "utils/raii.h"
 #include "utils/winapi.h"
+#include "SpellCheckerHelpers.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -189,6 +190,18 @@ void show_spell_check_menu_at_cursor ()
                          pnt.y, npp->get_scintilla_hwnd(v), &tpm_params);
 }
 
+void replace_with_1st_suggestion ()
+{
+  long pos, length;
+  if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
+    auto view = npp->active_view();
+    auto wstr = SpellCheckerHelpers::to_mapped_wstring(*npp, view, npp->get_text_range(view, pos, pos + length));
+    auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str ());
+    if (!suggestions.empty())
+      npp->replace_text(view, pos, pos + length, npp->to_editor_encoding(view, suggestions.front ()));
+  }
+}
+
 void copy_misspellings_to_clipboard() {
   auto str = spell_checker->get_all_misspellings_as_string();
   const size_t len = (str.length() + 1) * 2;
@@ -328,6 +341,10 @@ void command_menu_init() {
   action_index[Action::show_spell_check_menu_at_cursor] =
     set_next_command(rc_str(IDS_SHOW_SPELL_CHECK_MENU_AT_CURSOR).c_str (),
       show_spell_check_menu_at_cursor);
+
+  action_index[Action::replace_with_1st_suggestion] =
+    set_next_command(rc_str (IDS_REPLACE_WITH_1ST_SUGGESTION).c_str (),
+      replace_with_1st_suggestion);
   // add further set_next_command at the bottom to avoid breaking configured hotkeys
 }
 
@@ -504,8 +521,9 @@ std::wstring get_debug_log_path() {
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
-  auto list = {Action::copy_all_misspellings, Action::erase_all_misspellings, Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries,
-    Action::toggle_debug_logging, Action::open_debug_log};
+  auto list = {Action::copy_all_misspellings, Action::erase_all_misspellings, Action::replace_with_1st_suggestion,
+               Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries, Action::toggle_debug_logging,
+               Action::open_debug_log};
   for (auto action : list) {
     MENUITEMINFO info;
     info.cbSize = sizeof(info);
