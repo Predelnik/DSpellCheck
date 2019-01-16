@@ -35,17 +35,24 @@ std::string EditorInterface::to_editor_encoding(EditorViewType view, std::wstrin
   std::abort ();
 }
 
-MappedWstring EditorInterface::to_mapped_wstring(EditorViewType view, const std::string& str) const {
+MappedWstring EditorInterface::to_mapped_wstring(EditorViewType view, const std::string& str) {
   if (get_encoding(view) == EditorCodepage::utf8)
     return utf8_to_mapped_wstring(str);
 
   return ::to_mapped_wstring(str);
 }
 
-MappedWstring EditorInterface::get_mapped_wstring_range(EditorViewType view, long from, long to) const {
-  return to_mapped_wstring (view, get_text_range(view, from, to));
+MappedWstring EditorInterface::get_mapped_wstring_range(EditorViewType view, long from, long to) {
+  auto result = to_mapped_wstring (view, get_text_range(view, from, to));
+  for (auto &val : result.mapping)
+    val += from;
+  return result;
 }
 
-MappedWstring EditorInterface::get_mapped_wstring_line(EditorViewType view, long line) const {
-  return to_mapped_wstring (view, get_line(view, line));;
+MappedWstring EditorInterface::get_mapped_wstring_line(EditorViewType view, long line) {
+  auto result = to_mapped_wstring (view, get_line(view, line));;
+  auto line_start = get_line_start_position(view, line);
+  for (auto &val : result.mapping)
+    val += line_start;
+  return result;
 }

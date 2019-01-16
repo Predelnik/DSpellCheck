@@ -74,11 +74,10 @@ private:
   long next_token_end_in_document(EditorViewType view, long end) const;
   MappedWstring get_visible_text(EditorViewType view);
   bool check_text(EditorViewType view, const MappedWstring &text_to_check,
-                  long offset, CheckTextMode mode) const;
+                  CheckTextMode mode) const;
   void check_visible(EditorViewType view);
 
-  std::wstring_view get_word_at(long char_pos, const MappedWstring &text,
-                                long offset) const;
+  std::wstring_view get_word_at(long char_pos, const MappedWstring &text) const;
   void refresh_underline_style();
   void reset_hot_spot_cache();
   bool is_spellchecking_needed(EditorViewType view, std::wstring_view word,

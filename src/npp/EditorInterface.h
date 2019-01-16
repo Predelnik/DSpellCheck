@@ -155,9 +155,9 @@ public:
 
   long get_prev_valid_begin_pos(EditorViewType view, long pos) const;
   long get_next_valid_end_pos(EditorViewType view, long pos) const;
-  MappedWstring to_mapped_wstring (EditorViewType view, const std::string &str) const;
-  MappedWstring get_mapped_wstring_range (EditorViewType view, long from, long to) const;
-  MappedWstring get_mapped_wstring_line (EditorViewType view, long line) const;
+  MappedWstring to_mapped_wstring (EditorViewType view, const std::string &str);
+  MappedWstring get_mapped_wstring_range (EditorViewType view, long from, long to);
+  MappedWstring get_mapped_wstring_line (EditorViewType view, long line);
   std::string to_editor_encoding (EditorViewType view, std::wstring_view str) const;
 
   virtual ~EditorInterface() = default;
