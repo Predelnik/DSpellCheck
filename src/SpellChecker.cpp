@@ -239,7 +239,7 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view) {
       end = m_editor.char_position_from_point(view, {rect.right, end_point.y});
       end = next_token_end_in_document(view, end);
     }
-    auto new_str = get_document_mapped_wstring(view, start, end);
+    auto new_str = m_editor.get_mapped_wstring_range(view, start, end);
     result.append(new_str);
   }
   return result;
@@ -397,11 +397,6 @@ long SpellChecker::next_token_end(std::wstring_view target, long index) const {
 
 long SpellChecker::prev_token_begin(std::wstring_view target, long index) const {
   return m_settings.do_with_tokenizer (target, [index](const auto &tokenizer){ return tokenizer.prev_token_begin (index); });
-}
-
-MappedWstring SpellChecker::get_document_mapped_wstring(EditorViewType view, long start, long end) const {
-  auto result = m_editor.get_mapped_wstring_range(view, start, end);
-  return result;
 }
 
 namespace {

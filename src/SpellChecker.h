@@ -84,7 +84,6 @@ private:
                                long word_start) const;
   long next_token_end(std::wstring_view target, long index) const;
   long prev_token_begin(std::wstring_view target, long index) const;
-  MappedWstring get_document_mapped_wstring (EditorViewType view, long start, long end) const;
 
 private:
   // converted to corresponding symbols
