@@ -196,7 +196,7 @@ void ContextMenuHandler::update_word_under_cursor_data () {
 
 void ContextMenuHandler::precalculate_menu() {
   std::vector<MenuItem> suggestion_menu_items;
-  if (SpellCheckerHelpers::is_spell_checking_needed (m_editor, m_settings) &&
+  if (SpellCheckerHelpers::is_spell_checking_needed_for_file (m_editor, m_settings) &&
       m_settings.suggestions_mode == SuggestionMode::context_menu) {
       update_word_under_cursor_data ();
       if (!m_word_under_cursor_is_correct)
@@ -212,7 +212,7 @@ void ContextMenuHandler::init_suggestions_box(
   if (!m_speller_container.active_speller().is_working())
     return;
   POINT p;
-  if (!SpellCheckerHelpers::is_spell_checking_needed(
+  if (!SpellCheckerHelpers::is_spell_checking_needed_for_file(
           m_editor, m_settings)) // If there's no red underline let's do nothing
   {
     suggestion_button.display(false);

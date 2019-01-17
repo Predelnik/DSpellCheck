@@ -255,6 +255,13 @@ void SpellChecker::clear_all_underlines(EditorViewType view) const {
 
 void SpellChecker::reset_hot_spot_cache() { memset(m_hot_spot_cache, -1, sizeof(m_hot_spot_cache)); }
 
+bool SpellChecker::is_spellchecking_needed(EditorViewType view, std::wstring_view word, long word_start) const {
+  if (!m_speller_container.active_speller().is_working())
+    return false;
+
+  return SpellCheckerHelpers::is_word_spell_checking_needed (m_settings, m_editor, view, word, word_start);
+}
+
 bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length, bool use_text_cursor) const {
   POINT p;
   long init_char_pos;
@@ -316,72 +323,6 @@ void SpellChecker::erase_all_misspellings() {
     chars_removed += original_len;
   }
   m_editor.end_undo_action(view);
-}
-
-bool SpellChecker::is_spellchecking_needed(EditorViewType view, std::wstring_view word, long word_start) const {
-  if (!m_speller_container.active_speller().is_working() || word.empty()) {
-    return false;
-  }
-  // Well Numbers have same codes for ANSI and Unicode I guess, so
-  // If word contains number then it's probably just a number or some crazy name
-  auto style = m_editor.get_style_at(view, word_start);
-  auto lexer = m_editor.get_lexer(view);
-  auto category = SciUtils::get_style_category(lexer, style, m_settings);
-  if (category == SciUtils::StyleCategory::unknown) {
-    return false;
-  }
-
-  if (category != SciUtils::StyleCategory::text && !((category == SciUtils::StyleCategory::comment && m_settings.check_comments) ||
-                                                     (category == SciUtils::StyleCategory::string && m_settings.check_strings) ||
-                                                     (category == SciUtils::StyleCategory::identifier && m_settings.check_variable_functions))) {
-    return false;
-  }
-
-  if (m_editor.is_style_hotspot(view, style)) {
-    return false;
-  }
-
-  if (static_cast<int>(word.length()) < m_settings.word_minimum_length)
-    return false;
-
-  if (m_settings.ignore_one_letter && word.length() == 1)
-    return false;
-
-  if (m_settings.ignore_containing_digit &&
-      std::find_if(word.begin(), word.end(), [](wchar_t wc) { return IsCharAlphaNumeric(wc) && !IsCharAlpha(wc); }) != word.end())
-    return false;
-
-  if (m_settings.ignore_starting_with_capital && IsCharUpper(word.front())) {
-    return false;
-  }
-
-  if (m_settings.ignore_having_a_capital || m_settings.ignore_all_capital) {
-    if (m_settings.ignore_having_a_capital || m_settings.ignore_all_capital) {
-      bool all_upper = IsCharUpper(word.front()), any_upper = false;
-      for (auto c : std::wstring_view(word).substr(1)) {
-        if (IsCharUpper(c)) {
-          any_upper = true;
-        } else
-          all_upper = false;
-      }
-
-      if (!all_upper && any_upper && m_settings.ignore_having_a_capital)
-        return false;
-
-      if (all_upper && m_settings.ignore_all_capital)
-        return false;
-    }
-  }
-
-  if (m_settings.ignore_having_underscore && word.find(L'_') != std::wstring_view::npos)
-    return false;
-
-  if (m_settings.ignore_starting_or_ending_with_apostrophe) {
-    if (word.front() == '\'' || word.back() == '\'')
-      return false;
-  }
-
-  return true;
 }
 
 bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, long word_start) const {
@@ -520,11 +461,10 @@ void SpellChecker::recheck_visible(EditorViewType view) {
     return;
   }
 
-  // to utf-8 or no
-  if (SpellCheckerHelpers::is_spell_checking_needed(m_editor, m_settings))
-    check_visible(view);
-  else
-    clear_all_underlines(view);
+  if (!SpellCheckerHelpers::is_spell_checking_needed_for_file(m_editor, m_settings))
+    return clear_all_underlines(view);
+
+  check_visible(view);
 }
 
 std::wstring SpellChecker::get_all_misspellings_as_string() const {

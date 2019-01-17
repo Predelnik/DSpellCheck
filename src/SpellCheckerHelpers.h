@@ -20,10 +20,10 @@ class MappedWstring;
 enum class EditorViewType;
 
 namespace SpellCheckerHelpers {
-bool is_spell_checking_needed(const EditorInterface &editor,
-                              const Settings &settings);
+bool is_spell_checking_needed_for_file(const EditorInterface &editor, const Settings &settings);
 void apply_word_conversions(const Settings &settings, std::wstring &word);
 void cut_apostrophes(const Settings &settings, std::wstring_view &word);
 // Replace all tokens equal `from` to `to`. Settings are required for tokenization style.
-void replace_all_tokens (EditorInterface& editor, EditorViewType view, const Settings &settings, const char* from, std::wstring to);
+void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Settings &settings, const char *from, std::wstring to);
+bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, EditorViewType view, std::wstring_view word, long word_start);
 } // namespace SpellCheckerHelpers
