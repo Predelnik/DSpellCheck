@@ -261,5 +261,13 @@ abg
     editor.set_active_document_text(v, L"a a a a a A a a A b b c c a a A");
     SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "a", L"z");
     CHECK (editor.get_active_document_text(v) == "z z z z z Z z z Z b b c c z z Z");
+
+    {
+      auto m = settings.modify();
+      m->ignore_having_a_capital = true;
+    }
+    editor.set_active_document_text(v, L"token Token");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar");
+    CHECK (editor.get_active_document_text(v) == "foobar Token");
   }
 }
