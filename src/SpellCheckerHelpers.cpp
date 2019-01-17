@@ -77,28 +77,32 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
   while (true) {
     pos = editor.find_next(view, pos, from);
     if (pos >= 0) {
-      auto start_pos = editor.get_prev_valid_begin_pos(view, pos);
-      auto end_pos = editor.get_next_valid_end_pos(view, static_cast<long>(pos + from_len));
-      auto mapped_wstr = editor.get_mapped_wstring_range(view, start_pos, end_pos);
-      long word_start = 0;
-      long word_end = static_cast<long>(mapped_wstr.str.length());
+      auto doc_word_start_pos = editor.get_prev_valid_begin_pos(view, pos);
+      auto doc_word_end_pos = editor.get_next_valid_end_pos(view, static_cast<long>(pos + from_len));
+      auto mapped_wstr = editor.get_mapped_wstring_range(view, doc_word_start_pos, doc_word_end_pos);
+      if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, view, mapped_wstr.str, doc_word_start_pos)) {
+        pos = pos + static_cast<long>(from_len);
+        continue;
+      }
+      long buf_word_start_pos = 0;
+      long buf_word_end_pos = static_cast<long>(mapped_wstr.str.length());
       if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer) {
             long end_pos_offset = 0;
-            if (end_pos != pos + from_len)
+            if (doc_word_end_pos != pos + from_len)
               ++end_pos_offset;
             long start_pos_offset = 0;
-            if (start_pos != pos)
+            if (doc_word_start_pos != pos)
               ++start_pos_offset;
 
-            word_start += start_pos_offset;
-            word_end -= end_pos_offset;
+            buf_word_start_pos += start_pos_offset;
+            buf_word_end_pos -= end_pos_offset;
 
             if (start_pos_offset != 0) {
-              if (tokenizer.prev_token_begin(word_end - 1) != word_start)
+              if (tokenizer.prev_token_begin(buf_word_end_pos - 1) != buf_word_start_pos)
                 return false;
             }
             if (end_pos_offset != 0) {
-              if (tokenizer.next_token_end(word_start) != word_end)
+              if (tokenizer.next_token_end(buf_word_start_pos) != buf_word_end_pos)
                 return false;
             }
             return true;
@@ -106,7 +110,7 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
         pos = pos + static_cast<long>(from_len);
         continue;
       }
-      auto src_case_type = get_string_case_type(std::wstring_view(mapped_wstr.str).substr(word_start, word_end - word_start));
+      auto src_case_type = get_string_case_type(std::wstring_view(mapped_wstr.str).substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos));
       if (src_case_type == string_case_type::mixed) {
         pos = pos + static_cast<long>(from_len);
         continue;
