@@ -166,7 +166,7 @@ void DownloadDicsDlg::finalize_downloading() {
 static const auto buf_size_for_copy = 10240;
 
 void DownloadDicsDlg::on_zip_file_downloaded() {
-  wchar_t prog_message[DEFAULT_BUF_SIZE];
+  wchar_t prog_message[default_buf_size];
   std::map<std::string, int> files_found; // 0x01 - .aff found, 0x02 - .dic found
   auto downloaded = prev(m_cur);
   const auto local_path_ansi = to_string(get_temp_path() + L"/" + downloaded->path);
@@ -439,7 +439,7 @@ struct LogObserver : public nsFTP::CFTPClient::CNotification {
     _wfopen_s(&f, m_log_filename, L"a");
     if (!f)
       return;
-    wchar_t buf[DEFAULT_BUF_SIZE];
+    wchar_t buf[default_buf_size];
     swprintf(buf, L"Fatal error %s in file %s on line %d\n", error_msg.c_str(), error_filename.c_str(), line);
     fwprintf(f, buf);
     fclose(f);
@@ -468,7 +468,7 @@ struct LogObserver : public nsFTP::CFTPClient::CNotification {
     _wfopen_s(&f, m_log_filename, L"a");
     if (!f)
       return;
-    wchar_t buf[DEFAULT_BUF_SIZE];
+    wchar_t buf[default_buf_size];
     swprintf(buf, L"Got reply %s with value:\n%s\n", reply.Code().Value(), reply.Value().c_str());
     fwprintf(f, buf);
     fclose(f);
@@ -785,8 +785,8 @@ void DownloadDicsDlg::preserve_current_address_index(Settings &settings) {
 
 void DownloadDicsDlg::reset_download_combobox() {
   HWND target_combobox = GetDlgItem(getHSelf(), IDC_ADDRESS);
-  wchar_t buf[DEFAULT_BUF_SIZE];
-  ComboBox_GetText(target_combobox, buf, DEFAULT_BUF_SIZE);
+  wchar_t buf[default_buf_size];
+  ComboBox_GetText(target_combobox, buf, default_buf_size);
   if (m_address_is_set) {
     auto mut_settings = m_settings.modify();
     preserve_current_address_index(*mut_settings);

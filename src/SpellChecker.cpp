@@ -148,8 +148,8 @@ std::wstring_view SpellChecker::get_word_at(TextPosition char_pos, const MappedW
 
 void SpellChecker::refresh_underline_style() {
   for (auto view : enum_range<EditorViewType>()) {
-    m_editor.set_indicator_style(view, dspellchecker_indicator_id, m_settings.underline_style);
-    m_editor.set_indicator_foreground(view, dspellchecker_indicator_id, m_settings.underline_color);
+    m_editor.set_indicator_style(view, spell_check_indicator_id, m_settings.underline_style);
+    m_editor.set_indicator_foreground(view, spell_check_indicator_id, m_settings.underline_color);
   }
 }
 
@@ -159,14 +159,14 @@ void SpellChecker::on_settings_changed() {
 }
 
 void SpellChecker::create_word_underline(EditorViewType view, TextPosition start, TextPosition end) const {
-  m_editor.set_current_indicator(view, dspellchecker_indicator_id);
+  m_editor.set_current_indicator(view, spell_check_indicator_id);
   m_editor.indicator_fill_range(view, start, end);
 }
 
 void SpellChecker::remove_underline(EditorViewType view, TextPosition start, TextPosition end) const {
   if (end < start)
     return;
-  m_editor.set_current_indicator(view, dspellchecker_indicator_id);
+  m_editor.set_current_indicator(view, spell_check_indicator_id);
   m_editor.indicator_clear_range(view, start, end);
 }
 
@@ -247,7 +247,7 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view) {
 void SpellChecker::clear_all_underlines(EditorViewType view) const {
   auto length = m_editor.get_active_document_length(view);
   if (length > 0) {
-    m_editor.set_current_indicator(view, dspellchecker_indicator_id);
+    m_editor.set_current_indicator(view, spell_check_indicator_id);
     m_editor.indicator_clear_range(view, 0, length);
   }
 }

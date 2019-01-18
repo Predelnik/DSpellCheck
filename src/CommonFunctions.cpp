@@ -396,7 +396,7 @@ static bool try_to_create_dir(const wchar_t *path, bool silent, HWND npp_window)
       if (npp_window == nullptr)
         return false;
 
-      wchar_t message[DEFAULT_BUF_SIZE];
+      wchar_t message[default_buf_size];
       swprintf(message, rc_str(IDS_CANT_CREATE_DIR_PS).c_str(), path);
       MessageBox(npp_window, message, rc_str(IDS_ERROR_IN_DIR_CREATE).c_str(), MB_OK | MB_ICONERROR);
     }

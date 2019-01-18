@@ -157,7 +157,7 @@ void plugin_clean_up() {
 void register_custom_messages() {
   for (int i = 0; i < static_cast<int>(CustomGuiMessage::max); i++) {
     custom_gui_message_ids[i] =
-        RegisterWindowMessage(custom_gui_messsages_names[i]);
+        RegisterWindowMessage(custom_gui_messages_names[i]);
   }
 }
 
@@ -820,8 +820,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 void init_needed_dialogs(WPARAM w_param) {
   // A little bit of code duplication here :(
   auto menu_id = w_param;
-  if ((!get_use_allocated_ids() && HIBYTE(menu_id) != DSPELLCHECK_MENU_ID &&
-       HIBYTE(menu_id) != LANGUAGE_MENU_ID) ||
+  if ((!get_use_allocated_ids() && HIBYTE(menu_id) != menu_id::plguin_menu &&
+       HIBYTE(menu_id) != menu_id::language_menu) ||
       (get_use_allocated_ids() &&
        (static_cast<int>(menu_id) < get_context_menu_id_start() ||
         static_cast<int>(menu_id) > get_context_menu_id_start() + 350)))
@@ -829,23 +829,23 @@ void init_needed_dialogs(WPARAM w_param) {
   int used_menu_id;
   if (get_use_allocated_ids()) {
     used_menu_id = (static_cast<int>(menu_id) < get_langs_menu_id_start()
-                        ? DSPELLCHECK_MENU_ID
-                        : LANGUAGE_MENU_ID);
+                        ? menu_id::plguin_menu
+                        : menu_id::language_menu);
   } else {
     used_menu_id = HIBYTE(menu_id);
   }
   switch (used_menu_id) {
-  case LANGUAGE_MENU_ID:
+  case menu_id::language_menu:
     WPARAM result;
     if (!get_use_allocated_ids())
       result = LOBYTE(menu_id);
     else
       result = menu_id - get_langs_menu_id_start();
-    if (result == DOWNLOAD_DICS)
+    if (result == menu_id::download_dictionaries)
       download_dics_dlg->do_dialog();
-    else if (result == CUSTOMIZE_MULTIPLE_DICS) {
+    else if (result == menu_id::customize_multiple_languages) {
       get_lang_list()->do_dialog();
-    } else if (result == REMOVE_DICS) {
+    } else if (result == menu_id::remove_dictionaries) {
       get_remove_dics()->do_dialog();
     }
     break;

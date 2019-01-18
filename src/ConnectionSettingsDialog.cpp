@@ -130,8 +130,8 @@ INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
     case IDC_PORT:
       if (HIWORD(w_param) == EN_CHANGE) {
         wchar_t *end_ptr = nullptr;
-        wchar_t buf[DEFAULT_BUF_SIZE];
-        Edit_GetText(m_port, buf, DEFAULT_BUF_SIZE);
+        wchar_t buf[default_buf_size];
+        Edit_GetText(m_port, buf, default_buf_size);
         if (*buf == L'\0')
           return FALSE;
 

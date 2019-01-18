@@ -6,4 +6,4 @@ constexpr auto COLOR_WARN = RGB(144, 144, 0);
 constexpr auto COLOR_NEUTRAL = RGB(0, 0, 0);
 
 // Custom WMs (Only for our windows and threads)
-#define WM_SHOWANDRECREATEMENU (WM_USER + 1000)
+constexpr auto WM_SHOWANDRECREATEMENU = WM_USER + 1000;

@@ -39,7 +39,7 @@ MENUITEMINFO mi;
       }
     }
     if (!get_use_allocated_ids())
-      mi.wID = MAKEWORD(id, DSPELLCHECK_MENU_ID);
+      mi.wID = MAKEWORD(id, menu_id::plguin_menu);
     else
       mi.wID = get_context_menu_id_start() + id;
 

@@ -48,7 +48,7 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
         bool res = AppendMenu(
             new_menu, MF_STRING | checked,
             get_use_allocated_ids() ? i + get_langs_menu_id_start()
-                                    : MAKEWORD(i, LANGUAGE_MENU_ID),
+                                    : MAKEWORD(i, menu_id::language_menu),
             m_settings.language_name_style != LanguageNameStyle::original ? lang.alias_name.c_str()
                                                  : lang.orig_name.c_str());
         if (!res)
@@ -59,34 +59,34 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
                                                 : MF_UNCHECKED;
       AppendMenu(new_menu, MF_STRING | checked,
                  get_use_allocated_ids()
-                     ? MULTIPLE_LANGS + get_langs_menu_id_start()
-                     : MAKEWORD(MULTIPLE_LANGS, LANGUAGE_MENU_ID),
+                     ? menu_id::multiple_languages + get_langs_menu_id_start()
+                     : MAKEWORD(menu_id::multiple_languages, menu_id::language_menu),
                  rc_str(IDS_MULTIPLE_LANGUAGES).c_str ());
       AppendMenu(new_menu, MF_SEPARATOR, 0, nullptr);
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
-                     ? CUSTOMIZE_MULTIPLE_DICS + get_langs_menu_id_start()
-                     : MAKEWORD(CUSTOMIZE_MULTIPLE_DICS, LANGUAGE_MENU_ID),
+                     ? menu_id::customize_multiple_languages + get_langs_menu_id_start()
+                     : MAKEWORD(menu_id::customize_multiple_languages, menu_id::language_menu),
                  rc_str(IDS_SET_MULTIPLE_LANG).c_str ());
       if (m_settings.active_speller_lib_id ==
           SpellerId::hunspell) // Only Hunspell supported
       {
         AppendMenu(new_menu, MF_STRING,
                    get_use_allocated_ids()
-                       ? DOWNLOAD_DICS + get_langs_menu_id_start()
-                       : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
+                       ? menu_id::download_dictionaries + get_langs_menu_id_start()
+                       : MAKEWORD(menu_id::download_dictionaries, menu_id::language_menu),
                    rc_str(IDS_DOWNLOAD_LANGS).c_str ());
         AppendMenu(new_menu, MF_STRING,
                    get_use_allocated_ids()
-                       ? REMOVE_DICS + get_langs_menu_id_start()
-                       : MAKEWORD(REMOVE_DICS, LANGUAGE_MENU_ID),
+                       ? menu_id::remove_dictionaries + get_langs_menu_id_start()
+                       : MAKEWORD(menu_id::remove_dictionaries, menu_id::language_menu),
                    rc_str(IDS_REMOVE_LANG).c_str ());
       }
     } else if (m_settings.active_speller_lib_id == SpellerId::hunspell)
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
-                     ? DOWNLOAD_DICS + get_langs_menu_id_start()
-                     : MAKEWORD(DOWNLOAD_DICS, LANGUAGE_MENU_ID),
+                     ? menu_id::download_dictionaries + get_langs_menu_id_start()
+                     : MAKEWORD(menu_id::download_dictionaries, menu_id::language_menu),
                  rc_str(IDS_DOWNLOAD_LANG).c_str ());
   }
 
@@ -99,7 +99,7 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
 }
 
 void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
-  if ((!get_use_allocated_ids() && HIBYTE(menu_id) != DSPELLCHECK_MENU_ID &&
+  if ((!get_use_allocated_ids() && HIBYTE(menu_id) != menu_id::plguin_menu &&
        HIBYTE(menu_id) != get_func_item()[action_index[Action::quick_language_change]].cmd_id) ||
       (get_use_allocated_ids() &&
        (static_cast<int>(menu_id) < get_context_menu_id_start() ||
@@ -108,15 +108,15 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   int used_menu_id;
   if (get_use_allocated_ids()) {
     used_menu_id = (static_cast<int>(menu_id) < get_langs_menu_id_start()
-                        ? DSPELLCHECK_MENU_ID
-                        : LANGUAGE_MENU_ID);
+                        ? menu_id::plguin_menu
+                        : menu_id::language_menu);
   } else {
     used_menu_id = HIBYTE(menu_id);
   }
   auto view = m_editor.active_view();
 
   switch (used_menu_id) {
-  case DSPELLCHECK_MENU_ID: {
+  case menu_id::plguin_menu: {
     WPARAM result;
     if (!get_use_allocated_ids())
       result = LOBYTE(menu_id);
@@ -124,7 +124,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
       result = menu_id - get_context_menu_id_start();
 
     if (result != 0) {
-      if (result == MID_IGNOREALL) {
+      if (result == menu_id::ignore_all) {
         SpellCheckerHelpers::apply_word_conversions(m_settings,
                                                     m_selected_word.str);
         auto mut = m_speller_container.modify();
@@ -133,7 +133,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
             static_cast<TextPosition>(m_selected_word.str.length());
         m_editor.set_cursor_pos(view, m_word_under_cursor_pos +
                                           m_word_under_cursor_length);
-      } else if (result == MID_ADDTODICTIONARY) {
+      } else if (result == menu_id::add_to_dictionary) {
         SpellCheckerHelpers::apply_word_conversions(m_settings,
                                                     m_selected_word.str);
         auto mut = m_speller_container.modify();
@@ -150,13 +150,13 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
           encoded_str = to_utf8_string(m_last_suggestions[result - 1]);
 
         m_editor.replace_selection(view, encoded_str.c_str());
-      } else if (result <= MID_REPLACE_ALL_START + m_last_suggestions.size()) {
+      } else if (result <= menu_id::replace_all_start + m_last_suggestions.size()) {
         auto misspelled_text = m_editor.selected_text(view);
-        SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), m_last_suggestions[result - MID_REPLACE_ALL_START - 1]);
+        SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), m_last_suggestions[result - menu_id::replace_all_start - 1]);
       }
     }
   } break;
-  case LANGUAGE_MENU_ID: {
+  case menu_id::language_menu: {
     WPARAM result;
     if (!get_use_allocated_ids())
       result = LOBYTE(menu_id);
@@ -164,10 +164,10 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
       result = menu_id - get_langs_menu_id_start();
 
     std::wstring lang_string;
-    if (result == MULTIPLE_LANGS) {
+    if (result == menu_id::multiple_languages) {
       lang_string = multiple_language_alias;
-    } else if (result == CUSTOMIZE_MULTIPLE_DICS || result == DOWNLOAD_DICS ||
-               result == REMOVE_DICS) {
+    } else if (result == menu_id::customize_multiple_languages || result == menu_id::download_dictionaries ||
+               result == menu_id::remove_dictionaries) {
       // All actions are done in GUI thread in that case
       return;
     } else
@@ -293,19 +293,19 @@ ContextMenuHandler::get_suggestion_menu_items() {
     MenuItem replace_all_item (wstring_printf (rc_str (IDS_REPLACE_ALL_PS).c_str (), m_selected_word.str.c_str ()).c_str(), -1);
     replace_all_item.children = suggestion_menu_items;
     suggestion_menu_items.emplace_back(MenuItem::Separator{});
-    std::for_each (replace_all_item.children.begin (), replace_all_item.children.end (), [](auto &item){ item.id += MID_REPLACE_ALL_START;});
+    std::for_each (replace_all_item.children.begin (), replace_all_item.children.end (), [](auto &item){ item.id += menu_id::replace_all_start;});
     suggestion_menu_items.push_back (std::move (replace_all_item));
   }
 
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
   auto menu_string = wstring_printf(rc_str (IDS_IGNORE_PS_FOR_CURRENT_SESSION).c_str (),
                                     m_selected_word.str.c_str());
-  suggestion_menu_items.emplace_back(menu_string.c_str(), MID_IGNOREALL);
+  suggestion_menu_items.emplace_back(menu_string.c_str(), menu_id::ignore_all);
   menu_string =
       wstring_printf(rc_str (IDS_ADD_PS_TO_DICTIONARY).c_str (), m_selected_word.str.c_str());
   ;
   suggestion_menu_items.emplace_back(menu_string.c_str(),
-                                     MID_ADDTODICTIONARY);
+                                     menu_id::add_to_dictionary);
 
   if (m_settings.suggestions_mode == SuggestionMode::context_menu)
     suggestion_menu_items.emplace_back(MenuItem::Separator{});

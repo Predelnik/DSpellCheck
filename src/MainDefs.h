@@ -14,14 +14,23 @@
 
 #pragma once
 
-constexpr int dspellchecker_indicator_id = 19;
-#define DEFAULT_BUF_SIZE 4096
-
+constexpr int spell_check_indicator_id = 19;
+constexpr auto default_buf_size = 4096;
 
 #ifdef _DEBUG
-#define ASSERT_RETURN(CONDITION,RET) do { if (!(CONDITION)) { assert (false); return RET; }} while (0)
+#define ASSERT_RETURN(CONDITION, RET)                                                                                                                          \
+  do {                                                                                                                                                         \
+    if (!(CONDITION)) {                                                                                                                                        \
+      assert(false);                                                                                                                                           \
+      return RET;                                                                                                                                              \
+    }                                                                                                                                                          \
+  } while (0)
 #else // !_DEBUG
-#define ASSERT_RETURN(CONDITION,RET) do { if (!(CONDITION)) return RET; } while (0)
+#define ASSERT_RETURN(CONDITION, RET)                                                                                                                          \
+  do {                                                                                                                                                         \
+    if (!(CONDITION))                                                                                                                                          \
+      return RET;                                                                                                                                              \
+  } while (0)
 #endif // !_DEBUG
 
 enum class EncodingType { utf8 = 0, ansi };
@@ -31,22 +40,24 @@ enum class CustomGuiMessage {
   max,
 };
 
-const wchar_t *const custom_gui_messsages_names[] = {L"DSpellCheck_GenericCallback" };
+const wchar_t *const custom_gui_messages_names[] = {L"DSpellCheck_GenericCallback"};
 
+namespace menu_id {
 // Global Menu ID
-#define DSPELLCHECK_MENU_ID 193
-#define LANGUAGE_MENU_ID 197
+constexpr auto plguin_menu = 193;
+constexpr auto language_menu = 197;
 
 // Menu item IDs
-#define MID_REPLACE_ALL_START 50 
-#define MID_ADDTODICTIONARY 101
-#define MID_IGNOREALL 102
-#define MULTIPLE_LANGS 201
-#define CUSTOMIZE_MULTIPLE_DICS 202
-#define DOWNLOAD_DICS 203
-#define REMOVE_DICS 204
+constexpr auto replace_all_start = 50;
+constexpr auto add_to_dictionary = 101;
+constexpr auto ignore_all = 102;
+constexpr auto multiple_languages = 201;
+constexpr auto customize_multiple_languages = 202;
+constexpr auto download_dictionaries = 203;
+constexpr auto remove_dictionaries = 204;
+} // namespace menu_id
 
-#define USER_SERVER_CONST 100
+constexpr auto USER_SERVER_CONST = 100;
 
 constexpr auto static_plugin_name = L"DSpellCheck";
 constexpr auto config_file_name = L"DSpellCheck.ini";
