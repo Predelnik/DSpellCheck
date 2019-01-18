@@ -13,7 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MenuItem.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 
 MenuItem::MenuItem(const wchar_t *text_arg, int id_arg,
                                          bool separator_arg /*= false*/) {

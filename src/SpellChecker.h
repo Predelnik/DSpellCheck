@@ -60,37 +60,37 @@ public:
   void find_prev_mistake();
   WordForSpeller to_word_for_speller(std::wstring_view word) const;
   void lang_change();
-  bool is_word_under_cursor_correct(long &pos, long &length,
+  bool is_word_under_cursor_correct(TextPosition &pos, TextPosition &length,
                                     bool use_text_cursor = false) const;
   void erase_all_misspellings();
 
 private:
-  void create_word_underline(EditorViewType view, long start, long end) const;
-  void remove_underline(EditorViewType view, long start, long end) const;
+  void create_word_underline(EditorViewType view, TextPosition start, TextPosition end) const;
+  void remove_underline(EditorViewType view, TextPosition start, TextPosition end) const;
   void clear_all_underlines(EditorViewType view) const;
   bool check_word(EditorViewType view, std::wstring_view word,
-                  long word_start) const;
-  long prev_token_begin_in_document(EditorViewType view, long start) const;
-  long next_token_end_in_document(EditorViewType view, long end) const;
+                  TextPosition word_start) const;
+  TextPosition prev_token_begin_in_document(EditorViewType view, TextPosition start) const;
+  TextPosition next_token_end_in_document(EditorViewType view, TextPosition end) const;
   MappedWstring get_visible_text(EditorViewType view);
   bool check_text(EditorViewType view, const MappedWstring &text_to_check,
                   CheckTextMode mode) const;
   void check_visible(EditorViewType view);
 
-  std::wstring_view get_word_at(long char_pos, const MappedWstring &text) const;
+  std::wstring_view get_word_at(TextPosition char_pos, const MappedWstring &text) const;
   void refresh_underline_style();
   void reset_hot_spot_cache();
   bool is_spellchecking_needed(EditorViewType view, std::wstring_view word,
-                               long word_start) const;
-  long next_token_end(std::wstring_view target, long index) const;
-  long prev_token_begin(std::wstring_view target, long index) const;
+                               TextPosition word_start) const;
+  TextPosition next_token_end(std::wstring_view target, TextPosition index) const;
+  TextPosition prev_token_begin(std::wstring_view target, TextPosition index) const;
 
 private:
   // converted to corresponding symbols
   LRESULT m_hot_spot_cache[256]; // STYLE_MAX = 255
   const Settings &m_settings;
 
-  long m_current_position;
+  TextPosition m_current_position;
   EditorInterface &m_editor;
   mutable std::vector<std::wstring_view> m_misspellings;
   const SpellerContainer &m_speller_container;

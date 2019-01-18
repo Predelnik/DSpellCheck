@@ -7,7 +7,7 @@
 #include "MockSpeller.h"
 #include "SpellerContainer.h"
 #include "SpellChecker.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 #include "SpellCheckerHelpers.h"
 
 TEST_CASE("Speller") {
@@ -97,7 +97,7 @@ wrongword
   speller_ptr->set_working(true);
   sp_container.speller_status_changed();
 
-  long pos, length;
+  TextPosition pos, length;
   editor.set_cursor_pos(v, 4);
   CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, true));
   editor.set_cursor_pos(v, 14);

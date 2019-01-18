@@ -26,8 +26,7 @@
 #include "FTPDataTypes.h"
 #include "GithubFileListProvider.h"
 #include "HunspellInterface.h"
-#include "LanguageInfo.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 #include "Plugin.h"
 #include "ProgressData.h"
 #include "ProgressDlg.h"
@@ -38,6 +37,7 @@
 #include "unzip.h"
 #include "utils/string_utils.h"
 #include "utils/winapi.h"
+#include "WindowsDefs.h"
 #include <Wininet.h>
 #include <variant>
 
@@ -408,13 +408,13 @@ void DownloadDicsDlg::update_list_box() {
 class ProgressObserver : public nsFTP::CFTPClient::CNotification {
   std::shared_ptr<ProgressData> m_progress_data;
   std::wstring m_target_path;
-  long m_bytes_received = 0;
-  long m_target_size;
+  TextPosition m_bytes_received = 0;
+  TextPosition m_target_size;
   concurrency::cancellation_token m_token;
   nsFTP::CFTPClient &m_client;
 
 public:
-  ProgressObserver(std::shared_ptr<ProgressData> progress_data, std::wstring target_path, long target_size, nsFTP::CFTPClient &client,
+  ProgressObserver(std::shared_ptr<ProgressData> progress_data, std::wstring target_path, TextPosition target_size, nsFTP::CFTPClient &client,
                    concurrency::cancellation_token token)
       : m_progress_data(std::move(progress_data)), m_target_path(std::move(target_path)), m_target_size(target_size), m_token(std::move(token)),
         m_client(client) {}

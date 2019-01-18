@@ -1,20 +1,21 @@
 #include "EditorInterface.h"
 #include "MappedWString.h"
+#include "utils/utf8.h"
 
-long EditorInterface::get_prev_valid_begin_pos(EditorViewType view, long pos) const {
+TextPosition EditorInterface::get_prev_valid_begin_pos(EditorViewType view, TextPosition pos) const {
   if (pos == 0)
     return 0;
   if (get_encoding(view) == EditorCodepage::ansi)
     return pos - 1;
 
-  auto worst_prev_pos = std::max(0l, pos - static_cast<long>(max_utf8_char_length));
+  auto worst_prev_pos = std::max(0, pos - static_cast<TextPosition>(max_utf8_char_length));
   auto rng = get_text_range(view, worst_prev_pos, pos);
   auto it = std::find_if(rng.rbegin(), rng.rend(), &utf8_is_lead);
   assert (it != rng.rend ());
-  return worst_prev_pos + static_cast<long>(it.base() - rng.begin()) - 1;
+  return worst_prev_pos + static_cast<TextPosition>(it.base() - rng.begin()) - 1;
 }
 
-long EditorInterface::get_next_valid_end_pos(EditorViewType view, long pos) const {
+TextPosition EditorInterface::get_next_valid_end_pos(EditorViewType view, TextPosition pos) const {
   auto doc_len = get_active_document_length(view);
   if (pos >= doc_len)
     return doc_len;
@@ -42,14 +43,14 @@ MappedWstring EditorInterface::to_mapped_wstring(EditorViewType view, const std:
   return ::to_mapped_wstring(str);
 }
 
-MappedWstring EditorInterface::get_mapped_wstring_range(EditorViewType view, long from, long to) {
+MappedWstring EditorInterface::get_mapped_wstring_range(EditorViewType view, TextPosition from, TextPosition to) {
   auto result = to_mapped_wstring (view, get_text_range(view, from, to));
   for (auto &val : result.mapping)
     val += from;
   return result;
 }
 
-MappedWstring EditorInterface::get_mapped_wstring_line(EditorViewType view, long line) {
+MappedWstring EditorInterface::get_mapped_wstring_line(EditorViewType view, TextPosition line) {
   auto result = to_mapped_wstring (view, get_line(view, line));;
   auto line_start = get_line_start_position(view, line);
   for (auto &val : result.mapping)

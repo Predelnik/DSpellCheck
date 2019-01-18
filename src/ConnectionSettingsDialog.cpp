@@ -15,7 +15,7 @@
 #include "ConnectionSettingsDialog.h"
 
 #include "DownloadDicsDlg.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 #include "Plugin.h"
 #include "SpellChecker.h"
 

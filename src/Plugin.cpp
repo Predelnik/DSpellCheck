@@ -24,7 +24,7 @@
 #include "ConnectionSettingsDialog.h"
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 #include "ProgressDlg.h"
 #include "RemoveDictionariesDialog.h"
 #include "SettingsDlg.h"
@@ -192,7 +192,7 @@ void show_spell_check_menu_at_cursor ()
 
 void replace_with_1st_suggestion ()
 {
-  long pos, length;
+  TextPosition pos, length;
   if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
     auto view = npp->active_view();
     auto wstr = npp->get_mapped_wstring_range(view, pos, pos + length);
@@ -562,7 +562,7 @@ void rearrange_menu() {
 extern FuncItem func_item[nb_func]; // NOLINT
 extern NppData npp_data;            // NOLINT
 extern bool do_close_tag;           // NOLINT
-std::vector<std::pair<long, long>> check_queue;
+std::vector<std::pair<TextPosition, TextPosition>> check_queue;
 UINT_PTR ui_timer = 0u;
 UINT_PTR recheck_timer = 0u;
 bool recheck_done = true;

@@ -23,7 +23,7 @@
 #include "SpellerContainer.h"
 #include "resource.h"
 #include "utils/string_utils.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 
 LangList::LangList(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
     : m_settings(settings), m_speller_container(speller_container) {

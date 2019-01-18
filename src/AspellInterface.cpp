@@ -15,7 +15,7 @@
 #include "AspellInterface.h"
 #include "CommonFunctions.h"
 #include "LanguageInfo.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 #include "Plugin.h"
 #include "Settings.h"
 #include "aspell.h"

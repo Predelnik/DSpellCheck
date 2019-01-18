@@ -16,7 +16,7 @@
 
 #include "CheckedList/CheckedList.h"
 #include "HunspellInterface.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 #include "Plugin.h"
 #include "SpellChecker.h"
 

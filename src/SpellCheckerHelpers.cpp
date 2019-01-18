@@ -68,9 +68,9 @@ void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
 }
 
 void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Settings &settings, const char *from, std::wstring to) {
-  long pos = 0;
+  TextPosition pos = 0;
   editor.begin_undo_action(view);
-  auto from_len = static_cast<long>(strlen(from));
+  auto from_len = static_cast<TextPosition>(strlen(from));
   if (from_len == 0)
     return;
 
@@ -78,19 +78,19 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
     pos = editor.find_next(view, pos, from);
     if (pos >= 0) {
       auto doc_word_start_pos = editor.get_prev_valid_begin_pos(view, pos);
-      auto doc_word_end_pos = editor.get_next_valid_end_pos(view, static_cast<long>(pos + from_len));
+      auto doc_word_end_pos = editor.get_next_valid_end_pos(view, static_cast<TextPosition>(pos + from_len));
       auto mapped_wstr = editor.get_mapped_wstring_range(view, doc_word_start_pos, doc_word_end_pos);
       if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, view, mapped_wstr.str, doc_word_start_pos)) {
-        pos = pos + static_cast<long>(from_len);
+        pos = pos + static_cast<TextPosition>(from_len);
         continue;
       }
-      long buf_word_start_pos = 0;
-      long buf_word_end_pos = static_cast<long>(mapped_wstr.str.length());
+      TextPosition buf_word_start_pos = 0;
+      TextPosition buf_word_end_pos = static_cast<TextPosition>(mapped_wstr.str.length());
       if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer) {
-            long end_pos_offset = 0;
+            TextPosition end_pos_offset = 0;
             if (doc_word_end_pos != pos + from_len)
               ++end_pos_offset;
-            long start_pos_offset = 0;
+            TextPosition start_pos_offset = 0;
             if (doc_word_start_pos != pos)
               ++start_pos_offset;
 
@@ -107,25 +107,25 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
             }
             return true;
           })) {
-        pos = pos + static_cast<long>(from_len);
+        pos = pos + static_cast<TextPosition>(from_len);
         continue;
       }
       auto src_case_type = get_string_case_type(std::wstring_view(mapped_wstr.str).substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos));
       if (src_case_type == string_case_type::mixed) {
-        pos = pos + static_cast<long>(from_len);
+        pos = pos + static_cast<TextPosition>(from_len);
         continue;
       } else
         apply_case_type(to, src_case_type);
       auto encoded_to = editor.to_editor_encoding(view, to);
-      editor.replace_text(view, pos, static_cast<long>(pos + from_len), encoded_to);
-      pos = pos + static_cast<long>(encoded_to.length());
+      editor.replace_text(view, pos, static_cast<TextPosition>(pos + from_len), encoded_to);
+      pos = pos + static_cast<TextPosition>(encoded_to.length());
     } else
       break;
   }
   editor.end_undo_action(view);
 }
 
-bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, EditorViewType view, std::wstring_view word, long word_start) {
+bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, EditorViewType view, std::wstring_view word, TextPosition word_start) {
   if (word.empty())
     return false;
 

@@ -19,9 +19,8 @@
 #include <string>
 #include <vector>
 #include <windows.h>
-#include <algorithm>
 #include "CommonFunctions.h"
-#include "utils/utf8.h"
+#include "MainDefs.h"
 
 // To mock things and stuff
 
@@ -73,29 +72,29 @@ public:
   virtual void move_active_document_to_other_view() = 0;
   virtual void add_toolbar_icon(int cmd_id,
                                 const toolbarIcons *tool_bar_icons_ptr) = 0;
-  virtual void force_style_update(EditorViewType view, long from, long to) = 0;
-  virtual void set_selection(EditorViewType view, long from, long to) = 0;
-  virtual long find_next(EditorViewType view, long from_position, const char* needle) = 0;
-  void set_cursor_pos(EditorViewType view, long cursor_pos) {
+  virtual void force_style_update(EditorViewType view, TextPosition from, TextPosition to) = 0;
+  virtual void set_selection(EditorViewType view, TextPosition from, TextPosition to) = 0;
+  virtual TextPosition find_next(EditorViewType view, TextPosition from_position, const char* needle) = 0;
+  void set_cursor_pos(EditorViewType view, TextPosition cursor_pos) {
     set_selection(view, cursor_pos, cursor_pos);
   }
 
   virtual void replace_selection(EditorViewType view, const char *str) = 0;
-  virtual void delete_range (EditorViewType view, long start, long length) = 0;
+  virtual void delete_range (EditorViewType view, TextPosition start, TextPosition length) = 0;
   virtual void set_indicator_style(EditorViewType view, int indicator_index,
                                    int style) = 0;
   virtual void set_indicator_foreground(EditorViewType view,
                                         int indicator_index, int style) = 0;
   virtual void set_current_indicator(EditorViewType view,
                                      int indicator_index) = 0;
-  virtual void indicator_fill_range(EditorViewType view, long from,
-                                    long to) = 0;
-  virtual void indicator_clear_range(EditorViewType view, long from,
-                                     long to) = 0;
+  virtual void indicator_fill_range(EditorViewType view, TextPosition from,
+                                    TextPosition to) = 0;
+  virtual void indicator_clear_range(EditorViewType view, TextPosition from,
+                                     TextPosition to) = 0;
   virtual void undo(EditorViewType view) = 0;
   virtual void begin_undo_action (EditorViewType view) = 0;
   virtual void end_undo_action (EditorViewType view) = 0;
-  virtual void replace_text(EditorViewType view, long from, long to, std::string_view replacement) = 0;
+  virtual void replace_text(EditorViewType view, TextPosition from, TextPosition to, std::string_view replacement) = 0;
 
   // const
   virtual std::vector<std::wstring>
@@ -108,43 +107,43 @@ public:
   virtual std::wstring plugin_config_dir() const = 0;
   virtual std::string selected_text(EditorViewType view) const = 0;
   virtual std::string get_current_line(EditorViewType view) const = 0;
-  virtual std::string get_line(EditorViewType view, long line_number) const = 0;
+  virtual std::string get_line(EditorViewType view, TextPosition line_number) const = 0;
   virtual int get_current_pos(EditorViewType view) const = 0;
   virtual int get_current_line_number(EditorViewType view) const = 0;
   virtual int get_text_height(EditorViewType view, int line) const = 0;
   virtual int line_from_position(EditorViewType view, int position) const = 0;
-  virtual long get_line_start_position(EditorViewType view, int line) const = 0;
-  virtual long get_line_end_position(EditorViewType view, int line) const = 0;
+  virtual TextPosition get_line_start_position(EditorViewType view, int line) const = 0;
+  virtual TextPosition get_line_end_position(EditorViewType view, int line) const = 0;
   virtual int get_lexer(EditorViewType view) const = 0;
-  virtual std::optional<long>
+  virtual std::optional<TextPosition>
   char_position_from_global_point(EditorViewType view, int x, int y) const = 0;
-  virtual long char_position_from_point(EditorViewType view,
+  virtual TextPosition char_position_from_point(EditorViewType view,
                                         const POINT &pnt) const = 0;
-  virtual long get_selection_start(EditorViewType view) const = 0;
-  virtual long get_selection_end(EditorViewType view) const = 0;
+  virtual TextPosition get_selection_start(EditorViewType view) const = 0;
+  virtual TextPosition get_selection_end(EditorViewType view) const = 0;
   virtual HWND get_editor_handle() const = 0;
-  virtual int get_style_at(EditorViewType view, long position) const = 0;
+  virtual int get_style_at(EditorViewType view, TextPosition position) const = 0;
   virtual std::wstring get_full_current_path() const = 0;
   // is current style used for links (hotspots):
   virtual bool is_style_hotspot(EditorViewType view, int style) const = 0;
-  virtual long get_active_document_length(EditorViewType view) const = 0;
-  virtual std::string get_text_range(EditorViewType view, long from,
-                                     long to) const = 0;
-  virtual long get_line_length(EditorViewType view, int line) const = 0;
+  virtual TextPosition get_active_document_length(EditorViewType view) const = 0;
+  virtual std::string get_text_range(EditorViewType view, TextPosition from,
+                                     TextPosition to) const = 0;
+  virtual TextPosition get_line_length(EditorViewType view, int line) const = 0;
   virtual int get_point_x_from_position(EditorViewType view,
-                                        long position) const = 0;
+                                        TextPosition position) const = 0;
   virtual int get_point_y_from_position(EditorViewType view,
-                                        long position) const = 0;
-  POINT get_point_from_position(EditorViewType view, long position) const {
+                                        TextPosition position) const = 0;
+  POINT get_point_from_position(EditorViewType view, TextPosition position) const {
     return {get_point_x_from_position(view, position),
             get_point_y_from_position(view, position)};
   }
-  virtual long get_first_visible_line(EditorViewType view) const = 0;
-  virtual bool is_line_visible(EditorViewType view, long line) const = 0;
-  virtual long get_lines_on_screen(EditorViewType view) const = 0;
-  virtual long get_document_line_from_visible(EditorViewType view,
-                                              long visible_line) const = 0;
-  virtual long get_document_line_count(EditorViewType view) const = 0;
+  virtual TextPosition get_first_visible_line(EditorViewType view) const = 0;
+  virtual bool is_line_visible(EditorViewType view, TextPosition line) const = 0;
+  virtual TextPosition get_lines_on_screen(EditorViewType view) const = 0;
+  virtual TextPosition get_document_line_from_visible(EditorViewType view,
+                                              TextPosition visible_line) const = 0;
+  virtual TextPosition get_document_line_count(EditorViewType view) const = 0;
   virtual std::string get_active_document_text(EditorViewType view) const = 0;
   virtual RECT editor_rect(EditorViewType view) const = 0;
 
@@ -153,11 +152,11 @@ public:
            get_line_start_position(view, get_current_line_number(view));
   }
 
-  long get_prev_valid_begin_pos(EditorViewType view, long pos) const;
-  long get_next_valid_end_pos(EditorViewType view, long pos) const;
+  TextPosition get_prev_valid_begin_pos(EditorViewType view, TextPosition pos) const;
+  TextPosition get_next_valid_end_pos(EditorViewType view, TextPosition pos) const;
   MappedWstring to_mapped_wstring (EditorViewType view, const std::string &str);
-  MappedWstring get_mapped_wstring_range (EditorViewType view, long from, long to);
-  MappedWstring get_mapped_wstring_line (EditorViewType view, long line);
+  MappedWstring get_mapped_wstring_range (EditorViewType view, TextPosition from, TextPosition to);
+  MappedWstring get_mapped_wstring_line (EditorViewType view, TextPosition line);
   std::string to_editor_encoding (EditorViewType view, std::wstring_view str) const;
 
   virtual ~EditorInterface() = default;

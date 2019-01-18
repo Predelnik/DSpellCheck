@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include "MainDefs.h"
+
 template <typename IsDelimiterType> class Tokenizer {
 public:
   Tokenizer(const std::wstring_view &target,
@@ -50,7 +52,7 @@ public:
     return ret;
   }
 
-  long prev_token_begin(long index) const {
+  TextPosition prev_token_begin(TextPosition index) const {
     if (index <= 0)
       return 0;
     if (m_is_delimiter(m_target[index])) {
@@ -68,13 +70,13 @@ public:
     return index;
   }
 
-  long next_token_end(long index) const {
-    if (index >= static_cast<long>(m_target.length()))
-      return static_cast<long>(m_target.length());
-    while (index < static_cast<long>(m_target.length()) &&
+  TextPosition next_token_end(TextPosition index) const {
+    if (index >= static_cast<TextPosition>(m_target.length()))
+      return static_cast<TextPosition>(m_target.length());
+    while (index < static_cast<TextPosition>(m_target.length()) &&
            !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case &&
-          index < static_cast<long>(m_target.length()) - 1 &&
+          index < static_cast<TextPosition>(m_target.length()) - 1 &&
           IsCharUpper(m_target[index + 1]))
         return index + 1;
       ++index;

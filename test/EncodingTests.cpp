@@ -7,7 +7,7 @@
 #include "MockSpeller.h"
 #include "SpellerContainer.h"
 #include "SpellChecker.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 
 TEST_CASE("ANSI") {
   Settings settings;

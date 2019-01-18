@@ -42,8 +42,8 @@ private:
   const SpellerContainer &m_speller_container;
   EditorInterface &m_editor;
   MappedWstring m_selected_word;
-  long m_word_under_cursor_length = 0;
-  long m_word_under_cursor_pos = 0;
+  TextPosition m_word_under_cursor_length = 0;
+  TextPosition m_word_under_cursor_pos = 0;
   std::vector<std::wstring> m_last_suggestions;
   const SpellChecker &m_spell_checker;
   bool m_word_under_cursor_is_correct = true;

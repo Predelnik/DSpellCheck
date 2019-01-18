@@ -1,6 +1,6 @@
 #include "GithubFileListProvider.h"
 
-#include "MainDef.h"
+#include "MainDefs.h"
 
 #include "ProgressData.h"
 #include "Settings.h"

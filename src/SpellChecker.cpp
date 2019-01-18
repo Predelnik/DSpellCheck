@@ -18,9 +18,8 @@
 
 #include "CommonFunctions.h"
 #include "DownloadDicsDlg.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 #include "MappedWstring.h"
-#include "SciUtils.h"
 #include "Settings.h"
 #include "SpellChecker.h"
 #include "SpellCheckerHelpers.h"
@@ -56,16 +55,16 @@ void SpellChecker::find_next_mistake() {
   bool full_check = false;
 
   while (true) {
-    auto from = static_cast<long>(iterator_pos);
-    auto to = static_cast<long>(iterator_pos + 4096);
+    auto from = static_cast<TextPosition>(iterator_pos);
+    auto to = static_cast<TextPosition>(iterator_pos + 4096);
     int ignore_offsetting = 0;
     if (to > doc_length) {
       ignore_offsetting = 1;
-      to = static_cast<long>(doc_length);
+      to = static_cast<TextPosition>(doc_length);
     }
     if (from < to) {
       auto text = m_editor.get_mapped_wstring_range(view, from, to);
-      auto index = static_cast<long>(text.str.size());
+      auto index = static_cast<TextPosition>(text.str.size());
       if (to != doc_length && next_token_end(text.str, to) == index)
         index = prev_token_begin(text.str, index - 1);
       text.str.erase(index, text.str.size() - index);
@@ -98,8 +97,8 @@ void SpellChecker::find_prev_mistake() {
   bool full_check = false;
 
   while (true) {
-    auto from = static_cast<long>(iterator_pos - 4096);
-    auto to = static_cast<long>(iterator_pos);
+    auto from = static_cast<TextPosition>(iterator_pos - 4096);
+    auto to = static_cast<TextPosition>(iterator_pos);
     int ignore_offsetting = 0;
     if (from < 0) {
       from = 0;
@@ -138,10 +137,10 @@ WordForSpeller SpellChecker::to_word_for_speller(std::wstring_view word) const {
   return res;
 }
 
-std::wstring_view SpellChecker::get_word_at(long char_pos, const MappedWstring &text) const {
+std::wstring_view SpellChecker::get_word_at(TextPosition char_pos, const MappedWstring &text) const {
   auto index = text.from_original_index(char_pos);
-  if (index >= static_cast<long>(text.str.length()))
-    index = static_cast<long>(text.str.length()) - 1;
+  if (index >= static_cast<TextPosition>(text.str.length()))
+    index = static_cast<TextPosition>(text.str.length()) - 1;
   auto begin = prev_token_begin(text.str, index);
   auto end = next_token_end(text.str, begin);
   return std::wstring_view(text.str).substr(begin, end - begin);
@@ -159,26 +158,26 @@ void SpellChecker::on_settings_changed() {
   recheck_visible_both_views();
 }
 
-void SpellChecker::create_word_underline(EditorViewType view, long start, long end) const {
+void SpellChecker::create_word_underline(EditorViewType view, TextPosition start, TextPosition end) const {
   m_editor.set_current_indicator(view, dspellchecker_indicator_id);
   m_editor.indicator_fill_range(view, start, end);
 }
 
-void SpellChecker::remove_underline(EditorViewType view, long start, long end) const {
+void SpellChecker::remove_underline(EditorViewType view, TextPosition start, TextPosition end) const {
   if (end < start)
     return;
   m_editor.set_current_indicator(view, dspellchecker_indicator_id);
   m_editor.indicator_clear_range(view, start, end);
 }
 
-long SpellChecker::prev_token_begin_in_document(EditorViewType view, long start) const {
-  long shift = 15;
+TextPosition SpellChecker::prev_token_begin_in_document(EditorViewType view, TextPosition start) const {
+  TextPosition shift = 15;
   auto prev_start = start + 1;
   while (start > 0) {
-    start = std::max(start - shift, 0l);
+    start = std::max(start - shift, 0);
     auto mapped_str = m_editor.get_mapped_wstring_range(view, start, prev_start);
     // finding any start before start which starts a token
-    auto index = prev_token_begin(mapped_str.str, static_cast<long>(mapped_str.str.length()) - 1);
+    auto index = prev_token_begin(mapped_str.str, static_cast<TextPosition>(mapped_str.str.length()) - 1);
     if (index > 0)
       return mapped_str.to_original_index(index);
     prev_start = start;
@@ -187,8 +186,8 @@ long SpellChecker::prev_token_begin_in_document(EditorViewType view, long start)
   return start;
 }
 
-long SpellChecker::next_token_end_in_document(EditorViewType view, long end) const {
-  long shift = 15;
+TextPosition SpellChecker::next_token_end_in_document(EditorViewType view, TextPosition end) const {
+  TextPosition shift = 15;
   auto prev_end = end;
   auto length = m_editor.get_active_document_length(view);
   if (end == length)
@@ -198,7 +197,7 @@ long SpellChecker::next_token_end_in_document(EditorViewType view, long end) con
     auto mapped_str = m_editor.get_mapped_wstring_range(view, prev_end, end);
     // finding any start before start which starts a token
     auto index = next_token_end(mapped_str.str, 0);
-    if (index < static_cast<long>(mapped_str.str.length()))
+    if (index < static_cast<TextPosition>(mapped_str.str.length()))
       return mapped_str.to_original_index(index);
     if (end == length)
       return end;
@@ -255,16 +254,16 @@ void SpellChecker::clear_all_underlines(EditorViewType view) const {
 
 void SpellChecker::reset_hot_spot_cache() { memset(m_hot_spot_cache, -1, sizeof(m_hot_spot_cache)); }
 
-bool SpellChecker::is_spellchecking_needed(EditorViewType view, std::wstring_view word, long word_start) const {
+bool SpellChecker::is_spellchecking_needed(EditorViewType view, std::wstring_view word, TextPosition word_start) const {
   if (!m_speller_container.active_speller().is_working())
     return false;
 
   return SpellCheckerHelpers::is_word_spell_checking_needed (m_settings, m_editor, view, word, word_start);
 }
 
-bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length, bool use_text_cursor) const {
+bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition &length, bool use_text_cursor) const {
   POINT p;
-  long init_char_pos;
+  TextPosition init_char_pos;
   LRESULT selection_start = 0;
   LRESULT selection_end = 0;
   auto view = m_editor.active_view();
@@ -291,13 +290,13 @@ bool SpellChecker::is_word_under_cursor_correct(long &pos, long &length, bool us
   auto mapped_str = m_editor.get_mapped_wstring_line(view, line);
   if (mapped_str.str.empty())
     return true;
-  auto word = get_word_at(static_cast<long>(init_char_pos), mapped_str);
+  auto word = get_word_at(static_cast<TextPosition>(init_char_pos), mapped_str);
   if (word.empty())
     return true;
   SpellCheckerHelpers::cut_apostrophes(m_settings, word);
-  pos = static_cast<long>(mapped_str.to_original_index(static_cast<long>(word.data() - mapped_str.str.data())));
-  long pos_end = mapped_str.to_original_index(static_cast<long>(word.data() + word.length() - mapped_str.str.data()));
-  long word_len = pos_end - pos;
+  pos = static_cast<TextPosition>(mapped_str.to_original_index(static_cast<TextPosition>(word.data() - mapped_str.str.data())));
+  TextPosition pos_end = mapped_str.to_original_index(static_cast<TextPosition>(word.data() + word.length() - mapped_str.str.data()));
+  TextPosition word_len = pos_end - pos;
   if (selection_start != selection_end && (selection_start != pos || selection_end != pos + word_len))
     return true;
   if (check_word(view, word, pos)) {
@@ -317,26 +316,26 @@ void SpellChecker::erase_all_misspellings() {
   m_editor.begin_undo_action(view);
   auto chars_removed = 0l;
   for (auto &misspelling : m_misspellings) {
-    auto start = mapped_str.to_original_index (static_cast<long> (misspelling.data() - mapped_str.str.data()));
-    auto original_len = mapped_str.to_original_index (static_cast<long> (misspelling.data() - mapped_str.str.data() + misspelling.length ())) - start;
+    auto start = mapped_str.to_original_index (static_cast<TextPosition> (misspelling.data() - mapped_str.str.data()));
+    auto original_len = mapped_str.to_original_index (static_cast<TextPosition> (misspelling.data() - mapped_str.str.data() + misspelling.length ())) - start;
     m_editor.delete_range(view, start - chars_removed, original_len);
     chars_removed += original_len;
   }
   m_editor.end_undo_action(view);
 }
 
-bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, long word_start) const {
+bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, TextPosition word_start) const {
   if (!is_spellchecking_needed(view, word, word_start))
     return true;
 
   return m_speller_container.active_speller().check_word(to_word_for_speller(word));
 }
 
-long SpellChecker::next_token_end(std::wstring_view target, long index) const {
+TextPosition SpellChecker::next_token_end(std::wstring_view target, TextPosition index) const {
   return m_settings.do_with_tokenizer (target, [index](const auto &tokenizer){ return tokenizer.next_token_end (index); });
 }
 
-long SpellChecker::prev_token_begin(std::wstring_view target, long index) const {
+TextPosition SpellChecker::prev_token_begin(std::wstring_view target, TextPosition index) const {
   return m_settings.do_with_tokenizer (target, [index](const auto &tokenizer){ return tokenizer.prev_token_begin (index); });
 }
 
@@ -344,8 +343,8 @@ namespace {
 struct WordData {
   std::wstring_view token;
   WordForSpeller word_for_speller;
-  long word_start;
-  long word_end;
+  TextPosition word_start;
+  TextPosition word_end;
   bool is_correct;
 };
 } // namespace
@@ -355,9 +354,9 @@ bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_
     return false;
 
   bool stop = false;
-  long resulting_word_end = -1, resulting_word_start = -1;
+  TextPosition resulting_word_end = -1, resulting_word_start = -1;
   auto text_len = text_to_check.original_length();
-  std::vector<long> underline_buffer;
+  std::vector<TextPosition> underline_buffer;
 
   auto sv = std::wstring_view(text_to_check.str);
   std::vector<std::wstring_view> tokens;
@@ -369,8 +368,8 @@ bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_
   std::vector<WordForSpeller> words_for_speller;
   for (auto token : tokens) {
     SpellCheckerHelpers::cut_apostrophes(m_settings, token);
-    auto word_start = static_cast<long>(text_to_check.to_original_index(static_cast<long>(token.data() - text_to_check.str.data())));
-    auto word_end = static_cast<long>(text_to_check.to_original_index(static_cast<long>(token.data() - text_to_check.str.data() + token.length())));
+    auto word_start = static_cast<TextPosition>(text_to_check.to_original_index(static_cast<TextPosition>(token.data() - text_to_check.str.data())));
+    auto word_end = static_cast<TextPosition>(text_to_check.to_original_index(static_cast<TextPosition>(token.data() - text_to_check.str.data() + token.length())));
     if (is_spellchecking_needed(view, token, word_start)) {
       words_to_check.emplace_back();
       auto &w = words_to_check.back();
@@ -424,13 +423,13 @@ bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_
   }
 
   if (mode == CheckTextMode::underline_errors) {
-    long prev_pos = 0;
-    for (long i = 0; i < static_cast<long>(underline_buffer.size()) - 1; i += 2) {
+    TextPosition prev_pos = 0;
+    for (TextPosition i = 0; i < static_cast<TextPosition>(underline_buffer.size()) - 1; i += 2) {
       remove_underline(view, prev_pos, underline_buffer[i]);
       create_word_underline(view, underline_buffer[i], underline_buffer[i + 1]);
       prev_pos = underline_buffer[i + 1];
     }
-    remove_underline(view, prev_pos, static_cast<long>(text_len));
+    remove_underline(view, prev_pos, static_cast<TextPosition>(text_len));
   }
   switch (mode) {
   case CheckTextMode::underline_errors:

@@ -17,7 +17,6 @@
 #include "SpellerInterface.h"
 
 #include "CommonFunctions.h"
-#include "MainDef.h"
 #include "TaskWrapper.h"
 #include "iconv.h"
 #include "lsignal.h"

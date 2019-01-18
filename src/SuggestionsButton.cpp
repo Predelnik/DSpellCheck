@@ -14,13 +14,12 @@
 
 #include "SuggestionsButton.h"
 
-#include "MainDef.h"
-#include "Plugin.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "ContextMenuHandler.h"
 #include "MenuItem.h"
 #include "Settings.h"
+#include "WindowsDefs.h"
 
 #define MOUSELEAVE 0x0001
 #define MOUSEHOVER 0x0002

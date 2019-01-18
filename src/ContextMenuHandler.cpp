@@ -14,7 +14,7 @@
 
 #include "ContextMenuHandler.h"
 #include "LanguageInfo.h"
-#include "MainDef.h"
+#include "MainDefs.h"
 #include "Plugin.h"
 #include "SpellChecker.h"
 #include "SpellCheckerHelpers.h"
@@ -130,7 +130,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
         auto mut = m_speller_container.modify();
         mut->active_speller().ignore_all(m_selected_word.str.c_str());
         m_word_under_cursor_length =
-            static_cast<long>(m_selected_word.str.length());
+            static_cast<TextPosition>(m_selected_word.str.length());
         m_editor.set_cursor_pos(view, m_word_under_cursor_pos +
                                           m_word_under_cursor_length);
       } else if (result == MID_ADDTODICTIONARY) {
@@ -139,7 +139,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
         auto mut = m_speller_container.modify();
         mut->active_speller().add_to_dictionary(m_selected_word.str.c_str());
         m_word_under_cursor_length =
-            static_cast<long>(m_selected_word.str.length());
+            static_cast<TextPosition>(m_selected_word.str.length());
         m_editor.set_cursor_pos(view, m_word_under_cursor_pos +
                                           m_word_under_cursor_length);
       } else if (result <= m_last_suggestions.size()) {
@@ -185,7 +185,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
 }
 
 void ContextMenuHandler::update_word_under_cursor_data () {
-  long pos, length;
+  TextPosition pos, length;
     m_word_under_cursor_is_correct =
         m_spell_checker.is_word_under_cursor_correct(pos, length, true);
     if (!m_word_under_cursor_is_correct) {
@@ -219,7 +219,7 @@ void ContextMenuHandler::init_suggestions_box(
     return;
   }
 
-  long pos, length;
+  TextPosition pos, length;
   if (m_spell_checker.is_word_under_cursor_correct(pos, length)) {
     return;
   }
@@ -275,7 +275,7 @@ ContextMenuHandler::get_suggestion_menu_items() {
   auto view = m_editor.active_view();
   m_editor.set_selection(view, pos, pos + m_word_under_cursor_length);
   std::vector<MenuItem> suggestion_menu_items;
-  m_selected_word = m_editor.get_mapped_wstring_range(view, m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<long>(m_word_under_cursor_length));
+  m_selected_word = m_editor.get_mapped_wstring_range(view, m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
 
   m_last_suggestions = m_speller_container.active_speller().get_suggestions(

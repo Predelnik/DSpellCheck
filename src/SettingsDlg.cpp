@@ -31,6 +31,7 @@
 #include "utils/winapi.h"
 #include <Uxtheme.h>
 #include <cassert>
+#include "WindowsDefs.h"
 
 SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings, NppInterface &npp) : m_npp(npp), m_settings(settings), m_parent(parent) {
   m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
