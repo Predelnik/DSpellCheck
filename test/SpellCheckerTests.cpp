@@ -76,23 +76,23 @@ wrongword
   sc.recheck_visible_both_views(); // technically it should happen automatically
                                    // if notifications were signals in
                                    // EditorInterface
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
   {
     auto mut = settings.modify();
     mut->check_those = false;
     mut->file_types = L"*.txt";
   }
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id).empty());
   {
     auto mut = settings.modify();
     mut->check_those = true;
   }
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
   speller_ptr->set_working(false);
   sp_container.speller_status_changed();
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id).empty());
 
   speller_ptr->set_working(true);
   sp_container.speller_status_changed();
@@ -107,14 +107,14 @@ wrongword
     auto mut = settings.modify();
     mut->word_minimum_length = 8;
   }
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword"});
   {
     auto mut = settings.modify();
     mut->word_minimum_length = 0;
     mut->ignore_starting_with_capital = true;
   }
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword"});
   {
     auto mut = settings.modify();
@@ -128,7 +128,7 @@ wrongword
   wEirdCasE
   )");
   sc.recheck_visible_both_views();
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
         std::vector<std::string>{"abaas123asd"});
   {
     auto mut = settings.modify();
@@ -158,7 +158,7 @@ test
 abg
 )");
   sc.recheck_visible_both_views();
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
         std::vector<std::string>{"abg"});
 
   {
@@ -201,14 +201,14 @@ abg
   {
     editor.set_active_document_text(v, L"abcdef");
     sc.recheck_visible_both_views();
-    CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+    CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
           std::vector<std::string>{"abcdef"});
     {
       auto mut = settings.modify();
       mut->tokenization_style = TokenizationStyle::by_delimiters;
       mut->delimiters += L"abcdef";
     }
-    CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
+    CHECK(editor.get_underlined_words(v, spell_check_indicator_id).empty());
   }
   {
     {

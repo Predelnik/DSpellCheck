@@ -27,11 +27,11 @@ TEST_CASE("Language Styles") {
     editor.set_whole_text_style(v, SCE_H_DEFAULT);
     editor.make_all_visible(v);
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
+    CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
 
     editor.set_lexer(v, SCLEX_YAML);
     editor.set_whole_text_style(v, SCE_YAML_DEFAULT);
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(v, dspellchecker_indicator_id).empty());
+    CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
   }
 }

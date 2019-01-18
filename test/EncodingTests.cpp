@@ -22,7 +22,7 @@ TEST_CASE("ANSI") {
 
   editor.set_codepage(v, EditorCodepage::ansi);
   sc.recheck_visible_both_views();
-  CHECK(editor.get_underlined_words(v, dspellchecker_indicator_id) ==
+  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
         std::vector<std::string>{"abcd", "efgh"});
 }
 
