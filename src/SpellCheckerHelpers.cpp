@@ -80,10 +80,6 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
       auto doc_word_start_pos = editor.get_prev_valid_begin_pos(view, pos);
       auto doc_word_end_pos = editor.get_next_valid_end_pos(view, static_cast<TextPosition>(pos + from_len));
       auto mapped_wstr = editor.get_mapped_wstring_range(view, doc_word_start_pos, doc_word_end_pos);
-      if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, view, mapped_wstr.str, doc_word_start_pos)) {
-        pos = pos + static_cast<TextPosition>(from_len);
-        continue;
-      }
       TextPosition buf_word_start_pos = 0;
       TextPosition buf_word_end_pos = static_cast<TextPosition>(mapped_wstr.str.length());
       if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer) {
@@ -105,6 +101,10 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
               if (tokenizer.next_token_end(buf_word_start_pos) != buf_word_end_pos)
                 return false;
             }
+            if (!SpellCheckerHelpers::is_word_spell_checking_needed(
+                    settings, editor, view, mapped_wstr.str.substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos), doc_word_start_pos))
+              return false;
+
             return true;
           })) {
         pos = pos + static_cast<TextPosition>(from_len);
@@ -125,7 +125,8 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
   editor.end_undo_action(view);
 }
 
-bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, EditorViewType view, std::wstring_view word, TextPosition word_start) {
+bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, EditorViewType view, std::wstring_view word,
+                                   TextPosition word_start) {
   if (word.empty())
     return false;
 
