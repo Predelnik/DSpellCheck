@@ -33,7 +33,7 @@ std::string EditorInterface::to_editor_encoding(EditorViewType view, std::wstrin
   case EditorCodepage::utf8: return to_utf8_string(str);
   case EditorCodepage::COUNT: break;
   }
-  std::abort ();
+  throw std::runtime_error ("Unsupported encoding");
 }
 
 MappedWstring EditorInterface::to_mapped_wstring(EditorViewType view, const std::string& str) {

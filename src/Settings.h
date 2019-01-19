@@ -100,7 +100,7 @@ public:
         case TokenizationStyle::COUNT:
           break;
         }
-      std::abort();
+      throw std::runtime_error ("Incorrect tokenization style");
     }
 
   auto non_ansi_tokenizer(std::wstring_view target) const {

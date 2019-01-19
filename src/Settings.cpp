@@ -46,7 +46,7 @@ std::wstring gui_string(LanguageNameStyle value)
     return rc_str(IDS_LANGUAGE_NAME_STYLE_NATIVE);
   case LanguageNameStyle::COUNT: break;
   }
-  return nullptr;
+  throw std::runtime_error ("Incorrect LanguageNameStyle value");
 }
 
 std::wstring gui_string(ProxyType value) {
@@ -58,7 +58,7 @@ std::wstring gui_string(ProxyType value) {
   case ProxyType::COUNT:
     break;
   }
-  return nullptr;
+  throw std::runtime_error ("Incorrect ProxyType value");
 }
 
 std::wstring gui_string(TokenizationStyle value) {
@@ -72,7 +72,7 @@ std::wstring gui_string(TokenizationStyle value) {
   case TokenizationStyle::COUNT:
     break;
   }
-  return nullptr;
+  throw std::runtime_error ("Incorrect TokenizationStyle value");
 }
 
 std::wstring gui_string(SuggestionMode value) {
@@ -84,7 +84,7 @@ std::wstring gui_string(SuggestionMode value) {
   case SuggestionMode::COUNT:
     break;
   }
-  return nullptr;
+  throw std::runtime_error ("Incorrect SuggestionMode value");
 }
 
 std::wstring gui_string(SpellerId value) {
@@ -97,9 +97,8 @@ std::wstring gui_string(SpellerId value) {
     return rc_str(IDS_NATIVE_WINDOWS);
   case SpellerId::COUNT:
     break;
-  default:;
   }
-  return nullptr;
+  throw std::runtime_error ("Incorrect SpellerId value");
 }
 
 static const wchar_t *to_string(SpellerId value) {
@@ -112,9 +111,8 @@ static const wchar_t *to_string(SpellerId value) {
     return L"Native_Speller";
   case SpellerId::COUNT:
     break;
-  default:;
   }
-  return nullptr;
+  throw std::runtime_error ("Incorrect SpellerId value");
 }
 
 static const wchar_t *default_language(SpellerId value) {
@@ -127,9 +125,8 @@ static const wchar_t *default_language(SpellerId value) {
     return L"en-US";
   case SpellerId::COUNT:
     break;
-  default:;
   }
-  return nullptr;
+  throw std::runtime_error ("Incorrect SpellerId value");
 }
 
 Settings::Settings(std::wstring_view ini_filepath) : m_ini_filepath(ini_filepath)
