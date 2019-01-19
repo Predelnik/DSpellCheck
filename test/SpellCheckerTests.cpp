@@ -252,6 +252,8 @@ abg
     {
       auto m = settings.modify();
       m->split_camel_case = false;
+      m->ignore_all_capital = false;
+      m->ignore_one_letter = false;
     }
 
     editor.set_active_document_text(v, L"token token stillToken notoken andOneMoreToken TOKEN ToKeN");
@@ -265,6 +267,14 @@ abg
     {
       auto m = settings.modify();
       m->ignore_having_a_capital = true;
+    }
+    editor.set_active_document_text(v, L"token Token");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar");
+    CHECK (editor.get_active_document_text(v) == "foobar Foobar");
+
+    {
+      auto m = settings.modify();
+      m->ignore_starting_with_capital = true;
     }
     editor.set_active_document_text(v, L"token Token");
     SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar");
