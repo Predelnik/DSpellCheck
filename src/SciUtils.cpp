@@ -206,6 +206,7 @@ namespace SciUtils
             switch (style)
             {
             case SCE_L_DEFAULT:
+            case SCE_L_VERBATIM:
                 return s::text;
             case SCE_L_COMMENT:
                 return s::comment;
@@ -1069,6 +1070,7 @@ namespace SciUtils
                 return s::comment;
             case SCE_POWERPRO_DOUBLEQUOTEDSTRING:
             case SCE_POWERPRO_SINGLEQUOTEDSTRING:
+            case SCE_POWERPRO_VERBATIM:
                 return s::string;
             default:
                 return s::unknown;
@@ -1139,6 +1141,8 @@ namespace SciUtils
             case SCE_COFFEESCRIPT_STRING:
             case SCE_COFFEESCRIPT_STRINGEOL:
             case SCE_COFFEESCRIPT_STRINGRAW:
+            case SCE_COFFEESCRIPT_VERBATIM:
+            case SCE_COFFEESCRIPT_TRIPLEVERBATIM:
                 return s::string;
             default:
                 return s::unknown;
@@ -1187,6 +1191,7 @@ namespace SciUtils
                     return s::identifier;
                 case SCE_ECL_STRING:
                 case SCE_ECL_CHARACTER:
+                case SCE_ECL_VERBATIM:
                     return s::string;
                 default:
                     return s::unknown;
