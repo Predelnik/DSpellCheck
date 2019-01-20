@@ -1,3 +1,12 @@
+v1.4.10
+* Fix string literals in some languages not being checked properly. (#166)
+* Add the action to replace word with the first suggestion. (#165)
+* Improve decoding of dictionary names for Windows Vista+. (#164)
+* Fix problem with display of "special button". (#162)
+* Add action to possibly call context menu with suggestions by hotkey. (#160)
+* Add action to replace the same words in whole document with a selected suggestion. (#155)
+* Fix occasional error messages appearing in git bash.
+
 v1.4.9
 * Fix hang when spell-checking file containing invalid utf-8 characters.
 
