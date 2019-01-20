@@ -81,6 +81,8 @@ namespace SciUtils
             case SCE_C_COMMENTLINEDOC:
                 return s::comment;
             case SCE_C_STRING:
+            case SCE_C_VERBATIM:
+            case SCE_C_TRIPLEVERBATIM:
                 return s::string;
             case SCE_C_IDENTIFIER:
                 return s::identifier;
@@ -218,6 +220,7 @@ namespace SciUtils
             case SCE_LUA_COMMENTDOC:
                 return s::comment;
             case SCE_LUA_STRING:
+            case SCE_LUA_LITERALSTRING:
                 return s::string;
             case SCE_LUA_IDENTIFIER:
                 return s::identifier;
