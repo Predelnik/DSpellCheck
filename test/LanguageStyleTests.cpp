@@ -47,5 +47,20 @@ TEST_CASE("Language Styles") {
     editor.set_whole_text_style(v, SCE_YAML_DEFAULT);
     sc.recheck_visible_both_views();
     CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
+
+    {
+      auto m = settings.modify();
+      m->check_strings = true;
+    }
+
+    editor.set_lexer(v, SCLEX_CPP);
+    editor.set_whole_text_style(v, SCE_C_VERBATIM);
+    sc.recheck_visible_both_views();
+    CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
+
+    editor.set_lexer(v, SCLEX_LUA);
+    editor.set_whole_text_style(v, SCE_LUA_LITERALSTRING);
+    sc.recheck_visible_both_views();
+    CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
   }
 }
