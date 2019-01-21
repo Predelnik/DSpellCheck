@@ -199,8 +199,10 @@ void ContextMenuHandler::precalculate_menu() {
   if (SpellCheckerHelpers::is_spell_checking_needed_for_file (m_editor, m_settings) &&
       m_settings.suggestions_mode == SuggestionMode::context_menu) {
       update_word_under_cursor_data ();
-      if (!m_word_under_cursor_is_correct)
+      if (!m_word_under_cursor_is_correct) {
         suggestion_menu_items = get_suggestion_menu_items();
+        suggestion_menu_items.emplace_back(MenuItem::Separator{});
+      }
     }
   show_calculated_menu(std::move(suggestion_menu_items));
 }
@@ -306,9 +308,6 @@ ContextMenuHandler::get_suggestion_menu_items() {
   ;
   suggestion_menu_items.emplace_back(menu_string.c_str(),
                                      menu_id::add_to_dictionary);
-
-  if (m_settings.suggestions_mode == SuggestionMode::context_menu)
-    suggestion_menu_items.emplace_back(MenuItem::Separator{});
 
   return suggestion_menu_items;
 }
