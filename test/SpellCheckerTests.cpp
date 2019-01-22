@@ -293,5 +293,22 @@ abg
     editor.set_active_document_text(v, L"token Token");
     SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar");
     CHECK (editor.get_active_document_text(v) == "foobar Token");
+
+    {
+      auto m = settings.modify();
+      m->ignore_starting_with_capital = false;
+      m->ignore_all_capital = false;
+      m->ignore_having_a_capital = false;
+    }
+
+    // replacing not proper name
+    editor.set_active_document_text(v, L"please PlEaSe Token Please PLEASE");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "please", L"foobar");
+    CHECK (editor.get_active_document_text(v) == "foobar PlEaSe Token Foobar FOOBAR");
+
+    // replacing proper name
+    editor.set_active_document_text(v, L"parise PaRiSe Token Parise PARISE");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "parise", L"Paris");
+    CHECK (editor.get_active_document_text(v) == "Paris Paris Token Paris Paris");
   }
 }
