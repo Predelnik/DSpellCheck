@@ -166,7 +166,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
         }
 
         SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), suggestion);
-        m_editor.begin_undo_action(view);
+        m_editor.end_undo_action(view);
       }
     }
   } break;
