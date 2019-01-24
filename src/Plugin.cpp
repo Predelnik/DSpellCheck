@@ -185,8 +185,9 @@ void show_spell_check_menu_at_cursor ()
   auto y = npp->get_point_y_from_position(v, start);
   POINT pnt {x, y};
   ClientToScreen (npp->get_scintilla_hwnd(v), &pnt);
-  TrackPopupMenuEx(menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, pnt.x,
-                         pnt.y, npp->get_scintilla_hwnd(v), &tpm_params);
+  auto cmd = TrackPopupMenuEx(menu, TPM_HORIZONTAL | TPM_RIGHTALIGN | TPM_RETURNCMD, pnt.x,
+                              pnt.y, npp->get_scintilla_hwnd(v), &tpm_params);
+  context_menu_handler->process_menu_result(cmd);
 }
 
 void replace_with_1st_suggestion ()

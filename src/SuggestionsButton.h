@@ -38,7 +38,6 @@ protected:
                               LPARAM l_param) override;
 
 private:
-  int m_menu_result;
   bool m_state_pressed;
   bool m_state_hovered;
   bool m_state_menu;

@@ -57,12 +57,10 @@ bool reg_msg(HWND h_wnd, DWORD dw_msg_type) {
   return true;
 }
 
-int SuggestionsButton::get_result() const { return m_menu_result; }
-
 SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
                                      NppInterface &npp, ContextMenuHandler &context_menu_handler,
-                                     const Settings &settings)
-    : m_menu_result(0), m_npp(npp),
+                                     const Settings &settings) :
+      m_npp(npp),
       m_settings (settings), m_context_menu_handler(context_menu_handler) {
   Window::init(h_inst, parent);
   m_state_pressed = false;
@@ -173,9 +171,8 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
     HMENU popup_menu = CreatePopupMenu();
     MenuItem::append_to_menu(popup_menu, m_context_menu_handler.get_suggestion_menu_items());
     SetForegroundWindow(m_npp.get_editor_handle ());
-    m_menu_result =
-        TrackPopupMenuEx(popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
-                         p.y, _hSelf, &tpm_params);
+    TrackPopupMenuEx(popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
+                     p.y, _hSelf, &tpm_params);
     PostMessage(m_npp.get_editor_handle (), WM_NULL, 0, 0);
     SetFocus(m_npp.get_scintilla_hwnd(m_npp.active_view()));
     m_state_menu = false;
