@@ -104,7 +104,7 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
                 return false;
             }
             src_word_sv = std::wstring_view (mapped_wstr.str).substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos);
-            if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, view, src_word_sv, doc_word_start_pos))
+            if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, view, src_word_sv, doc_word_start_pos + start_pos_offset))
               return false;
 
             return true;
