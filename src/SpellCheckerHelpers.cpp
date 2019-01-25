@@ -67,13 +67,14 @@ void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
   }
 }
 
-void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Settings &settings, const char *from, std::wstring to) {
+void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Settings &settings, const char *from, std::wstring_view to, bool
+                        is_proper_name) {
   TextPosition pos = 0;
   auto from_len = static_cast<TextPosition>(strlen(from));
   if (from_len == 0)
     return;
 
-  bool is_proper_name = std::any_of (to.begin (), to.end (), IsCharUpper);
+  std::wstring modified_to (to);
 
   while (true) {
     pos = editor.find_next(view, pos, from);
@@ -113,15 +114,15 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
         continue;
       }
 
+      bool use_modified = false;
       if (!is_proper_name) {
         auto src_case_type = get_string_case_type(src_word_sv);
-        if (src_case_type == string_case_type::mixed) {
-          pos = pos + static_cast<TextPosition>(from_len);
-          continue;
+        if (src_case_type != string_case_type::mixed) {
+          apply_case_type(modified_to, src_case_type);
+          use_modified = true;
         }
-        apply_case_type(to, src_case_type);
       }
-      auto encoded_to = editor.to_editor_encoding(view, to);
+      auto encoded_to = editor.to_editor_encoding(view, use_modified ? modified_to : to);
       editor.replace_text(view, pos, static_cast<TextPosition>(pos + from_len), encoded_to);
       pos = pos + static_cast<TextPosition>(encoded_to.length());
     } else

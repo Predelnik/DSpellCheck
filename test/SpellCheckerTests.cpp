@@ -247,20 +247,20 @@ abg
   }
   {
     editor.set_active_document_text(v, L"token token token nottoken token token");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"bar");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"bar", false);
     CHECK (editor.get_active_document_text(v) == "bar bar bar nottoken bar bar");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "bar", L"foobuzz");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "bar", L"foobuzz", false);
     CHECK (editor.get_active_document_text(v) == "foobuzz foobuzz foobuzz nottoken foobuzz foobuzz");
     {
       auto m = settings.modify();
       m->split_camel_case = true;
     }
     editor.set_active_document_text(v, L"token token stillToken notoken andOneMoreToken");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar", false);
     CHECK (editor.get_active_document_text(v) == "foobar foobar stillFoobar notoken andOneMoreFoobar");
 
     editor.set_active_document_text(v, L"token⸺token⸺token⸺nottoken⸺token⸺token");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"bar");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"bar", false);
     CHECK (editor.get_active_document_text(v) == "bar⸺bar⸺bar⸺nottoken⸺bar⸺bar");
 
     {
@@ -271,11 +271,11 @@ abg
     }
 
     editor.set_active_document_text(v, L"token token stillToken notoken andOneMoreToken TOKEN ToKeN");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar");
-    CHECK (editor.get_active_document_text(v) == "foobar foobar stillToken notoken andOneMoreToken FOOBAR ToKeN");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar", false);
+    CHECK (editor.get_active_document_text(v) == "foobar foobar stillToken notoken andOneMoreToken FOOBAR foobar");
 
     editor.set_active_document_text(v, L"a a a a a A a a A b b c c a a A");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "a", L"z");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "a", L"z", false);
     CHECK (editor.get_active_document_text(v) == "z z z z z Z z z Z b b c c z z Z");
 
     {
@@ -283,7 +283,7 @@ abg
       m->ignore_having_a_capital = true;
     }
     editor.set_active_document_text(v, L"token Token");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar", false);
     CHECK (editor.get_active_document_text(v) == "foobar Foobar");
 
     {
@@ -291,7 +291,7 @@ abg
       m->ignore_starting_with_capital = true;
     }
     editor.set_active_document_text(v, L"token Token");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "token", L"foobar", false);
     CHECK (editor.get_active_document_text(v) == "foobar Token");
 
     {
@@ -303,12 +303,12 @@ abg
 
     // replacing not proper name
     editor.set_active_document_text(v, L"please PlEaSe Token Please PLEASE");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "please", L"foobar");
-    CHECK (editor.get_active_document_text(v) == "foobar PlEaSe Token Foobar FOOBAR");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "please", L"foobar", false);
+    CHECK (editor.get_active_document_text(v) == "foobar foobar Token Foobar FOOBAR");
 
     // replacing proper name
     editor.set_active_document_text(v, L"parise PaRiSe Token Parise PARISE");
-    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "parise", L"Paris");
+    SpellCheckerHelpers::replace_all_tokens(editor, v, settings, "parise", L"Paris", true);
     CHECK (editor.get_active_document_text(v) == "Paris Paris Token Paris Paris");
   }
 }

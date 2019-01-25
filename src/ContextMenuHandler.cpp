@@ -157,15 +157,16 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
         // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion
         m_editor.replace_selection(view, m_editor.to_editor_encoding(view, suggestion).c_str());
 
+        bool is_proper_name = true;
         if (!suggestion.empty ()) {
           auto suggestion_copy = suggestion;
           to_lower_inplace(suggestion_copy);
           // if lowercase version is incorrect - the word is not a proper name
           if (m_speller_container.active_speller().check_word({suggestion_copy}))
-            suggestion = std::move (suggestion_copy);
+            is_proper_name = false;
         }
 
-        SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), suggestion);
+        SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), suggestion, is_proper_name);
         m_editor.end_undo_action(view);
       }
     }
