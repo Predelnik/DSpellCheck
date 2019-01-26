@@ -33,6 +33,7 @@ public:
   void update_word_under_cursor_data();
   void precalculate_menu();
   void init_suggestions_box(SuggestionsButton &suggestion_button);
+  bool is_word_under_cursor_correct () const { return m_word_under_cursor_is_correct; }
 
 private:
   void do_plugin_menu_inclusion(bool invalidate = false);
