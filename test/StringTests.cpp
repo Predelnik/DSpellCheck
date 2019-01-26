@@ -49,3 +49,49 @@ TEST_CASE ("string_case") {
   apply_case_type (str, string_case_type::title);
   CHECK (str == L"Ararar");
 }
+
+TEST_CASE ("CamelCase") {
+  std::wstring s = L"TestCamelCase";
+  //                 0   4    9   13
+  auto t = [&](){ return make_delimiter_tokenizer (s, L" ", true); };
+  CHECK(t().get_all_tokens() == std::vector<std::wstring_view>{L"Test", L"Camel", L"Case"});
+  auto test_1 = [&](){
+  CHECK(t().prev_token_begin(2) == 0);
+  CHECK(t().next_token_end(2) == 4);
+  CHECK(t().prev_token_begin(6) == 4);
+  CHECK(t().next_token_end(6) == 9);
+  CHECK(t().prev_token_begin(10) == 9);
+  CHECK(t().next_token_end(10) == 13);
+  };
+  test_1 ();
+  s = L"TestCamelCaseAndABBREVIATION";
+  //    0   4    9   13 16         28
+  CHECK(t().get_all_tokens() == std::vector<std::wstring_view>{L"Test", L"Camel", L"Case", L"And", L"ABBREVIATION"});
+  auto test_2 = [&](){
+    CHECK(t().prev_token_begin(14) == 13);
+    CHECK(t().next_token_end(14) == 16);
+    CHECK(t().prev_token_begin(23) == 16);
+    CHECK(t().next_token_end(23) == 28);
+  };
+  test_2 ();
+  s = L"TestCamelCaseAndABBREVIATIONAndSomeMoreCamelCase";
+  //    0   4    9   13 16         28  31  35  39   44  48
+  auto test_3 = [&]()
+  {
+    CHECK(t().prev_token_begin(30) == 28);
+    CHECK(t().next_token_end(30) == 31);
+    CHECK(t().prev_token_begin(33) == 31);
+    CHECK(t().next_token_end(33) == 35);
+    CHECK(t().prev_token_begin(37) == 35);
+    CHECK(t().next_token_end(37) == 39);
+    CHECK(t().prev_token_begin(41) == 39);
+    CHECK(t().next_token_end(41) == 44);
+    CHECK(t().prev_token_begin(46) == 44);
+    CHECK(t().next_token_end(46) == 48);
+  };
+
+  CHECK(t().get_all_tokens() == std::vector<std::wstring_view>{L"Test", L"Camel", L"Case", L"And", L"ABBREVIATION", L"And", L"Some", L"More", L"Camel", L"Case"});
+  test_1 ();
+  test_2 ();
+  test_3 ();
+}

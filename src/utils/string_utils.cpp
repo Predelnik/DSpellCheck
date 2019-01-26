@@ -96,3 +96,11 @@ wchar_t make_upper(wchar_t c) {
 wchar_t make_lower(wchar_t c) {
   return static_cast<wchar_t> (reinterpret_cast<std::size_t> (CharLower (reinterpret_cast<LPWSTR>(c))));
 }
+
+bool is_upper(wchar_t c) {
+  return IsCharUpper (c);
+}
+
+bool is_lower(wchar_t c) {
+  return IsCharLower (c);
+}
