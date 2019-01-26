@@ -262,9 +262,7 @@ bool SpellChecker::is_spellchecking_needed(EditorViewType view, std::wstring_vie
 
 bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition &length, bool use_text_cursor) const {
   POINT p;
-  TextPosition init_char_pos;
-  LRESULT selection_start = 0;
-  LRESULT selection_end = 0;
+  TextPosition init_char_pos, selection_start = 0, selection_end = 0;
   auto view = m_editor.active_view();
   length = 0;
   pos = -1;
@@ -280,7 +278,7 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
   } else {
     selection_start = m_editor.get_selection_start(view);
     selection_end = m_editor.get_selection_end(view);
-    init_char_pos = m_editor.get_current_pos(view);
+    init_char_pos = std::min (selection_start, selection_end);
   }
 
   if (init_char_pos == -1)
