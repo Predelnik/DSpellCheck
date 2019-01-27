@@ -40,7 +40,7 @@ public:
     for (int i = 0; i < static_cast<int>(m_target.size()); ++i) {
       if (!m_is_delimiter(m_target[i])) {
         if (m_split_camel_case && i > token_begin && is_upper(m_target[i]) &&
-            (is_lower(m_target[i - 1]) || (i < m_target.length () - 1 && is_lower(m_target[i + 1])))) {
+            (is_lower(m_target[i - 1]) || (i < static_cast<TextPosition> (m_target.length ()) - 1 && is_lower(m_target[i + 1])))) {
           token_end = i;
           finalize_word();
           token_begin = i;
@@ -66,7 +66,7 @@ public:
     }
     while (index >= 0 && !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case && index > 0 && is_upper(m_target[index]) &&
-          ((index == m_target.length() - 1 || is_lower(m_target[index + 1])) || is_lower(m_target[index - 1])))
+          ((index == static_cast<TextPosition> (m_target.length()) - 1 || is_lower(m_target[index + 1])) || is_lower(m_target[index - 1])))
         return index;
       --index;
     }
@@ -79,7 +79,7 @@ public:
       return static_cast<TextPosition>(m_target.length());
     while (index < static_cast<TextPosition>(m_target.length()) && !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case && index < static_cast<TextPosition>(m_target.length()) - 1 &&
-          is_upper(m_target[index + 1]) && (is_lower(m_target[index]) || (index < m_target.length() - 2 && is_lower(m_target[index + 2]))))
+          is_upper(m_target[index + 1]) && (is_lower(m_target[index]) || (index < static_cast<TextPosition> (m_target.length()) - 2 && is_lower(m_target[index + 2]))))
         return index + 1;
       ++index;
     }
