@@ -43,11 +43,13 @@ std::vector<char> read_file_data(const wchar_t *file_path) {
   if (!fp)
     return {};
   _fseeki64(fp, 0, SEEK_END);
-  auto size = static_cast<size_t> (_ftelli64(fp));
+  auto size = static_cast<size_t>(_ftelli64(fp));
   std::vector<char> res(size + 1);
   _fseeki64(fp, 0, SEEK_SET);
-  if (fread(res.data(), 1, size, fp) != size)
+  if (fread(res.data(), 1, size, fp) != size) {
+    fclose(fp);
     return {};
+  }
   fclose(fp);
   return res;
 }
