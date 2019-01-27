@@ -25,7 +25,7 @@ ToolbarIconsWrapper::~ToolbarIconsWrapper() {
         DeleteObject(m_icons->hToolbarBmp);
 
     if (m_icons->hToolbarIcon != nullptr)
-        DeleteObject(m_icons->hToolbarBmp);
+        DeleteObject(m_icons->hToolbarIcon);
 }
 
 ToolbarIconsWrapper::

@@ -661,6 +661,7 @@ void TabBarPlus::drawItem(DRAWITEMSTRUCT *pDrawItemStruct)
         rect.top += 2;
       }
 
+      hBrush = ::CreateSolidBrush(_activeTopBarFocusedColour);
       ::FillRect(hDC, &barRect, hBrush);
       ::DeleteObject((HGDIOBJ)hBrush);
     }
