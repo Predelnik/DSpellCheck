@@ -5,7 +5,9 @@ v1.4.10
 * Fix problem with display of "special button". (#162)
 * Add action to possibly call context menu with suggestions by hotkey. (#160)
 * Add action to replace the same words in whole document with a selected suggestion. (#155)
-* Fix occasional error messages appearing in git bash.
+* Fix occasional error messages appearing when Notepad++ was launched from git bash.
+* Make dictionaries loading asynchronous. (#134)
+* Fix CamelCase splitting for words with all-capitals.
 
 v1.4.9
 * Fix hang when spell-checking file containing invalid utf-8 characters.
