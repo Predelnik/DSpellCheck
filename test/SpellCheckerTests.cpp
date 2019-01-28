@@ -44,6 +44,22 @@ adadsd.)");
   editor.set_active_document_text(v, LR"(This is test document)");
   sc.find_next_mistake();
   CHECK(editor.selected_text(v).empty());
+  std::wstring s;
+  for (int i = 0; i < 5000; ++i) {
+    if (i == 3333)
+      s += L"adadsd\n";
+    if (i == 4888)
+      s += L"abirvalg\n";
+    s += L"This is test document\n";
+  }
+  editor.set_active_document_text(v, s);
+  sc.find_next_mistake();
+  CHECK(editor.selected_text(v) == "adadsd");
+  sc.find_next_mistake();
+  CHECK(editor.selected_text(v) == "abirvalg");
+  sc.find_prev_mistake();
+  CHECK(editor.selected_text(v) == "adadsd");
+
   editor.set_active_document_text(v, LR"(
 wrongword
 This is test document
