@@ -70,7 +70,7 @@ void SpellChecker::find_next_mistake() {
       if (check_text(view, text, CheckTextMode::find_first))
         break;
 
-      iterator_pos += text.to_original_index(index);
+      iterator_pos += (text.to_original_index(index) - from);
     }
 
     if (to == doc_length) {
@@ -110,7 +110,7 @@ void SpellChecker::find_prev_mistake() {
       if (check_text(view, text, CheckTextMode::find_last))
         break;
 
-      iterator_pos -= (4096 - text.to_original_index(offset));
+      iterator_pos -= (4096 - (text.to_original_index(offset) - from));
     } else
       --iterator_pos;
 
