@@ -25,7 +25,7 @@ enum class UrlType
 	ftp,
 	ftp_web_proxy,
 	github,
-	unknown, 
+	unknown,
 };
 
 class LanguageInfo;
@@ -125,11 +125,10 @@ public:
   void on_zip_file_downloaded();
   std::optional<std::wstring> current_address() const;
   void update_status(const wchar_t *text, COLORREF status_color);
-  static void ui_update();
   void process_file_list_error(FtpOperationErrorType error);
   void process_file_list_error(const FtpWebOperationError &error);
 
-private: 
+private:
   std::vector<FileDescription> m_current_list;
   HBRUSH m_default_brush;
   COLORREF m_status_color;

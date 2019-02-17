@@ -725,8 +725,6 @@ void DownloadDicsDlg::update_status(const wchar_t *text, COLORREF status_color) 
   Static_SetText(m_h_status, text);
 }
 
-void DownloadDicsDlg::ui_update() { get_progress()->update(); }
-
 void DownloadDicsDlg::on_new_file_list(std::vector<FileDescription> list) {
   int count = 0;
 

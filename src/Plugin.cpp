@@ -565,7 +565,6 @@ extern FuncItem func_item[nb_func]; // NOLINT
 extern NppData npp_data;            // NOLINT
 extern bool do_close_tag;           // NOLINT
 std::vector<std::pair<TextPosition, TextPosition>> check_queue;
-UINT_PTR ui_timer = 0u;
 UINT_PTR recheck_timer = 0u;
 bool recheck_done = true;
 bool restyling_caused_recheck_was_done =
@@ -712,11 +711,6 @@ void WINAPI do_recheck(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
   first_restyle = false;
 }
 
-void WINAPI ui_update(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
-                      DWORD /*dwTime*/) {
-  download_dics_dlg->ui_update();
-}
-
 std::wstring_view rc_str_view(UINT string_id) {
   const wchar_t *ret = nullptr;
   auto len = LoadString(static_cast<HINSTANCE>(h_module), string_id,
@@ -735,8 +729,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case NPPN_SHUTDOWN: {
     if (recheck_timer != NULL)
       KillTimer(nullptr, recheck_timer);
-    if (ui_timer != NULL)
-      KillTimer(nullptr, ui_timer);
     command_menu_clean_up();
 
     plugin_clean_up();
@@ -750,7 +742,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     create_hooks();
     recheck_timer =
         SetTimer(npp_data.npp_handle, 0, USER_TIMER_MAXIMUM, do_recheck);
-    ui_timer = SetTimer(npp_data.npp_handle, 0, 100, ui_update);
     spell_checker->recheck_visible_both_views();
     restyling_caused_recheck_was_done = false;
     suggestions_button->set_transparency();

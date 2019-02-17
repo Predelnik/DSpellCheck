@@ -31,9 +31,31 @@ void ProgressDlg::init(HINSTANCE h_inst, HWND parent) {
   return Window::init(h_inst, parent);
 }
 
+namespace {
+  constexpr auto ui_update_timer_id = 0;
+}
+
 INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM w_param,
                                   LPARAM /*lParam*/) {
   switch (message) {
+    case WM_SHOWWINDOW: {
+       constexpr auto timer_resolution = 100;
+       if (w_param == TRUE) {
+         SetTimer (_hSelf, ui_update_timer_id, timer_resolution, nullptr);
+       } else {
+         KillTimer (_hSelf, ui_update_timer_id);
+       }
+    }
+  case WM_TIMER: {
+        switch (w_param)
+        {
+          case ui_update_timer_id:
+            update ();
+            return 0;
+          default:
+            break;
+        }
+      }
   case WM_INITDIALOG: {
     m_h_desc_top = GetDlgItem(_hSelf, IDC_DESCTOP);
     m_h_desc_bottom = GetDlgItem(_hSelf, IDC_DESCBOTTOM);
@@ -84,4 +106,7 @@ ProgressDlg::ProgressDlg(DownloadDicsDlg &download_dics_dlg)
     : m_progress_data(std::make_shared<ProgressData>()),
       m_download_dics_dlg(download_dics_dlg) {}
 
-ProgressDlg::~ProgressDlg() = default;
+ProgressDlg::~ProgressDlg()
+{
+  KillTimer (_hSelf, ui_update_timer_id);
+}

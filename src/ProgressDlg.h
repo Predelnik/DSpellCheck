@@ -28,7 +28,7 @@ public:
   void do_dialog();
   void set_top_message(const wchar_t* message);
   void set_marquee(bool animated);
-  std::shared_ptr<ProgressData> get_progress_data () { return m_progress_data; }
+  std::shared_ptr<ProgressData> get_progress_data () const { return m_progress_data; }
   void update();
 
 private:
