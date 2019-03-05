@@ -3,7 +3,7 @@
 DSpellCheck
 ===========
 
-Yet Another Notepad++ Spell-checking Plug-In
+Notepad++ Spell-checking Plug-In
 
 Following main features:
 - Underlining spelling mistakes
