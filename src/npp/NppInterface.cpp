@@ -144,7 +144,7 @@ bool NppInterface::is_line_visible(EditorViewType view, TextPosition line) const
   return send_msg_to_scintilla(view, SCI_GETLINEVISIBLE, line);
 }
 
-TextPosition NppInterface::find_next(EditorViewType view, TextPosition from_position, const char* needle) 
+TextPosition NppInterface::find_next(EditorViewType view, TextPosition from_position, const char* needle)
 {
   Sci_TextToFind ttf;
   ttf.chrg.cpMin = from_position;
