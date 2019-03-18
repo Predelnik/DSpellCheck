@@ -165,7 +165,6 @@ void DownloadDicsDlg::finalize_downloading() {
 static const auto buf_size_for_copy = 10240;
 
 void DownloadDicsDlg::on_zip_file_downloaded() {
-  wchar_t prog_message[default_buf_size];
   std::map<std::string, int> files_found; // 0x01 - .aff found, 0x02 - .dic found
   auto downloaded = prev(m_cur);
   const auto local_path_ansi = to_string(get_temp_path() + L"/" + downloaded->path);
@@ -204,17 +203,17 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
       if (local_dic_file_handle == -1)
         continue;
 
-      swprintf(prog_message, IDS_EXTRACTING_PS, dic_file_name.c_str());
-      get_progress()->set_top_message(prog_message);
+      auto msg = wstring_printf (rc_str(IDS_EXTRACTING_PS).c_str(), dic_file_name.c_str());
+      get_progress()->set_top_message(msg.c_str ());
       DWORD bytes_total = 0;
       int bytes_copied;
       std::vector<char> file_copy_buf(buf_size_for_copy);
       while ((bytes_copied = unzReadCurrentFile(fp, file_copy_buf.data(), static_cast<unsigned int>(file_copy_buf.size()))) != 0) {
         _write(local_dic_file_handle, file_copy_buf.data(), bytes_copied);
         bytes_total += bytes_copied;
-        swprintf(prog_message, rc_str(IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str(), bytes_total, f_info.uncompressed_size,
-                 bytes_total * 100 / f_info.uncompressed_size);
-        get_progress()->get_progress_data()->set(bytes_total * 100 / f_info.uncompressed_size, prog_message);
+        msg = wstring_printf(rc_str(IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str(), bytes_total, f_info.uncompressed_size,
+                             bytes_total * 100 / f_info.uncompressed_size);
+        get_progress()->get_progress_data()->set(bytes_total * 100 / f_info.uncompressed_size, msg.c_str ());
       }
       unzCloseCurrentFile(fp);
       _close(local_dic_file_handle);
@@ -438,9 +437,8 @@ struct LogObserver : public nsFTP::CFTPClient::CNotification {
     _wfopen_s(&f, m_log_filename, L"a");
     if (!f)
       return;
-    wchar_t buf[default_buf_size];
-    swprintf(buf, L"Fatal error %s in file %s on line %d\n", error_msg.c_str(), error_filename.c_str(), line);
-    fwprintf(f, buf);
+    auto final_msg = wstring_printf (L"Fatal error %s in file %s on line %d\n", error_msg.c_str(), error_filename.c_str(), line);
+    fwprintf(f, final_msg.c_str ());
     fclose(f);
   }
 
@@ -467,9 +465,8 @@ struct LogObserver : public nsFTP::CFTPClient::CNotification {
     _wfopen_s(&f, m_log_filename, L"a");
     if (!f)
       return;
-    wchar_t buf[default_buf_size];
-    swprintf(buf, L"Got reply %s with value:\n%s\n", reply.Code().Value(), reply.Value().c_str());
-    fwprintf(f, buf);
+    auto log_msg = wstring_printf (L"Got reply %s with value:\n%s\n", reply.Code().Value(), reply.Value().c_str());
+    fwprintf(f, log_msg.c_str ());
     fclose(f);
   }
 
@@ -781,25 +778,23 @@ void DownloadDicsDlg::preserve_current_address_index(Settings &settings) {
 }
 
 void DownloadDicsDlg::reset_download_combobox() {
-  HWND target_combobox = GetDlgItem(getHSelf(), IDC_ADDRESS);
-  wchar_t buf[default_buf_size];
-  ComboBox_GetText(target_combobox, buf, default_buf_size);
+  auto cur_text = m_address_cmb.current_text();
   if (m_address_is_set) {
     auto mut_settings = m_settings.modify();
     preserve_current_address_index(*mut_settings);
   }
-  ComboBox_ResetContent(target_combobox);
+  m_address_cmb.clear ();
   for (auto &server_name : m_default_server_names) {
-    ComboBox_AddString(target_combobox, server_name.c_str());
+    m_address_cmb.add_item(server_name.c_str());
   }
   for (auto &server_name : m_settings.server_names) {
     if (!server_name.empty())
-      ComboBox_AddString(target_combobox, server_name.c_str());
+      m_address_cmb.add_item(server_name.c_str());
   }
   if (m_settings.last_used_address_index < USER_SERVER_CONST)
-    ComboBox_SetCurSel(target_combobox, m_settings.last_used_address_index);
+    m_address_cmb.set_current_index(m_settings.last_used_address_index);
   else
-    ComboBox_SetCurSel(target_combobox, m_settings.last_used_address_index - USER_SERVER_CONST + m_default_server_names.size());
+    m_address_cmb.set_current_index(m_settings.last_used_address_index - USER_SERVER_CONST + static_cast<int> (m_default_server_names.size()));
   m_address_is_set = true;
 }
 
@@ -975,6 +970,7 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_par
     m_h_show_only_known = ::GetDlgItem(_hSelf, IDC_SHOWONLYKNOWN);
     m_h_refresh_btn = ::GetDlgItem(_hSelf, IDC_REFRESH);
     m_h_install_system = ::GetDlgItem(_hSelf, IDC_INSTALL_SYSTEM);
+    m_address_cmb.init(GetDlgItem (_hSelf, IDC_ADDRESS));
     RECT rc;
     GetClientRect(m_h_refresh_btn, &rc);
     int icon_size = std::min(rc.bottom - rc.top, rc.right - rc.left) * 4 / 5;

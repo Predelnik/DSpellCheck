@@ -296,12 +296,11 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
       break;
     case IDC_SUGGESTIONS_NUM: {
       if (HIWORD(w_param) == EN_CHANGE) {
-        wchar_t buf[default_buf_size];
-        Edit_GetText(m_h_suggestions_num, buf, default_buf_size);
-        if (*buf == L'\0')
+        auto text = get_edit_text(m_h_suggestions_num);
+        if (text.empty ())
           return TRUE;
 
-        int x = wcstol(buf, &end_ptr, 10);
+        int x = wcstol(text.c_str (), &end_ptr, 10);
         if (*end_ptr != L'\0')
           Edit_SetText(m_h_suggestions_num, L"5");
         else if (x > 20)
@@ -367,7 +366,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         buf.insert(buf.end(), std::begin(rest), std::end(rest));
         // TODO: add possibility to use modern browse dialog
         ofn.lpstrFile = filename.data();
-        ofn.nMaxFile = default_buf_size;
+        ofn.nMaxFile = MAX_PATH;
         ofn.lpstrFilter = buf.data();
         ofn.nFilterIndex = 1;
         ofn.lpstrFileTitle = nullptr;
@@ -496,8 +495,6 @@ void AdvancedDlg::setup_delimiter_line_edit_visiblity() {
 
 INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   wchar_t *end_ptr = nullptr;
-  wchar_t buf[default_buf_size];
-  int x;
   switch (message) {
   case WM_INITDIALOG: {
     // Retrieving handles of dialog controls
@@ -599,11 +596,11 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
       }
     case IDC_RECHECK_DELAY:
       if (HIWORD(w_param) == EN_CHANGE) {
-        Edit_GetText(m_h_recheck_delay, buf, default_buf_size);
-        if (*buf == 0u)
-          return 1;
+        auto text = get_edit_text (m_h_recheck_delay);
+        if (text.empty())
+          return TRUE;
 
-        x = wcstol(buf, &end_ptr, 10);
+        auto x = wcstol(text.c_str(), &end_ptr, 10);
         if (*end_ptr != 0u)
           Edit_SetText(m_h_recheck_delay, L"0");
         else if (x > 30000)
@@ -640,16 +637,13 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
 void AdvancedDlg::set_delimeters_edit(const wchar_t *delimiters) { Edit_SetText(m_h_edit_delimiters, delimiters); }
 
 void AdvancedDlg::set_recheck_delay(int delay) {
-  wchar_t buf[default_buf_size];
-  _itow(delay, buf, 10);
-  Edit_SetText(m_h_recheck_delay, buf);
+  Edit_SetText(m_h_recheck_delay, std::to_wstring (delay).c_str ());
 }
 
 int AdvancedDlg::get_recheck_delay() {
-  wchar_t buf[default_buf_size];
-  Edit_GetText(m_h_recheck_delay, buf, default_buf_size);
+  auto text = get_edit_text (m_h_recheck_delay);
   wchar_t *end_ptr;
-  int x = wcstol(buf, &end_ptr, 10);
+  int x = wcstol(text.c_str (), &end_ptr, 10);
   return x;
 }
 

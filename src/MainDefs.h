@@ -15,7 +15,6 @@
 #pragma once
 
 constexpr int spell_check_indicator_id = 19;
-constexpr auto default_buf_size = 4096;
 
 #ifdef _DEBUG
 #define ASSERT_RETURN(CONDITION, RET)                                                                                                                          \

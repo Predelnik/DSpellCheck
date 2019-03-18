@@ -130,12 +130,11 @@ INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
     case IDC_PORT:
       if (HIWORD(w_param) == EN_CHANGE) {
         wchar_t *end_ptr = nullptr;
-        wchar_t buf[default_buf_size];
-        Edit_GetText(m_port, buf, default_buf_size);
-        if (*buf == L'\0')
+        auto text = get_edit_text (m_port);
+        if (text.empty ())
           return FALSE;
 
-        int x = wcstol(buf, &end_ptr, 10);
+        int x = wcstol(text.c_str (), &end_ptr, 10);
         if (*end_ptr != L'\0')
           Edit_SetText(m_port, L"0");
         else if (x > 65535)

@@ -65,4 +65,5 @@ void ComboBox::clear() { ComboBox_ResetContent(m_hwnd); }
 int ComboBox::count() const {
   return ComboBox_GetCount(m_hwnd);
 }
+
 }

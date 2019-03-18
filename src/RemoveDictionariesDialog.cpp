@@ -92,9 +92,8 @@ void RemoveDictionariesDialog::remove_selected() {
   if (count > 0) {
     update_list();
     m_settings.settings_changed();
-    wchar_t buf[default_buf_size];
-    swprintf(buf, rc_str(IDS_PD_DICTIONARIES_REMOVED).c_str(), count);
-    MessageBox(_hParent, buf, L"Dictionaries were removed", MB_OK | MB_ICONINFORMATION);
+    auto text = wstring_printf (rc_str(IDS_PD_DICTIONARIES_REMOVED).c_str(), count);
+    MessageBox(_hParent, text.c_str(), L"Dictionaries were removed", MB_OK | MB_ICONINFORMATION);
   }
   if (need_single_reset) {
     auto s = m_settings.modify();

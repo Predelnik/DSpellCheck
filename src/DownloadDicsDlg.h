@@ -19,6 +19,7 @@
 #include "TaskWrapper.h"
 #include <optional>
 #include "FileListProvider.h"
+#include "utils/WinApiControls.h"
 
 enum class UrlType
 {
@@ -143,6 +144,7 @@ private:
   bool m_cancel_pressed;
   bool m_check_if_saving_is_needed;
   std::optional<TaskWrapper> m_ftp_operation_task;
+  WinApi::ComboBox m_address_cmb;
 
   bool m_failure;
   int m_downloaded_count;

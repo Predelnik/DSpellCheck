@@ -47,7 +47,7 @@ public:
     }
   }
 
-  void add_item(const wchar_t *text, int data) {
+  void add_item(const wchar_t *text, int data = -1) {
     ComboBox_AddString(m_hwnd, text);
     ComboBox_SetItemData(m_hwnd, ComboBox_GetCount(m_hwnd) - 1, data);
   }
