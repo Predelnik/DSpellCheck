@@ -83,6 +83,7 @@ namespace SciUtils
             case SCE_C_STRING:
             case SCE_C_VERBATIM:
             case SCE_C_TRIPLEVERBATIM:
+            case SCE_C_CHARACTER:
                 return s::string;
             case SCE_C_IDENTIFIER:
                 return s::identifier;
