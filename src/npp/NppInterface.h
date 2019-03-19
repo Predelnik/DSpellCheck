@@ -19,7 +19,7 @@
 #include <vector>
 
 struct SCNotification;
-struct NppData;
+class NppData;
 
 class NppInterface : public EditorInterface {
 public:

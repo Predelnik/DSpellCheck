@@ -41,11 +41,12 @@ public:
 private:
     void init_impl();
 private:
-    struct ptrs
+    class ptrs
     {
-    CComPtr<ISpellCheckerFactory> m_factory;
-    CComPtr<ISpellChecker> m_speller;
-    std::vector<CComPtr<ISpellChecker>> m_spellers;
+    public:
+      CComPtr<ISpellCheckerFactory> m_factory;
+      CComPtr<ISpellChecker> m_speller;
+      std::vector<CComPtr<ISpellChecker>> m_spellers;
     };
     std::unique_ptr<ptrs> m_ptrs;
     mutable ISpellChecker *m_last_used_speller = nullptr;

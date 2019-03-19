@@ -27,7 +27,8 @@
 
 const int nb_char = 64;
 
-struct NppData {
+class NppData {
+public:
     HWND npp_handle;
     HWND scintilla_main_handle;
     HWND scintilla_second_handle;

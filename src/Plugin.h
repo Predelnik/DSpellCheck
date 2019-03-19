@@ -21,7 +21,7 @@
 #include <memory>
 #include "utils/enum_array.h"
 
-struct MenuItem;
+class MenuItem;
 class AspellOptionsDialog;
 
 

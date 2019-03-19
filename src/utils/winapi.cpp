@@ -157,7 +157,8 @@ template <typename T> static void extract_function(T &target, HMODULE handle, co
   target = reinterpret_cast<T>(GetProcAddress(handle, proc_name));
 }
 
-struct locale_info_handles {
+class locale_info_handles {
+public:
   decltype (&::IsValidLocaleName) IsValidLocaleName;
   decltype (&::GetLocaleInfoEx) GetLocaleInfoEx;
 };

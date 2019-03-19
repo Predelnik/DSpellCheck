@@ -15,13 +15,7 @@
 #pragma once
 // Class that will do most of the job with spellchecker
 
-#include "CommonFunctions.h"
 #include "npp/EditorInterface.h"
-
-#include <string_view>
-
-struct AspellSpeller;
-struct AspellWordList;
 
 class EditorInterface;
 class Settings;

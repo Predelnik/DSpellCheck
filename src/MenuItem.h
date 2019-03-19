@@ -14,7 +14,8 @@
 
 #pragma once
 
-struct MenuItem {
+class MenuItem {
+public:
   struct Separator {};
 
   std::wstring text;

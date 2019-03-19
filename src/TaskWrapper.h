@@ -19,12 +19,13 @@
 #include <ppltasks.h>
 #include "utils/move_only.h"
 
-struct CallbackData {
+class CallbackData {
+public:
   std::weak_ptr<void> alive_status;
   std::function<void ()> callback;
 };
 
-struct TaskWrapper {
+class TaskWrapper {
 private:
     using AliveStatusType = std::shared_ptr<concurrency::cancellation_token_source>;
     using Self = TaskWrapper;

@@ -19,7 +19,7 @@
 #include "utils/TemporaryAcessor.h"
 #include "utils/enum_array.h"
 
-struct NppData;
+class NppData;
 class Settings;
 class AspellInterface;
 class HunspellInterface;

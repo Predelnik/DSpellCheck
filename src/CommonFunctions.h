@@ -20,7 +20,7 @@
 class MappedWstring;
 enum class LanguageNameStyle;
 
-struct NppData;
+class NppData;
 
 constexpr size_t max_utf8_char_length = 6;
 MappedWstring utf8_to_mapped_wstring(std::string_view str);

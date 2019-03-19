@@ -53,7 +53,8 @@ enum class FtpWebOperationErrorType {
   download_cancelled,
 };
 
-struct FtpWebOperationError {
+class FtpWebOperationError {
+public:
   FtpWebOperationErrorType type;
   int status_code;
 };
@@ -67,7 +68,8 @@ enum class FtpOperationErrorType {
 
 class SpellChecker;
 
-struct FtpOperationParams {
+class FtpOperationParams {
+public:
   std::wstring address;
   std::wstring path;
   bool use_proxy;

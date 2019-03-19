@@ -337,7 +337,8 @@ TextPosition SpellChecker::prev_token_begin(std::wstring_view target, TextPositi
 }
 
 namespace {
-struct WordData {
+class WordData {
+public:
   std::wstring_view token;
   WordForSpeller word_for_speller;
   TextPosition word_start;

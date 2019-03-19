@@ -43,7 +43,8 @@ private:
   std::unique_ptr<void, void (*)(iconv_t)> m_conv;
 };
 
-struct DicInfo {
+class DicInfo {
+public:
   std::unique_ptr<Hunspell> hunspell;
   IconvWrapperT converter;
   IconvWrapperT back_converter;
@@ -54,7 +55,8 @@ struct DicInfo {
   bool is_loaded() const { return !loading_task; }
 };
 
-struct AvailableLangInfo {
+class AvailableLangInfo {
+public:
   std::wstring name;
   int type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
   std::wstring full_path;

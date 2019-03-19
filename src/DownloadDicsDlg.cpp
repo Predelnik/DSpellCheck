@@ -429,7 +429,8 @@ public:
   }
 };
 
-struct LogObserver : public nsFTP::CFTPClient::CNotification {
+class LogObserver : public nsFTP::CFTPClient::CNotification {
+public:
   LogObserver(const wchar_t *log_filename) : m_log_filename(log_filename) {}
 
   void OnInternalError(const tstring &error_msg, const tstring &error_filename, DWORD line) override {
