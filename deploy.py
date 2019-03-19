@@ -20,6 +20,7 @@ def get_version_number (filename):
 	return '{}.{}.{}.{}'.format (HIWORD (ms), LOWORD (ms), HIWORD (ls), LOWORD (ls))
 
 version_str = re.compile (r'(\s*VALUE "FileVersion", ")([0-9.]*)(")')
+script_dir = os.path.dirname(os.path.realpath(__file__))
 
 def get_rc_version ():
 	with open('src/DSpellCheck.rc', encoding='utf-16-le') as f:
@@ -61,17 +62,31 @@ parser.add_argument('--new-major', action="store_true", dest="new_major", help="
 parser.add_argument('--update-pm', action="store_true", dest="update_pm", help="Update plugin manager (done automatically if new minor version is set)", default=False)
 parser.add_argument('-v', '--verbose', action="store_true", dest="verbose", help="Verbose output", default=False)
 options = parser.parse_args()
+
+def create_commit(repo_path, msg):
+	repo = Repository (repo_path)
+	index = repo.index
+	index.add_all ()
+	index.write ()
+	config = Config.get_global_config()
+	author = Signature(config['user.name'], config['user.email'])
+	commiter = author
+	tree = index.write_tree()
+	repo.create_commit ('refs/heads/master', author, commiter, msg, tree, [repo.head.get_object().hex])
+
 if options.new_minor:
 	ver = get_rc_version ().split ('.')
 	ver[-1]=str (int (ver[-1]) + 1)
 	replace_rc_version (ver)
 	print ('Version increased to {}'.format ('.'.join (ver)))
+	create_commit (script_dir, 'Update to {}'.format (ver))
 if options.new_major:
 	ver = get_rc_version ().split ('.')
 	ver[-2]=str (int (ver[-2]) + 1)
 	ver[-1]='0'
 	replace_rc_version (ver)
 	print ('Version increased to {}'.format ('.'.join (ver)))
+	create_commit (script_dir, 'Update to {}'.format (ver))
 x64_binary_path = ''
 x86_binary_path = ''
 x64_zip_path = ''
@@ -116,17 +131,6 @@ for arch in ['x64', 'x86']:
 if options.new_minor or options.update_pm:
 	ver = get_rc_version ()
 
-	def create_commit(repo_path):
-		repo = Repository (repo_path)
-		index = repo.index
-		index.add_all ()
-		index.write ()
-		config = Config.get_global_config()
-		author = Signature(config['user.name'], config['user.email'])
-		commiter = author
-		tree = index.write_tree()
-		repo.create_commit ('refs/heads/master', author, commiter, 'Update DSpellCheck to {}'.format (ver), tree, [repo.head.get_object().hex])
-
 	if 'NPP_PLUGINS_X64_PATH' in os.environ:
 		plugins_x64_path = os.environ['NPP_PLUGINS_X64_PATH']
 		print ('Applying change to npp-plugins-x64 source directory...')
@@ -142,7 +146,7 @@ if options.new_minor or options.update_pm:
 			bs_node.string = new_text
 			global plugins_xml_data
 			plugins_xml_data = plugins_xml_data.replace (prev_node_str, str (bs_node))
-	
+
 		ver = get_rc_version ()
 		replace_text (plugin_node.x64Version, ver)
 		replace_text (plugin_node.download, 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_x64.zip'.format (ver))
@@ -173,7 +177,7 @@ if options.new_minor or options.update_pm:
 			file.write (validate_text)
 
 		print ('Creating commit in npp-plugins-x64 repository...')
-		create_commit (plugins_x64_path)
+		create_commit (plugins_x64_path, 'Update DSpellCheck to {}'.format (ver))
 	else:
 		print ('%NPP_PLUGINS_X64_PATH% is not set up, nothing to update')
 	if  'NPP_PLUGIN_LIST_PATH' in os.environ:
@@ -195,7 +199,7 @@ if options.new_minor or options.update_pm:
 			json.dump (json_data, open (plugins_json_path, "w", encoding='utf-8'), indent='\t', ensure_ascii=False)
 
 		print ('Creating commit in nppPluginList repository...')
-		create_commit (plugin_list_path)
+		create_commit (plugin_list_path, 'Update DSpellCheck to {}'.format (ver))
 	else:
 		print ('%NPP_PLUGIN_LIST_PATH% is not set up, nothing to update')
 
