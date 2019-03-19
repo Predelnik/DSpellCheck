@@ -153,7 +153,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
       } else if (result <= menu_id::replace_all_start + m_last_suggestions.size()) {
         auto misspelled_text = m_editor.selected_text(view);
         auto &suggestion = m_last_suggestions[result - menu_id::replace_all_start - 1];
-        m_editor.begin_undo_action(view);
+        UNDO_BLOCK (m_editor, view);
         // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion
         m_editor.replace_selection(view, m_editor.to_editor_encoding(view, suggestion).c_str());
 
@@ -167,7 +167,6 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
         }
 
         SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), suggestion, is_proper_name);
-        m_editor.end_undo_action(view);
       }
     }
   } break;

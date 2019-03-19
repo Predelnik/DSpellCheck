@@ -310,7 +310,7 @@ void SpellChecker::erase_all_misspellings() {
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
     return;
 
-  m_editor.begin_undo_action(view);
+  UNDO_BLOCK(m_editor, view);
   auto chars_removed = 0l;
   for (auto &misspelling : m_misspellings) {
     auto start = mapped_str.to_original_index (static_cast<TextPosition> (misspelling.data() - mapped_str.str.data()));
@@ -318,7 +318,6 @@ void SpellChecker::erase_all_misspellings() {
     m_editor.delete_range(view, start - chars_removed, original_len);
     chars_removed += original_len;
   }
-  m_editor.end_undo_action(view);
 }
 
 bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, TextPosition word_start) const {

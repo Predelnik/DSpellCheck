@@ -91,8 +91,6 @@ public:
   virtual void indicator_clear_range(EditorViewType view, TextPosition from,
                                      TextPosition to) = 0;
   virtual void undo(EditorViewType view) = 0;
-  virtual void begin_undo_action (EditorViewType view) = 0;
-  virtual void end_undo_action (EditorViewType view) = 0;
   virtual void replace_text(EditorViewType view, TextPosition from, TextPosition to, std::string_view replacement) = 0;
 
   // const
@@ -159,4 +157,23 @@ public:
   std::string to_editor_encoding (EditorViewType view, std::wstring_view str) const;
 
   virtual ~EditorInterface() = default;
+
+private:
+  virtual void begin_undo_action (EditorViewType view) = 0; // use UNDO_BLOCK instead
+  virtual void end_undo_action (EditorViewType view) = 0;
+
+  friend class undo_block;
 };
+
+class undo_block
+{
+public:
+  undo_block (EditorInterface &editor, EditorViewType view) : m_editor(editor), m_view(view) { m_editor.begin_undo_action(m_view); }
+  ~undo_block () { m_editor.end_undo_action(m_view); }
+
+private:
+  EditorInterface &m_editor;
+  EditorViewType m_view;
+};
+
+#define UNDO_BLOCK(...) undo_block anonymous_undo_block_ ## __COUNTER__ {__VA_ARGS__}
