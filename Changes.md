@@ -1,3 +1,8 @@
+v1.4.11
+* Plugin should no longer utilize cpu when Notepad++ is not active.
+* Do not load dictionary if spell-checking is turned off.
+* Correctly spell-check single quoted string literals in javascript.
+
 v1.4.10
 * Fix string literals in some languages not being checked properly. (#166)
 * Add the action to replace word with the first suggestion. (#165)
