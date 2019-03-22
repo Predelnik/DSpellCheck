@@ -185,7 +185,7 @@ std::wstring get_locale_info(const wchar_t *locale_name, LCTYPE type) {
     return {};
 
   std::vector<wchar_t> buf(len);
-  GetLocaleInfoEx(locale_name, type, buf.data(), len);
+  handles.GetLocaleInfoEx(locale_name, type, buf.data(), len);
   std::wstring ret = buf.data();
   // Locales which give unknown locale etc. Somehow still pass IsValidLocaleName. Go figure.
   if (starts_with(ret, L"Unknown Locale"))
