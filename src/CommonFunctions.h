@@ -34,7 +34,7 @@ std::wstring utf8_to_wstring(const char* source);
 std::string utf8_to_string(const char* source);
 void write_unicode_bom (FILE *fp);
 
-std::wstring apply_alias(std::wstring_view str, LanguageNameStyle style);
+std::pair<std::wstring, bool> apply_alias(std::wstring_view str, LanguageNameStyle style);
 
 std::wstring parse_string(const wchar_t* source);
 

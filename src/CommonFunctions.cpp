@@ -359,9 +359,9 @@ static const std::unordered_map<std::wstring_view, std::wstring> alias_map = {{L
                                                                               {L"XH-ZA", L"isiXhosa"},
                                                                               {L"ZU-ZA", L"isiZulu"}};
 // Language Aliases
-std::wstring apply_alias(std::wstring_view str, LanguageNameStyle style) {
+std::pair<std::wstring, bool> apply_alias(std::wstring_view str, LanguageNameStyle style) {
   if (style == LanguageNameStyle::original)
-    return std::wstring(str);
+    return {std::wstring(str), true};
 
   std::wstring str_normalized{str};
   std::replace(str_normalized.begin(), str_normalized.end(), L'_', L'-');
@@ -380,14 +380,14 @@ std::wstring apply_alias(std::wstring_view str, LanguageNameStyle style) {
     return LOCALE_SENGLISHDISPLAYNAME;
   }());
   if (!alias.empty())
-    return alias;
+    return {alias, true};
 
   to_upper_inplace(str_normalized);
   auto it = alias_map.find(str_normalized);
   if (it != alias_map.end())
-    return it->second;
+    return {it->second, true};
 
-  return std::wstring(str);
+  return {std::wstring(str), false};
 }
 
 static bool try_to_create_dir(const wchar_t *path, bool silent, HWND npp_window) {

@@ -25,7 +25,7 @@ public:
                bool for_all_users_arg = false) {
     orig_name = name;
     for_all_users = for_all_users_arg;
-    alias_name = apply_alias(name, language_name_style);
+    std::tie(alias_name, std::ignore) = apply_alias(name, language_name_style);
   }
 };
 
