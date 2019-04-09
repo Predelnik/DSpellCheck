@@ -127,10 +127,10 @@ void SpellerContainer::apply_settings_to_active_speller() {
 }
 
 void SpellerContainer::init_speller() {
+  apply_settings_to_active_speller();
+
   if (!m_settings.auto_check_text)
     return;
-
-  apply_settings_to_active_speller();
 
   if (auto language = m_settings.get_active_language(); language != multiple_language_alias) {
     active_speller().set_language(language.c_str());
