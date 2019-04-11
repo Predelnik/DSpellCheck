@@ -28,6 +28,7 @@
 #include <iostream>
 #include <string>
 #include <variant>
+#include "utils/WinApi.h"
 
 constexpr auto dic_ext = ".dic"sv, aff_ext = ".aff"sv;
 constexpr auto dic_ext_w = L".dic"sv;
@@ -103,29 +104,55 @@ void GitHubFileListProvider::update_file_list() {
   });
 }
 
+FileListProviderDownloadErrorType GitHubFileListProvider::download_dictionary_impl(const Concurrency::cancellation_token& token, const std::wstring &aff_filepath,
+                                                                                   const std::wstring &target_path,
+                                                                                   std::shared_ptr<ProgressData> progress_data, std::vector<std::wstring> &downloaded_file_names)
+{
+  auto do_download = [&](const std::wstring &path) {
+    WinInet::GlobalHandle inet = WinInet::CreateGlobalHandle().agent(static_plugin_name);
+    auto url_handle = WinInet::WinInetOpenUrl(inet, path.c_str());
+    auto filename = path.substr(path.rfind(L'/'), std::wstring::npos);
+    auto local_file_path = target_path + filename;
+    downloaded_file_names.push_back (local_file_path);
+    std::ofstream fs(local_file_path, std::ios_base::out | std::ios_base::binary);
+    if (!fs.is_open())
+      return FileListProviderDownloadErrorType::file_is_not_writeable;
+    if (!WinInet::download_file(url_handle, fs, [&](int bytes_read, int total_bytes) {
+      if (token.is_canceled())
+        return false;
+
+      auto percent = bytes_read * 100 / total_bytes;
+      progress_data->set(percent, wstring_printf(rc_str(IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str(), bytes_read, total_bytes, percent));
+      return true;
+    }))
+      return FileListProviderDownloadErrorType::canceled;
+
+    return FileListProviderDownloadErrorType::none;
+  };
+  if (auto ret = do_download(aff_filepath); ret != FileListProviderDownloadErrorType::none)
+    return ret;
+
+  if (auto ret = do_download(aff_filepath.substr(0, aff_filepath.length() - aff_ext.length()) + dic_ext_w.data());
+      ret != FileListProviderDownloadErrorType::none)
+    return ret;
+
+  return FileListProviderDownloadErrorType::none;
+}
+
 void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepath, const std::wstring &target_path,
                                                  std::shared_ptr<ProgressData> progress_data) {
   m_download_file_task.do_deferred(
       [=](Concurrency::cancellation_token token) {
-        auto do_download = [&](const std::wstring &path) {
-          WinInet::GlobalHandle inet = WinInet::CreateGlobalHandle().agent(static_plugin_name);
-          auto url_handle = WinInet::WinInetOpenUrl(inet, path.c_str());
-          auto filename = path.substr(path.rfind(L'/'), std::wstring::npos);
-          std::ofstream fs(target_path + filename, std::ios_base::out | std::ios_base::binary);
-          WinInet::download_file(url_handle, fs, [&](int bytes_read, int total_bytes) {
-            if (token.is_canceled())
-              return false;
-
-            auto percent = bytes_read * 100 / total_bytes;
-            progress_data->set(percent, wstring_printf(rc_str(IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str(), bytes_read, total_bytes, percent));
-            return true;
-          });
-        };
-        do_download(aff_filepath);
-        do_download(aff_filepath.substr(0, aff_filepath.length() - aff_ext.length()) + dic_ext_w.data());
-        return true;
+        std::vector<std::wstring> downloaded_filenames;
+        auto ret = download_dictionary_impl (token, aff_filepath, target_path, progress_data, downloaded_filenames);
+        if (ret != FileListProviderDownloadErrorType::none)
+          {
+            for (auto &file_name : downloaded_filenames)
+              WinApi::delete_file(file_name.c_str());
+          }
+        return ret;
       },
-      [this](bool) { file_downloaded(); });
+      [this](FileListProviderDownloadErrorType error) { file_downloaded(error); });
 }
 
 void GitHubFileListProvider::cancel_download() { m_download_file_task.cancel(); }

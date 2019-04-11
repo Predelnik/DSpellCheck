@@ -28,6 +28,10 @@ public:
   void cancel_download();
 
 private:
+  FileListProviderDownloadErrorType download_dictionary_impl(const Concurrency::cancellation_token& token, const std::wstring &aff_filepath,
+                                                             const std::wstring &target_path, std::shared_ptr<ProgressData> progress_data, std::vector<std::wstring> &downloaded_file_names);
+
+private:
   std::wstring m_root_path;
   TaskWrapper m_get_file_list_task;
   TaskWrapper m_download_file_task;

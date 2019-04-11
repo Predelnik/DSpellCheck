@@ -101,7 +101,7 @@ LangList *get_lang_list ();
 RemoveDictionariesDialog *get_remove_dics ();
 AspellOptionsDialog *get_aspell_options_dlg ();
 ConnectionSettingsDialog *get_select_proxy ();
-ProgressDlg *get_progress ();
+ProgressDlg *get_progress_dlg ();
 FuncItem *get_func_item ();
 std::wstring get_default_hunspell_path ();
 void set_context_menu_id_start (int id);

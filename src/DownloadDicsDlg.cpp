@@ -84,9 +84,12 @@ DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &
     replace_all_inplace(wstr, L"\r\n", L" ");
     update_status(wstring_printf(rc_str(IDS_STATUS_NETWORK_ERROR_PS).c_str(), wstr.c_str()).c_str(), COLOR_FAIL);
   });
-  m_github_provider->file_downloaded.connect([this] {
+  m_github_provider->file_downloaded.connect([this](FileListProviderDownloadErrorType error){
     m_message += prev(m_cur)->title + L'\n';
-    ++m_downloaded_count;
+    if (error == FileListProviderDownloadErrorType::none)
+      ++m_downloaded_count;
+    else if (error == FileListProviderDownloadErrorType::canceled)
+      m_cur = m_current_list.end ();
     start_next_download();
   });
   m_ftp_operation_task = TaskWrapper{parent};
@@ -125,9 +128,9 @@ bool DownloadDicsDlg::prepare_downloading() {
     return false;
   }
   m_cancel_pressed = false;
-  ProgressDlg *p = get_progress();
+  ProgressDlg *p = get_progress_dlg();
   p->get_progress_data()->set(0, L"");
-  get_progress()->update();
+  get_progress_dlg()->update();
   p->set_top_message(L"");
   if (!check_for_directory_existence(m_settings.download_install_dictionaries_for_all_users ? m_settings.hunspell_system_path : m_settings.hunspell_user_path,
                                      false,
@@ -148,7 +151,7 @@ bool DownloadDicsDlg::prepare_downloading() {
 }
 
 void DownloadDicsDlg::finalize_downloading() {
-  get_progress()->display(false);
+  get_progress_dlg()->display(false);
   if (m_failure) {
     MessageBox(_hParent, rc_str(IDS_CANT_WRITE_DICT_FILES).c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
   } else if (m_downloaded_count > 0) {
@@ -204,7 +207,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         continue;
 
       auto msg = wstring_printf (rc_str(IDS_EXTRACTING_PS).c_str(), dic_file_name.c_str());
-      get_progress()->set_top_message(msg.c_str ());
+      get_progress_dlg()->set_top_message(msg.c_str ());
       DWORD bytes_total = 0;
       int bytes_copied;
       std::vector<char> file_copy_buf(buf_size_for_copy);
@@ -213,7 +216,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         bytes_total += bytes_copied;
         msg = wstring_printf(rc_str(IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str(), bytes_total, f_info.uncompressed_size,
                              bytes_total * 100 / f_info.uncompressed_size);
-        get_progress()->get_progress_data()->set(bytes_total * 100 / f_info.uncompressed_size, msg.c_str ());
+        get_progress_dlg()->get_progress_data()->set(bytes_total * 100 / f_info.uncompressed_size, msg.c_str ());
       }
       unzCloseCurrentFile(fp);
       _close(local_dic_file_handle);
@@ -310,8 +313,15 @@ void DownloadDicsDlg::start_next_download() {
   if (m_cur == m_to_download.end() || m_cancel_pressed)
     return finalize_downloading();
 
-  get_progress()->set_top_message(wstring_printf(rc_str(IDS_DOWNLOADING_PS).c_str(), m_cur->title.c_str()).c_str());
-  download_file();
+  get_progress_dlg()->set_top_message(wstring_printf(rc_str(IDS_DOWNLOADING_PS).c_str(), m_cur->title.c_str()).c_str());
+  if (!download_file())
+    {
+      ++m_cur;
+      start_next_download();
+      return;
+    }
+  else
+    get_progress_dlg()->do_dialog();
   ++m_cur;
 }
 
@@ -330,37 +340,38 @@ UrlType DownloadDicsDlg::selected_url_type() {
   return UrlType::unknown;
 }
 
-void DownloadDicsDlg::download_github_file(const std::wstring &title, const std::wstring &path, std::shared_ptr<ProgressData> progress_data) {
+bool DownloadDicsDlg::download_github_file(const std::wstring &title, const std::wstring &path, std::shared_ptr<ProgressData> progress_data) {
   auto local_path = std::wstring(m_settings.get_dictionary_download_path());
   auto local_name = local_path + L"\\" + path.substr(path.rfind(L'/'));
   if (PathFileExists(local_name.c_str())) {
     if (ask_replacement_message(title.c_str()) == IDNO) {
       --m_supposed_downloaded_count;
-      return;
+      return false;
     }
     m_speller_container.get_hunspell_speller().dictionary_removed(local_name);
   }
 
   m_github_provider->download_dictionary(path, local_path, progress_data);
+  return true;
 }
 
-void DownloadDicsDlg::download_file() {
+bool DownloadDicsDlg::download_file() {
   const auto ftp_path = *current_address() + m_cur->path;
   const auto ftp_location = get_temp_path() + L"/" + m_cur->path;
 
   switch (selected_url_type()) {
   case UrlType::ftp:
     download_file_async(ftp_path, ftp_location);
-    break;
+    return true;
   case UrlType::ftp_web_proxy:
     download_file_async_web_proxy(ftp_path, ftp_location);
-    break;
+    return true;
   case UrlType::github:
-    download_github_file(m_cur->title, m_cur->path, get_progress()->get_progress_data());
-    break;
+    return download_github_file(m_cur->title, m_cur->path, get_progress_dlg()->get_progress_data());
   case UrlType::unknown:
     break;
   }
+  return false;
 }
 
 void DownloadDicsDlg::download_selected() {
@@ -689,7 +700,7 @@ std::optional<FtpWebOperationError> do_download_file_web_proxy(FtpOperationParam
   if (file_handle == NULL)
     return FtpWebOperationError{FtpWebOperationErrorType::file_is_not_writeable, -1};
 
-  get_progress()->set_marquee(true);
+  get_progress_dlg()->set_marquee(true);
   while (true) {
     if (token.is_canceled()) {
       _close(file_handle);
@@ -854,7 +865,7 @@ void DownloadDicsDlg::process_file_list_error(const FtpWebOperationError &error)
   case FtpWebOperationErrorType::file_is_not_writeable:
     return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str(), COLOR_FAIL);
   case FtpWebOperationErrorType::download_cancelled:
-    return update_status(rc_str(IDS_STATUS_FILE_CANNOT_BE_WRITTEN).c_str(), COLOR_WARN);
+    break;
   }
 }
 
@@ -920,13 +931,13 @@ void DownloadDicsDlg::update_file_list_async(const std::wstring &full_path) {
 }
 
 void DownloadDicsDlg::download_file_async(const std::wstring &full_path, const std::wstring &target_location) {
-  m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress()->get_progress_data()](
+  m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress_dlg()->get_progress_data()](
                                         auto token) { return do_download_file(params, target_location, progressData, token); },
                                     [this](std::optional<FtpOperationErrorType>) { on_zip_file_downloaded(); });
 }
 
 void DownloadDicsDlg::download_file_async_web_proxy(const std::wstring &full_path, const std::wstring &target_location) {
-  m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress()->get_progress_data()](
+  m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress_dlg()->get_progress_data()](
                                         auto token) { return do_download_file_web_proxy(params, target_location, *progressData, token); },
                                     [this](std::optional<FtpWebOperationError>) { on_zip_file_downloaded(); });
 }
@@ -995,7 +1006,6 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_par
     case IDOK:
       if (HIWORD(w_param) == BN_CLICKED) {
         download_selected();
-        get_progress()->do_dialog();
         display(false);
       }
       break;

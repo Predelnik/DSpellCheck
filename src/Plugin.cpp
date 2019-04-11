@@ -134,7 +134,7 @@ AspellOptionsDialog *get_aspell_options_dlg() { return aspell_options_dlg.get();
 
 ConnectionSettingsDialog *get_select_proxy() { return select_proxy_dlg.get(); }
 
-ProgressDlg *get_progress() { return progress_dlg.get(); }
+ProgressDlg *get_progress_dlg() { return progress_dlg.get(); }
 
 DownloadDicsDlg *get_download_dics() { return download_dics_dlg.get(); }
 
