@@ -19,6 +19,7 @@
 class Settings;
 class SpellChecker;
 class SpellerContainer;
+class LanguageInfo;
 
 class RemoveDictionariesDialog : public StaticDialog {
 public:
@@ -42,4 +43,5 @@ protected:
   HWND m_remove_system = nullptr;
   const Settings &m_settings;
   SpellerContainer &m_speller_container;
+  std::vector<LanguageInfo> m_cur_lang_list;
 };

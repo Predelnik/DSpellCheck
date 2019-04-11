@@ -48,10 +48,20 @@ void RemoveDictionariesDialog::update_list() {
   if (m_lang_list == nullptr)
     return;
 
+  std::set<std::wstring> currently_checked;
+  for (int i = 0; i < ListBox_GetCount(m_lang_list); ++i)
+    if (CheckedListBox_GetCheckState(m_lang_list, i) == BST_CHECKED)
+      currently_checked.insert (m_cur_lang_list[i].orig_name);
+
+  m_cur_lang_list = m_speller_container.get_available_languages();
   ListBox_ResetContent(m_lang_list);
-  for (auto &lang : m_speller_container.get_available_languages())
+  for (auto &lang : m_cur_lang_list)
     ListBox_AddString(m_lang_list,
                       (std::wstring(lang.alias_name) + (lang.for_all_users ? L" [!For All Users]" : L"")).c_str());
+
+  for (int i = 0; i < ListBox_GetCount(m_lang_list); ++i)
+    if (currently_checked.count (m_cur_lang_list[i].orig_name) > 0)
+      CheckedListBox_SetCheckState(m_lang_list, i, BST_CHECKED);
 }
 
 HWND RemoveDictionariesDialog::get_list_box() { return m_lang_list; }
