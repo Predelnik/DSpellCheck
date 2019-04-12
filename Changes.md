@@ -1,3 +1,8 @@
+v1.4.12
+* Restore Windows XP support, broken in previous 2 versions. (#170)
+* Restore showing of Hunspell dictionary list if spell-checking is turned off. (#172)
+* Several fixes for download/remove dictionary dialogs.
+
 v1.4.11
 * Plugin should no longer utilize cpu when Notepad++ is not active.
 * Do not load dictionary if spell-checking is turned off.
