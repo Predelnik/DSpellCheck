@@ -222,6 +222,7 @@ namespace SciUtils
             case SCE_LUA_COMMENTDOC:
                 return s::comment;
             case SCE_LUA_STRING:
+            case SCE_LUA_CHARACTER:
             case SCE_LUA_LITERALSTRING:
                 return s::string;
             case SCE_LUA_IDENTIFIER:
