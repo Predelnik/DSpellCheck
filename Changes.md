@@ -1,3 +1,8 @@
+v1.4.13
+* Correctly spell-check single quoted string literals in lua. (#175)
+* Make plugin compatible with Notepad++ version 7.7 (#179)
+* Warning: Starting with version 1.4.13 plugin is no longer compatible with N++ versions older than 7.7.
+
 v1.4.12
 * Restore Windows XP support, broken in previous 2 versions. (#170)
 * Restore showing of Hunspell dictionary list if spell-checking is turned off. (#172)
