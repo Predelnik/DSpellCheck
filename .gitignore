@@ -44,3 +44,4 @@ bin*/
 out/
 *.TMP
 .vs/
+CMakeSettings.json
