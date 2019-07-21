@@ -206,7 +206,9 @@ if options.new_minor or options.update_pm:
 			plugin_node["version"] = ver
 			plugin_node["id"] = hashlib.sha256(open(t[1], 'rb').read()).hexdigest()
 			plugin_node["repository"] = 'https://github.com/Predelnik/DSpellCheck/releases/download/v{}/DSpellCheck_{}.zip'.format (ver, t[2])
-			json.dump (json_data, open (plugins_json_path, "w", encoding='utf-8'), indent='\t', ensure_ascii=False)
+			with open (plugins_json_path, "w", encoding='utf-8') as fp:
+				json.dump (json_data, fp, indent='\t', ensure_ascii=False)
+				fp.write ('\n')
 
 		print ('Creating commit in nppPluginList repository...')
 		create_commit (Repository(plugin_list_path), 'Update DSpellCheck to {}'.format (ver))
