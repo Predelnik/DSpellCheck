@@ -125,6 +125,7 @@ namespace SciUtils
             case SCE_HPA_STRING:
             case SCE_HPHP_HSTRING:
             case SCE_HPHP_SIMPLESTRING:
+            case SCE_H_CDATA:
                 return s::string;
             case SCE_HP_IDENTIFIER:
             case SCE_HPA_IDENTIFIER:
