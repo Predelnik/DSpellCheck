@@ -425,9 +425,6 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
 }
 
 void HunspellInterface::ignore_all(const wchar_t *word) {
-  if (m_last_selected_speller == nullptr || !m_last_selected_speller->is_loaded())
-    return;
-
   m_ignored.insert(word);
 }
 

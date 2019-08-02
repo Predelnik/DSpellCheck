@@ -25,7 +25,7 @@ class RemoveDictionariesDialog : public StaticDialog {
 public:
   RemoveDictionariesDialog(HINSTANCE h_inst, HWND parent,
                            const Settings &settings,
-                           SpellerContainer &speller_container);
+                           const SpellerContainer &speller_container);
   void do_dialog();
   void update_list();
   void remove_selected();
@@ -42,6 +42,6 @@ protected:
   HWND m_remove_user_dics = nullptr;
   HWND m_remove_system = nullptr;
   const Settings &m_settings;
-  SpellerContainer &m_speller_container;
+  const SpellerContainer &m_speller_container;
   std::vector<LanguageInfo> m_cur_lang_list;
 };

@@ -125,19 +125,15 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
 
     if (result != 0) {
       if (result == menu_id::ignore_all) {
-        SpellCheckerHelpers::apply_word_conversions(m_settings,
-                                                    m_selected_word.str);
         auto mut = m_speller_container.modify();
-        mut->active_speller().ignore_all(m_selected_word.str.c_str());
+        mut->ignore_word(m_selected_word.str);
         m_word_under_cursor_length =
             static_cast<TextPosition>(m_selected_word.str.length());
         m_editor.set_cursor_pos(view, m_word_under_cursor_pos +
                                           m_word_under_cursor_length);
       } else if (result == menu_id::add_to_dictionary) {
-        SpellCheckerHelpers::apply_word_conversions(m_settings,
-                                                    m_selected_word.str);
         auto mut = m_speller_container.modify();
-        mut->active_speller().add_to_dictionary(m_selected_word.str.c_str());
+        mut->add_to_dictionary(m_selected_word.str);
         m_word_under_cursor_length =
             static_cast<TextPosition>(m_selected_word.str.length());
         m_editor.set_cursor_pos(view, m_word_under_cursor_pos +

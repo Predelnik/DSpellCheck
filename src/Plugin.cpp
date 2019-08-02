@@ -66,7 +66,7 @@ wchar_t ini_file_path[MAX_PATH];
 DWORD custom_gui_message_ids[static_cast<int>(CustomGuiMessage::max)] = {0};
 bool do_close_tag = false;
 std::unique_ptr<SpellChecker> spell_checker;
-std::unique_ptr<SpellerContainer> speller_container;
+std::unique_ptr<const SpellerContainer> speller_container;
 std::unique_ptr<ContextMenuHandler> context_menu_handler;
 std::unique_ptr<SettingsDlg> settings_dlg;
 std::unique_ptr<SuggestionsButton> suggestions_button;
@@ -148,7 +148,10 @@ void create_hooks() {
 }
 
 void plugin_clean_up() {
-  speller_container->cleanup();
+  {
+    auto mut = speller_container->modify();
+    mut->cleanup();
+  }
   UnhookWindowsHookEx(h_mouse_hook);
   WinApi::delete_file(get_debug_log_path().c_str());
 }
@@ -201,6 +204,19 @@ void replace_with_1st_suggestion ()
     auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str ());
     if (!suggestions.empty())
       npp->replace_text(view, pos, pos + length, npp->to_editor_encoding(view, suggestions.front ()));
+  }
+}
+
+void ignore_for_current_session ()
+{
+  TextPosition pos, length;
+  if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
+    auto view = npp->active_view();
+    auto wstr = npp->get_mapped_wstring_range(view, pos, pos + length);
+    {
+      auto mut = speller_container->modify();
+      mut->ignore_word(std::move(wstr.str));
+    }
   }
 }
 
@@ -347,6 +363,10 @@ void command_menu_init() {
   action_index[Action::replace_with_1st_suggestion] =
     set_next_command(rc_str (IDS_REPLACE_WITH_1ST_SUGGESTION).c_str (),
       replace_with_1st_suggestion);
+
+  action_index[Action::ignore_for_current_session] =
+    set_next_command(L"<Placeholder>",
+      ignore_for_current_session);
   // add further set_next_command at the bottom to avoid breaking configured hotkeys
 }
 
@@ -523,7 +543,7 @@ std::wstring get_debug_log_path() {
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
-  auto list = {Action::copy_all_misspellings, Action::erase_all_misspellings, Action::replace_with_1st_suggestion,
+  auto list = {Action::copy_all_misspellings, Action::erase_all_misspellings, Action::replace_with_1st_suggestion, Action::ignore_for_current_session,
                Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries, Action::toggle_debug_logging,
                Action::open_debug_log};
   for (auto action : list) {

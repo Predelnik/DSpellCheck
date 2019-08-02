@@ -53,15 +53,17 @@ public:
 
   const NativeSpellerInterface &native_speller() const;
   const SpellerInterface &active_speller() const;
-  SpellerInterface &active_speller();
   AspellStatus get_aspell_status() const;
   std::wstring get_aspell_default_personal_dictionary_path() const;
   void cleanup();
+  void ignore_word(std::wstring wstr);
+  void add_to_dictionary(std::wstring wstr);;
 
 public:
   mutable lsignal::signal<void()> speller_status_changed;
 
 private:
+  SpellerInterface& active_speller();
   void create_spellers(const NppData &npp_data);
   void fill_speller_ptr_array();
   void init_spellers(const NppData &npp_data);

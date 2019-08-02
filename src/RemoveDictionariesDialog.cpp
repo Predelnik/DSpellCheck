@@ -26,7 +26,7 @@
 #include "resource.h"
 #include "utils/winapi.h"
 
-RemoveDictionariesDialog::RemoveDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, SpellerContainer &speller_container)
+RemoveDictionariesDialog::RemoveDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
     : m_settings(settings), m_speller_container(speller_container) {
   m_settings.settings_changed.connect([this] { update_list(); });
   m_speller_container.speller_status_changed.connect([this] { update_list(); });

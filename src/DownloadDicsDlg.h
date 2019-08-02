@@ -88,7 +88,7 @@ class DownloadDicsDlg : public StaticDialog {
 
 public:
   ~DownloadDicsDlg() override;
-  DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &settings, SpellerContainer &speller_container);
+  DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container);
   void do_dialog();
   // Maybe hunspell interface should be passed here
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
@@ -158,5 +158,5 @@ private:
   const Settings &m_settings;
   bool m_address_is_set = false;
   std::unique_ptr<GitHubFileListProvider> m_github_provider;
-  SpellerContainer &m_speller_container;
+  const SpellerContainer &m_speller_container;
 };

@@ -38,6 +38,7 @@ enum class Action
   toggle_debug_logging,
   open_debug_log,
   replace_with_1st_suggestion,
+  ignore_for_current_session,
 
   COUNT,
 };

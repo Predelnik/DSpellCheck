@@ -21,6 +21,7 @@
 #include "Settings.h"
 #include "utils/enum_range.h"
 #include "utils/string_utils.h"
+#include "SpellCheckerHelpers.h"
 
 void SpellerContainer::create_spellers(const NppData &npp_data) {
   m_aspell_speller = std::make_unique<AspellInterface>(npp_data.npp_handle, m_settings);
@@ -81,6 +82,16 @@ void SpellerContainer::init_spellers(const NppData &npp_data) {
 void SpellerContainer::on_settings_changed() {
   init_speller();
   speller_status_changed();
+}
+
+void SpellerContainer::ignore_word(std::wstring wstr) {
+  SpellCheckerHelpers::apply_word_conversions(m_settings, wstr);
+  active_speller().ignore_all(wstr.c_str());
+}
+
+void SpellerContainer::add_to_dictionary(std::wstring wstr) {
+  SpellCheckerHelpers::apply_word_conversions(m_settings, wstr);
+  active_speller().add_to_dictionary(wstr.c_str());
 }
 
 SpellerContainer::SpellerContainer(const Settings *settings, const NppData *npp_data) : m_settings(*settings) {

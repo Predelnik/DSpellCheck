@@ -76,7 +76,7 @@ DownloadDicsDlg::~DownloadDicsDlg() {
     DestroyIcon(m_refresh_icon);
 }
 
-DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &settings, SpellerContainer &speller_container)
+DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
     : m_settings(settings), m_github_provider(std::make_unique<GitHubFileListProvider>(parent, settings)), m_speller_container(speller_container) {
   m_github_provider->file_list_received.connect([this](const std::vector<FileDescription> &list) { on_new_file_list(list); });
   m_github_provider->error_happened.connect([this](const std::string &description) {
