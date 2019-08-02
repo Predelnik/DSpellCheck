@@ -23,7 +23,7 @@
 #include "resource.h"
 #include "utils/winapi.h"
 
-ConnectionSettingsDialog::ConnectionSettingsDialog(Settings &settings,
+ConnectionSettingsDialog::ConnectionSettingsDialog(const Settings &settings,
                                      DownloadDicsDlg &download_dics_dlg)
     : m_download_dics_dlg(download_dics_dlg), m_settings(settings) {}
 

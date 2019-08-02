@@ -77,7 +77,7 @@ std::unique_ptr<ConnectionSettingsDialog> select_proxy_dlg;
 std::unique_ptr<ProgressDlg> progress_dlg;
 std::unique_ptr<DownloadDicsDlg> download_dics_dlg;
 std::unique_ptr<AboutDlg> about_dlg;
-std::unique_ptr<Settings> settings;
+std::unique_ptr<const Settings> settings;
 int context_menu_id_start;
 int langs_menu_id_start = 0;
 bool use_allocated_ids;
@@ -242,9 +242,8 @@ DWORD get_custom_gui_message_id(CustomGuiMessage message_id) {
 }
 
 void switch_auto_check_text() {
-  settings->auto_check_text = !settings->auto_check_text;
-  settings->settings_changed();
-  settings->save();
+  auto mut = settings->modify();
+  mut->auto_check_text = !settings->auto_check_text;
 }
 
 void switch_debug_logging() {
@@ -365,7 +364,7 @@ void command_menu_init() {
       replace_with_1st_suggestion);
 
   action_index[Action::ignore_for_current_session] =
-    set_next_command(L"<Placeholder>",
+    set_next_command(rc_str(IDS_IGNORE_WORD_AT_CURSOR).c_str(),
       ignore_for_current_session);
   // add further set_next_command at the bottom to avoid breaking configured hotkeys
 }
@@ -499,7 +498,10 @@ void init_classes() {
   aspell_options_dlg = std::make_unique<AspellOptionsDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
     *settings, *speller_container);
 
-  settings->load();
+  {
+    auto mut = settings->modify();
+    mut->load();
+  }
   resources_inited = true;
 }
 
