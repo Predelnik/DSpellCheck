@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.7)
 project (DSpellCheck)
 include (CMake/ucm.cmake)
+include (CMake/PVS-Studio.cmake)
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:threadSafeInit-")
@@ -112,6 +113,11 @@ endif ()
 file (GLOB_RECURSE test_source_files test/*.cpp test/*.h)
 add_executable (DSpellCheckTest ${test_source_files})
 target_link_libraries (DSpellCheckTest DSpellCheckStatic catch)
+pvs_studio_add_target(TARGET DSpellCheck.analyze ALL
+                      OUTPUT FORMAT errorfile
+                      ANALYZE DSpellCheck
+                      LOG DSpellCheck.psv-err)
+
 
 if (MSVC)
 	target_compile_options (DSpellCheckStatic PRIVATE "/YuPrecompiledHeader.h" "/FIPrecompiledHeader.h")
