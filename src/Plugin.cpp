@@ -328,8 +328,10 @@ void command_menu_init() {
   action_index[Action::toggle_auto_spell_check] =
       set_next_command(rc_str(IDS_AUTO_SPELL_CHECK).c_str(),
                        switch_auto_check_text);
-  set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake);
-  set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake);
+  action_index[Action::find_next_error] =
+    set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake);
+  action_index[Action::find_prev_error] =
+    set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake);
 
   action_index[Action::quick_language_change] =
       set_next_command(rc_str(IDS_CHANGE_CURRENT_LANG).c_str(),
@@ -353,8 +355,10 @@ void command_menu_init() {
                        switch_debug_logging);
   action_index[Action::open_debug_log] = set_next_command(rc_str(IDS_OPEN_DEBUG_LOG).c_str(),
                                                           open_debug_log);
-  set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual);
-  set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg);
+  action_index[Action::online_manual] =
+    set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual);
+  action_index[Action::about] =
+    set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg);
   action_index[Action::show_spell_check_menu_at_cursor] =
     set_next_command(rc_str(IDS_SHOW_SPELL_CHECK_MENU_AT_CURSOR).c_str (),
       show_spell_check_menu_at_cursor);

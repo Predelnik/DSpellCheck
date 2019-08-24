@@ -39,10 +39,14 @@ enum class Action
   open_debug_log,
   replace_with_1st_suggestion,
   ignore_for_current_session,
+  online_manual,
+  about,
+  find_next_error,
+  find_prev_error,
 
   COUNT,
 };
-const int nb_func = static_cast<int> (Action::COUNT) + 4;
+const int nb_func = static_cast<int> (Action::COUNT);
 
 extern enum_array<Action, int> action_index;
 
