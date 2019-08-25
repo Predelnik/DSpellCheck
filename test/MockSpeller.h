@@ -41,7 +41,7 @@ public:
   void set_inner_dict(const Dict &dict);
   void set_suggestions_dict(const SuggestionsDict &dict);
 
-  bool check_word(WordForSpeller word) const override;
+  bool check_word(const WordForSpeller& word) const override;
   void set_working(bool working);
 
 private:

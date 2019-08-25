@@ -81,7 +81,7 @@ void ProgressDlg::set_marquee(bool animated) {
   if (m_marquee == animated)
     return;
   m_marquee = animated;
-  DWORD dw_style = ::GetWindowLongPtr(m_h_progress_bar, GWL_STYLE);
+  auto dw_style = ::GetWindowLongPtr(m_h_progress_bar, GWL_STYLE);
   if (animated)
     dw_style = dw_style | PBS_MARQUEE;
   else
@@ -92,7 +92,7 @@ void ProgressDlg::set_marquee(bool animated) {
 }
 
 void ProgressDlg::update() {
-  SendMessage(m_h_progress_bar, PBM_SETPOS, m_progress_data->get_progress(), 0);
+  SendMessage(m_h_progress_bar, PBM_SETPOS, static_cast<WPARAM> (m_progress_data->get_progress()), 0);
   Static_SetText(m_h_desc_bottom, m_progress_data->get_status().c_str());
   set_marquee(m_progress_data->get_marquee());
   Static_SetText(m_h_desc_top, m_top_message.c_str());

@@ -59,12 +59,12 @@ public:
   std::wstring active_file_directory() const override;
   std::string selected_text(EditorViewType view) const override;
   std::string get_current_line(EditorViewType view) const override;
-  int get_current_pos(EditorViewType view) const override;
+  TextPosition get_current_pos(EditorViewType view) const override;
   int get_current_line_number(EditorViewType view) const override;
-  int line_from_position(EditorViewType view, int position) const override;
+  int line_from_position(EditorViewType view, TextPosition position) const override;
   std::wstring plugin_config_dir() const override;
-  TextPosition get_line_start_position(EditorViewType view, int line) const override;
-  TextPosition get_line_end_position(EditorViewType view, int line) const override;
+  TextPosition get_line_start_position(EditorViewType view, TextPosition line) const override;
+  TextPosition get_line_end_position(EditorViewType view, TextPosition line) const override;
   HWND get_editor_handle() const override;
   // please hook it up to notify to simplify usage of certain caches
   void notify(SCNotification *notify_code);

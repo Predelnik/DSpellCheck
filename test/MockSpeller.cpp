@@ -84,7 +84,7 @@ void MockSpeller::set_suggestions_dict(const SuggestionsDict &dict) {
   m_sugg_dict = dict;
 }
 
-bool MockSpeller::check_word(WordForSpeller word) const {
+bool MockSpeller::check_word(const WordForSpeller& word) const {
   switch (m_speller_mode) {
   case SpellerMode::SingleLanguage: {
     auto it = m_inner_dict.find(m_current_lang);

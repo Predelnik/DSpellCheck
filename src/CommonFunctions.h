@@ -46,7 +46,7 @@ std::weak_ptr<T> weaken(std::shared_ptr<T> ptr) { return ptr; }
 
 template <typename... ArgTypes>
 std::wstring wstring_printf(const wchar_t* format, ArgTypes&&... args) {
-    auto size = _snwprintf(nullptr, 0, format, args...);
+    size_t size = _snwprintf(nullptr, 0, format, args...);
     std::vector<wchar_t> buf(size + 1);
     _snwprintf(buf.data(), size + 1, format, args...);
     return buf.data();

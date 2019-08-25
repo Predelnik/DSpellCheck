@@ -71,7 +71,7 @@ public:
   std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t *lang) override;
   void set_multiple_languages(const std::vector<std::wstring> &list) override; // Languages are from LangList
-  bool check_word(WordForSpeller word) const override;                         // Word in Utf-8 or ANSI
+  bool check_word(const WordForSpeller& word) const override;                         // Word in Utf-8 or ANSI
   bool is_working() const override;
   std::vector<std::wstring> get_suggestions(const wchar_t *word) const override;
   void add_to_dictionary(const wchar_t *word) override;

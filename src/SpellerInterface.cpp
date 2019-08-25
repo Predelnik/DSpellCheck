@@ -15,7 +15,7 @@
 #include "SpellerInterface.h"
 #include "LanguageInfo.h"
 
-bool SpellerInterface::check_word(WordForSpeller word) const {
+bool SpellerInterface::check_word(const WordForSpeller& word) const {
   return check_words({std::move (word)}).front();
 }
 
@@ -35,7 +35,8 @@ void DummySpeller::set_language(const wchar_t * /*lang*/) {}
 void DummySpeller::set_multiple_languages(
     const std::vector<std::wstring> & /*langs*/) {}
 
-bool DummySpeller::check_word(WordForSpeller /*word*/) const { return true; }
+bool DummySpeller::check_word(const WordForSpeller
+    /*word*/&) const { return true; }
 
 std::vector<std::wstring>
 DummySpeller::get_suggestions(const wchar_t * /*word*/) const {

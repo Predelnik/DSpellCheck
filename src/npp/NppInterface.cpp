@@ -147,8 +147,8 @@ bool NppInterface::is_line_visible(EditorViewType view, TextPosition line) const
 TextPosition NppInterface::find_next(EditorViewType view, TextPosition from_position, const char* needle)
 {
   Sci_TextToFind ttf;
-  ttf.chrg.cpMin = from_position;
-  ttf.chrg.cpMax = get_active_document_length(view);
+  ttf.chrg.cpMin = static_cast<Sci_PositionCR> (from_position);
+  ttf.chrg.cpMax = static_cast<Sci_PositionCR> (get_active_document_length(view));
   ttf.lpstrText = needle;
   return static_cast<TextPosition> (send_msg_to_scintilla(view, SCI_FINDTEXT, 0, reinterpret_cast<LPARAM> (&ttf)));
 }
@@ -272,21 +272,21 @@ std::string NppInterface::selected_text(EditorViewType view) const {
 
 std::string NppInterface::get_current_line(EditorViewType view) const { return get_line(view, get_current_line_number(view)); }
 
-int NppInterface::get_current_pos(EditorViewType view) const { return static_cast<int>(send_msg_to_scintilla(view, SCI_GETCURRENTPOS, 0, 0)); }
+TextPosition NppInterface::get_current_pos(EditorViewType view) const { return static_cast<int>(send_msg_to_scintilla(view, SCI_GETCURRENTPOS, 0, 0)); }
 
 int NppInterface::get_current_line_number(EditorViewType view) const { return line_from_position(view, get_current_pos(view)); }
 
-int NppInterface::line_from_position(EditorViewType view, int position) const {
+int NppInterface::line_from_position(EditorViewType view, TextPosition position) const {
   return static_cast<int>(send_msg_to_scintilla(view, SCI_LINEFROMPOSITION, position));
 }
 
 std::wstring NppInterface::plugin_config_dir() const { return get_dir_msg(NPPM_GETPLUGINSCONFIGDIR); }
 
-TextPosition NppInterface::get_line_start_position(EditorViewType view, int line) const {
+TextPosition NppInterface::get_line_start_position(EditorViewType view, TextPosition line) const {
   return static_cast<int>(send_msg_to_scintilla(view, SCI_POSITIONFROMLINE, line));
 }
 
-TextPosition NppInterface::get_line_end_position(EditorViewType view, int line) const {
+TextPosition NppInterface::get_line_end_position(EditorViewType view, TextPosition line) const {
   return static_cast<int>(send_msg_to_scintilla(view, SCI_GETLINEENDPOSITION, line));
 }
 
@@ -326,8 +326,8 @@ std::string NppInterface::get_text_range(EditorViewType view, TextPosition from,
     return {};
   }
   Sci_TextRange range;
-  range.chrg.cpMin = from;
-  range.chrg.cpMax = to;
+  range.chrg.cpMin = static_cast<Sci_PositionCR> (from);
+  range.chrg.cpMax = static_cast<Sci_PositionCR> (to);
   std::vector<char> buf(range.chrg.cpMax - range.chrg.cpMin + 1);
   range.lpstrText = buf.data();
   send_msg_to_scintilla(view, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
@@ -376,10 +376,10 @@ std::vector<std::wstring> NppInterface::get_open_filenames(std::optional<EditorV
     default:;
     }
 
-  ASSERT_RETURN(msg >= 0, {});
+  assert(msg >= 0);
   {
     auto ret = send_msg_to_npp(msg, reinterpret_cast<WPARAM>(paths), count);
-    ASSERT_RETURN(ret == count, {});
+    assert(ret == count);
   }
 
   std::vector<std::wstring> res;

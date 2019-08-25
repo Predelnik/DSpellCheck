@@ -283,7 +283,7 @@ ContextMenuHandler::get_suggestion_menu_items() {
   if (!m_speller_container.active_speller().is_working())
     return {}; // Word is already off-screen
 
-  int pos = m_word_under_cursor_pos;
+  auto pos = m_word_under_cursor_pos;
   auto view = m_editor.active_view();
   m_editor.set_selection(view, pos, pos + m_word_under_cursor_length);
   std::vector<MenuItem> suggestion_menu_items;

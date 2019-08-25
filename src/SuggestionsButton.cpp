@@ -81,8 +81,8 @@ void SuggestionsButton::on_settings_changed() {
 }
 
 void SuggestionsButton::set_transparency() {
-  SetWindowLong(getHSelf(), GWL_EXSTYLE,
-                GetWindowLong(getHSelf(), GWL_EXSTYLE) | WS_EX_LAYERED);
+  SetWindowLongPtr(getHSelf(), GWL_EXSTYLE,
+                GetWindowLongPtr(getHSelf(), GWL_EXSTYLE) | WS_EX_LAYERED);
   SetLayeredWindowAttributes(
       getHSelf(), 0,
       static_cast<BYTE>((255 * m_settings.suggestion_button_opacity) / 100),

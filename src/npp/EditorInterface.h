@@ -105,12 +105,12 @@ public:
   virtual std::string selected_text(EditorViewType view) const = 0;
   virtual std::string get_current_line(EditorViewType view) const = 0;
   virtual std::string get_line(EditorViewType view, TextPosition line_number) const = 0;
-  virtual int get_current_pos(EditorViewType view) const = 0;
+  virtual TextPosition get_current_pos(EditorViewType view) const = 0;
   virtual int get_current_line_number(EditorViewType view) const = 0;
   virtual int get_text_height(EditorViewType view, int line) const = 0;
-  virtual int line_from_position(EditorViewType view, int position) const = 0;
-  virtual TextPosition get_line_start_position(EditorViewType view, int line) const = 0;
-  virtual TextPosition get_line_end_position(EditorViewType view, int line) const = 0;
+  virtual int line_from_position(EditorViewType view, TextPosition position) const = 0;
+  virtual TextPosition get_line_start_position(EditorViewType view, TextPosition line) const = 0;
+  virtual TextPosition get_line_end_position(EditorViewType view, TextPosition line) const = 0;
   virtual int get_lexer(EditorViewType view) const = 0;
   virtual std::optional<TextPosition>
   char_position_from_global_point(EditorViewType view, int x, int y) const = 0;
@@ -144,7 +144,7 @@ public:
   virtual std::string get_active_document_text(EditorViewType view) const = 0;
   virtual RECT editor_rect(EditorViewType view) const = 0;
 
-  int get_current_pos_in_line(EditorViewType view) const {
+  TextPosition get_current_pos_in_line(EditorViewType view) const {
     return get_current_pos(view) -
            get_line_start_position(view, get_current_line_number(view));
   }

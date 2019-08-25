@@ -304,7 +304,7 @@ bool HunspellInterface::speller_check_word(const DicInfo &dic, WordForSpeller wo
   return dic.hunspell->spell(word_to_check);
 }
 
-bool HunspellInterface::check_word(WordForSpeller word) const {
+bool HunspellInterface::check_word(const WordForSpeller& word) const {
   if (m_ignored.find(word.str) != m_ignored.end())
     return true;
 
@@ -382,14 +382,14 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
   auto check_open = [&](const wchar_t *flags) {
     SetFileAttributes(dic_path.c_str(), FILE_ATTRIBUTE_NORMAL);
     auto fp = _wfopen(dic_path.c_str(), flags);
+    if (!fp) {
+      MessageBox(m_npp_window, rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str(), rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str(), MB_OK | MB_ICONWARNING);
+      return;
+    }
     if (flags == L"w"sv) {
       fprintf(fp, "0\n");
     }
-    if (!fp) {
-      MessageBox(m_npp_window, rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str(), rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str(), MB_OK | MB_ICONWARNING);
-    } else {
-      fclose(fp);
-    }
+    fclose(fp);
   };
 
   if (!PathFileExists(dic_path.c_str())) {

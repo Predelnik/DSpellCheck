@@ -173,7 +173,7 @@ TextPosition SpellChecker::prev_token_begin_in_document(EditorViewType view, Tex
   TextPosition shift = 15;
   auto prev_start = start + 1;
   while (start > 0) {
-    start = std::max(start - shift, 0);
+    start = std::max(start - shift, 0_sz);
     auto mapped_str = m_editor.get_mapped_wstring_range(view, start, prev_start);
     // finding any start before start which starts a token
     auto index = prev_token_begin(mapped_str.str, static_cast<TextPosition>(mapped_str.str.length()) - 1);
@@ -311,7 +311,7 @@ void SpellChecker::erase_all_misspellings() {
     return;
 
   UNDO_BLOCK(m_editor, view);
-  auto chars_removed = 0l;
+  TextPosition chars_removed = 0;
   for (auto &misspelling : m_misspellings) {
     auto start = mapped_str.to_original_index (static_cast<TextPosition> (misspelling.data() - mapped_str.str.data()));
     auto original_len = mapped_str.to_original_index (static_cast<TextPosition> (misspelling.data() - mapped_str.str.data() + misspelling.length ())) - start;

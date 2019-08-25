@@ -150,7 +150,7 @@ EditorCodepage MockEditorInterface::get_encoding(EditorViewType view) const {
   return doc->codepage;
 }
 
-int MockEditorInterface::get_current_pos(EditorViewType view) const {
+TextPosition MockEditorInterface::get_current_pos(EditorViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
@@ -172,7 +172,7 @@ int MockEditorInterface::get_text_height(EditorViewType /*view*/,
 }
 
 int MockEditorInterface::line_from_position(EditorViewType view,
-                                            int position) const {
+                                            TextPosition position) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
@@ -181,7 +181,7 @@ int MockEditorInterface::line_from_position(EditorViewType view,
 }
 
 TextPosition MockEditorInterface::get_line_start_position(EditorViewType view,
-                                                  int line) const {
+                                                          TextPosition line) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
@@ -197,7 +197,7 @@ TextPosition MockEditorInterface::get_line_start_position(EditorViewType view,
 }
 
 TextPosition MockEditorInterface::get_line_end_position(EditorViewType view,
-                                                int line) const {
+                                                        TextPosition line) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
@@ -273,7 +273,7 @@ TextPosition MockEditorInterface::get_line_length(EditorViewType view, int line)
 
 int MockEditorInterface::get_point_x_from_position(EditorViewType view,
                                                    TextPosition position) const {
-  return (position -
+  return static_cast<int>(position -
           get_line_start_position(view, line_from_position(view, position))) *
          10;
 }
@@ -433,7 +433,7 @@ TextPosition MockEditorInterface::char_position_from_point(EditorViewType view,
   if (!doc)
     return -1;
   return get_line_start_position(
-             view, get_document_line_from_visible(view, pnt.y / text_height)) +
+      view, get_document_line_from_visible(view, pnt.y / text_height)) +
          pnt.x / text_width;
 }
 

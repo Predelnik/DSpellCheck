@@ -22,7 +22,7 @@ TextPosition EditorInterface::get_prev_valid_begin_pos(EditorViewType view, Text
   if (get_encoding(view) == EditorCodepage::ansi)
     return pos - 1;
 
-  auto worst_prev_pos = std::max(0, pos - static_cast<TextPosition>(max_utf8_char_length));
+  auto worst_prev_pos = std::max(0_sz, pos - static_cast<TextPosition>(max_utf8_char_length));
   auto rng = get_text_range(view, worst_prev_pos, pos);
   auto it = std::find_if(rng.rbegin(), rng.rend(), &utf8_is_lead);
   assert (it != rng.rend ());

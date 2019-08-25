@@ -167,21 +167,19 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
   }
 
   if (settings.ignore_having_a_capital || settings.ignore_all_capital) {
-    if (settings.ignore_having_a_capital || settings.ignore_all_capital) {
-      bool all_upper = IsCharUpper(word.front()), any_upper = false;
-      for (auto c : std::wstring_view(word).substr(1)) {
-        if (IsCharUpper(c)) {
-          any_upper = true;
-        } else
-          all_upper = false;
-      }
-
-      if (!all_upper && any_upper && settings.ignore_having_a_capital)
-        return false;
-
-      if (all_upper && settings.ignore_all_capital)
-        return false;
+    bool all_upper = IsCharUpper(word.front()), any_upper = false;
+    for (auto c : std::wstring_view(word).substr(1)) {
+      if (IsCharUpper(c)) {
+        any_upper = true;
+      } else
+        all_upper = false;
     }
+
+    if (!all_upper && any_upper && settings.ignore_having_a_capital)
+      return false;
+
+    if (all_upper && settings.ignore_all_capital)
+      return false;
   }
 
   if (settings.ignore_having_underscore && word.find(L'_') != std::wstring_view::npos)

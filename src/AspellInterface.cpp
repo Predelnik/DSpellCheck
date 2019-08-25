@@ -158,7 +158,7 @@ void AspellInterface::ignore_all(const wchar_t *word) {
   m_last_selected_speller = nullptr;
 }
 
-bool AspellInterface::check_word(WordForSpeller word) const {
+bool AspellInterface::check_word(const WordForSpeller& word) const {
   if (!m_aspell_loaded) {
     return true;
   }

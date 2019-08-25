@@ -62,4 +62,14 @@ constexpr auto static_plugin_name = L"DSpellCheck";
 constexpr auto config_file_name = L"DSpellCheck.ini";
 constexpr auto multiple_language_alias = L"<MULTIPLE>";
 
-using TextPosition = int;
+using TextPosition = ptrdiff_t;
+
+constexpr std::size_t operator "" _z(unsigned long long n)
+{
+  return n;
+}
+
+constexpr std::ptrdiff_t operator "" _sz(unsigned long long n)
+{
+  return n;
+}

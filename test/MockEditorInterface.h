@@ -66,12 +66,12 @@ public:
   void indicator_clear_range(EditorViewType view, TextPosition from, TextPosition to) override;
   EditorViewType active_view() const override;
   EditorCodepage get_encoding(EditorViewType view) const override;
-  int get_current_pos(EditorViewType view) const override;
+  TextPosition get_current_pos(EditorViewType view) const override;
   int get_current_line_number(EditorViewType view) const override;
   int get_text_height(EditorViewType view, int line) const override;
-  int line_from_position(EditorViewType view, int position) const override;
-  TextPosition get_line_start_position(EditorViewType view, int line) const override;
-  TextPosition get_line_end_position(EditorViewType view, int line) const override;
+  int line_from_position(EditorViewType view, TextPosition position) const override;
+  TextPosition get_line_start_position(EditorViewType view, TextPosition line) const override;
+  TextPosition get_line_end_position(EditorViewType view, TextPosition line) const override;
   int get_lexer(EditorViewType view) const override;
   TextPosition get_selection_start(EditorViewType view) const override;
   TextPosition get_selection_end(EditorViewType view) const override;
