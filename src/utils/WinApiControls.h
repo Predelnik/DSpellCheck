@@ -14,6 +14,12 @@
 
 #pragma once
 #include "enum_range.h"
+#include "lsignal.h"
+
+enum class DlgProcResult {
+  processed,
+  pass_through
+};
 
 namespace WinApi {
 class WinBase {
@@ -22,6 +28,7 @@ public:
   void set_enabled(bool enabled);
   bool is_enabled() const;
   void init(HWND hwnd);
+  virtual DlgProcResult dlg_proc(UINT message, WPARAM w_param, LPARAM l_param); // should be called for possibility of making signals in windows work
   explicit operator bool () const;
 
 private:
@@ -30,6 +37,7 @@ private:
 
 protected:
   HWND m_hwnd = nullptr;
+  int m_id = -1;
 };
 
 class ComboBox : public WinBase {
@@ -60,6 +68,13 @@ public:
   std::optional<int> find_by_data(int data);
   void clear();
   int count() const;
+};
+
+class Button : public WinBase {
+  void check_hwnd() override;
+public:
+  DlgProcResult dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
+  lsignal::signal<void()> button_pressed;
 };
 
 template <typename EnumType> class EnumComboBox : protected ComboBox {

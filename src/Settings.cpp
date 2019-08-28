@@ -134,6 +134,12 @@ Settings::Settings(std::wstring_view ini_filepath) : m_ini_filepath(ini_filepath
   settings_changed.connect([this] { on_settings_changed(); });
 }
 
+Settings::Settings(const Settings&) = default;
+Settings& Settings::operator=(const Settings&) = default;
+Settings::Settings(Settings&&) = default;
+Settings& Settings::operator=(Settings&&) = default;
+
+
 void Settings::on_settings_changed() {
   update_processed_delimiters ();
 }

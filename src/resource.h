@@ -100,6 +100,7 @@
 #define IDC_CHECK_DEFAULT_UDL_STYLE             40004
 #define IDS_STATUS_PROXY_AUTH_REQUIRED          40004
 #define IDC_CHECKCOMMENTS_CB                    40005
+#define IDC_RESET_SETTINGS                      40005
 #define IDS_MULTIPLE_LANGUAGES                  40005
 #define IDC_CHECKSTRINGS_CB                     40006
 #define IDS_SET_MULTIPLE_LANG                   40006
@@ -205,3 +206,5 @@
 #define IDS_REPLACE_ALL_PS                      40106
 #define IDS_REPLACE_WITH_1ST_SUGGESTION         40107
 #define IDS_IGNORE_WORD_AT_CURSOR               40108
+#define IDS_RESET_SETTINGS_TEXT                 40109
+#define IDS_RESET_SETTINGS_CAPTION              40110

@@ -27,6 +27,7 @@
 
 #include "StaticDialog/StaticDialog.h"
 #include <stdio.h>
+#include "utils/WinApiControls.h"
 
 void StaticDialog::goToCenter()
 {
@@ -79,7 +80,7 @@ HGLOBAL StaticDialog::makeRTLResource(int dialogID, DLGTEMPLATE **ppMyDlgTemplat
   DLGTEMPLATE *pDlgTemplate = (DLGTEMPLATE *)::LockResource(hDlgTemplate);
 
   // Duplicate Dlg Template resource
-  unsigned long sizeDlg = ::SizeofResource(_hInst, hDialogRC);
+  size_t sizeDlg = ::SizeofResource(_hInst, hDialogRC);
   HGLOBAL hMyDlgTemplate = ::GlobalAlloc(GPTR, sizeDlg);
   *ppMyDlgTemplate = (DLGTEMPLATE *)::GlobalLock(hMyDlgTemplate);
 
@@ -139,6 +140,15 @@ INT_PTR StaticDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
       StaticDialog *pStaticDlg = reinterpret_cast<StaticDialog *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
       if (!pStaticDlg)
         return FALSE;
+      for (auto& weak_control : pStaticDlg->m_controls) {
+        if (auto control = weak_control.lock()) {
+          switch (control->dlg_proc(message, wParam, lParam))
+          {
+          case DlgProcResult::processed: return TRUE;
+          case DlgProcResult::pass_through: break;
+          }
+        }
+      }
       return pStaticDlg->run_dlg_proc(message, wParam, lParam);
     }
   }

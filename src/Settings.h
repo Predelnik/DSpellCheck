@@ -74,6 +74,10 @@ class Settings {
     using Self = Settings;
 public:
     Settings (std::wstring_view ini_filepath = L"");
+    Settings(const Settings&);
+    Settings &operator=(const Settings&);
+    Settings(Settings&&);
+    Settings& operator=(Settings&&);
     void on_settings_changed();
     void update_processed_delimiters();
     void process(IniWorker& worker);
@@ -187,8 +191,8 @@ public:
     bool split_camel_case = false;
     enum_array<SpellerId, std::wstring> speller_language;
     enum_array<SpellerId, std::wstring> speller_multi_languages;
-    bool write_debug_log;
-    LanguageNameStyle language_name_style;
+    bool write_debug_log = false;
+    LanguageNameStyle language_name_style = LanguageNameStyle::english;
 
     // Derivatives:
     std::wstring m_processed_delimiters;

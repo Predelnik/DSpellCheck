@@ -28,8 +28,15 @@ bool WinBase::is_enabled() const {
 
 void WinBase::init(HWND hwnd) {
   m_hwnd = hwnd;
+  assert(m_hwnd != nullptr);
+  m_id = GetDlgCtrlID(m_hwnd);
+  assert(m_id != -1);
   check_hwnd();
   init_impl();
+}
+
+DlgProcResult WinBase::dlg_proc([[maybe_unused]] UINT message, [[maybe_unused]] WPARAM w_param, [[maybe_unused]] LPARAM l_param) {
+  return DlgProcResult::pass_through;
 }
 
 WinBase::operator bool() const {
@@ -64,6 +71,18 @@ void ComboBox::clear() { ComboBox_ResetContent(m_hwnd); }
 
 int ComboBox::count() const {
   return ComboBox_GetCount(m_hwnd);
+}
+
+void Button::check_hwnd() {
+  assert(get_class_name(m_hwnd) == L"Button");
+}
+
+DlgProcResult Button::dlg_proc(UINT message, WPARAM w_param, [[maybe_unused]] LPARAM l_param) {
+  if (message == WM_COMMAND && LOWORD(w_param) == m_id && HIWORD(w_param) == BN_CLICKED) {
+    button_pressed();
+    return DlgProcResult::processed;
+  }
+  return DlgProcResult::pass_through;
 }
 
 }

@@ -31,6 +31,7 @@
 #include <Uxtheme.h>
 #include <cassert>
 #include "WindowsDefs.h"
+#include "utils/IniWorker.h"
 
 SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings, NppInterface &npp) : m_npp(npp), m_settings(settings), m_parent(parent) {
   m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
@@ -196,6 +197,14 @@ void SimpleDlg::set_file_types(bool check_those, const wchar_t *file_types) {
 void SimpleDlg::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_current(mode); }
 
 void SimpleDlg::set_one_user_dic(bool value) { Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED); }
+
+void AdvancedDlg::reset_settings () {
+  if (MessageBox(_hParent, rc_str(IDS_RESET_SETTINGS_TEXT).c_str(), rc_str(IDS_RESET_SETTINGS_CAPTION).c_str(), MB_YESNO) == IDNO)
+    return;
+  auto mut = m_settings.modify();
+  IniWorker worker{L"", L"", IniWorker::Action::load};
+  mut->process(worker);
+}
 
 INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   wchar_t *end_ptr;
@@ -521,6 +530,8 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
     SendMessage(m_h_slider_size, TBM_SETRANGE, TRUE, MAKELPARAM(5, 22));
     SendMessage(m_h_slider_sugg_button_opacity, TBM_SETRANGE, TRUE, MAKELPARAM(5, 100));
     m_split_camel_case_cb = ::GetDlgItem(_hSelf, IDC_CAMEL_CASE_SPLITTING_CB);
+    m_reset_btn = this->get_control<WinApi::Button>(IDC_RESET_SETTINGS);
+    m_reset_btn->button_pressed.connect([this]() { reset_settings();  });
 
     m_brush = nullptr;
 

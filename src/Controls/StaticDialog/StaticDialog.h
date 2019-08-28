@@ -29,12 +29,19 @@
 #define STATIC_DIALOG_H
 
 #include "Window.h"
+#include <memory>
+#include <vector>
 
 #ifndef NOTEPAD_PLUS_MSGS_H
 #include "Notepad_plus_msgs.h"
 #endif //NOTEPAD_PLUS_MSGS_H
 
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
+
+namespace WinApi
+{
+  class WinBase;
+}
 
 enum PosAlign{ALIGNPOS_LEFT, ALIGNPOS_RIGHT, ALIGNPOS_TOP, ALIGNPOS_BOTTOM};
 
@@ -55,7 +62,8 @@ struct DLGTEMPLATEEX {
 class StaticDialog : public Window
 {
 public :
-  StaticDialog() : Window() {};
+
+  StaticDialog() : Window() { _rc = {}; };
   ~StaticDialog(){
     if (isCreated()) {
       ::SetWindowLongPtr(_hSelf, GWLP_USERDATA, (LONG_PTR)NULL);	//Prevent run_dlgProc from doing anything, since its virtual
@@ -71,6 +79,15 @@ public :
   void goToCenter();
 
   void display(bool toShow = true, bool activate = true) const;
+  template <typename ControlType>
+  std::shared_ptr<ControlType> get_control(int id)
+  {
+    static_assert (std::is_base_of<WinApi::WinBase, ControlType>::value, "ControlType should inherit from WinApi::WinBase");
+    auto btn = std::make_shared<ControlType>();
+    btn->init(GetDlgItem(_hSelf, id));
+    m_controls.emplace_back(weaken (btn));
+    return btn;
+  }
 
   POINT getLeftTopPoint(HWND hwnd/*, POINT & p*/) const {
     RECT rc;
@@ -93,6 +110,7 @@ public :
 
 protected :
   RECT _rc;
+  std::vector<std::weak_ptr<WinApi::WinBase>> m_controls;
   static INT_PTR WINAPI dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
   virtual INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) = 0;
 

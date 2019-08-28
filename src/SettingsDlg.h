@@ -99,6 +99,7 @@ public:
     int get_recheck_delay();
     void set_recheck_delay(int delay);
     void set_sugg_box_settings(LRESULT size, LRESULT trans);
+    void reset_settings();
     void set_underline_settings(int color, int style);
     void set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg,
                     bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
@@ -133,6 +134,7 @@ private:
     HWND m_split_camel_case_cb = nullptr;
     HWND m_h_check_default_udl_style = nullptr;
     WinApi::EnumComboBox<TokenizationStyle> m_tokenization_style_cmb;
+    std::shared_ptr<WinApi::Button> m_reset_btn;
 
     HBRUSH m_brush = nullptr;
     COLORREF m_underline_color_btn = 0;
