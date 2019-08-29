@@ -66,10 +66,10 @@ using TextPosition = ptrdiff_t;
 
 constexpr std::size_t operator "" _z(unsigned long long n)
 {
-  return n;
+  return static_cast<std::size_t> (n);
 }
 
 constexpr std::ptrdiff_t operator "" _sz(unsigned long long n)
 {
-  return n;
+  return static_cast<std::ptrdiff_t> (n);
 }
