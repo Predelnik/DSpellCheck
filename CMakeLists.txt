@@ -113,12 +113,13 @@ endif ()
 file (GLOB_RECURSE test_source_files test/*.cpp test/*.h)
 add_executable (DSpellCheckTest ${test_source_files})
 target_link_libraries (DSpellCheckTest DSpellCheckStatic catch)
+set(DSpellCheck_PVS_CHECK OFF CACHE BOOL "Enable checking by PVS studio")
+if (DSpellCheck_PVS_CHECK)
 pvs_studio_add_target(TARGET DSpellCheck.analyze ALL
                       OUTPUT FORMAT errorfile
                       ANALYZE DSpellCheck
                       LOG DSpellCheck.psv-err)
-
-
+endif ()
 if (MSVC)
 	target_compile_options (DSpellCheckStatic PRIVATE "/YuPrecompiledHeader.h" "/FIPrecompiledHeader.h")
 	SET_SOURCE_FILES_PROPERTIES("src/PrecompiledHeader.cpp" PROPERTIES COMPILE_FLAGS "/Yc")
