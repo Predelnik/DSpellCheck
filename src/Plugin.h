@@ -123,3 +123,4 @@ void init_npp_interface ();
 void notify (SCNotification* notify_code);
 NppInterface &npp_interface ();
 void copy_misspellings_to_clipboard ();
+void delete_log();

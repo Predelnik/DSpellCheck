@@ -57,6 +57,21 @@ void apply_word_conversions(const Settings &settings, std::wstring &word) {
   }
 }
 
+void print_to_log(const Settings &settings, std::wstring_view line, HWND parent_wnd) {
+  if (!settings.write_debug_log)
+    return;
+
+  FILE* fp;
+  
+  auto err = _wfopen_s(&fp, get_debug_log_path().c_str (), L"a");
+  if (err != 0) {
+    MessageBox(parent_wnd, L"Error while writing to a log file", to_wstring (strerror(err)).c_str (), MB_OK);
+    return;
+  }
+  _fwprintf_p(fp, L"%.*s\n", static_cast<int> (line.length()), line.data());
+  fclose(fp);
+}
+
 void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
   if (settings.remove_boundary_apostrophes) {
     while (!word.empty() && word.front() == L'\'')

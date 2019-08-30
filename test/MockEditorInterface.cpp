@@ -402,7 +402,7 @@ std::optional<TextPosition> MockEditorInterface::char_position_from_global_point
   return std::nullopt;
 }
 
-HWND MockEditorInterface::get_editor_handle() const { return nullptr; }
+HWND MockEditorInterface::get_editor_hwnd() const { return nullptr; }
 
 std::wstring MockEditorInterface::get_full_current_path() const {
   auto doc = active_document(m_active_view);

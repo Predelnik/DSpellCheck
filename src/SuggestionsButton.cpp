@@ -170,10 +170,10 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
     m_state_menu = true;
     HMENU popup_menu = CreatePopupMenu();
     MenuItem::append_to_menu(popup_menu, m_context_menu_handler.get_suggestion_menu_items());
-    SetForegroundWindow(m_npp.get_editor_handle ());
+    SetForegroundWindow(m_npp.get_editor_hwnd ());
     TrackPopupMenuEx(popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
                      p.y, _hSelf, &tpm_params);
-    PostMessage(m_npp.get_editor_handle (), WM_NULL, 0, 0);
+    PostMessage(m_npp.get_editor_hwnd (), WM_NULL, 0, 0);
     SetFocus(m_npp.get_scintilla_hwnd(m_npp.active_view()));
     m_state_menu = false;
     DestroyMenu(popup_menu);

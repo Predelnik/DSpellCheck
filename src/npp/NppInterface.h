@@ -65,7 +65,7 @@ public:
   std::wstring plugin_config_dir() const override;
   TextPosition get_line_start_position(EditorViewType view, TextPosition line) const override;
   TextPosition get_line_end_position(EditorViewType view, TextPosition line) const override;
-  HWND get_editor_handle() const override;
+  HWND get_editor_hwnd() const override;
   // please hook it up to notify to simplify usage of certain caches
   void notify(SCNotification *notify_code);
   int get_lexer(EditorViewType view) const override;

@@ -118,7 +118,7 @@ public:
                                         const POINT &pnt) const = 0;
   virtual TextPosition get_selection_start(EditorViewType view) const = 0;
   virtual TextPosition get_selection_end(EditorViewType view) const = 0;
-  virtual HWND get_editor_handle() const = 0;
+  virtual HWND get_editor_hwnd() const = 0;
   virtual int get_style_at(EditorViewType view, TextPosition position) const = 0;
   virtual std::wstring get_full_current_path() const = 0;
   // is current style used for links (hotspots):

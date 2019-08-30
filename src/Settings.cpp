@@ -21,6 +21,7 @@
 #include "utils/enum_range.h"
 #include "utils/string_utils.h"
 #include <cassert>
+#include "SpellCheckerHelpers.h"
 
 const wchar_t *default_delimiters() {
   return L",.!?\":;{}()[]\\/"
@@ -176,6 +177,8 @@ void Settings::load() {
     return;
   IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::load);
   process(worker);
+  delete_log();
+  SpellCheckerHelpers::print_to_log(*this, L"void Settings::load()", nullptr);
   settings_changed();
 }
 
