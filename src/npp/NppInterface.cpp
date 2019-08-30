@@ -379,6 +379,7 @@ std::vector<std::wstring> NppInterface::get_open_filenames(std::optional<EditorV
   assert(msg >= 0);
   {
     auto ret = send_msg_to_npp(msg, reinterpret_cast<WPARAM>(paths), count);
+    static_cast<void> (ret);
     assert(ret == count);
   }
 
