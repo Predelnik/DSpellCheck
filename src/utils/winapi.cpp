@@ -32,13 +32,16 @@ bool move_file_and_reset_security_descriptor(const wchar_t *from, const wchar_t 
   // on why it is needed
   // https://blogs.msdn.microsoft.com/oldnewthing/20060824-16/?p=29973/
   auto ret = MoveFile(from, to);
+  if (!ret)
+    return false;
   // here goes exact code from https://stackoverflow.com/a/20009217/1269661
   ACL g_null_acl;
   memset(&g_null_acl, 0, sizeof(g_null_acl));
-  InitializeAcl(&g_null_acl, sizeof(g_null_acl), ACL_REVISION);
+  if (!InitializeAcl(&g_null_acl, sizeof(g_null_acl), ACL_REVISION))
+    return false;
   SetNamedSecurityInfo(const_cast<wchar_t *>(to), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION, nullptr, nullptr,
                        static_cast<PACL>(&g_null_acl), nullptr);
-  return ret != 0;
+  return true;
 }
 
 static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/, LPARAM lp_data) {
