@@ -1,3 +1,8 @@
+v1.4.14
+* Spell-check CDATA as text in HTML. (#184)
+* Support ignoring word at cursor through additional actions. (#182)
+* Add possibility to reset settings to default values (#188)
+
 v1.4.13
 * Correctly spell-check single quoted string literals in lua. (#175)
 * Make plugin compatible with Notepad++ version 7.7 (#179)
