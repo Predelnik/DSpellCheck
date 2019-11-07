@@ -40,7 +40,7 @@ SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor, co
 SpellChecker::~SpellChecker() = default;
 
 void SpellChecker::recheck_visible_both_views() {
-  SpellCheckerHelpers::print_to_log(m_settings, L"void SpellChecker::recheck_visible_both_views()", m_editor.get_editor_hwnd());
+  SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::recheck_visible_both_views()", m_editor.get_editor_hwnd());
   recheck_visible(EditorViewType::primary);
   recheck_visible(EditorViewType::secondary);
 }
@@ -322,7 +322,7 @@ void SpellChecker::erase_all_misspellings() {
 }
 
 bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, TextPosition word_start) const {
-  SpellCheckerHelpers::print_to_log(m_settings, L"bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, TextPosition word_start)", m_editor.get_editor_hwnd());
+  SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, TextPosition word_start)", m_editor.get_editor_hwnd());
   if (!is_spellchecking_needed(view, word, word_start))
     return true;
 
@@ -349,7 +349,7 @@ public:
 } // namespace
 
 bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_check, CheckTextMode mode) const {
-  SpellCheckerHelpers::print_to_log(m_settings, L"bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_check, CheckTextMode mode)", m_editor.get_editor_hwnd());
+  SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_check, CheckTextMode mode)", m_editor.get_editor_hwnd());
   if (text_to_check.str.empty())
     return false;
 
@@ -450,7 +450,7 @@ bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_
 }
 
 void SpellChecker::check_visible(EditorViewType view) {
-  SpellCheckerHelpers::print_to_log(m_settings, L"void SpellChecker::check_visible(EditorViewType view)", m_editor.get_editor_hwnd());
+  SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::check_visible(EditorViewType view)", m_editor.get_editor_hwnd());
   auto text = get_visible_text(view);
   check_text(view, text, CheckTextMode::underline_errors);
 }

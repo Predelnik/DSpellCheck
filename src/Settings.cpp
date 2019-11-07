@@ -178,7 +178,7 @@ void Settings::load() {
   IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::load);
   process(worker);
   delete_log();
-  SpellCheckerHelpers::print_to_log(*this, L"void Settings::load()", nullptr);
+  SpellCheckerHelpers::print_to_log(this, L"void Settings::load()", nullptr);
   settings_changed();
 }
 

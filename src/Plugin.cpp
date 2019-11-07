@@ -272,7 +272,7 @@ void start_about_dlg() { about_dlg->do_dialog(); }
 void start_language_list() { lang_list_instance->do_dialog(); }
 
 void recheck_visible() {
-  SpellCheckerHelpers::print_to_log(*settings, L"recheck_visible ()", npp->get_editor_hwnd());
+  SpellCheckerHelpers::print_to_log(settings.get (), L"recheck_visible ()", npp->get_editor_hwnd());
   spell_checker->recheck_visible(npp_interface().active_view());
 }
 
@@ -759,7 +759,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   notify(notify_code);
   switch (notify_code->nmhdr.code) {
   case NPPN_SHUTDOWN: {
-    SpellCheckerHelpers::print_to_log(*settings, L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
+    SpellCheckerHelpers::print_to_log(settings.get (), L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
     if (recheck_timer != NULL)
       KillTimer(nullptr, recheck_timer);
     command_menu_clean_up();
@@ -771,7 +771,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case NPPN_READY: {
     register_custom_messages();
     init_classes();
-    SpellCheckerHelpers::print_to_log(*settings, L"NPPN_READY", npp->get_editor_hwnd());
+    SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_READY", npp->get_editor_hwnd());
     check_queue.clear();
     create_hooks();
     recheck_timer =
@@ -784,7 +784,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 
   case NPPN_BUFFERACTIVATED: {
     if (settings)
-      SpellCheckerHelpers::print_to_log(*settings, L"NPPN_BUFFERACTIVATED", npp->get_editor_hwnd());
+      SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_BUFFERACTIVATED", npp->get_editor_hwnd());
     if (!spell_checker)
       return;
     recheck_visible();
@@ -827,7 +827,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     break;
 
   case NPPN_LANGCHANGED: {
-    SpellCheckerHelpers::print_to_log(*settings, L"NPPN_LANGCHANGED", npp->get_editor_hwnd());
+    SpellCheckerHelpers::print_to_log(settings.get (), L"NPPN_LANGCHANGED", npp->get_editor_hwnd());
     if (!spell_checker)
       return;
     spell_checker->lang_change();
@@ -835,7 +835,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 
   case NPPN_TBMODIFICATION: {
     if (settings)
-      SpellCheckerHelpers::print_to_log(*settings, L"NPPN_TBMODIFICATION", npp->get_editor_hwnd());
+      SpellCheckerHelpers::print_to_log(settings.get (), L"NPPN_TBMODIFICATION", npp->get_editor_hwnd());
     add_icons();
   }
 

@@ -57,18 +57,21 @@ void apply_word_conversions(const Settings &settings, std::wstring &word) {
   }
 }
 
-void print_to_log(const Settings &settings, std::wstring_view line, HWND parent_wnd) {
-  if (!settings.write_debug_log)
+void print_to_log(const Settings *settings, std::wstring_view line, HWND parent_wnd) {
+  if (!settings)
     return;
 
-  FILE* fp;
-  
-  auto err = _wfopen_s(&fp, get_debug_log_path().c_str (), L"a");
+  if (!settings->write_debug_log)
+    return;
+
+  FILE *fp;
+
+  auto err = _wfopen_s(&fp, get_debug_log_path().c_str(), L"a");
   if (err != 0) {
-    MessageBox(parent_wnd, L"Error while writing to a log file", to_wstring (strerror(err)).c_str (), MB_OK);
+    MessageBox(parent_wnd, L"Error while writing to a log file", to_wstring(strerror(err)).c_str(), MB_OK);
     return;
   }
-  _fwprintf_p(fp, L"%.*s\n", static_cast<int> (line.length()), line.data());
+  _fwprintf_p(fp, L"%.*s\n", static_cast<int>(line.length()), line.data());
   fclose(fp);
 }
 
@@ -82,14 +85,13 @@ void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
   }
 }
 
-void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Settings &settings, const char *from, std::wstring_view to, bool
-                        is_proper_name) {
+void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Settings &settings, const char *from, std::wstring_view to, bool is_proper_name) {
   TextPosition pos = 0;
   auto from_len = static_cast<TextPosition>(strlen(from));
   if (from_len == 0)
     return;
 
-  std::wstring modified_to (to);
+  std::wstring modified_to(to);
 
   while (true) {
     pos = editor.find_next(view, pos, from);
@@ -119,7 +121,7 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
               if (tokenizer.next_token_end(buf_word_start_pos) != buf_word_end_pos)
                 return false;
             }
-            src_word_sv = std::wstring_view (mapped_wstr.str).substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos);
+            src_word_sv = std::wstring_view(mapped_wstr.str).substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos);
             if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, view, src_word_sv, doc_word_start_pos + start_pos_offset))
               return false;
 
