@@ -88,7 +88,9 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
   int cur_sel = m_language_cmb.current_index();
 
   if (m_language_cmb.is_enabled ()) {
-    settings.get_active_language() = (cur_sel == lang_count - 1 ? multiple_language_alias : speller_container.get_available_languages()[cur_sel].orig_name.c_str());
+    std::wstring new_lang = (cur_sel == lang_count - 1 ? multiple_language_alias : speller_container.get_available_languages()[cur_sel].orig_name.c_str());
+    settings.get_active_language() = new_lang;
+    m_parent.m_selected_language_name = new_lang;
   }
   settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
   switch (settings.active_speller_lib_id) {
