@@ -134,6 +134,7 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
   ShowWindow(m_h_lib_path, not_native);
   ShowWindow(m_h_reset_speller_path, not_native);
   ShowWindow(m_browse_btn, not_native);
+  BOOL configure_enabled = FALSE;
 
   switch (settings.active_speller_lib_id) {
   case SpellerId::aspell:
@@ -141,10 +142,12 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
     switch (aspell_status) {
     case AspellStatus::working:
       m_aspell_status_color = COLOR_OK;
+      configure_enabled = TRUE;
       Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_STATUS_OK).c_str());
       break;
     case AspellStatus::no_dictionaries:
       m_aspell_status_color = COLOR_FAIL;
+      configure_enabled = TRUE;
       Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_STATUS_NO_DICTS).c_str());
       break;
     case AspellStatus::not_working:
@@ -156,6 +159,7 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
       Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_INCORRECT_BITNESS).c_str());
       break;
     }
+    EnableWindow(m_configure_aspell_btn, configure_enabled);
     Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.aspell_dll_path).c_str());
 
     Static_SetText(m_h_lib_group_box, rc_str(IDS_ASPELL_LOCATION).c_str());

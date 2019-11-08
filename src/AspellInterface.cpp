@@ -221,6 +221,9 @@ AspellStatus AspellInterface::get_status() const {
 }
 
 std::wstring AspellInterface::get_default_personal_dictionary_path() const {
+  if (!m_aspell_loaded)
+    return L"";
+
   auto cfg = wrap_config(new_aspell_config());
   return to_wstring(aspell_config_get_default(cfg.get(), "home-dir"));
 }
