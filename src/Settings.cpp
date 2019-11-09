@@ -198,6 +198,13 @@ TemporaryAcessor<Settings::Self> Settings::modify() const {
           }};
 }
 
+TemporaryAcessor<Settings::Self> Settings::modify_without_saving() const {
+  auto non_const_this = const_cast<Self *>(this);
+  return {*non_const_this, [non_const_this]() {
+            non_const_this->settings_changed();
+          }};
+}
+
 std::wstring_view Settings::get_dictionary_download_path() const {
   return download_install_dictionaries_for_all_users ? hunspell_system_path : hunspell_user_path;
 }

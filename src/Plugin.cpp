@@ -504,7 +504,7 @@ void init_classes() {
     *settings, *speller_container);
 
   {
-    auto mut = settings->modify();
+    auto mut = settings->modify_without_saving();
     mut->load();
   }
   resources_inited = true;

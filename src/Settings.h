@@ -134,6 +134,7 @@ public:
     std::wstring &get_active_multi_languages();
     const std::wstring& get_active_multi_languages() const;
     TemporaryAcessor<Self> modify() const;
+    TemporaryAcessor<Settings::Self> modify_without_saving() const;
     std::wstring_view get_dictionary_download_path() const;
     void reset_hunspell_lang_to_default();
 
