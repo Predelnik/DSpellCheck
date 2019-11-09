@@ -75,12 +75,22 @@ void print_to_log(const Settings *settings, std::wstring_view line, HWND parent_
   fclose(fp);
 }
 
+static bool is_apostrophe(const Settings &settings, wchar_t chr) {
+  if (chr == L'\'')
+    return true;
+
+  if (settings.convert_single_quotes && chr == L'’')
+    return true;
+
+  return false;
+}
+
 void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
   if (settings.remove_boundary_apostrophes) {
-    while (!word.empty() && word.front() == L'\'')
+    while (!word.empty() && is_apostrophe (settings, word.front()))
       word.remove_prefix(1);
 
-    while (!word.empty() && word.back() == L'\'')
+    while (!word.empty() && is_apostrophe (settings, word.back()))
       word.remove_suffix(1);
   }
 }
@@ -203,7 +213,7 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
     return false;
 
   if (settings.ignore_starting_or_ending_with_apostrophe) {
-    if (word.front() == '\'' || word.back() == '\'')
+    if (is_apostrophe(settings, word.front()) || is_apostrophe(settings, word.back()))
       return false;
   }
 
