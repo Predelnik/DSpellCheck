@@ -144,6 +144,7 @@ void NativeSpellerInterface::add_to_dictionary(const wchar_t *word) {
     return;
 
   m_last_used_speller->Add(word);
+  m_last_used_speller = nullptr;
 }
 
 void NativeSpellerInterface::ignore_all(const wchar_t *word) {
@@ -151,6 +152,7 @@ void NativeSpellerInterface::ignore_all(const wchar_t *word) {
     return;
 
   m_last_used_speller->Ignore(word);
+  m_last_used_speller = nullptr;
 }
 
 bool NativeSpellerInterface::is_working() const { return m_ok; }

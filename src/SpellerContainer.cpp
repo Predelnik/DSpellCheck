@@ -86,6 +86,9 @@ void SpellerContainer::on_settings_changed() {
 
 void SpellerContainer::ignore_word(std::wstring wstr) {
   SpellCheckerHelpers::apply_word_conversions(m_settings, wstr);
+  // calling get_suggestions before ignoring the word is a requirement by some spellers currently
+  // we're just discarding the result
+  static_cast<void> (active_speller().get_suggestions(wstr.c_str()));
   active_speller().ignore_all(wstr.c_str());
 }
 
