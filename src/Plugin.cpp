@@ -242,12 +242,12 @@ DWORD get_custom_gui_message_id(CustomGuiMessage message_id) {
 }
 
 void switch_auto_check_text() {
-  auto mut = settings->modify();
+  auto mut = settings->modify(SettingsModificationStyle::ignore_file_errors);
   mut->auto_check_text = !settings->auto_check_text;
 }
 
 void switch_debug_logging() {
-  auto mut = settings->modify();
+  auto mut = settings->modify(SettingsModificationStyle::ignore_file_errors);
   mut->write_debug_log = !mut->write_debug_log;
   if (mut->write_debug_log) {
     WinApi::delete_file(get_debug_log_path().c_str());

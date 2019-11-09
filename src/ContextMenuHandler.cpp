@@ -185,7 +185,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
           m_speller_container.get_available_languages()[result].orig_name;
     do_plugin_menu_inclusion(true);
 
-    auto mut_settings = m_settings.modify();
+    auto mut_settings = m_settings.modify(SettingsModificationStyle::ignore_file_errors);
     mut_settings->get_active_language() = lang_string;
     break;
   }

@@ -149,7 +149,7 @@ void Settings::update_processed_delimiters() { m_processed_delimiters = L" \n\r\
 
 constexpr auto app_name = L"SpellCheck";
 
-void Settings::save() {
+void Settings::save(SettingsModificationStyle modification_style) {
   if (m_ini_filepath.empty())
     return;
   FILE *fp;
@@ -158,6 +158,9 @@ void Settings::save() {
   check_for_directory_existence(std::wstring(path));
   // Cleaning settings file (or creating it)
   if (_wfopen_s(&fp, m_ini_filepath.c_str(), L"w") != NULL) {
+    if (modification_style == SettingsModificationStyle::ignore_file_errors)
+      return;
+
     MessageBox(nullptr,
                wstring_printf(L"Setting file %s cannot be written. All settings will "
                               L"be lost when you close Notepad++.",
@@ -190,10 +193,10 @@ std::wstring &Settings::get_active_multi_languages() { return speller_multi_lang
 
 const std::wstring &Settings::get_active_multi_languages() const { return const_cast<Self *>(this)->get_active_multi_languages(); }
 
-TemporaryAcessor<Settings::Self> Settings::modify() const {
+TemporaryAcessor<Settings::Self> Settings::modify(SettingsModificationStyle modification_style) const {
   auto non_const_this = const_cast<Self *>(this);
-  return {*non_const_this, [non_const_this]() {
-            non_const_this->save();
+  return {*non_const_this, [non_const_this, modification_style]() {
+            non_const_this->save(modification_style);
             non_const_this->settings_changed();
           }};
 }
