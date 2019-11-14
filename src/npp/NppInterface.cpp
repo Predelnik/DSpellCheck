@@ -28,7 +28,13 @@ std::wstring NppInterface::get_npp_directory() {
   return npp_path.data();
 }
 
-bool NppInterface::is_allocate_cmdid_supported() const { return send_msg_to_npp(NPPM_ALLOCATESUPPORTED) != 0; }
+bool NppInterface::is_allocate_cmdid_supported() const {
+  send_msg_to_scintilla(EditorViewType::primary, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE);
+  send_msg_to_scintilla(EditorViewType::secondary, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE);
+  send_msg_to_scintilla(EditorViewType::secondary, SCI_SETBUFFEREDDRAW, 0);
+  send_msg_to_scintilla(EditorViewType::secondary, SCI_SETBUFFEREDDRAW, 0);
+  return send_msg_to_npp(NPPM_ALLOCATESUPPORTED) != 0;
+}
 
 int NppInterface::allocate_cmdid(int start_number) {
   int id;

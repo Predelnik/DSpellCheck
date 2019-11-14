@@ -19,6 +19,7 @@
 //
 
 #include "AboutDlg.h"
+#include "AspellOptionsDialog.h"
 #include "CheckedList/CheckedList.h"
 #include "ConnectionSettingsDialog.h"
 #include "DownloadDicsDlg.h"
@@ -29,19 +30,18 @@
 #include "SettingsDlg.h"
 #include "SpellChecker.h"
 #include "SuggestionsButton.h"
-#include "AspellOptionsDialog.h"
 
 #include "ContextMenuHandler.h"
 #include "HunspellInterface.h"
-#include "Settings.h"
-#include "SpellerContainer.h"
 #include "MenuItem.h"
+#include "Settings.h"
+#include "SpellCheckerHelpers.h"
+#include "SpellerContainer.h"
 #include "menuCmdID.h"
 #include "npp/NppInterface.h"
 #include "resource.h"
 #include "utils/raii.h"
 #include "utils/winapi.h"
-#include "SpellCheckerHelpers.h"
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -141,8 +141,7 @@ DownloadDicsDlg *get_download_dics() { return download_dics_dlg.get(); }
 HANDLE get_h_module() { return h_module; }
 
 void create_hooks() {
-  h_mouse_hook =
-      SetWindowsHookEx(WH_MOUSE, mouse_proc, nullptr, GetCurrentThreadId());
+  h_mouse_hook = SetWindowsHookEx(WH_MOUSE, mouse_proc, nullptr, GetCurrentThreadId());
   // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0,
   // GetCurrentThreadId());
 }
@@ -158,8 +157,7 @@ void plugin_clean_up() {
 
 void register_custom_messages() {
   for (int i = 0; i < static_cast<int>(CustomGuiMessage::max); i++) {
-    custom_gui_message_ids[i] =
-        RegisterWindowMessage(custom_gui_messages_names[i]);
+    custom_gui_message_ids[i] = RegisterWindowMessage(custom_gui_messages_names[i]);
   }
 }
 
@@ -169,18 +167,14 @@ void notify(SCNotification *notify_code) { npp->notify(notify_code); }
 
 NppInterface &npp_interface() { return *npp; }
 
-void erase_misspellings ()
-{
-  spell_checker->erase_all_misspellings ();
-}
+void erase_misspellings() { spell_checker->erase_all_misspellings(); }
 
-void show_spell_check_menu_at_cursor ()
-{
+void show_spell_check_menu_at_cursor() {
   auto menu = CreatePopupMenu();
-  context_menu_handler->update_word_under_cursor_data ();
+  context_menu_handler->update_word_under_cursor_data();
   if (context_menu_handler->is_word_under_cursor_correct())
     return;
-  MenuItem::append_to_menu (menu, context_menu_handler->get_suggestion_menu_items());
+  MenuItem::append_to_menu(menu, context_menu_handler->get_suggestion_menu_items());
 
   tagTPMPARAMS tpm_params;
   tpm_params.cbSize = sizeof(tagTPMPARAMS);
@@ -188,27 +182,24 @@ void show_spell_check_menu_at_cursor ()
   auto start = npp->get_selection_start(v);
   auto x = npp->get_point_x_from_position(v, start);
   auto y = npp->get_point_y_from_position(v, start);
-  POINT pnt {x, y};
-  ClientToScreen (npp->get_scintilla_hwnd(v), &pnt);
-  auto cmd = TrackPopupMenuEx(menu, TPM_HORIZONTAL | TPM_RIGHTALIGN | TPM_RETURNCMD, pnt.x,
-                              pnt.y, npp->get_scintilla_hwnd(v), &tpm_params);
+  POINT pnt{x, y};
+  ClientToScreen(npp->get_scintilla_hwnd(v), &pnt);
+  auto cmd = TrackPopupMenuEx(menu, TPM_HORIZONTAL | TPM_RIGHTALIGN | TPM_RETURNCMD, pnt.x, pnt.y, npp->get_scintilla_hwnd(v), &tpm_params);
   context_menu_handler->process_menu_result(cmd);
 }
 
-void replace_with_1st_suggestion ()
-{
+void replace_with_1st_suggestion() {
   TextPosition pos, length;
   if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
     auto view = npp->active_view();
     auto wstr = npp->get_mapped_wstring_range(view, pos, pos + length);
-    auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str ());
+    auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str());
     if (!suggestions.empty())
-      npp->replace_text(view, pos, pos + length, npp->to_editor_encoding(view, suggestions.front ()));
+      npp->replace_text(view, pos, pos + length, npp->to_editor_encoding(view, suggestions.front()));
   }
 }
 
-void ignore_for_current_session ()
-{
+void ignore_for_current_session() {
   TextPosition pos, length;
   if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
     auto view = npp->active_view();
@@ -237,9 +228,7 @@ void reload_hunspell_dictionaries() {
   settings->settings_changed();
 }
 
-DWORD get_custom_gui_message_id(CustomGuiMessage message_id) {
-  return custom_gui_message_ids[static_cast<int>(message_id)];
-}
+DWORD get_custom_gui_message_id(CustomGuiMessage message_id) { return custom_gui_message_ids[static_cast<int>(message_id)]; }
 
 void switch_auto_check_text() {
   auto mut = settings->modify(SettingsModificationStyle::ignore_file_errors);
@@ -254,25 +243,18 @@ void switch_debug_logging() {
   }
 }
 
-void open_debug_log() {
-  ShellExecute(nullptr, L"open", get_debug_log_path().c_str(), nullptr, nullptr,
-               SW_SHOW);
-}
+void open_debug_log() { ShellExecute(nullptr, L"open", get_debug_log_path().c_str(), nullptr, nullptr, SW_SHOW); }
 
 void start_settings() { settings_dlg->do_dialog(); }
 
-void start_manual() {
-  ShellExecute(nullptr, L"open",
-               L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", nullptr,
-               nullptr, SW_SHOW);
-}
+void start_manual() { ShellExecute(nullptr, L"open", L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", nullptr, nullptr, SW_SHOW); }
 
 void start_about_dlg() { about_dlg->do_dialog(); }
 
 void start_language_list() { lang_list_instance->do_dialog(); }
 
 void recheck_visible() {
-  SpellCheckerHelpers::print_to_log(settings.get (), L"recheck_visible ()", npp->get_editor_hwnd());
+  SpellCheckerHelpers::print_to_log(settings.get(), L"recheck_visible ()", npp->get_editor_hwnd());
   spell_checker->recheck_visible(npp_interface().active_view());
 }
 
@@ -283,12 +265,14 @@ void find_prev_mistake() { spell_checker->find_prev_mistake(); }
 void quick_lang_change_context() {
   POINT pos;
   GetCursorPos(&pos);
-  TrackPopupMenu(get_langs_sub_menu(), 0, pos.x, pos.y, 0, npp_data.npp_handle,
-                 nullptr);
+  TrackPopupMenu(get_langs_sub_menu(), 0, pos.x, pos.y, 0, npp_data.npp_handle, nullptr);
 }
 
-
-enum_array<Action, int> action_index = [](){ enum_array<Action, int> val; val.fill (-1); return val; }();
+enum_array<Action, int> action_index = []() {
+  enum_array<Action, int> val;
+  val.fill(-1);
+  return val;
+}();
 
 //
 // Initialization of your plug-in commands
@@ -299,8 +283,7 @@ void command_menu_init() {
   //
 
   // get path of plugin configuration
-  ::SendMessage(npp_data.npp_handle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH,
-                reinterpret_cast<LPARAM>(ini_file_path));
+  ::SendMessage(npp_data.npp_handle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, reinterpret_cast<LPARAM>(ini_file_path));
 
   // if config path doesn't exist, we create it
   if (PathFileExists(ini_file_path) == FALSE) {
@@ -326,73 +309,42 @@ void command_menu_init() {
   //            bool check0nInit                // optional. Make this menu item
   //            be checked visually
   //            );
-  action_index[Action::toggle_auto_spell_check] =
-      set_next_command(rc_str(IDS_AUTO_SPELL_CHECK).c_str(),
-                       switch_auto_check_text);
-  action_index[Action::find_next_error] =
-    set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake);
-  action_index[Action::find_prev_error] =
-    set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake);
+  action_index[Action::toggle_auto_spell_check] = set_next_command(rc_str(IDS_AUTO_SPELL_CHECK).c_str(), switch_auto_check_text);
+  action_index[Action::find_next_error] = set_next_command(rc_str(IDS_FIND_NEXT_ERROR).c_str(), find_next_mistake);
+  action_index[Action::find_prev_error] = set_next_command(rc_str(IDS_FIND_PREV_ERROR).c_str(), find_prev_mistake);
 
-  action_index[Action::quick_language_change] =
-      set_next_command(rc_str(IDS_CHANGE_CURRENT_LANG).c_str(),
-                       quick_lang_change_context);
+  action_index[Action::quick_language_change] = set_next_command(rc_str(IDS_CHANGE_CURRENT_LANG).c_str(), quick_lang_change_context);
 
   set_next_command(L"---", nullptr);
 
-  action_index[Action::settings] = set_next_command(rc_str(IDS_SETTINGS).c_str(),
-                                                    start_settings);
-  action_index[Action::copy_all_misspellings] =
-      set_next_command(rc_str(IDS_COPY_ALL_MISSPELLED).c_str(),
-                       copy_misspellings_to_clipboard);
-  action_index[Action::erase_all_misspellings] =
-    set_next_command(rc_str(IDS_ERASE_ALL_MISSPELLED).c_str(),
-      erase_misspellings);
-  action_index[Action::reload_user_dictionaries] =
-      set_next_command(rc_str(IDS_RELOAD_HUNSPELL).c_str(),
-                       reload_hunspell_dictionaries);
-  action_index[Action::toggle_debug_logging] =
-      set_next_command(rc_str(IDS_SWITCH_DEBUG_LOGGING).c_str(),
-                       switch_debug_logging);
-  action_index[Action::open_debug_log] = set_next_command(rc_str(IDS_OPEN_DEBUG_LOG).c_str(),
-                                                          open_debug_log);
-  action_index[Action::online_manual] =
-    set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual);
-  action_index[Action::about] =
-    set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg);
+  action_index[Action::settings] = set_next_command(rc_str(IDS_SETTINGS).c_str(), start_settings);
+  action_index[Action::copy_all_misspellings] = set_next_command(rc_str(IDS_COPY_ALL_MISSPELLED).c_str(), copy_misspellings_to_clipboard);
+  action_index[Action::erase_all_misspellings] = set_next_command(rc_str(IDS_ERASE_ALL_MISSPELLED).c_str(), erase_misspellings);
+  action_index[Action::reload_user_dictionaries] = set_next_command(rc_str(IDS_RELOAD_HUNSPELL).c_str(), reload_hunspell_dictionaries);
+  action_index[Action::toggle_debug_logging] = set_next_command(rc_str(IDS_SWITCH_DEBUG_LOGGING).c_str(), switch_debug_logging);
+  action_index[Action::open_debug_log] = set_next_command(rc_str(IDS_OPEN_DEBUG_LOG).c_str(), open_debug_log);
+  action_index[Action::online_manual] = set_next_command(rc_str(IDS_ONLINE_MANUAL).c_str(), start_manual);
+  action_index[Action::about] = set_next_command(rc_str(IDS_ABOUT).c_str(), start_about_dlg);
   action_index[Action::show_spell_check_menu_at_cursor] =
-    set_next_command(rc_str(IDS_SHOW_SPELL_CHECK_MENU_AT_CURSOR).c_str (),
-      show_spell_check_menu_at_cursor);
+      set_next_command(rc_str(IDS_SHOW_SPELL_CHECK_MENU_AT_CURSOR).c_str(), show_spell_check_menu_at_cursor);
 
-  action_index[Action::replace_with_1st_suggestion] =
-    set_next_command(rc_str (IDS_REPLACE_WITH_1ST_SUGGESTION).c_str (),
-      replace_with_1st_suggestion);
+  action_index[Action::replace_with_1st_suggestion] = set_next_command(rc_str(IDS_REPLACE_WITH_1ST_SUGGESTION).c_str(), replace_with_1st_suggestion);
 
-  action_index[Action::ignore_for_current_session] =
-    set_next_command(rc_str(IDS_IGNORE_WORD_AT_CURSOR).c_str(),
-      ignore_for_current_session);
+  action_index[Action::ignore_for_current_session] = set_next_command(rc_str(IDS_IGNORE_WORD_AT_CURSOR).c_str(), ignore_for_current_session);
   // add further set_next_command at the bottom to avoid breaking configured hotkeys
 }
 
 void add_icons() {
   auto dpi = GetDeviceCaps(GetWindowDC(npp->get_editor_hwnd()), LOGPIXELSX);
   int size = 16 * dpi / 96;
-  static ToolbarIconsWrapper auto_check_icon{static_cast<HINSTANCE>(h_module),
-                                             MAKEINTRESOURCE(IDI_AUTOCHECK),
-                                             IMAGE_ICON,
-                                             size,
-                                             size,
-                                             0};
-  ::SendMessage(npp_data.npp_handle, NPPM_ADDTOOLBARICON,
-                static_cast<WPARAM>(func_item[0].cmd_id),
-                reinterpret_cast<LPARAM>(auto_check_icon.get()));
+  static ToolbarIconsWrapper auto_check_icon{static_cast<HINSTANCE>(h_module), MAKEINTRESOURCE(IDI_AUTOCHECK), IMAGE_ICON, size, size, 0};
+  ::SendMessage(npp_data.npp_handle, NPPM_ADDTOOLBARICON, static_cast<WPARAM>(func_item[0].cmd_id), reinterpret_cast<LPARAM>(auto_check_icon.get()));
 }
 
 static std::wstring get_menu_item_text(HMENU menu, UINT index) {
   auto str_len = GetMenuString(menu, index, nullptr, 0, MF_BYPOSITION);
   std::vector<wchar_t> buf(str_len + 1);
-  GetMenuString(menu, index, buf.data(), static_cast<int>(buf.size()),
-                MF_BYPOSITION);
+  GetMenuString(menu, index, buf.data(), static_cast<int>(buf.size()), MF_BYPOSITION);
   return buf.data();
 }
 
@@ -437,15 +389,11 @@ HMENU get_submenu(int item_id) {
   return mif.hSubMenu;
 }
 
-HMENU get_langs_sub_menu() {
-  return get_submenu(get_func_item()[action_index[Action::quick_language_change]].cmd_id);
-}
+HMENU get_langs_sub_menu() { return get_submenu(get_func_item()[action_index[Action::quick_language_change]].cmd_id); }
 
 void on_settings_changed() {
-  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_auto_spell_check]].cmd_id,
-                           settings->auto_check_text);
-  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_debug_logging]].cmd_id,
-                           settings->write_debug_log);
+  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_auto_spell_check]].cmd_id, settings->auto_check_text);
+  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_debug_logging]].cmd_id, settings->write_debug_log);
 }
 
 void init_classes() {
@@ -460,28 +408,19 @@ void init_classes() {
   settings = std::make_unique<Settings>(ini_file_path);
   settings->settings_changed.connect(on_settings_changed);
 
-  speller_container =
-      std::make_unique<SpellerContainer>(settings.get(), &npp_data);
+  speller_container = std::make_unique<SpellerContainer>(settings.get(), &npp_data);
 
-  spell_checker =
-      std::make_unique<SpellChecker>(settings.get(), *npp, *speller_container);
+  spell_checker = std::make_unique<SpellChecker>(settings.get(), *npp, *speller_container);
 
-  context_menu_handler = std::make_unique<ContextMenuHandler>(
-      *settings, *speller_container, *npp, *spell_checker);
+  context_menu_handler = std::make_unique<ContextMenuHandler>(*settings, *speller_container, *npp, *spell_checker);
 
-  suggestions_button = std::make_unique<SuggestionsButton>(
-      static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp,
-      *context_menu_handler, *settings);
+  suggestions_button = std::make_unique<SuggestionsButton>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp, *context_menu_handler, *settings);
   suggestions_button->do_dialog();
 
-  settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module),
-                                               npp_data.npp_handle, *npp,
-                                               *settings, *speller_container);
-  download_dics_dlg = std::make_unique<DownloadDicsDlg>(
-      static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
+  settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp, *settings, *speller_container);
+  download_dics_dlg = std::make_unique<DownloadDicsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
 
-  settings_dlg->download_dics_dlg_requested.connect(
-      []() { download_dics_dlg->do_dialog(); });
+  settings_dlg->download_dics_dlg_requested.connect([]() { download_dics_dlg->do_dialog(); });
 
   about_dlg = std::make_unique<AboutDlg>();
   about_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
@@ -489,19 +428,13 @@ void init_classes() {
   progress_dlg = std::make_unique<ProgressDlg>(*download_dics_dlg);
   progress_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
-  lang_list_instance = std::make_unique<LangList>(
-      static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings,
-      *speller_container);
+  lang_list_instance = std::make_unique<LangList>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
 
-  select_proxy_dlg =
-      std::make_unique<ConnectionSettingsDialog>(*settings, *download_dics_dlg);
+  select_proxy_dlg = std::make_unique<ConnectionSettingsDialog>(*settings, *download_dics_dlg);
   select_proxy_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
-  remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>(
-      static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings,
-      *speller_container);
-  aspell_options_dlg = std::make_unique<AspellOptionsDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle,
-    *settings, *speller_container);
+  remove_dics_dlg = std::make_unique<RemoveDictionariesDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
+  aspell_options_dlg = std::make_unique<AspellOptionsDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
 
   {
     auto mut = settings->modify_without_saving();
@@ -550,17 +483,15 @@ std::wstring get_debug_log_path() {
 void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
-  auto list = {Action::copy_all_misspellings, Action::erase_all_misspellings, Action::replace_with_1st_suggestion, Action::ignore_for_current_session,
-               Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries, Action::toggle_debug_logging,
-               Action::open_debug_log};
+  auto list = {
+      Action::copy_all_misspellings,           Action::erase_all_misspellings,   Action::replace_with_1st_suggestion, Action::ignore_for_current_session,
+      Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries, Action::toggle_debug_logging,        Action::open_debug_log};
   for (auto action : list) {
     MENUITEMINFO info;
     info.cbSize = sizeof(info);
     info.dwTypeData = nullptr;
     info.fMask = MIIM_STRING | MIIM_ID | MIIM_STATE | MIIM_DATA; // everything
-    auto get_info = [&] {
-      GetMenuItemInfo(plugin_menu, get_func_item()[action_index[action]].cmd_id, FALSE, &info);
-    };
+    auto get_info = [&] { GetMenuItemInfo(plugin_menu, get_func_item()[action_index[action]].cmd_id, FALSE, &info); };
     get_info();
     std::vector<wchar_t> buf(info.cch + 1);
     ++info.cch; // the worst API ever?
@@ -583,8 +514,7 @@ void rearrange_menu() {
     mif.cch = static_cast<UINT>(wcslen(mif.dwTypeData)) + 1;
     mif.hSubMenu = submenu;
     mif.fState = MFS_ENABLED;
-    InsertMenuItem(plugin_menu, get_func_item()[action_index[Action::settings]].cmd_id,
-                   FALSE, &mif);
+    InsertMenuItem(plugin_menu, get_func_item()[action_index[Action::settings]].cmd_id, FALSE, &mif);
   }
 }
 
@@ -592,27 +522,26 @@ extern FuncItem func_item[nb_func]; // NOLINT
 extern NppData npp_data;            // NOLINT
 extern bool do_close_tag;           // NOLINT
 std::vector<std::pair<TextPosition, TextPosition>> check_queue;
-UINT_PTR recheck_timer = 0u;
+static UINT_PTR edit_recheck_timer = 0u;
+static UINT_PTR scroll_recheck_timer = 0u;
+constexpr int scroll_recheck_timer_resolution = 100;
+bool scroll_timer_set = false;
 bool recheck_done = true;
-bool restyling_caused_recheck_was_done =
-    false; // Hack to avoid eternal cycle in case of scintilla bug
-bool first_restyle = true; // hack to successfully avoid checking hyperlinks
-                           // when they appear on program start
+bool restyling_caused_recheck_was_done = false; // Hack to avoid eternal cycle in case of scintilla bug
+bool first_restyle = true;                      // hack to successfully avoid checking hyperlinks
+                                                // when they appear on program start
 
 WPARAM last_hwnd = NULL;
 LPARAM last_coords = 0;
 std::vector<MenuItem> cur_menu_list;
 // Ok, trying to use window subclassing to handle messages
 
-LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param,
-                                      LPARAM l_param, UINT_PTR /*u_id_subclass*/,
-                                      DWORD_PTR /*dw_ref_data*/) {
+LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param, UINT_PTR /*u_id_subclass*/, DWORD_PTR /*dw_ref_data*/) {
   LRESULT ret; // int->LRESULT, fix x64 issue, still compatible with x86
   switch (message) {
   case WM_INITMENUPOPUP: {
     // Checking that it isn't system menu and nor any main menu except 0th
-    if (!cur_menu_list.empty() && LOWORD(l_param) == 0 &&
-        HIWORD(l_param) == 0) {
+    if (!cur_menu_list.empty() && LOWORD(l_param) == 0 && HIWORD(l_param) == 0) {
       // Special check for 0th main menu item
       MENUBARINFO info;
       info.cbSize = sizeof(MENUBARINFO);
@@ -636,15 +565,13 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param,
       if (!get_use_allocated_ids())
         context_menu_handler->process_menu_result(w_param);
 
-      if (LOWORD(w_param) == IDM_FILE_PRINTNOW ||
-          LOWORD(w_param) == IDM_FILE_PRINT) {
+      if (LOWORD(w_param) == IDM_FILE_PRINTNOW || LOWORD(w_param) == IDM_FILE_PRINT) {
         // Disable autocheck while printing
         bool prev_value = get_settings().auto_check_text;
 
         auto mut_settings = get_settings().modify();
         mut_settings->auto_check_text = false;
-        ret = ::DefSubclassProc(h_wnd, message, w_param,
-                               l_param);
+        ret = ::DefSubclassProc(h_wnd, message, w_param, l_param);
         mut_settings->auto_check_text = prev_value;
 
         return ret;
@@ -669,10 +596,8 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param,
   }
 
   if (message != 0) {
-    if (message ==
-        get_custom_gui_message_id(CustomGuiMessage::generic_callback)) {
-      const auto callback_ptr = std::unique_ptr<CallbackData>(
-          reinterpret_cast<CallbackData *>(w_param));
+    if (message == get_custom_gui_message_id(CustomGuiMessage::generic_callback)) {
+      const auto callback_ptr = std::unique_ptr<CallbackData>(reinterpret_cast<CallbackData *>(w_param));
       if (callback_ptr->alive_status.expired())
         return FALSE;
 
@@ -687,8 +612,7 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param,
 LRESULT
 show_calculated_menu(std::vector<MenuItem> &&menu_list) {
   cur_menu_list = std::move(menu_list);
-  return ::DefSubclassProc(npp_data.npp_handle, WM_CONTEXTMENU,
-                          last_hwnd, last_coords);
+  return ::DefSubclassProc(npp_data.npp_handle, WM_CONTEXTMENU, last_hwnd, last_coords);
 }
 
 void init_menu_ids() {
@@ -725,11 +649,22 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
 
 // For now doesn't look like there is such a need in check modified, but code
 // stays until thorough testing
-void WINAPI do_recheck(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
-                       DWORD /*dwTime*/) {
-  if (recheck_timer != NULL)
-    SetTimer(npp_data.npp_handle, recheck_timer, USER_TIMER_MAXIMUM,
-             do_recheck);
+void WINAPI edit_recheck_callback(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) {
+  if (edit_recheck_timer != NULL)
+    SetTimer(npp_data.npp_handle, edit_recheck_timer, USER_TIMER_MAXIMUM, edit_recheck_callback);
+  recheck_done = true;
+
+  spell_checker->recheck_visible(npp_interface().active_view());
+  if (!first_restyle)
+    restyling_caused_recheck_was_done = true;
+  first_restyle = false;
+}
+
+void WINAPI scroll_recheck_callback(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) {
+  if (scroll_recheck_timer != NULL) {
+    SetTimer(npp_data.npp_handle, scroll_recheck_timer, USER_TIMER_MAXIMUM, scroll_recheck_callback);
+    scroll_timer_set = false;
+  }
   recheck_done = true;
 
   spell_checker->recheck_visible(npp_interface().active_view());
@@ -740,14 +675,11 @@ void WINAPI do_recheck(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/,
 
 std::wstring_view rc_str_view(UINT string_id) {
   const wchar_t *ret = nullptr;
-  auto len = LoadString(static_cast<HINSTANCE>(h_module), string_id,
-                        reinterpret_cast<LPWSTR>(&ret), 0);
+  auto len = LoadString(static_cast<HINSTANCE>(h_module), string_id, reinterpret_cast<LPWSTR>(&ret), 0);
   return {ret, static_cast<size_t>(len)};
 }
 
-std::wstring rc_str(UINT string_id) {
-  return std::wstring{rc_str_view(string_id)};
-}
+std::wstring rc_str(UINT string_id) { return std::wstring{rc_str_view(string_id)}; }
 
 void delete_log() {
   if (settings->write_debug_log)
@@ -759,9 +691,11 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   notify(notify_code);
   switch (notify_code->nmhdr.code) {
   case NPPN_SHUTDOWN: {
-    SpellCheckerHelpers::print_to_log(settings.get (), L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
-    if (recheck_timer != NULL)
-      KillTimer(nullptr, recheck_timer);
+    SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
+    if (edit_recheck_timer != NULL)
+      KillTimer(nullptr, edit_recheck_timer);
+    if (scroll_recheck_timer != NULL)
+      KillTimer(nullptr, scroll_recheck_timer);
     command_menu_clean_up();
 
     plugin_clean_up();
@@ -774,8 +708,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_READY", npp->get_editor_hwnd());
     check_queue.clear();
     create_hooks();
-    recheck_timer =
-        SetTimer(npp_data.npp_handle, 0, USER_TIMER_MAXIMUM, do_recheck);
+    edit_recheck_timer = SetTimer(npp_data.npp_handle, 0, USER_TIMER_MAXIMUM, edit_recheck_callback);
+    scroll_recheck_timer = SetTimer(npp_data.npp_handle, 0, USER_TIMER_MAXIMUM, scroll_recheck_callback);
     spell_checker->recheck_visible_both_views();
     restyling_caused_recheck_was_done = false;
     suggestions_button->set_transparency();
@@ -794,21 +728,20 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case SCN_UPDATEUI:
     if (!spell_checker)
       return;
-    if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 &&
-        (recheck_done || first_restyle) &&
-        !restyling_caused_recheck_was_done) // If restyling wasn't caused by
-                                            // user input...
+    if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 && (recheck_done || first_restyle) && !restyling_caused_recheck_was_done) // If restyling wasn't caused
+                                                                                                                                  // by user input...
     {
       spell_checker->recheck_visible(npp_interface().active_view());
       if (!first_restyle)
         restyling_caused_recheck_was_done = true;
       first_restyle = false;
-    } else if ((notify_code->updated &
-                (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL)) != 0 &&
-               recheck_done) // If scroll wasn't caused by user input...
+    } else if ((notify_code->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL)) != 0 && recheck_done) // If scroll wasn't caused by user input...
     {
-      spell_checker->recheck_visible(npp_interface().active_view());
-      restyling_caused_recheck_was_done = false;
+      if (scroll_recheck_timer != NULL && !scroll_timer_set) {
+        SetTimer(npp_data.npp_handle, scroll_recheck_timer, scroll_recheck_timer_resolution, scroll_recheck_callback);
+        scroll_timer_set = true;
+        recheck_done = false;
+      }
     }
     suggestions_button->display(false);
     break;
@@ -816,18 +749,16 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case SCN_MODIFIED:
     if (!spell_checker)
       return;
-    if ((notify_code->modificationType &
-         (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0) {
-      if (recheck_timer != NULL) {
-        SetTimer(npp_data.npp_handle, recheck_timer,
-                 get_settings().recheck_delay, do_recheck);
+    if ((notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0) {
+      if (edit_recheck_timer != NULL) {
+        SetTimer(npp_data.npp_handle, edit_recheck_timer, get_settings().recheck_delay, edit_recheck_callback);
         recheck_done = false;
       }
     }
     break;
 
   case NPPN_LANGCHANGED: {
-    SpellCheckerHelpers::print_to_log(settings.get (), L"NPPN_LANGCHANGED", npp->get_editor_hwnd());
+    SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_LANGCHANGED", npp->get_editor_hwnd());
     if (!spell_checker)
       return;
     spell_checker->lang_change();
@@ -835,7 +766,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 
   case NPPN_TBMODIFICATION: {
     if (settings)
-      SpellCheckerHelpers::print_to_log(settings.get (), L"NPPN_TBMODIFICATION", npp->get_editor_hwnd());
+      SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_TBMODIFICATION", npp->get_editor_hwnd());
     add_icons();
   }
 
@@ -852,17 +783,12 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 void init_needed_dialogs(WPARAM w_param) {
   // A little bit of code duplication here :(
   auto menu_id = w_param;
-  if ((!get_use_allocated_ids() && HIBYTE(menu_id) != menu_id::plguin_menu &&
-       HIBYTE(menu_id) != menu_id::language_menu) ||
-      (get_use_allocated_ids() &&
-       (static_cast<int>(menu_id) < get_context_menu_id_start() ||
-        static_cast<int>(menu_id) > get_context_menu_id_start() + 350)))
+  if ((!get_use_allocated_ids() && HIBYTE(menu_id) != menu_id::plguin_menu && HIBYTE(menu_id) != menu_id::language_menu) ||
+      (get_use_allocated_ids() && (static_cast<int>(menu_id) < get_context_menu_id_start() || static_cast<int>(menu_id) > get_context_menu_id_start() + 350)))
     return;
   int used_menu_id;
   if (get_use_allocated_ids()) {
-    used_menu_id = (static_cast<int>(menu_id) < get_langs_menu_id_start()
-                        ? menu_id::plguin_menu
-                        : menu_id::language_menu);
+    used_menu_id = (static_cast<int>(menu_id) < get_langs_menu_id_start() ? menu_id::plguin_menu : menu_id::language_menu);
   } else {
     used_menu_id = HIBYTE(menu_id);
   }
