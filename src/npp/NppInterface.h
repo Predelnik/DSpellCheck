@@ -109,4 +109,5 @@ private:
 private:
   const NppData &m_npp_data;
   mutable enum_array<EditorViewType, std::optional<int>> m_lexer_cache;
+  mutable std::array<std::optional<bool>, 256> m_hotspot_cache;
 };

@@ -320,8 +320,10 @@ int NppInterface::get_lexer(EditorViewType view) const {
 int NppInterface::get_style_at(EditorViewType view, TextPosition position) const { return static_cast<int>(send_msg_to_scintilla(view, SCI_GETSTYLEAT, position)); }
 
 bool NppInterface::is_style_hotspot(EditorViewType view, int style) const {
-  // TODO: implement cache
-  return send_msg_to_scintilla(view, SCI_STYLEGETHOTSPOT, style) != 0;
+  ASSERT_RETURN(style <= STYLE_MAX, false);
+  if (auto value = m_hotspot_cache[style])
+    return *value;
+  return *(m_hotspot_cache[style]  = (send_msg_to_scintilla(view, SCI_STYLEGETHOTSPOT, style) != 0));
 }
 
 TextPosition NppInterface::get_active_document_length(EditorViewType view) const { return static_cast<TextPosition>(send_msg_to_scintilla(view, SCI_GETLENGTH)); }
