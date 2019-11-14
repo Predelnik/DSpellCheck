@@ -79,8 +79,6 @@ private:
   TextPosition prev_token_begin(std::wstring_view target, TextPosition index) const;
 
 private:
-  // converted to corresponding symbols
-  LRESULT m_hot_spot_cache[256]; // STYLE_MAX = 255
   const Settings &m_settings;
 
   TextPosition m_current_position;

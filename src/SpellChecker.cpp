@@ -31,7 +31,6 @@
 SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor, const SpellerContainer &speller_container)
     : m_settings(*settings), m_editor(editor), m_speller_container(speller_container) {
   m_current_position = 0;
-  reset_hot_spot_cache();
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
   m_speller_container.speller_status_changed.connect([this] { recheck_visible_both_views(); });
   on_settings_changed();
@@ -251,8 +250,6 @@ void SpellChecker::clear_all_underlines(EditorViewType view) const {
     m_editor.indicator_clear_range(view, 0, length);
   }
 }
-
-void SpellChecker::reset_hot_spot_cache() { memset(m_hot_spot_cache, -1, sizeof(m_hot_spot_cache)); }
 
 bool SpellChecker::is_spellchecking_needed(EditorViewType view, std::wstring_view word, TextPosition word_start) const {
   if (!m_speller_container.active_speller().is_working())
