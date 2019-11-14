@@ -1,3 +1,13 @@
+v1.4.15
+* Fix possible exception on Notepad++ start. (#194)
+* Lower CPU usage while scrolling (especially critical for N++ 7.8.0+) (#196)
+* Disable aspell configure dialog if aspell is not found. (#192)
+* Fix incorrect switching of language when pressing apply in settings.
+* Make unicode apostrophe affect options regarding normal apostrophe if the appropriate option is set. (#193)
+* Fix `ignoring word at cursor` action for some libraries. (#182)
+* Warn about inability to write settings less frequently. (#190)
+* The last version to support windows xp.
+
 v1.4.14
 * Spell-check CDATA as text in HTML. (#184)
 * Support ignoring word at cursor through additional actions. (#182)
