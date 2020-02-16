@@ -31,6 +31,7 @@ TEST_CASE("Speller") {
   settings.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
   auto v = NppViewType::primary;
+  editor.set_target_view(static_cast<int> (v));
   editor.open_virtual_document(v, L"test.txt", LR"(This is test document.
 Please bear with me.
 adadsd.)");
@@ -128,9 +129,9 @@ wrongword
   sp_container.speller_status_changed();
 
   TextPosition pos, length;
-  editor.set_cursor_pos(v, 4);
+  editor.set_cursor_pos(4);
   CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, true));
-  editor.set_cursor_pos(v, 14);
+  editor.set_cursor_pos(14);
   CHECK(sc.is_word_under_cursor_correct(pos, length, true));
 
   {
@@ -253,7 +254,7 @@ abg
   {
     // check that right clicking when cursor after the word works
     editor.set_active_document_text(v, L"abcdef test");
-    editor.set_cursor_pos(v, 6);
+    editor.set_cursor_pos(6);
     CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, true));
   }
   {

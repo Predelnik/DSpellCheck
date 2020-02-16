@@ -96,6 +96,7 @@ void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
 }
 
 void replace_all_tokens(EditorInterface &editor, NppViewType view, const Settings &settings, const char *from, std::wstring_view to, bool is_proper_name) {
+  TARGET_VIEW_BLOCK (editor, static_cast<int> (view));
   TextPosition pos = 0;
   auto from_len = static_cast<TextPosition>(strlen(from));
   if (from_len == 0)
@@ -104,7 +105,7 @@ void replace_all_tokens(EditorInterface &editor, NppViewType view, const Setting
   std::wstring modified_to(to);
 
   while (true) {
-    pos = editor.find_next(view, pos, from);
+    pos = editor.find_next(pos, from);
     if (pos >= 0) {
       auto doc_word_start_pos = editor.get_prev_valid_begin_pos(view, pos);
       auto doc_word_end_pos = editor.get_next_valid_end_pos(view, static_cast<TextPosition>(pos + from_len));

@@ -146,8 +146,11 @@ std::wstring_view SpellChecker::get_word_at(TextPosition char_pos, const MappedW
 }
 
 void SpellChecker::refresh_underline_style() {
-  for (auto view : enum_range<NppViewType>()) {
-    m_editor.set_indicator_style(view, spell_check_indicator_id, m_settings.underline_style);
+  auto view_count = m_editor.get_view_count();
+  for (int view_index = 0; view_index < view_count; ++view_index) {
+    TARGET_VIEW_BLOCK (m_editor, view_index);
+    auto view = static_cast<NppViewType> (view_index);
+    m_editor.set_indicator_style(spell_check_indicator_id, m_settings.underline_style);
     m_editor.set_indicator_foreground(view, spell_check_indicator_id, m_settings.underline_color);
   }
 }
@@ -303,6 +306,7 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
 
 void SpellChecker::erase_all_misspellings() {
   auto view = m_editor.active_view();
+  m_editor.target_active_view();
   auto mapped_str = m_editor.to_mapped_wstring(view, m_editor.get_active_document_text(view));
   m_misspellings.clear();
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
@@ -313,7 +317,7 @@ void SpellChecker::erase_all_misspellings() {
   for (auto &misspelling : m_misspellings) {
     auto start = mapped_str.to_original_index (static_cast<TextPosition> (misspelling.data() - mapped_str.str.data()));
     auto original_len = mapped_str.to_original_index (static_cast<TextPosition> (misspelling.data() - mapped_str.str.data() + misspelling.length ())) - start;
-    m_editor.delete_range(view, start - chars_removed, original_len);
+    m_editor.delete_range(start - chars_removed, original_len);
     chars_removed += original_len;
   }
 }
@@ -346,7 +350,7 @@ public:
 } // namespace
 
 bool SpellChecker::check_text(NppViewType view, const MappedWstring &text_to_check, CheckTextMode mode) const {
-  m_editor.set_target_view(static_cast<int> (view));
+  TARGET_VIEW_BLOCK(m_editor, static_cast<int> (view));
   SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_text(NppViewType view, const MappedWstring &text_to_check, CheckTextMode mode)", m_editor.get_editor_hwnd());
   if (text_to_check.str.empty())
     return false;

@@ -114,6 +114,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
     used_menu_id = HIBYTE(menu_id);
   }
   auto view = m_editor.active_view();
+  m_editor.target_active_view();
 
   switch (used_menu_id) {
   case menu_id::plguin_menu: {
@@ -129,15 +130,15 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
         mut->ignore_word(m_selected_word.str);
         m_word_under_cursor_length =
             static_cast<TextPosition>(m_selected_word.str.length());
-        m_editor.set_cursor_pos(view, m_word_under_cursor_pos +
-                                          m_word_under_cursor_length);
+        m_editor.set_cursor_pos(m_word_under_cursor_pos +
+                                m_word_under_cursor_length);
       } else if (result == menu_id::add_to_dictionary) {
         auto mut = m_speller_container.modify();
         mut->add_to_dictionary(m_selected_word.str);
         m_word_under_cursor_length =
             static_cast<TextPosition>(m_selected_word.str.length());
-        m_editor.set_cursor_pos(view, m_word_under_cursor_pos +
-                                          m_word_under_cursor_length);
+        m_editor.set_cursor_pos(m_word_under_cursor_pos +
+                                m_word_under_cursor_length);
       } else if (result <= m_last_suggestions.size()) {
         std::string encoded_str;
         if (m_editor.get_encoding(view) == EditorCodepage::ansi)
@@ -145,13 +146,13 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
         else
           encoded_str = to_utf8_string(m_last_suggestions[result - 1]);
 
-        m_editor.replace_selection(view, encoded_str.c_str());
+        m_editor.replace_selection(encoded_str.c_str());
       } else if (result <= menu_id::replace_all_start + m_last_suggestions.size()) {
         auto misspelled_text = m_editor.selected_text(view);
         auto &suggestion = m_last_suggestions[result - menu_id::replace_all_start - 1];
         UNDO_BLOCK (m_editor, view);
         // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion
-        m_editor.replace_selection(view, m_editor.to_editor_encoding(view, suggestion).c_str());
+        m_editor.replace_selection(m_editor.to_editor_encoding(view, suggestion).c_str());
 
         bool is_proper_name = true;
         if (!suggestion.empty ()) {

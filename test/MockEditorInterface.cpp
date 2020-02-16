@@ -76,9 +76,9 @@ void MockEditorInterface::set_selection(TextPosition from,
     doc->cur.selection = {to, from};
 }
 
-void MockEditorInterface::replace_selection(NppViewType view,
-                                            const char *str) {
-  auto doc = active_document(view);
+void MockEditorInterface::replace_selection(
+  const char *str) {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   auto &d = doc->cur.data;
@@ -86,9 +86,9 @@ void MockEditorInterface::replace_selection(NppViewType view,
   doc->cur.style.resize (doc->cur.data.length ());
 }
 
-void MockEditorInterface::set_indicator_style(NppViewType view,
-                                              int indicator_index, int style) {
-  auto doc = active_document(view);
+void MockEditorInterface::set_indicator_style(
+  int indicator_index, int style) {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   if (indicator_index >= static_cast<int>(doc->indicator_info.size()))
@@ -530,12 +530,12 @@ void MockEditorInterface::set_codepage(NppViewType view,
   doc->codepage = codepage;
 }
 
-void MockEditorInterface::delete_range(NppViewType view, TextPosition start,
+void MockEditorInterface::delete_range(TextPosition start,
                                        TextPosition length) {
-  auto doc = active_document(view);
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
-  if (m_save_undo[view])
+  if (m_save_undo[m_target_view])
     doc->save_state();
   doc->erase(start, length);
 }
@@ -566,9 +566,9 @@ bool MockEditorInterface::is_line_visible(NppViewType /*view*/, TextPosition /*l
   return true;
 }
 
-TextPosition MockEditorInterface::find_next(NppViewType view, TextPosition from_position, const char* needle)
+TextPosition MockEditorInterface::find_next(TextPosition from_position, const char* needle)
 {
-  auto doc = active_document(view);
+  auto doc = active_document(m_target_view);
   if (!doc)
     return -1;
 
@@ -605,6 +605,11 @@ int MockEditorInterface::get_view_count() const
 void MockEditorInterface::set_target_view(int view_index)
 {
   m_target_view = static_cast<NppViewType> (view_index);
+}
+
+int MockEditorInterface::get_target_view() const
+{
+  return static_cast<int> (m_target_view);
 }
 
 MockedDocumentInfo *MockEditorInterface::active_document(NppViewType view) {

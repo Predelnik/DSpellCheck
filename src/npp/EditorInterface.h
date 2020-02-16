@@ -72,15 +72,14 @@ public:
                                 const toolbarIcons *tool_bar_icons_ptr) = 0;
   virtual void force_style_update(TextPosition from, TextPosition to) = 0;
   virtual void set_selection(TextPosition from, TextPosition to) = 0;
-  virtual TextPosition find_next(NppViewType view, TextPosition from_position, const char* needle) = 0;
-  void set_cursor_pos(NppViewType view, TextPosition cursor_pos) {
-    set_target_view (static_cast<int> (view));
+  virtual TextPosition find_next(TextPosition from_position, const char* needle) = 0;
+  void set_cursor_pos(TextPosition cursor_pos) {
     set_selection(cursor_pos, cursor_pos);
   }
 
-  virtual void replace_selection(NppViewType view, const char *str) = 0;
-  virtual void delete_range (NppViewType view, TextPosition start, TextPosition length) = 0;
-  virtual void set_indicator_style(NppViewType view, int indicator_index,
+  virtual void replace_selection(const char *str) = 0;
+  virtual void delete_range (TextPosition start, TextPosition length) = 0;
+  virtual void set_indicator_style(int indicator_index,
                                    int style) = 0;
   virtual void set_indicator_foreground(NppViewType view,
                                         int indicator_index, int style) = 0;
@@ -150,7 +149,6 @@ public:
   }
 
   virtual int get_view_count () const = 0;
-  virtual void set_target_view (int view_index) = 0;
   virtual void target_active_view ();
   virtual NppViewType active_view() const = 0;
 
@@ -166,8 +164,11 @@ public:
 private:
   virtual void begin_undo_action (NppViewType view) = 0; // use UNDO_BLOCK instead
   virtual void end_undo_action (NppViewType view) = 0;
+  virtual void set_target_view (int view_index) = 0;
+  virtual int get_target_view () const = 0;
 
   friend class undo_block;
+  friend class target_view_block;
 };
 
 class undo_block
@@ -182,3 +183,25 @@ private:
 };
 
 #define UNDO_BLOCK(...) undo_block anonymous_undo_block_ ## __COUNTER__ {__VA_ARGS__}
+
+class target_view_block {
+  using self_t = target_view_block;
+public:
+  target_view_block (EditorInterface &editor, int view) : m_editor(editor) {
+    m_original_view = m_editor.get_target_view();
+    m_editor.set_target_view(view);
+  }
+  static self_t active_view (EditorInterface &editor) {
+    return {editor, static_cast<int> (editor.active_view())};
+  }
+  ~target_view_block () {
+    m_editor.set_target_view(m_original_view);
+  }
+
+private:
+  EditorInterface &m_editor;
+  int m_original_view;
+};
+
+#define TARGET_VIEW_BLOCK(...) target_view_block anonymous_target_view_block_ ## __COUNTER__ {__VA_ARGS__}
+#define ACTIVE_VIEW_BLOCK(...) auto anonymous_target_view_block_ ## __COUNTER__ = target_view_block::active_view (__VA_ARGS__)

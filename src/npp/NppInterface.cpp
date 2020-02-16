@@ -42,6 +42,10 @@ void NppInterface::set_menu_item_check(int cmd_id, bool checked) { send_msg_to_n
 
 HMENU NppInterface::get_menu_handle(int menu_type) const { return reinterpret_cast<HMENU>(send_msg_to_npp(NPPM_GETMENUHANDLE, menu_type)); }
 
+int NppInterface::get_target_view() const {
+  return static_cast<int> (m_target_view);
+}
+
 LRESULT NppInterface::send_msg_to_npp(UINT Msg, WPARAM wParam, LPARAM lParam) const { return SendMessage(m_npp_data.npp_handle, Msg, wParam, lParam); }
 
 HWND NppInterface::get_scintilla_hwnd(NppViewType view) const {
@@ -162,13 +166,13 @@ bool NppInterface::is_line_visible(NppViewType view, TextPosition line) const {
   return send_msg_to_scintilla(view, SCI_GETLINEVISIBLE, line);
 }
 
-TextPosition NppInterface::find_next(NppViewType view, TextPosition from_position, const char* needle)
+TextPosition NppInterface::find_next(TextPosition from_position, const char* needle)
 {
   Sci_TextToFind ttf;
   ttf.chrg.cpMin = static_cast<Sci_PositionCR> (from_position);
-  ttf.chrg.cpMax = static_cast<Sci_PositionCR> (get_active_document_length(view));
+  ttf.chrg.cpMax = static_cast<Sci_PositionCR> (get_active_document_length(m_target_view));
   ttf.lpstrText = needle;
-  return static_cast<TextPosition> (send_msg_to_scintilla(view, SCI_FINDTEXT, 0, reinterpret_cast<LPARAM> (&ttf)));
+  return static_cast<TextPosition> (send_msg_to_scintilla(m_target_view, SCI_FINDTEXT, 0, reinterpret_cast<LPARAM> (&ttf)));
 }
 
 void NppInterface::replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement) {
@@ -179,10 +183,10 @@ void NppInterface::replace_text(NppViewType view, TextPosition from, TextPositio
 
 void NppInterface::set_selection(TextPosition from, TextPosition to) { post_msg_to_scintilla(m_target_view, SCI_SETSEL, from, to); }
 
-void NppInterface::replace_selection(NppViewType view, const char *str) { send_msg_to_scintilla(view, SCI_REPLACESEL, 0, reinterpret_cast<LPARAM>(str)); }
+void NppInterface::replace_selection(const char *str) { send_msg_to_scintilla(m_target_view, SCI_REPLACESEL, 0, reinterpret_cast<LPARAM>(str)); }
 
-void NppInterface::set_indicator_style(NppViewType view, int indicator_index, int style) {
-  send_msg_to_scintilla(view, SCI_INDICSETSTYLE, indicator_index, style);
+void NppInterface::set_indicator_style(int indicator_index, int style) {
+  send_msg_to_scintilla(m_target_view, SCI_INDICSETSTYLE, indicator_index, style);
 }
 
 void NppInterface::set_indicator_foreground(NppViewType view, int indicator_index, int style) {
@@ -225,8 +229,8 @@ RECT NppInterface::editor_rect(NppViewType view) const {
   return out;
 }
 
-void NppInterface::delete_range(NppViewType view, TextPosition start, TextPosition length) {
-  send_msg_to_scintilla (view, SCI_DELETERANGE, start, length);
+void NppInterface::delete_range(TextPosition start, TextPosition length) {
+  send_msg_to_scintilla (m_target_view, SCI_DELETERANGE, start, length);
 }
 
 void NppInterface::begin_undo_action(NppViewType view) {

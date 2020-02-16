@@ -39,13 +39,13 @@ public:
   void move_active_document_to_other_view() override;
   void add_toolbar_icon(int cmdId, const toolbarIcons *toolBarIconsPtr) override;
   void set_selection(TextPosition from, TextPosition to) override;
-  void replace_selection(NppViewType view, const char *str) override;
-  void set_indicator_style(NppViewType view, int indicator_index, int style) override;
+  void replace_selection(const char *str) override;
+  void set_indicator_style(int indicator_index, int style) override;
   void set_indicator_foreground(NppViewType view, int indicator_index, int style) override;
   void set_current_indicator(NppViewType view, int indicator_index) override;
   void indicator_fill_range(NppViewType view, TextPosition from, TextPosition to) override;
   void indicator_clear_range(NppViewType view, TextPosition from, TextPosition to) override;
-  void delete_range(NppViewType view, TextPosition start, TextPosition length) override;
+  void delete_range(TextPosition start, TextPosition length) override;
   void begin_undo_action(NppViewType view) override;
   void end_undo_action(NppViewType view) override;
   void undo(NppViewType view) override;
@@ -91,7 +91,7 @@ public:
   int get_point_x_from_position(NppViewType view, TextPosition position) const override;
   int get_point_y_from_position(NppViewType view, TextPosition position) const override;
   bool is_line_visible(NppViewType view, TextPosition line) const override;
-  TextPosition find_next(NppViewType view, TextPosition from_position, const char* needle) override;
+  TextPosition find_next(TextPosition from_position, const char* needle) override;
   void replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(NppViewType view, TextPosition line) override;
 
@@ -99,6 +99,7 @@ public:
   void set_target_view(int view_index) override;
 
   HMENU get_menu_handle(int menu_type) const;
+  int get_target_view() const override;
 
 public:
   HWND get_scintilla_hwnd(NppViewType view) const;

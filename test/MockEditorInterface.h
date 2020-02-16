@@ -56,8 +56,8 @@ public:
                         const toolbarIcons *tool_bar_icons_ptr) override;
   void force_style_update(TextPosition from, TextPosition to) override;
   void set_selection(TextPosition from, TextPosition to) override;
-  void replace_selection(NppViewType view, const char *str) override;
-  void set_indicator_style(NppViewType view, int indicator_index,
+  void replace_selection(const char *str) override;
+  void set_indicator_style(int indicator_index,
                            int style) override;
   void set_indicator_foreground(NppViewType view, int indicator_index,
                                 int style) override;
@@ -121,21 +121,21 @@ public:
   void set_lexer (NppViewType view, int lexer);
   void set_whole_text_style (NppViewType view, int style);
   void set_codepage(NppViewType view, EditorCodepage codepage);
-  void delete_range(NppViewType view, TextPosition start, TextPosition length) override;
+  void delete_range(TextPosition start, TextPosition length) override;
   void begin_undo_action(NppViewType view) override;
   void end_undo_action(NppViewType view) override;
   void undo(NppViewType view) override;
   bool is_line_visible(NppViewType view, TextPosition line) const override;
-  TextPosition find_next(NppViewType view, TextPosition from_position, const char* needle) override;
+  TextPosition find_next(TextPosition from_position, const char* needle) override;
   void replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(NppViewType view, TextPosition line) override;
   int get_view_count() const override;
   void set_target_view(int view_index) override;
+  int get_target_view() const override;
 
 private:
   const MockedDocumentInfo *active_document(NppViewType view) const;
   MockedDocumentInfo *active_document(NppViewType view);
-private:
   enum_array<NppViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<NppViewType, int> m_active_document_index;
   enum_array<NppViewType, bool> m_save_undo;
