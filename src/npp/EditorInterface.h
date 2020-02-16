@@ -94,8 +94,8 @@ public:
   virtual void add_bookmark (TextPosition line) = 0;
 
   // const
-  virtual std::vector<std::wstring>
-  get_open_filenames(std::optional<NppViewType> view = {}) const = 0;
+  virtual std::vector<std::wstring> get_open_filenames() const = 0;
+  virtual std::vector<std::wstring> get_open_filenames_all_views() const = 0;
   virtual bool is_opened(const std::wstring &filename) const = 0;
   virtual EditorCodepage get_encoding(NppViewType view) const = 0;
   virtual std::wstring active_document_path() const = 0;

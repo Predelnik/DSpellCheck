@@ -360,22 +360,7 @@ std::string NppInterface::get_text_range(NppViewType view, TextPosition from, Te
 
 void NppInterface::force_style_update(TextPosition from, TextPosition to) { send_msg_to_scintilla(m_target_view, SCI_COLOURISE, from, to); }
 
-std::vector<std::wstring> NppInterface::get_open_filenames(std::optional<NppViewType> view) const {
-  int enum_val = -1;
-
-  if (!view)
-    enum_val = ALL_OPEN_FILES;
-  else
-    switch (*view) {
-    case NppViewType::primary:
-      enum_val = PRIMARY_VIEW;
-      break;
-    case NppViewType::secondary:
-      enum_val = SECOND_VIEW;
-      break;
-    case NppViewType::COUNT:
-      break;
-    }
+std::vector<std::wstring> NppInterface::get_open_filenames_helper(int enum_val, int msg) const {
 
   ASSERT_RETURN(enum_val >= 0, {});
   auto count = static_cast<int>(send_msg_to_npp(NPPM_GETNBOPENFILES, 0, enum_val));
@@ -384,23 +369,6 @@ std::vector<std::wstring> NppInterface::get_open_filenames(std::optional<NppView
   for (int i = 0; i < count; ++i)
     paths[i] = new wchar_t[MAX_PATH];
 
-  int msg = -1;
-  if (!view)
-    msg = NPPM_GETOPENFILENAMES;
-  else
-    switch (*view) {
-    case NppViewType::primary:
-      msg = NPPM_GETOPENFILENAMESPRIMARY;
-      break;
-    case NppViewType::secondary:
-      msg = NPPM_GETOPENFILENAMESSECOND;
-      break;
-    case NppViewType::COUNT:
-      break;
-    default:;
-    }
-
-  assert(msg >= 0);
   {
     auto ret = send_msg_to_npp(msg, reinterpret_cast<WPARAM>(paths), count);
     static_cast<void> (ret);
@@ -414,4 +382,22 @@ std::vector<std::wstring> NppInterface::get_open_filenames(std::optional<NppView
   }
   delete[] paths;
   return res;
+}
+
+std::vector<std::wstring> NppInterface::get_open_filenames_all_views() const {
+  return get_open_filenames_helper(ALL_OPEN_FILES, NPPM_GETOPENFILENAMES);
+}
+
+std::vector<std::wstring> NppInterface::get_open_filenames() const {
+  switch (m_target_view) {
+  case NppViewType::primary:
+    return get_open_filenames_helper(PRIMARY_VIEW, NPPM_GETOPENFILENAMESPRIMARY);
+    break;
+  case NppViewType::secondary:
+    return get_open_filenames_helper(SECOND_VIEW, NPPM_GETOPENFILENAMESSECOND);
+    break;
+  case NppViewType::COUNT: break;
+  }
+  assert (!"Incorrect target_view");
+  return {};
 }

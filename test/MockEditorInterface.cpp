@@ -344,17 +344,6 @@ void MockEditorInterface::switch_to_file(const std::wstring &path) {
     }
 }
 
-std::vector<std::wstring> MockEditorInterface::get_open_filenames(
-    std::optional<NppViewType> view) const {
-  std::vector<std::wstring> out;
-  for (auto view_it : enum_range<NppViewType>())
-    if (!view || view == view_it)
-      std::transform(m_documents[view_it].begin(), m_documents[view_it].end(),
-                     std::back_inserter(out),
-                     [](const auto &data) { return data.path; });
-  return out;
-}
-
 bool MockEditorInterface::is_opened(const std::wstring &filename) const {
   for (auto view : enum_range<NppViewType>())
     if (std::find_if(m_documents[view].begin(), m_documents[view].end(),
@@ -610,6 +599,27 @@ void MockEditorInterface::set_target_view(int view_index)
 int MockEditorInterface::get_target_view() const
 {
   return static_cast<int> (m_target_view);
+}
+
+std::vector<std::wstring> MockEditorInterface::get_open_filenames() const
+{
+  std::vector<std::wstring> out;
+  for (auto view : enum_range<NppViewType>())
+    if (view == m_target_view)
+      std::transform(m_documents[view].begin(), m_documents[view].end(),
+                     std::back_inserter(out),
+                     [](const auto &data) { return data.path; });
+  return out;
+}
+
+std::vector<std::wstring> MockEditorInterface::get_open_filenames_all_views() const
+{
+  std::vector<std::wstring> out;
+  for (auto view : enum_range<NppViewType>())
+      std::transform(m_documents[view].begin(), m_documents[view].end(),
+                     std::back_inserter(out),
+                     [](const auto &data) { return data.path; });
+  return out;
 }
 
 MockedDocumentInfo *MockEditorInterface::active_document(NppViewType view) {

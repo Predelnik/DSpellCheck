@@ -51,7 +51,8 @@ public:
   void undo() override;
 
   // const
-  std::vector<std::wstring> get_open_filenames(std::optional<NppViewType> view = {}) const override;
+  std::vector<std::wstring> get_open_filenames() const override;
+  std::vector<std::wstring> get_open_filenames_all_views() const override;
   NppViewType active_view() const override;
   bool is_opened(const std::wstring &filename) const override;
   EditorCodepage get_encoding(NppViewType view) const override;
@@ -110,6 +111,7 @@ private:
   void post_msg_to_scintilla(NppViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
   std::wstring get_dir_msg(UINT msg) const;
   void do_command(int id);
+  std::vector<std::wstring> get_open_filenames_helper(int enum_val, int msg) const;
 
 private:
   const NppData &m_npp_data;

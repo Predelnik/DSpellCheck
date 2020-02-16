@@ -92,8 +92,6 @@ public:
   void activate_document(int index) override;
   void activate_document(const std::wstring &filepath) override;
   void switch_to_file(const std::wstring &path) override;
-  std::vector<std::wstring>
-  get_open_filenames(std::optional<NppViewType> view) const override;
   bool is_opened(const std::wstring &filename) const override;
   std::wstring active_document_path() const override;
   std::wstring active_file_directory() const override;
@@ -132,10 +130,13 @@ public:
   int get_view_count() const override;
   void set_target_view(int view_index) override;
   int get_target_view() const override;
+  std::vector<std::wstring> get_open_filenames() const override;
+  std::vector<std::wstring> get_open_filenames_all_views() const override;
 
 private:
   const MockedDocumentInfo *active_document(NppViewType view) const;
   MockedDocumentInfo *active_document(NppViewType view);
+private:
   enum_array<NppViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<NppViewType, int> m_active_document_index;
   enum_array<NppViewType, bool> m_save_undo;
