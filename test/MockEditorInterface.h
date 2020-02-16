@@ -50,6 +50,7 @@ public:
 };
 
 class MockEditorInterface : public EditorInterface {
+  static constexpr auto view_count = 2;
 public:
   void move_active_document_to_other_view() override;
   void add_toolbar_icon(int cmd_id,
@@ -110,15 +111,15 @@ public:
   RECT editor_rect() const override;
   MockEditorInterface();
   ~MockEditorInterface();
-  void open_virtual_document(NppViewType view, const std::wstring &path,
+  void open_virtual_document(const std::wstring &path,
                              const std::wstring &data);
-  void set_active_document_text(NppViewType view, const std::wstring &text);
-  void set_active_document_text_raw(NppViewType view, const std::string& text);
-  std::vector<std::string> get_underlined_words (NppViewType view, int indicator_id) const;
-  void make_all_visible (NppViewType view);
-  void set_lexer (NppViewType view, int lexer);
-  void set_whole_text_style (NppViewType view, int style);
-  void set_codepage(NppViewType view, EditorCodepage codepage);
+  void set_active_document_text(const std::wstring &text);
+  void set_active_document_text_raw(const std::string& text);
+  std::vector<std::string> get_underlined_words (int indicator_id) const;
+  void make_all_visible ();
+  void set_lexer (int lexer);
+  void set_whole_text_style (int style);
+  void set_codepage(EditorCodepage codepage);
   void delete_range(TextPosition start, TextPosition length) override;
   void begin_undo_action() override;
   void end_undo_action() override;
@@ -135,14 +136,14 @@ private:
   void set_target_view(int view_index) const override;
   int get_target_view() const override;
   const MockedDocumentInfo *active_document() const;
-  MockedDocumentInfo *active_document(NppViewType view);
+  MockedDocumentInfo *active_document();
 private:
   int active_view() const override;
-  enum_array<NppViewType, std::vector<MockedDocumentInfo>> m_documents;
-  enum_array<NppViewType, int> m_active_document_index;
-  enum_array<NppViewType, bool> m_save_undo;
-  NppViewType m_active_view = NppViewType::primary;
-  mutable NppViewType m_target_view = NppViewType::COUNT;
+  std::array<std::vector<MockedDocumentInfo>, view_count> m_documents;
+  std::array<int, view_count> m_active_document_index;
+  std::array<bool, view_count> m_save_undo;
+  int m_active_view = 0;
+  mutable int m_target_view = -1;
   static constexpr auto text_width = 13;
   static constexpr auto text_height = 13;
 };

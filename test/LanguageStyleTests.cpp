@@ -32,36 +32,35 @@ TEST_CASE("Language Styles") {
     setup_speller(*speller);
     settings.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
-    auto v = NppViewType::primary;
-    TARGET_VIEW_BLOCK (editor, static_cast<int> (v));
-    editor.open_virtual_document(v, L"test.txt", L"abcdef test");
+    TARGET_VIEW_BLOCK (editor, 0);
+    editor.open_virtual_document(L"test.txt", L"abcdef test");
     SpellerContainer sp_container(&settings, std::move(speller));
     SpellChecker sc(&settings, editor, sp_container);
 
-    editor.set_lexer(v, SCLEX_HTML);
-    editor.set_whole_text_style(v, SCE_H_DEFAULT);
-    editor.make_all_visible(v);
+    editor.set_lexer(SCLEX_HTML);
+    editor.set_whole_text_style(SCE_H_DEFAULT);
+    editor.make_all_visible();
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
+    CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
 
-    editor.set_lexer(v, SCLEX_YAML);
-    editor.set_whole_text_style(v, SCE_YAML_DEFAULT);
+    editor.set_lexer(SCLEX_YAML);
+    editor.set_whole_text_style(SCE_YAML_DEFAULT);
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
+    CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
 
     {
       auto m = settings.modify();
       m->check_strings = true;
     }
 
-    editor.set_lexer(v, SCLEX_CPP);
-    editor.set_whole_text_style(v, SCE_C_VERBATIM);
+    editor.set_lexer(SCLEX_CPP);
+    editor.set_whole_text_style(SCE_C_VERBATIM);
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
+    CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
 
-    editor.set_lexer(v, SCLEX_LUA);
-    editor.set_whole_text_style(v, SCE_LUA_LITERALSTRING);
+    editor.set_lexer(SCLEX_LUA);
+    editor.set_whole_text_style(SCE_LUA_LITERALSTRING);
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(v, spell_check_indicator_id).empty());
+    CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
   }
 }

@@ -30,9 +30,8 @@ TEST_CASE("Speller") {
   setup_speller(*speller);
   settings.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
-  auto v = NppViewType::primary;
-  TARGET_VIEW_BLOCK(editor, static_cast<int> (v));
-  editor.open_virtual_document(v, L"test.txt", LR"(This is test document.
+  TARGET_VIEW_BLOCK(editor, 0);
+  editor.open_virtual_document(L"test.txt", LR"(This is test document.
 Please bear with me.
 adadsd.)");
   auto speller_ptr = speller.get();
@@ -42,7 +41,7 @@ adadsd.)");
   CHECK(editor.selected_text() == "adadsd");
   settings.modify()->tokenization_style = TokenizationStyle::by_delimiters;
   CHECK(editor.selected_text() == "adadsd");
-  editor.set_active_document_text(v, LR"(This is test document)");
+  editor.set_active_document_text(LR"(This is test document)");
   sc.find_next_mistake();
   CHECK(editor.selected_text().empty());
   std::wstring s;
@@ -53,7 +52,7 @@ adadsd.)");
       s += L"abirvalg\n";
     s += L"This is test document\n";
   }
-  editor.set_active_document_text(v, s);
+  editor.set_active_document_text(s);
   sc.find_next_mistake();
   CHECK(editor.selected_text() == "adadsd");
   sc.find_next_mistake();
@@ -61,7 +60,7 @@ adadsd.)");
   sc.find_prev_mistake();
   CHECK(editor.selected_text() == "adadsd");
 
-  editor.set_active_document_text(v, LR"(
+  editor.set_active_document_text(LR"(
 wrongword
 This is test document
 badword)");
@@ -81,7 +80,7 @@ wrongword
 
 This is test document
 )");
-  editor.set_active_document_text(v, LR"(
+  editor.set_active_document_text(LR"(
 нехорошееслово
 И ещё немного слов
 ошибочноеслово)");
@@ -95,7 +94,7 @@ This is test document
 нехорошееслово
 И ещё немного слов
 ошибочноеслово)");
-  editor.set_active_document_text(v, LR"(
+  editor.set_active_document_text(LR"(
 wrongword
 This is test document
 badword
@@ -103,27 +102,27 @@ Badword)");
   CHECK(sc.get_all_misspellings_as_string() == LR"(badword
 wrongword
 )");
-  editor.make_all_visible(v);
+  editor.make_all_visible();
   sc.recheck_visible_both_views(); // technically it should happen automatically
                                    // if notifications were signals in
                                    // EditorInterface
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
   {
     auto mut = settings.modify();
     mut->check_those = false;
     mut->file_types = L"*.txt";
   }
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id).empty());
+  CHECK(editor.get_underlined_words(spell_check_indicator_id).empty());
   {
     auto mut = settings.modify();
     mut->check_those = true;
   }
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
   speller_ptr->set_working(false);
   sp_container.speller_status_changed();
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id).empty());
+  CHECK(editor.get_underlined_words(spell_check_indicator_id).empty());
 
   speller_ptr->set_working(true);
   sp_container.speller_status_changed();
@@ -138,14 +137,14 @@ wrongword
     auto mut = settings.modify();
     mut->word_minimum_length = 8;
   }
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword"});
   {
     auto mut = settings.modify();
     mut->word_minimum_length = 0;
     mut->ignore_starting_with_capital = true;
   }
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword"});
   {
     auto mut = settings.modify();
@@ -154,12 +153,12 @@ wrongword
     mut->ignore_having_a_capital = true;
     mut->ignore_all_capital = true;
   }
-  editor.set_active_document_text(v, LR"(
+  editor.set_active_document_text(LR"(
   abaas123asd
   wEirdCasE
   )");
   sc.recheck_visible_both_views();
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"abaas123asd"});
   {
     auto mut = settings.modify();
@@ -183,13 +182,13 @@ w
   CHECK(sc.get_all_misspellings_as_string() == LR"(Cas
 Eird
 )");
-  editor.set_active_document_text(v, LR"(
+  editor.set_active_document_text(LR"(
 test
 'ignoreme
 abg
 )");
   sc.recheck_visible_both_views();
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"abg"});
 
   {
@@ -204,7 +203,7 @@ abg
       text.push_back('\n');
     }
     text.pop_back();
-    editor.set_active_document_text(v, text);
+    editor.set_active_document_text(text);
     sc.find_prev_mistake();
     CHECK(editor.selected_text() == "nurserymaid");
   }
@@ -223,23 +222,23 @@ abg
       text.push_back('\n');
     }
     text.pop_back();
-    editor.set_active_document_text(v, text);
+    editor.set_active_document_text(text);
     sc.find_next_mistake();
     CHECK(editor.selected_text() == "nurserymaid");
     sc.find_next_mistake();
     CHECK(editor.selected_text() == "nurserymaid");
   }
   {
-    editor.set_active_document_text(v, L"abcdef");
+    editor.set_active_document_text(L"abcdef");
     sc.recheck_visible_both_views();
-    CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
+    CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
           std::vector<std::string>{"abcdef"});
     {
       auto mut = settings.modify();
       mut->tokenization_style = TokenizationStyle::by_delimiters;
       mut->delimiters += L"abcdef";
     }
-    CHECK(editor.get_underlined_words(v, spell_check_indicator_id).empty());
+    CHECK(editor.get_underlined_words(spell_check_indicator_id).empty());
   }
   {
     {
@@ -247,23 +246,23 @@ abg
       mut->tokenization_style = TokenizationStyle::by_non_alphabetic;
     }
     editor.set_active_document_text(
-        v, L"これはテストです"); // each one is delimiter
+      L"これはテストです"); // each one is delimiter
     CHECK(sc.is_word_under_cursor_correct(pos, length, true));
     CHECK(length == 0);
   }
   {
     // check that right clicking when cursor after the word works
-    editor.set_active_document_text(v, L"abcdef test");
+    editor.set_active_document_text(L"abcdef test");
     editor.set_cursor_pos(6);
     CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, true));
   }
   {
     // check for wrong utf-8 characters
-    editor.set_active_document_text_raw(v, "abcdef\xBE\xE3");
+    editor.set_active_document_text_raw("abcdef\xBE\xE3");
     sc.recheck_visible_both_views();
   }
   {
-    editor.set_active_document_text(v, L"token token token nottoken token token");
+    editor.set_active_document_text(L"token token token nottoken token token");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false);
     CHECK (editor.get_active_document_text() == "bar bar bar nottoken bar bar");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "bar", L"foobuzz", false);
@@ -272,11 +271,11 @@ abg
       auto m = settings.modify();
       m->split_camel_case = true;
     }
-    editor.set_active_document_text(v, L"token token stillToken notoken andOneMoreToken");
+    editor.set_active_document_text(L"token token stillToken notoken andOneMoreToken");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"foobar", false);
     CHECK (editor.get_active_document_text() == "foobar foobar stillFoobar notoken andOneMoreFoobar");
 
-    editor.set_active_document_text(v, L"token⸺token⸺token⸺nottoken⸺token⸺token");
+    editor.set_active_document_text(L"token⸺token⸺token⸺nottoken⸺token⸺token");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false);
     CHECK (editor.get_active_document_text() == "bar⸺bar⸺bar⸺nottoken⸺bar⸺bar");
 
@@ -287,11 +286,11 @@ abg
       m->ignore_one_letter = false;
     }
 
-    editor.set_active_document_text(v, L"token token stillToken notoken andOneMoreToken TOKEN ToKeN");
+    editor.set_active_document_text(L"token token stillToken notoken andOneMoreToken TOKEN ToKeN");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"foobar", false);
     CHECK (editor.get_active_document_text() == "foobar foobar stillToken notoken andOneMoreToken FOOBAR foobar");
 
-    editor.set_active_document_text(v, L"a a a a a A a a A b b c c a a A");
+    editor.set_active_document_text(L"a a a a a A a a A b b c c a a A");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "a", L"z", false);
     CHECK (editor.get_active_document_text() == "z z z z z Z z z Z b b c c z z Z");
 
@@ -299,7 +298,7 @@ abg
       auto m = settings.modify();
       m->ignore_having_a_capital = true;
     }
-    editor.set_active_document_text(v, L"token Token");
+    editor.set_active_document_text(L"token Token");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"foobar", false);
     CHECK (editor.get_active_document_text() == "foobar Foobar");
 
@@ -307,7 +306,7 @@ abg
       auto m = settings.modify();
       m->ignore_starting_with_capital = true;
     }
-    editor.set_active_document_text(v, L"token Token");
+    editor.set_active_document_text(L"token Token");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"foobar", false);
     CHECK (editor.get_active_document_text() == "foobar Token");
 
@@ -319,12 +318,12 @@ abg
     }
 
     // replacing not proper name
-    editor.set_active_document_text(v, L"please PlEaSe Token Please PLEASE");
+    editor.set_active_document_text(L"please PlEaSe Token Please PLEASE");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "please", L"foobar", false);
     CHECK (editor.get_active_document_text() == "foobar foobar Token Foobar FOOBAR");
 
     // replacing proper name
-    editor.set_active_document_text(v, L"parise PaRiSe Token Parise PARISE");
+    editor.set_active_document_text(L"parise PaRiSe Token Parise PARISE");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "parise", L"Paris", true);
     CHECK (editor.get_active_document_text() == "Paris Paris Token Paris Paris");
   }

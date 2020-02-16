@@ -25,13 +25,6 @@
 
 struct toolbarIcons;
 
-enum class NppViewType {
-  primary,
-  secondary,
-
-  COUNT,
-};
-
 enum class EditorCodepage {
   ansi,
   utf8,
@@ -49,18 +42,6 @@ public:
 
 class EditorInterface {
 public:
-  static NppViewType other_view(NppViewType view) {
-    switch (view) {
-    case NppViewType::primary:
-      return NppViewType::secondary;
-    case NppViewType::secondary:
-      return NppViewType::primary;
-    case NppViewType::COUNT:
-      break;
-    }
-    assert(false);
-    return NppViewType::primary;
-  }
 
   // non-const
   virtual bool open_document(std::wstring filename) = 0;

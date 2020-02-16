@@ -18,6 +18,13 @@
 #include "utils/enum_array.h"
 #include <vector>
 
+enum class NppViewType {
+  primary,
+  secondary,
+
+  COUNT,
+};
+
 struct SCNotification;
 class NppData;
 

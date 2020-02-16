@@ -29,15 +29,14 @@ TEST_CASE("ANSI") {
   setup_speller(*speller);
   settings.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
-  auto v = NppViewType::primary;
-  TARGET_VIEW_BLOCK(editor, static_cast<int> (v));
-  editor.open_virtual_document(v, L"test.txt", L"abcd\nefgh");
+  TARGET_VIEW_BLOCK(editor, 0);
+  editor.open_virtual_document(L"test.txt", L"abcd\nefgh");
   SpellerContainer sp_container(&settings, std::move(speller));
   SpellChecker sc(&settings, editor, sp_container);
 
-  editor.set_codepage(v, EditorCodepage::ansi);
+  editor.set_codepage(EditorCodepage::ansi);
   sc.recheck_visible_both_views();
-  CHECK(editor.get_underlined_words(v, spell_check_indicator_id) ==
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"abcd", "efgh"});
 }
 
@@ -48,9 +47,8 @@ TEST_CASE("UTF-8 shenanigans") {
     setup_speller(*speller);
     settings.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
-    auto v = NppViewType::primary;
-    TARGET_VIEW_BLOCK(editor, static_cast<int> (v));
-    editor.open_virtual_document(v, L"test.txt", L"тестирование с нетривиальными utf-8 символами");
+    TARGET_VIEW_BLOCK(editor, 0);
+    editor.open_virtual_document(L"test.txt", L"тестирование с нетривиальными utf-8 символами");
     SpellerContainer sp_container(&settings, std::move(speller));
     SpellChecker sc(&settings, editor, sp_container);
 
