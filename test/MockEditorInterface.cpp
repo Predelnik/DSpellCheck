@@ -150,20 +150,20 @@ EditorCodepage MockEditorInterface::get_encoding() const {
   return doc->codepage;
 }
 
-TextPosition MockEditorInterface::get_current_pos(NppViewType view) const {
-  auto doc = active_document(view);
+TextPosition MockEditorInterface::get_current_pos() const {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return -1;
   return doc->cursor_pos;
 }
 
-int MockEditorInterface::get_current_line_number(NppViewType view) const {
-  auto doc = active_document(view);
+int MockEditorInterface::get_current_line_number() const {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return -1;
   return static_cast<int>(
       std::count(doc->cur.data.begin(),
-                 doc->cur.data.begin() + get_current_pos(view), '\n'));
+                 doc->cur.data.begin() + get_current_pos(), '\n'));
 }
 
 int MockEditorInterface::get_text_height(NppViewType /*view*/,
@@ -369,23 +369,23 @@ std::wstring MockEditorInterface::active_file_directory() const {
 
 std::wstring MockEditorInterface::plugin_config_dir() const { return L""; }
 
-std::string MockEditorInterface::selected_text(NppViewType view) const {
-  auto doc = active_document(view);
+std::string MockEditorInterface::selected_text() const {
+  auto doc = active_document(m_target_view);
   if (!doc || doc->cur.selection[0] < 0 || doc->cur.selection[1] < 0)
     return "";
   return doc->cur.data.substr(doc->cur.selection[0],
                               doc->cur.selection[1] - doc->cur.selection[0]);
 }
 
-std::string MockEditorInterface::get_current_line(NppViewType view) const {
-  return get_line(view, get_current_line_number(view));
+std::string MockEditorInterface::get_current_line() const {
+  return get_line(get_current_line_number());
 }
 
-std::string MockEditorInterface::get_line(NppViewType view,
-                                          TextPosition line_number) const {
-  auto start = get_line_start_position(view, line_number);
-  auto end = get_line_end_position(view, line_number);
-  return get_text_range(view, start, end);
+std::string MockEditorInterface::get_line(
+  TextPosition line_number) const {
+  auto start = get_line_start_position(m_target_view, line_number);
+  auto end = get_line_end_position(m_target_view, line_number);
+  return get_text_range(m_target_view, start, end);
 }
 
 std::optional<TextPosition> MockEditorInterface::char_position_from_global_point(

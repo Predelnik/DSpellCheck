@@ -47,8 +47,9 @@ void SpellChecker::recheck_visible_both_views() {
 void SpellChecker::lang_change() { recheck_visible(m_editor.active_view()); }
 
 void SpellChecker::find_next_mistake() {
+  ACTIVE_VIEW_BLOCK(m_editor);
   auto view = m_editor.active_view();
-  m_current_position = m_editor.get_current_pos(view);
+  m_current_position = m_editor.get_current_pos();
   auto doc_length = m_editor.get_active_document_length(view);
   auto iterator_pos = prev_token_begin_in_document(view, m_current_position);
   bool full_check = false;
@@ -88,8 +89,9 @@ void SpellChecker::find_next_mistake() {
 }
 
 void SpellChecker::find_prev_mistake() {
+  ACTIVE_VIEW_BLOCK(m_editor);
   auto view = m_editor.active_view();
-  m_current_position = m_editor.get_current_pos(view);
+  m_current_position = m_editor.get_current_pos();
   auto doc_length = m_editor.get_active_document_length(view);
 
   auto iterator_pos = next_token_end_in_document(view, m_current_position);

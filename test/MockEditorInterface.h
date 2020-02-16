@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include <npp/EditorInterface.h>
+#include "npp/EditorInterface.h"
 
 #include "utils/enum_array.h"
 #include <vector>
@@ -66,8 +66,8 @@ public:
   void indicator_clear_range(TextPosition from, TextPosition to) override;
   NppViewType active_view() const override;
   EditorCodepage get_encoding() const override;
-  TextPosition get_current_pos(NppViewType view) const override;
-  int get_current_line_number(NppViewType view) const override;
+  TextPosition get_current_pos() const override;
+  int get_current_line_number() const override;
   int get_text_height(NppViewType view, int line) const override;
   int line_from_position(NppViewType view, TextPosition position) const override;
   TextPosition get_line_start_position(NppViewType view, TextPosition line) const override;
@@ -96,9 +96,9 @@ public:
   std::wstring active_document_path() const override;
   std::wstring active_file_directory() const override;
   std::wstring plugin_config_dir() const override;
-  std::string selected_text(NppViewType view) const override;
-  std::string get_current_line(NppViewType view) const override;
-  std::string get_line(NppViewType view, TextPosition line_number) const override;
+  std::string selected_text() const override;
+  std::string get_current_line() const override;
+  std::string get_line(TextPosition line_number) const override;
   std::optional<TextPosition> char_position_from_global_point(NppViewType view, int x,
                                                int y) const override;
   HWND get_editor_hwnd() const override;
@@ -128,12 +128,12 @@ public:
   void replace_text(TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(TextPosition line) override;
   int get_view_count() const override;
-  void set_target_view(int view_index) const override;
-  int get_target_view() const override;
   std::vector<std::wstring> get_open_filenames() const override;
   std::vector<std::wstring> get_open_filenames_all_views() const override;
 
 private:
+  void set_target_view(int view_index) const override;
+  int get_target_view() const override;
   const MockedDocumentInfo *active_document(NppViewType view) const;
   MockedDocumentInfo *active_document(NppViewType view);
 private:

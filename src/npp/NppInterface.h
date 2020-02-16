@@ -58,10 +58,10 @@ public:
   EditorCodepage get_encoding() const override;
   std::wstring active_document_path() const override;
   std::wstring active_file_directory() const override;
-  std::string selected_text(NppViewType view) const override;
-  std::string get_current_line(NppViewType view) const override;
-  TextPosition get_current_pos(NppViewType view) const override;
-  int get_current_line_number(NppViewType view) const override;
+  std::string selected_text() const override;
+  std::string get_current_line() const override;
+  TextPosition get_current_pos() const override;
+  int get_current_line_number() const override;
   int line_from_position(NppViewType view, TextPosition position) const override;
   std::wstring plugin_config_dir() const override;
   TextPosition get_line_start_position(NppViewType view, TextPosition line) const override;
@@ -80,7 +80,7 @@ public:
   TextPosition get_selection_start(NppViewType view) const override;
   TextPosition get_selection_end(NppViewType view) const override;
   TextPosition get_line_length(NppViewType view, int line) const override;
-  std::string get_line(NppViewType view, TextPosition line_number) const override;
+  std::string get_line(TextPosition line_number) const override;
   TextPosition get_first_visible_line(NppViewType view) const override;
   TextPosition get_lines_on_screen(NppViewType view) const override;
   TextPosition get_document_line_from_visible(NppViewType view, TextPosition visible_line) const override;

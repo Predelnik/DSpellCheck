@@ -16,6 +16,12 @@
 #include "MappedWString.h"
 #include "utils/utf8.h"
 
+TextPosition EditorInterface::get_current_pos_in_line(NppViewType view) const {
+  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+  return get_current_pos() -
+         get_line_start_position(view, get_current_line_number());
+}
+
 TextPosition EditorInterface::get_prev_valid_begin_pos(NppViewType view, TextPosition pos) const {
   TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
   if (pos == 0)
@@ -69,7 +75,8 @@ MappedWstring EditorInterface::get_mapped_wstring_range(NppViewType view, TextPo
 }
 
 MappedWstring EditorInterface::get_mapped_wstring_line(NppViewType view, TextPosition line) {
-  auto result = to_mapped_wstring (view, get_line(view, line));;
+  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+  auto result = to_mapped_wstring (view, get_line(line));;
   auto line_start = get_line_start_position(view, line);
   for (auto &val : result.mapping)
     val += line_start;

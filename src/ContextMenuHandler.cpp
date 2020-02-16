@@ -148,7 +148,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
 
         m_editor.replace_selection(encoded_str.c_str());
       } else if (result <= menu_id::replace_all_start + m_last_suggestions.size()) {
-        auto misspelled_text = m_editor.selected_text(view);
+        auto misspelled_text = m_editor.selected_text();
         auto &suggestion = m_last_suggestions[result - menu_id::replace_all_start - 1];
         UNDO_BLOCK (m_editor, view);
         // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion

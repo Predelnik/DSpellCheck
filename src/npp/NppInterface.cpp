@@ -266,10 +266,10 @@ TextPosition NppInterface::get_selection_end(NppViewType view) const { return st
 
 TextPosition NppInterface::get_line_length(NppViewType view, int line) const { return static_cast<TextPosition>(send_msg_to_scintilla(view, SCI_LINELENGTH, line)); }
 
-std::string NppInterface::get_line(NppViewType view, TextPosition line_number) const {
-  auto buf_size = static_cast<int>(send_msg_to_scintilla(view, SCI_LINELENGTH, line_number) + 1);
+std::string NppInterface::get_line(TextPosition line_number) const {
+  auto buf_size = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_LINELENGTH, line_number) + 1);
   std::vector<char> buf(buf_size);
-  auto ret = static_cast<int>(send_msg_to_scintilla(view, SCI_GETLINE, line_number, reinterpret_cast<LPARAM>(buf.data())));
+  auto ret = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETLINE, line_number, reinterpret_cast<LPARAM>(buf.data())));
   static_cast<void>(ret);
   assert(ret == buf_size - 1);
   return buf.data();
@@ -281,22 +281,24 @@ void NppInterface::add_toolbar_icon(int cmdId, const toolbarIcons *toolBarIconsP
   send_msg_to_npp(NPPM_ADDTOOLBARICON, static_cast<WPARAM>(cmdId), reinterpret_cast<LPARAM>(toolBarIconsPtr));
 }
 
-std::string NppInterface::selected_text(NppViewType view) const {
-  auto sel_buf_size = static_cast<int>(send_msg_to_scintilla(view, SCI_GETSELTEXT, 0, 0));
+std::string NppInterface::selected_text() const {
+  auto sel_buf_size = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETSELTEXT, 0, 0));
   if (sel_buf_size > 1) // Because it includes terminating '\0'
   {
     std::vector<char> buf(sel_buf_size);
-    send_msg_to_scintilla(view, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(buf.data()));
+    send_msg_to_scintilla(m_target_view, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(buf.data()));
     return buf.data();
   }
   return {};
 }
 
-std::string NppInterface::get_current_line(NppViewType view) const { return get_line(view, get_current_line_number(view)); }
+std::string NppInterface::get_current_line() const { return get_line(get_current_line_number()); }
 
-TextPosition NppInterface::get_current_pos(NppViewType view) const { return static_cast<int>(send_msg_to_scintilla(view, SCI_GETCURRENTPOS, 0, 0)); }
+TextPosition NppInterface::get_current_pos() const { return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETCURRENTPOS, 0, 0)); }
 
-int NppInterface::get_current_line_number(NppViewType view) const { return line_from_position(view, get_current_pos(view)); }
+int NppInterface::get_current_line_number() const {
+  return line_from_position(m_target_view, get_current_pos());
+}
 
 int NppInterface::line_from_position(NppViewType view, TextPosition position) const {
   return static_cast<int>(send_msg_to_scintilla(view, SCI_LINEFROMPOSITION, position));

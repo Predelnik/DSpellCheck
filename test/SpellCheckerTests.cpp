@@ -31,7 +31,7 @@ TEST_CASE("Speller") {
   settings.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
   auto v = NppViewType::primary;
-  editor.set_target_view(static_cast<int> (v));
+  TARGET_VIEW_BLOCK(editor, static_cast<int> (v));
   editor.open_virtual_document(v, L"test.txt", LR"(This is test document.
 Please bear with me.
 adadsd.)");
@@ -39,12 +39,12 @@ adadsd.)");
   SpellerContainer sp_container(&settings, std::move(speller));
   SpellChecker sc(&settings, editor, sp_container);
   sc.find_next_mistake();
-  CHECK(editor.selected_text(v) == "adadsd");
+  CHECK(editor.selected_text() == "adadsd");
   settings.modify()->tokenization_style = TokenizationStyle::by_delimiters;
-  CHECK(editor.selected_text(v) == "adadsd");
+  CHECK(editor.selected_text() == "adadsd");
   editor.set_active_document_text(v, LR"(This is test document)");
   sc.find_next_mistake();
-  CHECK(editor.selected_text(v).empty());
+  CHECK(editor.selected_text().empty());
   std::wstring s;
   for (int i = 0; i < 5000; ++i) {
     if (i == 3333)
@@ -55,24 +55,24 @@ adadsd.)");
   }
   editor.set_active_document_text(v, s);
   sc.find_next_mistake();
-  CHECK(editor.selected_text(v) == "adadsd");
+  CHECK(editor.selected_text() == "adadsd");
   sc.find_next_mistake();
-  CHECK(editor.selected_text(v) == "abirvalg");
+  CHECK(editor.selected_text() == "abirvalg");
   sc.find_prev_mistake();
-  CHECK(editor.selected_text(v) == "adadsd");
+  CHECK(editor.selected_text() == "adadsd");
 
   editor.set_active_document_text(v, LR"(
 wrongword
 This is test document
 badword)");
   sc.find_next_mistake();
-  CHECK(editor.selected_text(v) == "wrongword");
+  CHECK(editor.selected_text() == "wrongword");
   sc.find_next_mistake();
-  CHECK(editor.selected_text(v) == "badword");
+  CHECK(editor.selected_text() == "badword");
   sc.find_prev_mistake();
-  CHECK(editor.selected_text(v) == "wrongword");
+  CHECK(editor.selected_text() == "wrongword");
   sc.find_prev_mistake();
-  CHECK(editor.selected_text(v) == "badword");
+  CHECK(editor.selected_text() == "badword");
   CHECK(sc.get_all_misspellings_as_string() == LR"(badword
 wrongword
 )");
@@ -206,7 +206,7 @@ abg
     text.pop_back();
     editor.set_active_document_text(v, text);
     sc.find_prev_mistake();
-    CHECK(editor.selected_text(v) == "nurserymaid");
+    CHECK(editor.selected_text() == "nurserymaid");
   }
 
   {
@@ -225,9 +225,9 @@ abg
     text.pop_back();
     editor.set_active_document_text(v, text);
     sc.find_next_mistake();
-    CHECK(editor.selected_text(v) == "nurserymaid");
+    CHECK(editor.selected_text() == "nurserymaid");
     sc.find_next_mistake();
-    CHECK(editor.selected_text(v) == "nurserymaid");
+    CHECK(editor.selected_text() == "nurserymaid");
   }
   {
     editor.set_active_document_text(v, L"abcdef");

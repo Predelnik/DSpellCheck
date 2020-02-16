@@ -101,11 +101,11 @@ public:
   virtual std::wstring active_document_path() const = 0;
   virtual std::wstring active_file_directory() const = 0;
   virtual std::wstring plugin_config_dir() const = 0;
-  virtual std::string selected_text(NppViewType view) const = 0;
-  virtual std::string get_current_line(NppViewType view) const = 0;
-  virtual std::string get_line(NppViewType view, TextPosition line_number) const = 0;
-  virtual TextPosition get_current_pos(NppViewType view) const = 0;
-  virtual int get_current_line_number(NppViewType view) const = 0;
+  virtual std::string selected_text() const = 0;
+  virtual std::string get_current_line() const = 0;
+  virtual std::string get_line(TextPosition line_number) const = 0;
+  virtual TextPosition get_current_pos() const = 0;
+  virtual int get_current_line_number() const = 0;
   virtual int get_text_height(NppViewType view, int line) const = 0;
   virtual int line_from_position(NppViewType view, TextPosition position) const = 0;
   virtual TextPosition get_line_start_position(NppViewType view, TextPosition line) const = 0;
@@ -143,10 +143,7 @@ public:
   virtual std::string get_active_document_text(NppViewType view) const = 0;
   virtual RECT editor_rect(NppViewType view) const = 0;
 
-  TextPosition get_current_pos_in_line(NppViewType view) const {
-    return get_current_pos(view) -
-           get_line_start_position(view, get_current_line_number(view));
-  }
+  TextPosition get_current_pos_in_line(NppViewType view) const;
 
   virtual int get_view_count () const = 0;
   virtual NppViewType active_view() const = 0;
