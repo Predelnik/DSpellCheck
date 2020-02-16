@@ -179,9 +179,10 @@ void show_spell_check_menu_at_cursor() {
   tagTPMPARAMS tpm_params;
   tpm_params.cbSize = sizeof(tagTPMPARAMS);
   auto v = npp->active_view();
-  auto start = npp->get_selection_start(v);
-  auto x = npp->get_point_x_from_position(v, start);
-  auto y = npp->get_point_y_from_position(v, start);
+  ACTIVE_VIEW_BLOCK (*npp);
+  auto start = npp->get_selection_start();
+  auto x = npp->get_point_x_from_position(start);
+  auto y = npp->get_point_y_from_position(start);
   POINT pnt{x, y};
   ClientToScreen(npp->get_scintilla_hwnd(v), &pnt);
   auto cmd = TrackPopupMenuEx(menu, TPM_HORIZONTAL | TPM_RIGHTALIGN | TPM_RETURNCMD, pnt.x, pnt.y, npp->get_scintilla_hwnd(v), &tpm_params);
@@ -193,7 +194,7 @@ void replace_with_1st_suggestion() {
   if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
     auto view = npp->active_view();
     ACTIVE_VIEW_BLOCK(*npp);
-    auto wstr = npp->get_mapped_wstring_range(view, pos, pos + length);
+    auto wstr = npp->get_mapped_wstring_range(pos, pos + length);
     auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str());
     if (!suggestions.empty())
       npp->replace_text(pos, pos + length, npp->to_editor_encoding(view, suggestions.front()));
@@ -203,8 +204,8 @@ void replace_with_1st_suggestion() {
 void ignore_for_current_session() {
   TextPosition pos, length;
   if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
-    auto view = npp->active_view();
-    auto wstr = npp->get_mapped_wstring_range(view, pos, pos + length);
+    ACTIVE_VIEW_BLOCK(*npp);
+    auto wstr = npp->get_mapped_wstring_range(pos, pos + length);
     {
       auto mut = speller_container->modify();
       mut->ignore_word(std::move(wstr.str));

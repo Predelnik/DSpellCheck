@@ -50,7 +50,7 @@ void SpellChecker::find_next_mistake() {
   ACTIVE_VIEW_BLOCK(m_editor);
   auto view = m_editor.active_view();
   m_current_position = m_editor.get_current_pos();
-  auto doc_length = m_editor.get_active_document_length(view);
+  auto doc_length = m_editor.get_active_document_length();
   auto iterator_pos = prev_token_begin_in_document(view, m_current_position);
   bool full_check = false;
 
@@ -63,7 +63,7 @@ void SpellChecker::find_next_mistake() {
       to = static_cast<TextPosition>(doc_length);
     }
     if (from < to) {
-      auto text = m_editor.get_mapped_wstring_range(view, from, to);
+      auto text = m_editor.get_mapped_wstring_range(from, to);
       auto index = static_cast<TextPosition>(text.str.size());
       if (to != doc_length && next_token_end(text.str, to) == index)
         index = prev_token_begin(text.str, index - 1);
@@ -92,7 +92,7 @@ void SpellChecker::find_prev_mistake() {
   ACTIVE_VIEW_BLOCK(m_editor);
   auto view = m_editor.active_view();
   m_current_position = m_editor.get_current_pos();
-  auto doc_length = m_editor.get_active_document_length(view);
+  auto doc_length = m_editor.get_active_document_length();
 
   auto iterator_pos = next_token_end_in_document(view, m_current_position);
   bool full_check = false;
@@ -107,7 +107,7 @@ void SpellChecker::find_prev_mistake() {
     }
 
     if (from < to) {
-      auto text = m_editor.get_mapped_wstring_range(view, from, to);
+      auto text = m_editor.get_mapped_wstring_range(from, to);
       auto offset = next_token_end(text.str, 0);
       if (check_text(view, text, CheckTextMode::find_last))
         break;
@@ -176,11 +176,12 @@ void SpellChecker::remove_underline(NppViewType view, TextPosition start, TextPo
 }
 
 TextPosition SpellChecker::prev_token_begin_in_document(NppViewType view, TextPosition start) const {
+  TARGET_VIEW_BLOCK(m_editor, static_cast<int> (view));
   TextPosition shift = 15;
   auto prev_start = start + 1;
   while (start > 0) {
     start = std::max(start - shift, 0_sz);
-    auto mapped_str = m_editor.get_mapped_wstring_range(view, start, prev_start);
+    auto mapped_str = m_editor.get_mapped_wstring_range(start, prev_start);
     // finding any start before start which starts a token
     auto index = prev_token_begin(mapped_str.str, static_cast<TextPosition>(mapped_str.str.length()) - 1);
     if (index > 0)
@@ -192,14 +193,15 @@ TextPosition SpellChecker::prev_token_begin_in_document(NppViewType view, TextPo
 }
 
 TextPosition SpellChecker::next_token_end_in_document(NppViewType view, TextPosition end) const {
+  TARGET_VIEW_BLOCK (m_editor, static_cast<int> (view));
   TextPosition shift = 15;
   auto prev_end = end;
-  auto length = m_editor.get_active_document_length(view);
+  auto length = m_editor.get_active_document_length();
   if (end == length)
     return end;
   while (end > 0) {
     end = std::min(end + shift, length);
-    auto mapped_str = m_editor.get_mapped_wstring_range(view, prev_end, end);
+    auto mapped_str = m_editor.get_mapped_wstring_range(prev_end, end);
     // finding any start before start which starts a token
     auto index = next_token_end(mapped_str.str, 0);
     if (index < static_cast<TextPosition>(mapped_str.str.length()))
@@ -214,19 +216,19 @@ TextPosition SpellChecker::next_token_end_in_document(NppViewType view, TextPosi
 
 MappedWstring SpellChecker::get_visible_text(NppViewType view) {
   TARGET_VIEW_BLOCK (m_editor, static_cast<int> (view));
-  auto top_visible_line = m_editor.get_first_visible_line(view);
-  auto top_visible_line_index = m_editor.get_document_line_from_visible(view, top_visible_line);
-  auto bottom_visible_line_index = m_editor.get_document_line_from_visible(view, top_visible_line + m_editor.get_lines_on_screen(view) - 1);
-  auto rect = m_editor.editor_rect(view);
-  auto len = m_editor.get_active_document_length(view);
+  auto top_visible_line = m_editor.get_first_visible_line();
+  auto top_visible_line_index = m_editor.get_document_line_from_visible(top_visible_line);
+  auto bottom_visible_line_index = m_editor.get_document_line_from_visible(top_visible_line + m_editor.get_lines_on_screen() - 1);
+  auto rect = m_editor.editor_rect();
+  auto len = m_editor.get_active_document_length();
   MappedWstring result;
   for (auto line = top_visible_line_index; line <= bottom_visible_line_index; ++line) {
-    if (!m_editor.is_line_visible(view, line))
+    if (!m_editor.is_line_visible(line))
       continue;
     auto start = m_editor.get_line_start_position(line);
     if (start >= len) // skipping possible empty lines when document is too short
       continue;
-    auto start_point = m_editor.get_point_from_position(view, start);
+    auto start_point = m_editor.get_point_from_position(start);
     if (start_point.y < rect.top) {
       start = m_editor.char_position_from_point({0, 0});
       start = prev_token_begin_in_document(view, start);
@@ -235,7 +237,7 @@ MappedWstring SpellChecker::get_visible_text(NppViewType view) {
       start = prev_token_begin_in_document(view, start);
     }
     auto end = m_editor.get_line_end_position(line);
-    auto end_point = m_editor.get_point_from_position(view, end);
+    auto end_point = m_editor.get_point_from_position(end);
     if (end_point.y > rect.bottom) {
       end = m_editor.char_position_from_point({rect.right, rect.bottom});
       end = next_token_end_in_document(view, end);
@@ -243,7 +245,7 @@ MappedWstring SpellChecker::get_visible_text(NppViewType view) {
       end = m_editor.char_position_from_point({rect.right, end_point.y});
       end = next_token_end_in_document(view, end);
     }
-    auto new_str = m_editor.get_mapped_wstring_range(view, start, end);
+    auto new_str = m_editor.get_mapped_wstring_range(start, end);
     result.append(new_str);
   }
   return result;
@@ -251,7 +253,7 @@ MappedWstring SpellChecker::get_visible_text(NppViewType view) {
 
 void SpellChecker::clear_all_underlines(NppViewType view) const {
   TARGET_VIEW_BLOCK (m_editor, static_cast<int> (view));
-  auto length = m_editor.get_active_document_length(view);
+  auto length = m_editor.get_active_document_length();
   if (length > 0) {
     m_editor.set_current_indicator(spell_check_indicator_id);
     m_editor.indicator_clear_range(0, length);
@@ -282,7 +284,7 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
       return true;
     init_char_pos = *mb_pos;
   } else {
-    selection_start = m_editor.get_selection_start(view);
+    selection_start = m_editor.get_selection_start();
     selection_end = m_editor.get_selection_end(view);
     init_char_pos = std::min (selection_start, selection_end);
   }
@@ -312,7 +314,7 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
 void SpellChecker::erase_all_misspellings() {
   auto view = m_editor.active_view();
   ACTIVE_VIEW_BLOCK (m_editor);
-  auto mapped_str = m_editor.to_mapped_wstring(view, m_editor.get_active_document_text(view));
+  auto mapped_str = m_editor.to_mapped_wstring(m_editor.get_active_document_text());
   m_misspellings.clear();
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
     return;
@@ -476,9 +478,9 @@ void SpellChecker::recheck_visible(NppViewType view) {
 
 std::wstring SpellChecker::get_all_misspellings_as_string() const {
   auto view = m_editor.active_view();
-  auto buf = m_editor.get_active_document_text(view);
-  auto mapped_str = m_editor.to_mapped_wstring(view, buf);
   ACTIVE_VIEW_BLOCK (m_editor);
+  auto buf = m_editor.get_active_document_text();
+  auto mapped_str = m_editor.to_mapped_wstring(buf);
   m_editor.force_style_update (mapped_str.mapping.front (), mapped_str.mapping.back ());
   m_misspellings.clear();
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
@@ -503,8 +505,8 @@ std::wstring SpellChecker::get_all_misspellings_as_string() const {
 void SpellChecker::mark_lines_with_misspelling() const {
   auto view = m_editor.active_view();
   ACTIVE_VIEW_BLOCK (m_editor);
-  auto buf = m_editor.get_active_document_text(view);
-  auto mapped_str = m_editor.to_mapped_wstring(view, buf);
+  auto buf = m_editor.get_active_document_text();
+  auto mapped_str = m_editor.to_mapped_wstring(buf);
   m_editor.force_style_update (mapped_str.mapping.front (), mapped_str.mapping.back ());
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
     return;

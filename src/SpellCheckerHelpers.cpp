@@ -107,9 +107,9 @@ void replace_all_tokens(EditorInterface &editor, NppViewType view, const Setting
   while (true) {
     pos = editor.find_next(pos, from);
     if (pos >= 0) {
-      auto doc_word_start_pos = editor.get_prev_valid_begin_pos(view, pos);
-      auto doc_word_end_pos = editor.get_next_valid_end_pos(view, static_cast<TextPosition>(pos + from_len));
-      auto mapped_wstr = editor.get_mapped_wstring_range(view, doc_word_start_pos, doc_word_end_pos);
+      auto doc_word_start_pos = editor.get_prev_valid_begin_pos(pos);
+      auto doc_word_end_pos = editor.get_next_valid_end_pos(static_cast<TextPosition>(pos + from_len));
+      auto mapped_wstr = editor.get_mapped_wstring_range(doc_word_start_pos, doc_word_end_pos);
       std::wstring_view src_word_sv;
       TextPosition buf_word_start_pos = 0;
       auto buf_word_end_pos = static_cast<TextPosition>(mapped_wstr.str.length());
@@ -160,11 +160,12 @@ void replace_all_tokens(EditorInterface &editor, NppViewType view, const Setting
 
 bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, NppViewType view, std::wstring_view word,
                                    TextPosition word_start) {
+  TARGET_VIEW_BLOCK(editor, static_cast<int> (view));
   if (word.empty())
     return false;
 
-  auto style = editor.get_style_at(view, word_start);
-  auto lexer = editor.get_lexer(view);
+  auto style = editor.get_style_at(word_start);
+  auto lexer = editor.get_lexer();
   auto category = SciUtils::get_style_category(lexer, style, settings);
   if (category == SciUtils::StyleCategory::unknown) {
     return false;
@@ -176,7 +177,7 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
     return false;
   }
 
-  if (editor.is_style_hotspot(view, style)) {
+  if (editor.is_style_hotspot(style)) {
     return false;
   }
 

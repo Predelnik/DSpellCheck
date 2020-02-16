@@ -48,17 +48,18 @@ TEST_CASE("UTF-8 shenanigans") {
     settings.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
     auto v = NppViewType::primary;
+    TARGET_VIEW_BLOCK(editor, static_cast<int> (v));
     editor.open_virtual_document(v, L"test.txt", L"тестирование с нетривиальными utf-8 символами");
     SpellerContainer sp_container(&settings, std::move(speller));
     SpellChecker sc(&settings, editor, sp_container);
 
-    CHECK(editor.get_prev_valid_begin_pos(v, 2) == 0);
-    CHECK(editor.get_next_valid_end_pos(v, 4) == 6);
+    CHECK(editor.get_prev_valid_begin_pos(2) == 0);
+    CHECK(editor.get_next_valid_end_pos(4) == 6);
     // moving around word 'нетривиальными'
-    CHECK(editor.get_prev_valid_begin_pos(v, 28) == 27);
-    CHECK(editor.get_next_valid_end_pos(v, 56) == 57);
+    CHECK(editor.get_prev_valid_begin_pos(28) == 27);
+    CHECK(editor.get_next_valid_end_pos(56) == 57);
     // and a bit further
-    CHECK(editor.get_prev_valid_begin_pos(v, 27) == 25);
-    CHECK(editor.get_next_valid_end_pos(v, 56) == 57);
+    CHECK(editor.get_prev_valid_begin_pos(27) == 25);
+    CHECK(editor.get_next_valid_end_pos(56) == 57);
   }
 }

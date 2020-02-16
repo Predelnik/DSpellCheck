@@ -110,48 +110,45 @@ public:
   virtual int line_from_position(TextPosition position) const = 0;
   virtual TextPosition get_line_start_position(TextPosition line) const = 0;
   virtual TextPosition get_line_end_position(TextPosition line) const = 0;
-  virtual int get_lexer(NppViewType view) const = 0;
+  virtual int get_lexer() const = 0;
   virtual std::optional<TextPosition>
   char_position_from_global_point(int x, int y) const = 0;
   virtual TextPosition char_position_from_point(
       const POINT &pnt) const = 0;
-  virtual TextPosition get_selection_start(NppViewType view) const = 0;
+  virtual TextPosition get_selection_start() const = 0;
   virtual TextPosition get_selection_end(NppViewType view) const = 0;
   virtual HWND get_editor_hwnd() const = 0;
-  virtual int get_style_at(NppViewType view, TextPosition position) const = 0;
+  virtual int get_style_at(TextPosition position) const = 0;
   virtual std::wstring get_full_current_path() const = 0;
   // is current style used for links (hotspots):
-  virtual bool is_style_hotspot(NppViewType view, int style) const = 0;
-  virtual TextPosition get_active_document_length(NppViewType view) const = 0;
-  virtual std::string get_text_range(NppViewType view, TextPosition from,
+  virtual bool is_style_hotspot(int style) const = 0;
+  virtual TextPosition get_active_document_length() const = 0;
+  virtual std::string get_text_range(TextPosition from,
                                      TextPosition to) const = 0;
-  virtual TextPosition get_line_length(NppViewType view, int line) const = 0;
-  virtual int get_point_x_from_position(NppViewType view,
-                                        TextPosition position) const = 0;
-  virtual int get_point_y_from_position(NppViewType view,
-                                        TextPosition position) const = 0;
-  POINT get_point_from_position(NppViewType view, TextPosition position) const {
-    return {get_point_x_from_position(view, position),
-            get_point_y_from_position(view, position)};
-  }
-  virtual TextPosition get_first_visible_line(NppViewType view) const = 0;
-  virtual bool is_line_visible(NppViewType view, TextPosition line) const = 0;
-  virtual TextPosition get_lines_on_screen(NppViewType view) const = 0;
-  virtual TextPosition get_document_line_from_visible(NppViewType view,
-                                              TextPosition visible_line) const = 0;
-  virtual TextPosition get_document_line_count(NppViewType view) const = 0;
-  virtual std::string get_active_document_text(NppViewType view) const = 0;
-  virtual RECT editor_rect(NppViewType view) const = 0;
+  virtual TextPosition get_line_length(int line) const = 0;
+  virtual int get_point_x_from_position(
+      TextPosition position) const = 0;
+  virtual int get_point_y_from_position(
+      TextPosition position) const = 0;
+  POINT get_point_from_position(TextPosition position) const;
+  virtual TextPosition get_first_visible_line() const = 0;
+  virtual bool is_line_visible(TextPosition line) const = 0;
+  virtual TextPosition get_lines_on_screen() const = 0;
+  virtual TextPosition get_document_line_from_visible(
+      TextPosition visible_line) const = 0;
+  virtual TextPosition get_document_line_count() const = 0;
+  virtual std::string get_active_document_text() const = 0;
+  virtual RECT editor_rect() const = 0;
 
-  TextPosition get_current_pos_in_line(NppViewType view) const;
+  TextPosition get_current_pos_in_line() const;
 
   virtual int get_view_count () const = 0;
   virtual NppViewType active_view() const = 0;
 
-  TextPosition get_prev_valid_begin_pos(NppViewType view, TextPosition pos) const;
-  TextPosition get_next_valid_end_pos(NppViewType view, TextPosition pos) const;
-  MappedWstring to_mapped_wstring (NppViewType view, const std::string &str);
-  MappedWstring get_mapped_wstring_range (NppViewType view, TextPosition from, TextPosition to);
+  TextPosition get_prev_valid_begin_pos(TextPosition pos) const;
+  TextPosition get_next_valid_end_pos(TextPosition pos) const;
+  MappedWstring to_mapped_wstring (const std::string &str);
+  MappedWstring get_mapped_wstring_range (TextPosition from, TextPosition to);
   MappedWstring get_mapped_wstring_line (NppViewType view, TextPosition line);
   std::string to_editor_encoding (NppViewType view, std::wstring_view str) const;
 

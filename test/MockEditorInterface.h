@@ -72,22 +72,22 @@ public:
   int line_from_position(TextPosition position) const override;
   TextPosition get_line_start_position(TextPosition line) const override;
   TextPosition get_line_end_position(TextPosition line) const override;
-  int get_lexer(NppViewType view) const override;
-  TextPosition get_selection_start(NppViewType view) const override;
+  int get_lexer() const override;
+  TextPosition get_selection_start() const override;
   TextPosition get_selection_end(NppViewType view) const override;
-  int get_style_at(NppViewType view, TextPosition position) const override;
-  bool is_style_hotspot(NppViewType view, int style) const override;
-  TextPosition get_active_document_length(NppViewType view) const override;
-  TextPosition get_line_length(NppViewType view, int line) const override;
-  int get_point_x_from_position(NppViewType view,
-                                TextPosition position) const override;
-  int get_point_y_from_position(NppViewType view,
-                                TextPosition position) const override;
-  TextPosition get_first_visible_line(NppViewType view) const override;
-  TextPosition get_lines_on_screen(NppViewType view) const override;
-  TextPosition get_document_line_from_visible(NppViewType view,
-                                      TextPosition visible_line) const override;
-  TextPosition get_document_line_count(NppViewType view) const override;
+  int get_style_at(TextPosition position) const override;
+  bool is_style_hotspot(int style) const override;
+  TextPosition get_active_document_length() const override;
+  TextPosition get_line_length(int line) const override;
+  int get_point_x_from_position(
+    TextPosition position) const override;
+  int get_point_y_from_position(
+    TextPosition position) const override;
+  TextPosition get_first_visible_line() const override;
+  TextPosition get_lines_on_screen() const override;
+  TextPosition get_document_line_from_visible(
+    TextPosition visible_line) const override;
+  TextPosition get_document_line_count() const override;
   bool open_document(std::wstring filename) override;
   void activate_document(int index) override;
   void activate_document(const std::wstring &filepath) override;
@@ -103,11 +103,11 @@ public:
                                                               int y) const override;
   HWND get_editor_hwnd() const override;
   std::wstring get_full_current_path() const override;
-  std::string get_text_range(NppViewType view, TextPosition from,
+  std::string get_text_range(TextPosition from,
                              TextPosition to) const override;
-  std::string get_active_document_text(NppViewType view) const override;
+  std::string get_active_document_text() const override;
   TextPosition char_position_from_point(const POINT& pnt) const override;
-  RECT editor_rect(NppViewType view) const override;
+  RECT editor_rect() const override;
   MockEditorInterface();
   ~MockEditorInterface();
   void open_virtual_document(NppViewType view, const std::wstring &path,
@@ -123,7 +123,7 @@ public:
   void begin_undo_action(NppViewType view) override;
   void end_undo_action(NppViewType view) override;
   void undo() override;
-  bool is_line_visible(NppViewType view, TextPosition line) const override;
+  bool is_line_visible(TextPosition line) const override;
   TextPosition find_next(TextPosition from_position, const char* needle) override;
   void replace_text(TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(TextPosition line) override;

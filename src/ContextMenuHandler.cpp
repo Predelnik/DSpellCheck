@@ -243,9 +243,9 @@ void ContextMenuHandler::init_suggestions_box(
   auto line = m_editor.line_from_position(m_word_under_cursor_pos);
   auto text_height = m_editor.get_text_height(line);
   auto x_pos =
-      m_editor.get_point_x_from_position(view, m_word_under_cursor_pos);
+      m_editor.get_point_x_from_position(m_word_under_cursor_pos);
   auto y_pos =
-      m_editor.get_point_y_from_position(view, m_word_under_cursor_pos);
+      m_editor.get_point_y_from_position(m_word_under_cursor_pos);
   p.x = static_cast<LONG>(x_pos);
   p.y = static_cast<LONG>(y_pos);
   auto npp = dynamic_cast<NppInterface *>(&m_editor);
@@ -286,11 +286,10 @@ ContextMenuHandler::get_suggestion_menu_items() {
     return {}; // Word is already off-screen
 
   auto pos = m_word_under_cursor_pos;
-  auto view = m_editor.active_view();
   ACTIVE_VIEW_BLOCK (m_editor);
   m_editor.set_selection(pos, pos + m_word_under_cursor_length);
   std::vector<MenuItem> suggestion_menu_items;
-  m_selected_word = m_editor.get_mapped_wstring_range(view, m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
+  m_selected_word = m_editor.get_mapped_wstring_range(m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
 
   m_last_suggestions = m_speller_container.active_speller().get_suggestions(

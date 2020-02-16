@@ -16,36 +16,38 @@
 #include "MappedWString.h"
 #include "utils/utf8.h"
 
-TextPosition EditorInterface::get_current_pos_in_line(NppViewType view) const {
-  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+POINT EditorInterface::get_point_from_position(TextPosition position) const {
+  return {get_point_x_from_position(position),
+          get_point_y_from_position(position)};
+}
+
+TextPosition EditorInterface::get_current_pos_in_line() const {
   return get_current_pos() -
          get_line_start_position(get_current_line_number());
 }
 
-TextPosition EditorInterface::get_prev_valid_begin_pos(NppViewType view, TextPosition pos) const {
-  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+TextPosition EditorInterface::get_prev_valid_begin_pos(TextPosition pos) const {
   if (pos == 0)
     return 0;
   if (get_encoding() == EditorCodepage::ansi)
     return pos - 1;
 
   auto worst_prev_pos = std::max(0_sz, pos - static_cast<TextPosition>(max_utf8_char_length));
-  auto rng = get_text_range(view, worst_prev_pos, pos);
+  auto rng = get_text_range(worst_prev_pos, pos);
   auto it = std::find_if(rng.rbegin(), rng.rend(), &utf8_is_lead);
   assert (it != rng.rend ());
   return worst_prev_pos + static_cast<TextPosition>(it.base() - rng.begin()) - 1;
 }
 
-TextPosition EditorInterface::get_next_valid_end_pos(NppViewType view, TextPosition pos) const {
-  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
-  auto doc_len = get_active_document_length(view);
+TextPosition EditorInterface::get_next_valid_end_pos(TextPosition pos) const {
+  auto doc_len = get_active_document_length();
   if (pos >= doc_len)
     return doc_len;
 
   if (get_encoding() == EditorCodepage::ansi)
     return pos + 1;
 
-  auto text = get_text_range(view, pos, pos + 1);
+  auto text = get_text_range(pos, pos + 1);
   return pos + utf8_symbol_len(*text.begin());
 }
 
@@ -59,16 +61,15 @@ std::string EditorInterface::to_editor_encoding(NppViewType view, std::wstring_v
   throw std::runtime_error ("Unsupported encoding");
 }
 
-MappedWstring EditorInterface::to_mapped_wstring(NppViewType view, const std::string& str) {
-  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+MappedWstring EditorInterface::to_mapped_wstring(const std::string& str) {
   if (get_encoding() == EditorCodepage::utf8)
     return utf8_to_mapped_wstring(str);
 
   return ::to_mapped_wstring(str);
 }
 
-MappedWstring EditorInterface::get_mapped_wstring_range(NppViewType view, TextPosition from, TextPosition to) {
-  auto result = to_mapped_wstring (view, get_text_range(view, from, to));
+MappedWstring EditorInterface::get_mapped_wstring_range(TextPosition from, TextPosition to) {
+  auto result = to_mapped_wstring (get_text_range(from, to));
   for (auto &val : result.mapping)
     val += from;
   return result;
@@ -76,7 +77,7 @@ MappedWstring EditorInterface::get_mapped_wstring_range(NppViewType view, TextPo
 
 MappedWstring EditorInterface::get_mapped_wstring_line(NppViewType view, TextPosition line) {
   TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
-  auto result = to_mapped_wstring (view, get_line(line));;
+  auto result = to_mapped_wstring (get_line(line));;
   auto line_start = get_line_start_position(line);
   for (auto &val : result.mapping)
     val += line_start;
