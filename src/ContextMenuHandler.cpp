@@ -113,7 +113,6 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   } else {
     used_menu_id = HIBYTE(menu_id);
   }
-  auto view = m_editor.active_view();
   ACTIVE_VIEW_BLOCK (m_editor);
 
   switch (used_menu_id) {
@@ -163,7 +162,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
             is_proper_name = false;
         }
 
-        SpellCheckerHelpers::replace_all_tokens (m_editor, view, m_settings, misspelled_text.c_str(), suggestion, is_proper_name);
+        SpellCheckerHelpers::replace_all_tokens (m_editor, m_settings, misspelled_text.c_str(), suggestion, is_proper_name);
       }
     }
   } break;

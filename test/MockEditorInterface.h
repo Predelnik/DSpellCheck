@@ -64,7 +64,6 @@ public:
   void set_current_indicator(int indicator_index) override;
   void indicator_fill_range(TextPosition from, TextPosition to) override;
   void indicator_clear_range(TextPosition from, TextPosition to) override;
-  NppViewType active_view() const override;
   EditorCodepage get_encoding() const override;
   TextPosition get_current_pos() const override;
   int get_current_line_number() const override;
@@ -138,6 +137,7 @@ private:
   const MockedDocumentInfo *active_document() const;
   MockedDocumentInfo *active_document(NppViewType view);
 private:
+  int active_view() const override;
   enum_array<NppViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<NppViewType, int> m_active_document_index;
   enum_array<NppViewType, bool> m_save_undo;

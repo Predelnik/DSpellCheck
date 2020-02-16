@@ -259,7 +259,8 @@ void start_language_list() { lang_list_instance->do_dialog(); }
 
 void recheck_visible() {
   SpellCheckerHelpers::print_to_log(settings.get(), L"recheck_visible ()", npp->get_editor_hwnd());
-  spell_checker->recheck_visible(npp_interface().active_view());
+  ACTIVE_VIEW_BLOCK(npp_interface());
+  spell_checker->recheck_visible();
 }
 
 void find_next_mistake() { spell_checker->find_next_mistake(); }
@@ -660,7 +661,8 @@ void WINAPI edit_recheck_callback(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEve
     SetTimer(npp_data.npp_handle, edit_recheck_timer, USER_TIMER_MAXIMUM, edit_recheck_callback);
   recheck_done = true;
 
-  spell_checker->recheck_visible(npp_interface().active_view());
+  ACTIVE_VIEW_BLOCK(npp_interface());
+  spell_checker->recheck_visible();
   if (!first_restyle)
     restyling_caused_recheck_was_done = true;
   first_restyle = false;
@@ -673,7 +675,8 @@ void WINAPI scroll_recheck_callback(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idE
   }
   recheck_done = true;
 
-  spell_checker->recheck_visible(npp_interface().active_view());
+  ACTIVE_VIEW_BLOCK(npp_interface());
+  spell_checker->recheck_visible();
   if (!first_restyle)
     restyling_caused_recheck_was_done = true;
   first_restyle = false;
@@ -737,7 +740,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 && (recheck_done || first_restyle) && !restyling_caused_recheck_was_done) // If restyling wasn't caused
                                                                                                                                   // by user input...
     {
-      spell_checker->recheck_visible(npp_interface().active_view());
+      ACTIVE_VIEW_BLOCK(npp_interface());
+      spell_checker->recheck_visible();
       if (!first_restyle)
         restyling_caused_recheck_was_done = true;
       first_restyle = false;

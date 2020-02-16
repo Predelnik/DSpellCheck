@@ -95,8 +95,7 @@ void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
   }
 }
 
-void replace_all_tokens(EditorInterface &editor, NppViewType view, const Settings &settings, const char *from, std::wstring_view to, bool is_proper_name) {
-  TARGET_VIEW_BLOCK (editor, static_cast<int> (view));
+void replace_all_tokens(EditorInterface &editor, const Settings &settings, const char *from, std::wstring_view to, bool is_proper_name) {
   TextPosition pos = 0;
   auto from_len = static_cast<TextPosition>(strlen(from));
   if (from_len == 0)
@@ -133,7 +132,7 @@ void replace_all_tokens(EditorInterface &editor, NppViewType view, const Setting
                 return false;
             }
             src_word_sv = std::wstring_view(mapped_wstr.str).substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos);
-            if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, view, src_word_sv, doc_word_start_pos + start_pos_offset))
+            if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, src_word_sv, doc_word_start_pos + start_pos_offset))
               return false;
 
             return true;
@@ -158,9 +157,8 @@ void replace_all_tokens(EditorInterface &editor, NppViewType view, const Setting
   }
 }
 
-bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, NppViewType view, std::wstring_view word,
+bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, std::wstring_view word,
                                    TextPosition word_start) {
-  TARGET_VIEW_BLOCK(editor, static_cast<int> (view));
   if (word.empty())
     return false;
 

@@ -139,8 +139,8 @@ void MockEditorInterface::indicator_clear_range(TextPosition from,
   std::fill(s.begin() + from, s.begin() + to, false);
 }
 
-NppViewType MockEditorInterface::active_view() const {
-  return m_active_view;
+int MockEditorInterface::active_view() const {
+  return static_cast<int> (m_active_view);
 }
 
 EditorCodepage MockEditorInterface::get_encoding() const {

@@ -53,7 +53,6 @@ public:
   // const
   std::vector<std::wstring> get_open_filenames() const override;
   std::vector<std::wstring> get_open_filenames_all_views() const override;
-  NppViewType active_view() const override;
   bool is_opened(const std::wstring &filename) const override;
   EditorCodepage get_encoding() const override;
   std::wstring active_document_path() const override;
@@ -112,10 +111,16 @@ private:
   std::wstring get_dir_msg(UINT msg) const;
   void do_command(int id);
   std::vector<std::wstring> get_open_filenames_helper(int enum_val, int msg) const;
+  int active_view() const override;
 
 private:
   const NppData &m_npp_data;
   mutable enum_array<NppViewType, std::optional<int>> m_lexer_cache;
   mutable std::array<std::optional<bool>, 256> m_hotspot_cache;
-  mutable NppViewType m_target_view = NppViewType::primary;
+  mutable NppViewType m_target_view =
+#ifdef _DEBUG
+    NppViewType::COUNT;
+#else
+    NppViewType::primary;
+#endif
 };

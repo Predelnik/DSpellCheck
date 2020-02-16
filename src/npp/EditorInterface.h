@@ -144,7 +144,6 @@ public:
   TextPosition get_current_pos_in_line() const;
 
   virtual int get_view_count () const = 0;
-  virtual NppViewType active_view() const = 0;
 
   TextPosition get_prev_valid_begin_pos(TextPosition pos) const;
   TextPosition get_next_valid_end_pos(TextPosition pos) const;
@@ -160,6 +159,7 @@ private:
   virtual void end_undo_action () = 0;
   virtual void set_target_view (int view_index) const = 0;
   virtual int get_target_view () const = 0;
+  virtual int active_view() const = 0;
 
   friend class undo_block;
   friend class target_view_block;
@@ -185,7 +185,7 @@ public:
     m_editor.set_target_view(view);
   }
   static self_t active_view (const EditorInterface &editor) {
-    return {editor, static_cast<int> (editor.active_view())};
+    return {editor, editor.active_view()};
   }
   ~target_view_block () {
     m_editor.set_target_view(m_original_view);

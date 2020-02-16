@@ -64,10 +64,12 @@ HWND NppInterface::get_view_hwnd() const {
 }
 
 LRESULT NppInterface::send_msg_to_scintilla(UINT msg, WPARAM w_param, LPARAM l_param) const {
+  assert (m_target_view != NppViewType::COUNT && "Outside view scope");
   return SendMessage(get_view_hwnd(), msg, w_param, l_param);
 }
 
 void NppInterface::post_msg_to_scintilla(UINT msg, WPARAM w_param, LPARAM l_param) const {
+  assert (m_target_view != NppViewType::COUNT && "Outside view scope");
   PostMessage(get_view_hwnd(), msg, w_param, l_param);
 }
 
@@ -90,16 +92,10 @@ int NppInterface::to_index(NppViewType target) {
   return 0;
 }
 
-NppViewType NppInterface::active_view() const {
+int NppInterface::active_view() const {
   int cur_scintilla = 0;
   send_msg_to_npp(NPPM_GETCURRENTSCINTILLA, 0, reinterpret_cast<LPARAM>(&cur_scintilla));
-  if (cur_scintilla == 0)
-    return NppViewType::primary;
-  if (cur_scintilla == 1)
-    return NppViewType::secondary;
-
-  assert(false);
-  return NppViewType::primary;
+  return cur_scintilla;
 }
 
 bool NppInterface::open_document(std::wstring filename) { return send_msg_to_npp(NPPM_DOOPEN, 0, reinterpret_cast<LPARAM>(filename.data())) == TRUE; }

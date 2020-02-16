@@ -28,7 +28,7 @@ void print_to_log(const Settings* settings, std::wstring_view line, HWND parent_
 void cut_apostrophes(const Settings &settings, std::wstring_view &word);
 // Replace all tokens equal `from` to `to`. Settings are required for tokenization style.
 // If to is proper name or abbreviation it should be capitalized correctly otherwise it should be all lower case
-void replace_all_tokens(EditorInterface &editor, NppViewType view, const Settings &settings, const char *from, std::wstring_view to, bool
+void replace_all_tokens(EditorInterface &editor, const Settings &settings, const char *from, std::wstring_view to, bool
                         is_proper_name);
-bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, NppViewType view, std::wstring_view word, TextPosition word_start);
+bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, std::wstring_view word, TextPosition word_start);
 } // namespace SpellCheckerHelpers
