@@ -141,7 +141,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
                                 m_word_under_cursor_length);
       } else if (result <= m_last_suggestions.size()) {
         std::string encoded_str;
-        if (m_editor.get_encoding(view) == EditorCodepage::ansi)
+        if (m_editor.get_encoding() == EditorCodepage::ansi)
           encoded_str = to_string(m_last_suggestions[result - 1].c_str());
         else
           encoded_str = to_utf8_string(m_last_suggestions[result - 1]);

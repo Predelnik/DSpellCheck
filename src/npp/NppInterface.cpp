@@ -109,8 +109,8 @@ bool NppInterface::is_opened(const std::wstring &filename) const {
   return std::find(filenames.begin(), filenames.end(), filename) != filenames.end();
 }
 
-EditorCodepage NppInterface::get_encoding(NppViewType view) const {
-  auto CodepageId = static_cast<int>(send_msg_to_scintilla(view, SCI_GETCODEPAGE, 0, 0));
+EditorCodepage NppInterface::get_encoding() const {
+  auto CodepageId = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETCODEPAGE, 0, 0));
   if (CodepageId == SC_CP_UTF8)
     return EditorCodepage::utf8;
 
@@ -148,7 +148,7 @@ int NppInterface::get_view_count() const {
   return npp_view_count;
 }
 
-void NppInterface::set_target_view(int view_index) {
+void NppInterface::set_target_view(int view_index) const {
   m_target_view = static_cast<NppViewType> (view_index);
 }
 

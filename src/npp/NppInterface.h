@@ -55,7 +55,7 @@ public:
   std::vector<std::wstring> get_open_filenames_all_views() const override;
   NppViewType active_view() const override;
   bool is_opened(const std::wstring &filename) const override;
-  EditorCodepage get_encoding(NppViewType view) const override;
+  EditorCodepage get_encoding() const override;
   std::wstring active_document_path() const override;
   std::wstring active_file_directory() const override;
   std::string selected_text(NppViewType view) const override;
@@ -97,7 +97,7 @@ public:
   void add_bookmark(TextPosition line) override;
 
   int get_view_count() const override;
-  void set_target_view(int view_index) override;
+  void set_target_view(int view_index) const override;
 
   HMENU get_menu_handle(int menu_type) const;
   int get_target_view() const override;
@@ -117,5 +117,5 @@ private:
   const NppData &m_npp_data;
   mutable enum_array<NppViewType, std::optional<int>> m_lexer_cache;
   mutable std::array<std::optional<bool>, 256> m_hotspot_cache;
-  NppViewType m_target_view = NppViewType::primary;
+  mutable NppViewType m_target_view = NppViewType::primary;
 };

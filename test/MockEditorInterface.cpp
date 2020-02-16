@@ -143,8 +143,8 @@ NppViewType MockEditorInterface::active_view() const {
   return m_active_view;
 }
 
-EditorCodepage MockEditorInterface::get_encoding(NppViewType view) const {
-  auto doc = active_document(view);
+EditorCodepage MockEditorInterface::get_encoding() const {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return EditorCodepage::utf8;
   return doc->codepage;
@@ -591,7 +591,7 @@ int MockEditorInterface::get_view_count() const
   return mock_editor_view_count;
 }
 
-void MockEditorInterface::set_target_view(int view_index)
+void MockEditorInterface::set_target_view(int view_index) const
 {
   m_target_view = static_cast<NppViewType> (view_index);
 }

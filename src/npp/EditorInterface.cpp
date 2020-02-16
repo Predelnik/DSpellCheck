@@ -17,9 +17,10 @@
 #include "utils/utf8.h"
 
 TextPosition EditorInterface::get_prev_valid_begin_pos(NppViewType view, TextPosition pos) const {
+  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
   if (pos == 0)
     return 0;
-  if (get_encoding(view) == EditorCodepage::ansi)
+  if (get_encoding() == EditorCodepage::ansi)
     return pos - 1;
 
   auto worst_prev_pos = std::max(0_sz, pos - static_cast<TextPosition>(max_utf8_char_length));
@@ -30,11 +31,12 @@ TextPosition EditorInterface::get_prev_valid_begin_pos(NppViewType view, TextPos
 }
 
 TextPosition EditorInterface::get_next_valid_end_pos(NppViewType view, TextPosition pos) const {
+  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
   auto doc_len = get_active_document_length(view);
   if (pos >= doc_len)
     return doc_len;
 
-  if (get_encoding(view) == EditorCodepage::ansi)
+  if (get_encoding() == EditorCodepage::ansi)
     return pos + 1;
 
   auto text = get_text_range(view, pos, pos + 1);
@@ -42,7 +44,8 @@ TextPosition EditorInterface::get_next_valid_end_pos(NppViewType view, TextPosit
 }
 
 std::string EditorInterface::to_editor_encoding(NppViewType view, std::wstring_view str) const {
-  switch (get_encoding(view)) {
+  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+  switch (get_encoding()) {
   case EditorCodepage::ansi: return to_string (str);
   case EditorCodepage::utf8: return to_utf8_string(str);
   case EditorCodepage::COUNT: break;
@@ -51,7 +54,8 @@ std::string EditorInterface::to_editor_encoding(NppViewType view, std::wstring_v
 }
 
 MappedWstring EditorInterface::to_mapped_wstring(NppViewType view, const std::string& str) {
-  if (get_encoding(view) == EditorCodepage::utf8)
+  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+  if (get_encoding() == EditorCodepage::utf8)
     return utf8_to_mapped_wstring(str);
 
   return ::to_mapped_wstring(str);

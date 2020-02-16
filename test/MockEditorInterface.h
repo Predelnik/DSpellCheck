@@ -65,7 +65,7 @@ public:
   void indicator_fill_range(TextPosition from, TextPosition to) override;
   void indicator_clear_range(TextPosition from, TextPosition to) override;
   NppViewType active_view() const override;
-  EditorCodepage get_encoding(NppViewType view) const override;
+  EditorCodepage get_encoding() const override;
   TextPosition get_current_pos(NppViewType view) const override;
   int get_current_line_number(NppViewType view) const override;
   int get_text_height(NppViewType view, int line) const override;
@@ -128,7 +128,7 @@ public:
   void replace_text(TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(TextPosition line) override;
   int get_view_count() const override;
-  void set_target_view(int view_index) override;
+  void set_target_view(int view_index) const override;
   int get_target_view() const override;
   std::vector<std::wstring> get_open_filenames() const override;
   std::vector<std::wstring> get_open_filenames_all_views() const override;
@@ -141,7 +141,7 @@ private:
   enum_array<NppViewType, int> m_active_document_index;
   enum_array<NppViewType, bool> m_save_undo;
   NppViewType m_active_view = NppViewType::primary;
-  NppViewType m_target_view = NppViewType::primary;
+  mutable NppViewType m_target_view = NppViewType::primary;
   static constexpr auto text_width = 13;
   static constexpr auto text_height = 13;
 };

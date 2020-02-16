@@ -97,7 +97,7 @@ public:
   virtual std::vector<std::wstring> get_open_filenames() const = 0;
   virtual std::vector<std::wstring> get_open_filenames_all_views() const = 0;
   virtual bool is_opened(const std::wstring &filename) const = 0;
-  virtual EditorCodepage get_encoding(NppViewType view) const = 0;
+  virtual EditorCodepage get_encoding() const = 0;
   virtual std::wstring active_document_path() const = 0;
   virtual std::wstring active_file_directory() const = 0;
   virtual std::wstring plugin_config_dir() const = 0;
@@ -163,7 +163,7 @@ public:
 private:
   virtual void begin_undo_action (NppViewType view) = 0; // use UNDO_BLOCK instead
   virtual void end_undo_action (NppViewType view) = 0;
-  virtual void set_target_view (int view_index) = 0;
+  virtual void set_target_view (int view_index) const = 0;
   virtual int get_target_view () const = 0;
 
   friend class undo_block;
@@ -186,11 +186,11 @@ private:
 class target_view_block {
   using self_t = target_view_block;
 public:
-  target_view_block (EditorInterface &editor, int view) : m_editor(editor) {
+  target_view_block (const EditorInterface &editor, int view) : m_editor(editor) {
     m_original_view = m_editor.get_target_view();
     m_editor.set_target_view(view);
   }
-  static self_t active_view (EditorInterface &editor) {
+  static self_t active_view (const EditorInterface &editor) {
     return {editor, static_cast<int> (editor.active_view())};
   }
   ~target_view_block () {
@@ -198,7 +198,7 @@ public:
   }
 
 private:
-  EditorInterface &m_editor;
+  const EditorInterface &m_editor;
   int m_original_view;
 };
 
