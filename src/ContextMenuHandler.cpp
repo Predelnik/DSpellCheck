@@ -150,9 +150,9 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
       } else if (result <= menu_id::replace_all_start + m_last_suggestions.size()) {
         auto misspelled_text = m_editor.selected_text();
         auto &suggestion = m_last_suggestions[result - menu_id::replace_all_start - 1];
-        UNDO_BLOCK (m_editor, view);
+        UNDO_BLOCK (m_editor);
         // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion
-        m_editor.replace_selection(m_editor.to_editor_encoding(view, suggestion).c_str());
+        m_editor.replace_selection(m_editor.to_editor_encoding(suggestion).c_str());
 
         bool is_proper_name = true;
         if (!suggestion.empty ()) {
@@ -238,7 +238,6 @@ void ContextMenuHandler::init_suggestions_box(
   }
   m_word_under_cursor_length = length;
   m_word_under_cursor_pos = pos;
-  auto view = m_editor.active_view();
   ACTIVE_VIEW_BLOCK (m_editor);
   auto line = m_editor.line_from_position(m_word_under_cursor_pos);
   auto text_height = m_editor.get_text_height(line);
@@ -252,7 +251,7 @@ void ContextMenuHandler::init_suggestions_box(
   if (npp == nullptr)
     return;
   RECT r;
-  auto hwnd = npp->get_scintilla_hwnd(view);
+  auto hwnd = npp->get_view_hwnd();
   GetWindowRect(hwnd, &r);
 
   ClientToScreen(hwnd, &p);

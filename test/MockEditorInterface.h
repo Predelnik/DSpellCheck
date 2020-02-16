@@ -74,7 +74,7 @@ public:
   TextPosition get_line_end_position(TextPosition line) const override;
   int get_lexer() const override;
   TextPosition get_selection_start() const override;
-  TextPosition get_selection_end(NppViewType view) const override;
+  TextPosition get_selection_end() const override;
   int get_style_at(TextPosition position) const override;
   bool is_style_hotspot(int style) const override;
   TextPosition get_active_document_length() const override;
@@ -102,6 +102,7 @@ public:
   std::optional<TextPosition> char_position_from_global_point(int x,
                                                               int y) const override;
   HWND get_editor_hwnd() const override;
+  HWND get_view_hwnd() const override;
   std::wstring get_full_current_path() const override;
   std::string get_text_range(TextPosition from,
                              TextPosition to) const override;
@@ -120,8 +121,8 @@ public:
   void set_whole_text_style (NppViewType view, int style);
   void set_codepage(NppViewType view, EditorCodepage codepage);
   void delete_range(TextPosition start, TextPosition length) override;
-  void begin_undo_action(NppViewType view) override;
-  void end_undo_action(NppViewType view) override;
+  void begin_undo_action() override;
+  void end_undo_action() override;
   void undo() override;
   bool is_line_visible(TextPosition line) const override;
   TextPosition find_next(TextPosition from_position, const char* needle) override;
@@ -134,14 +135,14 @@ public:
 private:
   void set_target_view(int view_index) const override;
   int get_target_view() const override;
-  const MockedDocumentInfo *active_document(NppViewType view) const;
+  const MockedDocumentInfo *active_document() const;
   MockedDocumentInfo *active_document(NppViewType view);
 private:
   enum_array<NppViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<NppViewType, int> m_active_document_index;
   enum_array<NppViewType, bool> m_save_undo;
   NppViewType m_active_view = NppViewType::primary;
-  mutable NppViewType m_target_view = NppViewType::primary;
+  mutable NppViewType m_target_view = NppViewType::COUNT;
   static constexpr auto text_width = 13;
   static constexpr auto text_height = 13;
 };

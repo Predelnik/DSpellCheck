@@ -285,14 +285,14 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
     init_char_pos = *mb_pos;
   } else {
     selection_start = m_editor.get_selection_start();
-    selection_end = m_editor.get_selection_end(view);
+    selection_end = m_editor.get_selection_end();
     init_char_pos = std::min (selection_start, selection_end);
   }
 
   if (init_char_pos == -1)
     return true;
   auto line = m_editor.line_from_position(init_char_pos);
-  auto mapped_str = m_editor.get_mapped_wstring_line(view, line);
+  auto mapped_str = m_editor.get_mapped_wstring_line(line);
   if (mapped_str.str.empty())
     return true;
   auto word = get_word_at(static_cast<TextPosition>(init_char_pos), mapped_str);
@@ -319,7 +319,7 @@ void SpellChecker::erase_all_misspellings() {
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
     return;
 
-  UNDO_BLOCK(m_editor, view);
+  UNDO_BLOCK(m_editor);
   TextPosition chars_removed = 0;
   for (auto &misspelling : m_misspellings) {
     auto start = mapped_str.to_original_index (static_cast<TextPosition> (misspelling.data() - mapped_str.str.data()));

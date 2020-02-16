@@ -33,6 +33,7 @@ TEST_CASE("Language Styles") {
     settings.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
     auto v = NppViewType::primary;
+    TARGET_VIEW_BLOCK (editor, static_cast<int> (v));
     editor.open_virtual_document(v, L"test.txt", L"abcdef test");
     SpellerContainer sp_container(&settings, std::move(speller));
     SpellChecker sc(&settings, editor, sp_container);

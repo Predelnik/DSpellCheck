@@ -150,7 +150,7 @@ void replace_all_tokens(EditorInterface &editor, NppViewType view, const Setting
           use_modified = true;
         }
       }
-      auto encoded_to = editor.to_editor_encoding(view, use_modified ? modified_to : to);
+      auto encoded_to = editor.to_editor_encoding(use_modified ? modified_to : to);
       editor.replace_text(pos, static_cast<TextPosition>(pos + from_len), encoded_to);
       pos = pos + static_cast<TextPosition>(encoded_to.length());
     } else

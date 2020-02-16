@@ -116,8 +116,9 @@ public:
   virtual TextPosition char_position_from_point(
       const POINT &pnt) const = 0;
   virtual TextPosition get_selection_start() const = 0;
-  virtual TextPosition get_selection_end(NppViewType view) const = 0;
+  virtual TextPosition get_selection_end() const = 0;
   virtual HWND get_editor_hwnd() const = 0;
+  virtual HWND get_view_hwnd() const = 0;
   virtual int get_style_at(TextPosition position) const = 0;
   virtual std::wstring get_full_current_path() const = 0;
   // is current style used for links (hotspots):
@@ -149,14 +150,14 @@ public:
   TextPosition get_next_valid_end_pos(TextPosition pos) const;
   MappedWstring to_mapped_wstring (const std::string &str);
   MappedWstring get_mapped_wstring_range (TextPosition from, TextPosition to);
-  MappedWstring get_mapped_wstring_line (NppViewType view, TextPosition line);
-  std::string to_editor_encoding (NppViewType view, std::wstring_view str) const;
+  MappedWstring get_mapped_wstring_line (TextPosition line);
+  std::string to_editor_encoding (std::wstring_view str) const;
 
   virtual ~EditorInterface() = default;
 
 private:
-  virtual void begin_undo_action (NppViewType view) = 0; // use UNDO_BLOCK instead
-  virtual void end_undo_action (NppViewType view) = 0;
+  virtual void begin_undo_action () = 0; // use UNDO_BLOCK instead
+  virtual void end_undo_action () = 0;
   virtual void set_target_view (int view_index) const = 0;
   virtual int get_target_view () const = 0;
 
@@ -167,12 +168,11 @@ private:
 class undo_block
 {
 public:
-  undo_block (EditorInterface &editor, NppViewType view) : m_editor(editor), m_view(view) { m_editor.begin_undo_action(m_view); }
-  ~undo_block () { m_editor.end_undo_action(m_view); }
+  undo_block (EditorInterface &editor) : m_editor(editor) { m_editor.begin_undo_action(); }
+  ~undo_block () { m_editor.end_undo_action(); }
 
 private:
   EditorInterface &m_editor;
-  NppViewType m_view;
 };
 
 #define UNDO_BLOCK(...) undo_block anonymous_undo_block_ ## __COUNTER__ {__VA_ARGS__}

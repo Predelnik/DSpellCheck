@@ -51,8 +51,7 @@ TextPosition EditorInterface::get_next_valid_end_pos(TextPosition pos) const {
   return pos + utf8_symbol_len(*text.begin());
 }
 
-std::string EditorInterface::to_editor_encoding(NppViewType view, std::wstring_view str) const {
-  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+std::string EditorInterface::to_editor_encoding(std::wstring_view str) const {
   switch (get_encoding()) {
   case EditorCodepage::ansi: return to_string (str);
   case EditorCodepage::utf8: return to_utf8_string(str);
@@ -75,8 +74,7 @@ MappedWstring EditorInterface::get_mapped_wstring_range(TextPosition from, TextP
   return result;
 }
 
-MappedWstring EditorInterface::get_mapped_wstring_line(NppViewType view, TextPosition line) {
-  TARGET_VIEW_BLOCK(*this, static_cast<int> (view));
+MappedWstring EditorInterface::get_mapped_wstring_line(TextPosition line) {
   auto result = to_mapped_wstring (get_line(line));;
   auto line_start = get_line_start_position(line);
   for (auto &val : result.mapping)

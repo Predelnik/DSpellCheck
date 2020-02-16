@@ -126,8 +126,11 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
 
   case WM_MOUSEWHEEL:
     ShowWindow(_hSelf, SW_HIDE);
-    PostMessage(m_npp.get_scintilla_hwnd(m_npp.active_view()), message, w_param,
-                l_param);
+    {
+      ACTIVE_VIEW_BLOCK(m_npp);
+      PostMessage(m_npp.get_view_hwnd(), message, w_param,
+                  l_param);
+    }
     return 0;
 
   case WM_PAINT: {
@@ -161,6 +164,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
   }
 
   case WM_SHOWANDRECREATEMENU: {
+    ACTIVE_VIEW_BLOCK (m_npp);
     tagTPMPARAMS tpm_params;
     tpm_params.cbSize = sizeof(tagTPMPARAMS);
     GetWindowRect(_hSelf, &tpm_params.rcExclude);
@@ -174,7 +178,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
     TrackPopupMenuEx(popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
                      p.y, _hSelf, &tpm_params);
     PostMessage(m_npp.get_editor_hwnd (), WM_NULL, 0, 0);
-    SetFocus(m_npp.get_scintilla_hwnd(m_npp.active_view()));
+    SetFocus(m_npp.get_view_hwnd());
     m_state_menu = false;
     DestroyMenu(popup_menu);
     return 0;

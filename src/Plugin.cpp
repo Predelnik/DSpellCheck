@@ -178,26 +178,24 @@ void show_spell_check_menu_at_cursor() {
 
   tagTPMPARAMS tpm_params;
   tpm_params.cbSize = sizeof(tagTPMPARAMS);
-  auto v = npp->active_view();
   ACTIVE_VIEW_BLOCK (*npp);
   auto start = npp->get_selection_start();
   auto x = npp->get_point_x_from_position(start);
   auto y = npp->get_point_y_from_position(start);
   POINT pnt{x, y};
-  ClientToScreen(npp->get_scintilla_hwnd(v), &pnt);
-  auto cmd = TrackPopupMenuEx(menu, TPM_HORIZONTAL | TPM_RIGHTALIGN | TPM_RETURNCMD, pnt.x, pnt.y, npp->get_scintilla_hwnd(v), &tpm_params);
+  ClientToScreen(npp->get_view_hwnd(), &pnt);
+  auto cmd = TrackPopupMenuEx(menu, TPM_HORIZONTAL | TPM_RIGHTALIGN | TPM_RETURNCMD, pnt.x, pnt.y, npp->get_view_hwnd(), &tpm_params);
   context_menu_handler->process_menu_result(cmd);
 }
 
 void replace_with_1st_suggestion() {
   TextPosition pos, length;
   if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
-    auto view = npp->active_view();
     ACTIVE_VIEW_BLOCK(*npp);
     auto wstr = npp->get_mapped_wstring_range(pos, pos + length);
     auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str());
     if (!suggestions.empty())
-      npp->replace_text(pos, pos + length, npp->to_editor_encoding(view, suggestions.front()));
+      npp->replace_text(pos, pos + length, npp->to_editor_encoding(suggestions.front()));
   }
 }
 

@@ -48,9 +48,9 @@ int NppInterface::get_target_view() const {
 
 LRESULT NppInterface::send_msg_to_npp(UINT Msg, WPARAM wParam, LPARAM lParam) const { return SendMessage(m_npp_data.npp_handle, Msg, wParam, lParam); }
 
-HWND NppInterface::get_scintilla_hwnd(NppViewType view) const {
+HWND NppInterface::get_view_hwnd() const {
   auto handle = m_npp_data.scintilla_main_handle;
-  switch (view) {
+  switch (m_target_view) {
   case NppViewType::primary:
     handle = m_npp_data.scintilla_main_handle;
     break;
@@ -63,12 +63,12 @@ HWND NppInterface::get_scintilla_hwnd(NppViewType view) const {
   return handle;
 }
 
-LRESULT NppInterface::send_msg_to_scintilla(NppViewType view, UINT msg, WPARAM w_param, LPARAM l_param) const {
-  return SendMessage(get_scintilla_hwnd(view), msg, w_param, l_param);
+LRESULT NppInterface::send_msg_to_scintilla(UINT msg, WPARAM w_param, LPARAM l_param) const {
+  return SendMessage(get_view_hwnd(), msg, w_param, l_param);
 }
 
-void NppInterface::post_msg_to_scintilla(NppViewType view, UINT msg, WPARAM w_param, LPARAM l_param) const {
-  PostMessage(get_scintilla_hwnd(view), msg, w_param, l_param);
+void NppInterface::post_msg_to_scintilla(UINT msg, WPARAM w_param, LPARAM l_param) const {
+  PostMessage(get_view_hwnd(), msg, w_param, l_param);
 }
 
 std::wstring NppInterface::get_dir_msg(UINT msg) const {
@@ -110,7 +110,7 @@ bool NppInterface::is_opened(const std::wstring &filename) const {
 }
 
 EditorCodepage NppInterface::get_encoding() const {
-  auto CodepageId = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETCODEPAGE, 0, 0));
+  auto CodepageId = static_cast<int>(send_msg_to_scintilla(SCI_GETCODEPAGE, 0, 0));
   if (CodepageId == SC_CP_UTF8)
     return EditorCodepage::utf8;
 
@@ -140,7 +140,7 @@ void NppInterface::do_command(int id) { send_msg_to_npp(WM_COMMAND, id); }
 constexpr auto MARK_BOOKMARK = 24;
 
 void NppInterface::add_bookmark(TextPosition line) {
-  send_msg_to_scintilla(m_target_view, SCI_MARKERADD, line, MARK_BOOKMARK);
+  send_msg_to_scintilla(SCI_MARKERADD, line, MARK_BOOKMARK);
 }
 
 constexpr auto npp_view_count = 2;
@@ -152,18 +152,18 @@ void NppInterface::set_target_view(int view_index) const {
   m_target_view = static_cast<NppViewType> (view_index);
 }
 
-int NppInterface::get_text_height(int line) const { return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_TEXTHEIGHT, line)); }
+int NppInterface::get_text_height(int line) const { return static_cast<int>(send_msg_to_scintilla(SCI_TEXTHEIGHT, line)); }
 
 int NppInterface::get_point_x_from_position(TextPosition position) const {
-  return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_POINTXFROMPOSITION, 0, position));
+  return static_cast<int>(send_msg_to_scintilla(SCI_POINTXFROMPOSITION, 0, position));
 }
 
 int NppInterface::get_point_y_from_position(TextPosition position) const {
-  return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_POINTYFROMPOSITION, 0, position));
+  return static_cast<int>(send_msg_to_scintilla(SCI_POINTYFROMPOSITION, 0, position));
 }
 
 bool NppInterface::is_line_visible(TextPosition line) const {
-  return send_msg_to_scintilla(m_target_view, SCI_GETLINEVISIBLE, line);
+  return send_msg_to_scintilla(SCI_GETLINEVISIBLE, line);
 }
 
 TextPosition NppInterface::find_next(TextPosition from_position, const char* needle)
@@ -172,48 +172,48 @@ TextPosition NppInterface::find_next(TextPosition from_position, const char* nee
   ttf.chrg.cpMin = static_cast<Sci_PositionCR> (from_position);
   ttf.chrg.cpMax = static_cast<Sci_PositionCR> (get_active_document_length());
   ttf.lpstrText = needle;
-  return static_cast<TextPosition> (send_msg_to_scintilla(m_target_view, SCI_FINDTEXT, 0, reinterpret_cast<LPARAM> (&ttf)));
+  return static_cast<TextPosition> (send_msg_to_scintilla(SCI_FINDTEXT, 0, reinterpret_cast<LPARAM> (&ttf)));
 }
 
 void NppInterface::replace_text(TextPosition from, TextPosition to, std::string_view replacement) {
-  send_msg_to_scintilla (m_target_view, SCI_SETTARGETSTART, from);
-  send_msg_to_scintilla (m_target_view, SCI_SETTARGETEND, to);
-  send_msg_to_scintilla (m_target_view, SCI_REPLACETARGET, replacement.size(), reinterpret_cast<LPARAM> (replacement.data()));
+  send_msg_to_scintilla (SCI_SETTARGETSTART, from);
+  send_msg_to_scintilla (SCI_SETTARGETEND, to);
+  send_msg_to_scintilla (SCI_REPLACETARGET, replacement.size(), reinterpret_cast<LPARAM> (replacement.data()));
 }
 
-void NppInterface::set_selection(TextPosition from, TextPosition to) { post_msg_to_scintilla(m_target_view, SCI_SETSEL, from, to); }
+void NppInterface::set_selection(TextPosition from, TextPosition to) { post_msg_to_scintilla(SCI_SETSEL, from, to); }
 
-void NppInterface::replace_selection(const char *str) { send_msg_to_scintilla(m_target_view, SCI_REPLACESEL, 0, reinterpret_cast<LPARAM>(str)); }
+void NppInterface::replace_selection(const char *str) { send_msg_to_scintilla(SCI_REPLACESEL, 0, reinterpret_cast<LPARAM>(str)); }
 
 void NppInterface::set_indicator_style(int indicator_index, int style) {
-  send_msg_to_scintilla(m_target_view, SCI_INDICSETSTYLE, indicator_index, style);
+  send_msg_to_scintilla(SCI_INDICSETSTYLE, indicator_index, style);
 }
 
 void NppInterface::set_indicator_foreground(int indicator_index, int style) {
-  send_msg_to_scintilla(m_target_view, SCI_INDICSETFORE, indicator_index, style);
+  send_msg_to_scintilla(SCI_INDICSETFORE, indicator_index, style);
 }
 
-void NppInterface::set_current_indicator(int indicator_index) { post_msg_to_scintilla(m_target_view, SCI_SETINDICATORCURRENT, indicator_index); }
+void NppInterface::set_current_indicator(int indicator_index) { post_msg_to_scintilla(SCI_SETINDICATORCURRENT, indicator_index); }
 
-void NppInterface::indicator_fill_range(TextPosition from, TextPosition to) { post_msg_to_scintilla(m_target_view, SCI_INDICATORFILLRANGE, from, to - from); }
+void NppInterface::indicator_fill_range(TextPosition from, TextPosition to) { post_msg_to_scintilla(SCI_INDICATORFILLRANGE, from, to - from); }
 
-void NppInterface::indicator_clear_range(TextPosition from, TextPosition to) { post_msg_to_scintilla(m_target_view, SCI_INDICATORCLEARRANGE, from, to - from); }
+void NppInterface::indicator_clear_range(TextPosition from, TextPosition to) { post_msg_to_scintilla(SCI_INDICATORCLEARRANGE, from, to - from); }
 
-TextPosition NppInterface::get_first_visible_line() const { return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_GETFIRSTVISIBLELINE)); }
+TextPosition NppInterface::get_first_visible_line() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETFIRSTVISIBLELINE)); }
 
-TextPosition NppInterface::get_lines_on_screen() const { return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_LINESONSCREEN)); }
+TextPosition NppInterface::get_lines_on_screen() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_LINESONSCREEN)); }
 
 TextPosition NppInterface::get_document_line_from_visible(TextPosition visible_line) const {
-  return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_DOCLINEFROMVISIBLE, visible_line));
+  return static_cast<TextPosition>(send_msg_to_scintilla(SCI_DOCLINEFROMVISIBLE, visible_line));
 }
 
-TextPosition NppInterface::get_document_line_count() const { return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_GETLINECOUNT)); }
+TextPosition NppInterface::get_document_line_count() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETLINECOUNT)); }
 
 std::string NppInterface::get_active_document_text() const {
   TARGET_VIEW_BLOCK (*this, static_cast<int> (m_target_view));
   auto buf_len = get_active_document_length() + 1;
   std::vector<char> buf(buf_len);
-  send_msg_to_scintilla(m_target_view, SCI_GETTEXT, buf_len, reinterpret_cast<LPARAM>(buf.data()));
+  send_msg_to_scintilla(SCI_GETTEXT, buf_len, reinterpret_cast<LPARAM>(buf.data()));
   return buf.data();
 }
 
@@ -225,52 +225,52 @@ std::wstring NppInterface::get_full_current_path() const {
 
 RECT NppInterface::editor_rect() const {
   RECT out;
-  GetWindowRect(get_scintilla_hwnd(m_target_view), &out);
+  GetWindowRect(get_view_hwnd(), &out);
   OffsetRect(&out, -out.left, -out.top);
   return out;
 }
 
 void NppInterface::delete_range(TextPosition start, TextPosition length) {
-  send_msg_to_scintilla (m_target_view, SCI_DELETERANGE, start, length);
+  send_msg_to_scintilla (SCI_DELETERANGE, start, length);
 }
 
-void NppInterface::begin_undo_action(NppViewType view) {
-  send_msg_to_scintilla (view, SCI_BEGINUNDOACTION);
+void NppInterface::begin_undo_action() {
+  send_msg_to_scintilla (SCI_BEGINUNDOACTION);
 }
 
-void NppInterface::end_undo_action(NppViewType view) {
-  send_msg_to_scintilla (view, SCI_ENDUNDOACTION);
+void NppInterface::end_undo_action() {
+  send_msg_to_scintilla (SCI_ENDUNDOACTION);
 }
 
 void NppInterface::undo() {
-  send_msg_to_scintilla (m_target_view, SCI_UNDO);
+  send_msg_to_scintilla (SCI_UNDO);
 }
 
 std::optional<TextPosition> NppInterface::char_position_from_global_point(int x, int y) const {
   POINT p;
   p.x = x;
   p.y = y;
-  auto hwnd = get_scintilla_hwnd(m_target_view);
+  auto hwnd = get_view_hwnd();
   if (WindowFromPoint(p) != hwnd)
     return std::nullopt;
   ScreenToClient(hwnd, &p);
-  return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y));
+  return static_cast<TextPosition>(send_msg_to_scintilla(SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y));
 }
 
 TextPosition NppInterface::char_position_from_point(const POINT &pnt) const {
-  return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_CHARPOSITIONFROMPOINT, pnt.x, pnt.y));
+  return static_cast<TextPosition>(send_msg_to_scintilla(SCI_CHARPOSITIONFROMPOINT, pnt.x, pnt.y));
 }
 
-TextPosition NppInterface::get_selection_start() const { return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_GETSELECTIONSTART)); }
+TextPosition NppInterface::get_selection_start() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETSELECTIONSTART)); }
 
-TextPosition NppInterface::get_selection_end(NppViewType view) const { return static_cast<TextPosition>(send_msg_to_scintilla(view, SCI_GETSELECTIONEND)); }
+TextPosition NppInterface::get_selection_end() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETSELECTIONEND)); }
 
-TextPosition NppInterface::get_line_length(int line) const { return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_LINELENGTH, line)); }
+TextPosition NppInterface::get_line_length(int line) const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_LINELENGTH, line)); }
 
 std::string NppInterface::get_line(TextPosition line_number) const {
-  auto buf_size = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_LINELENGTH, line_number) + 1);
+  auto buf_size = static_cast<int>(send_msg_to_scintilla(SCI_LINELENGTH, line_number) + 1);
   std::vector<char> buf(buf_size);
-  auto ret = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETLINE, line_number, reinterpret_cast<LPARAM>(buf.data())));
+  auto ret = static_cast<int>(send_msg_to_scintilla(SCI_GETLINE, line_number, reinterpret_cast<LPARAM>(buf.data())));
   static_cast<void>(ret);
   assert(ret == buf_size - 1);
   return buf.data();
@@ -283,11 +283,11 @@ void NppInterface::add_toolbar_icon(int cmdId, const toolbarIcons *toolBarIconsP
 }
 
 std::string NppInterface::selected_text() const {
-  auto sel_buf_size = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETSELTEXT, 0, 0));
+  auto sel_buf_size = static_cast<int>(send_msg_to_scintilla(SCI_GETSELTEXT, 0, 0));
   if (sel_buf_size > 1) // Because it includes terminating '\0'
   {
     std::vector<char> buf(sel_buf_size);
-    send_msg_to_scintilla(m_target_view, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(buf.data()));
+    send_msg_to_scintilla(SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(buf.data()));
     return buf.data();
   }
   return {};
@@ -295,24 +295,24 @@ std::string NppInterface::selected_text() const {
 
 std::string NppInterface::get_current_line() const { return get_line(get_current_line_number()); }
 
-TextPosition NppInterface::get_current_pos() const { return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETCURRENTPOS, 0, 0)); }
+TextPosition NppInterface::get_current_pos() const { return static_cast<int>(send_msg_to_scintilla(SCI_GETCURRENTPOS, 0, 0)); }
 
 int NppInterface::get_current_line_number() const {
   return line_from_position(get_current_pos());
 }
 
 int NppInterface::line_from_position(TextPosition position) const {
-  return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_LINEFROMPOSITION, position));
+  return static_cast<int>(send_msg_to_scintilla(SCI_LINEFROMPOSITION, position));
 }
 
 std::wstring NppInterface::plugin_config_dir() const { return get_dir_msg(NPPM_GETPLUGINSCONFIGDIR); }
 
 TextPosition NppInterface::get_line_start_position(TextPosition line) const {
-  return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_POSITIONFROMLINE, line));
+  return static_cast<int>(send_msg_to_scintilla(SCI_POSITIONFROMLINE, line));
 }
 
 TextPosition NppInterface::get_line_end_position(TextPosition line) const {
-  return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETLINEENDPOSITION, line));
+  return static_cast<int>(send_msg_to_scintilla(SCI_GETLINEENDPOSITION, line));
 }
 
 HWND NppInterface::get_editor_hwnd() const { return m_npp_data.npp_handle; }
@@ -333,19 +333,19 @@ void NppInterface::notify(SCNotification *notify_code) {
 int NppInterface::get_lexer() const {
   if (m_lexer_cache[m_target_view])
     return *m_lexer_cache[m_target_view];
-  return *(m_lexer_cache[m_target_view] = static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETLEXER)));
+  return *(m_lexer_cache[m_target_view] = static_cast<int>(send_msg_to_scintilla(SCI_GETLEXER)));
 }
 
-int NppInterface::get_style_at(TextPosition position) const { return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETSTYLEAT, position)); }
+int NppInterface::get_style_at(TextPosition position) const { return static_cast<int>(send_msg_to_scintilla(SCI_GETSTYLEAT, position)); }
 
 bool NppInterface::is_style_hotspot(int style) const {
   ASSERT_RETURN(style <= STYLE_MAX, false);
   if (auto value = m_hotspot_cache[style])
     return *value;
-  return *(m_hotspot_cache[style]  = (send_msg_to_scintilla(m_target_view, SCI_STYLEGETHOTSPOT, style) != 0));
+  return *(m_hotspot_cache[style]  = (send_msg_to_scintilla(SCI_STYLEGETHOTSPOT, style) != 0));
 }
 
-TextPosition NppInterface::get_active_document_length() const { return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_GETLENGTH)); }
+TextPosition NppInterface::get_active_document_length() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETLENGTH)); }
 
 std::string NppInterface::get_text_range(TextPosition from, TextPosition to) const {
   if (from > to) {
@@ -357,11 +357,11 @@ std::string NppInterface::get_text_range(TextPosition from, TextPosition to) con
   range.chrg.cpMax = static_cast<Sci_PositionCR> (to);
   std::vector<char> buf(range.chrg.cpMax - range.chrg.cpMin + 1);
   range.lpstrText = buf.data();
-  send_msg_to_scintilla(m_target_view, SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
+  send_msg_to_scintilla(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&range));
   return buf.data();
 }
 
-void NppInterface::force_style_update(TextPosition from, TextPosition to) { send_msg_to_scintilla(m_target_view, SCI_COLOURISE, from, to); }
+void NppInterface::force_style_update(TextPosition from, TextPosition to) { send_msg_to_scintilla(SCI_COLOURISE, from, to); }
 
 std::vector<std::wstring> NppInterface::get_open_filenames_helper(int enum_val, int msg) const {
 

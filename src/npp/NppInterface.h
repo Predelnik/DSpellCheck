@@ -46,8 +46,8 @@ public:
   void indicator_fill_range(TextPosition from, TextPosition to) override;
   void indicator_clear_range(TextPosition from, TextPosition to) override;
   void delete_range(TextPosition start, TextPosition length) override;
-  void begin_undo_action(NppViewType view) override;
-  void end_undo_action(NppViewType view) override;
+  void begin_undo_action() override;
+  void end_undo_action() override;
   void undo() override;
 
   // const
@@ -78,7 +78,7 @@ public:
   std::optional<TextPosition> char_position_from_global_point(int x, int y) const override;
   TextPosition char_position_from_point(const POINT &pnt) const override;
   TextPosition get_selection_start() const override;
-  TextPosition get_selection_end(NppViewType view) const override;
+  TextPosition get_selection_end() const override;
   TextPosition get_line_length(int line) const override;
   std::string get_line(TextPosition line_number) const override;
   TextPosition get_first_visible_line() const override;
@@ -103,12 +103,12 @@ public:
   int get_target_view() const override;
 
 public:
-  HWND get_scintilla_hwnd(NppViewType view) const;
+  HWND get_view_hwnd() const override;
 
 private:
   LRESULT send_msg_to_npp(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0) const;
-  LRESULT send_msg_to_scintilla(NppViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
-  void post_msg_to_scintilla(NppViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
+  LRESULT send_msg_to_scintilla(UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
+  void post_msg_to_scintilla(UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
   std::wstring get_dir_msg(UINT msg) const;
   void do_command(int id);
   std::vector<std::wstring> get_open_filenames_helper(int enum_val, int msg) const;
