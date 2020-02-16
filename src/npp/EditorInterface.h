@@ -81,17 +81,17 @@ public:
   virtual void delete_range (TextPosition start, TextPosition length) = 0;
   virtual void set_indicator_style(int indicator_index,
                                    int style) = 0;
-  virtual void set_indicator_foreground(NppViewType view,
-                                        int indicator_index, int style) = 0;
-  virtual void set_current_indicator(NppViewType view,
-                                     int indicator_index) = 0;
-  virtual void indicator_fill_range(NppViewType view, TextPosition from,
+  virtual void set_indicator_foreground(
+      int indicator_index, int style) = 0;
+  virtual void set_current_indicator(
+      int indicator_index) = 0;
+  virtual void indicator_fill_range(TextPosition from,
                                     TextPosition to) = 0;
-  virtual void indicator_clear_range(NppViewType view, TextPosition from,
+  virtual void indicator_clear_range(TextPosition from,
                                      TextPosition to) = 0;
-  virtual void undo(NppViewType view) = 0;
-  virtual void replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement) = 0;
-  virtual void add_bookmark (NppViewType view, TextPosition line) = 0;
+  virtual void undo() = 0;
+  virtual void replace_text(TextPosition from, TextPosition to, std::string_view replacement) = 0;
+  virtual void add_bookmark (TextPosition line) = 0;
 
   // const
   virtual std::vector<std::wstring>
@@ -149,7 +149,6 @@ public:
   }
 
   virtual int get_view_count () const = 0;
-  virtual void target_active_view ();
   virtual NppViewType active_view() const = 0;
 
   TextPosition get_prev_valid_begin_pos(NppViewType view, TextPosition pos) const;
@@ -203,5 +202,5 @@ private:
   int m_original_view;
 };
 
-#define TARGET_VIEW_BLOCK(...) target_view_block anonymous_target_view_block_ ## __COUNTER__ {__VA_ARGS__}
-#define ACTIVE_VIEW_BLOCK(...) auto anonymous_target_view_block_ ## __COUNTER__ = target_view_block::active_view (__VA_ARGS__)
+#define TARGET_VIEW_BLOCK(...) target_view_block CONCATENATE(anonymous_target_view_block_, __COUNTER__) {__VA_ARGS__}
+#define ACTIVE_VIEW_BLOCK(...) auto CONCATENATE(anonymous_target_view_block_, __COUNTER__) = target_view_block::active_view (__VA_ARGS__)

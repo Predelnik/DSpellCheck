@@ -139,8 +139,8 @@ void NppInterface::do_command(int id) { send_msg_to_npp(WM_COMMAND, id); }
 // [!] constant from Notepad++ sources which might be subject to change
 constexpr auto MARK_BOOKMARK = 24;
 
-void NppInterface::add_bookmark(NppViewType view, TextPosition line) {
-  send_msg_to_scintilla(view, SCI_MARKERADD, line, MARK_BOOKMARK);
+void NppInterface::add_bookmark(TextPosition line) {
+  send_msg_to_scintilla(m_target_view, SCI_MARKERADD, line, MARK_BOOKMARK);
 }
 
 constexpr auto npp_view_count = 2;
@@ -175,10 +175,10 @@ TextPosition NppInterface::find_next(TextPosition from_position, const char* nee
   return static_cast<TextPosition> (send_msg_to_scintilla(m_target_view, SCI_FINDTEXT, 0, reinterpret_cast<LPARAM> (&ttf)));
 }
 
-void NppInterface::replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement) {
-  send_msg_to_scintilla (view, SCI_SETTARGETSTART, from);
-  send_msg_to_scintilla (view, SCI_SETTARGETEND, to);
-  send_msg_to_scintilla (view, SCI_REPLACETARGET, replacement.size(), reinterpret_cast<LPARAM> (replacement.data()));
+void NppInterface::replace_text(TextPosition from, TextPosition to, std::string_view replacement) {
+  send_msg_to_scintilla (m_target_view, SCI_SETTARGETSTART, from);
+  send_msg_to_scintilla (m_target_view, SCI_SETTARGETEND, to);
+  send_msg_to_scintilla (m_target_view, SCI_REPLACETARGET, replacement.size(), reinterpret_cast<LPARAM> (replacement.data()));
 }
 
 void NppInterface::set_selection(TextPosition from, TextPosition to) { post_msg_to_scintilla(m_target_view, SCI_SETSEL, from, to); }
@@ -189,15 +189,15 @@ void NppInterface::set_indicator_style(int indicator_index, int style) {
   send_msg_to_scintilla(m_target_view, SCI_INDICSETSTYLE, indicator_index, style);
 }
 
-void NppInterface::set_indicator_foreground(NppViewType view, int indicator_index, int style) {
-  send_msg_to_scintilla(view, SCI_INDICSETFORE, indicator_index, style);
+void NppInterface::set_indicator_foreground(int indicator_index, int style) {
+  send_msg_to_scintilla(m_target_view, SCI_INDICSETFORE, indicator_index, style);
 }
 
-void NppInterface::set_current_indicator(NppViewType view, int indicator_index) { post_msg_to_scintilla(view, SCI_SETINDICATORCURRENT, indicator_index); }
+void NppInterface::set_current_indicator(int indicator_index) { post_msg_to_scintilla(m_target_view, SCI_SETINDICATORCURRENT, indicator_index); }
 
-void NppInterface::indicator_fill_range(NppViewType view, TextPosition from, TextPosition to) { post_msg_to_scintilla(view, SCI_INDICATORFILLRANGE, from, to - from); }
+void NppInterface::indicator_fill_range(TextPosition from, TextPosition to) { post_msg_to_scintilla(m_target_view, SCI_INDICATORFILLRANGE, from, to - from); }
 
-void NppInterface::indicator_clear_range(NppViewType view, TextPosition from, TextPosition to) { post_msg_to_scintilla(view, SCI_INDICATORCLEARRANGE, from, to - from); }
+void NppInterface::indicator_clear_range(TextPosition from, TextPosition to) { post_msg_to_scintilla(m_target_view, SCI_INDICATORCLEARRANGE, from, to - from); }
 
 TextPosition NppInterface::get_first_visible_line(NppViewType view) const { return static_cast<TextPosition>(send_msg_to_scintilla(view, SCI_GETFIRSTVISIBLELINE)); }
 
@@ -241,8 +241,8 @@ void NppInterface::end_undo_action(NppViewType view) {
   send_msg_to_scintilla (view, SCI_ENDUNDOACTION);
 }
 
-void NppInterface::undo(NppViewType view) {
-  send_msg_to_scintilla (view, SCI_UNDO);
+void NppInterface::undo() {
+  send_msg_to_scintilla (m_target_view, SCI_UNDO);
 }
 
 std::optional<TextPosition> NppInterface::char_position_from_global_point(NppViewType view, int x, int y) const {

@@ -41,14 +41,14 @@ public:
   void set_selection(TextPosition from, TextPosition to) override;
   void replace_selection(const char *str) override;
   void set_indicator_style(int indicator_index, int style) override;
-  void set_indicator_foreground(NppViewType view, int indicator_index, int style) override;
-  void set_current_indicator(NppViewType view, int indicator_index) override;
-  void indicator_fill_range(NppViewType view, TextPosition from, TextPosition to) override;
-  void indicator_clear_range(NppViewType view, TextPosition from, TextPosition to) override;
+  void set_indicator_foreground(int indicator_index, int style) override;
+  void set_current_indicator(int indicator_index) override;
+  void indicator_fill_range(TextPosition from, TextPosition to) override;
+  void indicator_clear_range(TextPosition from, TextPosition to) override;
   void delete_range(TextPosition start, TextPosition length) override;
   void begin_undo_action(NppViewType view) override;
   void end_undo_action(NppViewType view) override;
-  void undo(NppViewType view) override;
+  void undo() override;
 
   // const
   std::vector<std::wstring> get_open_filenames(std::optional<NppViewType> view = {}) const override;
@@ -92,8 +92,8 @@ public:
   int get_point_y_from_position(NppViewType view, TextPosition position) const override;
   bool is_line_visible(NppViewType view, TextPosition line) const override;
   TextPosition find_next(TextPosition from_position, const char* needle) override;
-  void replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement) override;
-  void add_bookmark(NppViewType view, TextPosition line) override;
+  void replace_text(TextPosition from, TextPosition to, std::string_view replacement) override;
+  void add_bookmark(TextPosition line) override;
 
   int get_view_count() const override;
   void set_target_view(int view_index) override;

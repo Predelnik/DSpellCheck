@@ -73,3 +73,6 @@ constexpr std::ptrdiff_t operator "" _sz(unsigned long long n)
 {
   return static_cast<std::ptrdiff_t> (n);
 }
+
+#define CONCATENATE_(a, b) a ## b
+#define CONCATENATE(a, b) CONCATENATE_(a, b)

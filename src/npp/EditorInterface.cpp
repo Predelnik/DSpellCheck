@@ -16,10 +16,6 @@
 #include "MappedWString.h"
 #include "utils/utf8.h"
 
-void EditorInterface::target_active_view() {
-  set_target_view (static_cast<int> (active_view ()));
-}
-
 TextPosition EditorInterface::get_prev_valid_begin_pos(NppViewType view, TextPosition pos) const {
   if (pos == 0)
     return 0;

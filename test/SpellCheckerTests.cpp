@@ -90,7 +90,7 @@ This is test document
 
 И ещё немного слов
 )");
-  editor.undo (v); // check that undo restore both removed words
+  editor.undo (); // check that undo restore both removed words
   CHECK(editor.get_active_document_text(v) == R"(
 нехорошееслово
 И ещё немного слов

@@ -114,7 +114,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
     used_menu_id = HIBYTE(menu_id);
   }
   auto view = m_editor.active_view();
-  m_editor.target_active_view();
+  ACTIVE_VIEW_BLOCK (m_editor);
 
   switch (used_menu_id) {
   case menu_id::plguin_menu: {
@@ -286,7 +286,7 @@ ContextMenuHandler::get_suggestion_menu_items() {
 
   auto pos = m_word_under_cursor_pos;
   auto view = m_editor.active_view();
-  m_editor.target_active_view();
+  ACTIVE_VIEW_BLOCK (m_editor);
   m_editor.set_selection(pos, pos + m_word_under_cursor_length);
   std::vector<MenuItem> suggestion_menu_items;
   m_selected_word = m_editor.get_mapped_wstring_range(view, m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));

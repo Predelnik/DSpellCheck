@@ -96,10 +96,10 @@ void MockEditorInterface::set_indicator_style(
   doc->indicator_info[indicator_index].style = style;
 }
 
-void MockEditorInterface::set_indicator_foreground(NppViewType view,
-                                                   int indicator_index,
-                                                   int style) {
-  auto doc = active_document(view);
+void MockEditorInterface::set_indicator_foreground(
+  int indicator_index,
+  int style) {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   if (indicator_index >= static_cast<int>(doc->indicator_info.size()))
@@ -107,9 +107,9 @@ void MockEditorInterface::set_indicator_foreground(NppViewType view,
   doc->indicator_info[indicator_index].foreground = style;
 }
 
-void MockEditorInterface::set_current_indicator(NppViewType view,
-                                                int indicator_index) {
-  auto doc = active_document(view);
+void MockEditorInterface::set_current_indicator(
+  int indicator_index) {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   if (indicator_index >= static_cast<int>(doc->indicator_info.size()))
@@ -117,9 +117,9 @@ void MockEditorInterface::set_current_indicator(NppViewType view,
   doc->current_indicator = indicator_index;
 }
 
-void MockEditorInterface::indicator_fill_range(NppViewType view, TextPosition from,
+void MockEditorInterface::indicator_fill_range(TextPosition from,
                                                TextPosition to) {
-  auto doc = active_document(view);
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   auto &s = doc->indicator_info[doc->current_indicator].set_for;
@@ -128,9 +128,9 @@ void MockEditorInterface::indicator_fill_range(NppViewType view, TextPosition fr
   std::fill(s.begin() + from, s.begin() + to, true);
 }
 
-void MockEditorInterface::indicator_clear_range(NppViewType view, TextPosition from,
+void MockEditorInterface::indicator_clear_range(TextPosition from,
                                                 TextPosition to) {
-  auto doc = active_document(view);
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   auto &s = doc->indicator_info[doc->current_indicator].set_for;
@@ -550,8 +550,8 @@ void MockEditorInterface::end_undo_action(NppViewType view) {
   m_save_undo[view] = true;
 }
 
-void MockEditorInterface::undo(NppViewType view) {
-  auto doc = active_document(view);
+void MockEditorInterface::undo() {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   // For now redo is not supported
@@ -579,9 +579,9 @@ TextPosition MockEditorInterface::find_next(TextPosition from_position, const ch
   return static_cast<TextPosition> (pos) + from_position;
 }
 
-void MockEditorInterface::replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement)
+void MockEditorInterface::replace_text(TextPosition from, TextPosition to, std::string_view replacement)
 {
-  auto doc = active_document(view);
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   auto &d = doc->cur.data;
@@ -589,7 +589,7 @@ void MockEditorInterface::replace_text(NppViewType view, TextPosition from, Text
   doc->cur.style.resize (doc->cur.data.length ());
 }
 
-void MockEditorInterface::add_bookmark(NppViewType /*view*/, TextPosition /*line*/)
+void MockEditorInterface::add_bookmark(TextPosition /*line*/)
 {
 
   assert(!"Unsupported by mock editor");
