@@ -29,86 +29,90 @@ public:
   int allocate_cmdid(int start_number);
   void set_menu_item_check(int cmd_id, bool checked);
 
-  static int to_index(EditorViewType target);
+  static int to_index(NppViewType target);
 
   // non-const
   bool open_document(std::wstring filename) override;
-  void activate_document(int index, EditorViewType view) override;
-  void activate_document(const std::wstring &filepath, EditorViewType view) override;
+  void activate_document(int index) override;
+  void activate_document(const std::wstring &filepath) override;
   void switch_to_file(const std::wstring &path) override;
   void move_active_document_to_other_view() override;
   void add_toolbar_icon(int cmdId, const toolbarIcons *toolBarIconsPtr) override;
-  void set_selection(EditorViewType view, TextPosition from, TextPosition to) override;
-  void replace_selection(EditorViewType view, const char *str) override;
-  void set_indicator_style(EditorViewType view, int indicator_index, int style) override;
-  void set_indicator_foreground(EditorViewType view, int indicator_index, int style) override;
-  void set_current_indicator(EditorViewType view, int indicator_index) override;
-  void indicator_fill_range(EditorViewType view, TextPosition from, TextPosition to) override;
-  void indicator_clear_range(EditorViewType view, TextPosition from, TextPosition to) override;
-  void delete_range(EditorViewType view, TextPosition start, TextPosition length) override;
-  void begin_undo_action(EditorViewType view) override;
-  void end_undo_action(EditorViewType view) override;
-  void undo(EditorViewType view) override;
+  void set_selection(TextPosition from, TextPosition to) override;
+  void replace_selection(NppViewType view, const char *str) override;
+  void set_indicator_style(NppViewType view, int indicator_index, int style) override;
+  void set_indicator_foreground(NppViewType view, int indicator_index, int style) override;
+  void set_current_indicator(NppViewType view, int indicator_index) override;
+  void indicator_fill_range(NppViewType view, TextPosition from, TextPosition to) override;
+  void indicator_clear_range(NppViewType view, TextPosition from, TextPosition to) override;
+  void delete_range(NppViewType view, TextPosition start, TextPosition length) override;
+  void begin_undo_action(NppViewType view) override;
+  void end_undo_action(NppViewType view) override;
+  void undo(NppViewType view) override;
 
   // const
-  std::vector<std::wstring> get_open_filenames(std::optional<EditorViewType> view = {}) const override;
-  EditorViewType active_view() const override;
+  std::vector<std::wstring> get_open_filenames(std::optional<NppViewType> view = {}) const override;
+  NppViewType active_view() const override;
   bool is_opened(const std::wstring &filename) const override;
-  EditorCodepage get_encoding(EditorViewType view) const override;
+  EditorCodepage get_encoding(NppViewType view) const override;
   std::wstring active_document_path() const override;
   std::wstring active_file_directory() const override;
-  std::string selected_text(EditorViewType view) const override;
-  std::string get_current_line(EditorViewType view) const override;
-  TextPosition get_current_pos(EditorViewType view) const override;
-  int get_current_line_number(EditorViewType view) const override;
-  int line_from_position(EditorViewType view, TextPosition position) const override;
+  std::string selected_text(NppViewType view) const override;
+  std::string get_current_line(NppViewType view) const override;
+  TextPosition get_current_pos(NppViewType view) const override;
+  int get_current_line_number(NppViewType view) const override;
+  int line_from_position(NppViewType view, TextPosition position) const override;
   std::wstring plugin_config_dir() const override;
-  TextPosition get_line_start_position(EditorViewType view, TextPosition line) const override;
-  TextPosition get_line_end_position(EditorViewType view, TextPosition line) const override;
+  TextPosition get_line_start_position(NppViewType view, TextPosition line) const override;
+  TextPosition get_line_end_position(NppViewType view, TextPosition line) const override;
   HWND get_editor_hwnd() const override;
   // please hook it up to notify to simplify usage of certain caches
   void notify(SCNotification *notify_code);
-  int get_lexer(EditorViewType view) const override;
-  int get_style_at(EditorViewType view, TextPosition position) const override;
-  bool is_style_hotspot(EditorViewType view, int style) const override;
-  TextPosition get_active_document_length(EditorViewType view) const override;
-  std::string get_text_range(EditorViewType view, TextPosition from, TextPosition to) const override;
-  void force_style_update(EditorViewType view, TextPosition from, TextPosition to) override;
-  std::optional<TextPosition> char_position_from_global_point(EditorViewType view, int x, int y) const override;
-  TextPosition char_position_from_point(EditorViewType view, const POINT &pnt) const override;
-  TextPosition get_selection_start(EditorViewType view) const override;
-  TextPosition get_selection_end(EditorViewType view) const override;
-  TextPosition get_line_length(EditorViewType view, int line) const override;
-  std::string get_line(EditorViewType view, TextPosition line_number) const override;
-  TextPosition get_first_visible_line(EditorViewType view) const override;
-  TextPosition get_lines_on_screen(EditorViewType view) const override;
-  TextPosition get_document_line_from_visible(EditorViewType view, TextPosition visible_line) const override;
-  TextPosition get_document_line_count(EditorViewType view) const override;
-  std::string get_active_document_text(EditorViewType view) const override;
+  int get_lexer(NppViewType view) const override;
+  int get_style_at(NppViewType view, TextPosition position) const override;
+  bool is_style_hotspot(NppViewType view, int style) const override;
+  TextPosition get_active_document_length(NppViewType view) const override;
+  std::string get_text_range(NppViewType view, TextPosition from, TextPosition to) const override;
+  void force_style_update(TextPosition from, TextPosition to) override;
+  std::optional<TextPosition> char_position_from_global_point(NppViewType view, int x, int y) const override;
+  TextPosition char_position_from_point(NppViewType view, const POINT &pnt) const override;
+  TextPosition get_selection_start(NppViewType view) const override;
+  TextPosition get_selection_end(NppViewType view) const override;
+  TextPosition get_line_length(NppViewType view, int line) const override;
+  std::string get_line(NppViewType view, TextPosition line_number) const override;
+  TextPosition get_first_visible_line(NppViewType view) const override;
+  TextPosition get_lines_on_screen(NppViewType view) const override;
+  TextPosition get_document_line_from_visible(NppViewType view, TextPosition visible_line) const override;
+  TextPosition get_document_line_count(NppViewType view) const override;
+  std::string get_active_document_text(NppViewType view) const override;
   std::wstring get_full_current_path() const override;
-  RECT editor_rect(EditorViewType view) const override;
-  int get_text_height(EditorViewType view, int line) const override;
-  int get_point_x_from_position(EditorViewType view, TextPosition position) const override;
-  int get_point_y_from_position(EditorViewType view, TextPosition position) const override;
-  bool is_line_visible(EditorViewType view, TextPosition line) const override;
-  TextPosition find_next(EditorViewType view, TextPosition from_position, const char* needle) override;
-  void replace_text(EditorViewType view, TextPosition from, TextPosition to, std::string_view replacement) override;
-  void add_bookmark(EditorViewType view, TextPosition line) override;
+  RECT editor_rect(NppViewType view) const override;
+  int get_text_height(NppViewType view, int line) const override;
+  int get_point_x_from_position(NppViewType view, TextPosition position) const override;
+  int get_point_y_from_position(NppViewType view, TextPosition position) const override;
+  bool is_line_visible(NppViewType view, TextPosition line) const override;
+  TextPosition find_next(NppViewType view, TextPosition from_position, const char* needle) override;
+  void replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement) override;
+  void add_bookmark(NppViewType view, TextPosition line) override;
+
+  int get_view_count() const override;
+  void set_target_view(int view_index) override;
 
   HMENU get_menu_handle(int menu_type) const;
 
 public:
-  HWND get_scintilla_hwnd(EditorViewType view) const;
+  HWND get_scintilla_hwnd(NppViewType view) const;
 
 private:
-  // these functions are const per se
   LRESULT send_msg_to_npp(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0) const;
-  LRESULT send_msg_to_scintilla(EditorViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
-  void post_msg_to_scintilla(EditorViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
+  LRESULT send_msg_to_scintilla(NppViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
+  void post_msg_to_scintilla(NppViewType view, UINT msg, WPARAM w_param = 0, LPARAM l_param = 0) const;
   std::wstring get_dir_msg(UINT msg) const;
   void do_command(int id);
+
 private:
   const NppData &m_npp_data;
-  mutable enum_array<EditorViewType, std::optional<int>> m_lexer_cache;
+  mutable enum_array<NppViewType, std::optional<int>> m_lexer_cache;
   mutable std::array<std::optional<bool>, 256> m_hotspot_cache;
+  NppViewType m_target_view = NppViewType::primary;
 };

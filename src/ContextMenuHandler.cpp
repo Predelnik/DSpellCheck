@@ -285,7 +285,8 @@ ContextMenuHandler::get_suggestion_menu_items() {
 
   auto pos = m_word_under_cursor_pos;
   auto view = m_editor.active_view();
-  m_editor.set_selection(view, pos, pos + m_word_under_cursor_length);
+  m_editor.target_active_view();
+  m_editor.set_selection(pos, pos + m_word_under_cursor_length);
   std::vector<MenuItem> suggestion_menu_items;
   m_selected_word = m_editor.get_mapped_wstring_range(view, m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);

@@ -45,7 +45,7 @@ public:
                const SpellerContainer &speller_container);
   ~SpellChecker();
   void recheck_visible_both_views();
-  void recheck_visible(EditorViewType view);
+  void recheck_visible(NppViewType view);
 
   std::wstring get_all_misspellings_as_string() const;
   void on_settings_changed();
@@ -59,22 +59,22 @@ public:
   void mark_lines_with_misspelling() const;
 
 private:
-  void create_word_underline(EditorViewType view, TextPosition start, TextPosition end) const;
-  void remove_underline(EditorViewType view, TextPosition start, TextPosition end) const;
-  void clear_all_underlines(EditorViewType view) const;
-  bool check_word(EditorViewType view, std::wstring_view word,
+  void create_word_underline(NppViewType view, TextPosition start, TextPosition end) const;
+  void remove_underline(NppViewType view, TextPosition start, TextPosition end) const;
+  void clear_all_underlines(NppViewType view) const;
+  bool check_word(NppViewType view, std::wstring_view word,
                   TextPosition word_start) const;
-  TextPosition prev_token_begin_in_document(EditorViewType view, TextPosition start) const;
-  TextPosition next_token_end_in_document(EditorViewType view, TextPosition end) const;
-  MappedWstring get_visible_text(EditorViewType view);
-  bool check_text(EditorViewType view, const MappedWstring &text_to_check,
+  TextPosition prev_token_begin_in_document(NppViewType view, TextPosition start) const;
+  TextPosition next_token_end_in_document(NppViewType view, TextPosition end) const;
+  MappedWstring get_visible_text(NppViewType view);
+  bool check_text(NppViewType view, const MappedWstring &text_to_check,
                   CheckTextMode mode) const;
-  void check_visible(EditorViewType view);
+  void check_visible(NppViewType view);
 
   std::wstring_view get_word_at(TextPosition char_pos, const MappedWstring &text) const;
   void refresh_underline_style();
   void reset_hot_spot_cache();
-  bool is_spellchecking_needed(EditorViewType view, std::wstring_view word,
+  bool is_spellchecking_needed(NppViewType view, std::wstring_view word,
                                TextPosition word_start) const;
   TextPosition next_token_end(std::wstring_view target, TextPosition index) const;
   TextPosition prev_token_begin(std::wstring_view target, TextPosition index) const;

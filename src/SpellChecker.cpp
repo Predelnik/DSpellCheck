@@ -40,8 +40,8 @@ SpellChecker::~SpellChecker() = default;
 
 void SpellChecker::recheck_visible_both_views() {
   SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::recheck_visible_both_views()", m_editor.get_editor_hwnd());
-  recheck_visible(EditorViewType::primary);
-  recheck_visible(EditorViewType::secondary);
+  recheck_visible(NppViewType::primary);
+  recheck_visible(NppViewType::secondary);
 }
 
 void SpellChecker::lang_change() { recheck_visible(m_editor.active_view()); }
@@ -146,7 +146,7 @@ std::wstring_view SpellChecker::get_word_at(TextPosition char_pos, const MappedW
 }
 
 void SpellChecker::refresh_underline_style() {
-  for (auto view : enum_range<EditorViewType>()) {
+  for (auto view : enum_range<NppViewType>()) {
     m_editor.set_indicator_style(view, spell_check_indicator_id, m_settings.underline_style);
     m_editor.set_indicator_foreground(view, spell_check_indicator_id, m_settings.underline_color);
   }
@@ -157,19 +157,19 @@ void SpellChecker::on_settings_changed() {
   recheck_visible_both_views();
 }
 
-void SpellChecker::create_word_underline(EditorViewType view, TextPosition start, TextPosition end) const {
+void SpellChecker::create_word_underline(NppViewType view, TextPosition start, TextPosition end) const {
   m_editor.set_current_indicator(view, spell_check_indicator_id);
   m_editor.indicator_fill_range(view, start, end);
 }
 
-void SpellChecker::remove_underline(EditorViewType view, TextPosition start, TextPosition end) const {
+void SpellChecker::remove_underline(NppViewType view, TextPosition start, TextPosition end) const {
   if (end < start)
     return;
   m_editor.set_current_indicator(view, spell_check_indicator_id);
   m_editor.indicator_clear_range(view, start, end);
 }
 
-TextPosition SpellChecker::prev_token_begin_in_document(EditorViewType view, TextPosition start) const {
+TextPosition SpellChecker::prev_token_begin_in_document(NppViewType view, TextPosition start) const {
   TextPosition shift = 15;
   auto prev_start = start + 1;
   while (start > 0) {
@@ -185,7 +185,7 @@ TextPosition SpellChecker::prev_token_begin_in_document(EditorViewType view, Tex
   return start;
 }
 
-TextPosition SpellChecker::next_token_end_in_document(EditorViewType view, TextPosition end) const {
+TextPosition SpellChecker::next_token_end_in_document(NppViewType view, TextPosition end) const {
   TextPosition shift = 15;
   auto prev_end = end;
   auto length = m_editor.get_active_document_length(view);
@@ -206,7 +206,7 @@ TextPosition SpellChecker::next_token_end_in_document(EditorViewType view, TextP
   return end;
 }
 
-MappedWstring SpellChecker::get_visible_text(EditorViewType view) {
+MappedWstring SpellChecker::get_visible_text(NppViewType view) {
 
   auto top_visible_line = m_editor.get_first_visible_line(view);
   auto top_visible_line_index = m_editor.get_document_line_from_visible(view, top_visible_line);
@@ -243,7 +243,7 @@ MappedWstring SpellChecker::get_visible_text(EditorViewType view) {
   return result;
 }
 
-void SpellChecker::clear_all_underlines(EditorViewType view) const {
+void SpellChecker::clear_all_underlines(NppViewType view) const {
   auto length = m_editor.get_active_document_length(view);
   if (length > 0) {
     m_editor.set_current_indicator(view, spell_check_indicator_id);
@@ -251,7 +251,7 @@ void SpellChecker::clear_all_underlines(EditorViewType view) const {
   }
 }
 
-bool SpellChecker::is_spellchecking_needed(EditorViewType view, std::wstring_view word, TextPosition word_start) const {
+bool SpellChecker::is_spellchecking_needed(NppViewType view, std::wstring_view word, TextPosition word_start) const {
   if (!m_speller_container.active_speller().is_working())
     return false;
 
@@ -318,8 +318,8 @@ void SpellChecker::erase_all_misspellings() {
   }
 }
 
-bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, TextPosition word_start) const {
-  SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_word(EditorViewType view, std::wstring_view word, TextPosition word_start)", m_editor.get_editor_hwnd());
+bool SpellChecker::check_word(NppViewType view, std::wstring_view word, TextPosition word_start) const {
+  SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_word(NppViewType view, std::wstring_view word, TextPosition word_start)", m_editor.get_editor_hwnd());
   if (!is_spellchecking_needed(view, word, word_start))
     return true;
 
@@ -345,8 +345,9 @@ public:
 };
 } // namespace
 
-bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_check, CheckTextMode mode) const {
-  SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_check, CheckTextMode mode)", m_editor.get_editor_hwnd());
+bool SpellChecker::check_text(NppViewType view, const MappedWstring &text_to_check, CheckTextMode mode) const {
+  m_editor.set_target_view(static_cast<int> (view));
+  SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_text(NppViewType view, const MappedWstring &text_to_check, CheckTextMode mode)", m_editor.get_editor_hwnd());
   if (text_to_check.str.empty())
     return false;
 
@@ -398,7 +399,7 @@ bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_
         break;
       case CheckTextMode::find_first:
         if (word_end > m_current_position) {
-          m_editor.set_selection(view, word_start, word_end);
+          m_editor.set_selection(word_start, word_end);
           stop = true;
         }
         break;
@@ -439,20 +440,20 @@ bool SpellChecker::check_text(EditorViewType view, const MappedWstring &text_to_
     if (resulting_word_start == -1)
       return false;
     else {
-      m_editor.set_selection(view, resulting_word_start, resulting_word_end);
+      m_editor.set_selection(resulting_word_start, resulting_word_end);
       return true;
     }
   };
   return false;
 }
 
-void SpellChecker::check_visible(EditorViewType view) {
-  SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::check_visible(EditorViewType view)", m_editor.get_editor_hwnd());
+void SpellChecker::check_visible(NppViewType view) {
+  SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::check_visible(NppViewType view)", m_editor.get_editor_hwnd());
   auto text = get_visible_text(view);
   check_text(view, text, CheckTextMode::underline_errors);
 }
 
-void SpellChecker::recheck_visible(EditorViewType view) {
+void SpellChecker::recheck_visible(NppViewType view) {
   if (!m_speller_container.active_speller().is_working()) {
     clear_all_underlines(view);
     return;
@@ -468,7 +469,8 @@ std::wstring SpellChecker::get_all_misspellings_as_string() const {
   auto view = m_editor.active_view();
   auto buf = m_editor.get_active_document_text(view);
   auto mapped_str = m_editor.to_mapped_wstring(view, buf);
-  m_editor.force_style_update (view, mapped_str.mapping.front (), mapped_str.mapping.back ());
+  m_editor.target_active_view();
+  m_editor.force_style_update (mapped_str.mapping.front (), mapped_str.mapping.back ());
   m_misspellings.clear();
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
     return {};
@@ -493,7 +495,8 @@ void SpellChecker::mark_lines_with_misspelling() const {
   auto view = m_editor.active_view();
   auto buf = m_editor.get_active_document_text(view);
   auto mapped_str = m_editor.to_mapped_wstring(view, buf);
-  m_editor.force_style_update (view, mapped_str.mapping.front (), mapped_str.mapping.back ());
+  m_editor.target_active_view();
+  m_editor.force_style_update (mapped_str.mapping.front (), mapped_str.mapping.back ());
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
     return;
   for (auto &misspelling : m_misspellings) {

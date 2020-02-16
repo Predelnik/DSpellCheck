@@ -16,7 +16,11 @@
 #include "MappedWString.h"
 #include "utils/utf8.h"
 
-TextPosition EditorInterface::get_prev_valid_begin_pos(EditorViewType view, TextPosition pos) const {
+void EditorInterface::target_active_view() {
+  set_target_view (static_cast<int> (active_view ()));
+}
+
+TextPosition EditorInterface::get_prev_valid_begin_pos(NppViewType view, TextPosition pos) const {
   if (pos == 0)
     return 0;
   if (get_encoding(view) == EditorCodepage::ansi)
@@ -29,7 +33,7 @@ TextPosition EditorInterface::get_prev_valid_begin_pos(EditorViewType view, Text
   return worst_prev_pos + static_cast<TextPosition>(it.base() - rng.begin()) - 1;
 }
 
-TextPosition EditorInterface::get_next_valid_end_pos(EditorViewType view, TextPosition pos) const {
+TextPosition EditorInterface::get_next_valid_end_pos(NppViewType view, TextPosition pos) const {
   auto doc_len = get_active_document_length(view);
   if (pos >= doc_len)
     return doc_len;
@@ -41,7 +45,7 @@ TextPosition EditorInterface::get_next_valid_end_pos(EditorViewType view, TextPo
   return pos + utf8_symbol_len(*text.begin());
 }
 
-std::string EditorInterface::to_editor_encoding(EditorViewType view, std::wstring_view str) const {
+std::string EditorInterface::to_editor_encoding(NppViewType view, std::wstring_view str) const {
   switch (get_encoding(view)) {
   case EditorCodepage::ansi: return to_string (str);
   case EditorCodepage::utf8: return to_utf8_string(str);
@@ -50,21 +54,21 @@ std::string EditorInterface::to_editor_encoding(EditorViewType view, std::wstrin
   throw std::runtime_error ("Unsupported encoding");
 }
 
-MappedWstring EditorInterface::to_mapped_wstring(EditorViewType view, const std::string& str) {
+MappedWstring EditorInterface::to_mapped_wstring(NppViewType view, const std::string& str) {
   if (get_encoding(view) == EditorCodepage::utf8)
     return utf8_to_mapped_wstring(str);
 
   return ::to_mapped_wstring(str);
 }
 
-MappedWstring EditorInterface::get_mapped_wstring_range(EditorViewType view, TextPosition from, TextPosition to) {
+MappedWstring EditorInterface::get_mapped_wstring_range(NppViewType view, TextPosition from, TextPosition to) {
   auto result = to_mapped_wstring (view, get_text_range(view, from, to));
   for (auto &val : result.mapping)
     val += from;
   return result;
 }
 
-MappedWstring EditorInterface::get_mapped_wstring_line(EditorViewType view, TextPosition line) {
+MappedWstring EditorInterface::get_mapped_wstring_line(NppViewType view, TextPosition line) {
   auto result = to_mapped_wstring (view, get_line(view, line));;
   auto line_start = get_line_start_position(view, line);
   for (auto &val : result.mapping)

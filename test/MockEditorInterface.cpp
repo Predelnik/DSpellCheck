@@ -61,12 +61,12 @@ void MockEditorInterface::move_active_document_to_other_view() {
 void MockEditorInterface::add_toolbar_icon(
     int /*cmd_id*/, const toolbarIcons * /*tool_bar_icons_ptr*/) {}
 
-void MockEditorInterface::force_style_update(EditorViewType /*view*/,
-                                             TextPosition /*from*/, TextPosition /*to*/) {}
+void MockEditorInterface::force_style_update(
+  TextPosition /*from*/, TextPosition /*to*/) {}
 
-void MockEditorInterface::set_selection(EditorViewType view, TextPosition from,
+void MockEditorInterface::set_selection(TextPosition from,
                                         TextPosition to) {
-  auto doc = active_document(view);
+  auto doc = active_document(m_target_view);
   if (!doc)
     return;
   doc->cursor_pos = to;
@@ -76,7 +76,7 @@ void MockEditorInterface::set_selection(EditorViewType view, TextPosition from,
     doc->cur.selection = {to, from};
 }
 
-void MockEditorInterface::replace_selection(EditorViewType view,
+void MockEditorInterface::replace_selection(NppViewType view,
                                             const char *str) {
   auto doc = active_document(view);
   if (!doc)
@@ -86,7 +86,7 @@ void MockEditorInterface::replace_selection(EditorViewType view,
   doc->cur.style.resize (doc->cur.data.length ());
 }
 
-void MockEditorInterface::set_indicator_style(EditorViewType view,
+void MockEditorInterface::set_indicator_style(NppViewType view,
                                               int indicator_index, int style) {
   auto doc = active_document(view);
   if (!doc)
@@ -96,7 +96,7 @@ void MockEditorInterface::set_indicator_style(EditorViewType view,
   doc->indicator_info[indicator_index].style = style;
 }
 
-void MockEditorInterface::set_indicator_foreground(EditorViewType view,
+void MockEditorInterface::set_indicator_foreground(NppViewType view,
                                                    int indicator_index,
                                                    int style) {
   auto doc = active_document(view);
@@ -107,7 +107,7 @@ void MockEditorInterface::set_indicator_foreground(EditorViewType view,
   doc->indicator_info[indicator_index].foreground = style;
 }
 
-void MockEditorInterface::set_current_indicator(EditorViewType view,
+void MockEditorInterface::set_current_indicator(NppViewType view,
                                                 int indicator_index) {
   auto doc = active_document(view);
   if (!doc)
@@ -117,7 +117,7 @@ void MockEditorInterface::set_current_indicator(EditorViewType view,
   doc->current_indicator = indicator_index;
 }
 
-void MockEditorInterface::indicator_fill_range(EditorViewType view, TextPosition from,
+void MockEditorInterface::indicator_fill_range(NppViewType view, TextPosition from,
                                                TextPosition to) {
   auto doc = active_document(view);
   if (!doc)
@@ -128,7 +128,7 @@ void MockEditorInterface::indicator_fill_range(EditorViewType view, TextPosition
   std::fill(s.begin() + from, s.begin() + to, true);
 }
 
-void MockEditorInterface::indicator_clear_range(EditorViewType view, TextPosition from,
+void MockEditorInterface::indicator_clear_range(NppViewType view, TextPosition from,
                                                 TextPosition to) {
   auto doc = active_document(view);
   if (!doc)
@@ -139,25 +139,25 @@ void MockEditorInterface::indicator_clear_range(EditorViewType view, TextPositio
   std::fill(s.begin() + from, s.begin() + to, false);
 }
 
-EditorViewType MockEditorInterface::active_view() const {
+NppViewType MockEditorInterface::active_view() const {
   return m_active_view;
 }
 
-EditorCodepage MockEditorInterface::get_encoding(EditorViewType view) const {
+EditorCodepage MockEditorInterface::get_encoding(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return EditorCodepage::utf8;
   return doc->codepage;
 }
 
-TextPosition MockEditorInterface::get_current_pos(EditorViewType view) const {
+TextPosition MockEditorInterface::get_current_pos(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
   return doc->cursor_pos;
 }
 
-int MockEditorInterface::get_current_line_number(EditorViewType view) const {
+int MockEditorInterface::get_current_line_number(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
@@ -166,12 +166,12 @@ int MockEditorInterface::get_current_line_number(EditorViewType view) const {
                  doc->cur.data.begin() + get_current_pos(view), '\n'));
 }
 
-int MockEditorInterface::get_text_height(EditorViewType /*view*/,
+int MockEditorInterface::get_text_height(NppViewType /*view*/,
                                          int /*line*/) const {
   return text_height;
 }
 
-int MockEditorInterface::line_from_position(EditorViewType view,
+int MockEditorInterface::line_from_position(NppViewType view,
                                             TextPosition position) const {
   auto doc = active_document(view);
   if (!doc)
@@ -180,7 +180,7 @@ int MockEditorInterface::line_from_position(EditorViewType view,
                                      doc->cur.data.begin() + position, '\n'));
 }
 
-TextPosition MockEditorInterface::get_line_start_position(EditorViewType view,
+TextPosition MockEditorInterface::get_line_start_position(NppViewType view,
                                                           TextPosition line) const {
   auto doc = active_document(view);
   if (!doc)
@@ -196,7 +196,7 @@ TextPosition MockEditorInterface::get_line_start_position(EditorViewType view,
   return static_cast<TextPosition>(index);
 }
 
-TextPosition MockEditorInterface::get_line_end_position(EditorViewType view,
+TextPosition MockEditorInterface::get_line_end_position(NppViewType view,
                                                         TextPosition line) const {
   auto doc = active_document(view);
   if (!doc)
@@ -212,28 +212,28 @@ TextPosition MockEditorInterface::get_line_end_position(EditorViewType view,
   return static_cast<TextPosition>(index);
 }
 
-int MockEditorInterface::get_lexer(EditorViewType view) const {
+int MockEditorInterface::get_lexer(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return 0;
   return doc->lexer;
 }
 
-TextPosition MockEditorInterface::get_selection_start(EditorViewType view) const {
+TextPosition MockEditorInterface::get_selection_start(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
   return doc->cur.selection[0];
 }
 
-TextPosition MockEditorInterface::get_selection_end(EditorViewType view) const {
+TextPosition MockEditorInterface::get_selection_end(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
   return doc->cur.selection[1];
 }
 
-int MockEditorInterface::get_style_at(EditorViewType view,
+int MockEditorInterface::get_style_at(NppViewType view,
                                       TextPosition position) const {
   auto doc = active_document(view);
   if (!doc)
@@ -241,7 +241,7 @@ int MockEditorInterface::get_style_at(EditorViewType view,
   return doc->cur.style[position];
 }
 
-bool MockEditorInterface::is_style_hotspot(EditorViewType view,
+bool MockEditorInterface::is_style_hotspot(NppViewType view,
                                            int style) const {
   auto doc = active_document(view);
   if (!doc)
@@ -250,14 +250,14 @@ bool MockEditorInterface::is_style_hotspot(EditorViewType view,
 }
 
 TextPosition MockEditorInterface::get_active_document_length(
-    EditorViewType view) const {
+    NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
   return static_cast<TextPosition>(doc->cur.data.length());
 }
 
-TextPosition MockEditorInterface::get_line_length(EditorViewType view, int line) const {
+TextPosition MockEditorInterface::get_line_length(NppViewType view, int line) const {
   size_t index = 0;
   auto doc = active_document(view);
   if (!doc)
@@ -271,27 +271,27 @@ TextPosition MockEditorInterface::get_line_length(EditorViewType view, int line)
   return static_cast<TextPosition>(doc->cur.data.find('\n', index) - index);
 }
 
-int MockEditorInterface::get_point_x_from_position(EditorViewType view,
+int MockEditorInterface::get_point_x_from_position(NppViewType view,
                                                    TextPosition position) const {
   return static_cast<int>(position -
           get_line_start_position(view, line_from_position(view, position))) *
          10;
 }
 
-int MockEditorInterface::get_point_y_from_position(EditorViewType view,
+int MockEditorInterface::get_point_y_from_position(NppViewType view,
                                                    TextPosition position) const {
   auto line = line_from_position(view, position);
   return line * get_text_height(view, line);
 }
 
-TextPosition MockEditorInterface::get_first_visible_line(EditorViewType view) const {
+TextPosition MockEditorInterface::get_first_visible_line(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
   return doc->visible_lines[0];
 }
 
-TextPosition MockEditorInterface::get_lines_on_screen(EditorViewType view) const {
+TextPosition MockEditorInterface::get_lines_on_screen(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
@@ -300,14 +300,14 @@ TextPosition MockEditorInterface::get_lines_on_screen(EditorViewType view) const
 }
 
 TextPosition MockEditorInterface::get_document_line_from_visible(
-    EditorViewType view, TextPosition visible_line) const {
+    NppViewType view, TextPosition visible_line) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
   return doc->visible_lines[0] + visible_line;
 }
 
-TextPosition MockEditorInterface::get_document_line_count(EditorViewType view) const {
+TextPosition MockEditorInterface::get_document_line_count(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return -1;
@@ -320,32 +320,34 @@ bool MockEditorInterface::open_document(std::wstring filename) {
   return false;
 }
 
-void MockEditorInterface::activate_document(int index, EditorViewType view) {
-  m_active_view = view;
-  m_active_document_index[view] = index;
+void MockEditorInterface::activate_document(int index) {
+  m_active_view = m_target_view;
+  m_active_document_index[m_target_view] = index;
 }
 
-void MockEditorInterface::activate_document(const std::wstring &filepath,
-                                            EditorViewType view) {
+void MockEditorInterface::activate_document(const std::wstring &filepath) {
   auto it =
-      std::find_if(m_documents[view].begin(), m_documents[view].end(),
+      std::find_if(m_documents[m_target_view].begin(), m_documents[m_target_view].end(),
                    [&](const auto &data) { return data.path == filepath; });
-  if (it != m_documents[view].end()) {
-    m_active_view = view;
-    m_active_document_index[view] =
-        static_cast<int>(it - m_documents[view].begin());
+  if (it != m_documents[m_target_view].end()) {
+    m_active_view = m_target_view;
+    m_active_document_index[m_target_view] =
+        static_cast<int>(it - m_documents[m_target_view].begin());
   }
 }
 
 void MockEditorInterface::switch_to_file(const std::wstring &path) {
-  for (auto view : enum_range<EditorViewType>())
-    activate_document(path, view);
+  for (auto view : enum_range<NppViewType>())
+    {
+      set_target_view(static_cast<int> (view));
+      activate_document(path);
+    }
 }
 
 std::vector<std::wstring> MockEditorInterface::get_open_filenames(
-    std::optional<EditorViewType> view) const {
+    std::optional<NppViewType> view) const {
   std::vector<std::wstring> out;
-  for (auto view_it : enum_range<EditorViewType>())
+  for (auto view_it : enum_range<NppViewType>())
     if (!view || view == view_it)
       std::transform(m_documents[view_it].begin(), m_documents[view_it].end(),
                      std::back_inserter(out),
@@ -354,7 +356,7 @@ std::vector<std::wstring> MockEditorInterface::get_open_filenames(
 }
 
 bool MockEditorInterface::is_opened(const std::wstring &filename) const {
-  for (auto view : enum_range<EditorViewType>())
+  for (auto view : enum_range<NppViewType>())
     if (std::find_if(m_documents[view].begin(), m_documents[view].end(),
                      [&](const auto &data) { return data.path == filename; }) !=
         m_documents[view].end())
@@ -373,12 +375,12 @@ std::wstring MockEditorInterface::active_file_directory() const {
   auto doc = active_document(m_active_view);
   if (!doc)
     return L"";
-  return std::experimental::filesystem::path(doc->path).parent_path();
+  return std::filesystem::path(doc->path).parent_path();
 }
 
 std::wstring MockEditorInterface::plugin_config_dir() const { return L""; }
 
-std::string MockEditorInterface::selected_text(EditorViewType view) const {
+std::string MockEditorInterface::selected_text(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc || doc->cur.selection[0] < 0 || doc->cur.selection[1] < 0)
     return "";
@@ -386,11 +388,11 @@ std::string MockEditorInterface::selected_text(EditorViewType view) const {
                               doc->cur.selection[1] - doc->cur.selection[0]);
 }
 
-std::string MockEditorInterface::get_current_line(EditorViewType view) const {
+std::string MockEditorInterface::get_current_line(NppViewType view) const {
   return get_line(view, get_current_line_number(view));
 }
 
-std::string MockEditorInterface::get_line(EditorViewType view,
+std::string MockEditorInterface::get_line(NppViewType view,
                                           TextPosition line_number) const {
   auto start = get_line_start_position(view, line_number);
   auto end = get_line_end_position(view, line_number);
@@ -398,7 +400,7 @@ std::string MockEditorInterface::get_line(EditorViewType view,
 }
 
 std::optional<TextPosition> MockEditorInterface::char_position_from_global_point(
-    EditorViewType /*view*/, int /*x*/, int /*y*/) const {
+    NppViewType /*view*/, int /*x*/, int /*y*/) const {
   return std::nullopt;
 }
 
@@ -411,7 +413,7 @@ std::wstring MockEditorInterface::get_full_current_path() const {
   return doc->path;
 }
 
-std::string MockEditorInterface::get_text_range(EditorViewType view, TextPosition from,
+std::string MockEditorInterface::get_text_range(NppViewType view, TextPosition from,
                                                 TextPosition to) const {
   auto doc = active_document(view);
   if (!doc)
@@ -420,14 +422,14 @@ std::string MockEditorInterface::get_text_range(EditorViewType view, TextPositio
 }
 
 std::string
-MockEditorInterface::get_active_document_text(EditorViewType view) const {
+MockEditorInterface::get_active_document_text(NppViewType view) const {
   auto doc = active_document(view);
   if (!doc)
     return "";
   return doc->cur.data;
 }
 
-TextPosition MockEditorInterface::char_position_from_point(EditorViewType view,
+TextPosition MockEditorInterface::char_position_from_point(NppViewType view,
                                                    const POINT &pnt) const {
   auto doc = active_document(view);
   if (!doc)
@@ -437,7 +439,7 @@ TextPosition MockEditorInterface::char_position_from_point(EditorViewType view,
          pnt.x / text_width;
 }
 
-RECT MockEditorInterface::editor_rect(EditorViewType /*view*/) const {
+RECT MockEditorInterface::editor_rect(NppViewType /*view*/) const {
   RECT r = {0, 0, 10000, 10000};
   return r;
 }
@@ -449,7 +451,7 @@ MockEditorInterface::MockEditorInterface() {
 
 MockEditorInterface::~MockEditorInterface() = default;
 
-void MockEditorInterface::open_virtual_document(EditorViewType view,
+void MockEditorInterface::open_virtual_document(NppViewType view,
                                                 const std::wstring &path,
                                                 const std::wstring &data) {
   MockedDocumentInfo info;
@@ -462,14 +464,14 @@ void MockEditorInterface::open_virtual_document(EditorViewType view,
       static_cast<int>(m_documents[view].size() - 1);
 }
 
-void MockEditorInterface::set_active_document_text(EditorViewType view,
+void MockEditorInterface::set_active_document_text(NppViewType view,
                                                    const std::wstring &text) {
   auto doc = active_document(view);
   if (doc)
     doc->set_data(text);
 }
 
-void MockEditorInterface::set_active_document_text_raw(EditorViewType view,
+void MockEditorInterface::set_active_document_text_raw(NppViewType view,
   const std::string &text) {
   auto doc = active_document(view);
   if (doc)
@@ -477,7 +479,7 @@ void MockEditorInterface::set_active_document_text_raw(EditorViewType view,
 }
 
 std::vector<std::string>
-MockEditorInterface::get_underlined_words(EditorViewType view,
+MockEditorInterface::get_underlined_words(NppViewType view,
                                           int indicator_id) const {
   auto doc = active_document(view);
   if (!doc)
@@ -498,7 +500,7 @@ MockEditorInterface::get_underlined_words(EditorViewType view,
   }
 }
 
-void MockEditorInterface::make_all_visible(EditorViewType view) {
+void MockEditorInterface::make_all_visible(NppViewType view) {
   auto doc = active_document(view);
   if (!doc)
     return;
@@ -506,21 +508,21 @@ void MockEditorInterface::make_all_visible(EditorViewType view) {
   doc->visible_lines = {0, get_document_line_count(view)};
 }
 
-void MockEditorInterface::set_lexer(EditorViewType view, int lexer) {
+void MockEditorInterface::set_lexer(NppViewType view, int lexer) {
   auto doc = active_document(view);
   if (!doc)
     return;
   doc->lexer = lexer;
 }
 
-void MockEditorInterface::set_whole_text_style(EditorViewType view, int style) {
+void MockEditorInterface::set_whole_text_style(NppViewType view, int style) {
   auto doc = active_document(view);
   if (!doc)
     return;
   std::fill(doc->cur.style.begin(), doc->cur.style.end(), style);
 }
 
-void MockEditorInterface::set_codepage(EditorViewType view,
+void MockEditorInterface::set_codepage(NppViewType view,
                                        EditorCodepage codepage) {
   auto doc = active_document(view);
   if (!doc)
@@ -528,7 +530,7 @@ void MockEditorInterface::set_codepage(EditorViewType view,
   doc->codepage = codepage;
 }
 
-void MockEditorInterface::delete_range(EditorViewType view, TextPosition start,
+void MockEditorInterface::delete_range(NppViewType view, TextPosition start,
                                        TextPosition length) {
   auto doc = active_document(view);
   if (!doc)
@@ -538,17 +540,17 @@ void MockEditorInterface::delete_range(EditorViewType view, TextPosition start,
   doc->erase(start, length);
 }
 
-void MockEditorInterface::begin_undo_action(EditorViewType view) {
+void MockEditorInterface::begin_undo_action(NppViewType view) {
   for (auto &doc : m_documents[view])
     doc.save_state();
   m_save_undo[view] = false;
 }
 
-void MockEditorInterface::end_undo_action(EditorViewType view) {
+void MockEditorInterface::end_undo_action(NppViewType view) {
   m_save_undo[view] = true;
 }
 
-void MockEditorInterface::undo(EditorViewType view) {
+void MockEditorInterface::undo(NppViewType view) {
   auto doc = active_document(view);
   if (!doc)
     return;
@@ -559,12 +561,12 @@ void MockEditorInterface::undo(EditorViewType view) {
   }
 }
 
-bool MockEditorInterface::is_line_visible(EditorViewType /*view*/, TextPosition /*line*/) const
+bool MockEditorInterface::is_line_visible(NppViewType /*view*/, TextPosition /*line*/) const
 {
   return true;
 }
 
-TextPosition MockEditorInterface::find_next(EditorViewType view, TextPosition from_position, const char* needle)
+TextPosition MockEditorInterface::find_next(NppViewType view, TextPosition from_position, const char* needle)
 {
   auto doc = active_document(view);
   if (!doc)
@@ -577,7 +579,7 @@ TextPosition MockEditorInterface::find_next(EditorViewType view, TextPosition fr
   return static_cast<TextPosition> (pos) + from_position;
 }
 
-void MockEditorInterface::replace_text(EditorViewType view, TextPosition from, TextPosition to, std::string_view replacement)
+void MockEditorInterface::replace_text(NppViewType view, TextPosition from, TextPosition to, std::string_view replacement)
 {
   auto doc = active_document(view);
   if (!doc)
@@ -587,19 +589,32 @@ void MockEditorInterface::replace_text(EditorViewType view, TextPosition from, T
   doc->cur.style.resize (doc->cur.data.length ());
 }
 
-void MockEditorInterface::add_bookmark(EditorViewType view, TextPosition line)
+void MockEditorInterface::add_bookmark(NppViewType /*view*/, TextPosition /*line*/)
 {
+
   assert(!"Unsupported by mock editor");
 }
 
-MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
+constexpr auto mock_editor_view_count = 2;
+
+int MockEditorInterface::get_view_count() const
+{
+  return mock_editor_view_count;
+}
+
+void MockEditorInterface::set_target_view(int view_index)
+{
+  m_target_view = static_cast<NppViewType> (view_index);
+}
+
+MockedDocumentInfo *MockEditorInterface::active_document(NppViewType view) {
   if (m_documents[view].empty())
     return nullptr;
   return &m_documents[view][m_active_document_index[view]];
 }
 
 const MockedDocumentInfo *
-MockEditorInterface::active_document(EditorViewType view) const {
+MockEditorInterface::active_document(NppViewType view) const {
   if (m_documents[view].empty())
     return nullptr;
   return &m_documents[view][m_active_document_index[view]];

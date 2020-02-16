@@ -95,7 +95,7 @@ void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
   }
 }
 
-void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Settings &settings, const char *from, std::wstring_view to, bool is_proper_name) {
+void replace_all_tokens(EditorInterface &editor, NppViewType view, const Settings &settings, const char *from, std::wstring_view to, bool is_proper_name) {
   TextPosition pos = 0;
   auto from_len = static_cast<TextPosition>(strlen(from));
   if (from_len == 0)
@@ -157,7 +157,7 @@ void replace_all_tokens(EditorInterface &editor, EditorViewType view, const Sett
   }
 }
 
-bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, EditorViewType view, std::wstring_view word,
+bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, NppViewType view, std::wstring_view word,
                                    TextPosition word_start) {
   if (word.empty())
     return false;

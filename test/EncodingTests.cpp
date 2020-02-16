@@ -29,7 +29,7 @@ TEST_CASE("ANSI") {
   setup_speller(*speller);
   settings.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
-  auto v = EditorViewType::primary;
+  auto v = NppViewType::primary;
   editor.open_virtual_document(v, L"test.txt", L"abcd\nefgh");
   SpellerContainer sp_container(&settings, std::move(speller));
   SpellChecker sc(&settings, editor, sp_container);
@@ -47,7 +47,7 @@ TEST_CASE("UTF-8 shenanigans") {
     setup_speller(*speller);
     settings.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
-    auto v = EditorViewType::primary;
+    auto v = NppViewType::primary;
     editor.open_virtual_document(v, L"test.txt", L"тестирование с нетривиальными utf-8 символами");
     SpellerContainer sp_container(&settings, std::move(speller));
     SpellChecker sc(&settings, editor, sp_container);

@@ -30,7 +30,7 @@ TEST_CASE("Speller") {
   setup_speller(*speller);
   settings.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
-  auto v = EditorViewType::primary;
+  auto v = NppViewType::primary;
   editor.open_virtual_document(v, L"test.txt", LR"(This is test document.
 Please bear with me.
 adadsd.)");
