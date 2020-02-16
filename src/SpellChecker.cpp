@@ -213,7 +213,7 @@ TextPosition SpellChecker::next_token_end_in_document(NppViewType view, TextPosi
 }
 
 MappedWstring SpellChecker::get_visible_text(NppViewType view) {
-
+  TARGET_VIEW_BLOCK (m_editor, static_cast<int> (view));
   auto top_visible_line = m_editor.get_first_visible_line(view);
   auto top_visible_line_index = m_editor.get_document_line_from_visible(view, top_visible_line);
   auto bottom_visible_line_index = m_editor.get_document_line_from_visible(view, top_visible_line + m_editor.get_lines_on_screen(view) - 1);
@@ -223,24 +223,24 @@ MappedWstring SpellChecker::get_visible_text(NppViewType view) {
   for (auto line = top_visible_line_index; line <= bottom_visible_line_index; ++line) {
     if (!m_editor.is_line_visible(view, line))
       continue;
-    auto start = m_editor.get_line_start_position(view, line);
+    auto start = m_editor.get_line_start_position(line);
     if (start >= len) // skipping possible empty lines when document is too short
       continue;
     auto start_point = m_editor.get_point_from_position(view, start);
     if (start_point.y < rect.top) {
-      start = m_editor.char_position_from_point(view, {0, 0});
+      start = m_editor.char_position_from_point({0, 0});
       start = prev_token_begin_in_document(view, start);
     } else if (start_point.x < rect.left) {
-      start = m_editor.char_position_from_point(view, {0, start_point.y});
+      start = m_editor.char_position_from_point({0, start_point.y});
       start = prev_token_begin_in_document(view, start);
     }
-    auto end = m_editor.get_line_end_position(view, line);
+    auto end = m_editor.get_line_end_position(line);
     auto end_point = m_editor.get_point_from_position(view, end);
     if (end_point.y > rect.bottom) {
-      end = m_editor.char_position_from_point(view, {rect.right, rect.bottom});
+      end = m_editor.char_position_from_point({rect.right, rect.bottom});
       end = next_token_end_in_document(view, end);
     } else if (end_point.x > rect.right) {
-      end = m_editor.char_position_from_point(view, {rect.right, end_point.y});
+      end = m_editor.char_position_from_point({rect.right, end_point.y});
       end = next_token_end_in_document(view, end);
     }
     auto new_str = m_editor.get_mapped_wstring_range(view, start, end);
@@ -269,6 +269,7 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
   POINT p;
   TextPosition init_char_pos, selection_start = 0, selection_end = 0;
   auto view = m_editor.active_view();
+  ACTIVE_VIEW_BLOCK(m_editor);
   length = 0;
   pos = -1;
 
@@ -276,7 +277,7 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
     if (GetCursorPos(&p) == 0)
       return true;
 
-    auto mb_pos = m_editor.char_position_from_global_point(view, p.x, p.y);
+    auto mb_pos = m_editor.char_position_from_global_point(p.x, p.y);
     if (!mb_pos)
       return true;
     init_char_pos = *mb_pos;
@@ -288,7 +289,7 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
 
   if (init_char_pos == -1)
     return true;
-  auto line = m_editor.line_from_position(view, init_char_pos);
+  auto line = m_editor.line_from_position(init_char_pos);
   auto mapped_str = m_editor.get_mapped_wstring_line(view, line);
   if (mapped_str.str.empty())
     return true;
@@ -510,7 +511,7 @@ void SpellChecker::mark_lines_with_misspelling() const {
   for (auto &misspelling : m_misspellings) {
     auto start_index = misspelling.data () - mapped_str.str.data ();
     auto position = mapped_str.to_original_index (start_index);
-    auto line = m_editor.line_from_position(view, position);
+    auto line = m_editor.line_from_position(position);
     m_editor.add_bookmark(line);
   }
   m_misspellings.clear();

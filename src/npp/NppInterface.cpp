@@ -152,7 +152,7 @@ void NppInterface::set_target_view(int view_index) const {
   m_target_view = static_cast<NppViewType> (view_index);
 }
 
-int NppInterface::get_text_height(NppViewType view, int line) const { return static_cast<int>(send_msg_to_scintilla(view, SCI_TEXTHEIGHT, line)); }
+int NppInterface::get_text_height(int line) const { return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_TEXTHEIGHT, line)); }
 
 int NppInterface::get_point_x_from_position(NppViewType view, TextPosition position) const {
   return static_cast<int>(send_msg_to_scintilla(view, SCI_POINTXFROMPOSITION, 0, position));
@@ -245,19 +245,19 @@ void NppInterface::undo() {
   send_msg_to_scintilla (m_target_view, SCI_UNDO);
 }
 
-std::optional<TextPosition> NppInterface::char_position_from_global_point(NppViewType view, int x, int y) const {
+std::optional<TextPosition> NppInterface::char_position_from_global_point(int x, int y) const {
   POINT p;
   p.x = x;
   p.y = y;
-  auto hwnd = get_scintilla_hwnd(view);
+  auto hwnd = get_scintilla_hwnd(m_target_view);
   if (WindowFromPoint(p) != hwnd)
     return std::nullopt;
   ScreenToClient(hwnd, &p);
-  return static_cast<TextPosition>(send_msg_to_scintilla(view, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y));
+  return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y));
 }
 
-TextPosition NppInterface::char_position_from_point(NppViewType view, const POINT &pnt) const {
-  return static_cast<TextPosition>(send_msg_to_scintilla(view, SCI_CHARPOSITIONFROMPOINT, pnt.x, pnt.y));
+TextPosition NppInterface::char_position_from_point(const POINT &pnt) const {
+  return static_cast<TextPosition>(send_msg_to_scintilla(m_target_view, SCI_CHARPOSITIONFROMPOINT, pnt.x, pnt.y));
 }
 
 TextPosition NppInterface::get_selection_start(NppViewType view) const { return static_cast<TextPosition>(send_msg_to_scintilla(view, SCI_GETSELECTIONSTART)); }
@@ -297,21 +297,21 @@ std::string NppInterface::get_current_line() const { return get_line(get_current
 TextPosition NppInterface::get_current_pos() const { return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETCURRENTPOS, 0, 0)); }
 
 int NppInterface::get_current_line_number() const {
-  return line_from_position(m_target_view, get_current_pos());
+  return line_from_position(get_current_pos());
 }
 
-int NppInterface::line_from_position(NppViewType view, TextPosition position) const {
-  return static_cast<int>(send_msg_to_scintilla(view, SCI_LINEFROMPOSITION, position));
+int NppInterface::line_from_position(TextPosition position) const {
+  return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_LINEFROMPOSITION, position));
 }
 
 std::wstring NppInterface::plugin_config_dir() const { return get_dir_msg(NPPM_GETPLUGINSCONFIGDIR); }
 
-TextPosition NppInterface::get_line_start_position(NppViewType view, TextPosition line) const {
-  return static_cast<int>(send_msg_to_scintilla(view, SCI_POSITIONFROMLINE, line));
+TextPosition NppInterface::get_line_start_position(TextPosition line) const {
+  return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_POSITIONFROMLINE, line));
 }
 
-TextPosition NppInterface::get_line_end_position(NppViewType view, TextPosition line) const {
-  return static_cast<int>(send_msg_to_scintilla(view, SCI_GETLINEENDPOSITION, line));
+TextPosition NppInterface::get_line_end_position(TextPosition line) const {
+  return static_cast<int>(send_msg_to_scintilla(m_target_view, SCI_GETLINEENDPOSITION, line));
 }
 
 HWND NppInterface::get_editor_hwnd() const { return m_npp_data.npp_handle; }

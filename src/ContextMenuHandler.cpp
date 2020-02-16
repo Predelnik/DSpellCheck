@@ -239,8 +239,9 @@ void ContextMenuHandler::init_suggestions_box(
   m_word_under_cursor_length = length;
   m_word_under_cursor_pos = pos;
   auto view = m_editor.active_view();
-  auto line = m_editor.line_from_position(view, m_word_under_cursor_pos);
-  auto text_height = m_editor.get_text_height(view, line);
+  ACTIVE_VIEW_BLOCK (m_editor);
+  auto line = m_editor.line_from_position(m_word_under_cursor_pos);
+  auto text_height = m_editor.get_text_height(line);
   auto x_pos =
       m_editor.get_point_x_from_position(view, m_word_under_cursor_pos);
   auto y_pos =

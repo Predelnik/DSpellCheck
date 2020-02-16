@@ -166,23 +166,23 @@ int MockEditorInterface::get_current_line_number() const {
                  doc->cur.data.begin() + get_current_pos(), '\n'));
 }
 
-int MockEditorInterface::get_text_height(NppViewType /*view*/,
-                                         int /*line*/) const {
+int MockEditorInterface::get_text_height(
+  int /*line*/) const {
   return text_height;
 }
 
-int MockEditorInterface::line_from_position(NppViewType view,
-                                            TextPosition position) const {
-  auto doc = active_document(view);
+int MockEditorInterface::line_from_position(
+  TextPosition position) const {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return -1;
   return static_cast<int>(std::count(doc->cur.data.begin(),
                                      doc->cur.data.begin() + position, '\n'));
 }
 
-TextPosition MockEditorInterface::get_line_start_position(NppViewType view,
-                                                          TextPosition line) const {
-  auto doc = active_document(view);
+TextPosition MockEditorInterface::get_line_start_position(
+  TextPosition line) const {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return -1;
   size_t index = 0;
@@ -196,9 +196,9 @@ TextPosition MockEditorInterface::get_line_start_position(NppViewType view,
   return static_cast<TextPosition>(index);
 }
 
-TextPosition MockEditorInterface::get_line_end_position(NppViewType view,
-                                                        TextPosition line) const {
-  auto doc = active_document(view);
+TextPosition MockEditorInterface::get_line_end_position(
+  TextPosition line) const {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return -1;
   size_t index = 0;
@@ -273,15 +273,17 @@ TextPosition MockEditorInterface::get_line_length(NppViewType view, int line) co
 
 int MockEditorInterface::get_point_x_from_position(NppViewType view,
                                                    TextPosition position) const {
+  TARGET_VIEW_BLOCK (*this, static_cast<int> (view));
   return static_cast<int>(position -
-          get_line_start_position(view, line_from_position(view, position))) *
+          get_line_start_position(line_from_position(position))) *
          10;
 }
 
 int MockEditorInterface::get_point_y_from_position(NppViewType view,
                                                    TextPosition position) const {
-  auto line = line_from_position(view, position);
-  return line * get_text_height(view, line);
+  TARGET_VIEW_BLOCK (*this, static_cast<int> (view));
+  auto line = line_from_position(position);
+  return line * get_text_height(line);
 }
 
 TextPosition MockEditorInterface::get_first_visible_line(NppViewType view) const {
@@ -383,13 +385,13 @@ std::string MockEditorInterface::get_current_line() const {
 
 std::string MockEditorInterface::get_line(
   TextPosition line_number) const {
-  auto start = get_line_start_position(m_target_view, line_number);
-  auto end = get_line_end_position(m_target_view, line_number);
+  auto start = get_line_start_position(line_number);
+  auto end = get_line_end_position(line_number);
   return get_text_range(m_target_view, start, end);
 }
 
 std::optional<TextPosition> MockEditorInterface::char_position_from_global_point(
-    NppViewType /*view*/, int /*x*/, int /*y*/) const {
+  int /*x*/, int /*y*/) const {
   return std::nullopt;
 }
 
@@ -418,13 +420,13 @@ MockEditorInterface::get_active_document_text(NppViewType view) const {
   return doc->cur.data;
 }
 
-TextPosition MockEditorInterface::char_position_from_point(NppViewType view,
-                                                   const POINT &pnt) const {
-  auto doc = active_document(view);
+TextPosition MockEditorInterface::char_position_from_point(
+  const POINT &pnt) const {
+  auto doc = active_document(m_target_view);
   if (!doc)
     return -1;
   return get_line_start_position(
-      view, get_document_line_from_visible(view, pnt.y / text_height)) +
+      get_document_line_from_visible(m_target_view, pnt.y / text_height)) +
          pnt.x / text_width;
 }
 

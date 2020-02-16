@@ -68,10 +68,10 @@ public:
   EditorCodepage get_encoding() const override;
   TextPosition get_current_pos() const override;
   int get_current_line_number() const override;
-  int get_text_height(NppViewType view, int line) const override;
-  int line_from_position(NppViewType view, TextPosition position) const override;
-  TextPosition get_line_start_position(NppViewType view, TextPosition line) const override;
-  TextPosition get_line_end_position(NppViewType view, TextPosition line) const override;
+  int get_text_height(int line) const override;
+  int line_from_position(TextPosition position) const override;
+  TextPosition get_line_start_position(TextPosition line) const override;
+  TextPosition get_line_end_position(TextPosition line) const override;
   int get_lexer(NppViewType view) const override;
   TextPosition get_selection_start(NppViewType view) const override;
   TextPosition get_selection_end(NppViewType view) const override;
@@ -99,14 +99,14 @@ public:
   std::string selected_text() const override;
   std::string get_current_line() const override;
   std::string get_line(TextPosition line_number) const override;
-  std::optional<TextPosition> char_position_from_global_point(NppViewType view, int x,
-                                               int y) const override;
+  std::optional<TextPosition> char_position_from_global_point(int x,
+                                                              int y) const override;
   HWND get_editor_hwnd() const override;
   std::wstring get_full_current_path() const override;
   std::string get_text_range(NppViewType view, TextPosition from,
                              TextPosition to) const override;
   std::string get_active_document_text(NppViewType view) const override;
-  TextPosition char_position_from_point(NppViewType view, const POINT& pnt) const override;
+  TextPosition char_position_from_point(const POINT& pnt) const override;
   RECT editor_rect(NppViewType view) const override;
   MockEditorInterface();
   ~MockEditorInterface();

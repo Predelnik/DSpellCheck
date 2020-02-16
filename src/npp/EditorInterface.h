@@ -106,15 +106,15 @@ public:
   virtual std::string get_line(TextPosition line_number) const = 0;
   virtual TextPosition get_current_pos() const = 0;
   virtual int get_current_line_number() const = 0;
-  virtual int get_text_height(NppViewType view, int line) const = 0;
-  virtual int line_from_position(NppViewType view, TextPosition position) const = 0;
-  virtual TextPosition get_line_start_position(NppViewType view, TextPosition line) const = 0;
-  virtual TextPosition get_line_end_position(NppViewType view, TextPosition line) const = 0;
+  virtual int get_text_height(int line) const = 0;
+  virtual int line_from_position(TextPosition position) const = 0;
+  virtual TextPosition get_line_start_position(TextPosition line) const = 0;
+  virtual TextPosition get_line_end_position(TextPosition line) const = 0;
   virtual int get_lexer(NppViewType view) const = 0;
   virtual std::optional<TextPosition>
-  char_position_from_global_point(NppViewType view, int x, int y) const = 0;
-  virtual TextPosition char_position_from_point(NppViewType view,
-                                        const POINT &pnt) const = 0;
+  char_position_from_global_point(int x, int y) const = 0;
+  virtual TextPosition char_position_from_point(
+      const POINT &pnt) const = 0;
   virtual TextPosition get_selection_start(NppViewType view) const = 0;
   virtual TextPosition get_selection_end(NppViewType view) const = 0;
   virtual HWND get_editor_hwnd() const = 0;
