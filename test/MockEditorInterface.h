@@ -129,11 +129,11 @@ public:
   bool is_line_visible(EditorViewType view, TextPosition line) const override;
   TextPosition find_next(EditorViewType view, TextPosition from_position, const char* needle) override;
   void replace_text(EditorViewType view, TextPosition from, TextPosition to, std::string_view replacement) override;
+  void add_bookmark(EditorViewType view, TextPosition line) override;
 
 private:
   const MockedDocumentInfo *active_document(EditorViewType view) const;
   MockedDocumentInfo *active_document(EditorViewType view);
-
 private:
   enum_array<EditorViewType, std::vector<MockedDocumentInfo>> m_documents;
   enum_array<EditorViewType, int> m_active_document_index;

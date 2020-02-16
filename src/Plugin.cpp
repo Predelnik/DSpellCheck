@@ -223,6 +223,10 @@ void copy_misspellings_to_clipboard() {
   CloseClipboard();
 }
 
+void mark_lines_with_misspelling() {
+  spell_checker->mark_lines_with_misspelling ();
+}
+
 void reload_hunspell_dictionaries() {
   speller_container->get_hunspell_speller().reset_spellers();
   settings->settings_changed();
@@ -331,6 +335,7 @@ void command_menu_init() {
   action_index[Action::replace_with_1st_suggestion] = set_next_command(rc_str(IDS_REPLACE_WITH_1ST_SUGGESTION).c_str(), replace_with_1st_suggestion);
 
   action_index[Action::ignore_for_current_session] = set_next_command(rc_str(IDS_IGNORE_WORD_AT_CURSOR).c_str(), ignore_for_current_session);
+  action_index[Action::mark_lines_with_misspelling] = set_next_command(rc_str(IDS_BOOKMARK_LINES_WITH_MISSPELLING).c_str(), mark_lines_with_misspelling);
   // add further set_next_command at the bottom to avoid breaking configured hotkeys
 }
 
@@ -484,7 +489,8 @@ void rearrange_menu() {
   auto plugin_menu = get_this_plugin_menu();
   auto submenu = CreatePopupMenu();
   auto list = {
-      Action::copy_all_misspellings,           Action::erase_all_misspellings,   Action::replace_with_1st_suggestion, Action::ignore_for_current_session,
+      Action::copy_all_misspellings, Action::erase_all_misspellings, Action::mark_lines_with_misspelling,
+      Action::replace_with_1st_suggestion, Action::ignore_for_current_session,
       Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries, Action::toggle_debug_logging,        Action::open_debug_log};
   for (auto action : list) {
     MENUITEMINFO info;

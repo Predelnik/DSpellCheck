@@ -467,7 +467,8 @@ void SpellChecker::recheck_visible(EditorViewType view) {
 std::wstring SpellChecker::get_all_misspellings_as_string() const {
   auto view = m_editor.active_view();
   auto buf = m_editor.get_active_document_text(view);
-  auto mapped_str = m_editor.to_mapped_wstring(view, buf.data());
+  auto mapped_str = m_editor.to_mapped_wstring(view, buf);
+  m_editor.force_style_update (view, mapped_str.mapping.front (), mapped_str.mapping.back ());
   m_misspellings.clear();
   if (!check_text(view, mapped_str, CheckTextMode::find_all))
     return {};
@@ -488,3 +489,18 @@ std::wstring SpellChecker::get_all_misspellings_as_string() const {
   return str;
 }
 
+void SpellChecker::mark_lines_with_misspelling() const {
+  auto view = m_editor.active_view();
+  auto buf = m_editor.get_active_document_text(view);
+  auto mapped_str = m_editor.to_mapped_wstring(view, buf);
+  m_editor.force_style_update (view, mapped_str.mapping.front (), mapped_str.mapping.back ());
+  if (!check_text(view, mapped_str, CheckTextMode::find_all))
+    return;
+  for (auto &misspelling : m_misspellings) {
+    auto start_index = misspelling.data () - mapped_str.str.data ();
+    auto position = mapped_str.to_original_index (start_index);
+    auto line = m_editor.line_from_position(view, position);
+    m_editor.add_bookmark(view, line);
+  }
+  m_misspellings.clear();
+}

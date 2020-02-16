@@ -93,6 +93,7 @@ public:
   bool is_line_visible(EditorViewType view, TextPosition line) const override;
   TextPosition find_next(EditorViewType view, TextPosition from_position, const char* needle) override;
   void replace_text(EditorViewType view, TextPosition from, TextPosition to, std::string_view replacement) override;
+  void add_bookmark(EditorViewType view, TextPosition line) override;
 
   HMENU get_menu_handle(int menu_type) const;
 

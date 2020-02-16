@@ -132,6 +132,13 @@ std::wstring NppInterface::active_file_directory() const { return get_dir_msg(NP
 
 void NppInterface::do_command(int id) { send_msg_to_npp(WM_COMMAND, id); }
 
+// [!] constant from Notepad++ sources which might be subject to change
+constexpr auto MARK_BOOKMARK = 24;
+
+void NppInterface::add_bookmark(EditorViewType view, TextPosition line) {
+  send_msg_to_scintilla(view, SCI_MARKERADD, line, MARK_BOOKMARK);
+}
+
 int NppInterface::get_text_height(EditorViewType view, int line) const { return static_cast<int>(send_msg_to_scintilla(view, SCI_TEXTHEIGHT, line)); }
 
 int NppInterface::get_point_x_from_position(EditorViewType view, TextPosition position) const {

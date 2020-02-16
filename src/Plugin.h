@@ -39,6 +39,7 @@ enum class Action
   open_debug_log,
   replace_with_1st_suggestion,
   ignore_for_current_session,
+  mark_lines_with_misspelling,
   online_manual,
   about,
   find_next_error,

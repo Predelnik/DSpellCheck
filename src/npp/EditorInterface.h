@@ -92,6 +92,7 @@ public:
                                      TextPosition to) = 0;
   virtual void undo(EditorViewType view) = 0;
   virtual void replace_text(EditorViewType view, TextPosition from, TextPosition to, std::string_view replacement) = 0;
+  virtual void add_bookmark (EditorViewType view, TextPosition line) = 0;
 
   // const
   virtual std::vector<std::wstring>

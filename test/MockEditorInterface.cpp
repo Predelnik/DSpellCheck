@@ -587,6 +587,11 @@ void MockEditorInterface::replace_text(EditorViewType view, TextPosition from, T
   doc->cur.style.resize (doc->cur.data.length ());
 }
 
+void MockEditorInterface::add_bookmark(EditorViewType view, TextPosition line)
+{
+  assert(!"Unsupported by mock editor");
+}
+
 MockedDocumentInfo *MockEditorInterface::active_document(EditorViewType view) {
   if (m_documents[view].empty())
     return nullptr;

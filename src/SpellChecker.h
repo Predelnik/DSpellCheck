@@ -56,6 +56,7 @@ public:
   bool is_word_under_cursor_correct(TextPosition &pos, TextPosition &length,
                                     bool use_text_cursor = false) const;
   void erase_all_misspellings();
+  void mark_lines_with_misspelling() const;
 
 private:
   void create_word_underline(EditorViewType view, TextPosition start, TextPosition end) const;
