@@ -109,8 +109,29 @@ FileListProviderDownloadErrorType GitHubFileListProvider::download_dictionary_im
                                                                                    std::shared_ptr<ProgressData> progress_data, std::vector<std::wstring> &downloaded_file_names)
 {
   auto do_download = [&](const std::wstring &path) {
-    WinInet::GlobalHandle inet = WinInet::CreateGlobalHandle().agent(static_plugin_name);
-    auto url_handle = WinInet::WinInetOpenUrl(inet, path.c_str());
+    constexpr auto default_timeout = 3000;
+    auto proxy_name = m_settings.proxy_user_name;
+    auto proxy_pwd = m_settings.proxy_password;
+    auto is_anon = m_settings.proxy_is_anonymous;
+
+    std::wstring proxy_string;
+    if (m_settings.use_proxy && m_settings.proxy_type == ProxyType::web_proxy)
+      proxy_string = m_settings.proxy_host_name + L":" + std::to_wstring(m_settings.proxy_port);
+
+    WinInet::GlobalHandle inet = WinInet::CreateGlobalHandle()
+                                     .agent(static_plugin_name)
+                                     .proxy_string(proxy_string.empty() ? L"" : proxy_string.c_str())
+                                     .access_type(proxy_string.empty() ? INTERNET_OPEN_TYPE_PRECONFIG : INTERNET_OPEN_TYPE_PROXY);
+
+    inet.set_connect_timeout(default_timeout);
+    inet.set_receive_timeout(default_timeout);
+    inet.set_send_timeout(default_timeout);
+
+    WinInet::UrlHandle url_handle = WinInet::WinInetOpenUrl(inet, path.c_str());
+    if (!is_anon) {
+      url_handle.set_proxy_username(proxy_name);
+      url_handle.set_proxy_password(proxy_pwd);
+    }
     auto filename = path.substr(path.rfind(L'/'), std::wstring::npos);
     auto local_file_path = target_path + filename;
     downloaded_file_names.push_back (local_file_path);
