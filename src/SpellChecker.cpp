@@ -48,7 +48,10 @@ void SpellChecker::recheck_visible_both_views() {
   }
 }
 
-void SpellChecker::lang_change() { recheck_visible(); }
+void SpellChecker::lang_change() {
+  ACTIVE_VIEW_BLOCK(m_editor);
+  recheck_visible();
+}
 
 void SpellChecker::find_next_mistake() {
   ACTIVE_VIEW_BLOCK(m_editor);
