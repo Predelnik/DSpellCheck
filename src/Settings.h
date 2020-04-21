@@ -117,7 +117,7 @@ public:
                          for (int i = 1; i < char_cnt; ++i)
                            s.push_back(static_cast<char>(i));
                          auto ws = to_wstring(s);
-                         std::experimental::erase_if(ws, [](wchar_t c) { return !IsCharAlphaNumeric(c); });
+                         std::erase_if(ws, [](wchar_t c) { return !IsCharAlphaNumeric(c); });
                          std::sort(ws.begin(), ws.end());
                          return ws;
                        }();
