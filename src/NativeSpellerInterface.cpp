@@ -167,7 +167,7 @@ std::vector<LanguageInfo> NativeSpellerInterface::get_language_list() const {
     ptr->Next(1, &ws, &fetched);
     if (fetched == 0)
       break;
-    res.push_back(LanguageInfo(ws, m_settings.language_name_style));
+    res.push_back(LanguageInfo(ws, m_settings.data.language_name_style));
   }
   return res;
 }

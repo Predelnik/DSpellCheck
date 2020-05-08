@@ -57,7 +57,7 @@ std::vector<LanguageInfo> SpellerContainer::get_available_languages() const {
     return {};
 
   auto langs = active_speller().get_language_list();
-  std::sort(langs.begin(), langs.end(), m_settings.language_name_style != LanguageNameStyle::original ? less_aliases : less_original);
+  std::sort(langs.begin(), langs.end(), m_settings.data.language_name_style != LanguageNameStyle::original ? less_aliases : less_original);
   return langs;
 }
 
@@ -69,7 +69,7 @@ void SpellerContainer::cleanup() { m_native_speller->cleanup(); }
 
 SpellerInterface &SpellerContainer::active_speller() {
   if (!m_single_speller)
-    return *m_spellers[m_settings.active_speller_lib_id];
+    return *m_spellers[m_settings.data.active_speller_lib_id];
 
   return *m_single_speller;
 }
@@ -123,17 +123,17 @@ void SpellerContainer::apply_settings_to_active_speller() {
   if (m_single_speller)
     return;
 
-  switch (m_settings.active_speller_lib_id) {
+  switch (m_settings.data.active_speller_lib_id) {
   case SpellerId::native:
     m_native_speller->init();
     break;
   case SpellerId::aspell:
-    m_aspell_speller->init(m_settings.aspell_dll_path.c_str());
+    m_aspell_speller->init(m_settings.data.aspell_dll_path.c_str());
     break;
   case SpellerId::hunspell:
-    m_hunspell_speller->set_use_one_dic(m_settings.use_unified_dictionary);
-    m_hunspell_speller->set_directory(m_settings.hunspell_user_path.c_str());
-    m_hunspell_speller->set_additional_directory(m_settings.hunspell_system_path.c_str());
+    m_hunspell_speller->set_use_one_dic(m_settings.data.use_unified_dictionary);
+    m_hunspell_speller->set_directory(m_settings.data.hunspell_user_path.c_str());
+    m_hunspell_speller->set_additional_directory(m_settings.data.hunspell_system_path.c_str());
     break;
   case SpellerId::COUNT:
     break;
@@ -143,7 +143,7 @@ void SpellerContainer::apply_settings_to_active_speller() {
 void SpellerContainer::init_speller() {
   apply_settings_to_active_speller();
 
-  if (!m_settings.auto_check_text)
+  if (!m_settings.data.auto_check_text)
     return;
 
   if (auto language = m_settings.get_active_language(); language != multiple_language_alias) {

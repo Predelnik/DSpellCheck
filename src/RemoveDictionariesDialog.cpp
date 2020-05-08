@@ -74,16 +74,16 @@ void RemoveDictionariesDialog::remove_selected() {
   for (int i = 0; i < ListBox_GetCount(m_lang_list); i++) {
     if (CheckedListBox_GetCheckState(m_lang_list, i) == BST_CHECKED) {
       wchar_t file_name[MAX_PATH];
-      for (int j = 0; j < 1 + (m_settings.remove_system_dictionaries ? 1 : 0); j++) {
+      for (int j = 0; j < 1 + (m_settings.data.remove_system_dictionaries ? 1 : 0); j++) {
         *file_name = L'\0';
-        wcscat(file_name, ((j == 0) ? m_settings.hunspell_user_path : m_settings.hunspell_system_path).c_str());
+        wcscat(file_name, ((j == 0) ? m_settings.data.hunspell_user_path : m_settings.data.hunspell_system_path).c_str());
         wcscat(file_name, L"\\");
         wcscat(file_name, m_speller_container.get_available_languages()[i].orig_name.c_str());
         wcscat(file_name, L".aff");
         bool success = WinApi::delete_file(file_name);
         wcsncpy(file_name + wcslen(file_name) - 4, L".dic", 4);
         success = success && WinApi::delete_file(file_name);
-        if (m_settings.remove_user_dictionaries) {
+        if (m_settings.data.remove_user_dictionaries) {
           wcsncpy(file_name + wcslen(file_name) - 4, L".usr", 4);
           WinApi::delete_file(file_name);
         }
@@ -111,19 +111,19 @@ void RemoveDictionariesDialog::remove_selected() {
   }
   if (need_multi_reset) {
     auto s = m_settings.modify();
-    s->speller_multi_languages[SpellerId::hunspell] = L"";
+    s->data.speller_multi_languages[SpellerId::hunspell] = L"";
   }
 }
 
 void RemoveDictionariesDialog::update_options() {
   auto mut_settings = m_settings.modify();
-  mut_settings->remove_user_dictionaries = Button_GetCheck(m_remove_user_dics) == BST_CHECKED;
-  mut_settings->remove_system_dictionaries = Button_GetCheck(m_remove_system) == BST_CHECKED;
+  mut_settings->data.remove_user_dictionaries = Button_GetCheck(m_remove_user_dics) == BST_CHECKED;
+  mut_settings->data.remove_system_dictionaries = Button_GetCheck(m_remove_system) == BST_CHECKED;
 }
 
 void RemoveDictionariesDialog::update_controls() {
-  Button_SetCheck(m_remove_user_dics, m_settings.remove_user_dictionaries ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_remove_system, m_settings.remove_system_dictionaries ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_remove_user_dics, m_settings.data.remove_user_dictionaries ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_remove_system, m_settings.data.remove_system_dictionaries ? BST_CHECKED : BST_UNCHECKED);
 }
 
 INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*lParam*/) {
@@ -159,6 +159,8 @@ INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param, LPA
       break;
     }
   } break;
+  default:
+    break;
   };
   return FALSE;
 }

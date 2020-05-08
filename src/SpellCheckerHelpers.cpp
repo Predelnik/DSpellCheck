@@ -22,10 +22,10 @@
 
 namespace SpellCheckerHelpers {
 static bool check_text_enabled_for_active_file(const EditorInterface &editor, const Settings &settings) {
-  auto ret = !settings.check_those;
+  auto ret = !settings.data.check_those;
   auto full_path = editor.get_full_current_path();
-  for (auto token : make_delimiter_tokenizer(settings.file_types, LR"(;)").get_all_tokens()) {
-    if (settings.check_those) {
+  for (auto token : make_delimiter_tokenizer(settings.data.file_types, LR"(;)").get_all_tokens()) {
+    if (settings.data.check_those) {
       ret = ret || PathMatchSpec(full_path.c_str(), std::wstring(token).c_str());
       if (ret)
         break;
@@ -39,18 +39,18 @@ static bool check_text_enabled_for_active_file(const EditorInterface &editor, co
 }
 
 bool is_spell_checking_needed_for_file(const EditorInterface &editor, const Settings &settings) {
-  return check_text_enabled_for_active_file(editor, settings) && settings.auto_check_text;
+  return check_text_enabled_for_active_file(editor, settings) && settings.data.auto_check_text;
 }
 
 void apply_word_conversions(const Settings &settings, std::wstring &word) {
   for (auto &c : word) {
-    if (settings.ignore_yo) {
+    if (settings.data.ignore_yo) {
       if (c == L'ё')
         c = L'е';
       if (c == L'Ё')
         c = L'Е';
     }
-    if (settings.convert_single_quotes) {
+    if (settings.data.convert_single_quotes) {
       if (c == L'’')
         c = L'\'';
     }
@@ -61,7 +61,7 @@ void print_to_log(const Settings *settings, std::wstring_view line, HWND parent_
   if (!settings)
     return;
 
-  if (!settings->write_debug_log)
+  if (!settings->data.write_debug_log)
     return;
 
   FILE *fp;
@@ -79,14 +79,14 @@ static bool is_apostrophe(const Settings &settings, wchar_t chr) {
   if (chr == L'\'')
     return true;
 
-  if (settings.convert_single_quotes && chr == L'’')
+  if (settings.data.convert_single_quotes && chr == L'’')
     return true;
 
   return false;
 }
 
 void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
-  if (settings.remove_boundary_apostrophes) {
+  if (settings.data.remove_boundary_apostrophes) {
     while (!word.empty() && is_apostrophe (settings, word.front()))
       word.remove_prefix(1);
 
@@ -170,8 +170,8 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
   }
 
   if (category != SciUtils::StyleCategory::text &&
-      !((category == SciUtils::StyleCategory::comment && settings.check_comments) || (category == SciUtils::StyleCategory::string && settings.check_strings) ||
-        (category == SciUtils::StyleCategory::identifier && settings.check_variable_functions))) {
+      !((category == SciUtils::StyleCategory::comment && settings.data.check_comments) || (category == SciUtils::StyleCategory::string && settings.data.check_strings) ||
+        (category == SciUtils::StyleCategory::identifier && settings.data.check_variable_functions))) {
     return false;
   }
 
@@ -179,21 +179,21 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
     return false;
   }
 
-  if (static_cast<int>(word.length()) < settings.word_minimum_length)
+  if (static_cast<int>(word.length()) < settings.data.word_minimum_length)
     return false;
 
-  if (settings.ignore_one_letter && word.length() == 1)
+  if (settings.data.ignore_one_letter && word.length() == 1)
     return false;
 
-  if (settings.ignore_containing_digit &&
+  if (settings.data.ignore_containing_digit &&
       std::find_if(word.begin(), word.end(), [](wchar_t wc) { return IsCharAlphaNumeric(wc) && !IsCharAlpha(wc); }) != word.end())
     return false;
 
-  if (settings.ignore_starting_with_capital && IsCharUpper(word.front())) {
+  if (settings.data.ignore_starting_with_capital && IsCharUpper(word.front())) {
     return false;
   }
 
-  if (settings.ignore_having_a_capital || settings.ignore_all_capital) {
+  if (settings.data.ignore_having_a_capital || settings.data.ignore_all_capital) {
     bool all_upper = IsCharUpper(word.front()), any_upper = false;
     for (auto c : std::wstring_view(word).substr(1)) {
       if (IsCharUpper(c)) {
@@ -202,17 +202,17 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
         all_upper = false;
     }
 
-    if (!all_upper && any_upper && settings.ignore_having_a_capital)
+    if (!all_upper && any_upper && settings.data.ignore_having_a_capital)
       return false;
 
-    if (all_upper && settings.ignore_all_capital)
+    if (all_upper && settings.data.ignore_all_capital)
       return false;
   }
 
-  if (settings.ignore_having_underscore && word.find(L'_') != std::wstring_view::npos)
+  if (settings.data.ignore_having_underscore && word.find(L'_') != std::wstring_view::npos)
     return false;
 
-  if (settings.ignore_starting_or_ending_with_apostrophe) {
+  if (settings.data.ignore_starting_or_ending_with_apostrophe) {
     if (is_apostrophe(settings, word.front()) || is_apostrophe(settings, word.back()))
       return false;
   }

@@ -194,7 +194,7 @@ bool are_paths_equal(const wchar_t *path1, const wchar_t *path2) {
 std::vector<LanguageInfo> HunspellInterface::get_language_list() const {
   std::vector<LanguageInfo> list;
   for (auto &dic : m_dic_list) {
-    list.emplace_back(dic.name, m_settings.language_name_style, get_lang_only_system(dic.name.c_str()));
+    list.emplace_back(dic.name, m_settings.data.language_name_style, get_lang_only_system(dic.name.c_str()));
   }
   return list;
 }

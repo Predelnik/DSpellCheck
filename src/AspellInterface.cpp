@@ -58,7 +58,7 @@ std::vector<LanguageInfo> AspellInterface::get_language_list() const {
   const AspellDictInfo *entry;
   std::vector<LanguageInfo> names;
   while ((entry = aspell_dict_info_enumeration_next(dels)) != nullptr) {
-    names.emplace_back(to_wstring(entry->name), m_settings.language_name_style);
+    names.emplace_back(to_wstring(entry->name), m_settings.data.language_name_style);
   }
   std::sort(names.begin(), names.end(), less_original);
   return names;
@@ -72,9 +72,9 @@ void AspellInterface::send_aspell_error(AspellCanHaveError *error) {
 
 void AspellInterface::setup_aspell_config(AspellConfig *spell_config) {
   aspell_config_replace(spell_config, "encoding", "utf-8");
-  aspell_config_replace(spell_config, "run-together", m_settings.aspell_allow_run_together_words ? "true" : "false");
-  if (!m_settings.aspell_personal_dictionary_path.empty())
-    aspell_config_replace(spell_config, "home-dir", to_string(m_settings.aspell_personal_dictionary_path).c_str());
+  aspell_config_replace(spell_config, "run-together", m_settings.data.aspell_allow_run_together_words ? "true" : "false");
+  if (!m_settings.data.aspell_personal_dictionary_path.empty())
+    aspell_config_replace(spell_config, "home-dir", to_string(m_settings.data.aspell_personal_dictionary_path).c_str());
 }
 
 void AspellInterface::set_multiple_languages(const std::vector<std::wstring> &list) {

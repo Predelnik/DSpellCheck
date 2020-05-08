@@ -92,14 +92,14 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
     settings.get_active_language() = new_lang;
     m_parent.m_selected_language_name = new_lang;
   }
-  settings.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
-  switch (settings.active_speller_lib_id) {
+  settings.data.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
+  switch (settings.data.active_speller_lib_id) {
   case SpellerId::aspell:
-    settings.aspell_dll_path = get_edit_text(m_h_lib_path);
+    settings.data.aspell_dll_path = get_edit_text(m_h_lib_path);
     break;
   case SpellerId::hunspell:
-    settings.hunspell_user_path = get_edit_text(m_h_lib_path);
-    settings.hunspell_system_path = get_edit_text(m_h_system_path);
+    settings.data.hunspell_user_path = get_edit_text(m_h_lib_path);
+    settings.data.hunspell_system_path = get_edit_text(m_h_system_path);
     break;
   case SpellerId::native:
     break;
@@ -108,37 +108,37 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
   default:;
   }
 
-  settings.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
-  settings.file_types = get_edit_text(m_h_file_types);
-  settings.suggestions_mode = m_suggestion_mode_cmb.current_data();
-  settings.check_comments = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
-  settings.check_strings = Button_GetCheck(m_h_check_strings) == BST_CHECKED;
-  settings.check_variable_functions = Button_GetCheck(m_h_check_varfunc) == BST_CHECKED;
-  settings.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
-  settings.language_name_style = m_language_name_style_cmb.current_data();
+  settings.data.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
+  settings.data.file_types = get_edit_text(m_h_file_types);
+  settings.data.suggestions_mode = m_suggestion_mode_cmb.current_data();
+  settings.data.check_comments = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
+  settings.data.check_strings = Button_GetCheck(m_h_check_strings) == BST_CHECKED;
+  settings.data.check_variable_functions = Button_GetCheck(m_h_check_varfunc) == BST_CHECKED;
+  settings.data.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
+  settings.data.language_name_style = m_language_name_style_cmb.current_data();
 }
 
 void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settings) {
 
-  auto is_aspell = settings.active_speller_lib_id == SpellerId::aspell ? TRUE : FALSE;
+  auto is_aspell = settings.data.active_speller_lib_id == SpellerId::aspell ? TRUE : FALSE;
   ShowWindow(m_h_lib_link, is_aspell);
   ShowWindow(m_h_aspell_status, is_aspell);
-  auto is_hunspell = settings.active_speller_lib_id == SpellerId::hunspell ? TRUE : FALSE;
+  auto is_hunspell = settings.data.active_speller_lib_id == SpellerId::hunspell ? TRUE : FALSE;
   ShowWindow(m_h_download_dics, is_hunspell);
   ShowWindow(m_h_remove_dics, is_hunspell);
   ShowWindow(m_h_one_user_dic, is_hunspell);
   ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
   ShowWindow(m_h_hunspell_path_type, is_hunspell);
   ShowWindow(m_h_system_path, 0);
-  ShowWindow(m_configure_aspell_btn, static_cast<int>(settings.active_speller_lib_id == SpellerId::aspell));
-  auto not_native = settings.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
+  ShowWindow(m_configure_aspell_btn, static_cast<int>(settings.data.active_speller_lib_id == SpellerId::aspell));
+  auto not_native = settings.data.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
   ShowWindow(m_h_lib_group_box, not_native);
   ShowWindow(m_h_lib_path, not_native);
   ShowWindow(m_h_reset_speller_path, not_native);
   ShowWindow(m_browse_btn, not_native);
   BOOL configure_enabled = FALSE;
 
-  switch (settings.active_speller_lib_id) {
+  switch (settings.data.active_speller_lib_id) {
   case SpellerId::aspell:
 
     switch (aspell_status) {
@@ -162,7 +162,7 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
       break;
     }
     EnableWindow(m_configure_aspell_btn, configure_enabled);
-    Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.aspell_dll_path).c_str());
+    Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.data.aspell_dll_path).c_str());
 
     Static_SetText(m_h_lib_group_box, rc_str(IDS_ASPELL_LOCATION).c_str());
     break;
@@ -171,7 +171,7 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
     ShowWindow(m_h_lib_path, static_cast<int>(is_lib_path));
     ShowWindow(m_h_system_path, static_cast<int>(!is_lib_path));
     Static_SetText(m_h_lib_group_box, rc_str(IDS_HUNSPELL_SETTINGS).c_str());
-    Edit_SetText(m_h_lib_path, settings.hunspell_user_path.c_str());
+    Edit_SetText(m_h_lib_path, settings.data.hunspell_user_path.c_str());
   } break;
   case SpellerId::native:
     break;
@@ -179,7 +179,7 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
     break;
   default:;
   }
-  Edit_SetText(m_h_system_path, settings.hunspell_system_path.c_str());
+  Edit_SetText(m_h_system_path, settings.data.hunspell_system_path.c_str());
 }
 
 void SimpleDlg::fill_sugestions_num(int suggestions_num) {
@@ -290,7 +290,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     case IDC_LANGUAGE_NAME_STYLE:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
         auto mut = m_settings.modify();
-        mut->language_name_style = m_language_name_style_cmb.current_data();
+        mut->data.language_name_style = m_language_name_style_cmb.current_data();
       }
       break;
     case IDC_LIBRARY:
@@ -300,7 +300,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
       break;
     case IDC_HUNSPELL_PATH_TYPE:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0 || m_settings.active_speller_lib_id == SpellerId::aspell) {
+        if (ComboBox_GetCurSel(m_h_hunspell_path_type) == 0 || m_settings.data.active_speller_lib_id == SpellerId::aspell) {
           ShowWindow(m_h_lib_path, 1);
           ShowWindow(m_h_system_path, 0);
         } else {
@@ -339,7 +339,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     case IDC_RESETSPELLERPATH: {
       if (HIWORD(w_param) == BN_CLICKED) {
         std::wstring path;
-        switch (m_settings.active_speller_lib_id) {
+        switch (m_settings.data.active_speller_lib_id) {
         case SpellerId::aspell:
           path = get_default_aspell_path();
           break;
@@ -352,7 +352,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
           break;
         }
 
-        if (m_settings.active_speller_lib_id == SpellerId::aspell || ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
+        if (m_settings.data.active_speller_lib_id == SpellerId::aspell || ComboBox_GetCurSel(m_h_hunspell_path_type) == 0)
           Edit_SetText(m_h_lib_path, path.c_str());
         else
           Edit_SetText(m_h_system_path, L".\\plugins\\config\\Hunspell");
@@ -365,7 +365,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
       }
     } break;
     case IDC_BROWSEASPELLPATH:
-      switch (m_settings.active_speller_lib_id) {
+      switch (m_settings.data.active_speller_lib_id) {
       case SpellerId::aspell: {
         OPENFILENAME ofn;
         ZeroMemory(&ofn, sizeof(ofn));
@@ -482,17 +482,17 @@ void AdvancedDlg::set_sugg_box_settings(LRESULT size, LRESULT trans) {
 }
 
 void AdvancedDlg::update_controls(const Settings &settings) {
-  Edit_SetText(m_h_edit_delimiters, settings.delimiters.c_str());
-  Edit_SetText(m_delimiter_exclusions_le, m_settings.delimiter_exclusions.c_str());
-  Button_SetCheck(m_split_camel_case_cb, m_settings.split_camel_case);
-  set_recheck_delay(settings.recheck_delay);
-  set_conversion_opts(settings.ignore_yo, settings.convert_single_quotes, settings.remove_boundary_apostrophes);
-  set_underline_settings(settings.underline_color, settings.underline_style);
-  Button_SetCheck(m_h_check_default_udl_style, settings.check_default_udl_style);
-  set_ignore(settings.ignore_containing_digit, settings.ignore_starting_with_capital, settings.ignore_having_a_capital, settings.ignore_all_capital,
-             settings.ignore_having_underscore, settings.ignore_starting_or_ending_with_apostrophe, settings.ignore_one_letter);
-  set_sugg_box_settings(settings.suggestion_button_size, settings.suggestion_button_opacity);
-  m_tokenization_style_cmb.set_current(settings.tokenization_style);
+  Edit_SetText(m_h_edit_delimiters, settings.data.delimiters.c_str());
+  Edit_SetText(m_delimiter_exclusions_le, m_settings.data.delimiter_exclusions.c_str());
+  Button_SetCheck(m_split_camel_case_cb, m_settings.data.split_camel_case);
+  set_recheck_delay(settings.data.recheck_delay);
+  set_conversion_opts(settings.data.ignore_yo, settings.data.convert_single_quotes, settings.data.remove_boundary_apostrophes);
+  set_underline_settings(settings.data.underline_color, settings.data.underline_style);
+  Button_SetCheck(m_h_check_default_udl_style, settings.data.check_default_udl_style);
+  set_ignore(settings.data.ignore_containing_digit, settings.data.ignore_starting_with_capital, settings.data.ignore_having_a_capital, settings.data.ignore_all_capital,
+             settings.data.ignore_having_underscore, settings.data.ignore_starting_or_ending_with_apostrophe, settings.data.ignore_one_letter);
+  set_sugg_box_settings(settings.data.suggestion_button_size, settings.data.suggestion_button_opacity);
+  m_tokenization_style_cmb.set_current(settings.data.tokenization_style);
   setup_delimiter_line_edit_visiblity();
 }
 
@@ -667,26 +667,26 @@ int AdvancedDlg::get_recheck_delay() {
 AdvancedDlg::AdvancedDlg(const Settings &settings) : m_settings(settings) {}
 
 void AdvancedDlg::apply_settings(Settings &settings) {
-  settings.delimiters = get_edit_text(m_h_edit_delimiters);
-  settings.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
-  settings.convert_single_quotes = Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
-  settings.remove_boundary_apostrophes = Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED;
-  settings.underline_color = m_underline_color_btn;
-  settings.underline_style = ComboBox_GetCurSel(m_h_underline_style);
-  settings.recheck_delay = get_recheck_delay();
-  settings.check_default_udl_style = Button_GetCheck(m_h_check_default_udl_style) == BST_CHECKED;
-  settings.ignore_containing_digit = Button_GetCheck(m_h_ignore_numbers) == BST_CHECKED;
-  settings.ignore_starting_with_capital = Button_GetCheck(m_h_ignore_c_start) == BST_CHECKED;
-  settings.ignore_having_a_capital = Button_GetCheck(m_h_ignore_c_have) == BST_CHECKED;
-  settings.ignore_all_capital = Button_GetCheck(m_h_ignore_c_all) == BST_CHECKED;
-  settings.ignore_having_underscore = Button_GetCheck(m_h_ignore_) == BST_CHECKED;
-  settings.ignore_starting_or_ending_with_apostrophe = Button_GetCheck(m_h_ignore_se_apostrophe) == BST_CHECKED;
-  settings.ignore_one_letter = Button_GetCheck(m_h_ignore_one_letter) == BST_CHECKED;
-  settings.suggestion_button_size = static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0));
-  settings.suggestion_button_opacity = static_cast<int>(SendMessage(m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0));
-  settings.tokenization_style = m_tokenization_style_cmb.current_data();
-  settings.delimiter_exclusions = get_edit_text(m_delimiter_exclusions_le);
-  settings.split_camel_case = Button_GetCheck(m_split_camel_case_cb) == BST_CHECKED;
+  settings.data.delimiters = get_edit_text(m_h_edit_delimiters);
+  settings.data.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
+  settings.data.convert_single_quotes = Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
+  settings.data.remove_boundary_apostrophes = Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED;
+  settings.data.underline_color = m_underline_color_btn;
+  settings.data.underline_style = ComboBox_GetCurSel(m_h_underline_style);
+  settings.data.recheck_delay = get_recheck_delay();
+  settings.data.check_default_udl_style = Button_GetCheck(m_h_check_default_udl_style) == BST_CHECKED;
+  settings.data.ignore_containing_digit = Button_GetCheck(m_h_ignore_numbers) == BST_CHECKED;
+  settings.data.ignore_starting_with_capital = Button_GetCheck(m_h_ignore_c_start) == BST_CHECKED;
+  settings.data.ignore_having_a_capital = Button_GetCheck(m_h_ignore_c_have) == BST_CHECKED;
+  settings.data.ignore_all_capital = Button_GetCheck(m_h_ignore_c_all) == BST_CHECKED;
+  settings.data.ignore_having_underscore = Button_GetCheck(m_h_ignore_) == BST_CHECKED;
+  settings.data.ignore_starting_or_ending_with_apostrophe = Button_GetCheck(m_h_ignore_se_apostrophe) == BST_CHECKED;
+  settings.data.ignore_one_letter = Button_GetCheck(m_h_ignore_one_letter) == BST_CHECKED;
+  settings.data.suggestion_button_size = static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0));
+  settings.data.suggestion_button_opacity = static_cast<int>(SendMessage(m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0));
+  settings.data.tokenization_style = m_tokenization_style_cmb.current_data();
+  settings.data.delimiter_exclusions = get_edit_text(m_delimiter_exclusions_le);
+  settings.data.split_camel_case = Button_GetCheck(m_split_camel_case_cb) == BST_CHECKED;
 }
 
 SimpleDlg *SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
@@ -722,7 +722,7 @@ void SettingsDlg::update_controls() {
 
 void SettingsDlg::apply_lib_change(SpellerId new_lib_id) {
   auto mut_settings = m_settings.modify();
-  mut_settings->active_speller_lib_id = new_lib_id;
+  mut_settings->data.active_speller_lib_id = new_lib_id;
 }
 
 void SettingsDlg::store_selected_language_name(int language_index) {
@@ -732,16 +732,16 @@ void SettingsDlg::store_selected_language_name(int language_index) {
 void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) { return Window::init(h_inst, parent); }
 
 void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer &speller_container) {
-  m_speller_cmb.set_current(settings.active_speller_lib_id);
+  m_speller_cmb.set_current(settings.data.active_speller_lib_id);
   fill_lib_info(speller_container.get_aspell_status(), settings);
-  fill_sugestions_num(settings.suggestion_count);
-  set_file_types(settings.check_those, settings.file_types.c_str());
-  Button_SetCheck(m_h_check_comments, settings.check_comments ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_check_strings, settings.check_strings ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_check_varfunc, settings.check_variable_functions ? BST_CHECKED : BST_UNCHECKED);
-  set_sugg_type(settings.suggestions_mode);
-  set_one_user_dic(settings.use_unified_dictionary);
-  m_language_name_style_cmb.set_current(settings.language_name_style);
+  fill_sugestions_num(settings.data.suggestion_count);
+  set_file_types(settings.data.check_those, settings.data.file_types.c_str());
+  Button_SetCheck(m_h_check_comments, settings.data.check_comments ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_check_strings, settings.data.check_strings ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_check_varfunc, settings.data.check_variable_functions ? BST_CHECKED : BST_UNCHECKED);
+  set_sugg_type(settings.data.suggestions_mode);
+  set_one_user_dic(settings.data.use_unified_dictionary);
+  m_language_name_style_cmb.set_current(settings.data.language_name_style);
 }
 
 void SimpleDlg::init_speller_id_combobox(const SpellerContainer &speller_container) {

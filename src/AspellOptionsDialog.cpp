@@ -33,16 +33,16 @@ void AspellOptionsDialog::do_dialog() {
 
 void AspellOptionsDialog::apply_choice() {
   auto s = m_settings.modify();
-  s->aspell_allow_run_together_words = Button_GetCheck(m_allow_run_together_cb) == BST_CHECKED;
-  s->aspell_personal_dictionary_path = get_edit_text(m_aspell_personal_path_le);
-  if (s->aspell_personal_dictionary_path == m_spellers.get_aspell_default_personal_dictionary_path())
-    s->aspell_personal_dictionary_path = L"";
+  s->data.aspell_allow_run_together_words = Button_GetCheck(m_allow_run_together_cb) == BST_CHECKED;
+  s->data.aspell_personal_dictionary_path = get_edit_text(m_aspell_personal_path_le);
+  if (s->data.aspell_personal_dictionary_path == m_spellers.get_aspell_default_personal_dictionary_path())
+    s->data.aspell_personal_dictionary_path = L"";
 }
 
 void AspellOptionsDialog::update_controls() {
-  Button_SetCheck(m_allow_run_together_cb, m_settings.aspell_allow_run_together_words ? BST_CHECKED : BST_UNCHECKED);
-  Edit_SetText(m_aspell_personal_path_le, m_settings.aspell_personal_dictionary_path.empty() ? m_spellers.get_aspell_default_personal_dictionary_path().c_str()
-                                                                                             : m_settings.aspell_personal_dictionary_path.c_str());
+  Button_SetCheck(m_allow_run_together_cb, m_settings.data.aspell_allow_run_together_words ? BST_CHECKED : BST_UNCHECKED);
+  Edit_SetText(m_aspell_personal_path_le, m_settings.data.aspell_personal_dictionary_path.empty() ? m_spellers.get_aspell_default_personal_dictionary_path().c_str()
+                                                                                             : m_settings.data.aspell_personal_dictionary_path.c_str());
 }
 
 INT_PTR __stdcall AspellOptionsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {

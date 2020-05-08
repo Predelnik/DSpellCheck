@@ -236,13 +236,13 @@ DWORD get_custom_gui_message_id(CustomGuiMessage message_id) { return custom_gui
 
 void switch_auto_check_text() {
   auto mut = settings->modify(SettingsModificationStyle::ignore_file_errors);
-  mut->auto_check_text = !settings->auto_check_text;
+  mut->data.auto_check_text = !settings->data.auto_check_text;
 }
 
 void switch_debug_logging() {
   auto mut = settings->modify(SettingsModificationStyle::ignore_file_errors);
-  mut->write_debug_log = !mut->write_debug_log;
-  if (mut->write_debug_log) {
+  mut->data.write_debug_log = !mut->data.write_debug_log;
+  if (mut->data.write_debug_log) {
     WinApi::delete_file(get_debug_log_path().c_str());
   }
 }
@@ -398,8 +398,8 @@ HMENU get_submenu(int item_id) {
 HMENU get_langs_sub_menu() { return get_submenu(get_func_item()[action_index[Action::quick_language_change]].cmd_id); }
 
 void on_settings_changed() {
-  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_auto_spell_check]].cmd_id, settings->auto_check_text);
-  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_debug_logging]].cmd_id, settings->write_debug_log);
+  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_auto_spell_check]].cmd_id, settings->data.auto_check_text);
+  npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_debug_logging]].cmd_id, settings->data.write_debug_log);
 }
 
 void init_classes() {
@@ -574,12 +574,12 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM 
 
       if (LOWORD(w_param) == IDM_FILE_PRINTNOW || LOWORD(w_param) == IDM_FILE_PRINT) {
         // Disable autocheck while printing
-        bool prev_value = get_settings().auto_check_text;
+        bool prev_value = get_settings().data.auto_check_text;
 
         auto mut_settings = get_settings().modify();
-        mut_settings->auto_check_text = false;
+        mut_settings->data.auto_check_text = false;
         ret = ::DefSubclassProc(h_wnd, message, w_param, l_param);
-        mut_settings->auto_check_text = prev_value;
+        mut_settings->data.auto_check_text = prev_value;
 
         return ret;
       }
@@ -691,7 +691,7 @@ std::wstring_view rc_str_view(UINT string_id) {
 std::wstring rc_str(UINT string_id) { return std::wstring{rc_str_view(string_id)}; }
 
 void delete_log() {
-  if (settings->write_debug_log)
+  if (settings->data.write_debug_log)
     WinApi::delete_file(get_debug_log_path().c_str());
 }
 
@@ -761,7 +761,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
       return;
     if ((notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0) {
       if (edit_recheck_timer != NULL) {
-        SetTimer(npp_data.npp_handle, edit_recheck_timer, get_settings().recheck_delay, edit_recheck_callback);
+        SetTimer(npp_data.npp_handle, edit_recheck_timer, get_settings().data.recheck_delay, edit_recheck_callback);
         recheck_done = false;
       }
     }

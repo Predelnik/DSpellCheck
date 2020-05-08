@@ -36,18 +36,18 @@ void ConnectionSettingsDialog::do_dialog() {
 
 void ConnectionSettingsDialog::apply_choice() {
   auto mut_settings = m_settings.modify();
-  mut_settings->proxy_user_name = get_edit_text(m_user_name);
-  mut_settings->proxy_host_name = get_edit_text(m_host_name);
-  mut_settings->proxy_password = get_edit_text(m_password);
-  mut_settings->ftp_use_passive_mode = Button_GetCheck(m_passive_mode_cb) == BST_CHECKED;
-  mut_settings->use_proxy = Button_GetCheck(m_use_proxy) == BST_CHECKED;
-  mut_settings->proxy_is_anonymous =
+  mut_settings->data.proxy_user_name = get_edit_text(m_user_name);
+  mut_settings->data.proxy_host_name = get_edit_text(m_host_name);
+  mut_settings->data.proxy_password = get_edit_text(m_password);
+  mut_settings->data.ftp_use_passive_mode = Button_GetCheck(m_passive_mode_cb) == BST_CHECKED;
+  mut_settings->data.use_proxy = Button_GetCheck(m_use_proxy) == BST_CHECKED;
+  mut_settings->data.proxy_is_anonymous =
       Button_GetCheck(m_proxy_anonymous) == BST_CHECKED;
-  mut_settings->proxy_type = m_proxy_type_cmb.current_data();
+  mut_settings->data.proxy_type = m_proxy_type_cmb.current_data();
   auto text = get_edit_text(m_port);
   wchar_t *end_ptr;
   int x = wcstol(text.c_str(), &end_ptr, 10);
-  mut_settings->proxy_port = (x);
+  mut_settings->data.proxy_port = (x);
   m_download_dics_dlg.refresh();
 }
 
@@ -76,17 +76,17 @@ void ConnectionSettingsDialog::disable_controls() {
 
 void ConnectionSettingsDialog::update_controls() {
   Button_SetCheck(m_use_proxy,
-                  m_settings.use_proxy ? BST_CHECKED : BST_UNCHECKED);
+                  m_settings.data.use_proxy ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_proxy_anonymous,
-                  m_settings.proxy_is_anonymous ? BST_CHECKED : BST_UNCHECKED);
-  Edit_SetText(m_user_name, m_settings.proxy_user_name.c_str());
-  Edit_SetText(m_host_name, m_settings.proxy_host_name.c_str());
-  Edit_SetText(m_password, m_settings.proxy_password.c_str());
-  Edit_SetText(m_port, std::to_wstring(m_settings.proxy_port).c_str());
-  Button_SetCheck (m_passive_mode_cb, m_settings.ftp_use_passive_mode);
+                  m_settings.data.proxy_is_anonymous ? BST_CHECKED : BST_UNCHECKED);
+  Edit_SetText(m_user_name, m_settings.data.proxy_user_name.c_str());
+  Edit_SetText(m_host_name, m_settings.data.proxy_host_name.c_str());
+  Edit_SetText(m_password, m_settings.data.proxy_password.c_str());
+  Edit_SetText(m_port, std::to_wstring(m_settings.data.proxy_port).c_str());
+  Button_SetCheck (m_passive_mode_cb, m_settings.data.ftp_use_passive_mode);
   disable_controls();
-  m_proxy_type_cmb.set_current(m_settings.proxy_type);
-  m_proxy_type_cmb.set_current(m_settings.proxy_type);
+  m_proxy_type_cmb.set_current(m_settings.data.proxy_type);
+  m_proxy_type_cmb.set_current(m_settings.data.proxy_type);
 }
 
 INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
@@ -146,6 +146,8 @@ INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
       }
     }
   } break;
+  default:
+    break;
   }
   return FALSE;
 }

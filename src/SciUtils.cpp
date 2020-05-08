@@ -46,7 +46,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
     case SCE_USER_STYLE_IDENTIFIER:
       return s::identifier;
     case SCE_USER_STYLE_DEFAULT:
-      return settings.check_default_udl_style ? s::text : s::identifier;
+      return settings.data.check_default_udl_style ? s::text : s::identifier;
     default:
       return s::unknown;
     };

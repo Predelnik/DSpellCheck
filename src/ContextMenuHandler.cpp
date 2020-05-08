@@ -49,7 +49,7 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
             new_menu, MF_STRING | checked,
             get_use_allocated_ids() ? i + get_langs_menu_id_start()
                                     : MAKEWORD(i, menu_id::language_menu),
-            m_settings.language_name_style != LanguageNameStyle::original ? lang.alias_name.c_str()
+            m_settings.data.language_name_style != LanguageNameStyle::original ? lang.alias_name.c_str()
                                                  : lang.orig_name.c_str());
         if (!res)
           return;
@@ -68,7 +68,7 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
                      ? menu_id::customize_multiple_languages + get_langs_menu_id_start()
                      : MAKEWORD(menu_id::customize_multiple_languages, menu_id::language_menu),
                  rc_str(IDS_SET_MULTIPLE_LANG).c_str ());
-      if (m_settings.active_speller_lib_id ==
+      if (m_settings.data.active_speller_lib_id ==
           SpellerId::hunspell) // Only Hunspell supported
       {
         AppendMenu(new_menu, MF_STRING,
@@ -82,7 +82,7 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
                        : MAKEWORD(menu_id::remove_dictionaries, menu_id::language_menu),
                    rc_str(IDS_REMOVE_LANG).c_str ());
       }
-    } else if (m_settings.active_speller_lib_id == SpellerId::hunspell)
+    } else if (m_settings.data.active_speller_lib_id == SpellerId::hunspell)
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
                      ? menu_id::download_dictionaries + get_langs_menu_id_start()
@@ -207,7 +207,7 @@ void ContextMenuHandler::update_word_under_cursor_data () {
 void ContextMenuHandler::precalculate_menu() {
   std::vector<MenuItem> suggestion_menu_items;
   if (SpellCheckerHelpers::is_spell_checking_needed_for_file (m_editor, m_settings) &&
-      m_settings.suggestions_mode == SuggestionMode::context_menu) {
+      m_settings.data.suggestions_mode == SuggestionMode::context_menu) {
       update_word_under_cursor_data ();
       if (!m_word_under_cursor_is_correct) {
         suggestion_menu_items = get_suggestion_menu_items();
@@ -219,7 +219,7 @@ void ContextMenuHandler::precalculate_menu() {
 
 void ContextMenuHandler::init_suggestions_box(
     SuggestionsButton &suggestion_button) {
-  if (m_settings.suggestions_mode != SuggestionMode::button)
+  if (m_settings.data.suggestions_mode != SuggestionMode::button)
     return;
   if (!m_speller_container.active_speller().is_working())
     return;
@@ -255,26 +255,26 @@ void ContextMenuHandler::init_suggestions_box(
 
   ClientToScreen(hwnd, &p);
 
-  if (p.y + text_height - 3 + m_settings.suggestion_button_size >= r.bottom)
+  if (p.y + text_height - 3 + m_settings.data.suggestion_button_size >= r.bottom)
     {
-      if (p.x > m_settings.suggestion_button_size) {
-        p.y -= m_settings.suggestion_button_size;
-        p.x -= m_settings.suggestion_button_size;
+      if (p.x > m_settings.data.suggestion_button_size) {
+        p.y -= m_settings.data.suggestion_button_size;
+        p.x -= m_settings.data.suggestion_button_size;
       }
       else
-        p.y -= (text_height + m_settings.suggestion_button_size);
+        p.y -= (text_height + m_settings.data.suggestion_button_size);
     }
 
-  if (p.x + m_settings.suggestion_button_size > r.right)
-    p.x -= m_settings.suggestion_button_size;
+  if (p.x + m_settings.data.suggestion_button_size > r.right)
+    p.x -= m_settings.data.suggestion_button_size;
 
   if (r.top > p.y + text_height - 3 || r.left > p.x)
     return;
 
   MoveWindow(suggestion_button.getHSelf(), p.x,
              p.y + static_cast<int>(text_height) - 3,
-             m_settings.suggestion_button_size,
-             m_settings.suggestion_button_size, 1);
+             m_settings.data.suggestion_button_size,
+             m_settings.data.suggestion_button_size, 1);
   suggestion_button.display(true, false);
 }
 
@@ -294,7 +294,7 @@ ContextMenuHandler::get_suggestion_menu_items() {
       m_selected_word.str.c_str());
 
   for (int i = 0; i < static_cast<int>(m_last_suggestions.size()); i++) {
-    if (i >= m_settings.suggestion_count)
+    if (i >= m_settings.data.suggestion_count)
       break;
 
     auto item = m_last_suggestions[i].c_str();

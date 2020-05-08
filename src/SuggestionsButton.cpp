@@ -76,7 +76,7 @@ void SuggestionsButton::on_settings_changed() {
   display(false);
   SetLayeredWindowAttributes(
       getHSelf(), 0,
-      static_cast<BYTE>((255 * m_settings.suggestion_button_opacity) / 100),
+      static_cast<BYTE>((255 * m_settings.data.suggestion_button_opacity) / 100),
       LWA_ALPHA);
 }
 
@@ -85,7 +85,7 @@ void SuggestionsButton::set_transparency() {
                 GetWindowLongPtr(getHSelf(), GWL_EXSTYLE) | WS_EX_LAYERED);
   SetLayeredWindowAttributes(
       getHSelf(), 0,
-      static_cast<BYTE>((255 * m_settings.suggestion_button_opacity) / 100),
+      static_cast<BYTE>((255 * m_settings.data.suggestion_button_opacity) / 100),
       LWA_ALPHA);
   display(true);
   display(false);

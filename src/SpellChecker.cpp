@@ -156,8 +156,8 @@ void SpellChecker::refresh_underline_style() {
   auto view_count = m_editor.get_view_count();
   for (int view_index = 0; view_index < view_count; ++view_index) {
     TARGET_VIEW_BLOCK (m_editor, view_index);
-    m_editor.set_indicator_style(spell_check_indicator_id, m_settings.underline_style);
-    m_editor.set_indicator_foreground(spell_check_indicator_id, m_settings.underline_color);
+    m_editor.set_indicator_style(spell_check_indicator_id, m_settings.data.underline_style);
+    m_editor.set_indicator_foreground(spell_check_indicator_id, m_settings.data.underline_color);
   }
 }
 

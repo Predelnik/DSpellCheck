@@ -105,7 +105,7 @@ DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &
 void DownloadDicsDlg::indicate_that_saving_might_be_needed() { m_check_if_saving_is_needed = true; }
 
 LRESULT DownloadDicsDlg::ask_replacement_message(const wchar_t *dic_name) {
-  auto [name,_] = apply_alias(dic_name, m_settings.language_name_style);
+  auto [name,_] = apply_alias(dic_name, m_settings.data.language_name_style);
   return MessageBox(_hParent, wstring_printf(rc_str(IDS_DICT_PS_EXISTS_BODY).c_str(), name.c_str()).c_str(), rc_str(IDS_DICT_EXISTS_HEADER).c_str(), MB_YESNO);
 }
 
@@ -132,7 +132,7 @@ bool DownloadDicsDlg::prepare_downloading() {
   p->get_progress_data()->set(0, L"");
   get_progress_dlg()->update();
   p->set_top_message(L"");
-  if (!check_for_directory_existence(m_settings.download_install_dictionaries_for_all_users ? m_settings.hunspell_system_path : m_settings.hunspell_user_path,
+  if (!check_for_directory_existence(m_settings.data.download_install_dictionaries_for_all_users ? m_settings.data.hunspell_system_path : m_settings.data.hunspell_user_path,
                                      false,
                                      _hParent)) // If path doesn't exist we're gonna try to create it
                                                 // else it's finish
@@ -241,7 +241,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
     } else {
       auto dic_file_local_path = get_temp_path();
       (dic_file_local_path += file_name) += L".aff";
-      std::wstring hunspell_dic_path = m_settings.download_install_dictionaries_for_all_users ? m_settings.hunspell_system_path : m_settings.hunspell_user_path;
+      std::wstring hunspell_dic_path = m_settings.data.download_install_dictionaries_for_all_users ? m_settings.data.hunspell_system_path : m_settings.data.hunspell_user_path;
       hunspell_dic_path += L"\\";
       hunspell_dic_path += file_name;
       hunspell_dic_path += L".aff";
@@ -286,7 +286,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         WinApi::delete_file(dic_file_local_path.c_str());
         m_failure = true;
       }
-      auto [converted_dic_name,_] = apply_alias(file_name, m_settings.language_name_style);
+      auto [converted_dic_name,_] = apply_alias(file_name, m_settings.data.language_name_style);
       if (m_failure)
         goto clean_and_continue;
 
@@ -331,7 +331,7 @@ UrlType DownloadDicsDlg::selected_url_type() {
     return UrlType::github;
 
   if (UrlHelpers::is_ftp_url(address)) {
-    if (m_settings.use_proxy && m_settings.proxy_type == ProxyType::web_proxy)
+    if (m_settings.data.use_proxy && m_settings.data.proxy_type == ProxyType::web_proxy)
       return UrlType::ftp_web_proxy;
 
     return UrlType::ftp;
@@ -407,7 +407,7 @@ void DownloadDicsDlg::update_list_box() {
 
   ListBox_ResetContent(m_h_file_list);
   for (auto &info : m_current_list) {
-    if (m_settings.download_show_only_recognized_dictionaries && !info.was_alias_applied)
+    if (m_settings.data.download_show_only_recognized_dictionaries && !info.was_alias_applied)
       continue;
     ListBox_AddString(m_h_file_list, info.title.c_str());
   }
@@ -748,7 +748,7 @@ void DownloadDicsDlg::on_new_file_list(std::vector<FileDescription> list) {
 
   m_current_list.clear();
   for (auto &element : list) {
-    std::tie(element.title, element.was_alias_applied) = apply_alias(element.title, m_settings.language_name_style);
+    std::tie(element.title, element.was_alias_applied) = apply_alias(element.title, m_settings.data.language_name_style);
     m_current_list.push_back(element);
   }
 
@@ -773,20 +773,20 @@ void DownloadDicsDlg::preserve_current_address_index(Settings &settings) {
   for (auto def_server : m_default_server_names) {
     ftp_trim(def_server);
     if (address == def_server) {
-      settings.last_used_address_index = i;
+      settings.data.last_used_address_index = i;
       return;
     }
     ++i;
   };
   i = 0;
-  for (auto &server : m_settings.server_names) {
+  for (auto &server : m_settings.data.server_names) {
     if (address == server) {
-      settings.last_used_address_index = USER_SERVER_CONST + i;
+      settings.data.last_used_address_index = USER_SERVER_CONST + i;
       return;
     }
     ++i;
   }
-  settings.last_used_address_index = 0;
+  settings.data.last_used_address_index = 0;
 }
 
 void DownloadDicsDlg::reset_download_combobox() {
@@ -799,14 +799,14 @@ void DownloadDicsDlg::reset_download_combobox() {
   for (auto &server_name : m_default_server_names) {
     m_address_cmb.add_item(server_name.c_str());
   }
-  for (auto &server_name : m_settings.server_names) {
+  for (auto &server_name : m_settings.data.server_names) {
     if (!server_name.empty())
       m_address_cmb.add_item(server_name.c_str());
   }
-  if (m_settings.last_used_address_index < USER_SERVER_CONST)
-    m_address_cmb.set_current_index(m_settings.last_used_address_index);
+  if (m_settings.data.last_used_address_index < USER_SERVER_CONST)
+    m_address_cmb.set_current_index(m_settings.data.last_used_address_index);
   else
-    m_address_cmb.set_current_index(m_settings.last_used_address_index - USER_SERVER_CONST + static_cast<int> (m_default_server_names.size()));
+    m_address_cmb.set_current_index(m_settings.data.last_used_address_index - USER_SERVER_CONST + static_cast<int> (m_default_server_names.size()));
   m_address_is_set = true;
 }
 
@@ -818,14 +818,14 @@ void DownloadDicsDlg::add_user_server(std::wstring server) {
       if (server == def_server)
         goto add_user_server_cleanup; // Nothing is done in this case
     }
-    for (auto added_server : m_settings.server_names) {
+    for (auto added_server : m_settings.data.server_names) {
       ftp_trim(added_server);
       if (server == added_server)
         goto add_user_server_cleanup; // Nothing is done in this case
     }
     auto settings_mut = m_settings.modify();
     // Then we're adding finally
-    auto &names = settings_mut->server_names;
+    auto &names = settings_mut->data.server_names;
     std::move(std::next(names.rbegin()), names.rend(), names.rbegin());
     names.front() = server;
   }
@@ -880,15 +880,15 @@ void DownloadDicsDlg::prepare_file_list_update() {
 FtpOperationParams DownloadDicsDlg::spawn_ftp_operation_params(const std::wstring &full_path) const {
   FtpOperationParams params;
   std::tie(params.address, params.path) = ftp_split(full_path);
-  params.use_proxy = m_settings.use_proxy;
-  params.proxy_port = m_settings.proxy_port;
-  params.proxy_address = m_settings.proxy_host_name;
-  params.anonymous = m_settings.proxy_is_anonymous;
-  params.proxy_username = m_settings.proxy_user_name;
-  params.proxy_password = m_settings.proxy_password;
-  params.write_debug_log = m_settings.write_debug_log;
+  params.use_proxy = m_settings.data.use_proxy;
+  params.proxy_port = m_settings.data.proxy_port;
+  params.proxy_address = m_settings.data.proxy_host_name;
+  params.anonymous = m_settings.data.proxy_is_anonymous;
+  params.proxy_username = m_settings.data.proxy_user_name;
+  params.proxy_password = m_settings.data.proxy_password;
+  params.write_debug_log = m_settings.data.write_debug_log;
   params.debug_log_path = get_debug_log_path();
-  params.use_passive_mode = m_settings.ftp_use_passive_mode;
+  params.use_passive_mode = m_settings.data.ftp_use_passive_mode;
   return params;
 }
 
@@ -949,13 +949,13 @@ void DownloadDicsDlg::refresh() {
 }
 
 void DownloadDicsDlg::update_controls() {
-  Button_SetCheck(m_h_show_only_known, m_settings.download_show_only_recognized_dictionaries ? BST_CHECKED : BST_UNCHECKED);
-  Button_SetCheck(m_h_install_system, m_settings.download_install_dictionaries_for_all_users ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_show_only_known, m_settings.data.download_show_only_recognized_dictionaries ? BST_CHECKED : BST_UNCHECKED);
+  Button_SetCheck(m_h_install_system, m_settings.data.download_install_dictionaries_for_all_users ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void DownloadDicsDlg::update_settings(Settings &settings) {
-  settings.download_show_only_recognized_dictionaries = Button_GetCheck(m_h_show_only_known) == BST_CHECKED;
-  settings.download_install_dictionaries_for_all_users = Button_GetCheck(m_h_install_system) == BST_CHECKED;
+  settings.data.download_show_only_recognized_dictionaries = Button_GetCheck(m_h_show_only_known) == BST_CHECKED;
+  settings.data.download_install_dictionaries_for_all_users = Button_GetCheck(m_h_install_system) == BST_CHECKED;
 }
 
 void DownloadDicsDlg::update_download_button_availability() {
