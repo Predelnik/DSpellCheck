@@ -81,19 +81,6 @@ if ( NOT ${DSpellCheck_SANITIZE} STREQUAL none)
   endif ()
 endif ()
 
-# this is hack to support native spell checker while building with xp toolset
-set(DSpellCheck_SUPPOSED_SDK_PATH "c:\\Program Files (x86)\\Windows Kits\\8.1\\Include\\")
-if (EXISTS ${DSpellCheck_SUPPOSED_SDK_PATH})
-  set (DSpellCheck_NEW_SDK_PATH_DEFAULT ${DSpellCheck_SUPPOSED_SDK_PATH})
-endif ()
-set(DSpellCheck_NEW_SDK_PATH ${DSpellCheck_NEW_SDK_PATH_DEFAULT} CACHE STRING "Newer(8.1) SDK path to support native windows spell check")
-
-if ( NOT ${DSpellCheck_NEW_SDK_PATH} STREQUAL none)
-    target_compile_definitions (DSpellCheckStatic PRIVATE DSPELLCHECK_NEW_SDK)
-    target_include_directories (DSpellCheckStatic PRIVATE ${DSpellCheck_NEW_SDK_PATH}/um 
-      ${DSpellCheck_NEW_SDK_PATH}/shared)
-endif ()
-
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   target_compile_options (DSpellCheckStatic PUBLIC /permissive- /Zc:twoPhase-)
 endif ()
