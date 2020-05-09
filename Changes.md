@@ -1,3 +1,9 @@
+v1.4.16
+* Support bookmarking lines containing misspelled words via additional actions.
+* Fix crash when downloading dictionaries from GitHub using proxy. (#205)
+* Correctly support spell-checking of json.
+* Windows xp no longer supported.
+
 v1.4.15
 * Fix possible exception on Notepad++ start. (#194)
 * Lower CPU usage while scrolling (especially critical for N++ 7.8.0+) (#196)
