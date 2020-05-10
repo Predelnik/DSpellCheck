@@ -27,7 +27,7 @@ TEST_CASE("ANSI") {
   Settings settings;
   auto speller = std::make_unique<MockSpeller>(settings);
   setup_speller(*speller);
-  settings.speller_language[SpellerId::aspell] = L"English";
+  settings.data.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
   TARGET_VIEW_BLOCK(editor, 0);
   editor.open_virtual_document(L"test.txt", L"abcd\nefgh");
@@ -45,7 +45,7 @@ TEST_CASE("UTF-8 shenanigans") {
     Settings settings;
     auto speller = std::make_unique<MockSpeller>(settings);
     setup_speller(*speller);
-    settings.speller_language[SpellerId::aspell] = L"English";
+    settings.data.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
     TARGET_VIEW_BLOCK(editor, 0);
     editor.open_virtual_document(L"test.txt", L"тестирование с нетривиальными utf-8 символами");

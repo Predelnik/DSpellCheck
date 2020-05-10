@@ -28,7 +28,7 @@ TEST_CASE("Speller") {
   Settings settings;
   auto speller = std::make_unique<MockSpeller>(settings);
   setup_speller(*speller);
-  settings.speller_language[SpellerId::aspell] = L"English";
+  settings.data.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
   TARGET_VIEW_BLOCK(editor, 0);
   editor.open_virtual_document(L"test.txt", LR"(This is test document.
@@ -39,7 +39,7 @@ adadsd.)");
   SpellChecker sc(&settings, editor, sp_container);
   sc.find_next_mistake();
   CHECK(editor.selected_text() == "adadsd");
-  settings.modify()->tokenization_style = TokenizationStyle::by_delimiters;
+  settings.modify()->data.tokenization_style = TokenizationStyle::by_delimiters;
   CHECK(editor.selected_text() == "adadsd");
   editor.set_active_document_text(LR"(This is test document)");
   sc.find_next_mistake();
@@ -110,13 +110,13 @@ wrongword
         std::vector<std::string>{"wrongword", "badword", "Badword"});
   {
     auto mut = settings.modify();
-    mut->check_those = false;
-    mut->file_types = L"*.txt";
+    mut->data.check_those = false;
+    mut->data.file_types = L"*.txt";
   }
   CHECK(editor.get_underlined_words(spell_check_indicator_id).empty());
   {
     auto mut = settings.modify();
-    mut->check_those = true;
+    mut->data.check_those = true;
   }
   CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
@@ -135,23 +135,23 @@ wrongword
 
   {
     auto mut = settings.modify();
-    mut->word_minimum_length = 8;
+    mut->data.word_minimum_length = 8;
   }
   CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword"});
   {
     auto mut = settings.modify();
-    mut->word_minimum_length = 0;
-    mut->ignore_starting_with_capital = true;
+    mut->data.word_minimum_length = 0;
+    mut->data.ignore_starting_with_capital = true;
   }
   CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword"});
   {
     auto mut = settings.modify();
-    mut->word_minimum_length = 0;
-    mut->ignore_containing_digit = false;
-    mut->ignore_having_a_capital = true;
-    mut->ignore_all_capital = true;
+    mut->data.word_minimum_length = 0;
+    mut->data.ignore_containing_digit = false;
+    mut->data.ignore_having_a_capital = true;
+    mut->data.ignore_all_capital = true;
   }
   editor.set_active_document_text(LR"(
   abaas123asd
@@ -162,11 +162,11 @@ wrongword
         std::vector<std::string>{"abaas123asd"});
   {
     auto mut = settings.modify();
-    mut->ignore_starting_with_capital = false;
-    mut->ignore_containing_digit = true;
-    mut->split_camel_case = true;
-    mut->ignore_all_capital = false;
-    mut->ignore_having_a_capital = false;
+    mut->data.ignore_starting_with_capital = false;
+    mut->data.ignore_containing_digit = true;
+    mut->data.split_camel_case = true;
+    mut->data.ignore_all_capital = false;
+    mut->data.ignore_having_a_capital = false;
   }
   CHECK(sc.get_all_misspellings_as_string() == LR"(Cas
 E
@@ -175,9 +175,9 @@ w
 )");
   {
     auto mut = settings.modify();
-    mut->ignore_one_letter = true;
-    mut->ignore_all_capital = true;
-    mut->ignore_starting_or_ending_with_apostrophe = true;
+    mut->data.ignore_one_letter = true;
+    mut->data.ignore_all_capital = true;
+    mut->data.ignore_starting_or_ending_with_apostrophe = true;
   }
   CHECK(sc.get_all_misspellings_as_string() == LR"(Cas
 Eird
@@ -235,15 +235,15 @@ abg
           std::vector<std::string>{"abcdef"});
     {
       auto mut = settings.modify();
-      mut->tokenization_style = TokenizationStyle::by_delimiters;
-      mut->delimiters += L"abcdef";
+      mut->data.tokenization_style = TokenizationStyle::by_delimiters;
+      mut->data.delimiters += L"abcdef";
     }
     CHECK(editor.get_underlined_words(spell_check_indicator_id).empty());
   }
   {
     {
       auto mut = settings.modify();
-      mut->tokenization_style = TokenizationStyle::by_non_alphabetic;
+      mut->data.tokenization_style = TokenizationStyle::by_non_alphabetic;
     }
     editor.set_active_document_text(
       L"これはテストです"); // each one is delimiter
@@ -269,7 +269,7 @@ abg
     CHECK (editor.get_active_document_text() == "foobuzz foobuzz foobuzz nottoken foobuzz foobuzz");
     {
       auto m = settings.modify();
-      m->split_camel_case = true;
+      m->data.split_camel_case = true;
     }
     editor.set_active_document_text(L"token token stillToken notoken andOneMoreToken");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"foobar", false);
@@ -281,9 +281,9 @@ abg
 
     {
       auto m = settings.modify();
-      m->split_camel_case = false;
-      m->ignore_all_capital = false;
-      m->ignore_one_letter = false;
+      m->data.split_camel_case = false;
+      m->data.ignore_all_capital = false;
+      m->data.ignore_one_letter = false;
     }
 
     editor.set_active_document_text(L"token token stillToken notoken andOneMoreToken TOKEN ToKeN");
@@ -296,7 +296,7 @@ abg
 
     {
       auto m = settings.modify();
-      m->ignore_having_a_capital = true;
+      m->data.ignore_having_a_capital = true;
     }
     editor.set_active_document_text(L"token Token");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"foobar", false);
@@ -304,7 +304,7 @@ abg
 
     {
       auto m = settings.modify();
-      m->ignore_starting_with_capital = true;
+      m->data.ignore_starting_with_capital = true;
     }
     editor.set_active_document_text(L"token Token");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"foobar", false);
@@ -312,9 +312,9 @@ abg
 
     {
       auto m = settings.modify();
-      m->ignore_starting_with_capital = false;
-      m->ignore_all_capital = false;
-      m->ignore_having_a_capital = false;
+      m->data.ignore_starting_with_capital = false;
+      m->data.ignore_all_capital = false;
+      m->data.ignore_having_a_capital = false;
     }
 
     // replacing not proper name
