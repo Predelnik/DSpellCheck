@@ -40,7 +40,7 @@ bool MockSpeller::is_working() const { return m_working; }
 std::vector<LanguageInfo> MockSpeller::get_language_list() const {
   std::vector<LanguageInfo> ret;
   for (auto &p : m_inner_dict)
-    ret.emplace_back(p.first, m_settings.language_name_style);
+    ret.emplace_back(p.first, m_settings.data.language_name_style);
   return ret;
 }
 

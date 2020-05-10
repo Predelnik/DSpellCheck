@@ -103,7 +103,7 @@ x64_zip_path = ''
 x86_zip_path = ''
 
 for arch in ['x64', 'x86']:
-	dir = 'build-deploy-msvc2017-{}'.format (arch)
+	dir = 'build-deploy-msvc2019-{}'.format (arch)
 	FNULL = open(os.devnull, 'w')
 	if call(['cmake', '..'], stdout= (None if options.verbose else FNULL), cwd=dir) != 0:
 		print ('Error: Cmake error')

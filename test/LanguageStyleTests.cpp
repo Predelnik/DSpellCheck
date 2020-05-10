@@ -30,7 +30,7 @@ TEST_CASE("Language Styles") {
     Settings settings;
     auto speller = std::make_unique<MockSpeller>(settings);
     setup_speller(*speller);
-    settings.speller_language[SpellerId::aspell] = L"English";
+    settings.data.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
     TARGET_VIEW_BLOCK (editor, 0);
     editor.open_virtual_document(L"test.txt", L"abcdef test");
@@ -50,7 +50,7 @@ TEST_CASE("Language Styles") {
 
     {
       auto m = settings.modify();
-      m->check_strings = true;
+      m->data.check_strings = true;
     }
 
     editor.set_lexer(SCLEX_CPP);

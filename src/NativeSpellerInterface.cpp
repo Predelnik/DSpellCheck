@@ -13,7 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Settings.h"
-#if defined(DSPELLCHECK_NEW_SDK) && !defined(__clang__)
+#if !defined(__clang__)
 #include "NativeSpellerInterface.h"
 #include "CommonFunctions.h"
 #include "LanguageInfo.h"
@@ -246,4 +246,4 @@ void NativeSpellerInterface::cleanup() {
   }
 }
 
-#endif // defined (DSPELLCHECK_NEW_SDK) && !defined (__clang__)
+#endif // !defined (__clang__)
