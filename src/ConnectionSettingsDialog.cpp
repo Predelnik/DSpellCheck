@@ -36,15 +36,15 @@ void ConnectionSettingsDialog::do_dialog() {
 
 void ConnectionSettingsDialog::apply_choice() {
   auto mut_settings = m_settings.modify();
-  mut_settings->data.proxy_user_name = get_edit_text(m_user_name);
-  mut_settings->data.proxy_host_name = get_edit_text(m_host_name);
-  mut_settings->data.proxy_password = get_edit_text(m_password);
+  mut_settings->data.proxy_user_name = WinApi::get_edit_text(m_user_name);
+  mut_settings->data.proxy_host_name = WinApi::get_edit_text(m_host_name);
+  mut_settings->data.proxy_password = WinApi::get_edit_text(m_password);
   mut_settings->data.ftp_use_passive_mode = Button_GetCheck(m_passive_mode_cb) == BST_CHECKED;
   mut_settings->data.use_proxy = Button_GetCheck(m_use_proxy) == BST_CHECKED;
   mut_settings->data.proxy_is_anonymous =
       Button_GetCheck(m_proxy_anonymous) == BST_CHECKED;
   mut_settings->data.proxy_type = m_proxy_type_cmb.current_data();
-  auto text = get_edit_text(m_port);
+  auto text = WinApi::get_edit_text(m_port);
   wchar_t *end_ptr;
   int x = wcstol(text.c_str(), &end_ptr, 10);
   mut_settings->data.proxy_port = (x);
@@ -130,7 +130,7 @@ INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
     case IDC_PORT:
       if (HIWORD(w_param) == EN_CHANGE) {
         wchar_t *end_ptr = nullptr;
-        auto text = get_edit_text (m_port);
+        auto text = WinApi::get_edit_text (m_port);
         if (text.empty ())
           return FALSE;
 

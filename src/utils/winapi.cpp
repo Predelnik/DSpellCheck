@@ -21,6 +21,23 @@
 #include "string_utils.h"
 #include <cassert>
 
+static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/, LPARAM lp_data) {
+  // If the BFFM_INITIALIZED message is received
+  // set the path to the start path.
+  switch (u_msg) {
+  case BFFM_INITIALIZED: {
+    if (NULL != lp_data) {
+      SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lp_data);
+    }
+  }
+  default:
+    break;
+  }
+
+  return 0; // The function should always return 0.
+}
+
+namespace WinApi {
 std::wstring get_edit_text(HWND edit) {
   auto length = Edit_GetTextLength(edit);
   std::vector<wchar_t> buf(length + 1);
@@ -44,23 +61,6 @@ bool move_file_and_reset_security_descriptor(const wchar_t *from, const wchar_t 
   return true;
 }
 
-static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/, LPARAM lp_data) {
-  // If the BFFM_INITIALIZED message is received
-  // set the path to the start path.
-  switch (u_msg) {
-  case BFFM_INITIALIZED: {
-    if (NULL != lp_data) {
-      SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lp_data);
-    }
-  }
-  default:
-    break;
-  }
-
-  return 0; // The function should always return 0.
-}
-
-namespace WinApi {
 std::wstring get_class_name(HWND hwnd) {
   static const int max_class_name = 256;
   std::vector<wchar_t> buf(max_class_name);

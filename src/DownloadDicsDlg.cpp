@@ -259,7 +259,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         }
       }
 
-      if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
+      if (confirmation && !WinApi::move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
         WinApi::delete_file(dic_file_local_path.c_str());
         m_failure = true;
       }
@@ -282,7 +282,7 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         }
       }
 
-      if (confirmation && !move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
+      if (confirmation && !WinApi::move_file_and_reset_security_descriptor(dic_file_local_path.c_str(), hunspell_dic_path.c_str())) {
         WinApi::delete_file(dic_file_local_path.c_str());
         m_failure = true;
       }

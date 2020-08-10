@@ -34,7 +34,7 @@ void AspellOptionsDialog::do_dialog() {
 void AspellOptionsDialog::apply_choice() {
   auto s = m_settings.modify();
   s->data.aspell_allow_run_together_words = Button_GetCheck(m_allow_run_together_cb) == BST_CHECKED;
-  s->data.aspell_personal_dictionary_path = get_edit_text(m_aspell_personal_path_le);
+  s->data.aspell_personal_dictionary_path = WinApi::get_edit_text(m_aspell_personal_path_le);
   if (s->data.aspell_personal_dictionary_path == m_spellers.get_aspell_default_personal_dictionary_path())
     s->data.aspell_personal_dictionary_path = L"";
 }
@@ -55,7 +55,7 @@ INT_PTR __stdcall AspellOptionsDialog::run_dlg_proc(UINT message, WPARAM w_param
     switch (LOWORD(w_param)) {
     case IDC_BROWSEPDICTIONARYPATH:
       if (HIWORD(w_param) == BN_CLICKED) {
-        auto cur_path = get_edit_text(m_aspell_personal_path_le);
+        auto cur_path = WinApi::get_edit_text(m_aspell_personal_path_le);
         auto path = WinApi::browse_for_directory(_hSelf, cur_path.data());
         if (path)
           Edit_SetText(m_aspell_personal_path_le, path->data());

@@ -13,13 +13,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
-#include "enum_range.h"
 
 // various winapi helpers
+namespace WinApi {
 std::wstring get_edit_text(HWND edit);
 bool move_file_and_reset_security_descriptor(const wchar_t *from, const wchar_t *to);
 
-namespace WinApi {
 std::wstring get_class_name(HWND hwnd);
 std::optional<std::wstring> browse_for_directory(HWND parent_wnd, const wchar_t *initial_path);
 

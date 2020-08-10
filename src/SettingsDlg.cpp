@@ -92,14 +92,14 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
     settings.get_active_language() = new_lang;
     m_parent.m_selected_language_name = new_lang;
   }
-  settings.data.suggestion_count = (_wtoi(get_edit_text(m_h_suggestions_num).c_str()));
+  settings.data.suggestion_count = (_wtoi(WinApi::get_edit_text(m_h_suggestions_num).c_str()));
   switch (settings.data.active_speller_lib_id) {
   case SpellerId::aspell:
-    settings.data.aspell_dll_path = get_edit_text(m_h_lib_path);
+    settings.data.aspell_dll_path = WinApi::get_edit_text(m_h_lib_path);
     break;
   case SpellerId::hunspell:
-    settings.data.hunspell_user_path = get_edit_text(m_h_lib_path);
-    settings.data.hunspell_system_path = get_edit_text(m_h_system_path);
+    settings.data.hunspell_user_path = WinApi::get_edit_text(m_h_lib_path);
+    settings.data.hunspell_system_path = WinApi::get_edit_text(m_h_system_path);
     break;
   case SpellerId::native:
     break;
@@ -109,7 +109,7 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
   }
 
   settings.data.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
-  settings.data.file_types = get_edit_text(m_h_file_types);
+  settings.data.file_types = WinApi::get_edit_text(m_h_file_types);
   settings.data.suggestions_mode = m_suggestion_mode_cmb.current_data();
   settings.data.check_comments = Button_GetCheck(m_h_check_comments) == BST_CHECKED;
   settings.data.check_strings = Button_GetCheck(m_h_check_strings) == BST_CHECKED;
@@ -242,7 +242,6 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         case LanguageNameStyle::native:
         case LanguageNameStyle::localized:
           return WinApi::is_locale_info_available();
-          break;
         case LanguageNameStyle::COUNT:
           break;
         }
@@ -311,7 +310,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
       break;
     case IDC_SUGGESTIONS_NUM: {
       if (HIWORD(w_param) == EN_CHANGE) {
-        auto text = get_edit_text(m_h_suggestions_num);
+        auto text = WinApi::get_edit_text(m_h_suggestions_num);
         if (text.empty ())
           return TRUE;
 
@@ -372,7 +371,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = _hSelf;
         std::vector<wchar_t> filename(MAX_PATH);
-        auto lib_path = get_edit_text(m_h_lib_path);
+        auto lib_path = WinApi::get_edit_text(m_h_lib_path);
         std::copy(lib_path.begin(), lib_path.end(), filename.begin());
         auto aspell_library_desc = rc_str(IDS_ASPELL_LIBRARY);
         std::vector<wchar_t> buf;
@@ -392,7 +391,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
           Edit_SetText(m_h_lib_path, filename.data());
       } break;
       case SpellerId::hunspell: {
-        auto lib_path = get_edit_text(m_h_lib_path);
+        auto lib_path = WinApi::get_edit_text(m_h_lib_path);
         std::vector<wchar_t> final_path(MAX_PATH);
 
         auto npp_path = m_npp.get_npp_directory();
@@ -613,7 +612,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
       }
     case IDC_RECHECK_DELAY:
       if (HIWORD(w_param) == EN_CHANGE) {
-        auto text = get_edit_text (m_h_recheck_delay);
+        auto text = WinApi::get_edit_text (m_h_recheck_delay);
         if (text.empty())
           return TRUE;
 
@@ -658,7 +657,7 @@ void AdvancedDlg::set_recheck_delay(int delay) {
 }
 
 int AdvancedDlg::get_recheck_delay() {
-  auto text = get_edit_text (m_h_recheck_delay);
+  auto text = WinApi::get_edit_text (m_h_recheck_delay);
   wchar_t *end_ptr;
   int x = wcstol(text.c_str (), &end_ptr, 10);
   return x;
@@ -667,7 +666,7 @@ int AdvancedDlg::get_recheck_delay() {
 AdvancedDlg::AdvancedDlg(const Settings &settings) : m_settings(settings) {}
 
 void AdvancedDlg::apply_settings(Settings &settings) {
-  settings.data.delimiters = get_edit_text(m_h_edit_delimiters);
+  settings.data.delimiters = WinApi::get_edit_text(m_h_edit_delimiters);
   settings.data.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
   settings.data.convert_single_quotes = Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
   settings.data.remove_boundary_apostrophes = Button_GetCheck(m_h_remove_boundary_apostrophes) == BST_CHECKED;
@@ -685,7 +684,7 @@ void AdvancedDlg::apply_settings(Settings &settings) {
   settings.data.suggestion_button_size = static_cast<int>(SendMessage(m_h_slider_size, TBM_GETPOS, 0, 0));
   settings.data.suggestion_button_opacity = static_cast<int>(SendMessage(m_h_slider_sugg_button_opacity, TBM_GETPOS, 0, 0));
   settings.data.tokenization_style = m_tokenization_style_cmb.current_data();
-  settings.data.delimiter_exclusions = get_edit_text(m_delimiter_exclusions_le);
+  settings.data.delimiter_exclusions = WinApi::get_edit_text(m_delimiter_exclusions_le);
   settings.data.split_camel_case = Button_GetCheck(m_split_camel_case_cb) == BST_CHECKED;
 }
 
