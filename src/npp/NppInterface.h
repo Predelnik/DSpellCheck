@@ -33,7 +33,7 @@ public:
   explicit NppInterface(const NppData *nppData);
   std::wstring get_npp_directory();
   bool is_allocate_cmdid_supported() const;
-  int allocate_cmdid(int start_number);
+  int allocate_cmdid(int requested_number);
   void set_menu_item_check(int cmd_id, bool checked);
 
   static int to_index(NppViewType target);

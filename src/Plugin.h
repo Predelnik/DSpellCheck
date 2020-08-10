@@ -48,6 +48,7 @@ enum class Action
   COUNT,
 };
 const int nb_func = static_cast<int> (Action::COUNT);
+constexpr int requested_menu_count = 350;
 
 extern enum_array<Action, int> action_index;
 

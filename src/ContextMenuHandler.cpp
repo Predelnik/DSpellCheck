@@ -103,7 +103,7 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
        HIBYTE(menu_id) != get_func_item()[action_index[Action::quick_language_change]].cmd_id) ||
       (get_use_allocated_ids() &&
        (static_cast<int>(menu_id) < get_context_menu_id_start() ||
-        static_cast<int>(menu_id) > get_context_menu_id_start() + 350)))
+        static_cast<int>(menu_id) >= get_context_menu_id_start() + requested_menu_count)))
     return;
   int used_menu_id;
   if (get_use_allocated_ids()) {

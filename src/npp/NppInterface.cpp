@@ -32,9 +32,9 @@ bool NppInterface::is_allocate_cmdid_supported() const {
   return send_msg_to_npp(NPPM_ALLOCATESUPPORTED) != 0;
 }
 
-int NppInterface::allocate_cmdid(int start_number) {
+int NppInterface::allocate_cmdid(int requested_number) {
   int id;
-  send_msg_to_npp(NPPM_ALLOCATECMDID, start_number, reinterpret_cast<LPARAM>(&id));
+  send_msg_to_npp(NPPM_ALLOCATECMDID, requested_number, reinterpret_cast<LPARAM>(&id));
   return id;
 }
 

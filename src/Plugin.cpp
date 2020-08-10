@@ -627,7 +627,7 @@ void init_menu_ids() {
 
   if (res) {
     set_use_allocated_ids(true);
-    auto id = npp->allocate_cmdid(350);
+    auto id = npp->allocate_cmdid(requested_menu_count);
     set_context_menu_id_start(id);
     set_langs_menu_id_start(id + 103);
   }
