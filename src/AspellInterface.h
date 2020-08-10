@@ -49,11 +49,11 @@ private:
     void setup_aspell_config(AspellConfig* spell_config);
 
 private:
-  mutable AspellSpeller *m_last_selected_speller;
+  mutable AspellSpeller *m_last_selected_speller = nullptr;
   SpellerPtr m_single_speller;
   std::vector<SpellerPtr> m_spellers;
-  bool m_aspell_loaded;
+  bool m_aspell_loaded = false;
   bool m_correct_bitness = true;
-  HWND m_npp_window; // For message boxes
+  HWND m_npp_window = nullptr; // For message boxes
   const Settings &m_settings;
 };

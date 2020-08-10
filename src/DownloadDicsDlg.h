@@ -133,24 +133,24 @@ public:
 
 private:
   std::vector<FileDescription> m_current_list;
-  HBRUSH m_default_brush;
-  COLORREF m_status_color;
-  HWND m_h_file_list;
+  HBRUSH m_default_brush = nullptr;
+  COLORREF m_status_color = 0;
+  HWND m_h_file_list = nullptr;
   HWND m_h_address = nullptr;
-  HWND m_h_status;
-  HWND m_h_install_selected;
-  HWND m_h_show_only_known;
-  HWND m_h_refresh_btn;
-  HWND m_h_install_system;
-  HICON m_refresh_icon;
-  bool m_cancel_pressed;
-  bool m_check_if_saving_is_needed;
+  HWND m_h_status = nullptr;
+  HWND m_h_install_selected = nullptr;
+  HWND m_h_show_only_known = nullptr;
+  HWND m_h_refresh_btn = nullptr;
+  HWND m_h_install_system = nullptr;
+  HICON m_refresh_icon = nullptr;
+  bool m_cancel_pressed = false;
+  bool m_check_if_saving_is_needed = false;
   std::optional<TaskWrapper> m_ftp_operation_task;
   WinApi::ComboBox m_address_cmb;
 
-  bool m_failure;
-  int m_downloaded_count;
-  int m_supposed_downloaded_count;
+  bool m_failure = false;
+  int m_downloaded_count = 0;
+  int m_supposed_downloaded_count = 0;
   std::wstring m_message;
   std::vector<FileDescription> m_to_download;
   decltype(m_to_download)::iterator m_cur;

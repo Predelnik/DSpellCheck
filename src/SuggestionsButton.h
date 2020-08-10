@@ -38,9 +38,9 @@ protected:
                               LPARAM l_param) override;
 
 private:
-  bool m_state_pressed;
-  bool m_state_hovered;
-  bool m_state_menu;
+  bool m_state_pressed = false;
+  bool m_state_hovered = false;
+  bool m_state_menu = false;
   NppInterface &m_npp;
   const Settings &m_settings;
   ContextMenuHandler &m_context_menu_handler;

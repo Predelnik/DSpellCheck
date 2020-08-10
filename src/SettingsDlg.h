@@ -85,8 +85,8 @@ private:
     WinApi::EnumComboBox<SuggestionMode> m_suggestion_mode_cmb;
     WinApi::EnumComboBox<LanguageNameStyle> m_language_name_style_cmb;
 
-    HMODULE m_h_ux_theme;
-    OtdProc m_open_theme_data;
+    HMODULE m_h_ux_theme = nullptr;
+    OtdProc m_open_theme_data = nullptr;
 };
 
 class AdvancedDlg : public StaticDialog {

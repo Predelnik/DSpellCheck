@@ -92,19 +92,19 @@ private:
   void message_box_word_cannot_be_added();
 
 private:
-  bool m_is_hunspell_working;
-  bool m_use_one_dic;
+  bool m_is_hunspell_working = false;
+  bool m_use_one_dic = false;
   std::wstring m_dic_dir;
   std::wstring m_sys_dic_dir;
   std::set<AvailableLangInfo> m_dic_list;
   std::map<std::wstring, DicInfo> m_all_hunspells;
-  DicInfo *m_singular_speller;
-  mutable DicInfo *m_last_selected_speller;
+  DicInfo *m_singular_speller = nullptr;
+  mutable DicInfo *m_last_selected_speller = nullptr;
   std::vector<DicInfo *> m_spellers;
   std::unordered_set<std::wstring> m_ignored;
   std::wstring m_user_dic_path;         // For now only default one.
   std::wstring m_system_wrong_dic_path; // Only for reading and then removing
-  HWND m_npp_window;
+  HWND m_npp_window = nullptr;
   const Settings &m_settings;
 
 public:

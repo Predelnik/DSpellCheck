@@ -63,7 +63,7 @@ public:
 }
 
 private:
-    HWND m_target_hwnd;
+    HWND m_target_hwnd = nullptr;
     AliveStatusType m_alive_status;
     move_only<bool> m_valid;
 };
