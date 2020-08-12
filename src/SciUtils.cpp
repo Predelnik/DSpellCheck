@@ -78,6 +78,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
     case SCE_C_VERBATIM:
     case SCE_C_TRIPLEVERBATIM:
     case SCE_C_CHARACTER:
+    case SCE_C_STRINGRAW:
       return s::string;
     case SCE_C_IDENTIFIER:
       return s::identifier;
