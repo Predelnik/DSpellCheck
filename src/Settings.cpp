@@ -250,7 +250,7 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Library", data.active_speller_lib_id, SpellerId::hunspell);
   worker.process(L"Suggestions_Button_Size", data.suggestion_button_size, 15);
   worker.process(L"Suggestions_Button_Opacity", data.suggestion_button_opacity, 70);
-  worker.process(L"Show_Only_Known", data.download_show_only_recognized_dictionaries, true);
+  worker.process(L"Show_Only_Known", data.download_show_only_recognized_dictionaries, false);
   worker.process(L"Install_Dictionaries_For_All_Users", data.download_install_dictionaries_for_all_users, false);
   worker.process(L"Recheck_Delay", data.recheck_delay, 500);
   for (int i = 0; i < static_cast<int>(data.server_names.size()); ++i)
