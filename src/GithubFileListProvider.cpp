@@ -63,8 +63,15 @@ void GitHubFileListProvider::update_file_list() {
         return Win32Exception(to_string (wstring_printf(rc_str(IDS_GITHUB_API_RATE_LIMIT_EXCEEDED_PD_PS).c_str(), core_limit_data["limit"].get<int>(),
                                              wss.str ().c_str ())));
       }
-      auto download_url = UrlHelpers::github_file_url_to_download_url(root_path);
-      auto nodes = url_to_json(UrlHelpers::github_url_to_api_recursive_tree_url(root_path))["tree"];
+      nlohmann::json nodes;
+      std::wstring download_url;
+      for (auto branch_name : {L"master", L"main"})
+        {
+          download_url = UrlHelpers::github_file_url_to_download_url(root_path, branch_name);
+          nodes = url_to_json(UrlHelpers::github_url_to_api_recursive_tree_url(root_path, branch_name))["tree"];
+          if (!nodes.empty ())
+            break;
+        }
       std::vector<FileDescription> result;
       for (auto &node : nodes) {
         if (token.is_canceled())

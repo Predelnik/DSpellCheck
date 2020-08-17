@@ -44,19 +44,26 @@ std::wstring to_github_base_url(std::wstring github_url) {
 
 
 
-std::wstring github_url_to_api_recursive_tree_url(std::wstring github_url) {
-  return to_github_base_url(std::move(github_url)) + L"/git/trees/master?recursive=1";
+std::wstring github_url_to_api_recursive_tree_url(std::wstring github_url, std::wstring_view branch_name) {
+  auto ret = to_github_base_url(std::move(github_url));
+  ret += L"/git/trees/";
+  ret += branch_name;
+  ret += L"?recursive=1";
+  return ret;
 }
 
 std::wstring github_url_to_contents_url(std::wstring github_url) { return to_github_base_url(std::move(github_url)) + L"/contents/"; }
 
-std::wstring github_file_url_to_download_url(std::wstring github_url) {
-  std::wstring_view vw = github_url;
-  vw = remove_prefix_equals(vw, L"https://");
-  vw = remove_prefix_equals(vw, L"www.");
-  vw = remove_prefix_equals(vw, L"github.com");
-  github_url = vw;
+std::wstring github_file_url_to_download_url(std::wstring github_url, std::wstring_view branch_name) {
+  std::wstring_view url = github_url;
+  url = remove_prefix_equals(url, L"https://");
+  url = remove_prefix_equals(url, L"www.");
+  url = remove_prefix_equals(url, L"github.com");
+  github_url = url;
   github_url.insert(0, L"https://raw.githubusercontent.com");
-  return github_url + L"/master/";
+  github_url += L"/";
+  github_url += branch_name;
+  github_url = L"/";
+  return github_url;
 }
 } // namespace UrlHelpers
