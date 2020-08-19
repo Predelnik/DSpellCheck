@@ -1,3 +1,9 @@
+v1.4.17
+* Fix interaction with some other plugins (e.g. PythonScript) (#219)
+* Fix possible hang on start of N++ due to the plugin on certain systems (#220)
+* Support javascript string literals in back-ticks (`) (#213)
+* Make "Show Only Recognized Ones" disabled by default for download dialog
+
 v1.4.16
 * Support bookmarking lines containing misspelled words via additional actions.
 * Fix crash when downloading dictionaries from GitHub using proxy. (#205)
