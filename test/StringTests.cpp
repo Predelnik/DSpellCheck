@@ -30,7 +30,7 @@ TEST_CASE("GitHub") {
   CHECK_FALSE(UrlHelpers::is_ftp_url(L"aftp://lol.com"));
   CHECK_FALSE(UrlHelpers::is_ftp_url(L"asdasdoaishdo"));
   CHECK(UrlHelpers::github_url_to_api_recursive_tree_url(
-            L"https://www.github.com/predelnik/DSpellCheck") ==
+            L"https://www.github.com/predelnik/DSpellCheck", L"master") ==
         L"https://api.github.com/repos/predelnik/DSpellCheck/git/trees/"
         L"master?recursive=1");
 }
