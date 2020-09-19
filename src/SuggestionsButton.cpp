@@ -57,6 +57,10 @@ bool reg_msg(HWND h_wnd, DWORD dw_msg_type) {
   return true;
 }
 
+bool SuggestionsButton::is_pressed() const {
+  return m_state_pressed;
+}
+
 SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
                                      NppInterface &npp, ContextMenuHandler &context_menu_handler,
                                      const Settings &settings) :

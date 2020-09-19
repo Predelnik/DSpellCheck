@@ -26,6 +26,7 @@ public:
   void do_dialog();
   HMENU get_popup_menu() const;
   int get_result() const;
+  bool is_pressed() const;
   SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface &npp,
                     ContextMenuHandler &context_menu_handler,
                     const Settings &settings);

@@ -753,6 +753,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
         recheck_done = false;
       }
     }
+    if (!suggestions_button->is_pressed ())
     suggestions_button->display(false);
     break;
 
