@@ -175,9 +175,14 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
     return false;
   }
 
+  // probably outdated:
   if (editor.is_style_hotspot(style)) {
     return false;
   }
+
+  // ignoring URLs new style:
+  if (editor.get_indicator_value_at(URL_INDIC, word_start) != 0)
+    return false;
 
   if (static_cast<int>(word.length()) < settings.data.word_minimum_length)
     return false;

@@ -107,6 +107,7 @@ public:
 
   HMENU get_menu_handle(int menu_type) const;
   int get_target_view() const override;
+  int get_indicator_value_at(int indicator_id, TextPosition position) const override;
 
 public:
   HWND get_view_hwnd() const override;

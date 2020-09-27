@@ -101,6 +101,7 @@ public:
   virtual HWND get_editor_hwnd() const = 0;
   virtual HWND get_view_hwnd() const = 0;
   virtual int get_style_at(TextPosition position) const = 0;
+  virtual int get_indicator_value_at (int indicator_id, TextPosition position) const = 0;
   virtual std::wstring get_full_current_path() const = 0;
   // is current style used for links (hotspots):
   virtual bool is_style_hotspot(int style) const = 0;

@@ -24,6 +24,8 @@
 
 #include <windows.h>
 
+// hardcoded in N++ currently:
+constexpr auto URL_INDIC = 8;
 
 const int nb_char = 64;
 

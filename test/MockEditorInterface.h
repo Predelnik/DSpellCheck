@@ -65,6 +65,7 @@ public:
   void set_current_indicator(int indicator_index) override;
   void indicator_fill_range(TextPosition from, TextPosition to) override;
   void indicator_clear_range(TextPosition from, TextPosition to) override;
+  int get_indicator_value_at(int indicator_id, TextPosition position) const override;
   EditorCodepage get_encoding() const override;
   TextPosition get_current_pos() const override;
   int get_current_line_number() const override;
@@ -139,6 +140,7 @@ private:
   MockedDocumentInfo *active_document();
 private:
   int active_view() const override;
+private:
   std::array<std::vector<MockedDocumentInfo>, view_count> m_documents;
   std::array<int, view_count> m_active_document_index;
   std::array<bool, view_count> m_save_undo;

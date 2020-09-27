@@ -46,6 +46,10 @@ int NppInterface::get_target_view() const {
   return static_cast<int> (m_target_view);
 }
 
+int NppInterface::get_indicator_value_at(int indicator_id, TextPosition position) const {
+  return static_cast<int>(send_msg_to_scintilla(SCI_INDICATORVALUEAT, indicator_id, position));
+}
+
 LRESULT NppInterface::send_msg_to_npp(UINT Msg, WPARAM wParam, LPARAM lParam) const { return SendMessage(m_npp_data.npp_handle, Msg, wParam, lParam); }
 
 HWND NppInterface::get_view_hwnd() const {

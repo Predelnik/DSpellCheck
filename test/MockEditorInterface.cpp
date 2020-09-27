@@ -140,6 +140,17 @@ void MockEditorInterface::indicator_clear_range(TextPosition from,
   std::fill(s.begin() + from, s.begin() + to, false);
 }
 
+int MockEditorInterface::get_indicator_value_at(int indicator_id, TextPosition position) const
+{
+  auto doc = active_document();
+  if (!doc)
+    return FALSE;
+  auto &s = doc->indicator_info[indicator_id].set_for;
+  if (position >= static_cast<TextPosition>(s.size()) || position < 0)
+    return FALSE;
+  return s[position];
+}
+
 int MockEditorInterface::active_view() const {
   return static_cast<int> (m_active_view);
 }

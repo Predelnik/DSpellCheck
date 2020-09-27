@@ -22,6 +22,7 @@
 #include "SpellerContainer.h"
 #include "SpellChecker.h"
 #include "MainDefs.h"
+#include "PluginInterface.h"
 
 #include "SciLexer.h"
 
@@ -62,5 +63,10 @@ TEST_CASE("Language Styles") {
     editor.set_whole_text_style(SCE_LUA_LITERALSTRING);
     sc.recheck_visible_both_views();
     CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
+
+    editor.set_current_indicator(URL_INDIC);
+    editor.indicator_fill_range(0, editor.get_active_document_length());
+    sc.recheck_visible_both_views();
+    CHECK(editor.get_underlined_words(spell_check_indicator_id).empty());
   }
 }
