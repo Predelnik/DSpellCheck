@@ -42,6 +42,7 @@
 #include "resource.h"
 #include "utils/raii.h"
 #include "utils/winapi.h"
+#include <chrono>
 
 #ifdef VLD_BUILD
 #include <vld.h>
@@ -529,10 +530,9 @@ extern FuncItem func_item[nb_func]; // NOLINT
 extern NppData npp_data;            // NOLINT
 extern bool do_close_tag;           // NOLINT
 std::vector<std::pair<TextPosition, TextPosition>> check_queue;
-static UINT_PTR edit_recheck_timer = 0u;
-static UINT_PTR scroll_recheck_timer = 0u;
+std::optional<WinApi::Timer> edit_recheck_timer;
+std::optional<WinApi::Timer> scroll_recheck_timer;
 constexpr int scroll_recheck_timer_resolution = 100;
-bool scroll_timer_set = false;
 bool recheck_done = true;
 bool restyling_caused_recheck_was_done = false; // Hack to avoid eternal cycle in case of scintilla bug
 bool first_restyle = true;                      // hack to successfully avoid checking hyperlinks
@@ -656,9 +656,8 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
 
 // For now doesn't look like there is such a need in check modified, but code
 // stays until thorough testing
-void WINAPI edit_recheck_callback(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) {
-  if (edit_recheck_timer != NULL)
-    SetTimer(npp_data.npp_handle, edit_recheck_timer, USER_TIMER_MAXIMUM, edit_recheck_callback);
+void WINAPI edit_recheck_callback() {
+  edit_recheck_timer->stop_timer();
   recheck_done = true;
 
   ACTIVE_VIEW_BLOCK(npp_interface());
@@ -668,11 +667,8 @@ void WINAPI edit_recheck_callback(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEve
   first_restyle = false;
 }
 
-void WINAPI scroll_recheck_callback(HWND /*hwnd*/, UINT /*uMsg*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/) {
-  if (scroll_recheck_timer != NULL) {
-    SetTimer(npp_data.npp_handle, scroll_recheck_timer, USER_TIMER_MAXIMUM, scroll_recheck_callback);
-    scroll_timer_set = false;
-  }
+void WINAPI scroll_recheck_callback() {
+  scroll_recheck_timer->stop_timer();
   recheck_done = true;
 
   ACTIVE_VIEW_BLOCK(npp_interface());
@@ -701,10 +697,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   switch (notify_code->nmhdr.code) {
   case NPPN_SHUTDOWN: {
     SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
-    if (edit_recheck_timer != NULL)
-      KillTimer(npp_data.npp_handle, edit_recheck_timer);
-    if (scroll_recheck_timer != NULL)
-      KillTimer(npp_data.npp_handle, scroll_recheck_timer);
+    edit_recheck_timer.reset ();
+    scroll_recheck_timer.reset ();
     command_menu_clean_up();
 
     plugin_clean_up();
@@ -717,8 +711,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_READY", npp->get_editor_hwnd());
     check_queue.clear();
     create_hooks();
-    edit_recheck_timer = SetTimer(npp_data.npp_handle, 0, USER_TIMER_MAXIMUM, edit_recheck_callback);
-    scroll_recheck_timer = SetTimer(npp_data.npp_handle, 0, USER_TIMER_MAXIMUM, scroll_recheck_callback);
+    edit_recheck_timer.emplace (npp_data.npp_handle);
+    edit_recheck_timer->on_timer_tick.connect (edit_recheck_callback);
+    scroll_recheck_timer.emplace (npp_data.npp_handle);
+    scroll_recheck_timer->on_timer_tick.connect (scroll_recheck_callback);
     spell_checker->recheck_visible_both_views();
     restyling_caused_recheck_was_done = false;
     suggestions_button->set_transparency();
@@ -747,9 +743,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
       first_restyle = false;
     } else if ((notify_code->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL)) != 0 && recheck_done) // If scroll wasn't caused by user input...
     {
-      if (scroll_recheck_timer != NULL && !scroll_timer_set) {
-        SetTimer(npp_data.npp_handle, scroll_recheck_timer, scroll_recheck_timer_resolution, scroll_recheck_callback);
-        scroll_timer_set = true;
+      if (!scroll_recheck_timer->is_set()) {
+        scroll_recheck_timer->set_resolution(std::chrono::milliseconds (scroll_recheck_timer_resolution));
         recheck_done = false;
       }
     }
@@ -761,10 +756,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     if (!spell_checker)
       return;
     if ((notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0) {
-      if (edit_recheck_timer != NULL) {
-        SetTimer(npp_data.npp_handle, edit_recheck_timer, get_settings().data.recheck_delay, edit_recheck_callback);
-        recheck_done = false;
-      }
+      edit_recheck_timer->set_resolution(std::chrono::milliseconds (get_settings().data.recheck_delay));
+      recheck_done = false;
     }
     break;
 

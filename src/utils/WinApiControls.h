@@ -93,4 +93,28 @@ public:
 private:
   void init_impl() override { this->add_items<EnumType>(); }
 };
+
+class Timer
+{
+public:
+  Timer(HWND hwnd);
+  ~Timer ();
+  void set_resolution (std::chrono::milliseconds resolution);
+  void stop_timer ();
+  bool is_set () const;
+
+  lsignal::signal<void()> on_timer_tick;
+
+private:
+  void do_register();
+  void unregister();
+  void kill_timer();
+  void generate_id();
+  void initialize ();
+
+private:
+  HWND m_hwnd = nullptr;
+  UINT_PTR m_id = 0;
+  std::optional<std::chrono::milliseconds> current_resolution;
+};
 } // namespace WinApi

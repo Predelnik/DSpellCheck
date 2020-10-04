@@ -16,6 +16,9 @@
 #include <cassert>
 #include "winapi.h"
 
+
+#include <chrono>
+
 namespace WinApi
 {
 WinBase::~WinBase() = default;
@@ -83,6 +86,68 @@ DlgProcResult Button::dlg_proc(UINT message, WPARAM w_param, [[maybe_unused]] LP
     return DlgProcResult::processed;
   }
   return DlgProcResult::pass_through;
+}
+
+namespace
+{
+std::map<UINT_PTR, Timer *> global_timer_map;
+void timer_proc ([[maybe_unused]] HWND hwnd, [[maybe_unused]] UINT msg, UINT_PTR id, [[maybe_unused]] DWORD time) {
+  auto it = global_timer_map.find (id);
+  if (it == global_timer_map.end ()) {
+    assert (!"Timer not registered. Unexpected state");
+    return;
+  }
+  it->second->on_timer_tick ();
+}
+}
+
+Timer::Timer(HWND hwnd)
+  : m_hwnd(hwnd)
+{
+  initialize ();
+}
+
+Timer::~Timer() {
+  kill_timer ();
+  unregister ();
+}
+
+void Timer::do_register() {
+  global_timer_map.insert ({m_id, this});
+}
+
+void Timer::unregister() {
+  global_timer_map.erase (m_id);
+}
+
+void Timer::kill_timer() {
+  KillTimer(0, m_id);
+}
+
+void Timer::generate_id()
+{
+  m_id = SetTimer (0, 0, USER_TIMER_MAXIMUM, timer_proc);
+}
+
+void Timer::initialize()
+{
+  generate_id();
+  do_register ();
+}
+
+void Timer::set_resolution(std::chrono::milliseconds resolution) {
+  using namespace std::chrono;
+  SetTimer (m_hwnd, m_id, static_cast<UINT> (resolution.count ()), timer_proc);
+  current_resolution = resolution;
+}
+
+void Timer::stop_timer() {
+  SetTimer (m_hwnd, m_id, USER_TIMER_MAXIMUM, timer_proc);
+  current_resolution = {};
+}
+
+bool Timer::is_set() const {
+  return current_resolution.has_value();
 }
 
 }
