@@ -702,9 +702,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case NPPN_SHUTDOWN: {
     SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
     if (edit_recheck_timer != NULL)
-      KillTimer(nullptr, edit_recheck_timer);
+      KillTimer(npp_data.npp_handle, edit_recheck_timer);
     if (scroll_recheck_timer != NULL)
-      KillTimer(nullptr, scroll_recheck_timer);
+      KillTimer(npp_data.npp_handle, scroll_recheck_timer);
     command_menu_clean_up();
 
     plugin_clean_up();
