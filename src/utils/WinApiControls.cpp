@@ -91,7 +91,7 @@ DlgProcResult Button::dlg_proc(UINT message, WPARAM w_param, [[maybe_unused]] LP
 namespace
 {
 std::map<UINT_PTR, Timer *> global_timer_map;
-void timer_proc ([[maybe_unused]] HWND hwnd, [[maybe_unused]] UINT msg, UINT_PTR id, [[maybe_unused]] DWORD time) {
+void WINAPI timer_proc ([[maybe_unused]] HWND hwnd, [[maybe_unused]] UINT msg, UINT_PTR id, [[maybe_unused]] DWORD time) {
   auto it = global_timer_map.find (id);
   if (it == global_timer_map.end ()) {
     assert (!"Timer not registered. Unexpected state");
