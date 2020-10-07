@@ -1,3 +1,9 @@
+v1.4.18
+* Fix an issue with suggestion button for Notepad++ 7.8.9.  (#221)
+* Ignore words in URLs in newer version of Notepad++ correctly (#67)
+* Fix broken rechecking on scrolling after quick edit after scrolling has been done (#222)
+* New words not being rechecked in case of zooming out (#225)
+
 v1.4.17
 * Fix interaction with some other plugins (e.g. PythonScript) (#219)
 * Fix possible hang on start of N++ due to the plugin on certain systems (#220)
