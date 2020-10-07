@@ -691,6 +691,14 @@ void delete_log() {
     WinApi::delete_file(get_debug_log_path().c_str());
 }
 
+void update_on_visible_area_changed()
+{
+  if (recheck_done && !scroll_recheck_timer->is_set()) {
+    scroll_recheck_timer->set_resolution(std::chrono::milliseconds (scroll_recheck_timer_resolution));
+    recheck_done = false;
+  }
+}
+
 // ReSharper disable once CppInconsistentNaming
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   notify(notify_code);
@@ -741,15 +749,16 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
       if (!first_restyle)
         restyling_caused_recheck_was_done = true;
       first_restyle = false;
-    } else if ((notify_code->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL)) != 0 && recheck_done) // If scroll wasn't caused by user input...
+    } else if ((notify_code->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL)) != 0) // If scroll wasn't caused by user input...
     {
-      if (!scroll_recheck_timer->is_set()) {
-        scroll_recheck_timer->set_resolution(std::chrono::milliseconds (scroll_recheck_timer_resolution));
-        recheck_done = false;
-      }
+      update_on_visible_area_changed();
     }
     if (!suggestions_button->is_pressed ())
-    suggestions_button->display(false);
+      suggestions_button->display(false);
+    break;
+
+  case SCN_ZOOM:
+    update_on_visible_area_changed ();
     break;
 
   case SCN_MODIFIED:
