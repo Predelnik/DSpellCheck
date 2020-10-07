@@ -60,6 +60,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--new-minor', action="store_true", dest="new_minor", help="Deploy new minor version", default=False)
 parser.add_argument('--new-major', action="store_true", dest="new_major", help="Deploy new major version", default=False)
 parser.add_argument('--update-pm', action="store_true", dest="update_pm", help="Update plugin manager (done automatically if new minor version is set)", default=False)
+parser.add_argument('--update-only-rc', action="store_true", dest="update_only_rc", help="Update only resource files if build should be done later", default=False)
+parser.add_argument('--add-tag', action="store_true", dest="add_tag", help="Add tag for version", default=False)
 parser.add_argument('-v', '--verbose', action="store_true", dest="verbose", help="Verbose output", default=False)
 options = parser.parse_args()
 
@@ -74,29 +76,39 @@ def create_commit(repo, msg):
 	author = Signature(config['user.name'], config['user.email'])
 	commiter = author
 	tree = index.write_tree()
-	repo.create_commit ('refs/heads/master', author, commiter, msg, tree, [repo.head.get_object().hex])
+	repo.create_commit ('HEAD', author, commiter, msg, tree, [repo.head.get_object().hex])
 
 def add_version_commit():
 	repo = Repository (script_dir)
 	create_commit (repo, 'Update to {}'.format (ver_str))
 	config = Config.get_global_config()
 	author = Signature(config['user.name'], config['user.email'])
+
+def add_version_tag ():
 	repo.create_tag('v{}'.format (ver_str), repo.revparse_single('HEAD').id, GIT_OBJ_COMMIT, author, 'v{}'.format (ver_str))
 
+new_ver_is_added = False
 if options.new_minor:
 	ver[-1]=str (int (ver[-1]) + 1)
-	replace_rc_version (ver)
-	ver_str = '.'.join (ver)
-	print ('Version increased to {}'.format (ver_str))
-	add_version_commit()
+	new_ver_is_added = True
 if options.new_major:
 	ver = get_rc_version ().split ('.')
 	ver[-2]=str (int (ver[-2]) + 1)
 	ver[-1]='0'
+	new_ver_is_added=True
+
+if new_ver_is_added:
 	replace_rc_version (ver)
 	ver_str = '.'.join (ver)
 	print ('Version increased to {}'.format (ver_str))
 	add_version_commit()
+
+if options.update_only_rc:
+	exit(0)
+
+if new_ver_is_added or options.add_tag:
+	add_version_tag()
+
 x64_binary_path = ''
 x86_binary_path = ''
 x64_zip_path = ''
