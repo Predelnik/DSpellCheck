@@ -55,22 +55,26 @@ bool download_file(const UrlHandle &handle, std::ostream &stream, std::function<
   file_buffer.clear();
   std::vector<wchar_t> buf (32);
   DWORD size = static_cast<DWORD> (buf.size ());
-  HttpQueryInfo(handle.get(), HTTP_QUERY_CONTENT_LENGTH, buf.data (), &size, nullptr);
-  size_t idx;
   int total_bytes_to_read = 0;
-  try {
-    total_bytes_to_read = std::stoi (buf.data (), &idx);
-  }
-  catch (...) {
-  }
+  if (HttpQueryInfo(handle.get(), HTTP_QUERY_CONTENT_LENGTH, buf.data (), &size, nullptr))
+    {
+      size_t idx;
+      try {
+        total_bytes_to_read = std::stoi (buf.data (), &idx);
+      }
+      catch (...) {
+      }
+    }
   while (true) {
     if (callback && !callback(bytes_read_total, total_bytes_to_read))
       return false;
-    InternetQueryDataAvailable(handle.get(), &bytes_to_read, 0, 0);
+    if (!InternetQueryDataAvailable(handle.get(), &bytes_to_read, 0, 0))
+      throw_if_error ();
     if (bytes_to_read == 0)
       break;
 
-    InternetReadFile(handle.get(), file_buffer.data(), std::min(bytes_to_read, buf_size), &bytes_read);
+    if (!InternetReadFile(handle.get(), file_buffer.data(), std::min(bytes_to_read, buf_size), &bytes_read))
+      throw_if_error ();
     if (bytes_read == 0)
       break;
     bytes_read_total += bytes_read;
