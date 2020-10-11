@@ -43,7 +43,7 @@ void GitHubFileListProvider::update_file_list() {
   std::wstring proxy_string;
   if (m_settings.data.use_proxy && m_settings.data.proxy_type == ProxyType::web_proxy)
     proxy_string = m_settings.data.proxy_host_name + L":" + std::to_wstring(m_settings.data.proxy_port);
-  using task_result_t = std::variant<std::monostate, std::vector<FileDescription>, Win32Exception>;
+  using task_result_t = std::variant<std::monostate, std::vector<FileDescription>, std::string /*error*/>;
   // TODO: possibly separate settings required for proxy connection to a struct to pass them instead of whole settings
   auto task = [root_path = m_root_path, proxy_string, default_timeout, settings_data = m_settings.data](Concurrency::cancellation_token token) -> task_result_t {
     try {
@@ -60,8 +60,8 @@ void GitHubFileListProvider::update_file_list() {
         auto reset_secs = core_limit_data["reset"].get<time_t>();
         std::wstringstream wss;
         wss << std::put_time(std::localtime(&reset_secs), L"%H:%M");
-        return Win32Exception(to_string (wstring_printf(rc_str(IDS_GITHUB_API_RATE_LIMIT_EXCEEDED_PD_PS).c_str(), core_limit_data["limit"].get<int>(),
-                                             wss.str ().c_str ())));
+        return to_string (wstring_printf(rc_str(IDS_GITHUB_API_RATE_LIMIT_EXCEEDED_PD_PS).c_str(), core_limit_data["limit"].get<int>(),
+                                             wss.str ().c_str ()));
       }
       nlohmann::json nodes;
       std::wstring download_url;
@@ -90,13 +90,13 @@ void GitHubFileListProvider::update_file_list() {
                           download_url + utf8_to_wstring(node["path"].get<std::string>().c_str())});
       }
       return result;
-    } catch (const Win32Exception &exception) {
-      return exception;
+    } catch (const std::exception &exception) {
+      return exception.what ();
     }
   };
   m_get_file_list_task.do_deferred(task, [this](task_result_t &&result) {
     std::visit(overload([](std::monostate) {}, [this](std::vector<FileDescription> &&list) { file_list_received(std::move(list)); },
-                        [this](Win32Exception &&e) { error_happened(e.what()); }),
+                        [this](std::string &&str) { error_happened(str); }),
                std::move(result));
   });
 }
