@@ -3,6 +3,7 @@ v1.4.18
 * Ignore words in URLs in newer version of Notepad++ correctly (#67)
 * Fix broken rechecking on scrolling after quick edit after scrolling has been done (#222)
 * New words not being rechecked in case of zooming out (#225)
+* Process more errors during dictionary downloading
 
 v1.4.17
 * Fix interaction with some other plugins (e.g. PythonScript) (#219)
