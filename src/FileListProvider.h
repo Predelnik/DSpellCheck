@@ -31,6 +31,7 @@ enum class FileListProviderDownloadErrorType
   none,
   canceled,
   file_is_not_writeable,
+  was_not_able_to_download,
 };
 
 class FileListProvider

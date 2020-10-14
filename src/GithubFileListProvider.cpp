@@ -170,6 +170,7 @@ void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepat
                                                  std::shared_ptr<ProgressData> progress_data) {
   m_download_file_task.do_deferred(
       [=, settings_data = m_settings.data](Concurrency::cancellation_token token) {
+        try {
         std::vector<std::wstring> downloaded_filenames;
         auto ret = download_dictionary_impl (token, aff_filepath, target_path, progress_data, downloaded_filenames, settings_data);
         if (ret != FileListProviderDownloadErrorType::none)
@@ -178,6 +179,11 @@ void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepat
               WinApi::delete_file(file_name.c_str());
           }
         return ret;
+        }
+        catch (const std::exception &) {
+          // TODO: display exception error in ui
+          return FileListProviderDownloadErrorType::was_not_able_to_download;
+        }
       },
       [this](FileListProviderDownloadErrorType error) { file_downloaded(error); });
 }
