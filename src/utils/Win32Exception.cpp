@@ -49,5 +49,5 @@ std::string get_win32_error_msg(DWORD error_code) {
 void throw_if_error() {
   auto err = GetLastError();
   if (err != ERROR_SUCCESS)
-    throw Win32Exception(get_win32_error_msg(err));
+    throw Win32Exception(std::to_string (err) + " - " + get_win32_error_msg(err));
 }

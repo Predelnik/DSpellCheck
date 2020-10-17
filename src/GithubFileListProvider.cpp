@@ -129,12 +129,13 @@ auto proxy_name = settings_data.proxy_user_name;
   return url_handle;
 }
 
-FileListProviderDownloadErrorType GitHubFileListProvider::download_dictionary_impl(const Concurrency::cancellation_token& token, const std::wstring &aff_filepath,
-                                                                                   const std::wstring &target_path,
-                                                                                   std::shared_ptr<ProgressData> progress_data, std::vector<std::wstring> &downloaded_file_names, const Settings::Data&
-                                                                                   settings_data)
+std::optional<std::string> GitHubFileListProvider::download_dictionary_impl(const Concurrency::cancellation_token &token, const std::wstring &aff_filepath,
+                                                                            const std::wstring &target_path,
+                                                                            std::shared_ptr<ProgressData> progress_data,
+                                                                            std::vector<std::wstring> &downloaded_file_names, const Settings::Data &
+                                                                            settings_data, bool& cancelled)
 {
-  auto do_download = [&](const std::wstring &path) {
+  auto do_download = [&](const std::wstring &path, bool &cancelled) -> std::optional<std::string> {
 
     auto inet = create_global_handle (settings_data);
     auto url_handle = create_url_handle (settings_data, inet, path.c_str ());
@@ -143,7 +144,7 @@ FileListProviderDownloadErrorType GitHubFileListProvider::download_dictionary_im
     downloaded_file_names.push_back (local_file_path);
     std::ofstream fs(local_file_path, std::ios_base::out | std::ios_base::binary);
     if (!fs.is_open())
-      return FileListProviderDownloadErrorType::file_is_not_writeable;
+      return "Failed to save a file locally";
     if (!WinInet::download_file(url_handle, fs, [&](int bytes_read, int total_bytes) {
       if (token.is_canceled())
         return false;
@@ -152,40 +153,53 @@ FileListProviderDownloadErrorType GitHubFileListProvider::download_dictionary_im
       progress_data->set(percent, wstring_printf(rc_str(IDS_PD_OF_PD_BYTES_DOWNLOADED_PD).c_str(), bytes_read, total_bytes, percent));
       return true;
     }))
-      return FileListProviderDownloadErrorType::canceled;
+    {
+      cancelled = true;
+      return "Cancelled";
+    }
 
-    return FileListProviderDownloadErrorType::none;
+    return {};
   };
-  if (auto ret = do_download(aff_filepath); ret != FileListProviderDownloadErrorType::none)
+  if (auto ret = do_download(aff_filepath, cancelled))
     return ret;
 
-  if (auto ret = do_download(aff_filepath.substr(0, aff_filepath.length() - aff_ext.length()) + dic_ext_w.data());
-      ret != FileListProviderDownloadErrorType::none)
+  if (auto ret = do_download(aff_filepath.substr(0, aff_filepath.length() - aff_ext.length()) + dic_ext_w.data(), cancelled))
     return ret;
 
-  return FileListProviderDownloadErrorType::none;
+  return {};
+}
+
+namespace
+{
+class DownloadResult {
+public:
+  std::optional<std::string> mb_error_description;
+  bool was_cancelled;
+};
 }
 
 void GitHubFileListProvider::download_dictionary(const std::wstring &aff_filepath, const std::wstring &target_path,
                                                  std::shared_ptr<ProgressData> progress_data) {
   m_download_file_task.do_deferred(
-      [=, settings_data = m_settings.data](Concurrency::cancellation_token token) {
-        try {
+      [=, settings_data = m_settings.data](Concurrency::cancellation_token token) -> DownloadResult {
         std::vector<std::wstring> downloaded_filenames;
-        auto ret = download_dictionary_impl (token, aff_filepath, target_path, progress_data, downloaded_filenames, settings_data);
-        if (ret != FileListProviderDownloadErrorType::none)
+        bool cancelled = false;
+        try {
+        auto ret = download_dictionary_impl (token, aff_filepath, target_path, progress_data, downloaded_filenames, settings_data, cancelled);
+        if (ret)
           {
             for (auto &file_name : downloaded_filenames)
               WinApi::delete_file(file_name.c_str());
           }
-        return ret;
+        return {ret, cancelled};
         }
-        catch (const std::exception &) {
-          // TODO: display exception error in ui
-          return FileListProviderDownloadErrorType::was_not_able_to_download;
+        catch (const std::exception &err) {
+          for (auto &file_name : downloaded_filenames)
+              WinApi::delete_file(file_name.c_str());
+          return {err.what (), false};
         }
       },
-      [this](FileListProviderDownloadErrorType error) { file_downloaded(error); });
+      [this](DownloadResult result) { file_downloaded(result.mb_error_description, result.was_cancelled); });
 }
 
 void GitHubFileListProvider::cancel_download() { m_download_file_task.cancel(); }
