@@ -63,7 +63,7 @@ std::wstring github_file_url_to_download_url(std::wstring github_url, std::wstri
   github_url.insert(0, L"https://raw.githubusercontent.com");
   github_url += L"/";
   github_url += branch_name;
-  github_url = L"/";
+  github_url += L"/";
   return github_url;
 }
 } // namespace UrlHelpers
