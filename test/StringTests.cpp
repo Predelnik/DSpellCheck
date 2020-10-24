@@ -33,6 +33,11 @@ TEST_CASE("GitHub") {
             L"https://www.github.com/predelnik/DSpellCheck", L"master") ==
         L"https://api.github.com/repos/predelnik/DSpellCheck/git/trees/"
         L"master?recursive=1");
+
+  CHECK (L"https://raw.githubusercontent.com/test/test_repo/master/" ==
+    UrlHelpers::github_file_url_to_download_url (L"https://www.github.com/test/test_repo", L"master"));
+  CHECK (L"https://raw.githubusercontent.com/show/me/the/money/main/" ==
+    UrlHelpers::github_file_url_to_download_url (L"github.com/show/me/the/money", L"main"));
 }
 
 TEST_CASE ("string_case") {

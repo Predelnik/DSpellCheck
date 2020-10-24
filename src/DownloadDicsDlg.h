@@ -150,6 +150,7 @@ private:
 
   bool m_failure = false;
   int m_downloaded_count = 0;
+  std::string m_errors_text;
   int m_supposed_downloaded_count = 0;
   std::wstring m_message;
   std::vector<FileDescription> m_to_download;

@@ -84,12 +84,14 @@ DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &
     replace_all_inplace(wstr, L"\r\n", L" ");
     update_status(wstring_printf(rc_str(IDS_STATUS_NETWORK_ERROR_PS).c_str(), wstr.c_str()).c_str(), COLOR_FAIL);
   });
-  m_github_provider->file_downloaded.connect([this](FileListProviderDownloadErrorType error){
+  m_github_provider->file_downloaded.connect([this](const std::optional<std::string> &error_description, bool was_cancelled){
     m_message += prev(m_cur)->title + L'\n';
-    if (error == FileListProviderDownloadErrorType::none)
-      ++m_downloaded_count;
-    else if (error == FileListProviderDownloadErrorType::canceled)
+     if (was_cancelled)
       m_cur = m_current_list.end ();
+    else if (!error_description)
+      ++m_downloaded_count;
+    else
+      m_errors_text += "* " + *error_description + "\n";
     start_next_download();
   });
   m_ftp_operation_task = TaskWrapper{parent};
@@ -117,6 +119,7 @@ static std::wstring get_temp_path() {
 
 bool DownloadDicsDlg::prepare_downloading() {
   m_downloaded_count = 0;
+  m_errors_text.clear ();
   m_supposed_downloaded_count = 0;
   m_failure = false;
   m_message = rc_str(IDS_DICTS_COPIED);
@@ -155,10 +158,16 @@ void DownloadDicsDlg::finalize_downloading() {
   if (m_failure) {
     MessageBox(_hParent, rc_str(IDS_CANT_WRITE_DICT_FILES).c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
   } else if (m_downloaded_count > 0) {
-    MessageBox(_hParent, m_message.c_str(), rc_str(IDS_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONINFORMATION);
+    auto text = m_message;
+    if (!m_errors_text.empty ())
+      text += rc_str(IDS_DOWNLOAD_ERRORS_ENCOUNTERED) + to_wstring (m_errors_text);
+    MessageBox(_hParent, text.c_str(), rc_str(IDS_DICTS_DOWNLOADED).c_str (), MB_OK | MB_ICONINFORMATION);
   } else if (m_supposed_downloaded_count > 0) // Otherwise - silent
   {
-    MessageBox(_hParent, rc_str(IDS_ZERO_DICTS_DOWNLOAD).c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
+    auto text = rc_str(IDS_ZERO_DICTS_DOWNLOAD);
+    if (!m_errors_text.empty ())
+      text += rc_str(IDS_DOWNLOAD_ERRORS_ENCOUNTERED) + to_wstring (m_errors_text);
+    MessageBox(_hParent, text.c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str (), MB_OK | MB_ICONEXCLAMATION);
   }
   for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
     CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);

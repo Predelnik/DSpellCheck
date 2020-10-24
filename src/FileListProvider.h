@@ -41,7 +41,7 @@ class FileListProvider
 public:
   virtual ~FileListProvider() = default;
   lsignal::signal<void (std::vector<FileDescription>)> file_list_received;
-  lsignal::signal<void(FileListProviderDownloadErrorType error)> file_downloaded;
+  lsignal::signal<void(const std::optional<std::string> &error_description, bool was_cancelled)> file_downloaded;
   lsignal::signal<void (const std::string &description)> error_happened;
 };
 
