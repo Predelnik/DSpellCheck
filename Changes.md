@@ -1,3 +1,7 @@
+v1.4.19
+* Print better diagnostics for errors during dictionary download
+* Fix regression from 1.4.17 making unable to download dictionaries (#229)
+
 v1.4.18
 * Fix an issue with suggestion button for Notepad++ 7.8.9.  (#221)
 * Ignore words in URLs in newer version of Notepad++ correctly (#67)
