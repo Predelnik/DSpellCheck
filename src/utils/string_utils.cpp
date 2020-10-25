@@ -80,9 +80,9 @@ void apply_case_type(std::wstring& str, string_case_type type) {
       return make_lower (wc);
     case string_case_type::upper:
       return make_upper (wc);
-    case string_case_type::mixed: assert (!"Inapplicable for mixed case"); break;
+    case string_case_type::mixed: throw std::invalid_argument ("apply_case_type: inapplicable for mixed case"); break;
     }
-    return wc;
+    throw std::invalid_argument ("apply_case_type: corrupted enum value for type");
   }
   );
   if (type == string_case_type::title)

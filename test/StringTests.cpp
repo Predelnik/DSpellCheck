@@ -18,6 +18,8 @@
 
 #include "UrlHelpers.h"
 
+using namespace std::literals;
+
 TEST_CASE("GitHub") {
   CHECK(UrlHelpers::is_github_url(L"github.com/predelnik/DSpellCheck"));
   CHECK(UrlHelpers::is_github_url(L"https://gitHub.com/predelnik/DSpellCheck"));
@@ -41,6 +43,7 @@ TEST_CASE("GitHub") {
 }
 
 TEST_CASE ("string_case") {
+  CHECK(get_string_case_type(L"") == string_case_type::mixed);
   CHECK(get_string_case_type(L"asda") == string_case_type::lower);
   CHECK(get_string_case_type(L"Asda") == string_case_type::title);
   CHECK(get_string_case_type(L"ASDA") == string_case_type::upper);
@@ -53,6 +56,12 @@ TEST_CASE ("string_case") {
   CHECK (str == L"ARARAR");
   apply_case_type (str, string_case_type::title);
   CHECK (str == L"Ararar");
+  str = L""s;
+  apply_case_type (str, string_case_type::title);
+  CHECK (str.empty ());
+  str = L"asda"s;
+  REQUIRE_THROWS_AS(apply_case_type (str, string_case_type::mixed), std::invalid_argument);
+  REQUIRE_THROWS_AS (apply_case_type (str, static_cast<string_case_type> (300)), std::invalid_argument);
 }
 
 TEST_CASE ("CamelCase") {
@@ -99,4 +108,10 @@ TEST_CASE ("CamelCase") {
   test_1 ();
   test_2 ();
   test_3 ();
+}
+
+TEST_CASE ("to_upper_inplace") {
+  auto word = L"ElEpHanT"s;
+  to_upper_inplace(word);
+  CHECK (word == L"ELEPHANT");
 }
