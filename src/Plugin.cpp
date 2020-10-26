@@ -654,10 +654,10 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
 // ReSharper restore CppInconsistentNaming
 
 bool is_any_timer_active () {
-  if (edit_recheck_timer->is_set())
+  if (edit_recheck_timer && edit_recheck_timer->is_set())
     return true;
 
-  if (scroll_recheck_timer->is_set())
+  if (scroll_recheck_timer && scroll_recheck_timer->is_set())
     return true;
 
   return false;
@@ -700,7 +700,7 @@ void delete_log() {
 
 void update_on_visible_area_changed()
 {
-  if (!is_any_timer_active()) {
+  if (!is_any_timer_active() && scroll_recheck_timer) {
     scroll_recheck_timer->set_resolution(std::chrono::milliseconds (scroll_recheck_timer_resolution));
   }
 }
@@ -770,7 +770,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case SCN_MODIFIED:
     if (!spell_checker)
       return;
-    if ((notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0 && !is_any_timer_active()) {
+    if (edit_recheck_timer && (notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0 && !is_any_timer_active()) {
       edit_recheck_timer->set_resolution(std::chrono::milliseconds (get_settings().data.recheck_delay));
     }
     break;
