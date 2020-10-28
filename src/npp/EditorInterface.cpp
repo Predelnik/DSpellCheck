@@ -21,11 +21,6 @@ POINT EditorInterface::get_point_from_position(TextPosition position) const {
           get_point_y_from_position(position)};
 }
 
-TextPosition EditorInterface::get_current_pos_in_line() const {
-  return get_current_pos() -
-         get_line_start_position(get_current_line_number());
-}
-
 TextPosition EditorInterface::get_prev_valid_begin_pos(TextPosition pos) const {
   if (pos == 0)
     return 0;

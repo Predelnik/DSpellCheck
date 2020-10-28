@@ -326,5 +326,13 @@ abg
     editor.set_active_document_text(L"parise PaRiSe Token Parise PARISE");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "parise", L"Paris", true);
     CHECK (editor.get_active_document_text() == "Paris Paris Token Paris Paris");
+
+    editor.set_codepage (EditorCodepage::COUNT);
+    editor.set_active_document_text(L"token token token nottoken token token");
+    CHECK_THROWS_AS(SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false), std::runtime_error);
+    editor.set_codepage (EditorCodepage::ansi);
+    editor.set_active_document_text(L"token token token nottoken token token");
+    SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false);
+    CHECK (editor.get_active_document_text() == "bar bar bar nottoken bar bar");
   }
-}
+  }
