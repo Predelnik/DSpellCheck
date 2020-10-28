@@ -533,7 +533,6 @@ std::vector<std::pair<TextPosition, TextPosition>> check_queue;
 std::optional<WinApi::Timer> edit_recheck_timer;
 std::optional<WinApi::Timer> scroll_recheck_timer;
 constexpr int scroll_recheck_timer_resolution = 100;
-bool recheck_done = true;
 bool restyling_caused_recheck_was_done = false; // Hack to avoid eternal cycle in case of scintilla bug
 bool first_restyle = true;                      // hack to successfully avoid checking hyperlinks
                                                 // when they appear on program start
@@ -654,11 +653,20 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
 
 // ReSharper restore CppInconsistentNaming
 
+bool is_any_timer_active () {
+  if (edit_recheck_timer && edit_recheck_timer->is_set())
+    return true;
+
+  if (scroll_recheck_timer && scroll_recheck_timer->is_set())
+    return true;
+
+  return false;
+}
+
 // For now doesn't look like there is such a need in check modified, but code
 // stays until thorough testing
 void WINAPI edit_recheck_callback() {
   edit_recheck_timer->stop_timer();
-  recheck_done = true;
 
   ACTIVE_VIEW_BLOCK(npp_interface());
   spell_checker->recheck_visible();
@@ -669,7 +677,6 @@ void WINAPI edit_recheck_callback() {
 
 void WINAPI scroll_recheck_callback() {
   scroll_recheck_timer->stop_timer();
-  recheck_done = true;
 
   ACTIVE_VIEW_BLOCK(npp_interface());
   spell_checker->recheck_visible();
@@ -693,9 +700,8 @@ void delete_log() {
 
 void update_on_visible_area_changed()
 {
-  if (recheck_done && !scroll_recheck_timer->is_set()) {
+  if (!is_any_timer_active() && scroll_recheck_timer) {
     scroll_recheck_timer->set_resolution(std::chrono::milliseconds (scroll_recheck_timer_resolution));
-    recheck_done = false;
   }
 }
 
@@ -741,8 +747,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case SCN_UPDATEUI:
     if (!spell_checker)
       return;
-    if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 && (recheck_done || first_restyle) && !restyling_caused_recheck_was_done) // If restyling wasn't caused
-                                                                                                                                  // by user input...
+    if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 && (!is_any_timer_active() || first_restyle) && !restyling_caused_recheck_was_done) // If restyling wasn't caused
+                                                                                                                                            // by user input...
     {
       ACTIVE_VIEW_BLOCK(npp_interface());
       spell_checker->recheck_visible();
@@ -764,9 +770,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case SCN_MODIFIED:
     if (!spell_checker)
       return;
-    if ((notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0) {
+    if (edit_recheck_timer && (notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0 && !is_any_timer_active()) {
       edit_recheck_timer->set_resolution(std::chrono::milliseconds (get_settings().data.recheck_delay));
-      recheck_done = false;
     }
     break;
 
