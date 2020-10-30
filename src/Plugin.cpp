@@ -779,7 +779,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_LANGCHANGED", npp->get_editor_hwnd());
     if (!spell_checker)
       return;
-    spell_checker->lang_change();
+    spell_checker->recheck_visible_on_active_view();
   } break;
 
   case NPPN_TBMODIFICATION: {

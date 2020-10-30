@@ -52,7 +52,7 @@ public:
   void find_next_mistake();
   void find_prev_mistake();
   WordForSpeller to_word_for_speller(std::wstring_view word) const;
-  void lang_change();
+  void recheck_visible_on_active_view();
   bool is_word_under_cursor_correct(TextPosition &pos, TextPosition &length,
                                     bool use_text_cursor = false) const;
   void erase_all_misspellings();

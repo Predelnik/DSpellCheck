@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <set>
+
 #include "npp/EditorInterface.h"
 
 #include "utils/enum_array.h"
@@ -39,6 +41,7 @@ public:
   std::string data;
   std::array<TextPosition, 2> selection = {};
   std::vector<int> style;
+  std::set<size_t> bookmarked_lines;
   } cur;
   std::vector<State> past;
 
@@ -132,6 +135,9 @@ public:
   int get_view_count() const override;
   std::vector<std::wstring> get_open_filenames() const override;
   std::vector<std::wstring> get_open_filenames_all_views() const override;
+
+public:
+  std::vector<size_t> get_bookmarked_lines () const;
 
 private:
   void set_target_view(int view_index) const override;

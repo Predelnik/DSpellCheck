@@ -597,10 +597,12 @@ void MockEditorInterface::replace_text(TextPosition from, TextPosition to, std::
   doc->cur.style.resize (doc->cur.data.length ());
 }
 
-void MockEditorInterface::add_bookmark(TextPosition /*line*/)
+void MockEditorInterface::add_bookmark(TextPosition line)
 {
-
-  assert(!"Unsupported by mock editor");
+  auto doc = active_document();
+  if (!doc)
+    return;
+  doc->cur.bookmarked_lines.insert (line);
 }
 
 constexpr auto mock_editor_view_count = 2;
@@ -639,6 +641,17 @@ std::vector<std::wstring> MockEditorInterface::get_open_filenames_all_views() co
                      std::back_inserter(out),
                      [](const auto &data) { return data.path; });
   return out;
+}
+
+std::vector<size_t> MockEditorInterface::get_bookmarked_lines() const
+{
+  auto doc = active_document();
+  if (!doc)
+    return {};
+
+  auto &src = doc->cur.bookmarked_lines;
+  std::vector<size_t> lines (src.begin (), src.end ());
+  return lines;
 }
 
 MockedDocumentInfo *MockEditorInterface::active_document() {

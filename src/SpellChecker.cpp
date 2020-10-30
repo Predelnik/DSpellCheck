@@ -48,7 +48,7 @@ void SpellChecker::recheck_visible_both_views() {
   }
 }
 
-void SpellChecker::lang_change() {
+void SpellChecker::recheck_visible_on_active_view() {
   ACTIVE_VIEW_BLOCK(m_editor);
   recheck_visible();
 }

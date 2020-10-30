@@ -94,8 +94,7 @@ This is test document
 нехорошееслово
 И ещё немного слов
 ошибочноеслово)");
-  editor.set_active_document_text(LR"(
-wrongword
+  editor.set_active_document_text(LR"(wrongword
 This is test document
 badword
 Badword)");
@@ -108,6 +107,12 @@ wrongword
                                    // EditorInterface
   CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
+
+  {
+    sc.mark_lines_with_misspelling ();
+    CHECK (editor.get_bookmarked_lines() == std::vector {0ull, 2ull, 3ull});
+  }
+
   {
     auto mut = settings.modify();
     mut->data.check_those = false;
@@ -157,7 +162,7 @@ wrongword
   abaas123asd
   wEirdCasE
   )");
-  sc.recheck_visible_both_views();
+  sc.recheck_visible_on_active_view();
   CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"abaas123asd"});
   {
