@@ -74,7 +74,7 @@ void SpellChecker::find_next_mistake() {
       if (to != doc_length && next_token_end(text.str, to) == index)
         index = prev_token_begin(text.str, index - 1);
       text.str.erase(index, text.str.size() - index);
-      if (check_text(text, CheckTextMode::find_first))
+      if (check_text<CheckTextMode::find_first>(text))
         break;
 
       iterator_pos += (text.to_original_index(index) - from);
@@ -114,7 +114,7 @@ void SpellChecker::find_prev_mistake() {
     if (from < to) {
       auto text = m_editor.get_mapped_wstring_range(from, to);
       auto offset = next_token_end(text.str, 0);
-      if (check_text(text, CheckTextMode::find_last))
+      if (check_text<CheckTextMode::find_last>(text))
         break;
 
       iterator_pos -= (4096 - (text.to_original_index(offset) - from));
@@ -313,7 +313,7 @@ void SpellChecker::erase_all_misspellings() {
   ACTIVE_VIEW_BLOCK (m_editor);
   auto mapped_str = m_editor.to_mapped_wstring(m_editor.get_active_document_text());
   m_misspellings.clear();
-  if (!check_text(mapped_str, CheckTextMode::find_all))
+  if (!check_text<CheckTextMode::find_all>(mapped_str))
     return;
 
   UNDO_BLOCK(m_editor);
@@ -353,7 +353,8 @@ public:
 };
 } // namespace
 
-bool SpellChecker::check_text(const MappedWstring &text_to_check, CheckTextMode mode) const {
+template <SpellChecker::CheckTextMode mode>
+bool SpellChecker::check_text(const MappedWstring &text_to_check) const {
   SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_text(NppViewType view, const MappedWstring &text_to_check, CheckTextMode mode)", m_editor.get_editor_hwnd());
   if (text_to_check.str.empty())
     return false;
@@ -436,28 +437,26 @@ bool SpellChecker::check_text(const MappedWstring &text_to_check, CheckTextMode 
     }
     remove_underline(prev_pos, static_cast<TextPosition>(text_len));
   }
-  switch (mode) {
-  case CheckTextMode::underline_errors:
+  if constexpr (mode == CheckTextMode::underline_errors || mode == CheckTextMode::find_all) {
     return true;
-  case CheckTextMode::find_first:
+  } else if constexpr (mode == CheckTextMode::find_first) {
     return stop;
-  case CheckTextMode::find_all:
-    return true;
-  case CheckTextMode::find_last:
+  }
+  else if constexpr (mode == CheckTextMode::find_last) {
     if (resulting_word_start == -1)
       return false;
-    else {
-      m_editor.set_selection(resulting_word_start, resulting_word_end);
-      return true;
-    }
-  };
-  return false;
+
+    m_editor.set_selection(resulting_word_start, resulting_word_end);
+    return true;
+  } else {
+    static_assert(mode == CheckTextMode::underline_errors, "Incorrect mode was specified");
+  }
 }
 
 void SpellChecker::check_visible() {
   SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::check_visible(NppViewType view)", m_editor.get_editor_hwnd());
   auto text = get_visible_text();
-  check_text(text, CheckTextMode::underline_errors);
+  check_text<CheckTextMode::underline_errors>(text);
 }
 
 void SpellChecker::recheck_visible() {
@@ -478,7 +477,7 @@ std::wstring SpellChecker::get_all_misspellings_as_string() const {
   auto mapped_str = m_editor.to_mapped_wstring(buf);
   m_editor.force_style_update (mapped_str.mapping.front (), mapped_str.mapping.back ());
   m_misspellings.clear();
-  if (!check_text(mapped_str, CheckTextMode::find_all))
+  if (!check_text<CheckTextMode::find_all>(mapped_str))
     return {};
   std::sort(m_misspellings.begin(), m_misspellings.end(), [](const auto &lhs, const auto &rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), [](wchar_t lhs, wchar_t rhs) {
@@ -502,7 +501,7 @@ void SpellChecker::mark_lines_with_misspelling() const {
   auto buf = m_editor.get_active_document_text();
   auto mapped_str = m_editor.to_mapped_wstring(buf);
   m_editor.force_style_update (mapped_str.mapping.front (), mapped_str.mapping.back ());
-  if (!check_text(mapped_str, CheckTextMode::find_all))
+  if (!check_text<CheckTextMode::find_all>(mapped_str))
     return;
   for (auto &misspelling : m_misspellings) {
     auto start_index = misspelling.data () - mapped_str.str.data ();

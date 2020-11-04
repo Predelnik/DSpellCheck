@@ -21,6 +21,7 @@
 class Settings;
 
 class MockSpeller : public SpellerInterface {
+  using parent_t = SpellerInterface;
 public:
   using Dict =
       std::unordered_map<std::wstring, std::unordered_set<std::wstring>>;
@@ -44,6 +45,7 @@ public:
   bool check_word(const WordForSpeller& word) const override;
   void set_working(bool working);
 
+  std::vector<bool> check_words(const std::vector<WordForSpeller>& words) const override;
 private:
   std::wstring m_current_lang;
   std::unordered_set<std::wstring> m_ignored;

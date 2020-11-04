@@ -110,7 +110,7 @@ wrongword
 
   {
     sc.mark_lines_with_misspelling ();
-    CHECK (editor.get_bookmarked_lines() == std::vector {0ull, 2ull, 3ull});
+    CHECK (editor.get_bookmarked_lines() == std::vector {0_z, 2_z, 3_z});
   }
 
   {
