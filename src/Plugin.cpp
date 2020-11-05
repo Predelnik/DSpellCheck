@@ -770,7 +770,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case SCN_MODIFIED:
     if (!spell_checker)
       return;
-    if (edit_recheck_timer && (notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0 && !is_any_timer_active()) {
+    if (edit_recheck_timer && (notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0) {
       edit_recheck_timer->set_resolution(std::chrono::milliseconds (get_settings().data.recheck_delay));
     }
     break;
