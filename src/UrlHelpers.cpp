@@ -52,8 +52,6 @@ std::wstring github_url_to_api_recursive_tree_url(std::wstring github_url, std::
   return ret;
 }
 
-std::wstring github_url_to_contents_url(std::wstring github_url) { return to_github_base_url(std::move(github_url)) + L"/contents/"; }
-
 std::wstring github_file_url_to_download_url(std::wstring github_url, std::wstring_view branch_name) {
   std::wstring_view url = github_url;
   url = remove_prefix_equals(url, L"https://");

@@ -108,3 +108,12 @@ bool MockSpeller::check_word(const WordForSpeller& word) const {
 }
 
 void MockSpeller::set_working(bool working) { m_working = working; }
+
+std::vector<bool> MockSpeller::check_words(const std::vector<WordForSpeller>& words) const
+{
+  auto res = parent_t::check_words(words);
+  if (std::ranges::all_of (res, std::identity {}))
+    return {};
+
+  return res;
+}

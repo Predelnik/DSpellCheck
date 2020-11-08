@@ -39,6 +39,8 @@ adadsd.)");
   SpellChecker sc(&settings, editor, sp_container);
   sc.find_next_mistake();
   CHECK(editor.selected_text() == "adadsd");
+  sc.find_next_mistake();
+  CHECK(editor.selected_text() == "adadsd");
   settings.modify()->data.tokenization_style = TokenizationStyle::by_delimiters;
   CHECK(editor.selected_text() == "adadsd");
   editor.set_active_document_text(LR"(This is test document)");
@@ -94,8 +96,7 @@ This is test document
 нехорошееслово
 И ещё немного слов
 ошибочноеслово)");
-  editor.set_active_document_text(LR"(
-wrongword
+  editor.set_active_document_text(LR"(wrongword
 This is test document
 badword
 Badword)");
@@ -108,6 +109,26 @@ wrongword
                                    // EditorInterface
   CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
+
+  editor.set_visible_lines(0, 1);
+  editor.clear_indicator_info ();
+  sc.recheck_visible_on_active_view();
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
+        std::vector<std::string>{"wrongword"});
+
+  editor.set_visible_lines(0, 2);
+  editor.clear_indicator_info ();
+  sc.recheck_visible_on_active_view();
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
+        std::vector<std::string>{"wrongword", "badword"});
+
+  editor.make_all_visible();
+
+  {
+    sc.mark_lines_with_misspelling ();
+    CHECK (editor.get_bookmarked_lines() == std::vector {0_z, 2_z, 3_z});
+  }
+
   {
     auto mut = settings.modify();
     mut->data.check_those = false;
@@ -157,7 +178,7 @@ wrongword
   abaas123asd
   wEirdCasE
   )");
-  sc.recheck_visible_both_views();
+  sc.recheck_visible_on_active_view();
   CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"abaas123asd"});
   {
@@ -326,5 +347,13 @@ abg
     editor.set_active_document_text(L"parise PaRiSe Token Parise PARISE");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "parise", L"Paris", true);
     CHECK (editor.get_active_document_text() == "Paris Paris Token Paris Paris");
+
+    editor.set_codepage (EditorCodepage::COUNT);
+    editor.set_active_document_text(L"token token token nottoken token token");
+    CHECK_THROWS_AS(SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false), std::runtime_error);
+    editor.set_codepage (EditorCodepage::ansi);
+    editor.set_active_document_text(L"token token token nottoken token token");
+    SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false);
+    CHECK (editor.get_active_document_text() == "bar bar bar nottoken bar bar");
   }
-}
+  }

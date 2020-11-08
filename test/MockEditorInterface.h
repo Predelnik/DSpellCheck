@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <set>
+
 #include "npp/EditorInterface.h"
 
 #include "utils/enum_array.h"
@@ -39,6 +41,7 @@ public:
   std::string data;
   std::array<TextPosition, 2> selection = {};
   std::vector<int> style;
+  std::set<size_t> bookmarked_lines;
   } cur;
   std::vector<State> past;
 
@@ -118,6 +121,7 @@ public:
   void set_active_document_text_raw(const std::string& text);
   std::vector<std::string> get_underlined_words (int indicator_id) const;
   void make_all_visible ();
+  void set_visible_lines (ptrdiff_t first_visible_line, ptrdiff_t last_visible_line);
   void set_lexer (int lexer);
   void set_whole_text_style (int style);
   void set_codepage(EditorCodepage codepage);
@@ -130,8 +134,12 @@ public:
   void replace_text(TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(TextPosition line) override;
   int get_view_count() const override;
+  void clear_indicator_info ();
   std::vector<std::wstring> get_open_filenames() const override;
   std::vector<std::wstring> get_open_filenames_all_views() const override;
+
+public:
+  std::vector<size_t> get_bookmarked_lines () const;
 
 private:
   void set_target_view(int view_index) const override;
@@ -146,6 +154,6 @@ private:
   std::array<bool, view_count> m_save_undo;
   int m_active_view = 0;
   mutable int m_target_view = -1;
-  static constexpr auto text_width = 13;
-  static constexpr auto text_height = 13;
+  static constexpr auto char_width = 13;
+  static constexpr auto char_height = 13;
 };

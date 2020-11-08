@@ -52,7 +52,7 @@ public:
   void find_next_mistake();
   void find_prev_mistake();
   WordForSpeller to_word_for_speller(std::wstring_view word) const;
-  void lang_change();
+  void recheck_visible_on_active_view();
   bool is_word_under_cursor_correct(TextPosition &pos, TextPosition &length,
                                     bool use_text_cursor = false) const;
   void erase_all_misspellings();
@@ -67,13 +67,12 @@ private:
   TextPosition prev_token_begin_in_document(TextPosition start) const;
   TextPosition next_token_end_in_document(TextPosition end) const;
   MappedWstring get_visible_text();
-  bool check_text(const MappedWstring &text_to_check,
-                  CheckTextMode mode) const;
+  template <CheckTextMode mode>
+  bool check_text(const MappedWstring &text_to_check) const;
   void check_visible();
 
   std::wstring_view get_word_at(TextPosition char_pos, const MappedWstring &text) const;
   void refresh_underline_style();
-  void reset_hot_spot_cache();
   bool is_spellchecking_needed(std::wstring_view word,
                                TextPosition word_start) const;
   TextPosition next_token_end(std::wstring_view target, TextPosition index) const;

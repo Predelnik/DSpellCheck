@@ -123,8 +123,6 @@ public:
   virtual std::string get_active_document_text() const = 0;
   virtual RECT editor_rect() const = 0;
 
-  TextPosition get_current_pos_in_line() const;
-
   virtual int get_view_count () const = 0;
 
   TextPosition get_prev_valid_begin_pos(TextPosition pos) const;
