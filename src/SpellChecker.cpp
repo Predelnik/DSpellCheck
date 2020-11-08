@@ -81,15 +81,12 @@ void SpellChecker::find_next_mistake() {
     }
 
     if (to == doc_length) {
-      if (!full_check) {
-        m_current_position = 0;
-        iterator_pos = 0;
-        full_check = true;
-      } else
+      if (full_check)
         break;
 
-      if (full_check && iterator_pos > m_current_position)
-        break; // So nothing was found TODO: Message probably
+      m_current_position = 0;
+      iterator_pos = 0;
+      full_check = true;
     }
   }
 }
@@ -122,15 +119,12 @@ void SpellChecker::find_prev_mistake() {
       --iterator_pos;
 
     if (iterator_pos < 0) {
-      if (!full_check) {
-        m_current_position = doc_length + 1;
-        iterator_pos = doc_length;
-        full_check = true;
-      } else
+      if (full_check)
         break;
 
-      if (full_check && iterator_pos < m_current_position - 1)
-        break; // So nothing was found TODO: Message probably
+      m_current_position = doc_length + 1;
+      iterator_pos = doc_length;
+      full_check = true;
     }
   }
 }
@@ -172,8 +166,6 @@ void SpellChecker::create_word_underline(TextPosition start, TextPosition end) c
 }
 
 void SpellChecker::remove_underline(TextPosition start, TextPosition end) const {
-  if (end < start)
-    return;
   m_editor.set_current_indicator(spell_check_indicator_id);
   m_editor.indicator_clear_range(start, end);
 }
