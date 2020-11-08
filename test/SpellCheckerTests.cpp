@@ -39,6 +39,8 @@ adadsd.)");
   SpellChecker sc(&settings, editor, sp_container);
   sc.find_next_mistake();
   CHECK(editor.selected_text() == "adadsd");
+  sc.find_next_mistake();
+  CHECK(editor.selected_text() == "adadsd");
   settings.modify()->data.tokenization_style = TokenizationStyle::by_delimiters;
   CHECK(editor.selected_text() == "adadsd");
   editor.set_active_document_text(LR"(This is test document)");
@@ -107,6 +109,20 @@ wrongword
                                    // EditorInterface
   CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"wrongword", "badword", "Badword"});
+
+  editor.set_visible_lines(0, 1);
+  editor.clear_indicator_info ();
+  sc.recheck_visible_on_active_view();
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
+        std::vector<std::string>{"wrongword"});
+
+  editor.set_visible_lines(0, 2);
+  editor.clear_indicator_info ();
+  sc.recheck_visible_on_active_view();
+  CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
+        std::vector<std::string>{"wrongword", "badword"});
+
+  editor.make_all_visible();
 
   {
     sc.mark_lines_with_misspelling ();

@@ -180,7 +180,7 @@ int MockEditorInterface::get_current_line_number() const {
 
 int MockEditorInterface::get_text_height(
   int /*line*/) const {
-  return text_height;
+  return char_height;
 }
 
 int MockEditorInterface::line_from_position(
@@ -287,7 +287,7 @@ int MockEditorInterface::get_point_x_from_position(
   TextPosition position) const {
   return static_cast<int>(position -
           get_line_start_position(line_from_position(position))) *
-         10;
+         char_width;
 }
 
 int MockEditorInterface::get_point_y_from_position(
@@ -401,8 +401,26 @@ std::string MockEditorInterface::get_line(
 }
 
 std::optional<TextPosition> MockEditorInterface::char_position_from_global_point(
-  int /*x*/, int /*y*/) const {
-  return std::nullopt;
+  int x, int y) const {
+  auto doc = active_document();
+  if (!doc)
+    return std::nullopt;
+
+  auto line = y / char_height;
+  size_t index = 0;
+  while (line > 0)
+    {
+      index = doc->cur.data.find ('\n', index);
+      if (index == std::string::npos)
+        return std::nullopt;
+      --line;
+    }
+  auto char_cnt = x / char_width;
+  index += char_cnt;
+  if (index >= doc->cur.data.length ())
+    return std::nullopt;
+
+  return index;
 }
 
 HWND MockEditorInterface::get_editor_hwnd() const
@@ -444,8 +462,8 @@ TextPosition MockEditorInterface::char_position_from_point(
   if (!doc)
     return -1;
   return get_line_start_position(
-      get_document_line_from_visible(pnt.y / text_height)) +
-         pnt.x / text_width;
+      get_document_line_from_visible(pnt.y / char_height)) +
+         pnt.x / char_width;
 }
 
 RECT MockEditorInterface::editor_rect() const {
@@ -514,6 +532,15 @@ void MockEditorInterface::make_all_visible() {
     return;
 
   doc->visible_lines = {0, get_document_line_count()};
+}
+
+void MockEditorInterface::set_visible_lines(ptrdiff_t first_visible_line, ptrdiff_t last_visible_line)
+{
+  auto doc = active_document();
+  if (!doc)
+    return;
+
+  doc->visible_lines = {first_visible_line, last_visible_line};
 }
 
 void MockEditorInterface::set_lexer(int lexer) {
@@ -610,6 +637,16 @@ constexpr auto mock_editor_view_count = 2;
 int MockEditorInterface::get_view_count() const
 {
   return mock_editor_view_count;
+}
+
+void MockEditorInterface::clear_indicator_info()
+{
+  auto doc = active_document();
+  if (!doc)
+    return;
+
+  for (auto &info : doc->indicator_info)
+    std::fill(info.set_for.begin (), info.set_for.end (), false);
 }
 
 void MockEditorInterface::set_target_view(int view_index) const
