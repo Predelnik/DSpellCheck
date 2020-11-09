@@ -1,3 +1,6 @@
+v1.4.20
+* Fix regression in 1.4.19 leading to too fast rechecking of new words during typing. (#240)
+
 v1.4.19
 * Print better diagnostics for errors during dictionary download
 * Fix regression from 1.4.17 making unable to download dictionaries (#229)
