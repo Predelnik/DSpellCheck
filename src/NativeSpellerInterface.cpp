@@ -226,6 +226,8 @@ NativeSpellerInterface::get_suggestions(const wchar_t *word) const {
         m_last_used_speller = speller;
       }
     }
+    if (!m_last_used_speller && !m_ptrs->m_spellers.empty ())
+      m_last_used_speller = m_ptrs->m_spellers.front ();
     return longest;
   }
   }
