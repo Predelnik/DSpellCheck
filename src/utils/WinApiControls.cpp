@@ -46,6 +46,10 @@ WinBase::operator bool() const {
   return m_hwnd;
 }
 
+bool WinBase::was_inited() const {
+  return m_hwnd != nullptr;
+}
+
 void ComboBox::check_hwnd() { assert(get_class_name(m_hwnd) == L"ComboBox"); }
 
 int ComboBox::current_index() const { return static_cast<int>(ComboBox_GetCurSel(m_hwnd)); }
