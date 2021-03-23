@@ -30,6 +30,7 @@ public:
   void init(HWND hwnd);
   virtual DlgProcResult dlg_proc(UINT message, WPARAM w_param, LPARAM l_param); // should be called for possibility of making signals in windows work
   explicit operator bool () const;
+  bool was_inited () const;
 
 private:
   virtual void check_hwnd() = 0;
@@ -88,7 +89,11 @@ public:
 
   EnumType current_data() const { return static_cast<EnumType>(Parent::current_data()); }
 
-  void set_current(EnumType value) { set_current_index(*find_by_data(static_cast<std::underlying_type_t<EnumType>>(value))); }
+  void set_current(EnumType value) {
+    if (!was_inited ())
+      return;
+    set_current_index(*find_by_data(static_cast<std::underlying_type_t<EnumType>>(value)));
+  }
 
 private:
   void init_impl() override { this->add_items<EnumType>(); }
