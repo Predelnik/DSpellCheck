@@ -113,6 +113,7 @@ public:
   std::string get_active_document_text() const override;
   TextPosition char_position_from_point(const POINT& pnt) const override;
   RECT editor_rect() const override;
+  void init();
   MockEditorInterface();
   ~MockEditorInterface();
   void open_virtual_document(const std::wstring &path,
@@ -137,6 +138,7 @@ public:
   void clear_indicator_info ();
   std::vector<std::wstring> get_open_filenames() const override;
   std::vector<std::wstring> get_open_filenames_all_views() const override;
+  void set_editor_rect (int left, int top, int right, int bottom);
 
 public:
   std::vector<size_t> get_bookmarked_lines () const;
@@ -148,12 +150,16 @@ private:
   MockedDocumentInfo *active_document();
 private:
   int active_view() const override;
+
+public:
+  static constexpr auto char_width = 13;
+  static constexpr auto char_height = 13;
+
 private:
   std::array<std::vector<MockedDocumentInfo>, view_count> m_documents;
   std::array<int, view_count> m_active_document_index;
   std::array<bool, view_count> m_save_undo;
   int m_active_view = 0;
   mutable int m_target_view = -1;
-  static constexpr auto char_width = 13;
-  static constexpr auto char_height = 13;
+  RECT m_editor_rect;
 };

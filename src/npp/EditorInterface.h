@@ -13,11 +13,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
+
+#define NOMINMAX
+#include <Windows.h>
+
 #include <cassert>
 #include <optional>
 #include <string>
 #include <vector>
-#include <windows.h>
 #include "CommonFunctions.h"
 #include "MainDefs.h"
 

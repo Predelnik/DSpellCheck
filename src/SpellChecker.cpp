@@ -215,8 +215,6 @@ MappedWstring SpellChecker::get_visible_text() {
   auto len = m_editor.get_active_document_length();
   MappedWstring result;
   for (auto line = top_visible_line_index; line <= bottom_visible_line_index; ++line) {
-    if (!m_editor.is_line_visible(line))
-      continue;
     auto start = m_editor.get_line_start_position(line);
     if (start >= len) // skipping possible empty lines when document is too short
       continue;
@@ -230,11 +228,11 @@ MappedWstring SpellChecker::get_visible_text() {
     }
     auto end = m_editor.get_line_end_position(line);
     auto end_point = m_editor.get_point_from_position(end);
-    if (end_point.y > rect.bottom) {
-      end = m_editor.char_position_from_point({rect.right, rect.bottom});
+    if (end_point.y > rect.bottom - rect.top) {
+      end = m_editor.char_position_from_point({rect.right - rect.left, rect.bottom - rect.top});
       end = next_token_end_in_document(end);
     } else if (end_point.x > rect.right) {
-      end = m_editor.char_position_from_point({rect.right, end_point.y});
+      end = m_editor.char_position_from_point({rect.right - rect.left, end_point.y});
       end = next_token_end_in_document(end);
     }
     auto new_str = m_editor.get_mapped_wstring_range(start, end);
