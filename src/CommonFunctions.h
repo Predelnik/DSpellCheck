@@ -14,6 +14,7 @@
 
 #pragma once
 #include <algorithm>
+#define NOMINMAX
 #include <Windows.h>
 #include <memory>
 

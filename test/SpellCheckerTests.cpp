@@ -290,7 +290,14 @@ abg
   }
 
   SECTION("Editor rect") {
-
+    // \r is used to emulate word wrap
+    // \n separates real lines, \r word-wrapped ones
+    editor.set_editor_rect(0, MockEditorInterface::char_height, 1000, MockEditorInterface::char_height * 3 - 1);
+    editor.set_active_document_text(L"Thes\rtist\rhes\rinvesible\rwards\n");
+    editor.set_visible_lines(0, 0);
+    sc.recheck_visible_both_views();
+    CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
+        std::vector<std::string>{"tist", "hes"});
   }
 
   SECTION("Replace all tokens") {
