@@ -28,14 +28,14 @@ using namespace std::literals;
 
 TEST_CASE("Speller") {
   Settings settings;
-  auto speller = std::make_unique<MockSpeller>(settings);
-  setup_speller(*speller);
   settings.data.speller_language[SpellerId::aspell] = L"English";
   MockEditorInterface editor;
   TARGET_VIEW_BLOCK(editor, 0);
   editor.open_virtual_document(L"test.txt", LR"(This is test document.
 Please bear with me.
 adadsd.)");
+  auto speller = std::make_unique<MockSpeller>(settings);
+  setup_speller(*speller);
   auto speller_ptr = speller.get();
   SpellerContainer sp_container(&settings, std::move(speller));
   SpellChecker sc(&settings, editor, sp_container);
@@ -136,6 +136,9 @@ wrongword
     TextPosition pos, length;
     editor.set_cursor_pos(4);
     CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, true));
+    speller_ptr->set_working(false);
+    CHECK(sc.is_word_under_cursor_correct(pos, length, true));
+    speller_ptr->set_working(true);
     editor.set_cursor_pos(14);
     CHECK(sc.is_word_under_cursor_correct(pos, length, true));
 
