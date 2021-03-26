@@ -298,6 +298,12 @@ abg
     sc.recheck_visible_both_views();
     CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
         std::vector<std::string>{"tist", "hes"});
+    editor.set_active_document_text(L"Thes osome und gret tist realy mbe hes invesible wards");
+    editor.make_all_visible();
+    editor.set_editor_rect(MockEditorInterface::char_height * 5, 0, MockEditorInterface::char_height * (5 + 5 + 1 + 3) - 1, MockEditorInterface::char_height * 2 - 1);
+    sc.recheck_visible_both_views();
+    CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
+        std::vector<std::string>{"osome", "und"});
   }
 
   SECTION("Replace all tokens") {
