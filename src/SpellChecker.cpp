@@ -257,17 +257,17 @@ bool SpellChecker::is_spellchecking_needed(std::wstring_view word, TextPosition 
 }
 
 bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition &length, bool use_text_cursor) const {
-  POINT p;
   TextPosition init_char_pos, selection_start = 0, selection_end = 0;
   ACTIVE_VIEW_BLOCK(m_editor);
   length = 0;
   pos = -1;
 
   if (!use_text_cursor) {
-    if (GetCursorPos(&p) == 0)
+    auto p = m_editor.get_mouse_cursor_pos();
+    if (!p)
       return true;
 
-    auto mb_pos = m_editor.char_position_from_global_point(p.x, p.y);
+    auto mb_pos = m_editor.char_position_from_global_point(p->x, p->y);
     if (!mb_pos)
       return true;
     init_char_pos = *mb_pos;
@@ -277,8 +277,6 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
     init_char_pos = std::min (selection_start, selection_end);
   }
 
-  if (init_char_pos == -1)
-    return true;
   auto line = m_editor.line_from_position(init_char_pos);
   auto mapped_str = m_editor.get_mapped_wstring_line(line);
   if (mapped_str.str.empty())
@@ -303,8 +301,7 @@ void SpellChecker::erase_all_misspellings() {
   ACTIVE_VIEW_BLOCK (m_editor);
   auto mapped_str = m_editor.to_mapped_wstring(m_editor.get_active_document_text());
   m_misspellings.clear();
-  if (!check_text<CheckTextMode::find_all>(mapped_str))
-    return;
+  check_text<CheckTextMode::find_all>(mapped_str);
 
   UNDO_BLOCK(m_editor);
   TextPosition chars_removed = 0;
@@ -467,8 +464,7 @@ std::wstring SpellChecker::get_all_misspellings_as_string() const {
   auto mapped_str = m_editor.to_mapped_wstring(buf);
   m_editor.force_style_update (mapped_str.mapping.front (), mapped_str.mapping.back ());
   m_misspellings.clear();
-  if (!check_text<CheckTextMode::find_all>(mapped_str))
-    return {};
+  check_text<CheckTextMode::find_all>(mapped_str);
   std::sort(m_misspellings.begin(), m_misspellings.end(), [](const auto &lhs, const auto &rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), [](wchar_t lhs, wchar_t rhs) {
       return CharUpper(reinterpret_cast<LPWSTR>(lhs)) < CharUpper(reinterpret_cast<LPWSTR>(rhs));
@@ -491,8 +487,7 @@ void SpellChecker::mark_lines_with_misspelling() const {
   auto buf = m_editor.get_active_document_text();
   auto mapped_str = m_editor.to_mapped_wstring(buf);
   m_editor.force_style_update (mapped_str.mapping.front (), mapped_str.mapping.back ());
-  if (!check_text<CheckTextMode::find_all>(mapped_str))
-    return;
+  check_text<CheckTextMode::find_all>(mapped_str);
   for (auto &misspelling : m_misspellings) {
     auto start_index = misspelling.data () - mapped_str.str.data ();
     auto position = mapped_str.to_original_index (start_index);

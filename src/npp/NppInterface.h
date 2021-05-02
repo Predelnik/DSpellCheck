@@ -120,7 +120,7 @@ private:
   void do_command(int id);
   std::vector<std::wstring> get_open_filenames_helper(int enum_val, int msg) const;
   int active_view() const override;
-
+  std::optional<POINT> get_mouse_cursor_pos() const override;
 private:
   const NppData &m_npp_data;
   mutable enum_array<NppViewType, std::optional<int>> m_lexer_cache;

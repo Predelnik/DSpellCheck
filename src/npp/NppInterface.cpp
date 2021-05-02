@@ -102,6 +102,14 @@ int NppInterface::active_view() const {
   return cur_scintilla;
 }
 
+std::optional<POINT> NppInterface::get_mouse_cursor_pos() const {
+  POINT p;
+  if (GetCursorPos(&p) == FALSE)
+    return std::nullopt;
+
+  return p;
+}
+
 bool NppInterface::open_document(std::wstring filename) { return send_msg_to_npp(NPPM_DOOPEN, 0, reinterpret_cast<LPARAM>(filename.data())) == TRUE; }
 
 bool NppInterface::is_opened(const std::wstring &filename) const {

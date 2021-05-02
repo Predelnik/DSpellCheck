@@ -128,6 +128,9 @@ public:
 
   virtual int get_view_count () const = 0;
 
+  // winapi function moved here for easier testing
+  virtual std::optional<POINT> get_mouse_cursor_pos () const = 0;
+
   TextPosition get_prev_valid_begin_pos(TextPosition pos) const;
   TextPosition get_next_valid_end_pos(TextPosition pos) const;
   MappedWstring to_mapped_wstring (const std::string &str);

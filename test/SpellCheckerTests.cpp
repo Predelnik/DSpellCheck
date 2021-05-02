@@ -40,7 +40,7 @@ adadsd.)");
   SpellerContainer sp_container(&settings, std::move(speller));
   SpellChecker sc(&settings, editor, sp_container);
 
-  SECTION("Find/prev next mistake / Undrlines") {
+  SECTION("Find/prev next mistake / Underlines") {
     sc.find_next_mistake();
     CHECK(editor.selected_text() == "adadsd");
     settings.modify()->data.tokenization_style = TokenizationStyle::by_delimiters;
@@ -284,11 +284,40 @@ abg
       editor.set_active_document_text(L"abcdef test");
       editor.set_cursor_pos(11);
       CHECK(sc.is_word_under_cursor_correct(pos, length, true));
+      editor.set_selection(0, 6);
+      CHECK(!sc.is_word_under_cursor_correct(pos, length, true));
+      editor.set_selection(0, 5);
+      CHECK(sc.is_word_under_cursor_correct(pos, length, true));
     }
     {
       // check for wrong utf-8 characters
       editor.set_active_document_text_raw("abcdef\xBE\xE3");
       sc.recheck_visible_both_views();
+    }
+    {
+      editor.set_active_document_text(L"");
+      sc.recheck_visible_both_views();
+      editor.set_cursor_pos(0);
+      CHECK(sc.is_word_under_cursor_correct(pos, length, true));
+    }
+  }
+
+  SECTION("Mouse cursor pos") {
+    TextPosition pos, length;
+    {
+      // check that right clicking when cursor after the word works
+      editor.set_active_document_text(L"abcdef test");
+      CHECK(sc.is_word_under_cursor_correct(pos, length, false));
+      editor.set_mouse_cursor_pos(POINT {-500, -500});
+      CHECK(sc.is_word_under_cursor_correct(pos, length, false));
+      editor.set_mouse_cursor_pos(POINT {MockEditorInterface::char_width * 3, 0});
+      CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, false));
+    }
+    {
+      // check that right clicking when cursor after the word works
+      editor.set_active_document_text(L"abcdef test");
+      editor.set_mouse_cursor_pos(POINT {MockEditorInterface::char_width * 10, MockEditorInterface::char_height / 2});
+      CHECK(sc.is_word_under_cursor_correct(pos, length, false));
     }
   }
 
@@ -375,5 +404,11 @@ abg
     editor.set_active_document_text(L"parise PaRiSe Token Parise PARISE");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "parise", L"Paris", true);
     CHECK(editor.get_active_document_text() == "Paris Paris Token Paris Paris");
+  }
+
+  SECTION("Bookmarks") {
+    editor.set_active_document_text(L"abcdef\ntest\ntest\nkolli");
+    sc.mark_lines_with_misspelling ();
+    CHECK (editor.get_bookmarked_lines() == std::set<size_t> {0, 3});
   }
 }
