@@ -26,7 +26,7 @@
 #include "npp/EditorInterface.h"
 #include "npp/NppInterface.h"
 
-#include "utils/enum_range.h"
+#include <ranges>
 
 SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor, const SpellerContainer &speller_container)
     : m_settings(*settings), m_editor(editor), m_speller_container(speller_container) {
@@ -375,10 +375,28 @@ std::vector<SpellerWordData> SpellChecker::generate_words_to_check (const Mapped
   return words_to_check;
 }
 
+void SpellChecker::underline_errors(const MappedWstring &text_to_check) const {
+  std::vector<TextPosition> underline_buffer;
+  auto words_to_check = generate_words_to_check (text_to_check);
+  for (auto &result : words_to_check) {
+    if (result.is_correct)
+      continue;
+    std::array list {result.word_start, result.word_end};
+    underline_buffer.insert(underline_buffer.end (), list.begin (), list.end ());
+  }
+  TextPosition prev_pos = 0;
+  for (TextPosition i = 0; i < static_cast<TextPosition>(underline_buffer.size()) - 1; i += 2) {
+    remove_underline(prev_pos, underline_buffer[i]);
+    create_word_underline(underline_buffer[i], underline_buffer[i + 1]);
+    prev_pos = underline_buffer[i + 1];
+  }
+  auto text_len = text_to_check.original_length();
+  remove_underline(prev_pos, text_len);
+}
+
 template <SpellChecker::CheckTextMode mode>
 bool SpellChecker::check_text(const MappedWstring &text_to_check) const {
   bool stop = false;
-  auto text_len = text_to_check.original_length();
   TextPosition resulting_word_start = -1, resulting_word_end = -1;
   auto words_to_check = generate_words_to_check (text_to_check);
   std::vector<TextPosition> underline_buffer;
@@ -387,10 +405,6 @@ bool SpellChecker::check_text(const MappedWstring &text_to_check) const {
       auto word_start = result.word_start;
       auto word_end = result.word_end;
       switch (mode) {
-      case CheckTextMode::underline_errors:
-        underline_buffer.push_back(word_start);
-        underline_buffer.push_back(word_end);
-        break;
       case CheckTextMode::find_first:
         if (word_end > m_current_position) {
           m_editor.set_selection(word_start, word_end);
@@ -414,16 +428,7 @@ bool SpellChecker::check_text(const MappedWstring &text_to_check) const {
     }
   }
 
-  if (mode == CheckTextMode::underline_errors) {
-    TextPosition prev_pos = 0;
-    for (TextPosition i = 0; i < static_cast<TextPosition>(underline_buffer.size()) - 1; i += 2) {
-      remove_underline(prev_pos, underline_buffer[i]);
-      create_word_underline(underline_buffer[i], underline_buffer[i + 1]);
-      prev_pos = underline_buffer[i + 1];
-    }
-    remove_underline(prev_pos, static_cast<TextPosition>(text_len));
-  }
-  if constexpr (mode == CheckTextMode::underline_errors || mode == CheckTextMode::find_all) {
+  if constexpr (mode == CheckTextMode::find_all) {
     return true;
   } else if constexpr (mode == CheckTextMode::find_first) {
     return stop;
@@ -435,14 +440,14 @@ bool SpellChecker::check_text(const MappedWstring &text_to_check) const {
     m_editor.set_selection(resulting_word_start, resulting_word_end);
     return true;
   } else {
-    static_assert(mode == CheckTextMode::underline_errors, "Incorrect mode was specified");
+    static_assert(mode == CheckTextMode::find_last, "Incorrect mode was specified");
   }
 }
 
 void SpellChecker::check_visible() {
   SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::check_visible(NppViewType view)", m_editor.get_editor_hwnd());
   auto text = get_visible_text();
-  check_text<CheckTextMode::underline_errors>(text);
+  underline_errors(text);
 }
 
 void SpellChecker::recheck_visible() {
