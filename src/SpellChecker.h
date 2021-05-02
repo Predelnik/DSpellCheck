@@ -31,6 +31,7 @@ class MappedWstring;
 class NativeSpellerInterface;
 class WordForSpeller;
 class SpellerContainer;
+class SpellerWordData;
 
 class SpellChecker {
   enum class CheckTextMode {
@@ -67,6 +68,7 @@ private:
   TextPosition prev_token_begin_in_document(TextPosition start) const;
   TextPosition next_token_end_in_document(TextPosition end) const;
   MappedWstring get_visible_text();
+  std::vector<SpellerWordData> generate_words_to_check (const MappedWstring &text_to_check) const;
   template <CheckTextMode mode>
   bool check_text(const MappedWstring &text_to_check) const;
   void check_visible();

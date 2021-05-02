@@ -329,8 +329,7 @@ TextPosition SpellChecker::prev_token_begin(std::wstring_view target, TextPositi
   return m_settings.do_with_tokenizer (target, [index](const auto &tokenizer){ return tokenizer.prev_token_begin (index); });
 }
 
-namespace {
-class WordData {
+class SpellerWordData {
 public:
   std::wstring_view token;
   WordForSpeller word_for_speller;
@@ -338,25 +337,16 @@ public:
   TextPosition word_end;
   bool is_correct;
 };
-} // namespace
 
-template <SpellChecker::CheckTextMode mode>
-bool SpellChecker::check_text(const MappedWstring &text_to_check) const {
-  SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_text(NppViewType view, const MappedWstring &text_to_check, CheckTextMode mode)", m_editor.get_editor_hwnd());
+std::vector<SpellerWordData> SpellChecker::generate_words_to_check (const MappedWstring &text_to_check) const {
   if (text_to_check.str.empty())
-    return false;
-
-  bool stop = false;
-  TextPosition resulting_word_end = -1, resulting_word_start = -1;
-  auto text_len = text_to_check.original_length();
-  std::vector<TextPosition> underline_buffer;
-
+    return {};
   auto sv = std::wstring_view(text_to_check.str);
   std::vector<std::wstring_view> tokens;
   m_settings.do_with_tokenizer(sv, [&](const auto &tokenizer){ tokens = tokenizer.get_all_tokens (); });
 
   std::vector<bool> results(tokens.size());
-  std::vector<WordData> words_to_check;
+  std::vector<SpellerWordData> words_to_check;
   words_to_check.clear();
   std::vector<WordForSpeller> words_for_speller;
   for (auto token : tokens) {
@@ -382,7 +372,16 @@ bool SpellChecker::check_text(const MappedWstring &text_to_check) const {
   } else
     for (auto &w : words_to_check)
       w.is_correct = true;
+  return words_to_check;
+}
 
+template <SpellChecker::CheckTextMode mode>
+bool SpellChecker::check_text(const MappedWstring &text_to_check) const {
+  bool stop = false;
+  auto text_len = text_to_check.original_length();
+  TextPosition resulting_word_start = -1, resulting_word_end = -1;
+  auto words_to_check = generate_words_to_check (text_to_check);
+  std::vector<TextPosition> underline_buffer;
   for (auto &result : words_to_check) {
     if (!result.is_correct) {
       auto word_start = result.word_start;
