@@ -134,14 +134,15 @@ public:
   TextPosition find_next(TextPosition from_position, const char* needle) override;
   void replace_text(TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(TextPosition line) override;
+  void clear_bookmarks ();
+  std::set<size_t> get_bookmarked_lines () const;
   int get_view_count() const override;
   void clear_indicator_info ();
   std::vector<std::wstring> get_open_filenames() const override;
   std::vector<std::wstring> get_open_filenames_all_views() const override;
   void set_editor_rect (int left, int top, int right, int bottom);
-
-public:
-  std::vector<size_t> get_bookmarked_lines () const;
+  std::optional<POINT> get_mouse_cursor_pos() const override;
+  void set_mouse_cursor_pos(const std::optional<POINT>& pos);
 
 private:
   void set_target_view(int view_index) const override;
@@ -162,4 +163,5 @@ private:
   int m_active_view = 0;
   mutable int m_target_view = -1;
   RECT m_editor_rect;
+  std::optional<POINT> m_cursor_pos;
 };

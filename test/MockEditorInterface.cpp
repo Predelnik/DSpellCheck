@@ -656,6 +656,20 @@ void MockEditorInterface::add_bookmark(TextPosition line) {
   doc->cur.bookmarked_lines.insert(line);
 }
 
+void MockEditorInterface::clear_bookmarks() {
+  auto doc = active_document();
+  if (!doc)
+    return;
+  doc->cur.bookmarked_lines.clear ();
+}
+
+std::set<size_t> MockEditorInterface::get_bookmarked_lines() const {
+  auto doc = active_document();
+  if (!doc)
+    return {};
+  return doc->cur.bookmarked_lines;
+}
+
 constexpr auto mock_editor_view_count = 2;
 
 int MockEditorInterface::get_view_count() const {
@@ -702,14 +716,12 @@ void MockEditorInterface::set_editor_rect(int left, int top, int right, int bott
   m_editor_rect = {left, top, right, bottom};
 }
 
-std::vector<size_t> MockEditorInterface::get_bookmarked_lines() const {
-  auto doc = active_document();
-  if (!doc)
-    return {};
+std::optional<POINT> MockEditorInterface::get_mouse_cursor_pos() const {
+  return m_cursor_pos;
+}
 
-  auto& src = doc->cur.bookmarked_lines;
-  std::vector<size_t> lines(src.begin(), src.end());
-  return lines;
+void MockEditorInterface::set_mouse_cursor_pos(const std::optional<POINT>& pos) {
+  m_cursor_pos = pos;
 }
 
 MockedDocumentInfo* MockEditorInterface::active_document() {
