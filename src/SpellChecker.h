@@ -37,7 +37,6 @@ class SpellChecker {
   enum class CheckTextMode {
     find_first,
     find_last,
-    find_all,
   };
 
 public:
@@ -68,7 +67,8 @@ private:
   TextPosition next_token_end_in_document(TextPosition end) const;
   MappedWstring get_visible_text();
   std::vector<SpellerWordData> generate_words_to_check (const MappedWstring &text_to_check) const;
-  void underline_errors(const MappedWstring &text_to_check) const;
+  void underline_misspelled_words(const MappedWstring &text_to_check) const;
+  std::vector<std::wstring_view> get_misspelled_words(const MappedWstring &text_to_check) const;
   template <CheckTextMode mode>
   bool check_text(const MappedWstring &text_to_check) const;
   void check_visible();
@@ -85,6 +85,5 @@ private:
 
   TextPosition m_current_position;
   EditorInterface &m_editor;
-  mutable std::vector<std::wstring_view> m_misspellings;
   const SpellerContainer &m_speller_container;
 };
