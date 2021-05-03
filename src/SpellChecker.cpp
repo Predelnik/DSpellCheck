@@ -30,7 +30,6 @@
 
 SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor, const SpellerContainer &speller_container)
   : m_settings(*settings), m_editor(editor), m_speller_container(speller_container) {
-  m_current_position = 0;
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
   m_speller_container.speller_status_changed.connect([this] { recheck_visible_both_views(); });
   on_settings_changed();
@@ -54,9 +53,9 @@ void SpellChecker::recheck_visible_on_active_view() {
 
 void SpellChecker::find_next_mistake() {
   ACTIVE_VIEW_BLOCK(m_editor);
-  m_current_position = m_editor.get_current_pos();
+  auto current_position = m_editor.get_current_pos();
   auto doc_length = m_editor.get_active_document_length();
-  auto iterator_pos = prev_token_begin_in_document(m_current_position);
+  auto iterator_pos = prev_token_begin_in_document(current_position);
   bool full_check = false;
 
   while (true) {
@@ -73,7 +72,7 @@ void SpellChecker::find_next_mistake() {
       if (to != doc_length && next_token_end(text.str, to) == index)
         index = prev_token_begin(text.str, index - 1);
       text.str.erase(index, text.str.size() - index);
-      if (auto mb_positions = find_first_misspelling(text)) {
+      if (auto mb_positions = find_first_misspelling(text, current_position)) {
         auto &pos = *mb_positions;
         m_editor.set_selection(pos[0], pos[1]);
         break;
@@ -86,7 +85,7 @@ void SpellChecker::find_next_mistake() {
       if (full_check)
         break;
 
-      m_current_position = 0;
+      current_position = 0;
       iterator_pos = 0;
       full_check = true;
     }
@@ -95,10 +94,10 @@ void SpellChecker::find_next_mistake() {
 
 void SpellChecker::find_prev_mistake() {
   ACTIVE_VIEW_BLOCK(m_editor);
-  m_current_position = m_editor.get_current_pos();
+  auto current_position = m_editor.get_current_pos();
   auto doc_length = m_editor.get_active_document_length();
 
-  auto iterator_pos = next_token_end_in_document(m_current_position);
+  auto iterator_pos = next_token_end_in_document(current_position);
   bool full_check = false;
 
   while (true) {
@@ -113,7 +112,7 @@ void SpellChecker::find_prev_mistake() {
     if (from < to) {
       auto text = m_editor.get_mapped_wstring_range(from, to);
       auto offset = next_token_end(text.str, 0);
-      if (auto mb_positions = find_last_misspelling(text)) {
+      if (auto mb_positions = find_last_misspelling(text, current_position)) {
         auto &pos = *mb_positions;
         m_editor.set_selection(pos[0], pos[1]);
         break;
@@ -127,7 +126,7 @@ void SpellChecker::find_prev_mistake() {
       if (full_check)
         break;
 
-      m_current_position = doc_length + 1;
+      current_position = doc_length + 1;
       iterator_pos = doc_length;
       full_check = true;
     }
@@ -356,9 +355,9 @@ std::vector<SpellerWordData> SpellChecker::check_text(const MappedWstring &text_
   std::vector<WordForSpeller> words_for_speller;
   for (auto token : tokens) {
     SpellCheckerHelpers::cut_apostrophes(m_settings, token);
-    auto word_start = static_cast<TextPosition>(text_to_check.to_original_index(static_cast<TextPosition>(token.data() - text_to_check.str.data())));
-    auto word_end = static_cast<TextPosition>(text_to_check.to_original_index(
-        static_cast<TextPosition>(token.data() - text_to_check.str.data() + token.length())));
+    auto word_start = text_to_check.to_original_index(token.data() - text_to_check.str.data());
+    auto word_end = text_to_check.to_original_index(
+        static_cast<TextPosition>(token.data() - text_to_check.str.data() + token.length()));
     if (is_spellchecking_needed(token, word_start)) {
       words_to_check.emplace_back();
       auto &w = words_to_check.back();
@@ -411,20 +410,20 @@ std::vector<std::wstring_view> SpellChecker::get_misspelled_words(const MappedWs
   return misspelled_words;
 }
 
-std::optional<std::array<TextPosition, 2>> SpellChecker::find_first_misspelling(const MappedWstring &text_to_check) const {
+std::optional<std::array<TextPosition, 2>> SpellChecker::find_first_misspelling(const MappedWstring &text_to_check, TextPosition last_valid_position) const {
   auto words_to_check = check_text(text_to_check);
-  auto it = std::ranges::find_if(words_to_check, [this](const SpellerWordData &data) { return !data.is_correct && data.word_end > m_current_position; });
+  auto it = std::ranges::find_if(words_to_check, [last_valid_position](const SpellerWordData &data) { return !data.is_correct && data.word_end > last_valid_position; });
   if (it == words_to_check.end())
     return {};
 
   return std::array{it->word_start, it->word_end};
 }
 
-std::optional<std::array<TextPosition, 2>> SpellChecker::find_last_misspelling(const MappedWstring &text_to_check) const {
+std::optional<std::array<TextPosition, 2>> SpellChecker::find_last_misspelling(const MappedWstring &text_to_check, TextPosition last_valid_position) const {
   auto words_to_check = check_text(text_to_check);
   using namespace std::ranges;
   auto reversed = views::reverse(words_to_check);
-  auto it = find_if(reversed, [this](const SpellerWordData &word_data) { return !word_data.is_correct && word_data.word_end < m_current_position; });
+  auto it = find_if(reversed, [last_valid_position](const SpellerWordData &word_data) { return !word_data.is_correct && word_data.word_end < last_valid_position; });
   if (it == reversed.end())
     return {};
 
