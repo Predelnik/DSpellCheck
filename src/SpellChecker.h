@@ -17,6 +17,7 @@
 
 #include "npp/EditorInterface.h"
 
+
 class EditorInterface;
 class Settings;
 class LanguageInfo;
@@ -69,8 +70,8 @@ private:
   std::vector<SpellerWordData> check_text (const MappedWstring &text_to_check) const;
   void underline_misspelled_words(const MappedWstring &text_to_check) const;
   std::vector<std::wstring_view> get_misspelled_words(const MappedWstring &text_to_check) const;
-  std::optional<std::array<TextPosition, 2>> find_first_misspelling(const MappedWstring &text_to_check) const;
-  std::optional<std::array<TextPosition, 2>> find_last_misspelling(const MappedWstring &text_to_check) const;
+  std::optional<std::array<TextPosition, 2>> find_first_misspelling(const MappedWstring &text_to_check, TextPosition last_valid_position) const;
+  std::optional<std::array<TextPosition, 2>> find_last_misspelling(const MappedWstring &text_to_check, TextPosition last_valid_position) const;
   void check_visible();
 
   std::wstring_view get_word_at(TextPosition char_pos, const MappedWstring &text) const;
@@ -83,7 +84,6 @@ private:
 private:
   const Settings &m_settings;
 
-  TextPosition m_current_position;
   EditorInterface &m_editor;
   const SpellerContainer &m_speller_container;
 };
