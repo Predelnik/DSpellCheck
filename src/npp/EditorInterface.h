@@ -21,8 +21,8 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include "CommonFunctions.h"
-#include "MainDefs.h"
+#include "common/CommonFunctions.h"
+#include "plugin/MainDefs.h"
 
 // To mock things and stuff
 

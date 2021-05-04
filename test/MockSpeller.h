@@ -13,7 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
-#include "SpellerInterface.h"
+#include "spellers/SpellerInterface.h"
 
 #include <unordered_map>
 #include <unordered_set>

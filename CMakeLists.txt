@@ -55,8 +55,8 @@ if ( DSpellCheck_USE_VLD )
     add_definitions ("-DVLD_BUILD")
 endif ()
 
-file (GLOB_RECURSE source_files src/*.cpp src/*.h)
-list(REMOVE_ITEM source_files src/DllMain.cpp)
+file (GLOB_RECURSE source_files src/**/*.cpp src/**/*.h)
+list(REMOVE_ITEM source_files src/plugin/DllMain.cpp)
 
 add_library (DSpellCheckStatic STATIC ${source_files})
 target_include_directories (DSpellCheckStatic PUBLIC src deps/win-iconv)
@@ -86,7 +86,7 @@ if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif ()
 target_compile_options (DSpellCheckStatic PUBLIC /std:c++latest /EHsc)
 
-add_library (DSpellCheck SHARED src/DllMain.cpp src/DSpellCheck.rc)
+add_library (DSpellCheck SHARED src/plugin/DllMain.cpp src/plugin/DSpellCheck.rc)
 target_link_libraries (DSpellCheck DSpellCheckStatic)
 
 set(DSpellCheck_DLL_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
@@ -108,6 +108,6 @@ pvs_studio_add_target(TARGET DSpellCheck.analyze ALL
                       LOG DSpellCheck.psv-err)
 endif ()
 if (MSVC)
-	target_compile_options (DSpellCheckStatic PRIVATE "/YuPrecompiledHeader.h" "/FIPrecompiledHeader.h")
-	SET_SOURCE_FILES_PROPERTIES("src/PrecompiledHeader.cpp" PROPERTIES COMPILE_FLAGS "/Yc")
+	target_compile_options (DSpellCheckStatic PRIVATE "/Yucommon/PrecompiledHeader.h" "/FIcommon/PrecompiledHeader.h")
+	SET_SOURCE_FILES_PROPERTIES("src/common/PrecompiledHeader.cpp" PROPERTIES COMPILE_FLAGS "/Yc")
 endif ()

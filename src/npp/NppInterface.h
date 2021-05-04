@@ -15,7 +15,7 @@
 #pragma once
 #include "npp/EditorInterface.h"
 
-#include "utils/enum_array.h"
+#include "common/enum_array.h"
 #include <vector>
 
 enum class NppViewType {

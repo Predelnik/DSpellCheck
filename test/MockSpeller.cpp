@@ -13,8 +13,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MockSpeller.h"
-#include "LanguageInfo.h"
-#include "Settings.h"
+#include "spellers/LanguageInfo.h"
+#include "plugin/Settings.h"
 
 MockSpeller::MockSpeller(const Settings &settings) : m_settings (settings) {}
 MockSpeller::~MockSpeller() = default;
