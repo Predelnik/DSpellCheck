@@ -13,8 +13,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MockEditorInterface.h"
-#include "CommonFunctions.h"
-#include "utils/string_utils.h"
+#include "common/CommonFunctions.h"
+#include "common/string_utils.h"
 
 #include <filesystem>
 #include <algorithm>

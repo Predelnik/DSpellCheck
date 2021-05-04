@@ -14,9 +14,9 @@
 
 #include <catch.hpp>
 
-#include "utils/string_utils.h"
+#include "common/string_utils.h"
 
-#include "UrlHelpers.h"
+#include "network/UrlHelpers.h"
 
 using namespace std::literals;
 

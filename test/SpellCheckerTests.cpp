@@ -16,13 +16,13 @@
 
 #include <catch.hpp>
 
-#include "Settings.h"
+#include "plugin/Settings.h"
 #include "MockEditorInterface.h"
 #include "MockSpeller.h"
-#include "SpellerContainer.h"
-#include "SpellChecker.h"
-#include "MainDefs.h"
-#include "SpellCheckerHelpers.h"
+#include "spellers/SpellerContainer.h"
+#include "core/SpellChecker.h"
+#include "plugin/MainDefs.h"
+#include "core/SpellCheckerHelpers.h"
 
 using namespace std::literals;
 

@@ -13,8 +13,10 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "EditorInterface.h"
-#include "MappedWString.h"
-#include "utils/utf8.h"
+
+#include "TextUtils.h"
+#include "common/utf8.h"
+#include "common/CommonFunctions.h"
 
 POINT EditorInterface::get_point_from_position(TextPosition position) const {
   return {get_point_x_from_position(position),

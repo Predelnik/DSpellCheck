@@ -14,7 +14,7 @@
 
 #include "NppInterface.h"
 
-#include "MainDefs.h"
+#include "plugin/MainDefs.h"
 #include "Notepad_plus_msgs.h"
 #include "PluginInterface.h"
 #include "menuCmdID.h"
