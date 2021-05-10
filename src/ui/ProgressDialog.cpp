@@ -12,13 +12,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "ProgressDlg.h"
+#include "ProgressDialog.h"
 
-#include "DownloadDicsDlg.h"
+#include "DownloadDictionariesDialog.h"
 #include "common/ProgressData.h"
 #include "plugin/resource.h"
 
-void ProgressDlg::do_dialog() {
+void ProgressDialog::do_dialog() {
   if (!isCreated()) {
     create(IDD_DIALOGPROGRESS);
   } else {
@@ -27,7 +27,7 @@ void ProgressDlg::do_dialog() {
   }
 }
 
-void ProgressDlg::init(HINSTANCE h_inst, HWND parent) {
+void ProgressDialog::init(HINSTANCE h_inst, HWND parent) {
   return Window::init(h_inst, parent);
 }
 
@@ -35,7 +35,7 @@ namespace {
 constexpr auto ui_update_timer_id = 0;
 }
 
-INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM w_param,
+INT_PTR ProgressDialog::run_dlg_proc(UINT message, WPARAM w_param,
                                   LPARAM /*lParam*/) {
   switch (message) {
   case WM_SHOWWINDOW: {
@@ -76,7 +76,7 @@ INT_PTR ProgressDlg::run_dlg_proc(UINT message, WPARAM w_param,
   return FALSE;
 }
 
-void ProgressDlg::set_marquee(bool animated) {
+void ProgressDialog::set_marquee(bool animated) {
   if (m_marquee == animated)
     return;
   m_marquee = animated;
@@ -90,22 +90,22 @@ void ProgressDlg::set_marquee(bool animated) {
   SendMessage(m_h_progress_bar, PBM_SETMARQUEE, static_cast<int>(animated), 0);
 }
 
-void ProgressDlg::update() {
+void ProgressDialog::update() {
   SendMessage(m_h_progress_bar, PBM_SETPOS, static_cast<WPARAM>(m_progress_data->get_progress()), 0);
   Static_SetText(m_h_desc_bottom, m_progress_data->get_status().c_str());
   set_marquee(m_progress_data->get_marquee());
   Static_SetText(m_h_desc_top, m_top_message.c_str());
 }
 
-void ProgressDlg::set_top_message(const wchar_t *message) {
+void ProgressDialog::set_top_message(const wchar_t *message) {
   m_top_message = message;
 }
 
-ProgressDlg::ProgressDlg(DownloadDicsDlg &download_dics_dlg)
+ProgressDialog::ProgressDialog(DownloadDictionariesDialog &download_dics_dlg)
   : m_progress_data(std::make_shared<ProgressData>()),
     m_download_dics_dlg(download_dics_dlg) {
 }
 
-ProgressDlg::~ProgressDlg() {
+ProgressDialog::~ProgressDialog() {
   KillTimer(_hSelf, ui_update_timer_id);
 }

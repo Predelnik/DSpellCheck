@@ -16,33 +16,27 @@
 
 #include "StaticDialog.h"
 
-class SpellChecker;
-class NppInterface;
-class Settings;
-class ContextMenuHandler;
+class ProgressData;
 
-class SuggestionsButton : public StaticDialog {
+class ProgressDialog : public StaticDialog {
 public:
-  void do_dialog();
-  HMENU get_popup_menu() const;
-  int get_result() const;
-  bool is_pressed() const;
-  SuggestionsButton(HINSTANCE h_inst, HWND parent, NppInterface &npp,
-                    ContextMenuHandler &context_menu_handler,
-                    const Settings &settings);
-  void show_suggestion_menu();
-  void on_settings_changed();
-  void set_transparency();
+  ProgressDialog(DownloadDictionariesDialog &download_dics_dlg);
+  ~ProgressDialog() override;
 
-protected:
-  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
-                              LPARAM l_param) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override; // NOLINT
+  void init(HINSTANCE h_inst, HWND parent) override;
+  void do_dialog();
+  void set_top_message(const wchar_t *message);
+  void set_marquee(bool animated);
+  std::shared_ptr<ProgressData> get_progress_data() const { return m_progress_data; }
+  void update();
 
 private:
-  bool m_state_pressed = false;
-  bool m_state_hovered = false;
-  bool m_state_menu = false;
-  NppInterface &m_npp;
-  const Settings &m_settings;
-  ContextMenuHandler &m_context_menu_handler;
+  std::shared_ptr<ProgressData> m_progress_data;
+  HWND m_h_desc_bottom = nullptr;
+  HWND m_h_desc_top = nullptr;
+  HWND m_h_progress_bar = nullptr;
+  bool m_marquee = false;
+  std::wstring m_top_message;
+  DownloadDictionariesDialog &m_download_dics_dlg;
 };

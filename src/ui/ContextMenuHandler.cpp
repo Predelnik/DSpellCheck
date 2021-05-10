@@ -15,12 +15,12 @@
 #include "ContextMenuHandler.h"
 
 #include "MenuItem.h"
-#include "SuggestionsButton.h"
+#include "SuggestionMenuButton.h"
 #include "core/SpellChecker.h"
 #include "core/SpellCheckerHelpers.h"
 #include "npp/EditorInterface.h"
 #include "npp/NppInterface.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"
 #include "plugin/Settings.h"
@@ -223,7 +223,7 @@ void ContextMenuHandler::precalculate_menu() {
 }
 
 void ContextMenuHandler::init_suggestions_box(
-    SuggestionsButton &suggestion_button) {
+    SuggestionMenuButton &suggestion_button) {
   if (m_settings.data.suggestions_mode != SuggestionMode::button)
     return;
   if (!m_speller_container.active_speller().is_working())

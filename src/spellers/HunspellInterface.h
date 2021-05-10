@@ -17,7 +17,7 @@
 #include "iconv.h"
 #include "lsignal.h"
 #include "SpellerInterface.h"
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/TaskWrapper.h"
 
 class LanguageInfo;
@@ -76,7 +76,7 @@ public:
   ~HunspellInterface() override;
   std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t *lang) override;
-  void set_multiple_languages(const std::vector<std::wstring> &list) override; // Languages are from LangList
+  void set_multiple_languages(const std::vector<std::wstring> &list) override; // Languages are from SelectMultipleLanguagesDialog
   bool check_word(const WordForSpeller &word) const override;                  // Word in Utf-8 or ANSI
   bool is_working() const override;
   std::vector<std::wstring> get_suggestions(const wchar_t *word) const override;

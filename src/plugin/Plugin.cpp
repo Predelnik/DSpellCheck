@@ -18,7 +18,7 @@
 // put the headers you need here
 //
 
-#include "MainDefs.h"
+#include "Constants.h"
 #include "menuCmdID.h"
 #include "resource.h"
 #include "Settings.h"
@@ -30,17 +30,17 @@
 #include "npp/NppInterface.h"
 #include "spellers/HunspellInterface.h"
 #include "spellers/SpellerContainer.h"
-#include "ui/AboutDlg.h"
+#include "ui/AboutDialog.h"
 #include "ui/AspellOptionsDialog.h"
 #include "ui/ConnectionSettingsDialog.h"
 #include "ui/ContextMenuHandler.h"
-#include "ui/DownloadDicsDlg.h"
-#include "ui/LangList.h"
+#include "ui/DownloadDictionariesDialog.h"
+#include "ui/SelectMultipleLanguagesDialog.h"
 #include "ui/MenuItem.h"
-#include "ui/ProgressDlg.h"
+#include "ui/ProgressDialog.h"
 #include "ui/RemoveDictionariesDialog.h"
-#include "ui/SettingsDlg.h"
-#include "ui/SuggestionsButton.h"
+#include "ui/SettingsDialog.h"
+#include "ui/SuggestionMenuButton.h"
 
 #include <chrono>
 
@@ -69,15 +69,15 @@ bool do_close_tag = false;
 std::unique_ptr<SpellChecker> spell_checker;
 std::unique_ptr<const SpellerContainer> speller_container;
 std::unique_ptr<ContextMenuHandler> context_menu_handler;
-std::unique_ptr<SettingsDlg> settings_dlg;
-std::unique_ptr<SuggestionsButton> suggestions_button;
-std::unique_ptr<LangList> lang_list_instance;
+std::unique_ptr<SettingsDialog> settings_dlg;
+std::unique_ptr<SuggestionMenuButton> suggestions_button;
+std::unique_ptr<SelectMultipleLanguagesDialog> lang_list_instance;
 std::unique_ptr<RemoveDictionariesDialog> remove_dics_dlg;
 std::unique_ptr<AspellOptionsDialog> aspell_options_dlg;
 std::unique_ptr<ConnectionSettingsDialog> select_proxy_dlg;
-std::unique_ptr<ProgressDlg> progress_dlg;
-std::unique_ptr<DownloadDicsDlg> download_dics_dlg;
-std::unique_ptr<AboutDlg> about_dlg;
+std::unique_ptr<ProgressDialog> progress_dlg;
+std::unique_ptr<DownloadDictionariesDialog> download_dics_dlg;
+std::unique_ptr<AboutDialog> about_dlg;
 std::unique_ptr<const Settings> settings;
 int context_menu_id_start;
 int langs_menu_id_start = 0;
@@ -127,16 +127,16 @@ void set_hmodule(HANDLE h_module_arg) {
   // Init it all dialog classes:
 }
 
-LangList *get_lang_list() { return lang_list_instance.get(); }
+SelectMultipleLanguagesDialog *get_lang_list() { return lang_list_instance.get(); }
 
 RemoveDictionariesDialog *get_remove_dics() { return remove_dics_dlg.get(); }
 AspellOptionsDialog *get_aspell_options_dlg() { return aspell_options_dlg.get(); }
 
 ConnectionSettingsDialog *get_select_proxy() { return select_proxy_dlg.get(); }
 
-ProgressDlg *get_progress_dlg() { return progress_dlg.get(); }
+ProgressDialog *get_progress_dlg() { return progress_dlg.get(); }
 
-DownloadDicsDlg *get_download_dics() { return download_dics_dlg.get(); }
+DownloadDictionariesDialog *get_download_dics() { return download_dics_dlg.get(); }
 
 HANDLE get_h_module() { return h_module; }
 
@@ -424,21 +424,21 @@ void init_classes() {
 
   context_menu_handler = std::make_unique<ContextMenuHandler>(*settings, *speller_container, *npp, *spell_checker);
 
-  suggestions_button = std::make_unique<SuggestionsButton>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp, *context_menu_handler, *settings);
+  suggestions_button = std::make_unique<SuggestionMenuButton>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp, *context_menu_handler, *settings);
   suggestions_button->do_dialog();
 
-  settings_dlg = std::make_unique<SettingsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp, *settings, *speller_container);
-  download_dics_dlg = std::make_unique<DownloadDicsDlg>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
+  settings_dlg = std::make_unique<SettingsDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp, *settings, *speller_container);
+  download_dics_dlg = std::make_unique<DownloadDictionariesDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
 
   settings_dlg->download_dics_dlg_requested.connect([]() { download_dics_dlg->do_dialog(); });
 
-  about_dlg = std::make_unique<AboutDlg>();
+  about_dlg = std::make_unique<AboutDialog>();
   about_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
-  progress_dlg = std::make_unique<ProgressDlg>(*download_dics_dlg);
+  progress_dlg = std::make_unique<ProgressDialog>(*download_dics_dlg);
   progress_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);
 
-  lang_list_instance = std::make_unique<LangList>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
+  lang_list_instance = std::make_unique<SelectMultipleLanguagesDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
 
   select_proxy_dlg = std::make_unique<ConnectionSettingsDialog>(*settings, *download_dics_dlg);
   select_proxy_dlg->init(static_cast<HINSTANCE>(h_module), npp_data.npp_handle);

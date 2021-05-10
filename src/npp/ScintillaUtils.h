@@ -14,29 +14,18 @@
 
 #pragma once
 
-#include "StaticDialog.h"
+namespace ScintillaUtils {
+enum class StyleCategory {
+  text,
+  // should be spell-checked
+  comment,
+  string,
+  identifier,
+  unknown,
+  // Should not be spell-checked
 
-class ProgressData;
-
-class ProgressDlg : public StaticDialog {
-public:
-  ProgressDlg(DownloadDicsDlg &download_dics_dlg);
-  ~ProgressDlg() override;
-
-  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override; // NOLINT
-  void init(HINSTANCE h_inst, HWND parent) override;
-  void do_dialog();
-  void set_top_message(const wchar_t *message);
-  void set_marquee(bool animated);
-  std::shared_ptr<ProgressData> get_progress_data() const { return m_progress_data; }
-  void update();
-
-private:
-  std::shared_ptr<ProgressData> m_progress_data;
-  HWND m_h_desc_bottom = nullptr;
-  HWND m_h_desc_top = nullptr;
-  HWND m_h_progress_bar = nullptr;
-  bool m_marquee = false;
-  std::wstring m_top_message;
-  DownloadDicsDlg &m_download_dics_dlg;
+  COUNT,
 };
+
+StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &settings);
+} // namespace ScintillaUtils

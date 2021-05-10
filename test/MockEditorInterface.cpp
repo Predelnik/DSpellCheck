@@ -14,7 +14,7 @@
 
 #include "MockEditorInterface.h"
 
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/string_utils.h"
 
 #include <algorithm>

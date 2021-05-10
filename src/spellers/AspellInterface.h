@@ -32,7 +32,7 @@ public:
   std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t *lang) override;
   void set_multiple_languages(
-      const std::vector<std::wstring> &list) override; // Languages are from LangList
+      const std::vector<std::wstring> &list) override; // Languages are from SelectMultipleLanguagesDialog
   bool
   check_word(const WordForSpeller &word) const override; // Word in Utf-8 or ANSI (For now only Utf-8)
   bool is_working() const override;

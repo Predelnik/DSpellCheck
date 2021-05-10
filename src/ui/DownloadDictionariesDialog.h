@@ -83,12 +83,12 @@ public:
   bool use_passive_mode;
 };
 
-class DownloadDicsDlg : public StaticDialog {
+class DownloadDictionariesDialog : public StaticDialog {
   enum { refresh_timer_id = 0 };
 
 public:
-  ~DownloadDicsDlg() override;
-  DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container);
+  ~DownloadDictionariesDialog() override;
+  DownloadDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container);
   void do_dialog();
   // Maybe hunspell interface should be passed here
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,

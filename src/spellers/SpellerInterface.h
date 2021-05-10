@@ -42,7 +42,7 @@ public:
   virtual std::vector<LanguageInfo> get_language_list() const = 0;
   virtual void set_language(const wchar_t *lang) = 0;
   virtual void set_multiple_languages(
-      const std::vector<std::wstring> &list) = 0; // Languages are from LangList
+      const std::vector<std::wstring> &list) = 0; // Languages are from SelectMultipleLanguagesDialog
   void set_mode(SpellerMode multi) { m_speller_mode = multi; }
   // Implement either check_word or check_words or get the endless recursion
   virtual bool check_word(const WordForSpeller &word) const;

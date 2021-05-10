@@ -21,9 +21,9 @@
 class EditorInterface;
 class Settings;
 class LanguageInfo;
-class SettingsDlg;
-class LangList;
-class SuggestionsButton;
+class SettingsDialog;
+class SelectMultipleLanguagesDialog;
+class SuggestionMenuButton;
 class SpellerInterface;
 class AspellInterface;
 class HunspellInterface;

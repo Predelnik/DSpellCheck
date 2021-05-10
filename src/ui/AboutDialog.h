@@ -15,25 +15,12 @@
 #pragma once
 #include "ui/StaticDialog.h"
 
-class SpellChecker;
-class Settings;
-class SpellerContainer;
-
-class LangList : public StaticDialog {
+class AboutDialog : public StaticDialog {
 public:
-  LangList(HINSTANCE h_inst, HWND parent, const Settings &settings,
-           const SpellerContainer &speller_container);
+  void init(HINSTANCE h_inst, HWND parent) override;
   void do_dialog();
-  HWND get_list_box();
-  void update_list();
+  void update_compiler_version();
 
 protected:
-  void apply();
-  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
-                              LPARAM l_param) override; // NOLINT
-
-private:
-  HWND m_h_lang_list = nullptr;
-  const Settings &m_settings;
-  const SpellerContainer &m_speller_container;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 };

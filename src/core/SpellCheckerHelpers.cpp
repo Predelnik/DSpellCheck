@@ -14,10 +14,10 @@
 
 #include "SpellCheckerHelpers.h"
 
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/string_utils.h"
 #include "npp/EditorInterface.h"
-#include "npp/SciUtils.h"
+#include "npp/ScintillaUtils.h"
 #include "plugin/Settings.h"
 
 namespace SpellCheckerHelpers {
@@ -164,15 +164,15 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
 
   auto style = editor.get_style_at(word_start);
   auto lexer = editor.get_lexer();
-  auto category = SciUtils::get_style_category(lexer, style, settings);
-  if (category == SciUtils::StyleCategory::unknown) {
+  auto category = ScintillaUtils::get_style_category(lexer, style, settings);
+  if (category == ScintillaUtils::StyleCategory::unknown) {
     return false;
   }
 
-  if (category != SciUtils::StyleCategory::text &&
-      !((category == SciUtils::StyleCategory::comment && settings.data.check_comments) || (
-          category == SciUtils::StyleCategory::string && settings.data.check_strings) ||
-        (category == SciUtils::StyleCategory::identifier && settings.data.check_variable_functions))) {
+  if (category != ScintillaUtils::StyleCategory::text &&
+      !((category == ScintillaUtils::StyleCategory::comment && settings.data.check_comments) || (
+          category == ScintillaUtils::StyleCategory::string && settings.data.check_strings) ||
+        (category == ScintillaUtils::StyleCategory::identifier && settings.data.check_variable_functions))) {
     return false;
   }
 

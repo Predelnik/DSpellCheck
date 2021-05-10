@@ -17,7 +17,7 @@
 #include "menuCmdID.h"
 #include "Notepad_plus_msgs.h"
 #include "PluginInterface.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 
 #include <cassert>
 

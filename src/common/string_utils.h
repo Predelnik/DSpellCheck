@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 
 wchar_t make_upper(wchar_t c);
 wchar_t make_lower(wchar_t c);

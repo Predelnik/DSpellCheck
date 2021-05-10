@@ -12,14 +12,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "CommonFunctions.h"
+#include "Utility.h"
 
 #include "iconv.h"
 #include "MappedWString.h"
 #include "common/string_utils.h"
 #include "common/utf8.h"
 #include "common/winapi.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"
 #include "plugin/Settings.h"

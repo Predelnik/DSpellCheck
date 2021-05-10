@@ -14,7 +14,7 @@
 
 #include "MenuItem.h"
 
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 
 MenuItem::MenuItem(const wchar_t *text_arg, int id_arg,
                    bool separator_arg /*= false*/) {

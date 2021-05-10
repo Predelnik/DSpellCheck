@@ -12,27 +12,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "LangList.h"
+#include "SelectMultipleLanguagesDialog.h"
 
 #include "CheckedList/CheckedList.h"
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/string_utils.h"
 #include "core/SpellChecker.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"
 #include "plugin/Settings.h"
 #include "spellers/LanguageInfo.h"
 #include "spellers/SpellerContainer.h"
 
-LangList::LangList(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
+SelectMultipleLanguagesDialog::SelectMultipleLanguagesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
   : m_settings(settings), m_speller_container(speller_container) {
   Window::init(h_inst, parent);
   m_settings.settings_changed.connect([this] { update_list(); });
   m_speller_container.speller_status_changed.connect([this] { update_list(); });
 }
 
-void LangList::do_dialog() {
+void SelectMultipleLanguagesDialog::do_dialog() {
   if (!isCreated()) {
     create(IDD_CHOOSE_MULTIPLE_LANGUAGES);
   }
@@ -41,9 +41,9 @@ void LangList::do_dialog() {
   SetFocus(m_h_lang_list);
 }
 
-HWND LangList::get_list_box() { return m_h_lang_list; }
+HWND SelectMultipleLanguagesDialog::get_list_box() { return m_h_lang_list; }
 
-void LangList::update_list() {
+void SelectMultipleLanguagesDialog::update_list() {
   if (m_h_lang_list == nullptr)
     return;
 
@@ -69,7 +69,7 @@ void LangList::update_list() {
   }
 }
 
-void LangList::apply() {
+void SelectMultipleLanguagesDialog::apply() {
   int count = ListBox_GetCount(m_h_lang_list);
   std::wstring buf;
   bool first = true;
@@ -91,7 +91,7 @@ void LangList::apply() {
   }
 }
 
-INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
+INT_PTR SelectMultipleLanguagesDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
   switch (message) {
   case WM_INITDIALOG: {
     m_h_lang_list = ::GetDlgItem(_hSelf, IDC_LANGLIST);

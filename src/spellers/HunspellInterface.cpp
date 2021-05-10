@@ -19,7 +19,7 @@
 #include "HunspellInterface.h"
 
 #include "LanguageInfo.h"
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/winapi.h"
 #include "hunspell/hunspell.hxx"
 #include "plugin/Plugin.h"

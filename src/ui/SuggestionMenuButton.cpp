@@ -12,7 +12,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "SuggestionsButton.h"
+#include "SuggestionMenuButton.h"
 
 #include "ContextMenuHandler.h"
 #include "MenuItem.h"
@@ -24,7 +24,7 @@
 #define MOUSELEAVE 0x0001
 #define MOUSEHOVER 0x0002
 
-void SuggestionsButton::do_dialog() {
+void SuggestionMenuButton::do_dialog() {
   HWND temp = GetFocus();
   create(IDD_SUGGESTIONS);
   SetFocus(temp);
@@ -57,11 +57,11 @@ bool reg_msg(HWND h_wnd, DWORD dw_msg_type) {
   return true;
 }
 
-bool SuggestionsButton::is_pressed() const {
+bool SuggestionMenuButton::is_pressed() const {
   return m_state_pressed;
 }
 
-SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
+SuggestionMenuButton::SuggestionMenuButton(HINSTANCE h_inst, HWND parent,
                                      NppInterface &npp, ContextMenuHandler &context_menu_handler,
                                      const Settings &settings)
   : m_npp(npp),
@@ -72,11 +72,11 @@ SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
   m_state_menu = false;
 }
 
-void SuggestionsButton::show_suggestion_menu() {
+void SuggestionMenuButton::show_suggestion_menu() {
   SendMessage(getHSelf(), WM_SHOWANDRECREATEMENU, 0, 0);
 }
 
-void SuggestionsButton::on_settings_changed() {
+void SuggestionMenuButton::on_settings_changed() {
   display(false);
   SetLayeredWindowAttributes(
       getHSelf(), 0,
@@ -84,7 +84,7 @@ void SuggestionsButton::on_settings_changed() {
       LWA_ALPHA);
 }
 
-void SuggestionsButton::set_transparency() {
+void SuggestionMenuButton::set_transparency() {
   SetWindowLongPtr(getHSelf(), GWL_EXSTYLE,
                    GetWindowLongPtr(getHSelf(), GWL_EXSTYLE) | WS_EX_LAYERED);
   SetLayeredWindowAttributes(
@@ -95,7 +95,7 @@ void SuggestionsButton::set_transparency() {
   display(false);
 }
 
-INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
+INT_PTR SuggestionMenuButton::run_dlg_proc(UINT message, WPARAM w_param,
                                         LPARAM l_param) {
   POINT p;
   BITMAP bmp;
