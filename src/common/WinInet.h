@@ -13,25 +13,26 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
-#include <Windows.h>
-#include <WinInet.h>
 #include "move_only.h"
 #include "remap_rvalues_for.h"
+
+#include <Windows.h>
+#include <WinInet.h>
 
 namespace WinInet {
 class GlobalHandle {
 public:
-  GlobalHandle ();
+  GlobalHandle();
   GlobalHandle(const wchar_t *agent, DWORD access_type,
-                const wchar_t *proxy_string,
-                const wchar_t *proxy_bypass = nullptr, DWORD flags = 0);
+               const wchar_t *proxy_string,
+               const wchar_t *proxy_bypass = nullptr, DWORD flags = 0);
   void set_connect_timeout(DWORD ms);
   void set_send_timeout(DWORD ms);
   void set_receive_timeout(DWORD ms);
-  GlobalHandle (GlobalHandle&&) = default;
-  GlobalHandle &operator=(GlobalHandle&&) = default;
+  GlobalHandle(GlobalHandle &&) = default;
+  GlobalHandle &operator=(GlobalHandle &&) = default;
   ~GlobalHandle();
-  HINTERNET get() const { return m_handle.get (); }
+  HINTERNET get() const { return m_handle.get(); }
 
 private:
   move_only<HINTERNET> m_handle;
@@ -45,17 +46,22 @@ public:
     m_agent = agent;
     return *this;
   }
-  REMAP_RVALUES_FOR (agent)
+
+  REMAP_RVALUES_FOR(agent)
+
   Self &access_type(DWORD access_type) & {
     m_access_type = access_type;
     return *this;
   }
-  REMAP_RVALUES_FOR (access_type)
+
+  REMAP_RVALUES_FOR(access_type)
+
   Self &proxy_string(const wchar_t *proxy_string) & {
     m_proxy_string = proxy_string;
     return *this;
   }
-  REMAP_RVALUES_FOR (proxy_string)
+
+  REMAP_RVALUES_FOR(proxy_string)
   operator GlobalHandle() const;
 
 private:
@@ -67,10 +73,10 @@ private:
 class UrlHandle {
 public:
   UrlHandle(HINTERNET h_internet, const wchar_t *url,
-                   std::wstring_view headers, DWORD flags, void *context);
-  UrlHandle (UrlHandle &&) = default;
-  UrlHandle &operator= (UrlHandle &&) = default;
-  HINTERNET get() const { return m_handle.get (); };
+            std::wstring_view headers, DWORD flags, void *context);
+  UrlHandle(UrlHandle &&) = default;
+  UrlHandle &operator=(UrlHandle &&) = default;
+  HINTERNET get() const { return m_handle.get(); };
   void set_proxy_username(std::wstring_view username);
   void set_proxy_password(std::wstring_view password);
   ~UrlHandle();
@@ -87,18 +93,33 @@ class WinInetOpenUrl {
 
 public:
   WinInetOpenUrl(const GlobalHandle &inet_handle, const wchar_t *url)
-      : m_inet_handle(inet_handle), m_url(url) {}
+    : m_inet_handle(inet_handle), m_url(url) {
+  }
 
-  Self &set_headers(std::wstring_view headers) & { m_headers = headers; return *this; }
+  Self &set_headers(std::wstring_view headers) & {
+    m_headers = headers;
+    return *this;
+  }
+
   REMAP_RVALUES_FOR(set_headers);
-  Self &set_context(void *context) & { m_context = context; return *this; }
+
+  Self &set_context(void *context) & {
+    m_context = context;
+    return *this;
+  }
+
   REMAP_RVALUES_FOR(set_context);
-  Self &set_flags(DWORD flags) & { m_flags = flags; return *this; }
+
+  Self &set_flags(DWORD flags) & {
+    m_flags = flags;
+    return *this;
+  }
+
   REMAP_RVALUES_FOR(set_flags);
 
   operator UrlHandle() {
     UrlHandle handle(m_inet_handle.get(), m_url, m_headers, m_flags,
-                            m_context);
+                     m_context);
     return handle;
   }
 

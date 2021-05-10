@@ -15,19 +15,18 @@
 #include "RemoveDictionariesDialog.h"
 
 #include "CheckedList/CheckedList.h"
-#include "spellers/HunspellInterface.h"
+#include "common/winapi.h"
+#include "core/SpellChecker.h"
 #include "plugin/MainDefs.h"
 #include "plugin/Plugin.h"
-#include "core/SpellChecker.h"
-
-#include "spellers/LanguageInfo.h"
-#include "plugin/Settings.h"
-#include "spellers/SpellerContainer.h"
 #include "plugin/resource.h"
-#include "common/winapi.h"
+#include "plugin/Settings.h"
+#include "spellers/HunspellInterface.h"
+#include "spellers/LanguageInfo.h"
+#include "spellers/SpellerContainer.h"
 
 RemoveDictionariesDialog::RemoveDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
-    : m_settings(settings), m_speller_container(speller_container) {
+  : m_settings(settings), m_speller_container(speller_container) {
   m_settings.settings_changed.connect([this] { update_list(); });
   m_speller_container.speller_status_changed.connect([this] { update_list(); });
   Window::init(h_inst, parent);
@@ -51,16 +50,16 @@ void RemoveDictionariesDialog::update_list() {
   std::set<std::wstring> currently_checked;
   for (int i = 0; i < ListBox_GetCount(m_lang_list); ++i)
     if (CheckedListBox_GetCheckState(m_lang_list, i) == BST_CHECKED)
-      currently_checked.insert (m_cur_lang_list[i].orig_name);
+      currently_checked.insert(m_cur_lang_list[i].orig_name);
 
   m_cur_lang_list = m_speller_container.get_available_languages();
   ListBox_ResetContent(m_lang_list);
   for (auto &lang : m_cur_lang_list)
     ListBox_AddString(m_lang_list,
-                      (std::wstring(lang.alias_name) + (lang.for_all_users ? L" [!For All Users]" : L"")).c_str());
+                    (std::wstring(lang.alias_name) + (lang.for_all_users ? L" [!For All Users]" : L"")).c_str());
 
   for (int i = 0; i < ListBox_GetCount(m_lang_list); ++i)
-    if (currently_checked.count (m_cur_lang_list[i].orig_name) > 0)
+    if (currently_checked.count(m_cur_lang_list[i].orig_name) > 0)
       CheckedListBox_SetCheckState(m_lang_list, i, BST_CHECKED);
 }
 
@@ -102,7 +101,7 @@ void RemoveDictionariesDialog::remove_selected() {
   if (count > 0) {
     update_list();
     m_settings.settings_changed();
-    auto text = wstring_printf (rc_str(IDS_PD_DICTIONARIES_REMOVED).c_str(), count);
+    auto text = wstring_printf(rc_str(IDS_PD_DICTIONARIES_REMOVED).c_str(), count);
     MessageBox(_hParent, text.c_str(), L"Dictionaries were removed", MB_OK | MB_ICONINFORMATION);
   }
   if (need_single_reset) {
@@ -143,7 +142,8 @@ INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param, LPA
       if (HIWORD(w_param) == BN_CLICKED) {
         update_options();
       }
-    } break;
+    }
+    break;
     case IDOK:
       if (HIWORD(w_param) == BN_CLICKED) {
         display(false);
@@ -158,7 +158,8 @@ INT_PTR RemoveDictionariesDialog::run_dlg_proc(UINT message, WPARAM w_param, LPA
 
       break;
     }
-  } break;
+  }
+  break;
   default:
     break;
   };

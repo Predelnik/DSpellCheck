@@ -13,15 +13,17 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CommonFunctions.h"
-#include "plugin/MainDefs.h"
-#include "MappedWString.h"
-#include "plugin/Plugin.h"
-#include "plugin/Settings.h"
+
 #include "iconv.h"
-#include "plugin/resource.h"
+#include "MappedWString.h"
 #include "common/string_utils.h"
 #include "common/utf8.h"
 #include "common/winapi.h"
+#include "plugin/MainDefs.h"
+#include "plugin/Plugin.h"
+#include "plugin/resource.h"
+#include "plugin/Settings.h"
+
 #include <cassert>
 #include <numeric>
 
@@ -364,7 +366,7 @@ static bool try_to_create_dir(const wchar_t *path, bool silent, HWND npp_window)
         return false;
 
       auto msg = wstring_printf(rc_str(IDS_CANT_CREATE_DIR_PS).c_str(), path);
-      MessageBox(npp_window, msg.c_str (), rc_str(IDS_ERROR_IN_DIR_CREATE).c_str(), MB_OK | MB_ICONERROR);
+      MessageBox(npp_window, msg.c_str(), rc_str(IDS_ERROR_IN_DIR_CREATE).c_str(), MB_OK | MB_ICONERROR);
     }
     return false;
   }

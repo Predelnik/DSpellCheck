@@ -66,7 +66,7 @@ private:
   TextPosition prev_token_begin_in_document(TextPosition start) const;
   TextPosition next_token_end_in_document(TextPosition end) const;
   MappedWstring get_visible_text();
-  std::vector<SpellerWordData> check_text (const MappedWstring &text_to_check) const;
+  std::vector<SpellerWordData> check_text(const MappedWstring &text_to_check) const;
   void underline_misspelled_words(const MappedWstring &text_to_check) const;
   std::vector<std::wstring_view> get_misspelled_words(const MappedWstring &text_to_check) const;
   std::optional<std::array<TextPosition, 2>> find_first_misspelling(const MappedWstring &text_to_check, TextPosition last_valid_position) const;

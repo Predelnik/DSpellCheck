@@ -22,5 +22,5 @@ public:
   void update_compiler_version();
 
 protected:
-  INT_PTR WINAPI run_dlg_proc (UINT message, WPARAM w_param, LPARAM l_param) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 };

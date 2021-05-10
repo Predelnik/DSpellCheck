@@ -15,17 +15,17 @@
 #include "ConnectionSettingsDialog.h"
 
 #include "DownloadDicsDlg.h"
+#include "common/winapi.h"
+#include "core/SpellChecker.h"
 #include "plugin/MainDefs.h"
 #include "plugin/Plugin.h"
-#include "core/SpellChecker.h"
-
-#include "plugin/Settings.h"
 #include "plugin/resource.h"
-#include "common/winapi.h"
+#include "plugin/Settings.h"
 
 ConnectionSettingsDialog::ConnectionSettingsDialog(const Settings &settings,
-                                     DownloadDicsDlg &download_dics_dlg)
-    : m_download_dics_dlg(download_dics_dlg), m_settings(settings) {}
+                                                   DownloadDicsDlg &download_dics_dlg)
+  : m_download_dics_dlg(download_dics_dlg), m_settings(settings) {
+}
 
 void ConnectionSettingsDialog::do_dialog() {
   if (!isCreated()) {
@@ -83,14 +83,14 @@ void ConnectionSettingsDialog::update_controls() {
   Edit_SetText(m_host_name, m_settings.data.proxy_host_name.c_str());
   Edit_SetText(m_password, m_settings.data.proxy_password.c_str());
   Edit_SetText(m_port, std::to_wstring(m_settings.data.proxy_port).c_str());
-  Button_SetCheck (m_passive_mode_cb, m_settings.data.ftp_use_passive_mode);
+  Button_SetCheck(m_passive_mode_cb, m_settings.data.ftp_use_passive_mode);
   disable_controls();
   m_proxy_type_cmb.set_current(m_settings.data.proxy_type);
   m_proxy_type_cmb.set_current(m_settings.data.proxy_type);
 }
 
 INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
-                                        LPARAM /*lParam*/) {
+                                               LPARAM /*lParam*/) {
   switch (message) {
   case WM_INITDIALOG: {
     m_port = ::GetDlgItem(_hSelf, IDC_PORT);
@@ -122,7 +122,8 @@ INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
     case IDC_ANONYMOUS_LOGIN: {
       if (HIWORD(w_param) == BN_CLICKED)
         disable_controls();
-    } break;
+    }
+    break;
     case IDC_PROXY_TYPE:
       if (HIWORD(w_param) == CBN_SELCHANGE)
         disable_controls();
@@ -130,11 +131,11 @@ INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
     case IDC_PORT:
       if (HIWORD(w_param) == EN_CHANGE) {
         wchar_t *end_ptr = nullptr;
-        auto text = WinApi::get_edit_text (m_port);
-        if (text.empty ())
+        auto text = WinApi::get_edit_text(m_port);
+        if (text.empty())
           return FALSE;
 
-        int x = wcstol(text.c_str (), &end_ptr, 10);
+        int x = wcstol(text.c_str(), &end_ptr, 10);
         if (*end_ptr != L'\0')
           Edit_SetText(m_port, L"0");
         else if (x > 65535)
@@ -145,7 +146,8 @@ INT_PTR ConnectionSettingsDialog::run_dlg_proc(UINT message, WPARAM w_param,
         return FALSE;
       }
     }
-  } break;
+  }
+  break;
   default:
     break;
   }

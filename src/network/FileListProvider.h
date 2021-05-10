@@ -18,30 +18,26 @@
 
 class ProgressData;
 
-class FileDescription
-{
+class FileDescription {
 public:
   std::wstring title;
   std::wstring path;
   bool was_alias_applied = false;
 };
 
-enum class FileListProviderDownloadErrorType
-{
+enum class FileListProviderDownloadErrorType {
   none,
   canceled,
   file_is_not_writeable,
   was_not_able_to_download,
 };
 
-class FileListProvider
-{
-  virtual void update_file_list () = 0; // asynchronous call, caller should wait for file_list_received
-  virtual void download_dictionary (const std::wstring& aff_filepath, const std::wstring& target_path, std::shared_ptr<ProgressData> progress_data) = 0;
+class FileListProvider {
+  virtual void update_file_list() = 0; // asynchronous call, caller should wait for file_list_received
+  virtual void download_dictionary(const std::wstring &aff_filepath, const std::wstring &target_path, std::shared_ptr<ProgressData> progress_data) = 0;
 public:
   virtual ~FileListProvider() = default;
   lsignal::signal<void (std::vector<FileDescription>)> file_list_received;
   lsignal::signal<void(const std::optional<std::string> &error_description, bool was_cancelled)> file_downloaded;
   lsignal::signal<void (const std::string &description)> error_happened;
 };
-

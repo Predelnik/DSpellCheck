@@ -19,6 +19,7 @@
 #pragma warning(pop)
 #include "Aclapi.h"
 #include "string_utils.h"
+
 #include <cassert>
 
 static int CALLBACK browse_callback_proc(HWND hwnd, UINT u_msg, LPARAM /*lParam*/, LPARAM lp_data) {
@@ -177,7 +178,7 @@ const locale_info_handles &get_locale_info_handles() {
 bool is_locale_info_available() { return get_locale_info_handles().IsValidLocaleName && get_locale_info_handles().GetLocaleInfoEx; }
 
 std::wstring get_locale_info(const wchar_t *locale_name, LCTYPE type) {
-  if (!is_locale_info_available ())
+  if (!is_locale_info_available())
     return locale_name;
 
   auto &handles = get_locale_info_handles();

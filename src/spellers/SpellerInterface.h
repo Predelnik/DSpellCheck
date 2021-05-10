@@ -13,8 +13,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
-#include <vector>
 #include <string>
+#include <vector>
 
 class LanguageInfo;
 
@@ -45,7 +45,7 @@ public:
       const std::vector<std::wstring> &list) = 0; // Languages are from LangList
   void set_mode(SpellerMode multi) { m_speller_mode = multi; }
   // Implement either check_word or check_words or get the endless recursion
-  virtual bool check_word(const WordForSpeller& word) const;
+  virtual bool check_word(const WordForSpeller &word) const;
   // Functions which should be implemented in case if words for some awkward
   // reason could be faster checked in bulk
   virtual std::vector<bool>
@@ -68,7 +68,7 @@ public:
 
   void set_multiple_languages(const std::vector<std::wstring> &langs) override;
 
-  bool check_word(const WordForSpeller& word) const override;
+  bool check_word(const WordForSpeller &word) const override;
   std::vector<std::wstring> get_suggestions(const wchar_t *word) const override;
   void add_to_dictionary(const wchar_t *word) override;
   void ignore_all(const wchar_t *word) override;

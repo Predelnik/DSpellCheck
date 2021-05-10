@@ -12,19 +12,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include <catch.hpp>
-
-#include "TestCommon.h"
-
-#include "plugin/Settings.h"
 #include "MockEditorInterface.h"
 #include "MockSpeller.h"
-#include "spellers/SpellerContainer.h"
+#include "PluginInterface.h"
+#include "SciLexer.h"
+#include "TestCommon.h"
 #include "core/SpellChecker.h"
 #include "plugin/MainDefs.h"
-#include "PluginInterface.h"
+#include "plugin/Settings.h"
+#include "spellers/SpellerContainer.h"
 
-#include "SciLexer.h"
+#include <catch.hpp>
 
 TEST_CASE("Language Styles") {
   {
@@ -33,7 +31,7 @@ TEST_CASE("Language Styles") {
     setup_speller(*speller);
     settings.data.speller_language[SpellerId::aspell] = L"English";
     MockEditorInterface editor;
-    TARGET_VIEW_BLOCK (editor, 0);
+    TARGET_VIEW_BLOCK(editor, 0);
     editor.open_virtual_document(L"test.txt", L"abcdef test");
     SpellerContainer sp_container(&settings, std::move(speller));
     SpellChecker sc(&settings, editor, sp_container);

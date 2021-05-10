@@ -12,16 +12,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "TestCommon.h"
-
-#include <catch.hpp>
-
-#include "plugin/Settings.h"
 #include "MockEditorInterface.h"
 #include "MockSpeller.h"
-#include "spellers/SpellerContainer.h"
+#include "TestCommon.h"
 #include "core/SpellChecker.h"
 #include "plugin/MainDefs.h"
+#include "plugin/Settings.h"
+#include "spellers/SpellerContainer.h"
+
+#include <catch.hpp>
 
 TEST_CASE("ANSI") {
   Settings settings;

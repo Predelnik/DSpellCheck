@@ -13,10 +13,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MockSpeller.h"
-#include "spellers/LanguageInfo.h"
-#include "plugin/Settings.h"
 
-MockSpeller::MockSpeller(const Settings &settings) : m_settings (settings) {}
+#include "plugin/Settings.h"
+#include "spellers/LanguageInfo.h"
+
+MockSpeller::MockSpeller(const Settings &settings)
+  : m_settings(settings) {
+}
+
 MockSpeller::~MockSpeller() = default;
 
 void MockSpeller::set_language(const wchar_t *lang) { m_current_lang = lang; }
@@ -84,7 +88,7 @@ void MockSpeller::set_suggestions_dict(const SuggestionsDict &dict) {
   m_sugg_dict = dict;
 }
 
-bool MockSpeller::check_word(const WordForSpeller& word) const {
+bool MockSpeller::check_word(const WordForSpeller &word) const {
   switch (m_speller_mode) {
   case SpellerMode::SingleLanguage: {
     auto it = m_inner_dict.find(m_current_lang);
@@ -109,10 +113,9 @@ bool MockSpeller::check_word(const WordForSpeller& word) const {
 
 void MockSpeller::set_working(bool working) { m_working = working; }
 
-std::vector<bool> MockSpeller::check_words(const std::vector<WordForSpeller>& words) const
-{
+std::vector<bool> MockSpeller::check_words(const std::vector<WordForSpeller> &words) const {
   auto res = parent_t::check_words(words);
-  if (std::ranges::all_of (res, std::identity {}))
+  if (std::ranges::all_of(res, std::identity{}))
     return {};
 
   return res;

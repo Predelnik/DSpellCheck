@@ -26,22 +26,31 @@ template <typename T> class move_only {
   using self_t = move_only;
 
 public:
-  move_only () = default;
-  move_only (const T& arg) : value (arg) {}
-  move_only (T&& arg) : value (std::move (arg)) {}
+  move_only() = default;
+
+  move_only(const T &arg)
+    : value(arg) {
+  }
+
+  move_only(T &&arg)
+    : value(std::move(arg)) {
+  }
 
   move_only(const self_t &) = delete;
   move_only &operator=(const self_t &) = delete;
 
-  move_only(self_t &&other) noexcept : value(std::move(other.value)) {
+  move_only(self_t &&other) noexcept
+    : value(std::move(other.value)) {
     other.value = T{};
   }
+
   move_only &operator=(self_t &&other) noexcept {
     value = std::move(other.value);
     other.value = T{};
     return *this;
   }
-  ~move_only () = default;
+
+  ~move_only() = default;
   const T &get() const { return value; }
   T &get() { return value; }
 

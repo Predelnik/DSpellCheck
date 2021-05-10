@@ -15,8 +15,9 @@
 #pragma once
 
 #include "CommonFunctions.h"
-#include <ppltasks.h>
 #include "common/move_only.h"
+
+#include <ppltasks.h>
 
 class CallbackData {
 public:
@@ -26,43 +27,43 @@ public:
 
 class TaskWrapper {
 private:
-    using AliveStatusType = std::shared_ptr<concurrency::cancellation_token_source>;
-    using Self = TaskWrapper;
+  using AliveStatusType = std::shared_ptr<concurrency::cancellation_token_source>;
+  using Self = TaskWrapper;
 
 public:
-    explicit TaskWrapper(HWND target_hwnd);
-    TaskWrapper(Self &&) = default;
-    Self &operator=(Self &&) = default;
-    ~TaskWrapper ();
-    void reset_alive_status ();
-    void cancel ();
-    template <typename ActionType, typename GuiCallbackType>
-     void do_deferred (ActionType action, GuiCallbackType gui_callback) {
-     reset_alive_status ();
+  explicit TaskWrapper(HWND target_hwnd);
+  TaskWrapper(Self &&) = default;
+  Self &operator=(Self &&) = default;
+  ~TaskWrapper();
+  void reset_alive_status();
+  void cancel();
+
+  template <typename ActionType, typename GuiCallbackType>
+  void do_deferred(ActionType action, GuiCallbackType gui_callback) {
+    reset_alive_status();
     concurrency::create_task(
         [
-            action = std::move (action),
-            guiCallback = std::move(gui_callback),
-            as = weaken (m_alive_status),
-            ctoken = m_alive_status->get_token(),
-            hwnd = m_target_hwnd
-        ]()
-    {
-        auto ret = action (ctoken);
-        if (as.expired() || ctoken.is_canceled())
+          action = std::move(action),
+          guiCallback = std::move(gui_callback),
+          as = weaken(m_alive_status),
+          ctoken = m_alive_status->get_token(),
+          hwnd = m_target_hwnd
+        ]() {
+          auto ret = action(ctoken);
+          if (as.expired() || ctoken.is_canceled())
             return;
 
-        auto cb_data = std::make_unique<CallbackData>();
-        cb_data->callback = [guiCallback = std::move (guiCallback), ret = std::move (ret)]()mutable{ guiCallback (std::move (ret)); };
-        cb_data->alive_status = as;
-         PostMessage(hwnd,
-            get_custom_gui_message_id(CustomGuiMessage::generic_callback), reinterpret_cast<WPARAM> (cb_data.release ())
-            , 0);
-    });
-}
+          auto cb_data = std::make_unique<CallbackData>();
+          cb_data->callback = [guiCallback = std::move(guiCallback), ret = std::move(ret)]()mutable { guiCallback(std::move(ret)); };
+          cb_data->alive_status = as;
+          PostMessage(hwnd,
+                      get_custom_gui_message_id(CustomGuiMessage::generic_callback), reinterpret_cast<WPARAM>(cb_data.release())
+                      , 0);
+        });
+  }
 
 private:
-    HWND m_target_hwnd = nullptr;
-    AliveStatusType m_alive_status;
-    move_only<bool> m_valid;
+  HWND m_target_hwnd = nullptr;
+  AliveStatusType m_alive_status;
+  move_only<bool> m_valid;
 };

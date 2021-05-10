@@ -13,10 +13,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "SpellerInterface.h"
+
 #include "LanguageInfo.h"
 
-bool SpellerInterface::check_word(const WordForSpeller& word) const {
-  return check_words({std::move (word)}).front();
+bool SpellerInterface::check_word(const WordForSpeller &word) const {
+  return check_words({std::move(word)}).front();
 }
 
 std::vector<bool>
@@ -30,10 +31,12 @@ SpellerInterface::check_words(const std::vector<WordForSpeller> &words) const {
 
 std::vector<LanguageInfo> DummySpeller::get_language_list() const { return {}; }
 
-void DummySpeller::set_language(const wchar_t * /*lang*/) {}
+void DummySpeller::set_language(const wchar_t * /*lang*/) {
+}
 
 void DummySpeller::set_multiple_languages(
-    const std::vector<std::wstring> & /*langs*/) {}
+    const std::vector<std::wstring> & /*langs*/) {
+}
 
 bool DummySpeller::check_word(const WordForSpeller
     /*word*/&) const { return true; }
@@ -43,8 +46,10 @@ DummySpeller::get_suggestions(const wchar_t * /*word*/) const {
   return {};
 }
 
-void DummySpeller::add_to_dictionary(const wchar_t * /*word*/) {}
+void DummySpeller::add_to_dictionary(const wchar_t * /*word*/) {
+}
 
-void DummySpeller::ignore_all(const wchar_t * /*word*/) {}
+void DummySpeller::ignore_all(const wchar_t * /*word*/) {
+}
 
 bool DummySpeller::is_working() const { return false; }

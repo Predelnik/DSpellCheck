@@ -15,27 +15,26 @@
 #pragma once
 
 #define NOMINMAX
-#include <winsock2.h>
-#include <windows.h>
-
+#include <algorithm>
 #include <array>
+#include <cstring>
+#include <ctime>
+#include <cwchar>
 #include <map>
 #include <numeric>
-#include <set>
-#include <unordered_set>
 #include <optional>
-#include <algorithm>
-#include <stack>
-#include <cstring>
-#include <string>
-#include <string_view>
-#include <ctime>
-#include <shlwapi.h>
-#include <windowsx.h>
-#include <cwchar>
-#include <vector>
 #include <ppltasks.h>
 #include <regex>
+#include <set>
+#include <shlwapi.h>
+#include <stack>
+#include <string>
+#include <string_view>
+#include <unordered_set>
+#include <vector>
+#include <windows.h>
+#include <windowsx.h>
+#include <winsock2.h>
 #pragma warning(push)
 #pragma warning(disable: 4091)
 #include "Shlobj.h"

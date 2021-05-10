@@ -12,17 +12,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "spellers/NativeSpellerInterface.h"
-#include "spellers/SpellerInterface.h"
-
-#include "common/CommonFunctions.h"
-#include "plugin/MainDefs.h"
-#include "plugin/Settings.h"
 #include "SpellChecker.h"
+
 #include "SpellCheckerHelpers.h"
-#include "spellers/SpellerContainer.h"
+#include "common/CommonFunctions.h"
 #include "npp/EditorInterface.h"
 #include "npp/NppInterface.h"
+#include "plugin/MainDefs.h"
+#include "plugin/Settings.h"
+#include "spellers/NativeSpellerInterface.h"
+#include "spellers/SpellerContainer.h"
+#include "spellers/SpellerInterface.h"
 
 #include <ranges>
 
@@ -410,7 +410,9 @@ std::vector<std::wstring_view> SpellChecker::get_misspelled_words(const MappedWs
 
 std::optional<std::array<TextPosition, 2>> SpellChecker::find_first_misspelling(const MappedWstring &text_to_check, TextPosition last_valid_position) const {
   auto words_to_check = check_text(text_to_check);
-  auto it = std::ranges::find_if(words_to_check, [last_valid_position](const SpellerWordData &data) { return !data.is_correct && data.word_end > last_valid_position; });
+  auto it = std::ranges::find_if(words_to_check, [last_valid_position](const SpellerWordData &data) {
+    return !data.is_correct && data.word_end > last_valid_position;
+  });
   if (it == words_to_check.end())
     return {};
 
@@ -421,7 +423,9 @@ std::optional<std::array<TextPosition, 2>> SpellChecker::find_last_misspelling(c
   auto words_to_check = check_text(text_to_check);
   using namespace std::ranges;
   auto reversed = views::reverse(words_to_check);
-  auto it = find_if(reversed, [last_valid_position](const SpellerWordData &word_data) { return !word_data.is_correct && word_data.word_end < last_valid_position; });
+  auto it = find_if(reversed, [last_valid_position](const SpellerWordData &word_data) {
+    return !word_data.is_correct && word_data.word_end < last_valid_position;
+  });
   if (it == reversed.end())
     return {};
 

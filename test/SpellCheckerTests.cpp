@@ -12,17 +12,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "TestCommon.h"
-
-#include <catch.hpp>
-
-#include "plugin/Settings.h"
 #include "MockEditorInterface.h"
 #include "MockSpeller.h"
-#include "spellers/SpellerContainer.h"
+#include "TestCommon.h"
 #include "core/SpellChecker.h"
-#include "plugin/MainDefs.h"
 #include "core/SpellCheckerHelpers.h"
+#include "plugin/MainDefs.h"
+#include "plugin/Settings.h"
+#include "spellers/SpellerContainer.h"
+
+#include <catch.hpp>
 
 using namespace std::literals;
 
@@ -147,7 +146,7 @@ wrongword
       mut->data.word_minimum_length = 8;
     }
     CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
-      std::vector<std::string>{"wrongword"});
+        std::vector<std::string>{"wrongword"});
     {
       auto mut = settings.modify();
       mut->data.word_minimum_length = 0;
@@ -173,7 +172,7 @@ wrongword
   )");
     sc.recheck_visible_both_views();
     CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
-      std::vector<std::string>{"abaas123asd"});
+        std::vector<std::string>{"abaas123asd"});
     {
       auto mut = settings.modify();
       mut->data.ignore_starting_with_capital = false;
@@ -203,7 +202,7 @@ abg
 )");
     sc.recheck_visible_both_views();
     CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
-      std::vector<std::string>{"abg"});
+        std::vector<std::string>{"abg"});
 
     {
       std::wstring text = L"nurserymaid ";
@@ -252,7 +251,7 @@ abg
       editor.set_active_document_text(L"abcdef");
       sc.recheck_visible_both_views();
       CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
-        std::vector<std::string>{"abcdef"});
+          std::vector<std::string>{"abcdef"});
       {
         auto mut = settings.modify();
         mut->data.tokenization_style = TokenizationStyle::by_delimiters;
@@ -269,7 +268,7 @@ abg
         mut->data.tokenization_style = TokenizationStyle::by_non_alphabetic;
       }
       editor.set_active_document_text(
-        L"これはテストです"); // each one is delimiter
+          L"これはテストです"); // each one is delimiter
       CHECK(sc.is_word_under_cursor_correct(pos, length, true));
       CHECK(length == 0);
     }
@@ -308,15 +307,15 @@ abg
       // check that right clicking when cursor after the word works
       editor.set_active_document_text(L"abcdef test");
       CHECK(sc.is_word_under_cursor_correct(pos, length, false));
-      editor.set_mouse_cursor_pos(POINT {-500, -500});
+      editor.set_mouse_cursor_pos(POINT{-500, -500});
       CHECK(sc.is_word_under_cursor_correct(pos, length, false));
-      editor.set_mouse_cursor_pos(POINT {MockEditorInterface::char_width * 3, 0});
+      editor.set_mouse_cursor_pos(POINT{MockEditorInterface::char_width * 3, 0});
       CHECK_FALSE(sc.is_word_under_cursor_correct(pos, length, false));
     }
     {
       // check that right clicking when cursor after the word works
       editor.set_active_document_text(L"abcdef test");
-      editor.set_mouse_cursor_pos(POINT {MockEditorInterface::char_width * 10, MockEditorInterface::char_height / 2});
+      editor.set_mouse_cursor_pos(POINT{MockEditorInterface::char_width * 10, MockEditorInterface::char_height / 2});
       CHECK(sc.is_word_under_cursor_correct(pos, length, false));
     }
   }
@@ -329,13 +328,14 @@ abg
     editor.set_visible_lines(0, 0);
     sc.recheck_visible_both_views();
     CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
-        std::vector<std::string>{"tist", "hes"});
+          std::vector<std::string>{"tist", "hes"});
     editor.set_active_document_text(L"Thes osome und gret tist realy mbe hes invesible wards");
     editor.make_all_visible();
-    editor.set_editor_rect(MockEditorInterface::char_height * 5, 0, MockEditorInterface::char_height * (5 + 5 + 1 + 3) - 1, MockEditorInterface::char_height * 2 - 1);
+    editor.set_editor_rect(MockEditorInterface::char_height * 5, 0, MockEditorInterface::char_height * (5 + 5 + 1 + 3) - 1,
+                           MockEditorInterface::char_height * 2 - 1);
     sc.recheck_visible_both_views();
     CHECK(editor.get_underlined_words(spell_check_indicator_id) ==
-        std::vector<std::string>{"osome", "und"});
+          std::vector<std::string>{"osome", "und"});
   }
 
   SECTION("Replace all tokens") {
@@ -408,7 +408,7 @@ abg
 
   SECTION("Bookmarks") {
     editor.set_active_document_text(L"abcdef\ntest\ntest\nkolli");
-    sc.mark_lines_with_misspelling ();
-    CHECK (editor.get_bookmarked_lines() == std::set<size_t> {0, 3});
+    sc.mark_lines_with_misspelling();
+    CHECK(editor.get_bookmarked_lines() == std::set<size_t> {0, 3});
   }
 }

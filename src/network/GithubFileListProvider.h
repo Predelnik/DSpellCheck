@@ -15,9 +15,9 @@
 #pragma once
 
 #include "FileListProvider.h"
-#include "plugin/Settings.h"
 #include "common/TaskWrapper.h"
 #include "common/WinInet.h"
+#include "plugin/Settings.h"
 
 class Settings;
 
@@ -30,12 +30,12 @@ public:
   void cancel_download();
 
 private:
-  static WinInet::GlobalHandle create_global_handle(const Settings::Data& settings_data);
-  static WinInet::UrlHandle create_url_handle(const Settings::Data& settings_data, const WinInet::GlobalHandle& global_handle, const wchar_t* url);
+  static WinInet::GlobalHandle create_global_handle(const Settings::Data &settings_data);
+  static WinInet::UrlHandle create_url_handle(const Settings::Data &settings_data, const WinInet::GlobalHandle &global_handle, const wchar_t *url);
   static std::optional<std::string> download_dictionary_impl(const Concurrency::cancellation_token &token, const std::wstring &aff_filepath,
                                                              const std::wstring &target_path, std::shared_ptr<ProgressData> progress_data,
                                                              std::vector<std::wstring> &downloaded_file_names, const
-                                                             Settings::Data &settings_data, bool& cancelled);
+                                                             Settings::Data &settings_data, bool &cancelled);
 
 private:
   std::wstring m_root_path;

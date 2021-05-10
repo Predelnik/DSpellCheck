@@ -13,6 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "UrlHelpers.h"
+
 #include "common/string_utils.h"
 
 namespace UrlHelpers {
@@ -41,7 +42,6 @@ std::wstring to_github_base_url(std::wstring github_url) {
   return L"https://api." + github_url;
 }
 }
-
 
 
 std::wstring github_url_to_api_recursive_tree_url(std::wstring github_url, std::wstring_view branch_name) {

@@ -14,26 +14,27 @@
 
 #include "SettingsDlg.h"
 
+#include "aspell.h"
+#include "AspellOptionsDialog.h"
 #include "DownloadDicsDlg.h"
 #include "LangList.h"
-#include "plugin/Plugin.h"
 #include "RemoveDictionariesDialog.h"
-#include "aspell.h"
-
-#include "AspellOptionsDialog.h"
+#include "common/IniWorker.h"
+#include "common/winapi.h"
+#include "common/WindowsDefs.h"
+#include "npp/NppInterface.h"
+#include "plugin/Plugin.h"
+#include "plugin/resource.h"
+#include "plugin/Settings.h"
 #include "spellers/LanguageInfo.h"
 #include "spellers/NativeSpellerInterface.h"
-#include "plugin/Settings.h"
 #include "spellers/SpellerContainer.h"
-#include "npp/NppInterface.h"
-#include "plugin/resource.h"
-#include "common/winapi.h"
-#include <Uxtheme.h>
-#include <cassert>
-#include "common/WindowsDefs.h"
-#include "common/IniWorker.h"
 
-SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings, NppInterface &npp) : m_npp(npp), m_settings(settings), m_parent(parent) {
+#include <cassert>
+#include <Uxtheme.h>
+
+SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings, NppInterface &npp)
+  : m_npp(npp), m_settings(settings), m_parent(parent) {
   m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
   if (m_h_ux_theme != nullptr)
     m_open_theme_data = reinterpret_cast<OtdProc>(::GetProcAddress(m_h_ux_theme, "OpenThemeData"));
@@ -47,32 +48,32 @@ void SimpleDlg::disable_language_combo(bool disable) {
   EnableWindow(m_h_remove_dics, enable);
 }
 
-void SimpleDlg::update_language_controls(const Settings &settings, const SpellerContainer &speller_container, const std::wstring& selected_language_name) {
+void SimpleDlg::update_language_controls(const Settings &settings, const SpellerContainer &speller_container, const std::wstring &selected_language_name) {
 
   if (!m_language_cmb)
     return;
 
-  m_language_cmb.clear ();
+  m_language_cmb.clear();
   int selected_index = 0;
 
   auto langs_available = speller_container.get_available_languages();
 
   int i = 0;
-  const auto &target_language = selected_language_name.empty () ? settings.get_active_language() : selected_language_name;
+  const auto &target_language = selected_language_name.empty() ? settings.get_active_language() : selected_language_name;
 
   for (auto &lang : langs_available) {
     if (target_language == lang.orig_name) {
       selected_index = i;
     }
 
-    m_language_cmb.add_item(lang.alias_name.c_str (), i);
+    m_language_cmb.add_item(lang.alias_name.c_str(), i);
     ++i;
   }
   if (target_language == multiple_language_alias)
     selected_index = i;
 
   if (!langs_available.empty())
-    m_language_cmb.add_item (rc_str(IDS_MULTIPLE_LANGUAGES).c_str(), -1);
+    m_language_cmb.add_item(rc_str(IDS_MULTIPLE_LANGUAGES).c_str(), -1);
 
   m_language_cmb.set_current_index(selected_index);
   m_language_cmb.set_enabled(!langs_available.empty());
@@ -84,10 +85,10 @@ SimpleDlg::~SimpleDlg() {
 }
 
 void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &speller_container) {
-  int lang_count = m_language_cmb.count ();
+  int lang_count = m_language_cmb.count();
   int cur_sel = m_language_cmb.current_index();
 
-  if (m_language_cmb.is_enabled ()) {
+  if (m_language_cmb.is_enabled()) {
     std::wstring new_lang = (cur_sel == lang_count - 1 ? multiple_language_alias : speller_container.get_available_languages()[cur_sel].orig_name.c_str());
     settings.get_active_language() = new_lang;
     m_parent.m_selected_language_name = new_lang;
@@ -105,7 +106,7 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
     break;
   case SpellerId::COUNT:
     break;
-  default:;
+  default: ;
   }
 
   settings.data.check_those = Button_GetCheck(m_h_check_only_those) == BST_CHECKED;
@@ -172,12 +173,13 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
     ShowWindow(m_h_system_path, static_cast<int>(!is_lib_path));
     Static_SetText(m_h_lib_group_box, rc_str(IDS_HUNSPELL_SETTINGS).c_str());
     Edit_SetText(m_h_lib_path, settings.data.hunspell_user_path.c_str());
-  } break;
+  }
+  break;
   case SpellerId::native:
     break;
   case SpellerId::COUNT:
     break;
-  default:;
+  default: ;
   }
   Edit_SetText(m_h_system_path, settings.data.hunspell_system_path.c_str());
 }
@@ -202,9 +204,11 @@ void SimpleDlg::set_file_types(bool check_those, const wchar_t *file_types) {
 
 void SimpleDlg::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_current(mode); }
 
-void SimpleDlg::set_one_user_dic(bool value) { Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED); }
+void SimpleDlg::set_one_user_dic(bool value) {
+  Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED);
+}
 
-void AdvancedDlg::reset_settings () {
+void AdvancedDlg::reset_settings() {
   if (MessageBox(_hParent, rc_str(IDS_RESET_SETTINGS_TEXT).c_str(), rc_str(IDS_RESET_SETTINGS_CAPTION).c_str(), MB_YESNO) == IDNO)
     return;
   auto mut = m_settings.modify();
@@ -218,7 +222,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
     // Retrieving handles of dialog controls
-    m_language_cmb.init (GetDlgItem(_hSelf, IDC_COMBO_LANGUAGE));
+    m_language_cmb.init(GetDlgItem(_hSelf, IDC_COMBO_LANGUAGE));
     m_h_suggestions_num = ::GetDlgItem(_hSelf, IDC_SUGGESTIONS_NUM);
     m_h_aspell_status = ::GetDlgItem(_hSelf, IDC_ASPELL_STATUS);
     m_h_lib_path = ::GetDlgItem(_hSelf, IDC_ASPELLPATH);
@@ -245,7 +249,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         case LanguageNameStyle::COUNT:
           break;
         }
-            return false;
+        return false;
       }())
         m_language_name_style_cmb.add_item(val);
     }
@@ -280,7 +284,7 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     switch (LOWORD(w_param)) {
     case IDC_COMBO_LANGUAGE:
       if (HIWORD(w_param) == CBN_SELCHANGE) {
-        m_parent.store_selected_language_name (m_language_cmb.current_data());
+        m_parent.store_selected_language_name(m_language_cmb.current_data());
         if (m_language_cmb.current_data() == -1) {
           get_lang_list()->do_dialog();
         }
@@ -311,10 +315,10 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
     case IDC_SUGGESTIONS_NUM: {
       if (HIWORD(w_param) == EN_CHANGE) {
         auto text = WinApi::get_edit_text(m_h_suggestions_num);
-        if (text.empty ())
+        if (text.empty())
           return TRUE;
 
-        int x = wcstol(text.c_str (), &end_ptr, 10);
+        int x = wcstol(text.c_str(), &end_ptr, 10);
         if (*end_ptr != L'\0')
           Edit_SetText(m_h_suggestions_num, L"5");
         else if (x > 20)
@@ -324,12 +328,14 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
 
         return TRUE;
       }
-    } break;
+    }
+    break;
     case IDC_CONFIGURE_ASPELL: {
       if (HIWORD(w_param) == BN_CLICKED) {
         get_aspell_options_dlg()->do_dialog();
       }
-    } break;
+    }
+    break;
     case IDC_REMOVE_DICS:
       if (HIWORD(w_param) == BN_CLICKED) {
         get_remove_dics()->do_dialog();
@@ -357,12 +363,14 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
           Edit_SetText(m_h_system_path, L".\\plugins\\config\\Hunspell");
         return TRUE;
       }
-    } break;
+    }
+    break;
     case IDC_DOWNLOADDICS: {
       if (HIWORD(w_param) == BN_CLICKED) {
         m_parent.download_dics_dlg_requested();
       }
-    } break;
+    }
+    break;
     case IDC_BROWSEASPELLPATH:
       switch (m_settings.data.active_speller_lib_id) {
       case SpellerId::aspell: {
@@ -389,7 +397,8 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
         if (GetOpenFileName(&ofn))
           Edit_SetText(m_h_lib_path, filename.data());
-      } break;
+      }
+      break;
       case SpellerId::hunspell: {
         auto lib_path = WinApi::get_edit_text(m_h_lib_path);
         std::vector<wchar_t> final_path(MAX_PATH);
@@ -400,16 +409,18 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         auto path = WinApi::browse_for_directory(_hSelf, final_path.data());
         if (path)
           Edit_SetText(m_h_lib_path, path->data());
-      } break;
+      }
+      break;
       case SpellerId::COUNT:
         break;
       case SpellerId::native:
         break;
-      default:;
+      default: ;
       }
       break;
     }
-  } break;
+  }
+  break;
   case WM_NOTIFY:
 
     switch (reinterpret_cast<LPNMHDR>(l_param)->code) {
@@ -488,7 +499,8 @@ void AdvancedDlg::update_controls(const Settings &settings) {
   set_conversion_opts(settings.data.ignore_yo, settings.data.convert_single_quotes, settings.data.remove_boundary_apostrophes);
   set_underline_settings(settings.data.underline_color, settings.data.underline_style);
   Button_SetCheck(m_h_check_default_udl_style, settings.data.check_default_udl_style);
-  set_ignore(settings.data.ignore_containing_digit, settings.data.ignore_starting_with_capital, settings.data.ignore_having_a_capital, settings.data.ignore_all_capital,
+  set_ignore(settings.data.ignore_containing_digit, settings.data.ignore_starting_with_capital, settings.data.ignore_having_a_capital,
+             settings.data.ignore_all_capital,
              settings.data.ignore_having_underscore, settings.data.ignore_starting_or_ending_with_apostrophe, settings.data.ignore_one_letter);
   set_sugg_box_settings(settings.data.suggestion_button_size, settings.data.suggestion_button_opacity);
   m_tokenization_style_cmb.set_current(settings.data.tokenization_style);
@@ -496,9 +508,9 @@ void AdvancedDlg::update_controls(const Settings &settings) {
 }
 
 const std::vector<std::wstring> &get_indic_names() {
-  static std::vector<std::wstring> indic_names = {rc_str(IDS_PLAIN),        rc_str(IDS_SQUIGGLE), rc_str(IDS_TT),   rc_str(IDS_DIAGONAL),
-                                                  rc_str(IDS_STRIKE),       rc_str(IDS_HIDDEN),   rc_str(IDS_BOX),  rc_str(IDS_ROUND_BOX),
-                                                  rc_str(IDS_STRAIGHT_BOX), rc_str(IDS_DASH),     rc_str(IDS_DOTS), rc_str(IDS_SQUIGGLE_LOW)};
+  static std::vector<std::wstring> indic_names = {rc_str(IDS_PLAIN), rc_str(IDS_SQUIGGLE), rc_str(IDS_TT), rc_str(IDS_DIAGONAL),
+                                                  rc_str(IDS_STRIKE), rc_str(IDS_HIDDEN), rc_str(IDS_BOX), rc_str(IDS_ROUND_BOX),
+                                                  rc_str(IDS_STRAIGHT_BOX), rc_str(IDS_DASH), rc_str(IDS_DOTS), rc_str(IDS_SQUIGGLE_LOW)};
   return indic_names;
 }
 
@@ -536,7 +548,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
     SendMessage(m_h_slider_sugg_button_opacity, TBM_SETRANGE, TRUE, MAKELPARAM(5, 100));
     m_split_camel_case_cb = ::GetDlgItem(_hSelf, IDC_CAMEL_CASE_SPLITTING_CB);
     m_reset_btn = this->get_control<WinApi::Button>(IDC_RESET_SETTINGS);
-    m_reset_btn->button_pressed.connect([this]() { reset_settings();  });
+    m_reset_btn->button_pressed.connect([this]() { reset_settings(); });
 
     m_brush = nullptr;
 
@@ -612,7 +624,7 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
       }
     case IDC_RECHECK_DELAY:
       if (HIWORD(w_param) == EN_CHANGE) {
-        auto text = WinApi::get_edit_text (m_h_recheck_delay);
+        auto text = WinApi::get_edit_text(m_h_recheck_delay);
         if (text.empty())
           return TRUE;
 
@@ -650,20 +662,24 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
   return 0;
 }
 
-void AdvancedDlg::set_delimeters_edit(const wchar_t *delimiters) { Edit_SetText(m_h_edit_delimiters, delimiters); }
+void AdvancedDlg::set_delimeters_edit(const wchar_t *delimiters) {
+  Edit_SetText(m_h_edit_delimiters, delimiters);
+}
 
 void AdvancedDlg::set_recheck_delay(int delay) {
   Edit_SetText(m_h_recheck_delay, std::to_wstring (delay).c_str ());
 }
 
 int AdvancedDlg::get_recheck_delay() {
-  auto text = WinApi::get_edit_text (m_h_recheck_delay);
+  auto text = WinApi::get_edit_text(m_h_recheck_delay);
   wchar_t *end_ptr;
-  int x = wcstol(text.c_str (), &end_ptr, 10);
+  int x = wcstol(text.c_str(), &end_ptr, 10);
   return x;
 }
 
-AdvancedDlg::AdvancedDlg(const Settings &settings) : m_settings(settings) {}
+AdvancedDlg::AdvancedDlg(const Settings &settings)
+  : m_settings(settings) {
+}
 
 void AdvancedDlg::apply_settings(Settings &settings) {
   settings.data.delimiters = WinApi::get_edit_text(m_h_edit_delimiters);
@@ -693,7 +709,7 @@ SimpleDlg *SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
 AdvancedDlg *SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
 
 SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings &settings, const SpellerContainer &speller_container)
-    : m_npp(npp), m_simple_dlg(*this, settings, m_npp), m_advanced_dlg(settings), m_settings(settings), m_speller_container(speller_container) {
+  : m_npp(npp), m_simple_dlg(*this, settings, m_npp), m_advanced_dlg(settings), m_settings(settings), m_speller_container(speller_container) {
   Window::init(h_inst, parent);
   m_settings.settings_changed.connect([this] { update_controls(); });
   m_speller_container.speller_status_changed.connect([this] {
@@ -725,7 +741,9 @@ void SettingsDlg::apply_lib_change(SpellerId new_lib_id) {
 }
 
 void SettingsDlg::store_selected_language_name(int language_index) {
-  m_selected_language_name = language_index != -1 ? m_speller_container.active_speller().get_language_list()[language_index].orig_name : multiple_language_alias;
+  m_selected_language_name = language_index != -1
+                               ? m_speller_container.active_speller().get_language_list()[language_index].orig_name
+                               : multiple_language_alias;
 }
 
 void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) { return Window::init(h_inst, parent); }
@@ -744,7 +762,7 @@ void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer
 }
 
 void SimpleDlg::init_speller_id_combobox(const SpellerContainer &speller_container) {
-  m_speller_cmb.clear ();
+  m_speller_cmb.clear();
   for (auto id : enum_range<SpellerId>()) {
     if (id == SpellerId::native && !speller_container.native_speller().is_working())
       continue;
@@ -801,7 +819,8 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
     case 0: // Menu
     {
       copy_misspellings_to_clipboard();
-    } break;
+    }
+    break;
     case IDAPPLY:
       if (HIWORD(w_param) == BN_CLICKED) {
         apply_settings();

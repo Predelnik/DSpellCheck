@@ -15,18 +15,18 @@
 #pragma once
 
 #include "FTPFileStatus.h"
-#include "ui\StaticDialog.h"
 #include "common/TaskWrapper.h"
-#include <optional>
-#include "network/FileListProvider.h"
 #include "common/WinApiControls.h"
+#include "network/FileListProvider.h"
+#include "ui\StaticDialog.h"
 
-enum class UrlType
-{
-	ftp,
-	ftp_web_proxy,
-	github,
-	unknown,
+#include <optional>
+
+enum class UrlType {
+  ftp,
+  ftp_web_proxy,
+  github,
+  unknown,
 };
 
 class LanguageInfo;

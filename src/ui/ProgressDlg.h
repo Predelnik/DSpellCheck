@@ -26,9 +26,9 @@ public:
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override; // NOLINT
   void init(HINSTANCE h_inst, HWND parent) override;
   void do_dialog();
-  void set_top_message(const wchar_t* message);
+  void set_top_message(const wchar_t *message);
   void set_marquee(bool animated);
-  std::shared_ptr<ProgressData> get_progress_data () const { return m_progress_data; }
+  std::shared_ptr<ProgressData> get_progress_data() const { return m_progress_data; }
   void update();
 
 private:

@@ -18,13 +18,14 @@
 
 wchar_t make_upper(wchar_t c);
 wchar_t make_lower(wchar_t c);
-bool is_upper (wchar_t c);
-bool is_lower (wchar_t c);
+bool is_upper(wchar_t c);
+bool is_lower(wchar_t c);
 
 template <typename IsDelimiterType> class Tokenizer {
 public:
   Tokenizer(const std::wstring_view &target, const IsDelimiterType &is_delimiter, bool split_camel_case)
-      : m_target(target), m_is_delimiter(is_delimiter), m_split_camel_case(split_camel_case) {}
+    : m_target(target), m_is_delimiter(is_delimiter), m_split_camel_case(split_camel_case) {
+  }
 
   std::vector<std::wstring_view> get_all_tokens() const {
     int token_begin = 0, token_end = -1;
@@ -40,7 +41,7 @@ public:
     for (int i = 0; i < static_cast<int>(m_target.size()); ++i) {
       if (!m_is_delimiter(m_target[i])) {
         if (m_split_camel_case && i > token_begin && is_upper(m_target[i]) &&
-            (is_lower(m_target[i - 1]) || (i < static_cast<TextPosition> (m_target.length ()) - 1 && is_lower(m_target[i + 1])))) {
+            (is_lower(m_target[i - 1]) || (i < static_cast<TextPosition>(m_target.length()) - 1 && is_lower(m_target[i + 1])))) {
           token_end = i;
           finalize_word();
           token_begin = i;
@@ -66,7 +67,7 @@ public:
     }
     while (index >= 0 && !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case && index > 0 && is_upper(m_target[index]) &&
-          ((index == static_cast<TextPosition> (m_target.length()) - 1 || is_lower(m_target[index + 1])) || is_lower(m_target[index - 1])))
+          ((index == static_cast<TextPosition>(m_target.length()) - 1 || is_lower(m_target[index + 1])) || is_lower(m_target[index - 1])))
         return index;
       --index;
     }
@@ -79,7 +80,8 @@ public:
       return static_cast<TextPosition>(m_target.length());
     while (index < static_cast<TextPosition>(m_target.length()) && !m_is_delimiter(m_target[index])) {
       if (m_split_camel_case && index < static_cast<TextPosition>(m_target.length()) - 1 &&
-          is_upper(m_target[index + 1]) && (is_lower(m_target[index]) || (index < static_cast<TextPosition> (m_target.length()) - 2 && is_lower(m_target[index + 2]))))
+          is_upper(m_target[index + 1]) && (is_lower(m_target[index]) || (
+                                              index < static_cast<TextPosition>(m_target.length()) - 2 && is_lower(m_target[index + 2]))))
         return index + 1;
       ++index;
     }
@@ -128,9 +130,11 @@ inline bool ends_with(const std::wstring_view &target, const std::wstring_view &
 inline std::string_view remove_prefix_equals(std::string_view target, const std::string_view &prefix) {
   return detail::remove_prefix_equals_helper(target, prefix);
 }
+
 inline std::wstring_view remove_prefix_equals(std::wstring_view target, const std::wstring_view &prefix) {
   return detail::remove_prefix_equals_helper(target, prefix);
 }
+
 void to_lower_inplace(std::wstring &s);
 void to_upper_inplace(std::wstring &s);
 
@@ -158,7 +162,10 @@ void rtrim_inplace(std::wstring &s);
 void trim_inplace(std::wstring &s);
 
 namespace detail {
-template <typename T> struct identity { using type = T; };
+template <typename T> struct identity {
+  using type = T;
+};
+
 template <typename T> using identity_t = typename identity<T>::type;
 } // namespace detail
 

@@ -13,6 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "AboutDlg.h"
+
 #include "common/CommonFunctions.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"
@@ -28,51 +29,51 @@ void AboutDlg::do_dialog() {
 #define STR_HELPER(x) L#x
 #define STR(x) STR_HELPER(x)
 
-void AboutDlg::update_compiler_version()
-{
+void AboutDlg::update_compiler_version() {
   std::wstring compiler_name = L"Unknown Compiler";
 #ifdef _MSC_FULL_VER
   std::wstring ver_str = STR(_MSC_FULL_VER);
-  compiler_name = wstring_printf (L"MSVC cl %s.%s.%s.%02d", ver_str.substr(0, 2).c_str (), ver_str.substr(2, 2).c_str (), ver_str.substr(4, 5).c_str (), _MSC_BUILD);
+  compiler_name = wstring_printf(L"MSVC cl %s.%s.%s.%02d", ver_str.substr(0, 2).c_str(), ver_str.substr(2, 2).c_str(), ver_str.substr(4, 5).c_str(),
+                                 _MSC_BUILD);
 #endif
-  auto wnd = ::GetDlgItem (_hSelf, IDC_COMPILER_TEXT);
-  auto str = wstring_printf (rc_str(IDS_BUILT_WITH_PS).c_str (), compiler_name.c_str ());
+  auto wnd = ::GetDlgItem(_hSelf, IDC_COMPILER_TEXT);
+  auto str = wstring_printf(rc_str(IDS_BUILT_WITH_PS).c_str(), compiler_name.c_str());
   auto ret = Static_SetText(wnd, str.c_str ());
-  (void) ret;
+  (void)ret;
 }
 
 std::wstring get_product_and_version() {
   // get the filename of the executable containing the version resource
-  std::vector<wchar_t> sz_filename (MAX_PATH + 1);
-  if (GetModuleFileName(static_cast<HMODULE>(get_h_module()), sz_filename.data (), MAX_PATH) == 0) {
+  std::vector<wchar_t> sz_filename(MAX_PATH + 1);
+  if (GetModuleFileName(static_cast<HMODULE>(get_h_module()), sz_filename.data(), MAX_PATH) == 0) {
     return {};
   }
 
   // allocate a block of memory for the version info
   DWORD dummy;
-  auto dw_size = GetFileVersionInfoSize(sz_filename.data (), &dummy);
+  auto dw_size = GetFileVersionInfoSize(sz_filename.data(), &dummy);
   if (dw_size == 0) {
     return {};
   }
   std::vector<BYTE> data(dw_size);
 
   // load the version info
-  if (!GetFileVersionInfo(sz_filename.data (), NULL, dw_size, &data[0])) {
+  if (!GetFileVersionInfo(sz_filename.data(), NULL, dw_size, &data[0])) {
     return {};
   }
 
   UINT ui_ver_len = 0;
   VS_FIXEDFILEINFO *p_fixed_info = nullptr; // pointer to fixed file info structure
   // get the fixed file info (language-independent)
-  if (VerQueryValue(data.data (), TEXT("\\"), reinterpret_cast<void **>(&p_fixed_info),
+  if (VerQueryValue(data.data(), TEXT("\\"), reinterpret_cast<void **>(&p_fixed_info),
                     static_cast<UINT *>(&ui_ver_len)) == 0) {
     return {};
   }
-  return wstring_printf (rc_str (IDS_VERSION_PU_PU_PU_PU).c_str (),
-           HIWORD(p_fixed_info->dwProductVersionMS),
-           LOWORD(p_fixed_info->dwProductVersionMS),
-           HIWORD(p_fixed_info->dwProductVersionLS),
-           LOWORD(p_fixed_info->dwProductVersionLS));
+  return wstring_printf(rc_str(IDS_VERSION_PU_PU_PU_PU).c_str(),
+                        HIWORD(p_fixed_info->dwProductVersionMS),
+                        LOWORD(p_fixed_info->dwProductVersionMS),
+                        HIWORD(p_fixed_info->dwProductVersionLS),
+                        LOWORD(p_fixed_info->dwProductVersionLS));
 }
 
 void AboutDlg::init(HINSTANCE h_inst, HWND parent) {
@@ -83,7 +84,7 @@ INT_PTR AboutDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
     Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), get_product_and_version ().c_str ());
-    update_compiler_version ();
+    update_compiler_version();
   }
     return TRUE;
   case WM_NOTIFY: {
@@ -109,7 +110,8 @@ INT_PTR AboutDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
         return TRUE;
       }
     }
-  } break;
+  }
+  break;
   }
   return FALSE;
 }

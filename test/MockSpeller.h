@@ -24,10 +24,10 @@ class MockSpeller : public SpellerInterface {
   using parent_t = SpellerInterface;
 public:
   using Dict =
-      std::unordered_map<std::wstring, std::unordered_set<std::wstring>>;
+  std::unordered_map<std::wstring, std::unordered_set<std::wstring>>;
   using SuggestionsDict = std::unordered_map<
-      std::wstring,
-      std::unordered_map<std::wstring, std::vector<std::wstring>>>;
+    std::wstring,
+    std::unordered_map<std::wstring, std::vector<std::wstring>>>;
   ;
   MockSpeller(const Settings &settings);
   virtual ~MockSpeller();
@@ -42,10 +42,10 @@ public:
   void set_inner_dict(const Dict &dict);
   void set_suggestions_dict(const SuggestionsDict &dict);
 
-  bool check_word(const WordForSpeller& word) const override;
+  bool check_word(const WordForSpeller &word) const override;
   void set_working(bool working);
 
-  std::vector<bool> check_words(const std::vector<WordForSpeller>& words) const override;
+  std::vector<bool> check_words(const std::vector<WordForSpeller> &words) const override;
 private:
   std::wstring m_current_lang;
   std::unordered_set<std::wstring> m_ignored;

@@ -13,29 +13,29 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Settings.h"
-#include "common/CommonFunctions.h"
-#include "Scintilla.h"
-#include "spellers/SpellerId.h"
+
 #include "aspell.h"
-#include "common/IniWorker.h"
+#include "Scintilla.h"
+#include "common/CommonFunctions.h"
 #include "common/enum_range.h"
-#include <cassert>
+#include "common/IniWorker.h"
 #include "core/SpellCheckerHelpers.h"
+#include "spellers/SpellerId.h"
+
+#include <cassert>
 
 const wchar_t *default_delimiters() {
   return L",.!?\":;{}()[]\\/"
-         L"=+-^$*<>|#$@%&~"
-         L"\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D"
-         L"\u00B7"
-         L"\u00A0\u0060\u2192\u00d7";
+      L"=+-^$*<>|#$@%&~"
+      L"\u2026\u2116\u2014\u00AB\u00BB\u2013\u2022\u00A9\u203A\u201C\u201D"
+      L"\u00B7"
+      L"\u00A0\u0060\u2192\u00d7";
 }
 
 const wchar_t *default_delimiter_exclusions() { return L"'’_"; }
 
-std::wstring gui_string(LanguageNameStyle value)
-{
-  switch (value) 
-  {
+std::wstring gui_string(LanguageNameStyle value) {
+  switch (value) {
   case LanguageNameStyle::original:
     return rc_str(IDS_LANGUAGE_NAME_STYLE_ORIGINAL);
   case LanguageNameStyle::english:
@@ -44,9 +44,10 @@ std::wstring gui_string(LanguageNameStyle value)
     return rc_str(IDS_LANGUAGE_NAME_STYLE_LOCALIZED);
   case LanguageNameStyle::native:
     return rc_str(IDS_LANGUAGE_NAME_STYLE_NATIVE);
-  case LanguageNameStyle::COUNT: break;
+  case LanguageNameStyle::COUNT:
+    break;
   }
-  throw std::runtime_error ("Incorrect LanguageNameStyle value");
+  throw std::runtime_error("Incorrect LanguageNameStyle value");
 }
 
 std::wstring gui_string(ProxyType value) {
@@ -58,7 +59,7 @@ std::wstring gui_string(ProxyType value) {
   case ProxyType::COUNT:
     break;
   }
-  throw std::runtime_error ("Incorrect ProxyType value");
+  throw std::runtime_error("Incorrect ProxyType value");
 }
 
 std::wstring gui_string(TokenizationStyle value) {
@@ -72,7 +73,7 @@ std::wstring gui_string(TokenizationStyle value) {
   case TokenizationStyle::COUNT:
     break;
   }
-  throw std::runtime_error ("Incorrect TokenizationStyle value");
+  throw std::runtime_error("Incorrect TokenizationStyle value");
 }
 
 std::wstring gui_string(SuggestionMode value) {
@@ -84,7 +85,7 @@ std::wstring gui_string(SuggestionMode value) {
   case SuggestionMode::COUNT:
     break;
   }
-  throw std::runtime_error ("Incorrect SuggestionMode value");
+  throw std::runtime_error("Incorrect SuggestionMode value");
 }
 
 std::wstring gui_string(SpellerId value) {
@@ -98,7 +99,7 @@ std::wstring gui_string(SpellerId value) {
   case SpellerId::COUNT:
     break;
   }
-  throw std::runtime_error ("Incorrect SpellerId value");
+  throw std::runtime_error("Incorrect SpellerId value");
 }
 
 static const wchar_t *to_string(SpellerId value) {
@@ -112,7 +113,7 @@ static const wchar_t *to_string(SpellerId value) {
   case SpellerId::COUNT:
     break;
   }
-  throw std::runtime_error ("Incorrect SpellerId value");
+  throw std::runtime_error("Incorrect SpellerId value");
 }
 
 static const wchar_t *default_language(SpellerId value) {
@@ -126,17 +127,17 @@ static const wchar_t *default_language(SpellerId value) {
   case SpellerId::COUNT:
     break;
   }
-  throw std::runtime_error ("Incorrect SpellerId value");
+  throw std::runtime_error("Incorrect SpellerId value");
 }
 
-Settings::Settings(std::wstring_view ini_filepath) : m_ini_filepath(ini_filepath)
-{
+Settings::Settings(std::wstring_view ini_filepath)
+  : m_ini_filepath(ini_filepath) {
   settings_changed.connect([this] { on_settings_changed(); });
 }
 
 
 void Settings::on_settings_changed() {
-  update_processed_delimiters ();
+  update_processed_delimiters();
 }
 
 void Settings::update_processed_delimiters() { data.m_processed_delimiters = L" \n\r\t\v" + parse_string(data.delimiters.c_str()); }
@@ -159,7 +160,7 @@ void Settings::save(SettingsModificationStyle modification_style) {
                wstring_printf(L"Setting file %s cannot be written. All settings will "
                               L"be lost when you close Notepad++.",
                               m_ini_filepath.c_str())
-                   .c_str(),
+               .c_str(),
                L"Saving of Settings Failed", MB_OK | MB_ICONHAND);
     return;
   }
@@ -190,16 +191,16 @@ const std::wstring &Settings::get_active_multi_languages() const { return const_
 TemporaryAcessor<Settings::Self> Settings::modify(SettingsModificationStyle modification_style) const {
   auto non_const_this = const_cast<Self *>(this);
   return {*non_const_this, [non_const_this, modification_style]() {
-            non_const_this->save(modification_style);
-            non_const_this->settings_changed();
-          }};
+    non_const_this->save(modification_style);
+    non_const_this->settings_changed();
+  }};
 }
 
 TemporaryAcessor<Settings::Self> Settings::modify_without_saving() const {
   auto non_const_this = const_cast<Self *>(this);
   return {*non_const_this, [non_const_this]() {
-            non_const_this->settings_changed();
-          }};
+    non_const_this->settings_changed();
+  }};
 }
 
 std::wstring_view Settings::get_dictionary_download_path() const {

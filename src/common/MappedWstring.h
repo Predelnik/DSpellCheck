@@ -17,19 +17,23 @@
 template <typename IndexType>
 class MappedWstringGeneric {
 public:
-    IndexType to_original_index(IndexType cur_index) const { return !mapping.empty() ? mapping[cur_index] : cur_index; }
-    IndexType from_original_index(IndexType cur_index) const { return !mapping.empty() ?
-        static_cast<IndexType> (std::lower_bound(mapping.begin (), mapping.end (), cur_index) - mapping.begin ()) : cur_index; }
-    IndexType original_length () const { return !mapping.empty () ? mapping.back () : static_cast<IndexType> (str.size ());}
-    void append (const MappedWstringGeneric<IndexType>& other) {
-      if (!str.empty() && !other.str.empty())
-        str.push_back(L'\n');
-      str.insert(str.end(), other.str.begin(), other.str.end());
-      mapping.insert(mapping.end(), other.mapping.begin(), other.mapping.end());
-    }
+  IndexType to_original_index(IndexType cur_index) const { return !mapping.empty() ? mapping[cur_index] : cur_index; }
+
+  IndexType from_original_index(IndexType cur_index) const {
+    return !mapping.empty() ? static_cast<IndexType>(std::lower_bound(mapping.begin(), mapping.end(), cur_index) - mapping.begin()) : cur_index;
+  }
+
+  IndexType original_length() const { return !mapping.empty() ? mapping.back() : static_cast<IndexType>(str.size()); }
+
+  void append(const MappedWstringGeneric<IndexType> &other) {
+    if (!str.empty() && !other.str.empty())
+      str.push_back(L'\n');
+    str.insert(str.end(), other.str.begin(), other.str.end());
+    mapping.insert(mapping.end(), other.mapping.begin(), other.mapping.end());
+  }
 
 public:
-    std::wstring str;
-    std::vector<IndexType> mapping; // should have size str.length () or empty (if empty mapping is identity a<->a)
-    // indices should correspond to offsets string `str` had in original encoding
+  std::wstring str;
+  std::vector<IndexType> mapping; // should have size str.length () or empty (if empty mapping is identity a<->a)
+  // indices should correspond to offsets string `str` had in original encoding
 };
