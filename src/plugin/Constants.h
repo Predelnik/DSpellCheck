@@ -18,22 +18,6 @@
 
 constexpr int spell_check_indicator_id = 19;
 
-#ifdef _DEBUG
-#define ASSERT_RETURN(CONDITION, RET)                                                                                                                          \
-  do {                                                                                                                                                         \
-    if (!(CONDITION)) {                                                                                                                                        \
-      assert(false);                                                                                                                                           \
-      return RET;                                                                                                                                              \
-    }                                                                                                                                                          \
-  } while (0)
-#else // !_DEBUG
-#define ASSERT_RETURN(CONDITION, RET)                                                                                                                          \
-  do {                                                                                                                                                         \
-    if (!(CONDITION))                                                                                                                                          \
-      return RET;                                                                                                                                              \
-  } while (0)
-#endif // !_DEBUG
-
 enum class EncodingType { utf8 = 0, ansi };
 
 enum class CustomGuiMessage {
@@ -66,14 +50,3 @@ constexpr auto multiple_language_alias = L"<MULTIPLE>";
 
 using TextPosition = ptrdiff_t;
 using MappedWstring = MappedWstringGeneric<TextPosition>;
-
-constexpr std::size_t operator "" _z(unsigned long long n) {
-  return static_cast<std::size_t>(n);
-}
-
-constexpr std::ptrdiff_t operator "" _sz(unsigned long long n) {
-  return static_cast<std::ptrdiff_t>(n);
-}
-
-#define CONCATENATE_(a, b) a ## b
-#define CONCATENATE(a, b) CONCATENATE_(a, b)
