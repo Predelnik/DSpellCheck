@@ -13,14 +13,36 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
-#include "ui/StaticDialog.h"
 
-class AboutDlg : public StaticDialog {
+#include "StaticDialog.h"
+
+class SpellChecker;
+class NppInterface;
+class Settings;
+class ContextMenuHandler;
+
+class SuggestionMenuButton : public StaticDialog {
 public:
-  void init(HINSTANCE h_inst, HWND parent) override;
   void do_dialog();
-  void update_compiler_version();
+  HMENU get_popup_menu() const;
+  int get_result() const;
+  bool is_pressed() const;
+  SuggestionMenuButton(HINSTANCE h_inst, HWND parent, NppInterface &npp,
+                    ContextMenuHandler &context_menu_handler,
+                    const Settings &settings);
+  void show_suggestion_menu();
+  void on_settings_changed();
+  void set_transparency();
 
 protected:
-  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
+  INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
+                              LPARAM l_param) override;
+
+private:
+  bool m_state_pressed = false;
+  bool m_state_hovered = false;
+  bool m_state_menu = false;
+  NppInterface &m_npp;
+  const Settings &m_settings;
+  ContextMenuHandler &m_context_menu_handler;
 };

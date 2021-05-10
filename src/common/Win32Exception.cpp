@@ -14,7 +14,7 @@
 
 #include "Win32Exception.h"
 
-#include "CommonFunctions.h"
+#include "Utility.h"
 #include "string_utils.h"
 
 #include <cassert>

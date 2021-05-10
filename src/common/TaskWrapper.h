@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "CommonFunctions.h"
+#include "Utility.h"
 #include "common/move_only.h"
 
 #include <ppltasks.h>

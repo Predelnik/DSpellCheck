@@ -16,7 +16,7 @@
 #if !defined(__clang__)
 #include "NativeSpellerInterface.h"
 
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "spellers/LanguageInfo.h"
 
 #include <comdef.h>

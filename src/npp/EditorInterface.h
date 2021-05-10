@@ -15,8 +15,8 @@
 #pragma once
 
 #define NOMINMAX
-#include "common/CommonFunctions.h"
-#include "plugin/MainDefs.h"
+#include "common/Utility.h"
+#include "plugin/Constants.h"
 
 #include <cassert>
 #include <optional>

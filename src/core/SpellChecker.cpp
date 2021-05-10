@@ -15,10 +15,10 @@
 #include "SpellChecker.h"
 
 #include "SpellCheckerHelpers.h"
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "npp/EditorInterface.h"
 #include "npp/NppInterface.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Settings.h"
 #include "spellers/NativeSpellerInterface.h"
 #include "spellers/SpellerContainer.h"

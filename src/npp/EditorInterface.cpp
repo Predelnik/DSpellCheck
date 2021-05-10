@@ -15,7 +15,7 @@
 #include "EditorInterface.h"
 
 #include "TextUtils.h"
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/utf8.h"
 
 POINT EditorInterface::get_point_from_position(TextPosition position) const {

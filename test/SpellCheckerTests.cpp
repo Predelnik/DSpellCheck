@@ -17,7 +17,7 @@
 #include "TestCommon.h"
 #include "core/SpellChecker.h"
 #include "core/SpellCheckerHelpers.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Settings.h"
 #include "spellers/SpellerContainer.h"
 

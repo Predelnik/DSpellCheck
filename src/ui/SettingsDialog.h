@@ -25,15 +25,15 @@ class SpellChecker;
 class NppInterface;
 class LanguageInfo;
 class Settings;
-class SettingsDlg;
+class SettingsDialog;
 class NppInteface;
 class SpellerContainer;
 using OtdProc = HTHEME(WINAPI *)(HWND, LPCWSTR);
 
-class SimpleDlg : public StaticDialog {
+class SimpleSettingsTab : public StaticDialog {
 public:
-  SimpleDlg(SettingsDlg &parent, const Settings &settings, NppInterface &npp);
-  ~SimpleDlg() override;
+  SimpleSettingsTab(SettingsDialog &parent, const Settings &settings, NppInterface &npp);
+  ~SimpleSettingsTab() override;
   void apply_settings(Settings &settings, const SpellerContainer &speller_container);
   void update_language_controls(const Settings &settings, const SpellerContainer &speller_container, const std::wstring &selected_language_name
       );
@@ -54,7 +54,7 @@ private:
   /* NppData struct instance */
   NppInterface &m_npp;
   const Settings &m_settings;
-  SettingsDlg &m_parent;
+  SettingsDialog &m_parent;
 
   /* handles of controls */
   COLORREF m_aspell_status_color = NULL;
@@ -88,9 +88,9 @@ private:
   OtdProc m_open_theme_data = nullptr;
 };
 
-class AdvancedDlg : public StaticDialog {
+class AdvancedSettingsTab : public StaticDialog {
 public:
-  explicit AdvancedDlg(const Settings &settings);
+  explicit AdvancedSettingsTab(const Settings &settings);
   void apply_settings(Settings &settings);
   void set_delimeters_edit(const wchar_t *delimiters);
   void set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg,
@@ -139,12 +139,12 @@ private:
   COLORREF m_underline_color_btn = 0;
 };
 
-class SettingsDlg : public StaticDialog {
+class SettingsDialog : public StaticDialog {
 public:
   UINT do_dialog();
-  SimpleDlg *get_simple_dlg();
-  AdvancedDlg *get_advanced_dlg();
-  SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings &settings, const SpellerContainer &speller_container);
+  SimpleSettingsTab *get_simple_dlg();
+  AdvancedSettingsTab *get_advanced_dlg();
+  SettingsDialog(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings &settings, const SpellerContainer &speller_container);
 
   lsignal::signal<void ()> download_dics_dlg_requested;
 
@@ -158,13 +158,13 @@ private:
 
 private:
   NppInterface &m_npp;
-  SimpleDlg m_simple_dlg;
-  AdvancedDlg m_advanced_dlg;
+  SimpleSettingsTab m_simple_dlg;
+  AdvancedSettingsTab m_advanced_dlg;
   WindowVector m_window_vector;
   ControlsTab m_controls_tab;
   const Settings &m_settings;
   const SpellerContainer &m_speller_container;
   std::wstring m_selected_language_name;
 
-  friend class SimpleDlg;
+  friend class SimpleSettingsTab;
 };

@@ -12,12 +12,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "SettingsDlg.h"
+#include "SettingsDialog.h"
 
 #include "aspell.h"
 #include "AspellOptionsDialog.h"
-#include "DownloadDicsDlg.h"
-#include "LangList.h"
+#include "DownloadDictionariesDialog.h"
+#include "SelectMultipleLanguagesDialog.h"
 #include "RemoveDictionariesDialog.h"
 #include "common/IniWorker.h"
 #include "common/winapi.h"
@@ -33,14 +33,14 @@
 #include <cassert>
 #include <Uxtheme.h>
 
-SimpleDlg::SimpleDlg(SettingsDlg &parent, const Settings &settings, NppInterface &npp)
+SimpleSettingsTab::SimpleSettingsTab(SettingsDialog &parent, const Settings &settings, NppInterface &npp)
   : m_npp(npp), m_settings(settings), m_parent(parent) {
   m_h_ux_theme = ::LoadLibrary(TEXT("uxtheme.dll"));
   if (m_h_ux_theme != nullptr)
     m_open_theme_data = reinterpret_cast<OtdProc>(::GetProcAddress(m_h_ux_theme, "OpenThemeData"));
 }
 
-void SimpleDlg::disable_language_combo(bool disable) {
+void SimpleSettingsTab::disable_language_combo(bool disable) {
   auto enable = disable ? FALSE : TRUE;
   m_language_cmb.clear();
   m_language_cmb.set_enabled(enable);
@@ -48,7 +48,7 @@ void SimpleDlg::disable_language_combo(bool disable) {
   EnableWindow(m_h_remove_dics, enable);
 }
 
-void SimpleDlg::update_language_controls(const Settings &settings, const SpellerContainer &speller_container, const std::wstring &selected_language_name) {
+void SimpleSettingsTab::update_language_controls(const Settings &settings, const SpellerContainer &speller_container, const std::wstring &selected_language_name) {
 
   if (!m_language_cmb)
     return;
@@ -79,12 +79,12 @@ void SimpleDlg::update_language_controls(const Settings &settings, const Speller
   m_language_cmb.set_enabled(!langs_available.empty());
 }
 
-SimpleDlg::~SimpleDlg() {
+SimpleSettingsTab::~SimpleSettingsTab() {
   if (m_h_ux_theme != nullptr)
     FreeLibrary(m_h_ux_theme);
 }
 
-void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &speller_container) {
+void SimpleSettingsTab::apply_settings(Settings &settings, const SpellerContainer &speller_container) {
   int lang_count = m_language_cmb.count();
   int cur_sel = m_language_cmb.current_index();
 
@@ -119,7 +119,7 @@ void SimpleDlg::apply_settings(Settings &settings, const SpellerContainer &spell
   settings.data.language_name_style = m_language_name_style_cmb.current_data();
 }
 
-void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settings) {
+void SimpleSettingsTab::fill_lib_info(AspellStatus aspell_status, const Settings &settings) {
 
   auto is_aspell = settings.data.active_speller_lib_id == SpellerId::aspell ? TRUE : FALSE;
   ShowWindow(m_h_lib_link, is_aspell);
@@ -184,13 +184,13 @@ void SimpleDlg::fill_lib_info(AspellStatus aspell_status, const Settings &settin
   Edit_SetText(m_h_system_path, settings.data.hunspell_system_path.c_str());
 }
 
-void SimpleDlg::fill_sugestions_num(int suggestions_num) {
+void SimpleSettingsTab::fill_sugestions_num(int suggestions_num) {
   wchar_t buf[10];
   _itow_s(suggestions_num, buf, 10);
   Edit_SetText(m_h_suggestions_num, buf);
 }
 
-void SimpleDlg::set_file_types(bool check_those, const wchar_t *file_types) {
+void SimpleSettingsTab::set_file_types(bool check_those, const wchar_t *file_types) {
   if (!check_those) {
     Button_SetCheck(m_h_check_not_those, BST_CHECKED);
     Button_SetCheck(m_h_check_only_those, BST_UNCHECKED);
@@ -202,13 +202,13 @@ void SimpleDlg::set_file_types(bool check_those, const wchar_t *file_types) {
   }
 }
 
-void SimpleDlg::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_current(mode); }
+void SimpleSettingsTab::set_sugg_type(SuggestionMode mode) { m_suggestion_mode_cmb.set_current(mode); }
 
-void SimpleDlg::set_one_user_dic(bool value) {
+void SimpleSettingsTab::set_one_user_dic(bool value) {
   Button_SetCheck(m_h_one_user_dic, value ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void AdvancedDlg::reset_settings() {
+void AdvancedSettingsTab::reset_settings() {
   if (MessageBox(_hParent, rc_str(IDS_RESET_SETTINGS_TEXT).c_str(), rc_str(IDS_RESET_SETTINGS_CAPTION).c_str(), MB_YESNO) == IDNO)
     return;
   auto mut = m_settings.modify();
@@ -216,7 +216,7 @@ void AdvancedDlg::reset_settings() {
   mut->process(worker);
 }
 
-INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
+INT_PTR SimpleSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   wchar_t *end_ptr;
 
   switch (message) {
@@ -464,18 +464,18 @@ INT_PTR SimpleDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   return 0;
 }
 
-void AdvancedDlg::set_underline_settings(int color, int style) {
+void AdvancedSettingsTab::set_underline_settings(int color, int style) {
   m_underline_color_btn = color;
   ComboBox_SetCurSel(m_h_underline_style, style);
 }
 
-void AdvancedDlg::set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg, bool remove_boundary_apostrophes) {
+void AdvancedSettingsTab::set_conversion_opts(bool convert_yo, bool convert_single_quotes_arg, bool remove_boundary_apostrophes) {
   Button_SetCheck(m_h_ignore_yo, convert_yo ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_convert_single_quotes, convert_single_quotes_arg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_remove_boundary_apostrophes, remove_boundary_apostrophes ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void AdvancedDlg::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg, bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
+void AdvancedSettingsTab::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg, bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
                              bool ignore_sa_apostrophe_arg, bool ignore_one_letter) {
   Button_SetCheck(m_h_ignore_numbers, ignore_numbers_arg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_ignore_c_start, ignore_c_start_arg ? BST_CHECKED : BST_UNCHECKED);
@@ -486,12 +486,12 @@ void AdvancedDlg::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg, b
   Button_SetCheck(m_h_ignore_se_apostrophe, ignore_sa_apostrophe_arg ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void AdvancedDlg::set_sugg_box_settings(LRESULT size, LRESULT trans) {
+void AdvancedSettingsTab::set_sugg_box_settings(LRESULT size, LRESULT trans) {
   SendMessage(m_h_slider_size, TBM_SETPOS, TRUE, size);
   SendMessage(m_h_slider_sugg_button_opacity, TBM_SETPOS, TRUE, trans);
 }
 
-void AdvancedDlg::update_controls(const Settings &settings) {
+void AdvancedSettingsTab::update_controls(const Settings &settings) {
   Edit_SetText(m_h_edit_delimiters, settings.data.delimiters.c_str());
   Edit_SetText(m_delimiter_exclusions_le, m_settings.data.delimiter_exclusions.c_str());
   Button_SetCheck(m_split_camel_case_cb, m_settings.data.split_camel_case);
@@ -514,12 +514,12 @@ const std::vector<std::wstring> &get_indic_names() {
   return indic_names;
 }
 
-void AdvancedDlg::setup_delimiter_line_edit_visiblity() {
+void AdvancedSettingsTab::setup_delimiter_line_edit_visiblity() {
   ShowWindow(m_delimiter_exclusions_le, m_tokenization_style_cmb.current_data() != TokenizationStyle::by_delimiters ? TRUE : FALSE);
   ShowWindow(m_h_edit_delimiters, m_tokenization_style_cmb.current_data() == TokenizationStyle::by_delimiters ? TRUE : FALSE);
 }
 
-INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
+INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   wchar_t *end_ptr = nullptr;
   switch (message) {
   case WM_INITDIALOG: {
@@ -662,26 +662,26 @@ INT_PTR AdvancedDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
   return 0;
 }
 
-void AdvancedDlg::set_delimeters_edit(const wchar_t *delimiters) {
+void AdvancedSettingsTab::set_delimeters_edit(const wchar_t *delimiters) {
   Edit_SetText(m_h_edit_delimiters, delimiters);
 }
 
-void AdvancedDlg::set_recheck_delay(int delay) {
+void AdvancedSettingsTab::set_recheck_delay(int delay) {
   Edit_SetText(m_h_recheck_delay, std::to_wstring (delay).c_str ());
 }
 
-int AdvancedDlg::get_recheck_delay() {
+int AdvancedSettingsTab::get_recheck_delay() {
   auto text = WinApi::get_edit_text(m_h_recheck_delay);
   wchar_t *end_ptr;
   int x = wcstol(text.c_str(), &end_ptr, 10);
   return x;
 }
 
-AdvancedDlg::AdvancedDlg(const Settings &settings)
+AdvancedSettingsTab::AdvancedSettingsTab(const Settings &settings)
   : m_settings(settings) {
 }
 
-void AdvancedDlg::apply_settings(Settings &settings) {
+void AdvancedSettingsTab::apply_settings(Settings &settings) {
   settings.data.delimiters = WinApi::get_edit_text(m_h_edit_delimiters);
   settings.data.ignore_yo = Button_GetCheck(m_h_ignore_yo) == BST_CHECKED;
   settings.data.convert_single_quotes = Button_GetCheck(m_h_convert_single_quotes) == BST_CHECKED;
@@ -704,11 +704,11 @@ void AdvancedDlg::apply_settings(Settings &settings) {
   settings.data.split_camel_case = Button_GetCheck(m_split_camel_case_cb) == BST_CHECKED;
 }
 
-SimpleDlg *SettingsDlg::get_simple_dlg() { return &m_simple_dlg; }
+SimpleSettingsTab *SettingsDialog::get_simple_dlg() { return &m_simple_dlg; }
 
-AdvancedDlg *SettingsDlg::get_advanced_dlg() { return &m_advanced_dlg; }
+AdvancedSettingsTab *SettingsDialog::get_advanced_dlg() { return &m_advanced_dlg; }
 
-SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings &settings, const SpellerContainer &speller_container)
+SettingsDialog::SettingsDialog(HINSTANCE h_inst, HWND parent, NppInterface &npp, const Settings &settings, const SpellerContainer &speller_container)
   : m_npp(npp), m_simple_dlg(*this, settings, m_npp), m_advanced_dlg(settings), m_settings(settings), m_speller_container(speller_container) {
   Window::init(h_inst, parent);
   m_settings.settings_changed.connect([this] { update_controls(); });
@@ -718,37 +718,37 @@ SettingsDlg::SettingsDlg(HINSTANCE h_inst, HWND parent, NppInterface &npp, const
   });
 }
 
-void SettingsDlg::destroy() {
+void SettingsDialog::destroy() {
   m_simple_dlg.destroy();
   m_advanced_dlg.destroy();
 };
 
 // Send appropriate event and set some npp thread properties
-void SettingsDlg::apply_settings() {
+void SettingsDialog::apply_settings() {
   auto mut_settings = m_settings.modify();
   m_simple_dlg.apply_settings(*mut_settings, m_speller_container);
   m_advanced_dlg.apply_settings(*mut_settings);
 }
 
-void SettingsDlg::update_controls() {
+void SettingsDialog::update_controls() {
   m_simple_dlg.update_controls(m_settings, m_speller_container);
   m_advanced_dlg.update_controls(m_settings);
 }
 
-void SettingsDlg::apply_lib_change(SpellerId new_lib_id) {
+void SettingsDialog::apply_lib_change(SpellerId new_lib_id) {
   auto mut_settings = m_settings.modify();
   mut_settings->data.active_speller_lib_id = new_lib_id;
 }
 
-void SettingsDlg::store_selected_language_name(int language_index) {
+void SettingsDialog::store_selected_language_name(int language_index) {
   m_selected_language_name = language_index != -1
                                ? m_speller_container.active_speller().get_language_list()[language_index].orig_name
                                : multiple_language_alias;
 }
 
-void SimpleDlg::init_settings(HINSTANCE h_inst, HWND parent) { return Window::init(h_inst, parent); }
+void SimpleSettingsTab::init_settings(HINSTANCE h_inst, HWND parent) { return Window::init(h_inst, parent); }
 
-void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer &speller_container) {
+void SimpleSettingsTab::update_controls(const Settings &settings, const SpellerContainer &speller_container) {
   m_speller_cmb.set_current(settings.data.active_speller_lib_id);
   fill_lib_info(speller_container.get_aspell_status(), settings);
   fill_sugestions_num(settings.data.suggestion_count);
@@ -761,7 +761,7 @@ void SimpleDlg::update_controls(const Settings &settings, const SpellerContainer
   m_language_name_style_cmb.set_current(settings.data.language_name_style);
 }
 
-void SimpleDlg::init_speller_id_combobox(const SpellerContainer &speller_container) {
+void SimpleSettingsTab::init_speller_id_combobox(const SpellerContainer &speller_container) {
   m_speller_cmb.clear();
   for (auto id : enum_range<SpellerId>()) {
     if (id == SpellerId::native && !speller_container.native_speller().is_working())
@@ -770,7 +770,7 @@ void SimpleDlg::init_speller_id_combobox(const SpellerContainer &speller_contain
   }
 }
 
-INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
+INT_PTR SettingsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
     m_controls_tab.initTabBar(_hInst, _hSelf, false, true, false);
@@ -847,7 +847,7 @@ INT_PTR SettingsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) 
   return 0;
 }
 
-UINT SettingsDlg::do_dialog() {
+UINT SettingsDialog::do_dialog() {
   if (!isCreated()) {
     create(IDD_SETTINGS);
     goToCenter();

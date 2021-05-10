@@ -22,7 +22,7 @@
 #include "common/Win32Exception.h"
 #include "common/WinApi.h"
 #include "common/WinInet.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Settings.h"
 
 #include <fstream>

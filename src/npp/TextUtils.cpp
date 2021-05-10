@@ -1,6 +1,6 @@
 #include "npp/TextUtils.h"
 
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/utf8.h"
 
 MappedWstring utf8_to_mapped_wstring(std::string_view str) {

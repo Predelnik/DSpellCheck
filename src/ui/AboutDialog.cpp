@@ -12,13 +12,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "AboutDlg.h"
+#include "AboutDialog.h"
 
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"
 
-void AboutDlg::do_dialog() {
+void AboutDialog::do_dialog() {
   if (!isCreated()) {
     create(IDD_ABOUT);
     goToCenter();
@@ -29,7 +29,7 @@ void AboutDlg::do_dialog() {
 #define STR_HELPER(x) L#x
 #define STR(x) STR_HELPER(x)
 
-void AboutDlg::update_compiler_version() {
+void AboutDialog::update_compiler_version() {
   std::wstring compiler_name = L"Unknown Compiler";
 #ifdef _MSC_FULL_VER
   std::wstring ver_str = STR(_MSC_FULL_VER);
@@ -76,11 +76,11 @@ std::wstring get_product_and_version() {
                         LOWORD(p_fixed_info->dwProductVersionLS));
 }
 
-void AboutDlg::init(HINSTANCE h_inst, HWND parent) {
+void AboutDialog::init(HINSTANCE h_inst, HWND parent) {
   return Window::init(h_inst, parent);
 }
 
-INT_PTR AboutDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
+INT_PTR AboutDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
     Static_SetText(::GetDlgItem(_hSelf, IDC_VERSION), get_product_and_version ().c_str ());

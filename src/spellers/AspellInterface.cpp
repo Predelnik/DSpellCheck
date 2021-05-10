@@ -16,9 +16,9 @@
 
 #include "aspell.h"
 #include "LanguageInfo.h"
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/winapi.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Plugin.h"
 #include "plugin/Settings.h"
 

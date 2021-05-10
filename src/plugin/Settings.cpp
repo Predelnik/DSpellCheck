@@ -16,7 +16,7 @@
 
 #include "aspell.h"
 #include "Scintilla.h"
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/enum_range.h"
 #include "common/IniWorker.h"
 #include "core/SpellCheckerHelpers.h"

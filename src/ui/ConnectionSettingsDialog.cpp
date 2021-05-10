@@ -14,16 +14,16 @@
 
 #include "ConnectionSettingsDialog.h"
 
-#include "DownloadDicsDlg.h"
+#include "DownloadDictionariesDialog.h"
 #include "common/winapi.h"
 #include "core/SpellChecker.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"
 #include "plugin/Settings.h"
 
 ConnectionSettingsDialog::ConnectionSettingsDialog(const Settings &settings,
-                                                   DownloadDicsDlg &download_dics_dlg)
+                                                   DownloadDictionariesDialog &download_dics_dlg)
   : m_download_dics_dlg(download_dics_dlg), m_settings(settings) {
 }
 

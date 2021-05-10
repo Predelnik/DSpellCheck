@@ -16,7 +16,7 @@
 #include "MockSpeller.h"
 #include "TestCommon.h"
 #include "core/SpellChecker.h"
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 #include "plugin/Settings.h"
 #include "spellers/SpellerContainer.h"
 

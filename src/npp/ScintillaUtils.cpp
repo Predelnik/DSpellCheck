@@ -12,12 +12,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "SciUtils.h"
+#include "ScintillaUtils.h"
 
 #include "SciLexer.h"
 #include "plugin/Settings.h"
 
-namespace SciUtils {
+namespace ScintillaUtils {
 StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &settings) {
   using s = StyleCategory;
   switch (lexer) {
@@ -1238,4 +1238,4 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
     return s::unknown;
   }
 }
-} // namespace SciUtils
+} // namespace ScintillaUtils

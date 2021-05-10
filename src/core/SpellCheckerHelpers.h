@@ -18,7 +18,7 @@ class Settings;
 class EditorInterface;
 enum class NppViewType;
 
-#include "plugin/MainDefs.h"
+#include "plugin/Constants.h"
 
 namespace SpellCheckerHelpers {
 bool is_spell_checking_needed_for_file(const EditorInterface &editor, const Settings &settings);

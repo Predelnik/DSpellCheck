@@ -14,7 +14,7 @@
 
 #include "IniWorker.h"
 
-#include "CommonFunctions.h"
+#include "Utility.h"
 
 IniWorker::IniWorker(std::wstring_view app_name, std::wstring_view file_name, Action action)
   : m_app_name{app_name},

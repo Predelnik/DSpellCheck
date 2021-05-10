@@ -13,7 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
-#include "common/CommonFunctions.h"
+#include "common/Utility.h"
 #include "common/WinApiControls.h"
 #include "plugin/Settings.h"
 #include "ui/StaticDialog.h"
@@ -24,7 +24,7 @@ enum class ProxyType;
 
 class ConnectionSettingsDialog : public StaticDialog {
 public:
-  explicit ConnectionSettingsDialog(const Settings &settings, DownloadDicsDlg &download_dics_dlg);
+  explicit ConnectionSettingsDialog(const Settings &settings, DownloadDictionariesDialog &download_dics_dlg);
   void do_dialog();
   void apply_choice();
   void update_controls(
@@ -43,7 +43,7 @@ protected:
   HWND m_password = nullptr;
   HWND m_use_proxy = nullptr;
   HWND m_proxy_anonymous = nullptr;
-  DownloadDicsDlg &m_download_dics_dlg;
+  DownloadDictionariesDialog &m_download_dics_dlg;
 
   WinApi::EnumComboBox<ProxyType> m_proxy_type_cmb;
   const Settings &m_settings;
