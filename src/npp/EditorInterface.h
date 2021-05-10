@@ -18,7 +18,6 @@
 #include "common/Utility.h"
 #include "plugin/Constants.h"
 
-#include <cassert>
 #include <optional>
 #include <string>
 #include <vector>

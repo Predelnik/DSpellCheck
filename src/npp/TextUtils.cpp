@@ -20,11 +20,11 @@ MappedWstring utf8_to_mapped_wstring(std::string_view str) {
     auto next = utf8_inc(it);
     buf.resize(char_cnt);
     MultiByteToWideChar(CP_UTF8, 0, it, static_cast<int>(next - it), buf.data() + char_cnt - 1, 1);
-    mapping.push_back(static_cast<TextPosition>(it - str.data()));
+    mapping.push_back(it - str.data());
     ++char_cnt;
     it = next;
   }
-  mapping.push_back(static_cast<TextPosition>(it - str.data()));
+  mapping.push_back(it - str.data());
   return {std::wstring{buf.begin(), buf.end()}, std::move(mapping)};
 }
 

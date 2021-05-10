@@ -66,7 +66,7 @@ std::wstring get_product_and_version() {
   VS_FIXEDFILEINFO *p_fixed_info = nullptr; // pointer to fixed file info structure
   // get the fixed file info (language-independent)
   if (VerQueryValue(data.data(), TEXT("\\"), reinterpret_cast<void **>(&p_fixed_info),
-                    static_cast<UINT *>(&ui_ver_len)) == 0) {
+                    &ui_ver_len) == 0) {
     return {};
   }
   return wstring_printf(rc_str(IDS_VERSION_PU_PU_PU_PU).c_str(),

@@ -99,8 +99,8 @@ void SpellChecker::find_prev_mistake() {
   bool full_check = false;
 
   while (true) {
-    auto from = static_cast<TextPosition>(iterator_pos - 4096);
-    auto to = static_cast<TextPosition>(iterator_pos);
+    auto from = iterator_pos - 4096;
+    auto to = iterator_pos;
     int ignore_offsetting = 0;
     if (from < 0) {
       from = 0;
@@ -283,12 +283,12 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
   auto mapped_str = m_editor.get_mapped_wstring_line(line);
   if (mapped_str.str.empty())
     return true;
-  auto word = get_word_at(static_cast<TextPosition>(init_char_pos), mapped_str);
+  auto word = get_word_at(init_char_pos, mapped_str);
   if (word.empty())
     return true;
   SpellCheckerHelpers::cut_apostrophes(m_settings, word);
-  pos = static_cast<TextPosition>(mapped_str.to_original_index(static_cast<TextPosition>(word.data() - mapped_str.str.data())));
-  TextPosition pos_end = mapped_str.to_original_index(static_cast<TextPosition>(word.data() + word.length() - mapped_str.str.data()));
+  pos = mapped_str.to_original_index(word.data() - mapped_str.str.data());
+  TextPosition pos_end = mapped_str.to_original_index(word.data() + word.length() - mapped_str.str.data());
   TextPosition word_len = pos_end - pos;
   if (selection_start != selection_end && (selection_start != pos || selection_end != pos + word_len))
     return true;
@@ -307,7 +307,7 @@ void SpellChecker::erase_all_misspellings() {
   UNDO_BLOCK(m_editor);
   TextPosition chars_removed = 0;
   for (auto &misspelling : misspelled_words) {
-    auto start = mapped_str.to_original_index(static_cast<TextPosition>(misspelling.data() - mapped_str.str.data()));
+    auto start = mapped_str.to_original_index(misspelling.data() - mapped_str.str.data());
     auto original_len = mapped_str.to_original_index(static_cast<TextPosition>(misspelling.data() - mapped_str.str.data() + misspelling.length())) - start;
     m_editor.delete_range(start - chars_removed, original_len);
     chars_removed += original_len;

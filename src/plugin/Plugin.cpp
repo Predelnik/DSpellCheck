@@ -375,7 +375,7 @@ HMENU get_this_plugin_menu() {
       bool res = GetMenuItemInfo(plugins_menu, i, TRUE, &mif) != FALSE;
 
       if (res)
-        dspellcheck_menu = static_cast<HMENU>(mif.hSubMenu);
+        dspellcheck_menu = mif.hSubMenu;
       break;
     }
   }

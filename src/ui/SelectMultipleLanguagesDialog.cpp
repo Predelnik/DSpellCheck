@@ -17,7 +17,6 @@
 #include "CheckedList/CheckedList.h"
 #include "common/Utility.h"
 #include "common/string_utils.h"
-#include "core/SpellChecker.h"
 #include "plugin/Constants.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"

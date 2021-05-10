@@ -98,10 +98,10 @@ void StaticDialog::create(int dialogID, bool isRTL, bool msgDestParent) {
   if (isRTL) {
     DLGTEMPLATE *pMyDlgTemplate = NULL;
     HGLOBAL hMyDlgTemplate = makeRTLResource(dialogID, &pMyDlgTemplate);
-    _hSelf = ::CreateDialogIndirectParam(_hInst, pMyDlgTemplate, _hParent, (DLGPROC)dlgProc, (LPARAM)this);
+    _hSelf = ::CreateDialogIndirectParam(_hInst, pMyDlgTemplate, _hParent, dlgProc, (LPARAM)this);
     ::GlobalFree(hMyDlgTemplate);
   } else
-    _hSelf = ::CreateDialogParam(_hInst, MAKEINTRESOURCE(dialogID), _hParent, (DLGPROC)dlgProc, (LPARAM)this);
+    _hSelf = ::CreateDialogParam(_hInst, MAKEINTRESOURCE(dialogID), _hParent, dlgProc, (LPARAM)this);
 
   if (!_hSelf) {
     DWORD err = ::GetLastError();
@@ -120,7 +120,7 @@ INT_PTR StaticDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
   case WM_INITDIALOG: {
     StaticDialog *pStaticDlg = (StaticDialog *)(lParam);
     pStaticDlg->_hSelf = hwnd;
-    ::SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)lParam);
+    ::SetWindowLongPtr(hwnd, GWLP_USERDATA, lParam);
     ::GetWindowRect(hwnd, &(pStaticDlg->_rc));
     pStaticDlg->run_dlg_proc(message, wParam, lParam);
 

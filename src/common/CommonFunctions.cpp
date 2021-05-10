@@ -15,24 +15,21 @@
 #include "Utility.h"
 
 #include "iconv.h"
-#include "MappedWString.h"
 #include "common/string_utils.h"
 #include "common/utf8.h"
 #include "common/winapi.h"
-#include "plugin/Constants.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"
 #include "plugin/Settings.h"
 
 #include <cassert>
-#include <numeric>
 
 static std::vector<char> convert(const char *source_enc, const char *target_enc, const void *source_data_ptr, size_t source_len, size_t max_dest_len) {
   std::vector<char> buf(max_dest_len);
-  auto out_buf = reinterpret_cast<char *>(buf.data());
+  auto out_buf = buf.data();
   iconv_t converter = iconv_open(target_enc, source_enc);
   auto char_ptr = static_cast<const char *>(source_data_ptr);
-  size_t res = iconv(converter, static_cast<const char **>(&char_ptr), &source_len, &out_buf, &max_dest_len);
+  size_t res = iconv(converter, &char_ptr, &source_len, &out_buf, &max_dest_len);
   iconv_close(converter);
 
   if (res == static_cast<size_t>(-1))
@@ -137,7 +134,7 @@ bool match_special_char(wchar_t *dest, const wchar_t *&source) {
       if (c > UCHAR_MAX || !((L'0' <= c && c <= L'9') || (L'a' <= c && c <= L'f') || (L'A' <= c && c <= L'F')))
         return false;
 
-      buf[0] = static_cast<wchar_t>(c);
+      buf[0] = c;
       n = n << 4;
       n += static_cast<wchar_t>(wcstol(buf, nullptr, 16));
     }

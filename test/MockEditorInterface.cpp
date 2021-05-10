@@ -14,10 +14,11 @@
 
 #include "MockEditorInterface.h"
 
-#include "common/Utility.h"
 #include "common/string_utils.h"
+#include "common/Utility.h"
 
 #include <algorithm>
+#include <cassert>
 #include <filesystem>
 
 void MockedDocumentInfo::set_data(const std::wstring &data_arg) {

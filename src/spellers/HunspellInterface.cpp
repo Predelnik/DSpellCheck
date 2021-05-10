@@ -27,7 +27,6 @@
 
 #include <fcntl.h>
 #include <fstream>
-#include <io.h>
 
 namespace {
 void append_word_to_user_dictionary(const wchar_t *dictionary_path, const char *word) {

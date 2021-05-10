@@ -1,4 +1,11 @@
 BasedOnStyle: LLVM
 ColumnLimit: 160
 IncludeBlocks: Regroup
-
+IncludeCategories:
+  - Regex:           '<Winsock2.h>'
+    Priority:        1
+  - Regex:           '<[[:alnum:].]+>'
+    Priority:        2
+  - Regex:           '".*"'
+    Priority:        1
+    SortPriority:    0

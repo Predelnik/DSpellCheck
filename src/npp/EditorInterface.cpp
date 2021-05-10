@@ -15,8 +15,9 @@
 #include "EditorInterface.h"
 
 #include "TextUtils.h"
-#include "common/Utility.h"
 #include "common/utf8.h"
+#include "common/Utility.h"
+#include <cassert>
 
 POINT EditorInterface::get_point_from_position(TextPosition position) const {
   return {get_point_x_from_position(position),
@@ -33,7 +34,7 @@ TextPosition EditorInterface::get_prev_valid_begin_pos(TextPosition pos) const {
   auto rng = get_text_range(worst_prev_pos, pos);
   auto it = std::find_if(rng.rbegin(), rng.rend(), &utf8_is_lead);
   assert(it != rng.rend ());
-  return worst_prev_pos + static_cast<TextPosition>(it.base() - rng.begin()) - 1;
+  return worst_prev_pos + (it.base() - rng.begin()) - 1;
 }
 
 TextPosition EditorInterface::get_next_valid_end_pos(TextPosition pos) const {
