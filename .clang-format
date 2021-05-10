@@ -1,2 +1,4 @@
 BasedOnStyle: LLVM
 ColumnLimit: 160
+IncludeBlocks: Regroup
+
