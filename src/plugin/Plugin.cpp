@@ -18,30 +18,30 @@
 // put the headers you need here
 //
 
+#include "MainDefs.h"
+#include "menuCmdID.h"
+#include "resource.h"
+#include "Settings.h"
+#include "CheckedList/CheckedList.h"
+#include "common/raii.h"
+#include "common/winapi.h"
+#include "core/SpellChecker.h"
+#include "core/SpellCheckerHelpers.h"
+#include "npp/NppInterface.h"
+#include "spellers/HunspellInterface.h"
+#include "spellers/SpellerContainer.h"
 #include "ui/AboutDlg.h"
 #include "ui/AspellOptionsDialog.h"
-#include "CheckedList/CheckedList.h"
 #include "ui/ConnectionSettingsDialog.h"
+#include "ui/ContextMenuHandler.h"
 #include "ui/DownloadDicsDlg.h"
 #include "ui/LangList.h"
-#include "MainDefs.h"
+#include "ui/MenuItem.h"
 #include "ui/ProgressDlg.h"
 #include "ui/RemoveDictionariesDialog.h"
 #include "ui/SettingsDlg.h"
 #include "ui/SuggestionsButton.h"
 
-#include "ui/ContextMenuHandler.h"
-#include "spellers/HunspellInterface.h"
-#include "ui/MenuItem.h"
-#include "Settings.h"
-#include "core/SpellChecker.h"
-#include "core/SpellCheckerHelpers.h"
-#include "spellers/SpellerContainer.h"
-#include "menuCmdID.h"
-#include "npp/NppInterface.h"
-#include "resource.h"
-#include "common/raii.h"
-#include "common/winapi.h"
 #include <chrono>
 
 #ifdef VLD_BUILD
@@ -100,8 +100,7 @@ LRESULT CALLBACK mouse_proc(int n_code, WPARAM w_param, LPARAM l_param) {
   default:
     break;
   }
-  return CallNextHookEx(h_mouse_hook, n_code, w_param, l_param);
-  ;
+  return CallNextHookEx(h_mouse_hook, n_code, w_param, l_param);;
 }
 
 void set_context_menu_id_start(int id) { context_menu_id_start = id; }
@@ -179,7 +178,7 @@ void show_spell_check_menu_at_cursor() {
 
   tagTPMPARAMS tpm_params;
   tpm_params.cbSize = sizeof(tagTPMPARAMS);
-  ACTIVE_VIEW_BLOCK (*npp);
+  ACTIVE_VIEW_BLOCK(*npp);
   auto start = npp->get_selection_start();
   auto x = npp->get_point_x_from_position(start);
   auto y = npp->get_point_y_from_position(start);
@@ -225,7 +224,7 @@ void copy_misspellings_to_clipboard() {
 }
 
 void mark_lines_with_misspelling() {
-  spell_checker->mark_lines_with_misspelling ();
+  spell_checker->mark_lines_with_misspelling();
 }
 
 void reload_hunspell_dictionaries() {
@@ -248,11 +247,15 @@ void switch_debug_logging() {
   }
 }
 
-void open_debug_log() { ShellExecute(nullptr, L"open", get_debug_log_path().c_str(), nullptr, nullptr, SW_SHOW); }
+void open_debug_log() {
+  ShellExecute(nullptr, L"open", get_debug_log_path().c_str(), nullptr, nullptr, SW_SHOW);
+}
 
 void start_settings() { settings_dlg->do_dialog(); }
 
-void start_manual() { ShellExecute(nullptr, L"open", L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", nullptr, nullptr, SW_SHOW); }
+void start_manual() {
+  ShellExecute(nullptr, L"open", L"https://github.com/Predelnik/DSpellCheck/wiki/Manual", nullptr, nullptr, SW_SHOW);
+}
 
 void start_about_dlg() { about_dlg->do_dialog(); }
 
@@ -450,7 +453,8 @@ void init_classes() {
   resources_inited = true;
 }
 
-void command_menu_clean_up() {}
+void command_menu_clean_up() {
+}
 
 //
 // Function that initializes plug-in commands
@@ -493,7 +497,7 @@ void rearrange_menu() {
   auto list = {
       Action::copy_all_misspellings, Action::erase_all_misspellings, Action::mark_lines_with_misspelling,
       Action::replace_with_1st_suggestion, Action::ignore_for_current_session,
-      Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries, Action::toggle_debug_logging,        Action::open_debug_log};
+      Action::show_spell_check_menu_at_cursor, Action::reload_user_dictionaries, Action::toggle_debug_logging, Action::open_debug_log};
   for (auto action : list) {
     MENUITEMINFO info;
     info.cbSize = sizeof(info);
@@ -535,7 +539,7 @@ std::optional<WinApi::Timer> scroll_recheck_timer;
 constexpr int scroll_recheck_timer_resolution = 100;
 bool restyling_caused_recheck_was_done = false; // Hack to avoid eternal cycle in case of scintilla bug
 bool first_restyle = true;                      // hack to successfully avoid checking hyperlinks
-                                                // when they appear on program start
+// when they appear on program start
 
 WPARAM last_hwnd = NULL;
 LPARAM last_coords = 0;
@@ -564,7 +568,8 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM 
       }
     }
     cur_menu_list.clear();
-  } break;
+  }
+  break;
 
   case WM_COMMAND:
     if (HIWORD(w_param) == 0) {
@@ -598,7 +603,8 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM 
     return TRUE;
   case WM_DISPLAYCHANGE: {
     suggestions_button->display(false);
-  } break;
+  }
+  break;
   }
 
   if (message != 0) {
@@ -653,7 +659,7 @@ extern "C" __declspec(dllexport) FuncItem *getFuncsArray(int *nbF) {
 
 // ReSharper restore CppInconsistentNaming
 
-bool is_any_timer_active () {
+bool is_any_timer_active() {
   if (edit_recheck_timer && edit_recheck_timer->is_set())
     return true;
 
@@ -698,10 +704,9 @@ void delete_log() {
     WinApi::delete_file(get_debug_log_path().c_str());
 }
 
-void update_on_visible_area_changed()
-{
+void update_on_visible_area_changed() {
   if (!is_any_timer_active() && scroll_recheck_timer) {
-    scroll_recheck_timer->set_resolution(std::chrono::milliseconds (scroll_recheck_timer_resolution));
+    scroll_recheck_timer->set_resolution(std::chrono::milliseconds(scroll_recheck_timer_resolution));
   }
 }
 
@@ -711,13 +716,14 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   switch (notify_code->nmhdr.code) {
   case NPPN_SHUTDOWN: {
     SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
-    edit_recheck_timer.reset ();
-    scroll_recheck_timer.reset ();
+    edit_recheck_timer.reset();
+    scroll_recheck_timer.reset();
     command_menu_clean_up();
 
     plugin_clean_up();
     RemoveWindowSubclass(npp_data.npp_handle, subclass_proc, 0);
-  } break;
+  }
+  break;
 
   case NPPN_READY: {
     register_custom_messages();
@@ -725,15 +731,16 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_READY", npp->get_editor_hwnd());
     check_queue.clear();
     create_hooks();
-    edit_recheck_timer.emplace (npp_data.npp_handle);
-    edit_recheck_timer->on_timer_tick.connect (edit_recheck_callback);
-    scroll_recheck_timer.emplace (npp_data.npp_handle);
-    scroll_recheck_timer->on_timer_tick.connect (scroll_recheck_callback);
+    edit_recheck_timer.emplace(npp_data.npp_handle);
+    edit_recheck_timer->on_timer_tick.connect(edit_recheck_callback);
+    scroll_recheck_timer.emplace(npp_data.npp_handle);
+    scroll_recheck_timer->on_timer_tick.connect(scroll_recheck_callback);
     spell_checker->recheck_visible_both_views();
     restyling_caused_recheck_was_done = false;
     suggestions_button->set_transparency();
     rearrange_menu();
-  } break;
+  }
+  break;
 
   case NPPN_BUFFERACTIVATED: {
     if (settings)
@@ -742,13 +749,15 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
       return;
     recheck_visible();
     restyling_caused_recheck_was_done = false;
-  } break;
+  }
+  break;
 
   case SCN_UPDATEUI:
     if (!spell_checker)
       return;
-    if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 && (!is_any_timer_active() || first_restyle) && !restyling_caused_recheck_was_done) // If restyling wasn't caused
-                                                                                                                                            // by user input...
+    if ((notify_code->updated & SC_UPDATE_CONTENT) != 0 && (!is_any_timer_active() || first_restyle) && !restyling_caused_recheck_was_done)
+      // If restyling wasn't caused
+      // by user input...
     {
       ACTIVE_VIEW_BLOCK(npp_interface());
       spell_checker->recheck_visible();
@@ -759,19 +768,19 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     {
       update_on_visible_area_changed();
     }
-    if (!suggestions_button->is_pressed ())
+    if (!suggestions_button->is_pressed())
       suggestions_button->display(false);
     break;
 
   case SCN_ZOOM:
-    update_on_visible_area_changed ();
+    update_on_visible_area_changed();
     break;
 
   case SCN_MODIFIED:
     if (!spell_checker)
       return;
     if (edit_recheck_timer && (notify_code->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT)) != 0) {
-      edit_recheck_timer->set_resolution(std::chrono::milliseconds (get_settings().data.recheck_delay));
+      edit_recheck_timer->set_resolution(std::chrono::milliseconds(get_settings().data.recheck_delay));
     }
     break;
 
@@ -780,7 +789,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     if (!spell_checker)
       return;
     spell_checker->recheck_visible_on_active_view();
-  } break;
+  }
+  break;
 
   case NPPN_TBMODIFICATION: {
     if (settings)
@@ -829,8 +839,8 @@ void init_needed_dialogs(WPARAM w_param) {
 }
 
 extern "C" __declspec(dllexport) LRESULT
-    // ReSharper disable once CppInconsistentNaming
-    messageProc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
+// ReSharper disable once CppInconsistentNaming
+messageProc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
   // NOLINT
   switch (message) {
   case WM_MOVE:
@@ -842,7 +852,8 @@ extern "C" __declspec(dllexport) LRESULT
       init_needed_dialogs(w_param);
       context_menu_handler->process_menu_result(w_param);
     }
-  } break;
+  }
+  break;
   }
 
   return FALSE;

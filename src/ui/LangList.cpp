@@ -13,20 +13,20 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "LangList.h"
+
 #include "CheckedList/CheckedList.h"
 #include "common/CommonFunctions.h"
-#include "plugin/Plugin.h"
-#include "core/SpellChecker.h"
-
-#include "spellers/LanguageInfo.h"
-#include "plugin/Settings.h"
-#include "spellers/SpellerContainer.h"
-#include "plugin/resource.h"
 #include "common/string_utils.h"
+#include "core/SpellChecker.h"
 #include "plugin/MainDefs.h"
+#include "plugin/Plugin.h"
+#include "plugin/resource.h"
+#include "plugin/Settings.h"
+#include "spellers/LanguageInfo.h"
+#include "spellers/SpellerContainer.h"
 
 LangList::LangList(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
-    : m_settings(settings), m_speller_container(speller_container) {
+  : m_settings(settings), m_speller_container(speller_container) {
   Window::init(h_inst, parent);
   m_settings.settings_changed.connect([this] { update_list(); });
   m_speller_container.speller_status_changed.connect([this] { update_list(); });
@@ -113,7 +113,8 @@ INT_PTR LangList::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*l_param*/)
       }
       break;
     }
-  } break;
+  }
+  break;
   };
   return FALSE;
 }

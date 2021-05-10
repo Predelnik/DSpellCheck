@@ -12,33 +12,33 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include <fcntl.h>
-#include <io.h>
-
-#include "CheckedList/CheckedList.h"
-#include "common/CommonFunctions.h"
-#include "Definements.h"
 #include "DownloadDicsDlg.h"
 
 #include "ConnectionSettingsDialog.h"
+#include "Definements.h"
 #include "FTPClient.h"
 #include "FTPDataTypes.h"
-#include "network/GithubFileListProvider.h"
-#include "spellers/HunspellInterface.h"
-#include "plugin/MainDefs.h"
-#include "plugin/Plugin.h"
-#include "common/ProgressData.h"
 #include "ProgressDlg.h"
-#include "plugin/Settings.h"
-#include "spellers/SpellerContainer.h"
-#include "network/UrlHelpers.h"
-#include "plugin/resource.h"
 #include "unzip.h"
+#include "CheckedList/CheckedList.h"
+#include "common/CommonFunctions.h"
+#include "common/ProgressData.h"
 #include "common/string_utils.h"
 #include "common/winapi.h"
 #include "common/WindowsDefs.h"
-#include <Wininet.h>
+#include "network/GithubFileListProvider.h"
+#include "network/UrlHelpers.h"
+#include "plugin/MainDefs.h"
+#include "plugin/Plugin.h"
+#include "plugin/resource.h"
+#include "plugin/Settings.h"
+#include "spellers/HunspellInterface.h"
+#include "spellers/SpellerContainer.h"
+
+#include <fcntl.h>
+#include <io.h>
 #include <variant>
+#include <Wininet.h>
 
 void DownloadDicsDlg::do_dialog() {
   if (!isCreated()) {
@@ -77,17 +77,17 @@ DownloadDicsDlg::~DownloadDicsDlg() {
 }
 
 DownloadDicsDlg::DownloadDicsDlg(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
-    : m_settings(settings), m_github_provider(std::make_unique<GitHubFileListProvider>(parent, settings)), m_speller_container(speller_container) {
+  : m_settings(settings), m_github_provider(std::make_unique<GitHubFileListProvider>(parent, settings)), m_speller_container(speller_container) {
   m_github_provider->file_list_received.connect([this](const std::vector<FileDescription> &list) { on_new_file_list(list); });
   m_github_provider->error_happened.connect([this](const std::string &description) {
     auto wstr = to_wstring(description);
     replace_all_inplace(wstr, L"\r\n", L" ");
     update_status(wstring_printf(rc_str(IDS_STATUS_NETWORK_ERROR_PS).c_str(), wstr.c_str()).c_str(), COLOR_FAIL);
   });
-  m_github_provider->file_downloaded.connect([this](const std::optional<std::string> &error_description, bool was_cancelled){
+  m_github_provider->file_downloaded.connect([this](const std::optional<std::string> &error_description, bool was_cancelled) {
     m_message += prev(m_cur)->title + L'\n';
-     if (was_cancelled)
-      m_cur = m_current_list.end ();
+    if (was_cancelled)
+      m_cur = m_current_list.end();
     else if (!error_description)
       ++m_downloaded_count;
     else
@@ -119,7 +119,7 @@ static std::wstring get_temp_path() {
 
 bool DownloadDicsDlg::prepare_downloading() {
   m_downloaded_count = 0;
-  m_errors_text.clear ();
+  m_errors_text.clear();
   m_supposed_downloaded_count = 0;
   m_failure = false;
   m_message = rc_str(IDS_DICTS_COPIED);
@@ -135,10 +135,11 @@ bool DownloadDicsDlg::prepare_downloading() {
   p->get_progress_data()->set(0, L"");
   get_progress_dlg()->update();
   p->set_top_message(L"");
-  if (!check_for_directory_existence(m_settings.data.download_install_dictionaries_for_all_users ? m_settings.data.hunspell_system_path : m_settings.data.hunspell_user_path,
-                                     false,
-                                     _hParent)) // If path doesn't exist we're gonna try to create it
-                                                // else it's finish
+  if (!check_for_directory_existence(
+      m_settings.data.download_install_dictionaries_for_all_users ? m_settings.data.hunspell_system_path : m_settings.data.hunspell_user_path,
+      false,
+      _hParent)) // If path doesn't exist we're gonna try to create it
+    // else it's finish
   {
     MessageBox(_hParent, rc_str(IDS_CANT_CREATE_DOWNLOAD_DIR).c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
     return false;
@@ -159,15 +160,15 @@ void DownloadDicsDlg::finalize_downloading() {
     MessageBox(_hParent, rc_str(IDS_CANT_WRITE_DICT_FILES).c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
   } else if (m_downloaded_count > 0) {
     auto text = m_message;
-    if (!m_errors_text.empty ())
-      text += rc_str(IDS_DOWNLOAD_ERRORS_ENCOUNTERED) + to_wstring (m_errors_text);
-    MessageBox(_hParent, text.c_str(), rc_str(IDS_DICTS_DOWNLOADED).c_str (), MB_OK | MB_ICONINFORMATION);
+    if (!m_errors_text.empty())
+      text += rc_str(IDS_DOWNLOAD_ERRORS_ENCOUNTERED) + to_wstring(m_errors_text);
+    MessageBox(_hParent, text.c_str(), rc_str(IDS_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONINFORMATION);
   } else if (m_supposed_downloaded_count > 0) // Otherwise - silent
   {
     auto text = rc_str(IDS_ZERO_DICTS_DOWNLOAD);
-    if (!m_errors_text.empty ())
-      text += rc_str(IDS_DOWNLOAD_ERRORS_ENCOUNTERED) + to_wstring (m_errors_text);
-    MessageBox(_hParent, text.c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str (), MB_OK | MB_ICONEXCLAMATION);
+    if (!m_errors_text.empty())
+      text += rc_str(IDS_DOWNLOAD_ERRORS_ENCOUNTERED) + to_wstring(m_errors_text);
+    MessageBox(_hParent, text.c_str(), rc_str(IDS_NO_DICTS_DOWNLOADED).c_str(), MB_OK | MB_ICONEXCLAMATION);
   }
   for (int i = 0; i < ListBox_GetCount(m_h_file_list); i++)
     CheckedListBox_SetCheckState(m_h_file_list, i, BST_UNCHECKED);
@@ -215,8 +216,8 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
       if (local_dic_file_handle == -1)
         continue;
 
-      auto msg = wstring_printf (rc_str(IDS_EXTRACTING_PS).c_str(), dic_file_name.c_str());
-      get_progress_dlg()->set_top_message(msg.c_str ());
+      auto msg = wstring_printf(rc_str(IDS_EXTRACTING_PS).c_str(), dic_file_name.c_str());
+      get_progress_dlg()->set_top_message(msg.c_str());
       DWORD bytes_total = 0;
       int bytes_copied;
       std::vector<char> file_copy_buf(buf_size_for_copy);
@@ -225,12 +226,13 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
         bytes_total += bytes_copied;
         msg = wstring_printf(rc_str(IDS_PS_OF_PS_BYTES_EXTRACTED_PS).c_str(), bytes_total, f_info.uncompressed_size,
                              bytes_total * 100 / f_info.uncompressed_size);
-        get_progress_dlg()->get_progress_data()->set(bytes_total * 100 / f_info.uncompressed_size, msg.c_str ());
+        get_progress_dlg()->get_progress_data()->set(bytes_total * 100 / f_info.uncompressed_size, msg.c_str());
       }
       unzCloseCurrentFile(fp);
       _close(local_dic_file_handle);
     }
-  } while (unzGoToNextFile(fp) == UNZ_OK);
+  }
+  while (unzGoToNextFile(fp) == UNZ_OK);
   // Now we're gonna check what's exactly we extracted with using FilesFound
   // map
   for (auto &[file_name_ansi, mask] : files_found) {
@@ -250,7 +252,9 @@ void DownloadDicsDlg::on_zip_file_downloaded() {
     } else {
       auto dic_file_local_path = get_temp_path();
       (dic_file_local_path += file_name) += L".aff";
-      std::wstring hunspell_dic_path = m_settings.data.download_install_dictionaries_for_all_users ? m_settings.data.hunspell_system_path : m_settings.data.hunspell_user_path;
+      std::wstring hunspell_dic_path = m_settings.data.download_install_dictionaries_for_all_users
+                                         ? m_settings.data.hunspell_system_path
+                                         : m_settings.data.hunspell_user_path;
       hunspell_dic_path += L"\\";
       hunspell_dic_path += file_name;
       hunspell_dic_path += L".aff";
@@ -323,13 +327,11 @@ void DownloadDicsDlg::start_next_download() {
     return finalize_downloading();
 
   get_progress_dlg()->set_top_message(wstring_printf(rc_str(IDS_DOWNLOADING_PS).c_str(), m_cur->title.c_str()).c_str());
-  if (!download_file())
-    {
-      ++m_cur;
-      start_next_download();
-      return;
-    }
-  else
+  if (!download_file()) {
+    ++m_cur;
+    start_next_download();
+    return;
+  } else
     get_progress_dlg()->do_dialog();
   ++m_cur;
 }
@@ -434,8 +436,9 @@ class ProgressObserver : public nsFTP::CFTPClient::CNotification {
 public:
   ProgressObserver(std::shared_ptr<ProgressData> progress_data, std::wstring target_path, long target_size, nsFTP::CFTPClient &client,
                    concurrency::cancellation_token token)
-      : m_progress_data(std::move(progress_data)), m_target_path(std::move(target_path)), m_target_size(target_size), m_token(std::move(token)),
-        m_client(client) {}
+    : m_progress_data(std::move(progress_data)), m_target_path(std::move(target_path)), m_target_size(target_size), m_token(std::move(token)),
+      m_client(client) {
+  }
 
   void OnBytesReceived(const nsFTP::TByteVector & /*vBuffer*/, long l_received_bytes) override {
     if (m_token.is_canceled()) {
@@ -451,15 +454,17 @@ public:
 
 class LogObserver : public nsFTP::CFTPClient::CNotification {
 public:
-  LogObserver(const wchar_t *log_filename) : m_log_filename(log_filename) {}
+  LogObserver(const wchar_t *log_filename)
+    : m_log_filename(log_filename) {
+  }
 
   void OnInternalError(const tstring &error_msg, const tstring &error_filename, DWORD line) override {
     FILE *f;
     _wfopen_s(&f, m_log_filename, L"a");
     if (!f)
       return;
-    auto final_msg = wstring_printf (L"Fatal error %s in file %s on line %d\n", error_msg.c_str(), error_filename.c_str(), line);
-    fwprintf(f, final_msg.c_str ());
+    auto final_msg = wstring_printf(L"Fatal error %s in file %s on line %d\n", error_msg.c_str(), error_filename.c_str(), line);
+    fwprintf(f, final_msg.c_str());
     fclose(f);
   }
 
@@ -486,8 +491,8 @@ public:
     _wfopen_s(&f, m_log_filename, L"a");
     if (!f)
       return;
-    auto log_msg = wstring_printf (L"Got reply %s with value:\n%s\n", reply.Code().Value(), reply.Value().c_str());
-    fwprintf(f, log_msg.c_str ());
+    auto log_msg = wstring_printf(L"Got reply %s with value:\n%s\n", reply.Code().Value(), reply.Value().c_str());
+    fwprintf(f, log_msg.c_str());
     fclose(f);
   }
 
@@ -804,7 +809,7 @@ void DownloadDicsDlg::reset_download_combobox() {
     auto mut_settings = m_settings.modify();
     preserve_current_address_index(*mut_settings);
   }
-  m_address_cmb.clear ();
+  m_address_cmb.clear();
   for (auto &server_name : m_default_server_names) {
     m_address_cmb.add_item(server_name.c_str());
   }
@@ -815,7 +820,7 @@ void DownloadDicsDlg::reset_download_combobox() {
   if (m_settings.data.last_used_address_index < USER_SERVER_CONST)
     m_address_cmb.set_current_index(m_settings.data.last_used_address_index);
   else
-    m_address_cmb.set_current_index(m_settings.data.last_used_address_index - USER_SERVER_CONST + static_cast<int> (m_default_server_names.size()));
+    m_address_cmb.set_current_index(m_settings.data.last_used_address_index - USER_SERVER_CONST + static_cast<int>(m_default_server_names.size()));
   m_address_is_set = true;
 }
 
@@ -941,13 +946,17 @@ void DownloadDicsDlg::update_file_list_async(const std::wstring &full_path) {
 
 void DownloadDicsDlg::download_file_async(const std::wstring &full_path, const std::wstring &target_location) {
   m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress_dlg()->get_progress_data()](
-                                        auto token) { return do_download_file(params, target_location, progressData, token); },
+                                    auto token) {
+                                      return do_download_file(params, target_location, progressData, token);
+                                    },
                                     [this](std::optional<FtpOperationErrorType>) { on_zip_file_downloaded(); });
 }
 
 void DownloadDicsDlg::download_file_async_web_proxy(const std::wstring &full_path, const std::wstring &target_location) {
   m_ftp_operation_task->do_deferred([params = spawn_ftp_operation_params(full_path), target_location, progressData = get_progress_dlg()->get_progress_data()](
-                                        auto token) { return do_download_file_web_proxy(params, target_location, *progressData, token); },
+                                    auto token) {
+                                      return do_download_file_web_proxy(params, target_location, *progressData, token);
+                                    },
                                     [this](std::optional<FtpWebOperationError>) { on_zip_file_downloaded(); });
 }
 
@@ -991,7 +1000,7 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_par
     m_h_show_only_known = ::GetDlgItem(_hSelf, IDC_SHOWONLYKNOWN);
     m_h_refresh_btn = ::GetDlgItem(_hSelf, IDC_REFRESH);
     m_h_install_system = ::GetDlgItem(_hSelf, IDC_INSTALL_SYSTEM);
-    m_address_cmb.init(GetDlgItem (_hSelf, IDC_ADDRESS));
+    m_address_cmb.init(GetDlgItem(_hSelf, IDC_ADDRESS));
     RECT rc;
     GetClientRect(m_h_refresh_btn, &rc);
     int icon_size = std::min(rc.bottom - rc.top, rc.right - rc.left) * 4 / 5;
@@ -1040,7 +1049,8 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_par
       break;
     case IDC_REFRESH: {
       refresh();
-    } break;
+    }
+    break;
     case IDC_INSTALL_SYSTEM:
       if (HIWORD(w_param) == BN_CLICKED) {
         auto mut_settings = m_settings.modify();
@@ -1059,7 +1069,8 @@ INT_PTR DownloadDicsDlg::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_par
         get_select_proxy()->display();
       }
     }
-  } break;
+  }
+  break;
   case WM_CTLCOLORSTATIC:
     if (m_h_status == reinterpret_cast<HWND>(l_param)) {
       auto h_dc = reinterpret_cast<HDC>(w_param);

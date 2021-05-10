@@ -15,18 +15,20 @@
 #include "plugin/Settings.h"
 #if !defined(__clang__)
 #include "NativeSpellerInterface.h"
+
 #include "common/CommonFunctions.h"
 #include "spellers/LanguageInfo.h"
 
-#include <SpellCheck.h>
 #include <comdef.h>
 #include <iostream>
+#include <SpellCheck.h>
 
 class ComException : public std::runtime_error {
 public:
   ComException(HRESULT code)
-      : std::runtime_error(to_string(_com_error(code).ErrorMessage())),
-        code(code) {}
+    : std::runtime_error(to_string(_com_error(code).ErrorMessage())),
+      code(code) {
+  }
 
 public:
   HRESULT code;
@@ -66,7 +68,8 @@ void NativeSpellerInterface::init() {
   m_ok = true;
 }
 
-NativeSpellerInterface::NativeSpellerInterface(const Settings &settings) : m_settings (settings) {
+NativeSpellerInterface::NativeSpellerInterface(const Settings &settings)
+  : m_settings(settings) {
   m_ptrs = std::make_unique<ptrs>();
 }
 
@@ -226,8 +229,8 @@ NativeSpellerInterface::get_suggestions(const wchar_t *word) const {
         m_last_used_speller = speller;
       }
     }
-    if (!m_last_used_speller && !m_ptrs->m_spellers.empty ())
-      m_last_used_speller = m_ptrs->m_spellers.front ();
+    if (!m_last_used_speller && !m_ptrs->m_spellers.empty())
+      m_last_used_speller = m_ptrs->m_spellers.front();
     return longest;
   }
   }
@@ -239,12 +242,11 @@ void NativeSpellerInterface::cleanup() {
   // exit and have to do it earlier In the future it could be resolved other way
   // if all the notifications from NPP will be processed as signals which will
   // be disconnected as the first cleanup step
-  if (m_ok)
-  {
+  if (m_ok) {
     m_ok = false;
     m_ptrs.reset();
     if (m_co_initialize_successful)
-      CoUninitialize ();
+      CoUninitialize();
   }
 }
 

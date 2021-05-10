@@ -13,17 +13,18 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "MenuItem.h"
+
 #include "plugin/MainDefs.h"
 
 MenuItem::MenuItem(const wchar_t *text_arg, int id_arg,
-                                         bool separator_arg /*= false*/) {
+                   bool separator_arg /*= false*/) {
   text = text_arg;
   id = static_cast<BYTE>(id_arg);
   separator = separator_arg;
 }
 
 void MenuItem::append_to_menu(HMENU menu, int insert_pos) const {
-MENUITEMINFO mi;
+  MENUITEMINFO mi;
   memset(&mi, 0, sizeof(mi));
   mi.cbSize = sizeof(MENUITEMINFO);
   if (separator) {
@@ -31,11 +32,11 @@ MENUITEMINFO mi;
   } else {
     mi.fType = MFT_STRING;
     mi.fMask = MIIM_ID | MIIM_TYPE;
-    if (!children.empty ()) {
+    if (!children.empty()) {
       mi.fMask |= MIIM_SUBMENU;
       mi.hSubMenu = CreatePopupMenu();
       for (auto &child : children) {
-        child.append_to_menu (mi.hSubMenu);
+        child.append_to_menu(mi.hSubMenu);
       }
     }
     if (!get_use_allocated_ids())
@@ -43,8 +44,8 @@ MENUITEMINFO mi;
     else
       mi.wID = get_context_menu_id_start() + id;
 
-    mi.dwTypeData = const_cast<wchar_t *>(text.data ());
-    mi.cch = static_cast<int>(text.length ()) + 1;
+    mi.dwTypeData = const_cast<wchar_t *>(text.data());
+    mi.cch = static_cast<int>(text.length()) + 1;
   }
   if (insert_pos == -1)
     InsertMenuItem(menu, GetMenuItemCount(menu), 1, &mi);

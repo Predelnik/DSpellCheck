@@ -13,9 +13,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
+#include "common/enum_array.h"
 #include "npp/EditorInterface.h"
 
-#include "common/enum_array.h"
 #include <vector>
 
 enum class NppViewType {
@@ -98,7 +98,7 @@ public:
   int get_point_x_from_position(TextPosition position) const override;
   int get_point_y_from_position(TextPosition position) const override;
   bool is_line_visible(TextPosition line) const override;
-  TextPosition find_next(TextPosition from_position, const char* needle) override;
+  TextPosition find_next(TextPosition from_position, const char *needle) override;
   void replace_text(TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(TextPosition line) override;
 
@@ -127,7 +127,7 @@ private:
   mutable std::array<std::optional<bool>, 256> m_hotspot_cache;
   mutable NppViewType m_target_view =
 #ifdef _DEBUG
-    NppViewType::COUNT;
+      NppViewType::COUNT;
 #else
     NppViewType::primary;
 #endif

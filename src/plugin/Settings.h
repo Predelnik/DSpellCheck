@@ -14,12 +14,12 @@
 
 #pragma once
 
-#include "common/CommonFunctions.h"
-#include "spellers/SpellerId.h"
 #include "lsignal.h"
-#include "common/TemporaryAcessor.h"
+#include "common/CommonFunctions.h"
 #include "common/enum_array.h"
 #include "common/string_utils.h"
+#include "common/TemporaryAcessor.h"
+#include "spellers/SpellerId.h"
 
 #include <experimental/string>
 
@@ -90,7 +90,7 @@ public:
   auto delimiter_tokenizer(std::wstring_view target) const { return make_delimiter_tokenizer(target, data.m_processed_delimiters, data.split_camel_case); }
 
   auto non_alphabetic_tokenizer(std::wstring_view target) const {
-    return Tokenizer(target, [this](wchar_t c) { return !IsCharAlphaNumeric(c) && data.delimiter_exclusions.find(c) == std ::wstring_view::npos; },
+    return Tokenizer(target, [this](wchar_t c) { return !IsCharAlphaNumeric(c) && data.delimiter_exclusions.find(c) == std::wstring_view::npos; },
                      data.split_camel_case);
   }
 
@@ -121,7 +121,7 @@ public:
                          std::sort(ws.begin(), ws.end());
                          return ws;
                        }();
-                       return !std::binary_search(ansi_str.begin(), ansi_str.end(), c) && data.delimiter_exclusions.find(c) == std ::wstring_view::npos;
+                       return !std::binary_search(ansi_str.begin(), ansi_str.end(), c) && data.delimiter_exclusions.find(c) == std::wstring_view::npos;
                      },
                      data.split_camel_case);
   }

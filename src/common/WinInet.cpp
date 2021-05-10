@@ -12,8 +12,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "Win32Exception.h"
 #include "WinInet.h"
+
+#include "Win32Exception.h"
+
 #include <sstream>
 
 namespace WinInet {
@@ -35,46 +37,52 @@ void UrlHandle::set_proxy_password(std::wstring_view password) {
   proxy_settings_changed();
 }
 
-void GlobalHandle::set_connect_timeout(DWORD ms) { InternetSetOption(m_handle.get(), INTERNET_OPTION_CONNECT_TIMEOUT, &ms, sizeof(DWORD)); }
+void GlobalHandle::set_connect_timeout(DWORD ms) {
+  InternetSetOption(m_handle.get(), INTERNET_OPTION_CONNECT_TIMEOUT, &ms, sizeof(DWORD));
+}
 
-void GlobalHandle::set_send_timeout(DWORD ms) { InternetSetOption(m_handle.get(), INTERNET_OPTION_SEND_TIMEOUT, &ms, sizeof(DWORD)); }
+void GlobalHandle::set_send_timeout(DWORD ms) {
+  InternetSetOption(m_handle.get(), INTERNET_OPTION_SEND_TIMEOUT, &ms, sizeof(DWORD));
+}
 
-void GlobalHandle::set_receive_timeout(DWORD ms) { InternetSetOption(m_handle.get(), INTERNET_OPTION_RECEIVE_TIMEOUT, &ms, sizeof(DWORD)); }
+void GlobalHandle::set_receive_timeout(DWORD ms) {
+  InternetSetOption(m_handle.get(), INTERNET_OPTION_RECEIVE_TIMEOUT, &ms, sizeof(DWORD));
+}
 
 UrlHandle::~UrlHandle() {
   if (m_handle.get())
     InternetCloseHandle(m_handle.get());
 }
 
-void UrlHandle::proxy_settings_changed() { InternetSetOption(m_handle.get(), INTERNET_OPTION_PROXY_SETTINGS_CHANGED, nullptr, 0); }
+void UrlHandle::proxy_settings_changed() {
+  InternetSetOption(m_handle.get(), INTERNET_OPTION_PROXY_SETTINGS_CHANGED, nullptr, 0);
+}
 
 bool download_file(const UrlHandle &handle, std::ostream &stream, std::function<bool(int bytes_read, int total_bytes)> callback) {
   constexpr DWORD buf_size = 1024 * 1024;
   DWORD bytes_to_read = 0, bytes_read_total = 0, cur_index = 0, bytes_read = 0;
   static std::vector<char> file_buffer(buf_size);
   file_buffer.clear();
-  std::vector<wchar_t> buf (32);
-  DWORD size = static_cast<DWORD> (buf.size ());
+  std::vector<wchar_t> buf(32);
+  DWORD size = static_cast<DWORD>(buf.size());
   int total_bytes_to_read = 0;
-  if (HttpQueryInfo(handle.get(), HTTP_QUERY_CONTENT_LENGTH, buf.data (), &size, nullptr))
-    {
-      size_t idx;
-      try {
-        total_bytes_to_read = std::stoi (buf.data (), &idx);
-      }
-      catch (...) {
-      }
+  if (HttpQueryInfo(handle.get(), HTTP_QUERY_CONTENT_LENGTH, buf.data(), &size, nullptr)) {
+    size_t idx;
+    try {
+      total_bytes_to_read = std::stoi(buf.data(), &idx);
+    } catch (...) {
     }
+  }
   while (true) {
     if (callback && !callback(bytes_read_total, total_bytes_to_read))
       return false;
     if (!InternetQueryDataAvailable(handle.get(), &bytes_to_read, 0, 0))
-      throw_if_error ();
+      throw_if_error();
     if (bytes_to_read == 0)
       break;
 
     if (!InternetReadFile(handle.get(), file_buffer.data(), std::min(bytes_to_read, buf_size), &bytes_read))
-      throw_if_error ();
+      throw_if_error();
     if (bytes_read == 0)
       break;
     bytes_read_total += bytes_read;

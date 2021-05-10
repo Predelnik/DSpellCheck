@@ -13,14 +13,15 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "SpellerContainer.h"
+
 #include "AspellInterface.h"
 #include "HunspellInterface.h"
 #include "LanguageInfo.h"
 #include "NativeSpellerInterface.h"
-#include "plugin/Settings.h"
 #include "common/enum_range.h"
 #include "common/string_utils.h"
 #include "core/SpellCheckerHelpers.h"
+#include "plugin/Settings.h"
 
 void SpellerContainer::create_spellers(const NppData &npp_data) {
   m_aspell_speller = std::make_unique<AspellInterface>(npp_data.npp_handle, m_settings);
@@ -31,7 +32,7 @@ void SpellerContainer::create_spellers(const NppData &npp_data) {
 
 void SpellerContainer::fill_speller_ptr_array() {
   for (auto id : enum_range<SpellerId>()) {
-    m_spellers[id] = [&]() -> SpellerInterface * {
+    m_spellers[id] = [&]() -> SpellerInterface* {
       switch (id) {
       case SpellerId::aspell:
         return m_aspell_speller.get();
@@ -87,7 +88,7 @@ void SpellerContainer::ignore_word(std::wstring wstr) {
   SpellCheckerHelpers::apply_word_conversions(m_settings, wstr);
   // calling get_suggestions before ignoring the word is a requirement by some spellers currently
   // we're just discarding the result
-  static_cast<void> (active_speller().get_suggestions(wstr.c_str()));
+  static_cast<void>(active_speller().get_suggestions(wstr.c_str()));
   active_speller().ignore_all(wstr.c_str());
 }
 
@@ -96,13 +97,15 @@ void SpellerContainer::add_to_dictionary(std::wstring wstr) {
   active_speller().add_to_dictionary(wstr.c_str());
 }
 
-SpellerContainer::SpellerContainer(const Settings *settings, const NppData *npp_data) : m_settings(*settings) {
+SpellerContainer::SpellerContainer(const Settings *settings, const NppData *npp_data)
+  : m_settings(*settings) {
   init_spellers(*npp_data);
   m_native_speller->init(); // just to allow checking if it's available or not
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
 }
 
-SpellerContainer::SpellerContainer(const Settings *settings, std::unique_ptr<SpellerInterface> speller) : m_settings(*settings), m_spellers({}) {
+SpellerContainer::SpellerContainer(const Settings *settings, std::unique_ptr<SpellerInterface> speller)
+  : m_settings(*settings), m_spellers({}) {
   m_single_speller = std::move(speller);
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
   on_settings_changed();

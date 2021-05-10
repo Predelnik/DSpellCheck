@@ -15,14 +15,14 @@
 #pragma once
 
 #define NOMINMAX
-#include <Windows.h>
+#include "common/CommonFunctions.h"
+#include "plugin/MainDefs.h"
 
 #include <cassert>
 #include <optional>
 #include <string>
 #include <vector>
-#include "common/CommonFunctions.h"
-#include "plugin/MainDefs.h"
+#include <Windows.h>
 
 // To mock things and stuff
 
@@ -45,7 +45,6 @@ public:
 
 class EditorInterface {
 public:
-
   // non-const
   virtual bool open_document(std::wstring filename) = 0;
   virtual void activate_document(int index) = 0;
@@ -56,13 +55,14 @@ public:
                                 const toolbarIcons *tool_bar_icons_ptr) = 0;
   virtual void force_style_update(TextPosition from, TextPosition to) = 0;
   virtual void set_selection(TextPosition from, TextPosition to) = 0;
-  virtual TextPosition find_next(TextPosition from_position, const char* needle) = 0;
+  virtual TextPosition find_next(TextPosition from_position, const char *needle) = 0;
+
   void set_cursor_pos(TextPosition cursor_pos) {
     set_selection(cursor_pos, cursor_pos);
   }
 
   virtual void replace_selection(const char *str) = 0;
-  virtual void delete_range (TextPosition start, TextPosition length) = 0;
+  virtual void delete_range(TextPosition start, TextPosition length) = 0;
   virtual void set_indicator_style(int indicator_index,
                                    int style) = 0;
   virtual void set_indicator_foreground(
@@ -75,7 +75,7 @@ public:
                                      TextPosition to) = 0;
   virtual void undo() = 0;
   virtual void replace_text(TextPosition from, TextPosition to, std::string_view replacement) = 0;
-  virtual void add_bookmark (TextPosition line) = 0;
+  virtual void add_bookmark(TextPosition line) = 0;
 
   // const
   virtual std::vector<std::wstring> get_open_filenames() const = 0;
@@ -104,7 +104,7 @@ public:
   virtual HWND get_editor_hwnd() const = 0;
   virtual HWND get_view_hwnd() const = 0;
   virtual int get_style_at(TextPosition position) const = 0;
-  virtual int get_indicator_value_at (int indicator_id, TextPosition position) const = 0;
+  virtual int get_indicator_value_at(int indicator_id, TextPosition position) const = 0;
   virtual std::wstring get_full_current_path() const = 0;
   // is current style used for links (hotspots):
   virtual bool is_style_hotspot(int style) const = 0;
@@ -126,36 +126,37 @@ public:
   virtual std::string get_active_document_text() const = 0;
   virtual RECT editor_rect() const = 0;
 
-  virtual int get_view_count () const = 0;
+  virtual int get_view_count() const = 0;
 
   // winapi function moved here for easier testing
-  virtual std::optional<POINT> get_mouse_cursor_pos () const = 0;
+  virtual std::optional<POINT> get_mouse_cursor_pos() const = 0;
 
   TextPosition get_prev_valid_begin_pos(TextPosition pos) const;
   TextPosition get_next_valid_end_pos(TextPosition pos) const;
-  MappedWstring to_mapped_wstring (const std::string &str);
-  MappedWstring get_mapped_wstring_range (TextPosition from, TextPosition to);
-  MappedWstring get_mapped_wstring_line (TextPosition line);
-  std::string to_editor_encoding (std::wstring_view str) const;
+  MappedWstring to_mapped_wstring(const std::string &str);
+  MappedWstring get_mapped_wstring_range(TextPosition from, TextPosition to);
+  MappedWstring get_mapped_wstring_line(TextPosition line);
+  std::string to_editor_encoding(std::wstring_view str) const;
 
   virtual ~EditorInterface() = default;
 
 private:
-  virtual void begin_undo_action () = 0; // use UNDO_BLOCK instead
-  virtual void end_undo_action () = 0;
-  virtual void set_target_view (int view_index) const = 0;
-  virtual int get_target_view () const = 0;
+  virtual void begin_undo_action() = 0; // use UNDO_BLOCK instead
+  virtual void end_undo_action() = 0;
+  virtual void set_target_view(int view_index) const = 0;
+  virtual int get_target_view() const = 0;
   virtual int active_view() const = 0;
 
   friend class undo_block;
   friend class target_view_block;
 };
 
-class undo_block
-{
+class undo_block {
 public:
-  undo_block (EditorInterface &editor) : m_editor(editor) { m_editor.begin_undo_action(); }
-  ~undo_block () { m_editor.end_undo_action(); }
+  undo_block(EditorInterface &editor)
+    : m_editor(editor) { m_editor.begin_undo_action(); }
+
+  ~undo_block() { m_editor.end_undo_action(); }
 
 private:
   EditorInterface &m_editor;
@@ -166,14 +167,17 @@ private:
 class target_view_block {
   using self_t = target_view_block;
 public:
-  target_view_block (const EditorInterface &editor, int view) : m_editor(editor) {
+  target_view_block(const EditorInterface &editor, int view)
+    : m_editor(editor) {
     m_original_view = m_editor.get_target_view();
     m_editor.set_target_view(view);
   }
-  static self_t active_view (const EditorInterface &editor) {
+
+  static self_t active_view(const EditorInterface &editor) {
     return {editor, editor.active_view()};
   }
-  ~target_view_block () {
+
+  ~target_view_block() {
     m_editor.set_target_view(m_original_view);
   }
 

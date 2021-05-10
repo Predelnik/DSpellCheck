@@ -13,12 +13,13 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "AspellOptionsDialog.h"
+
+#include "common/WinApi.h"
 #include "plugin/Settings.h"
 #include "spellers/SpellerContainer.h"
-#include "common/WinApi.h"
 
 AspellOptionsDialog::AspellOptionsDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &spellers)
-    : m_settings(settings), m_spellers(spellers) {
+  : m_settings(settings), m_spellers(spellers) {
   Window::init(h_inst, parent);
 }
 
@@ -41,8 +42,9 @@ void AspellOptionsDialog::apply_choice() {
 
 void AspellOptionsDialog::update_controls() {
   Button_SetCheck(m_allow_run_together_cb, m_settings.data.aspell_allow_run_together_words ? BST_CHECKED : BST_UNCHECKED);
-  Edit_SetText(m_aspell_personal_path_le, m_settings.data.aspell_personal_dictionary_path.empty() ? m_spellers.get_aspell_default_personal_dictionary_path().c_str()
-                                                                                             : m_settings.data.aspell_personal_dictionary_path.c_str());
+  Edit_SetText(m_aspell_personal_path_le,
+               m_settings.data.aspell_personal_dictionary_path.empty() ? m_spellers.get_aspell_default_personal_dictionary_path().c_str()
+               : m_settings.data.aspell_personal_dictionary_path.c_str());
 }
 
 INT_PTR __stdcall AspellOptionsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {

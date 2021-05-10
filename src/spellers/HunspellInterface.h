@@ -14,12 +14,11 @@
 
 #pragma once
 
-#include "SpellerInterface.h"
-
-#include "common/CommonFunctions.h"
-#include "common/TaskWrapper.h"
 #include "iconv.h"
 #include "lsignal.h"
+#include "SpellerInterface.h"
+#include "common/CommonFunctions.h"
+#include "common/TaskWrapper.h"
 
 class LanguageInfo;
 
@@ -33,9 +32,16 @@ class IconvWrapperT {
   }
 
 public:
-  template <typename... ArgTypes> IconvWrapperT(ArgTypes &&... args) : m_conv(iconv_open(std::forward<ArgTypes>(args)...), &close_iconv) {}
+  template <typename... ArgTypes> IconvWrapperT(ArgTypes &&... args)
+    : m_conv(iconv_open(std::forward<ArgTypes>(args)...), &close_iconv) {
+  }
+
   iconv_t get() const { return m_conv.get(); }
-  IconvWrapperT() : m_conv(nullptr, &close_iconv) {}
+
+  IconvWrapperT()
+    : m_conv(nullptr, &close_iconv) {
+  }
+
   IconvWrapperT(IconvWrapperT &&) = default;
   IconvWrapperT &operator=(IconvWrapperT &&) = default;
 
@@ -71,7 +77,7 @@ public:
   std::vector<LanguageInfo> get_language_list() const override;
   void set_language(const wchar_t *lang) override;
   void set_multiple_languages(const std::vector<std::wstring> &list) override; // Languages are from LangList
-  bool check_word(const WordForSpeller& word) const override;                         // Word in Utf-8 or ANSI
+  bool check_word(const WordForSpeller &word) const override;                  // Word in Utf-8 or ANSI
   bool is_working() const override;
   std::vector<std::wstring> get_suggestions(const wchar_t *word) const override;
   void add_to_dictionary(const wchar_t *word) override;

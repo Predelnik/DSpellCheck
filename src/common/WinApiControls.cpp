@@ -13,20 +13,19 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "WinApiControls.h"
-#include <cassert>
+
 #include "winapi.h"
 
-
+#include <cassert>
 #include <chrono>
 
-namespace WinApi
-{
+namespace WinApi {
 WinBase::~WinBase() = default;
 
 void WinBase::set_enabled(bool enabled) { EnableWindow(m_hwnd, enabled ? TRUE : FALSE); }
 
 bool WinBase::is_enabled() const {
-  return IsWindowEnabled (m_hwnd) != FALSE;
+  return IsWindowEnabled(m_hwnd) != FALSE;
 }
 
 void WinBase::init(HWND hwnd) {
@@ -50,7 +49,9 @@ bool WinBase::was_inited() const {
   return m_hwnd != nullptr;
 }
 
-void ComboBox::check_hwnd() { assert(get_class_name(m_hwnd) == L"ComboBox"); }
+void ComboBox::check_hwnd() {
+  assert(get_class_name(m_hwnd) == L"ComboBox");
+}
 
 int ComboBox::current_index() const { return static_cast<int>(ComboBox_GetCurSel(m_hwnd)); }
 
@@ -68,13 +69,15 @@ void ComboBox::set_current_index(int index) {
 }
 
 std::optional<int> ComboBox::find_by_data(int data) {
-  for (int i = 0; i < count (); ++i)
+  for (int i = 0; i < count(); ++i)
     if (ComboBox_GetItemData(m_hwnd, i) == data)
       return i;
   return std::nullopt;
 }
 
-void ComboBox::clear() { ComboBox_ResetContent(m_hwnd); }
+void ComboBox::clear() {
+  ComboBox_ResetContent(m_hwnd);
+}
 
 int ComboBox::count() const {
   return ComboBox_GetCount(m_hwnd);
@@ -92,61 +95,58 @@ DlgProcResult Button::dlg_proc(UINT message, WPARAM w_param, [[maybe_unused]] LP
   return DlgProcResult::pass_through;
 }
 
-namespace
-{
+namespace {
 std::map<UINT_PTR, Timer *> global_timer_map;
-void WINAPI timer_proc ([[maybe_unused]] HWND hwnd, [[maybe_unused]] UINT msg, UINT_PTR id, [[maybe_unused]] DWORD time) {
-  auto it = global_timer_map.find (id);
-  if (it == global_timer_map.end ()) {
-    assert (!"Timer not registered. Unexpected state");
+
+void WINAPI timer_proc([[maybe_unused]] HWND hwnd, [[maybe_unused]] UINT msg, UINT_PTR id, [[maybe_unused]] DWORD time) {
+  auto it = global_timer_map.find(id);
+  if (it == global_timer_map.end()) {
+    assert(!"Timer not registered. Unexpected state");
     return;
   }
-  it->second->on_timer_tick ();
+  it->second->on_timer_tick();
 }
 }
 
 Timer::Timer(HWND hwnd)
-  : m_hwnd(hwnd)
-{
-  initialize ();
+  : m_hwnd(hwnd) {
+  initialize();
 }
 
 Timer::~Timer() {
-  kill_timer ();
-  unregister ();
+  kill_timer();
+  unregister();
 }
 
 void Timer::do_register() {
-  global_timer_map.insert ({m_id, this});
+  global_timer_map.insert({m_id, this});
 }
 
 void Timer::unregister() {
-  global_timer_map.erase (m_id);
+  global_timer_map.erase(m_id);
 }
 
 void Timer::kill_timer() {
   KillTimer(0, m_id);
 }
 
-void Timer::generate_id()
-{
-  m_id = SetTimer (0, 0, USER_TIMER_MAXIMUM, timer_proc);
+void Timer::generate_id() {
+  m_id = SetTimer(0, 0, USER_TIMER_MAXIMUM, timer_proc);
 }
 
-void Timer::initialize()
-{
+void Timer::initialize() {
   generate_id();
-  do_register ();
+  do_register();
 }
 
 void Timer::set_resolution(std::chrono::milliseconds resolution) {
   using namespace std::chrono;
-  SetTimer (m_hwnd, m_id, static_cast<UINT> (resolution.count ()), timer_proc);
+  SetTimer(m_hwnd, m_id, static_cast<UINT>(resolution.count()), timer_proc);
   current_resolution = resolution;
 }
 
 void Timer::stop_timer() {
-  SetTimer (m_hwnd, m_id, USER_TIMER_MAXIMUM, timer_proc);
+  SetTimer(m_hwnd, m_id, USER_TIMER_MAXIMUM, timer_proc);
   current_resolution = {};
 }
 

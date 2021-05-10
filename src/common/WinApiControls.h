@@ -29,12 +29,14 @@ public:
   bool is_enabled() const;
   void init(HWND hwnd);
   virtual DlgProcResult dlg_proc(UINT message, WPARAM w_param, LPARAM l_param); // should be called for possibility of making signals in windows work
-  explicit operator bool () const;
-  bool was_inited () const;
+  explicit operator bool() const;
+  bool was_inited() const;
 
 private:
   virtual void check_hwnd() = 0;
-  virtual void init_impl() {}
+
+  virtual void init_impl() {
+  }
 
 protected:
   HWND m_hwnd = nullptr;
@@ -62,7 +64,7 @@ public:
   }
 
   int current_index() const;
-  std::wstring current_text () const;
+  std::wstring current_text() const;
   int current_data() const;
   void set_current_index(int index);
 
@@ -90,7 +92,7 @@ public:
   EnumType current_data() const { return static_cast<EnumType>(Parent::current_data()); }
 
   void set_current(EnumType value) {
-    if (!was_inited ())
+    if (!was_inited())
       return;
     set_current_index(*find_by_data(static_cast<std::underlying_type_t<EnumType>>(value)));
   }
@@ -99,14 +101,13 @@ private:
   void init_impl() override { this->add_items<EnumType>(); }
 };
 
-class Timer
-{
+class Timer {
 public:
   Timer(HWND hwnd);
-  ~Timer ();
-  void set_resolution (std::chrono::milliseconds resolution);
-  void stop_timer ();
-  bool is_set () const;
+  ~Timer();
+  void set_resolution(std::chrono::milliseconds resolution);
+  void stop_timer();
+  bool is_set() const;
 
   lsignal::signal<void()> on_timer_tick;
 
@@ -115,7 +116,7 @@ private:
   void unregister();
   void kill_timer();
   void generate_id();
-  void initialize ();
+  void initialize();
 
 private:
   HWND m_hwnd = nullptr;

@@ -15,8 +15,8 @@
 #include "EditorInterface.h"
 
 #include "TextUtils.h"
-#include "common/utf8.h"
 #include "common/CommonFunctions.h"
+#include "common/utf8.h"
 
 POINT EditorInterface::get_point_from_position(TextPosition position) const {
   return {get_point_x_from_position(position),
@@ -32,7 +32,7 @@ TextPosition EditorInterface::get_prev_valid_begin_pos(TextPosition pos) const {
   auto worst_prev_pos = std::max(0_sz, pos - static_cast<TextPosition>(max_utf8_char_length));
   auto rng = get_text_range(worst_prev_pos, pos);
   auto it = std::find_if(rng.rbegin(), rng.rend(), &utf8_is_lead);
-  assert (it != rng.rend ());
+  assert(it != rng.rend ());
   return worst_prev_pos + static_cast<TextPosition>(it.base() - rng.begin()) - 1;
 }
 
@@ -50,14 +50,17 @@ TextPosition EditorInterface::get_next_valid_end_pos(TextPosition pos) const {
 
 std::string EditorInterface::to_editor_encoding(std::wstring_view str) const {
   switch (get_encoding()) {
-  case EditorCodepage::ansi: return to_string (str);
-  case EditorCodepage::utf8: return to_utf8_string(str);
-  case EditorCodepage::COUNT: break;
+  case EditorCodepage::ansi:
+    return to_string(str);
+  case EditorCodepage::utf8:
+    return to_utf8_string(str);
+  case EditorCodepage::COUNT:
+    break;
   }
-  throw std::runtime_error ("Unsupported encoding");
+  throw std::runtime_error("Unsupported encoding");
 }
 
-MappedWstring EditorInterface::to_mapped_wstring(const std::string& str) {
+MappedWstring EditorInterface::to_mapped_wstring(const std::string &str) {
   if (get_encoding() == EditorCodepage::utf8)
     return utf8_to_mapped_wstring(str);
 
@@ -65,14 +68,14 @@ MappedWstring EditorInterface::to_mapped_wstring(const std::string& str) {
 }
 
 MappedWstring EditorInterface::get_mapped_wstring_range(TextPosition from, TextPosition to) {
-  auto result = to_mapped_wstring (get_text_range(from, to));
+  auto result = to_mapped_wstring(get_text_range(from, to));
   for (auto &val : result.mapping)
     val += from;
   return result;
 }
 
 MappedWstring EditorInterface::get_mapped_wstring_line(TextPosition line) {
-  auto result = to_mapped_wstring (get_line(line));;
+  auto result = to_mapped_wstring(get_line(line));;
   auto line_start = get_line_start_position(line);
   for (auto &val : result.mapping)
     val += line_start;

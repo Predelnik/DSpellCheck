@@ -18,15 +18,15 @@
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
-#include <memory>
 #include "common/enum_array.h"
+
+#include <memory>
 
 class MenuItem;
 class AspellOptionsDialog;
 
 
-enum class Action
-{
+enum class Action {
   toggle_auto_spell_check,
   quick_language_change,
   copy_all_misspellings,
@@ -47,7 +47,8 @@ enum class Action
 
   COUNT,
 };
-const int nb_func = static_cast<int> (Action::COUNT);
+
+const int nb_func = static_cast<int>(Action::COUNT);
 constexpr int requested_menu_count = 350;
 
 extern enum_array<Action, int> action_index;
@@ -87,42 +88,42 @@ void command_menu_clean_up();
 //
 // Function which sets your command
 //
-int set_next_command(const wchar_t* cmd_name, Pfuncplugincmd p_func);
+int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func);
 
-void set_delimiters (const char *str);
-std::wstring rc_str (UINT string_id);
-std::wstring_view rc_str_view (UINT string_id);
-const char *get_delimiters ();
-void set_encoding_by_id (int enc_id);
-void recheck_visible ();
-void init_classes ();
-void create_hooks ();
-LRESULT show_calculated_menu(std::vector<MenuItem>&& menu_list);
-void add_icons ();
-bool get_auto_check_state ();
-void auto_check_state_received (bool state);
-HMENU get_this_plugin_menu ();
-HMENU get_langs_sub_menu ();
-HANDLE get_h_module ();
-LangList *get_lang_list ();
-RemoveDictionariesDialog *get_remove_dics ();
-AspellOptionsDialog *get_aspell_options_dlg ();
-ConnectionSettingsDialog *get_select_proxy ();
-ProgressDlg *get_progress_dlg ();
-FuncItem *get_func_item ();
-std::wstring get_default_hunspell_path ();
-void set_context_menu_id_start (int id);
-void set_langs_menu_id_start (int id);
-void set_use_allocated_ids (bool value);
-int get_context_menu_id_start ();
-int get_langs_menu_id_start ();
-bool get_use_allocated_ids ();
-const Settings& get_settings();
-DWORD get_custom_gui_message_id (CustomGuiMessage message_id);
-void register_custom_messages ();
+void set_delimiters(const char *str);
+std::wstring rc_str(UINT string_id);
+std::wstring_view rc_str_view(UINT string_id);
+const char *get_delimiters();
+void set_encoding_by_id(int enc_id);
+void recheck_visible();
+void init_classes();
+void create_hooks();
+LRESULT show_calculated_menu(std::vector<MenuItem> &&menu_list);
+void add_icons();
+bool get_auto_check_state();
+void auto_check_state_received(bool state);
+HMENU get_this_plugin_menu();
+HMENU get_langs_sub_menu();
+HANDLE get_h_module();
+LangList *get_lang_list();
+RemoveDictionariesDialog *get_remove_dics();
+AspellOptionsDialog *get_aspell_options_dlg();
+ConnectionSettingsDialog *get_select_proxy();
+ProgressDlg *get_progress_dlg();
+FuncItem *get_func_item();
+std::wstring get_default_hunspell_path();
+void set_context_menu_id_start(int id);
+void set_langs_menu_id_start(int id);
+void set_use_allocated_ids(bool value);
+int get_context_menu_id_start();
+int get_langs_menu_id_start();
+bool get_use_allocated_ids();
+const Settings &get_settings();
+DWORD get_custom_gui_message_id(CustomGuiMessage message_id);
+void register_custom_messages();
 std::wstring get_debug_log_path();
-void init_npp_interface ();
-void notify (SCNotification* notify_code);
-NppInterface &npp_interface ();
-void copy_misspellings_to_clipboard ();
+void init_npp_interface();
+void notify(SCNotification *notify_code);
+NppInterface &npp_interface();
+void copy_misspellings_to_clipboard();
 void delete_log();

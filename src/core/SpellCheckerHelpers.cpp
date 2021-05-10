@@ -13,11 +13,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "SpellCheckerHelpers.h"
+
 #include "common/CommonFunctions.h"
+#include "common/string_utils.h"
+#include "npp/EditorInterface.h"
 #include "npp/SciUtils.h"
 #include "plugin/Settings.h"
-#include "npp/EditorInterface.h"
-#include "common/string_utils.h"
 
 namespace SpellCheckerHelpers {
 static bool check_text_enabled_for_active_file(const EditorInterface &editor, const Settings &settings) {
@@ -86,10 +87,10 @@ static bool is_apostrophe(const Settings &settings, wchar_t chr) {
 
 void cut_apostrophes(const Settings &settings, std::wstring_view &word) {
   if (settings.data.remove_boundary_apostrophes) {
-    while (!word.empty() && is_apostrophe (settings, word.front()))
+    while (!word.empty() && is_apostrophe(settings, word.front()))
       word.remove_prefix(1);
 
-    while (!word.empty() && is_apostrophe (settings, word.back()))
+    while (!word.empty() && is_apostrophe(settings, word.back()))
       word.remove_suffix(1);
   }
 }
@@ -112,30 +113,30 @@ void replace_all_tokens(EditorInterface &editor, const Settings &settings, const
       TextPosition buf_word_start_pos = 0;
       auto buf_word_end_pos = static_cast<TextPosition>(mapped_wstr.str.length());
       if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer) {
-            TextPosition end_pos_offset = 0;
-            if (doc_word_end_pos != pos + from_len)
-              ++end_pos_offset;
-            TextPosition start_pos_offset = 0;
-            if (doc_word_start_pos != pos)
-              ++start_pos_offset;
+        TextPosition end_pos_offset = 0;
+        if (doc_word_end_pos != pos + from_len)
+          ++end_pos_offset;
+        TextPosition start_pos_offset = 0;
+        if (doc_word_start_pos != pos)
+          ++start_pos_offset;
 
-            buf_word_start_pos += start_pos_offset;
-            buf_word_end_pos -= end_pos_offset;
+        buf_word_start_pos += start_pos_offset;
+        buf_word_end_pos -= end_pos_offset;
 
-            if (start_pos_offset != 0) {
-              if (tokenizer.prev_token_begin(buf_word_end_pos - 1) != buf_word_start_pos)
-                return false;
-            }
-            if (end_pos_offset != 0) {
-              if (tokenizer.next_token_end(buf_word_start_pos) != buf_word_end_pos)
-                return false;
-            }
-            src_word_sv = std::wstring_view(mapped_wstr.str).substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos);
-            if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, src_word_sv, doc_word_start_pos + start_pos_offset))
-              return false;
+        if (start_pos_offset != 0) {
+          if (tokenizer.prev_token_begin(buf_word_end_pos - 1) != buf_word_start_pos)
+            return false;
+        }
+        if (end_pos_offset != 0) {
+          if (tokenizer.next_token_end(buf_word_start_pos) != buf_word_end_pos)
+            return false;
+        }
+        src_word_sv = std::wstring_view(mapped_wstr.str).substr(buf_word_start_pos, buf_word_end_pos - buf_word_start_pos);
+        if (!SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, src_word_sv, doc_word_start_pos + start_pos_offset))
+          return false;
 
-            return true;
-          })) {
+        return true;
+      })) {
         pos = pos + static_cast<TextPosition>(from_len);
         continue;
       }
@@ -169,7 +170,8 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
   }
 
   if (category != SciUtils::StyleCategory::text &&
-      !((category == SciUtils::StyleCategory::comment && settings.data.check_comments) || (category == SciUtils::StyleCategory::string && settings.data.check_strings) ||
+      !((category == SciUtils::StyleCategory::comment && settings.data.check_comments) || (
+          category == SciUtils::StyleCategory::string && settings.data.check_strings) ||
         (category == SciUtils::StyleCategory::identifier && settings.data.check_variable_functions))) {
     return false;
   }

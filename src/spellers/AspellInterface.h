@@ -30,23 +30,23 @@ public:
   AspellInterface(HWND npp_window_arg, const Settings &settings); // Window for error reporting
   ~AspellInterface() override;
   std::vector<LanguageInfo> get_language_list() const override;
-  void set_language(const wchar_t* lang) override;
+  void set_language(const wchar_t *lang) override;
   void set_multiple_languages(
-      const std::vector<std::wstring>& list) override; // Languages are from LangList
+      const std::vector<std::wstring> &list) override; // Languages are from LangList
   bool
-  check_word(const WordForSpeller& word) const override; // Word in Utf-8 or ANSI (For now only Utf-8)
+  check_word(const WordForSpeller &word) const override; // Word in Utf-8 or ANSI (For now only Utf-8)
   bool is_working() const override;
-    std::vector<std::wstring> get_suggestions(const wchar_t* word) const override;
-  void add_to_dictionary(const wchar_t* word) override;
-  void ignore_all(const wchar_t* word) override;
+  std::vector<std::wstring> get_suggestions(const wchar_t *word) const override;
+  void add_to_dictionary(const wchar_t *word) override;
+  void ignore_all(const wchar_t *word) override;
 
-  bool init(const wchar_t* path_arg);
+  bool init(const wchar_t *path_arg);
   AspellStatus get_status() const;
   std::wstring get_default_personal_dictionary_path() const;
 
 private:
   void send_aspell_error(AspellCanHaveError *error);
-    void setup_aspell_config(AspellConfig* spell_config);
+  void setup_aspell_config(AspellConfig *spell_config);
 
 private:
   mutable AspellSpeller *m_last_selected_speller = nullptr;

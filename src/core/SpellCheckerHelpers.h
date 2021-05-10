@@ -23,7 +23,7 @@ enum class NppViewType;
 namespace SpellCheckerHelpers {
 bool is_spell_checking_needed_for_file(const EditorInterface &editor, const Settings &settings);
 void apply_word_conversions(const Settings &settings, std::wstring &word);
-void print_to_log(const Settings* settings, std::wstring_view line, HWND parent_wnd);
+void print_to_log(const Settings *settings, std::wstring_view line, HWND parent_wnd);
 void cut_apostrophes(const Settings &settings, std::wstring_view &word);
 // Replace all tokens equal `from` to `to`. Settings are required for tokenization style.
 // If to is proper name or abbreviation it should be capitalized correctly otherwise it should be all lower case

@@ -14,11 +14,10 @@
 
 #pragma once
 
-#include <set>
-
+#include "common/enum_array.h"
 #include "npp/EditorInterface.h"
 
-#include "common/enum_array.h"
+#include <set>
 #include <vector>
 
 class MockedIndicatorInfo {
@@ -37,18 +36,20 @@ public:
   int hotspot_style = 123;
   int current_indicator = 0;
   std::array<TextPosition, 2> visible_lines = {0, 30};
+
   struct State {
-  std::string data;
-  std::array<TextPosition, 2> selection = {};
-  std::vector<int> style;
-  std::set<size_t> bookmarked_lines;
+    std::string data;
+    std::array<TextPosition, 2> selection = {};
+    std::vector<int> style;
+    std::set<size_t> bookmarked_lines;
   } cur;
+
   std::vector<State> past;
 
   void set_data(const std::wstring &data_arg);
-  void set_data_raw(const std::string& data_arg);
+  void set_data_raw(const std::string &data_arg);
   void erase(TextPosition start, TextPosition length);
-  void save_state ();
+  void save_state();
   TextPosition cursor_pos;
 };
 
@@ -84,13 +85,13 @@ public:
   TextPosition get_active_document_length() const override;
   TextPosition get_line_length(int line) const override;
   int get_point_x_from_position(
-    TextPosition position) const override;
+      TextPosition position) const override;
   int get_point_y_from_position(
-    TextPosition position) const override;
+      TextPosition position) const override;
   TextPosition get_first_visible_line() const override;
   TextPosition get_lines_on_screen() const override;
   TextPosition get_document_line_from_visible(
-    TextPosition visible_line) const override;
+      TextPosition visible_line) const override;
   TextPosition get_document_line_count() const override;
   bool open_document(std::wstring filename) override;
   void activate_document(int index) override;
@@ -111,7 +112,7 @@ public:
   std::string get_text_range(TextPosition from,
                              TextPosition to) const override;
   std::string get_active_document_text() const override;
-  TextPosition char_position_from_point(const POINT& pnt) const override;
+  TextPosition char_position_from_point(const POINT &pnt) const override;
   RECT editor_rect() const override;
   void init();
   MockEditorInterface();
@@ -119,30 +120,30 @@ public:
   void open_virtual_document(const std::wstring &path,
                              const std::wstring &data);
   void set_active_document_text(const std::wstring &text);
-  void set_active_document_text_raw(const std::string& text);
-  std::vector<std::string> get_underlined_words (int indicator_id) const;
-  void make_all_visible ();
-  void set_visible_lines (ptrdiff_t first_visible_line, ptrdiff_t last_visible_line);
-  void set_lexer (int lexer);
-  void set_whole_text_style (int style);
+  void set_active_document_text_raw(const std::string &text);
+  std::vector<std::string> get_underlined_words(int indicator_id) const;
+  void make_all_visible();
+  void set_visible_lines(ptrdiff_t first_visible_line, ptrdiff_t last_visible_line);
+  void set_lexer(int lexer);
+  void set_whole_text_style(int style);
   void set_codepage(EditorCodepage codepage);
   void delete_range(TextPosition start, TextPosition length) override;
   void begin_undo_action() override;
   void end_undo_action() override;
   void undo() override;
   bool is_line_visible(TextPosition line) const override;
-  TextPosition find_next(TextPosition from_position, const char* needle) override;
+  TextPosition find_next(TextPosition from_position, const char *needle) override;
   void replace_text(TextPosition from, TextPosition to, std::string_view replacement) override;
   void add_bookmark(TextPosition line) override;
-  void clear_bookmarks ();
-  std::set<size_t> get_bookmarked_lines () const;
+  void clear_bookmarks();
+  std::set<size_t> get_bookmarked_lines() const;
   int get_view_count() const override;
-  void clear_indicator_info ();
+  void clear_indicator_info();
   std::vector<std::wstring> get_open_filenames() const override;
   std::vector<std::wstring> get_open_filenames_all_views() const override;
-  void set_editor_rect (int left, int top, int right, int bottom);
+  void set_editor_rect(int left, int top, int right, int bottom);
   std::optional<POINT> get_mouse_cursor_pos() const override;
-  void set_mouse_cursor_pos(const std::optional<POINT>& pos);
+  void set_mouse_cursor_pos(const std::optional<POINT> &pos);
 
 private:
   void set_target_view(int view_index) const override;

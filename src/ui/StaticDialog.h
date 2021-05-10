@@ -29,6 +29,7 @@
 #define STATIC_DIALOG_H
 
 #include "Window.h"
+
 #include <memory>
 #include <vector>
 
@@ -36,37 +37,36 @@
 #include "Notepad_plus_msgs.h"
 #endif //NOTEPAD_PLUS_MSGS_H
 
-typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
+typedef HRESULT (WINAPI * ETDTProc)(HWND, DWORD);
 
-namespace WinApi
-{
-  class WinBase;
+namespace WinApi {
+class WinBase;
 }
 
-enum PosAlign{ALIGNPOS_LEFT, ALIGNPOS_RIGHT, ALIGNPOS_TOP, ALIGNPOS_BOTTOM};
+enum PosAlign { ALIGNPOS_LEFT, ALIGNPOS_RIGHT, ALIGNPOS_TOP, ALIGNPOS_BOTTOM };
 
 struct DLGTEMPLATEEX {
-  WORD   dlgVer;
-  WORD   signature;
-  DWORD  helpID;
-  DWORD  exStyle;
-  DWORD  style;
-  WORD   cDlgItems;
-  short  x;
-  short  y;
-  short  cx;
-  short  cy;
+  WORD dlgVer;
+  WORD signature;
+  DWORD helpID;
+  DWORD exStyle;
+  DWORD style;
+  WORD cDlgItems;
+  short x;
+  short y;
+  short cx;
+  short cy;
   // The structure has more fields but are variable length
-} ;
+};
 
-class StaticDialog : public Window
-{
+class StaticDialog : public Window {
 public :
+  StaticDialog()
+    : Window() { _rc = {}; };
 
-  StaticDialog() : Window() { _rc = {}; };
-  ~StaticDialog(){
+  ~StaticDialog() {
     if (isCreated()) {
-      ::SetWindowLongPtr(_hSelf, GWLP_USERDATA, (LONG_PTR)NULL);	//Prevent run_dlgProc from doing anything, since its virtual
+      ::SetWindowLongPtr(_hSelf, GWLP_USERDATA, (LONG_PTR)NULL); //Prevent run_dlgProc from doing anything, since its virtual
       destroy();
     }
   };
@@ -79,13 +79,13 @@ public :
   void goToCenter();
 
   void display(bool toShow = true, bool activate = true) const;
+
   template <typename ControlType>
-  std::shared_ptr<ControlType> get_control(int id)
-  {
+  std::shared_ptr<ControlType> get_control(int id) {
     static_assert (std::is_base_of<WinApi::WinBase, ControlType>::value, "ControlType should inherit from WinApi::WinBase");
     auto btn = std::make_shared<ControlType>();
     btn->init(GetDlgItem(_hSelf, id));
-    m_controls.emplace_back(weaken (btn));
+    m_controls.emplace_back(weaken(btn));
     return btn;
   }
 
@@ -114,7 +114,7 @@ protected :
   static INT_PTR WINAPI dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
   virtual INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM wParam, LPARAM lParam) = 0;
 
-  void alignWith(HWND handle, HWND handle2Align, PosAlign pos, POINT & point);
+  void alignWith(HWND handle, HWND handle2Align, PosAlign pos, POINT &point);
   HGLOBAL makeRTLResource(int dialogID, DLGTEMPLATE **ppMyDlgTemplate);
 };
 

@@ -16,31 +16,32 @@
 
 class MenuItem {
 public:
-  struct Separator {};
+  struct Separator {
+  };
 
   std::wstring text;
   BYTE id;
   bool separator;
   std::vector<MenuItem> children;
   MenuItem(const wchar_t *text_arg, int id_arg,
-                      bool separator_arg = false);
-  MenuItem(const Separator&) : MenuItem(L"", -1, true)
-  {
-    
+           bool separator_arg = false);
+
+  MenuItem(const Separator &)
+    : MenuItem(L"", -1, true) {
+
   }
-  void append_to_menu (HMENU menu, int insert_pos = -1) const;
+
+  void append_to_menu(HMENU menu, int insert_pos = -1) const;
 
   template <typename Range>
-  static void append_to_menu (HMENU menu, const Range &range)
-  {
+  static void append_to_menu(HMENU menu, const Range &range) {
     for (auto &item : range)
-      item.append_to_menu (menu);
+      item.append_to_menu(menu);
   }
 
   template <typename Range>
-  static void prepend_to_menu (HMENU menu, const Range &range)
-  {
-    for (auto it = range.rbegin (); it != range.rend (); ++it)
-      it->append_to_menu (menu, 0);
+  static void prepend_to_menu(HMENU menu, const Range &range) {
+    for (auto it = range.rbegin(); it != range.rend(); ++it)
+      it->append_to_menu(menu, 0);
   }
 };

@@ -13,11 +13,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
-#include "common/CommonFunctions.h"
-#include "SpellerId.h"
 #include "lsignal.h"
-#include "common/TemporaryAcessor.h"
+#include "SpellerId.h"
+#include "common/CommonFunctions.h"
 #include "common/enum_array.h"
+#include "common/TemporaryAcessor.h"
 
 class NppData;
 class Settings;
@@ -43,10 +43,11 @@ public:
   SpellerContainer(const Settings *settings,
                    std::unique_ptr<SpellerInterface> speller);
   ~SpellerContainer();
-    void apply_settings_to_active_speller();
-    void init_speller();
+  void apply_settings_to_active_speller();
+  void init_speller();
   TemporaryAcessor<Self> modify() const;
   std::vector<LanguageInfo> get_available_languages() const;
+
   HunspellInterface &get_hunspell_speller() const {
     return *m_hunspell_speller;
   }
@@ -63,7 +64,7 @@ public:
   mutable lsignal::signal<void()> speller_status_changed;
 
 private:
-  SpellerInterface& active_speller();
+  SpellerInterface &active_speller();
   void create_spellers(const NppData &npp_data);
   void fill_speller_ptr_array();
   void init_spellers(const NppData &npp_data);

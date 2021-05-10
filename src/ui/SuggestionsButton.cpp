@@ -14,12 +14,12 @@
 
 #include "SuggestionsButton.h"
 
-#include "npp/NppInterface.h"
-#include "plugin/resource.h"
 #include "ContextMenuHandler.h"
 #include "MenuItem.h"
-#include "plugin/Settings.h"
 #include "common/WindowsDefs.h"
+#include "npp/NppInterface.h"
+#include "plugin/resource.h"
+#include "plugin/Settings.h"
 
 #define MOUSELEAVE 0x0001
 #define MOUSEHOVER 0x0002
@@ -63,9 +63,9 @@ bool SuggestionsButton::is_pressed() const {
 
 SuggestionsButton::SuggestionsButton(HINSTANCE h_inst, HWND parent,
                                      NppInterface &npp, ContextMenuHandler &context_menu_handler,
-                                     const Settings &settings) :
-      m_npp(npp),
-      m_settings (settings), m_context_menu_handler(context_menu_handler) {
+                                     const Settings &settings)
+  : m_npp(npp),
+    m_settings(settings), m_context_menu_handler(context_menu_handler) {
   Window::init(h_inst, parent);
   m_state_pressed = false;
   m_state_hovered = false;
@@ -86,7 +86,7 @@ void SuggestionsButton::on_settings_changed() {
 
 void SuggestionsButton::set_transparency() {
   SetWindowLongPtr(getHSelf(), GWL_EXSTYLE,
-                GetWindowLongPtr(getHSelf(), GWL_EXSTYLE) | WS_EX_LAYERED);
+                   GetWindowLongPtr(getHSelf(), GWL_EXSTYLE) | WS_EX_LAYERED);
   SetLayeredWindowAttributes(
       getHSelf(), 0,
       static_cast<BYTE>((255 * m_settings.data.suggestion_button_opacity) / 100),
@@ -168,7 +168,7 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
   }
 
   case WM_SHOWANDRECREATEMENU: {
-    ACTIVE_VIEW_BLOCK (m_npp);
+    ACTIVE_VIEW_BLOCK(m_npp);
     tagTPMPARAMS tpm_params;
     tpm_params.cbSize = sizeof(tagTPMPARAMS);
     GetWindowRect(_hSelf, &tpm_params.rcExclude);
@@ -178,10 +178,10 @@ INT_PTR SuggestionsButton::run_dlg_proc(UINT message, WPARAM w_param,
     m_state_menu = true;
     HMENU popup_menu = CreatePopupMenu();
     MenuItem::append_to_menu(popup_menu, m_context_menu_handler.get_suggestion_menu_items());
-    SetForegroundWindow(m_npp.get_editor_hwnd ());
+    SetForegroundWindow(m_npp.get_editor_hwnd());
     TrackPopupMenuEx(popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
                      p.y, _hSelf, &tpm_params);
-    PostMessage(m_npp.get_editor_hwnd (), WM_NULL, 0, 0);
+    PostMessage(m_npp.get_editor_hwnd(), WM_NULL, 0, 0);
     SetFocus(m_npp.get_view_hwnd());
     m_state_menu = false;
     DestroyMenu(popup_menu);

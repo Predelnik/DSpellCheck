@@ -67,14 +67,12 @@ constexpr auto multiple_language_alias = L"<MULTIPLE>";
 using TextPosition = ptrdiff_t;
 using MappedWstring = MappedWstringGeneric<TextPosition>;
 
-constexpr std::size_t operator "" _z(unsigned long long n)
-{
-  return static_cast<std::size_t> (n);
+constexpr std::size_t operator "" _z(unsigned long long n) {
+  return static_cast<std::size_t>(n);
 }
 
-constexpr std::ptrdiff_t operator "" _sz(unsigned long long n)
-{
-  return static_cast<std::ptrdiff_t> (n);
+constexpr std::ptrdiff_t operator "" _sz(unsigned long long n) {
+  return static_cast<std::ptrdiff_t>(n);
 }
 
 #define CONCATENATE_(a, b) a ## b

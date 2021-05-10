@@ -12,14 +12,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "PluginInterface.h"
 #include "aspell.h"
+
+#include "PluginInterface.h"
+#include "common/CommonFunctions.h"
+
 #include <iostream>
 #include <shellapi.h>
-#include <shlwapi.h>
 #include <shlobj.h>
-
-#include "common/CommonFunctions.h"
+#include <shlwapi.h>
 
 HANDLE g_h_module;
 
@@ -29,7 +30,7 @@ PFUNC_aspell_mutable_container_add aspell_mutable_container_add = nullptr;
 PFUNC_aspell_mutable_container_remove aspell_mutable_container_remove = nullptr;
 PFUNC_aspell_mutable_container_clear aspell_mutable_container_clear = nullptr;
 PFUNC_aspell_mutable_container_to_mutable_container
-    aspell_mutable_container_to_mutable_container = nullptr;
+aspell_mutable_container_to_mutable_container = nullptr;
 PFUNC_aspell_key_info_enumeration_at_end aspell_key_info_enumeration_at_end =
     nullptr;
 PFUNC_aspell_key_info_enumeration_next aspell_key_info_enumeration_next = nullptr;
@@ -88,16 +89,16 @@ PFUNC_aspell_filter_error aspell_filter_error = nullptr;
 PFUNC_to_aspell_filter to_aspell_filter = nullptr;
 PFUNC_delete_aspell_document_checker delete_aspell_document_checker = nullptr;
 PFUNC_aspell_document_checker_error_number
-    aspell_document_checker_error_number = nullptr;
+aspell_document_checker_error_number = nullptr;
 PFUNC_aspell_document_checker_error_message
-    aspell_document_checker_error_message = nullptr;
+aspell_document_checker_error_message = nullptr;
 PFUNC_aspell_document_checker_error aspell_document_checker_error = nullptr;
 PFUNC_new_aspell_document_checker new_aspell_document_checker = nullptr;
 PFUNC_to_aspell_document_checker to_aspell_document_checker = nullptr;
 PFUNC_aspell_document_checker_reset aspell_document_checker_reset = nullptr;
 PFUNC_aspell_document_checker_process aspell_document_checker_process = nullptr;
 PFUNC_aspell_document_checker_next_misspelling
-    aspell_document_checker_next_misspelling = nullptr;
+aspell_document_checker_next_misspelling = nullptr;
 PFUNC_aspell_document_checker_filter aspell_document_checker_filter = nullptr;
 PFUNC_aspell_word_list_empty aspell_word_list_empty = nullptr;
 PFUNC_aspell_word_list_size aspell_word_list_size = nullptr;
@@ -116,15 +117,15 @@ PFUNC_aspell_dict_info_list_empty aspell_dict_info_list_empty = nullptr;
 PFUNC_aspell_dict_info_list_size aspell_dict_info_list_size = nullptr;
 PFUNC_aspell_dict_info_list_elements aspell_dict_info_list_elements = nullptr;
 PFUNC_aspell_module_info_enumeration_at_end
-    aspell_module_info_enumeration_at_end = nullptr;
+aspell_module_info_enumeration_at_end = nullptr;
 PFUNC_aspell_module_info_enumeration_next aspell_module_info_enumeration_next =
     nullptr;
 PFUNC_delete_aspell_module_info_enumeration
-    delete_aspell_module_info_enumeration = nullptr;
+delete_aspell_module_info_enumeration = nullptr;
 PFUNC_aspell_module_info_enumeration_clone
-    aspell_module_info_enumeration_clone = nullptr;
+aspell_module_info_enumeration_clone = nullptr;
 PFUNC_aspell_module_info_enumeration_assign
-    aspell_module_info_enumeration_assign = nullptr;
+aspell_module_info_enumeration_assign = nullptr;
 PFUNC_aspell_dict_info_enumeration_at_end aspell_dict_info_enumeration_at_end =
     nullptr;
 PFUNC_aspell_dict_info_enumeration_next aspell_dict_info_enumeration_next =
@@ -143,7 +144,7 @@ PFUNC_aspell_string_list_add aspell_string_list_add = nullptr;
 PFUNC_aspell_string_list_remove aspell_string_list_remove = nullptr;
 PFUNC_aspell_string_list_clear aspell_string_list_clear = nullptr;
 PFUNC_aspell_string_list_to_mutable_container
-    aspell_string_list_to_mutable_container = nullptr;
+aspell_string_list_to_mutable_container = nullptr;
 PFUNC_delete_aspell_string_list delete_aspell_string_list = nullptr;
 PFUNC_aspell_string_list_clone aspell_string_list_clone = nullptr;
 PFUNC_aspell_string_list_assign aspell_string_list_assign = nullptr;
@@ -152,7 +153,7 @@ PFUNC_aspell_string_map_add aspell_string_map_add = nullptr;
 PFUNC_aspell_string_map_remove aspell_string_map_remove = nullptr;
 PFUNC_aspell_string_map_clear aspell_string_map_clear = nullptr;
 PFUNC_aspell_string_map_to_mutable_container
-    aspell_string_map_to_mutable_container = nullptr;
+aspell_string_map_to_mutable_container = nullptr;
 PFUNC_delete_aspell_string_map delete_aspell_string_map = nullptr;
 PFUNC_aspell_string_map_clone aspell_string_map_clone = nullptr;
 PFUNC_aspell_string_map_assign aspell_string_map_assign = nullptr;
@@ -163,15 +164,15 @@ PFUNC_aspell_string_map_insert aspell_string_map_insert = nullptr;
 PFUNC_aspell_string_map_replace aspell_string_map_replace = nullptr;
 PFUNC_aspell_string_map_lookup aspell_string_map_lookup = nullptr;
 PFUNC_aspell_string_pair_enumeration_at_end
-    aspell_string_pair_enumeration_at_end = nullptr;
+aspell_string_pair_enumeration_at_end = nullptr;
 PFUNC_aspell_string_pair_enumeration_next aspell_string_pair_enumeration_next =
     nullptr;
 PFUNC_delete_aspell_string_pair_enumeration
-    delete_aspell_string_pair_enumeration = nullptr;
+delete_aspell_string_pair_enumeration = nullptr;
 PFUNC_aspell_string_pair_enumeration_clone
-    aspell_string_pair_enumeration_clone = nullptr;
+aspell_string_pair_enumeration_clone = nullptr;
 PFUNC_aspell_string_pair_enumeration_assign
-    aspell_string_pair_enumeration_assign = nullptr;
+aspell_string_pair_enumeration_assign = nullptr;
 
 std::wstring get_default_aspell_path() {
   wchar_t psz_path[MAX_PATH];
@@ -194,17 +195,17 @@ std::wstring get_default_aspell_path() {
   return psz_path;
 }
 
-std::wstring get_actual_aspell_path(const std::wstring& supposed_path) {
-  if (supposed_path.empty ()) {
+std::wstring get_actual_aspell_path(const std::wstring &supposed_path) {
+  if (supposed_path.empty()) {
     return get_default_aspell_path();
-  } 
-    return supposed_path;
-  
+  }
+  return supposed_path;
+
 }
 
-bool load_aspell(const wchar_t* path_arg) {
+bool load_aspell(const wchar_t *path_arg) {
   auto path = get_actual_aspell_path(path_arg);
-  h_inst_lib = LoadLibrary(path.c_str ());
+  h_inst_lib = LoadLibrary(path.c_str());
   bool b_ret = false;
 
   if (h_inst_lib != nullptr) {

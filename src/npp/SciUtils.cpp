@@ -13,6 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "SciUtils.h"
+
 #include "SciLexer.h"
 #include "plugin/Settings.h"
 

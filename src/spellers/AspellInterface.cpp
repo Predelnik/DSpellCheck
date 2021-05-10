@@ -13,13 +13,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "AspellInterface.h"
-#include "common/CommonFunctions.h"
+
+#include "aspell.h"
 #include "LanguageInfo.h"
+#include "common/CommonFunctions.h"
+#include "common/winapi.h"
 #include "plugin/MainDefs.h"
 #include "plugin/Plugin.h"
 #include "plugin/Settings.h"
-#include "aspell.h"
-#include "common/winapi.h"
 
 AspellInterface::~AspellInterface() = default;
 
@@ -33,7 +34,8 @@ auto wrap_config(AspellConfig *raw_ptr) {
 }
 } // namespace
 
-AspellInterface::AspellInterface(HWND npp_window_arg, const Settings &settings) : m_single_speller(wrap_speller(nullptr)), m_settings(settings) {
+AspellInterface::AspellInterface(HWND npp_window_arg, const Settings &settings)
+  : m_single_speller(wrap_speller(nullptr)), m_settings(settings) {
   m_npp_window = npp_window_arg;
   m_last_selected_speller = nullptr;
   m_aspell_loaded = false;
@@ -158,7 +160,7 @@ void AspellInterface::ignore_all(const wchar_t *word) {
   m_last_selected_speller = nullptr;
 }
 
-bool AspellInterface::check_word(const WordForSpeller& word) const {
+bool AspellInterface::check_word(const WordForSpeller &word) const {
   if (!m_aspell_loaded) {
     return true;
   }
@@ -174,7 +176,8 @@ bool AspellInterface::check_word(const WordForSpeller& word) const {
     }
 
     res = aspell_speller_check(m_single_speller.get(), dst_word.c_str(), len) != 0;
-  } break;
+  }
+  break;
   case SpellerMode::MultipleLanguages: {
     if (m_spellers.empty())
       return true;
@@ -184,7 +187,8 @@ bool AspellInterface::check_word(const WordForSpeller& word) const {
       if (res)
         break;
     }
-  } break;
+  }
+  break;
   }
 
   return res;

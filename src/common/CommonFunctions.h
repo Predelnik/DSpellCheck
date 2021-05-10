@@ -15,9 +15,10 @@
 #pragma once
 #include <algorithm>
 #define NOMINMAX
-#include <Windows.h>
-#include <memory>
 #include "plugin/MainDefs.h"
+
+#include <memory>
+#include <Windows.h>
 
 enum class LanguageNameStyle;
 
@@ -29,13 +30,13 @@ std::wstring to_wstring(std::string_view source);
 std::string to_string(std::wstring_view source);
 std::string to_utf8_string(std::string_view source);
 std::string to_utf8_string(std::wstring_view source);
-std::wstring utf8_to_wstring(const char* source);
-std::string utf8_to_string(const char* source);
-void write_unicode_bom (FILE *fp);
+std::wstring utf8_to_wstring(const char *source);
+std::string utf8_to_string(const char *source);
+void write_unicode_bom(FILE *fp);
 
 std::pair<std::wstring, bool> apply_alias(std::wstring_view str, LanguageNameStyle style);
 
-std::wstring parse_string(const wchar_t* source);
+std::wstring parse_string(const wchar_t *source);
 
 bool check_for_directory_existence(std::wstring path, bool silent = true,
                                    HWND npp_window = nullptr);
@@ -44,39 +45,41 @@ template <typename T>
 std::weak_ptr<T> weaken(std::shared_ptr<T> ptr) { return ptr; }
 
 template <typename... ArgTypes>
-std::wstring wstring_printf(const wchar_t* format, ArgTypes&&... args) {
-    size_t size = _snwprintf(nullptr, 0, format, args...);
-    std::vector<wchar_t> buf(size + 1);
-    _snwprintf(buf.data(), size + 1, format, args...);
-    return buf.data();
+std::wstring wstring_printf(const wchar_t *format, ArgTypes &&... args) {
+  size_t size = _snwprintf(nullptr, 0, format, args...);
+  std::vector<wchar_t> buf(size + 1);
+  _snwprintf(buf.data(), size + 1, format, args...);
+  return buf.data();
 }
 
-std::wstring read_ini_value(const wchar_t* app_name, const wchar_t* key_name, const wchar_t* default_value,
-                            const wchar_t* file_name);
+std::wstring read_ini_value(const wchar_t *app_name, const wchar_t *key_name, const wchar_t *default_value,
+                            const wchar_t *file_name);
 
 class MoveOnlyFlag {
-    using Self = MoveOnlyFlag;
+  using Self = MoveOnlyFlag;
 public:
-    MoveOnlyFlag() = default;
+  MoveOnlyFlag() = default;
 
-    static Self create_valid() {
-        Self out;
-        out.m_valid = true;
-        return out;
-    }
+  static Self create_valid() {
+    Self out;
+    out.m_valid = true;
+    return out;
+  }
 
-    void make_valid() { m_valid = true; }
-    MoveOnlyFlag(Self&& other) noexcept : m_valid(other.m_valid) { other.m_valid = false; }
+  void make_valid() { m_valid = true; }
 
-    Self& operator=(Self&& other) noexcept {
-        m_valid = other.m_valid;
-        other.m_valid = false;
-        return *this;
-    }
+  MoveOnlyFlag(Self &&other) noexcept
+    : m_valid(other.m_valid) { other.m_valid = false; }
 
-    MoveOnlyFlag(const Self&) = delete;
-    Self& operator=(const Self& other) = delete;
-    bool is_valid() const { return m_valid; }
+  Self &operator=(Self &&other) noexcept {
+    m_valid = other.m_valid;
+    other.m_valid = false;
+    return *this;
+  }
+
+  MoveOnlyFlag(const Self &) = delete;
+  Self &operator=(const Self &other) = delete;
+  bool is_valid() const { return m_valid; }
 private:
-    bool m_valid = false;
+  bool m_valid = false;
 };

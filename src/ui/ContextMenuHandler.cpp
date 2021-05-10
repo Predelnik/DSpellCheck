@@ -13,19 +13,20 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "ContextMenuHandler.h"
-#include "spellers/LanguageInfo.h"
-#include "plugin/MainDefs.h"
-#include "plugin/Plugin.h"
+
+#include "MenuItem.h"
+#include "SuggestionsButton.h"
 #include "core/SpellChecker.h"
 #include "core/SpellCheckerHelpers.h"
-#include "spellers/SpellerContainer.h"
-#include "spellers/SpellerInterface.h"
-#include "SuggestionsButton.h"
 #include "npp/EditorInterface.h"
 #include "npp/NppInterface.h"
+#include "plugin/MainDefs.h"
+#include "plugin/Plugin.h"
 #include "plugin/resource.h"
-#include "MenuItem.h"
 #include "plugin/Settings.h"
+#include "spellers/LanguageInfo.h"
+#include "spellers/SpellerContainer.h"
+#include "spellers/SpellerInterface.h"
 
 void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
   MENUITEMINFO mif;
@@ -43,51 +44,54 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
       int i = 0;
       for (auto &lang : langs) {
         int checked = (cur_lang == lang.orig_name)
-                          ? (MFT_RADIOCHECK | MF_CHECKED)
-                          : MF_UNCHECKED;
+                        ? (MFT_RADIOCHECK | MF_CHECKED)
+                        : MF_UNCHECKED;
         bool res = AppendMenu(
             new_menu, MF_STRING | checked,
-            get_use_allocated_ids() ? i + get_langs_menu_id_start()
-                                    : MAKEWORD(i, menu_id::language_menu),
-            m_settings.data.language_name_style != LanguageNameStyle::original ? lang.alias_name.c_str()
-                                                 : lang.orig_name.c_str());
+            get_use_allocated_ids()
+              ? i + get_langs_menu_id_start()
+              : MAKEWORD(i, menu_id::language_menu),
+            m_settings.data.language_name_style != LanguageNameStyle::original
+              ? lang.alias_name.c_str()
+              : lang.orig_name.c_str());
         if (!res)
           return;
         ++i;
       }
-      int checked = (cur_lang == multiple_language_alias) ? (MFT_RADIOCHECK | MF_CHECKED)
-                                                : MF_UNCHECKED;
+      int checked = (cur_lang == multiple_language_alias)
+                      ? (MFT_RADIOCHECK | MF_CHECKED)
+                      : MF_UNCHECKED;
       AppendMenu(new_menu, MF_STRING | checked,
                  get_use_allocated_ids()
-                     ? menu_id::multiple_languages + get_langs_menu_id_start()
-                     : MAKEWORD(menu_id::multiple_languages, menu_id::language_menu),
-                 rc_str(IDS_MULTIPLE_LANGUAGES).c_str ());
+                   ? menu_id::multiple_languages + get_langs_menu_id_start()
+                   : MAKEWORD(menu_id::multiple_languages, menu_id::language_menu),
+                 rc_str(IDS_MULTIPLE_LANGUAGES).c_str());
       AppendMenu(new_menu, MF_SEPARATOR, 0, nullptr);
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
-                     ? menu_id::customize_multiple_languages + get_langs_menu_id_start()
-                     : MAKEWORD(menu_id::customize_multiple_languages, menu_id::language_menu),
-                 rc_str(IDS_SET_MULTIPLE_LANG).c_str ());
+                   ? menu_id::customize_multiple_languages + get_langs_menu_id_start()
+                   : MAKEWORD(menu_id::customize_multiple_languages, menu_id::language_menu),
+                 rc_str(IDS_SET_MULTIPLE_LANG).c_str());
       if (m_settings.data.active_speller_lib_id ==
           SpellerId::hunspell) // Only Hunspell supported
       {
         AppendMenu(new_menu, MF_STRING,
                    get_use_allocated_ids()
-                       ? menu_id::download_dictionaries + get_langs_menu_id_start()
-                       : MAKEWORD(menu_id::download_dictionaries, menu_id::language_menu),
-                   rc_str(IDS_DOWNLOAD_LANGS).c_str ());
+                     ? menu_id::download_dictionaries + get_langs_menu_id_start()
+                     : MAKEWORD(menu_id::download_dictionaries, menu_id::language_menu),
+                   rc_str(IDS_DOWNLOAD_LANGS).c_str());
         AppendMenu(new_menu, MF_STRING,
                    get_use_allocated_ids()
-                       ? menu_id::remove_dictionaries + get_langs_menu_id_start()
-                       : MAKEWORD(menu_id::remove_dictionaries, menu_id::language_menu),
-                   rc_str(IDS_REMOVE_LANG).c_str ());
+                     ? menu_id::remove_dictionaries + get_langs_menu_id_start()
+                     : MAKEWORD(menu_id::remove_dictionaries, menu_id::language_menu),
+                   rc_str(IDS_REMOVE_LANG).c_str());
       }
     } else if (m_settings.data.active_speller_lib_id == SpellerId::hunspell)
       AppendMenu(new_menu, MF_STRING,
                  get_use_allocated_ids()
-                     ? menu_id::download_dictionaries + get_langs_menu_id_start()
-                     : MAKEWORD(menu_id::download_dictionaries, menu_id::language_menu),
-                 rc_str(IDS_DOWNLOAD_LANG).c_str ());
+                   ? menu_id::download_dictionaries + get_langs_menu_id_start()
+                   : MAKEWORD(menu_id::download_dictionaries, menu_id::language_menu),
+                 rc_str(IDS_DOWNLOAD_LANG).c_str());
   }
 
   mif.fMask = MIIM_SUBMENU | MIIM_STATE;
@@ -108,12 +112,12 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   int used_menu_id;
   if (get_use_allocated_ids()) {
     used_menu_id = (static_cast<int>(menu_id) < get_langs_menu_id_start()
-                        ? menu_id::plguin_menu
-                        : menu_id::language_menu);
+                      ? menu_id::plguin_menu
+                      : menu_id::language_menu);
   } else {
     used_menu_id = HIBYTE(menu_id);
   }
-  ACTIVE_VIEW_BLOCK (m_editor);
+  ACTIVE_VIEW_BLOCK(m_editor);
 
   switch (used_menu_id) {
   case menu_id::plguin_menu: {
@@ -149,12 +153,12 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
       } else if (result <= menu_id::replace_all_start + m_last_suggestions.size()) {
         auto misspelled_text = m_editor.selected_text();
         auto &suggestion = m_last_suggestions[result - menu_id::replace_all_start - 1];
-        UNDO_BLOCK (m_editor);
+        UNDO_BLOCK(m_editor);
         // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion
         m_editor.replace_selection(m_editor.to_editor_encoding(suggestion).c_str());
 
         bool is_proper_name = true;
-        if (!suggestion.empty ()) {
+        if (!suggestion.empty()) {
           auto suggestion_copy = suggestion;
           to_lower_inplace(suggestion_copy);
           // if lowercase version is incorrect - the word is not a proper name
@@ -162,10 +166,11 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
             is_proper_name = false;
         }
 
-        SpellCheckerHelpers::replace_all_tokens (m_editor, m_settings, misspelled_text.c_str(), suggestion, is_proper_name);
+        SpellCheckerHelpers::replace_all_tokens(m_editor, m_settings, misspelled_text.c_str(), suggestion, is_proper_name);
       }
     }
-  } break;
+  }
+  break;
   case menu_id::language_menu: {
     WPARAM result;
     if (!get_use_allocated_ids())
@@ -194,26 +199,26 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   }
 }
 
-void ContextMenuHandler::update_word_under_cursor_data () {
+void ContextMenuHandler::update_word_under_cursor_data() {
   TextPosition pos, length;
-    m_word_under_cursor_is_correct =
-        m_spell_checker.is_word_under_cursor_correct(pos, length, true);
-    if (!m_word_under_cursor_is_correct) {
-      m_word_under_cursor_pos = pos;
-      m_word_under_cursor_length = length;
-    }
+  m_word_under_cursor_is_correct =
+      m_spell_checker.is_word_under_cursor_correct(pos, length, true);
+  if (!m_word_under_cursor_is_correct) {
+    m_word_under_cursor_pos = pos;
+    m_word_under_cursor_length = length;
+  }
 }
 
 void ContextMenuHandler::precalculate_menu() {
   std::vector<MenuItem> suggestion_menu_items;
-  if (SpellCheckerHelpers::is_spell_checking_needed_for_file (m_editor, m_settings) &&
+  if (SpellCheckerHelpers::is_spell_checking_needed_for_file(m_editor, m_settings) &&
       m_settings.data.suggestions_mode == SuggestionMode::context_menu) {
-      update_word_under_cursor_data ();
-      if (!m_word_under_cursor_is_correct) {
-        suggestion_menu_items = get_suggestion_menu_items();
-        suggestion_menu_items.emplace_back(MenuItem::Separator{});
-      }
+    update_word_under_cursor_data();
+    if (!m_word_under_cursor_is_correct) {
+      suggestion_menu_items = get_suggestion_menu_items();
+      suggestion_menu_items.emplace_back(MenuItem::Separator{});
     }
+  }
   show_calculated_menu(std::move(suggestion_menu_items));
 }
 
@@ -225,7 +230,7 @@ void ContextMenuHandler::init_suggestions_box(
     return;
   POINT p;
   if (!SpellCheckerHelpers::is_spell_checking_needed_for_file(
-          m_editor, m_settings)) // If there's no red underline let's do nothing
+      m_editor, m_settings)) // If there's no red underline let's do nothing
   {
     suggestion_button.display(false);
     return;
@@ -237,7 +242,7 @@ void ContextMenuHandler::init_suggestions_box(
   }
   m_word_under_cursor_length = length;
   m_word_under_cursor_pos = pos;
-  ACTIVE_VIEW_BLOCK (m_editor);
+  ACTIVE_VIEW_BLOCK(m_editor);
   auto line = m_editor.line_from_position(m_word_under_cursor_pos);
   auto text_height = m_editor.get_text_height(line);
   auto x_pos =
@@ -255,15 +260,13 @@ void ContextMenuHandler::init_suggestions_box(
 
   ClientToScreen(hwnd, &p);
 
-  if (p.y + text_height - 3 + m_settings.data.suggestion_button_size >= r.bottom)
-    {
-      if (p.x > m_settings.data.suggestion_button_size) {
-        p.y -= m_settings.data.suggestion_button_size;
-        p.x -= m_settings.data.suggestion_button_size;
-      }
-      else
-        p.y -= (text_height + m_settings.data.suggestion_button_size);
-    }
+  if (p.y + text_height - 3 + m_settings.data.suggestion_button_size >= r.bottom) {
+    if (p.x > m_settings.data.suggestion_button_size) {
+      p.y -= m_settings.data.suggestion_button_size;
+      p.x -= m_settings.data.suggestion_button_size;
+    } else
+      p.y -= (text_height + m_settings.data.suggestion_button_size);
+  }
 
   if (p.x + m_settings.data.suggestion_button_size > r.right)
     p.x -= m_settings.data.suggestion_button_size;
@@ -284,7 +287,7 @@ ContextMenuHandler::get_suggestion_menu_items() {
     return {}; // Word is already off-screen
 
   auto pos = m_word_under_cursor_pos;
-  ACTIVE_VIEW_BLOCK (m_editor);
+  ACTIVE_VIEW_BLOCK(m_editor);
   m_editor.set_selection(pos, pos + m_word_under_cursor_length);
   std::vector<MenuItem> suggestion_menu_items;
   m_selected_word = m_editor.get_mapped_wstring_range(m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
@@ -302,20 +305,19 @@ ContextMenuHandler::get_suggestion_menu_items() {
   }
 
   if (!m_last_suggestions.empty()) {
-    MenuItem replace_all_item (wstring_printf (rc_str (IDS_REPLACE_ALL_PS).c_str (), m_selected_word.str.c_str ()).c_str(), -1);
+    MenuItem replace_all_item(wstring_printf(rc_str(IDS_REPLACE_ALL_PS).c_str(), m_selected_word.str.c_str()).c_str(), -1);
     replace_all_item.children = suggestion_menu_items;
     suggestion_menu_items.emplace_back(MenuItem::Separator{});
-    std::for_each (replace_all_item.children.begin (), replace_all_item.children.end (), [](auto &item){ item.id += menu_id::replace_all_start;});
-    suggestion_menu_items.push_back (std::move (replace_all_item));
+    std::for_each(replace_all_item.children.begin(), replace_all_item.children.end(), [](auto &item) { item.id += menu_id::replace_all_start; });
+    suggestion_menu_items.push_back(std::move(replace_all_item));
   }
 
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
-  auto menu_string = wstring_printf(rc_str (IDS_IGNORE_PS_FOR_CURRENT_SESSION).c_str (),
+  auto menu_string = wstring_printf(rc_str(IDS_IGNORE_PS_FOR_CURRENT_SESSION).c_str(),
                                     m_selected_word.str.c_str());
   suggestion_menu_items.emplace_back(menu_string.c_str(), menu_id::ignore_all);
   menu_string =
-      wstring_printf(rc_str (IDS_ADD_PS_TO_DICTIONARY).c_str (), m_selected_word.str.c_str());
-  ;
+      wstring_printf(rc_str(IDS_ADD_PS_TO_DICTIONARY).c_str(), m_selected_word.str.c_str());;
   suggestion_menu_items.emplace_back(menu_string.c_str(),
                                      menu_id::add_to_dictionary);
 
@@ -325,8 +327,8 @@ ContextMenuHandler::get_suggestion_menu_items() {
 ContextMenuHandler::ContextMenuHandler(
     const Settings &settings, const SpellerContainer &speller_container,
     EditorInterface &editor, const SpellChecker &spell_checker)
-    : m_settings(settings), m_speller_container(speller_container),
-      m_editor(editor), m_spell_checker(spell_checker) {
+  : m_settings(settings), m_speller_container(speller_container),
+    m_editor(editor), m_spell_checker(spell_checker) {
   m_speller_container.speller_status_changed.connect(
       [this]() { do_plugin_menu_inclusion(); });
 }
