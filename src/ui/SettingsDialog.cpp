@@ -131,7 +131,7 @@ void SimpleSettingsTab::fill_lib_info(AspellStatus aspell_status, const Settings
   ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
   ShowWindow(m_h_hunspell_path_type, is_hunspell);
   ShowWindow(m_h_system_path, 0);
-  ShowWindow(m_configure_aspell_btn, static_cast<int>(settings.data.active_speller_lib_id == SpellerId::aspell));
+  ShowWindow(m_configure_aspell_btn, settings.data.active_speller_lib_id == SpellerId::aspell);
   auto not_native = settings.data.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
   ShowWindow(m_h_lib_group_box, not_native);
   ShowWindow(m_h_lib_path, not_native);
@@ -169,8 +169,8 @@ void SimpleSettingsTab::fill_lib_info(AspellStatus aspell_status, const Settings
     break;
   case SpellerId::hunspell: {
     auto is_lib_path = ComboBox_GetCurSel(m_h_hunspell_path_type) == 0;
-    ShowWindow(m_h_lib_path, static_cast<int>(is_lib_path));
-    ShowWindow(m_h_system_path, static_cast<int>(!is_lib_path));
+    ShowWindow(m_h_lib_path, is_lib_path);
+    ShowWindow(m_h_system_path, !is_lib_path);
     Static_SetText(m_h_lib_group_box, rc_str(IDS_HUNSPELL_SETTINGS).c_str());
     Edit_SetText(m_h_lib_path, settings.data.hunspell_user_path.c_str());
   }

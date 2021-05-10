@@ -15,7 +15,6 @@
 #pragma once
 #include <algorithm>
 #define NOMINMAX
-#include "plugin/Constants.h"
 
 #include <memory>
 #include <Windows.h>
@@ -101,7 +100,7 @@ private:
 #endif // !_DEBUG
 
 constexpr std::size_t operator "" _z(unsigned long long n) {
-  return static_cast<std::size_t>(n);
+  return n;
 }
 
 constexpr std::ptrdiff_t operator "" _sz(unsigned long long n) {

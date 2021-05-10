@@ -20,8 +20,6 @@
 #include "PluginInterface.h"
 #include "common/enum_array.h"
 
-#include <memory>
-
 class MenuItem;
 class AspellOptionsDialog;
 

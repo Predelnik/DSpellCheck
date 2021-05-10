@@ -14,7 +14,6 @@
 
 #include "aspell.h"
 
-#include "PluginInterface.h"
 #include "common/Utility.h"
 
 #include <iostream>

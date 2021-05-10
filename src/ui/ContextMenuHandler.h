@@ -14,7 +14,7 @@
 
 #pragma once
 #include "common/Utility.h"
-#include "common/MappedWString.h"
+#include "plugin/Constants.h"
 
 class Settings;
 class SpellerContainer;

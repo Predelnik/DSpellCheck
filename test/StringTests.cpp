@@ -16,6 +16,7 @@
 #include "network/UrlHelpers.h"
 
 #include <catch.hpp>
+#include <string>
 
 using namespace std::literals;
 

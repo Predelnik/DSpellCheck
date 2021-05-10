@@ -183,7 +183,7 @@ TextPosition NppInterface::find_next(TextPosition from_position, const char *nee
   ttf.chrg.cpMin = static_cast<Sci_PositionCR>(from_position);
   ttf.chrg.cpMax = static_cast<Sci_PositionCR>(get_active_document_length());
   ttf.lpstrText = needle;
-  return static_cast<TextPosition>(send_msg_to_scintilla(SCI_FINDTEXT, 0, reinterpret_cast<LPARAM>(&ttf)));
+  return send_msg_to_scintilla(SCI_FINDTEXT, 0, reinterpret_cast<LPARAM>(&ttf));
 }
 
 void NppInterface::replace_text(TextPosition from, TextPosition to, std::string_view replacement) {
@@ -210,15 +210,15 @@ void NppInterface::indicator_fill_range(TextPosition from, TextPosition to) { po
 
 void NppInterface::indicator_clear_range(TextPosition from, TextPosition to) { post_msg_to_scintilla(SCI_INDICATORCLEARRANGE, from, to - from); }
 
-TextPosition NppInterface::get_first_visible_line() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETFIRSTVISIBLELINE)); }
+TextPosition NppInterface::get_first_visible_line() const { return send_msg_to_scintilla(SCI_GETFIRSTVISIBLELINE); }
 
-TextPosition NppInterface::get_lines_on_screen() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_LINESONSCREEN)); }
+TextPosition NppInterface::get_lines_on_screen() const { return send_msg_to_scintilla(SCI_LINESONSCREEN); }
 
 TextPosition NppInterface::get_document_line_from_visible(TextPosition visible_line) const {
-  return static_cast<TextPosition>(send_msg_to_scintilla(SCI_DOCLINEFROMVISIBLE, visible_line));
+  return send_msg_to_scintilla(SCI_DOCLINEFROMVISIBLE, visible_line);
 }
 
-TextPosition NppInterface::get_document_line_count() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETLINECOUNT)); }
+TextPosition NppInterface::get_document_line_count() const { return send_msg_to_scintilla(SCI_GETLINECOUNT); }
 
 std::string NppInterface::get_active_document_text() const {
   TARGET_VIEW_BLOCK(*this, static_cast<int> (m_target_view));
@@ -265,18 +265,18 @@ std::optional<TextPosition> NppInterface::char_position_from_global_point(int x,
   if (WindowFromPoint(p) != hwnd)
     return std::nullopt;
   ScreenToClient(hwnd, &p);
-  return static_cast<TextPosition>(send_msg_to_scintilla(SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y));
+  return send_msg_to_scintilla(SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
 }
 
 TextPosition NppInterface::char_position_from_point(const POINT &pnt) const {
-  return static_cast<TextPosition>(send_msg_to_scintilla(SCI_CHARPOSITIONFROMPOINT, pnt.x, pnt.y));
+  return send_msg_to_scintilla(SCI_CHARPOSITIONFROMPOINT, pnt.x, pnt.y);
 }
 
-TextPosition NppInterface::get_selection_start() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETSELECTIONSTART)); }
+TextPosition NppInterface::get_selection_start() const { return send_msg_to_scintilla(SCI_GETSELECTIONSTART); }
 
-TextPosition NppInterface::get_selection_end() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETSELECTIONEND)); }
+TextPosition NppInterface::get_selection_end() const { return send_msg_to_scintilla(SCI_GETSELECTIONEND); }
 
-TextPosition NppInterface::get_line_length(int line) const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_LINELENGTH, line)); }
+TextPosition NppInterface::get_line_length(int line) const { return send_msg_to_scintilla(SCI_LINELENGTH, line); }
 
 std::string NppInterface::get_line(TextPosition line_number) const {
   auto buf_size = static_cast<int>(send_msg_to_scintilla(SCI_LINELENGTH, line_number) + 1);
@@ -358,7 +358,7 @@ bool NppInterface::is_style_hotspot(int style) const {
   return *(m_hotspot_cache[style] = (send_msg_to_scintilla(SCI_STYLEGETHOTSPOT, style) != 0));
 }
 
-TextPosition NppInterface::get_active_document_length() const { return static_cast<TextPosition>(send_msg_to_scintilla(SCI_GETLENGTH)); }
+TextPosition NppInterface::get_active_document_length() const { return send_msg_to_scintilla(SCI_GETLENGTH); }
 
 std::string NppInterface::get_text_range(TextPosition from, TextPosition to) const {
   if (from > to) {

@@ -15,7 +15,6 @@
 #pragma once
 #include "lsignal.h"
 #include "SpellerId.h"
-#include "common/Utility.h"
 #include "common/enum_array.h"
 #include "common/TemporaryAcessor.h"
 

@@ -58,7 +58,7 @@ bool move_file_and_reset_security_descriptor(const wchar_t *from, const wchar_t 
   if (!InitializeAcl(&g_null_acl, sizeof(g_null_acl), ACL_REVISION))
     return false;
   SetNamedSecurityInfo(const_cast<wchar_t *>(to), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION, nullptr, nullptr,
-                       static_cast<PACL>(&g_null_acl), nullptr);
+                       &g_null_acl, nullptr);
   return true;
 }
 

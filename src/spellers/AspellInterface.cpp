@@ -18,8 +18,6 @@
 #include "LanguageInfo.h"
 #include "common/Utility.h"
 #include "common/winapi.h"
-#include "plugin/Constants.h"
-#include "plugin/Plugin.h"
 #include "plugin/Settings.h"
 
 AspellInterface::~AspellInterface() = default;

@@ -15,7 +15,6 @@
 #include "Win32Exception.h"
 
 #include "Utility.h"
-#include "string_utils.h"
 
 #include <cassert>
 #include <Wininet.h>
@@ -24,7 +23,7 @@ namespace {
 
 struct LocalFreeHelper {
   void operator()(void *toFree) const {
-    ::LocalFree(reinterpret_cast<HLOCAL>(toFree));
+    ::LocalFree(toFree);
   };
 };
 

@@ -53,7 +53,7 @@ void ComboBox::check_hwnd() {
   assert(get_class_name(m_hwnd) == L"ComboBox");
 }
 
-int ComboBox::current_index() const { return static_cast<int>(ComboBox_GetCurSel(m_hwnd)); }
+int ComboBox::current_index() const { return ComboBox_GetCurSel(m_hwnd); }
 
 std::wstring ComboBox::current_text() const {
   auto length = ComboBox_GetTextLength(m_hwnd);

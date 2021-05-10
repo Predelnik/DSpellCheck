@@ -15,6 +15,8 @@
 #pragma once
 
 #define NOMINMAX
+#include <Winsock2.h>
+
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -32,9 +34,8 @@
 #include <string_view>
 #include <unordered_set>
 #include <vector>
-#include <windows.h>
+#include <Windows.h>
 #include <windowsx.h>
-#include <winsock2.h>
 #pragma warning(push)
 #pragma warning(disable: 4091)
 #include "Shlobj.h"

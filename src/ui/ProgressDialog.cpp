@@ -87,7 +87,7 @@ void ProgressDialog::set_marquee(bool animated) {
     dw_style = dw_style & (~PBS_MARQUEE);
 
   ::SetWindowLongPtr(m_h_progress_bar, GWL_STYLE, dw_style);
-  SendMessage(m_h_progress_bar, PBM_SETMARQUEE, static_cast<int>(animated), 0);
+  SendMessage(m_h_progress_bar, PBM_SETMARQUEE, animated, 0);
 }
 
 void ProgressDialog::update() {

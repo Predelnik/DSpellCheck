@@ -17,7 +17,6 @@
 #include "CheckedList/CheckedList.h"
 #include "common/winapi.h"
 #include "core/SpellChecker.h"
-#include "plugin/Constants.h"
 #include "plugin/Plugin.h"
 #include "plugin/resource.h"
 #include "plugin/Settings.h"

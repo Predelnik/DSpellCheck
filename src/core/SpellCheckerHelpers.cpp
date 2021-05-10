@@ -107,7 +107,7 @@ void replace_all_tokens(EditorInterface &editor, const Settings &settings, const
     pos = editor.find_next(pos, from);
     if (pos >= 0) {
       auto doc_word_start_pos = editor.get_prev_valid_begin_pos(pos);
-      auto doc_word_end_pos = editor.get_next_valid_end_pos(static_cast<TextPosition>(pos + from_len));
+      auto doc_word_end_pos = editor.get_next_valid_end_pos(pos + from_len);
       auto mapped_wstr = editor.get_mapped_wstring_range(doc_word_start_pos, doc_word_end_pos);
       std::wstring_view src_word_sv;
       TextPosition buf_word_start_pos = 0;
@@ -137,7 +137,7 @@ void replace_all_tokens(EditorInterface &editor, const Settings &settings, const
 
         return true;
       })) {
-        pos = pos + static_cast<TextPosition>(from_len);
+        pos = pos + from_len;
         continue;
       }
 
@@ -150,7 +150,7 @@ void replace_all_tokens(EditorInterface &editor, const Settings &settings, const
         }
       }
       auto encoded_to = editor.to_editor_encoding(use_modified ? modified_to : to);
-      editor.replace_text(pos, static_cast<TextPosition>(pos + from_len), encoded_to);
+      editor.replace_text(pos, pos + from_len, encoded_to);
       pos = pos + static_cast<TextPosition>(encoded_to.length());
     } else
       break;

@@ -19,14 +19,12 @@
 #include "common/overload.h"
 #include "common/ProgressData.h"
 #include "common/string_utils.h"
-#include "common/Win32Exception.h"
 #include "common/WinApi.h"
 #include "common/WinInet.h"
 #include "plugin/Constants.h"
 #include "plugin/Settings.h"
 
 #include <fstream>
-#include <iostream>
 #include <string>
 #include <variant>
 
