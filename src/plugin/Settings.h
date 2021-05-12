@@ -149,7 +149,7 @@ public:
     std::wstring delimiters = default_delimiters();
     int suggestion_count = 0;
     bool ignore_yo = false;
-    bool convert_single_quotes = false;
+    bool convert_single_quotes = true;
     bool remove_boundary_apostrophes = false;
     bool check_those = false;
     std::wstring file_types;
