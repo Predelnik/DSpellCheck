@@ -125,3 +125,4 @@ void notify(SCNotification *notify_code);
 NppInterface &npp_interface();
 void copy_misspellings_to_clipboard();
 void delete_log();
+void print_to_log(std::wstring_view line, HWND parent_wnd);

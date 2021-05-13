@@ -20,6 +20,7 @@
 #include "npp/NppInterface.h"
 #include "plugin/Constants.h"
 #include "plugin/Settings.h"
+#include "plugin/Plugin.h"
 #include "spellers/NativeSpellerInterface.h"
 #include "spellers/SpellerContainer.h"
 #include "spellers/SpellerInterface.h"
@@ -36,7 +37,7 @@ SpellChecker::SpellChecker(const Settings *settings, EditorInterface &editor, co
 SpellChecker::~SpellChecker() = default;
 
 void SpellChecker::recheck_visible_both_views() {
-  SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::recheck_visible_both_views()", m_editor.get_editor_hwnd());
+  print_to_log(L"void SpellChecker::recheck_visible_both_views()", m_editor.get_editor_hwnd());
   auto view_count = m_editor.get_view_count();
   for (int view_index = 0; view_index < view_count; ++view_index) {
     TARGET_VIEW_BLOCK(m_editor, view_index);
@@ -315,7 +316,7 @@ void SpellChecker::erase_all_misspellings() {
 }
 
 bool SpellChecker::check_word(std::wstring_view word, TextPosition word_start) const {
-  SpellCheckerHelpers::print_to_log(&m_settings, L"bool SpellChecker::check_word(NppViewType view, std::wstring_view word, TextPosition word_start)",
+  print_to_log(L"bool SpellChecker::check_word(NppViewType view, std::wstring_view word, TextPosition word_start)",
                                     m_editor.get_editor_hwnd());
   if (!is_spellchecking_needed(word, word_start))
     return true;
@@ -433,7 +434,7 @@ std::optional<std::array<TextPosition, 2>> SpellChecker::find_last_misspelling(c
 }
 
 void SpellChecker::check_visible() {
-  SpellCheckerHelpers::print_to_log(&m_settings, L"void SpellChecker::check_visible(NppViewType view)", m_editor.get_editor_hwnd());
+  print_to_log(L"void SpellChecker::check_visible(NppViewType view)", m_editor.get_editor_hwnd());
   auto text = get_visible_text();
   underline_misspelled_words(text);
 }
