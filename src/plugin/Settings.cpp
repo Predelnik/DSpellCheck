@@ -16,10 +16,9 @@
 
 #include "aspell.h"
 #include "Scintilla.h"
-#include "common/Utility.h"
 #include "common/enum_range.h"
 #include "common/IniWorker.h"
-#include "core/SpellCheckerHelpers.h"
+#include "common/Utility.h"
 #include "spellers/SpellerId.h"
 
 #include <cassert>
@@ -176,7 +175,7 @@ void Settings::load() {
   IniWorker worker(app_name, m_ini_filepath, IniWorker::Action::load);
   process(worker);
   delete_log();
-  SpellCheckerHelpers::print_to_log(this, L"void Settings::load()", nullptr);
+  print_to_log(L"void Settings::load()", nullptr);
   settings_changed();
 }
 

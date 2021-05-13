@@ -262,7 +262,7 @@ void start_about_dlg() { about_dlg->do_dialog(); }
 void start_language_list() { lang_list_instance->do_dialog(); }
 
 void recheck_visible() {
-  SpellCheckerHelpers::print_to_log(settings.get(), L"recheck_visible ()", npp->get_editor_hwnd());
+  print_to_log(L"recheck_visible ()", npp->get_editor_hwnd());
   ACTIVE_VIEW_BLOCK(npp_interface());
   spell_checker->recheck_visible();
 }
@@ -699,6 +699,24 @@ std::wstring_view rc_str_view(UINT string_id) {
 
 std::wstring rc_str(UINT string_id) { return std::wstring{rc_str_view(string_id)}; }
 
+void print_to_log(std::wstring_view line, HWND parent_wnd) {
+  if (!settings)
+    return;
+
+  if (!settings->data.write_debug_log)
+    return;
+
+  FILE *fp;
+
+  auto err = _wfopen_s(&fp, get_debug_log_path().c_str(), L"a");
+  if (err != 0) {
+    MessageBox(parent_wnd, L"Error while writing to a log file", to_wstring(strerror(err)).c_str(), MB_OK);
+    return;
+  }
+  _fwprintf_p(fp, L"%.*s\n", static_cast<int>(line.length()), line.data());
+  fclose(fp);
+}
+
 void delete_log() {
   if (settings->data.write_debug_log)
     WinApi::delete_file(get_debug_log_path().c_str());
@@ -715,7 +733,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   notify(notify_code);
   switch (notify_code->nmhdr.code) {
   case NPPN_SHUTDOWN: {
-    SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
+    print_to_log(L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
     edit_recheck_timer.reset();
     scroll_recheck_timer.reset();
     command_menu_clean_up();
@@ -728,7 +746,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   case NPPN_READY: {
     register_custom_messages();
     init_classes();
-    SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_READY", npp->get_editor_hwnd());
+    print_to_log(L"NPPN_READY", npp->get_editor_hwnd());
     check_queue.clear();
     create_hooks();
     edit_recheck_timer.emplace(npp_data.npp_handle);
@@ -744,7 +762,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 
   case NPPN_BUFFERACTIVATED: {
     if (settings)
-      SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_BUFFERACTIVATED", npp->get_editor_hwnd());
+      print_to_log(L"NPPN_BUFFERACTIVATED", npp->get_editor_hwnd());
     if (!spell_checker)
       return;
     recheck_visible();
@@ -785,7 +803,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     break;
 
   case NPPN_LANGCHANGED: {
-    SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_LANGCHANGED", npp->get_editor_hwnd());
+    print_to_log(L"NPPN_LANGCHANGED", npp->get_editor_hwnd());
     if (!spell_checker)
       return;
     spell_checker->recheck_visible_on_active_view();
@@ -794,7 +812,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
 
   case NPPN_TBMODIFICATION: {
     if (settings)
-      SpellCheckerHelpers::print_to_log(settings.get(), L"NPPN_TBMODIFICATION", npp->get_editor_hwnd());
+      print_to_log(L"NPPN_TBMODIFICATION", npp->get_editor_hwnd());
     add_icons();
   }
 
