@@ -357,6 +357,9 @@ abg
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false);
     CHECK(editor.get_active_document_text() == "bar⸺bar⸺bar⸺nottoken⸺bar⸺bar");
 
+    SpellCheckerHelpers::replace_all_tokens(editor, settings, "", L"bar", false);
+    CHECK(editor.get_active_document_text() == "bar⸺bar⸺bar⸺nottoken⸺bar⸺bar");
+
     {
       auto m = settings.modify();
       m->data.split_camel_case = false;
@@ -430,8 +433,19 @@ abg
     {
       auto mut = settings.modify();
       mut->data.convert_single_quotes = false;
+      mut->data.remove_boundary_apostrophes = false;
     }
     sc.recheck_visible_both_views();
     CHECK (editor.get_underlined_words(indicator_id) == std::vector{"D’Artagnan"s});
+    editor.set_active_document_text(L"’’’test’’’");
+    sc.recheck_visible_both_views();
+    CHECK (editor.get_underlined_words(indicator_id) == std::vector{"’’’test’’’"s});
+    {
+      auto mut = settings.modify();
+      mut->data.remove_boundary_apostrophes = true;
+      mut->data.convert_single_quotes = true;
+    }
+    sc.recheck_visible_both_views();
+    CHECK (editor.get_underlined_words(indicator_id).empty ());
   }
 }
