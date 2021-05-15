@@ -97,10 +97,10 @@ void replace_all_tokens(EditorInterface &editor, const Settings &settings, const
       if (!settings.do_with_tokenizer(mapped_wstr.str, [&](const auto &tokenizer) {
         TextPosition end_pos_offset = 0;
         if (doc_word_end_pos != pos + from_len)
-          ++end_pos_offset;
+          end_pos_offset = 1;
         TextPosition start_pos_offset = 0;
         if (doc_word_start_pos != pos)
-          ++start_pos_offset;
+          start_pos_offset = 1;
 
         buf_word_start_pos += start_pos_offset;
         buf_word_end_pos -= end_pos_offset;

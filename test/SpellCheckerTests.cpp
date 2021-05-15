@@ -349,9 +349,9 @@ abg
       auto m = settings.modify();
       m->data.split_camel_case = true;
     }
-    editor.set_active_document_text(L"token token stillToken notoken andOneMoreToken");
+    editor.set_active_document_text(L"token token stillToken notoken andOneMoreToken tokenno");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"foobar", false);
-    CHECK(editor.get_active_document_text() == "foobar foobar stillFoobar notoken andOneMoreFoobar");
+    CHECK(editor.get_active_document_text() == "foobar foobar stillFoobar notoken andOneMoreFoobar tokenno");
 
     editor.set_active_document_text(L"token⸺token⸺token⸺nottoken⸺token⸺token");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false);
