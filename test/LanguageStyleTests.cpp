@@ -40,12 +40,12 @@ TEST_CASE("Language Styles") {
     editor.set_whole_text_style(SCE_H_DEFAULT);
     editor.make_all_visible();
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
+    CHECK_FALSE(editor.get_underlined_words(spell_check_indicator_id).empty());
 
     editor.set_lexer(SCLEX_YAML);
     editor.set_whole_text_style(SCE_YAML_DEFAULT);
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
+    CHECK_FALSE(editor.get_underlined_words(spell_check_indicator_id).empty());
 
     {
       auto m = settings.modify();
@@ -55,12 +55,33 @@ TEST_CASE("Language Styles") {
     editor.set_lexer(SCLEX_CPP);
     editor.set_whole_text_style(SCE_C_VERBATIM);
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
+    CHECK_FALSE(editor.get_underlined_words(spell_check_indicator_id).empty());
+    // unknown style:
+    editor.set_whole_text_style(SCE_C_GLOBALCLASS);
+    sc.recheck_visible_both_views();
+    CHECK(editor.get_underlined_words(spell_check_indicator_id).empty());
+
+    {
+      auto mut = settings.modify();
+      mut->data.check_comments = true;
+    }
+
+    editor.set_whole_text_style(SCE_C_COMMENT);
+    sc.recheck_visible_both_views();
+    CHECK_FALSE(editor.get_underlined_words(spell_check_indicator_id).empty());
+
+    {
+      auto mut = settings.modify();
+      mut->data.check_comments = false;
+    }
+
+    sc.recheck_visible_both_views();
+    CHECK(editor.get_underlined_words(spell_check_indicator_id).empty());
 
     editor.set_lexer(SCLEX_LUA);
     editor.set_whole_text_style(SCE_LUA_LITERALSTRING);
     sc.recheck_visible_both_views();
-    CHECK(!editor.get_underlined_words(spell_check_indicator_id).empty());
+    CHECK_FALSE(editor.get_underlined_words(spell_check_indicator_id).empty());
 
     editor.set_current_indicator(URL_INDIC);
     editor.indicator_fill_range(0, editor.get_active_document_length());

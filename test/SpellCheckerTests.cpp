@@ -170,6 +170,7 @@ wrongword
     editor.set_active_document_text(LR"(
   abaas123asd
   wEirdCasE
+  ALLCAPITAL
   )");
     sc.recheck_visible_both_views();
     CHECK(editor.get_underlined_words(indicator_id) ==
@@ -179,11 +180,9 @@ wrongword
       mut->data.ignore_starting_with_capital = false;
       mut->data.ignore_containing_digit = true;
       mut->data.split_camel_case = true;
-      mut->data.ignore_all_capital = false;
       mut->data.ignore_having_a_capital = false;
     }
     CHECK(sc.get_all_misspellings_as_string() == LR"(Cas
-E
 Eird
 w
 )");
@@ -447,5 +446,8 @@ abg
     }
     sc.recheck_visible_both_views();
     CHECK (editor.get_underlined_words(indicator_id).empty ());
+  }
+  SECTION("Not called normally") {
+    CHECK_FALSE (SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, L"", 0));
   }
 }
