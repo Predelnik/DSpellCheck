@@ -77,7 +77,6 @@ public:
   void notify(SCNotification *notify_code);
   int get_lexer() const override;
   int get_style_at(TextPosition position) const override;
-  bool is_style_hotspot(int style) const override;
   TextPosition get_active_document_length() const override;
   std::string get_text_range(TextPosition from, TextPosition to) const override;
   void force_style_update(TextPosition from, TextPosition to) override;

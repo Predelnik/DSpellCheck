@@ -33,7 +33,6 @@ public:
   EditorCodepage codepage = EditorCodepage::utf8;
   std::vector<MockedIndicatorInfo> indicator_info;
   int lexer = 0;
-  int hotspot_style = 123;
   int current_indicator = 0;
   std::array<TextPosition, 2> visible_lines = {0, 30};
 
@@ -81,7 +80,6 @@ public:
   TextPosition get_selection_start() const override;
   TextPosition get_selection_end() const override;
   int get_style_at(TextPosition position) const override;
-  bool is_style_hotspot(int style) const override;
   TextPosition get_active_document_length() const override;
   TextPosition get_line_length(int line) const override;
   int get_point_x_from_position(

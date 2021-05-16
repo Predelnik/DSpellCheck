@@ -106,7 +106,6 @@ public:
   virtual int get_indicator_value_at(int indicator_id, TextPosition position) const = 0;
   virtual std::wstring get_full_current_path() const = 0;
   // is current style used for links (hotspots):
-  virtual bool is_style_hotspot(int style) const = 0;
   virtual TextPosition get_active_document_length() const = 0;
   virtual std::string get_text_range(TextPosition from,
                                      TextPosition to) const = 0;
