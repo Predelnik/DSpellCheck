@@ -351,13 +351,6 @@ int NppInterface::get_lexer() const {
 
 int NppInterface::get_style_at(TextPosition position) const { return static_cast<int>(send_msg_to_scintilla(SCI_GETSTYLEAT, position)); }
 
-bool NppInterface::is_style_hotspot(int style) const {
-  ASSERT_RETURN(style <= STYLE_MAX, false);
-  if (auto value = m_hotspot_cache[style])
-    return *value;
-  return *(m_hotspot_cache[style] = (send_msg_to_scintilla(SCI_STYLEGETHOTSPOT, style) != 0));
-}
-
 TextPosition NppInterface::get_active_document_length() const { return send_msg_to_scintilla(SCI_GETLENGTH); }
 
 std::string NppInterface::get_text_range(TextPosition from, TextPosition to) const {

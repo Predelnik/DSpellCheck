@@ -257,14 +257,6 @@ int MockEditorInterface::get_style_at(
   return doc->cur.style[position];
 }
 
-bool MockEditorInterface::is_style_hotspot(
-    int style) const {
-  auto doc = active_document();
-  if (!doc)
-    return false;
-  return doc->hotspot_style == style;
-}
-
 TextPosition MockEditorInterface::get_active_document_length(
     ) const {
   auto doc = active_document();
