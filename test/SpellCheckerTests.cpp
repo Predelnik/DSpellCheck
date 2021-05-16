@@ -203,6 +203,21 @@ abg
     sc.recheck_visible_both_views();
     CHECK(editor.get_underlined_words(indicator_id) ==
         std::vector<std::string>{"abg"});
+    editor.set_active_document_text(LR"(
+test
+test_test
+)");
+    {
+      auto mut = settings.modify();
+      mut->data.ignore_having_underscore = false;
+    }
+    CHECK(editor.get_underlined_words(indicator_id) ==
+        std::vector{"test_test"s});
+    {
+      auto mut = settings.modify();
+      mut->data.ignore_having_underscore = true;
+    }
+    CHECK(editor.get_underlined_words(indicator_id).empty ());
 
     {
       std::wstring text = L"nurserymaid ";
