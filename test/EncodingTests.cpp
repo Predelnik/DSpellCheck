@@ -59,5 +59,10 @@ TEST_CASE("UTF-8 shenanigans") {
     // and a bit further
     CHECK(editor.get_prev_valid_begin_pos(27) == 25);
     CHECK(editor.get_next_valid_end_pos(56) == 57);
+
+    editor.set_active_document_text(L"test tests test");
+    editor.set_codepage(EditorCodepage::ansi);
+    CHECK(editor.get_prev_valid_begin_pos(5) == 4);
+    CHECK(editor.get_next_valid_end_pos(5) == 6);
   }
 }

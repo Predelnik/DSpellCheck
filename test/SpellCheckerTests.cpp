@@ -314,6 +314,12 @@ test_test
       editor.set_cursor_pos(0);
       CHECK(sc.is_word_under_cursor_correct(pos, length, true));
     }
+    {
+      editor.set_codepage(EditorCodepage::ansi);
+      sc.recheck_visible_both_views();
+      editor.set_cursor_pos(0);
+      CHECK(sc.is_word_under_cursor_correct(pos, length, true));
+    }
   }
 
   SECTION("Mouse cursor pos") {
@@ -422,6 +428,14 @@ test_test
     editor.set_active_document_text(L"parise PaRiSe Token Parise PARISE");
     SpellCheckerHelpers::replace_all_tokens(editor, settings, "parise", L"Paris", true);
     CHECK(editor.get_active_document_text() == "Paris Paris Token Paris Paris");
+
+    editor.set_active_document_text(L"token token token nottoken token token");
+    editor.set_codepage(EditorCodepage::ansi);
+    SpellCheckerHelpers::replace_all_tokens(editor, settings, "token", L"bar", false);
+    CHECK(editor.get_active_document_text() == "bar bar bar nottoken bar bar");
+
+    editor.set_codepage (static_cast<EditorCodepage> (-1));
+    REQUIRE_THROWS_AS (editor.to_editor_encoding(L""), std::runtime_error);
   }
 
   SECTION("Bookmarks") {
