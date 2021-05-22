@@ -134,12 +134,19 @@ Settings::Settings(std::wstring_view ini_filepath)
   settings_changed.connect([this] { on_settings_changed(); });
 }
 
-
-void Settings::on_settings_changed() {
-  update_processed_delimiters();
+const std::wregex & Settings::get_ignore_regexp() const {
+  return data.ignore_regexp;
 }
 
-void Settings::update_processed_delimiters() { data.m_processed_delimiters = L" \n\r\t\v" + parse_string(data.delimiters.c_str()); }
+
+void Settings::on_settings_changed() {
+  update_cached_values();
+}
+
+void Settings::update_cached_values() {
+  data.processed_delimiters = L" \n\r\t\v" + parse_string(data.delimiters.c_str());
+  data.ignore_regexp.assign(data.ignore_regexp_str);
+}
 
 constexpr auto app_name = L"SpellCheck";
 
@@ -242,6 +249,7 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Ignore_Have_Capital", data.ignore_having_a_capital, true);
   worker.process(L"Ignore_All_Capital", data.ignore_all_capital, true);
   worker.process(L"Ignore_One_Letter", data.ignore_one_letter, false);
+  worker.process(L"Ignore_Regular_Expression", data.ignore_regexp_str, L"");
   worker.process(L"Word_Minimum_Length", data.word_minimum_length, false);
   worker.process(L"Check_Default_UDL_style", data.check_default_udl_style, true);
   worker.process(L"Ignore_With_", data.ignore_having_underscore, true);

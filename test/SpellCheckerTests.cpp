@@ -476,6 +476,16 @@ test_test
     sc.recheck_visible_both_views();
     CHECK (editor.get_underlined_words(indicator_id).empty ());
   }
+  SECTION("Ignore regexp") {
+    {
+      auto mut = settings.modify();
+      mut->data.ignore_regexp_str = L"[A-Z]{1,5}";
+    }
+    editor.set_active_document_text(L"ABBA ALEXANDER abba V");
+    sc.recheck_visible_both_views();
+    CHECK (editor.get_underlined_words(indicator_id) == std::vector{"ALEXANDER"s, "abba"s});
+    sc.recheck_visible_both_views();
+  }
   SECTION("Not called normally") {
     CHECK_FALSE (SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, L"", 0));
   }

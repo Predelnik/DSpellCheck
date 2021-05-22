@@ -15,12 +15,13 @@
 #pragma once
 
 #include "lsignal.h"
-#include "common/Utility.h"
 #include "common/enum_array.h"
 #include "common/string_utils.h"
 #include "common/TemporaryAcessor.h"
+#include "common/Utility.h"
 #include "spellers/SpellerId.h"
 
+#include <regex>
 #include <experimental/string>
 
 class IniWorker;
@@ -82,12 +83,13 @@ public:
   Settings(std::wstring_view ini_filepath = L"");
   Settings(const Settings &) = delete;
   Settings &operator=(const Settings &) = delete;
+  const std::wregex &get_ignore_regexp() const;
   Settings(Settings &&) = delete;
   Settings &operator=(Settings &&) = delete;
   void on_settings_changed();
-  void update_processed_delimiters();
+  void update_cached_values();
   void process(IniWorker &worker);
-  auto delimiter_tokenizer(std::wstring_view target) const { return make_delimiter_tokenizer(target, data.m_processed_delimiters, data.split_camel_case); }
+  auto delimiter_tokenizer(std::wstring_view target) const { return make_delimiter_tokenizer(target, data.processed_delimiters, data.split_camel_case); }
 
   auto non_alphabetic_tokenizer(std::wstring_view target) const {
     return Tokenizer(target, [this](wchar_t c) { return !IsCharAlphaNumeric(c) && data.delimiter_exclusions.find(c) == std::wstring_view::npos; },
@@ -147,6 +149,7 @@ public:
     std::wstring hunspell_system_path;
     SuggestionMode suggestions_mode = SuggestionMode::button;
     std::wstring delimiters = default_delimiters();
+    std::wstring ignore_regexp_str;
     int suggestion_count = 0;
     bool ignore_yo = false;
     bool convert_single_quotes = true;
@@ -196,7 +199,11 @@ public:
     LanguageNameStyle language_name_style = LanguageNameStyle::english;
 
     // Derivatives:
-    std::wstring m_processed_delimiters;
+  private:
+    std::wstring processed_delimiters;
+    std::wregex ignore_regexp;
+
+    friend class Settings;
   } data;
 
   mutable lsignal::signal<void()> settings_changed;

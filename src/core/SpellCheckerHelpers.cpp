@@ -200,6 +200,9 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
       return false;
   }
 
+  if (std::regex_match(word.begin (), word.end (), settings.get_ignore_regexp ()))
+    return false;
+
   return true;
 }
 } // namespace SpellCheckerHelpers
