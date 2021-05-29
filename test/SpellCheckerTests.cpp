@@ -484,7 +484,15 @@ test_test
     editor.set_active_document_text(L"ABBA ALEXANDER abba V");
     sc.recheck_visible_both_views();
     CHECK (editor.get_underlined_words(indicator_id) == std::vector{"ALEXANDER"s, "abba"s});
+    {
+      auto mut = settings.modify();
+      mut->data.tokenization_style = TokenizationStyle::by_delimiters;
+      mut->data.delimiters = L" ";
+      mut->data.ignore_regexp_str = L"#.*|.*#|[A-Z]{1,5}";
+    }
+    editor.set_active_document_text(L"#ignore ignore# donotignore ABBA ALEXANDER abba V");
     sc.recheck_visible_both_views();
+    CHECK (editor.get_underlined_words(indicator_id) == std::vector{"donotignore"s, "ALEXANDER"s, "abba"s});
   }
   SECTION("Not called normally") {
     CHECK_FALSE (SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, L"", 0));
