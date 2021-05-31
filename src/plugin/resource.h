@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by DSpellCheck.rc
 //
+#define VS_VERSION_INFO                 1
 #define IDAPPLY                         3
 #define IDR_DOWNARROW                   101
 #define IDR_DOWNARROW_HOVER             102
@@ -16,6 +17,8 @@
 #define IDD_CONNECTION_SETTINGS_DIALOG  148
 #define IDD_ASPELL_OPTIONS              150
 #define IDC_VERSION                     1000
+#define IDC_EDIT1                       1000
+#define IDC_IGNORE_REGEXP_EDIT          1000
 #define IDC_IGNORE_ONE_LETTER           1001
 #define IDC_REMOVE_LANGLIST             1001
 #define IDC_SHOWONLYKNOWN               1001
@@ -28,14 +31,17 @@
 #define IDC_SUGG_TYPE                   1002
 #define IDC_LIBRARY                     1003
 #define IDC_REMOVE_SYSTEM               1003
+#define IDC_EDIT2                       1003
 #define IDC_DEFAULT_DELIMITERS          1004
 #define IDC_DOWNLOADDICS                1004
 #define IDC_COMBO_LANGUAGE              1005
 #define IDC_INSTALL_SYSTEM              1005
 #define IDC_ASPELLPATH                  1006
+#define IDC_RADIO2                      1006
 #define IDC_BROWSEASPELLPATH            1007
 #define IDC_HOSTNAME                    1007
 #define IDD_SIMPLE                      1007
+#define IDC_IGNORE_REGEXP_STATIC        1007
 #define IDC_ONE_USER_DIC                1008
 #define IDC_USERNAME                    1008
 #define IDD_ADVANCED                    1008
@@ -210,7 +216,6 @@
 #define IDS_RESET_SETTINGS_CAPTION      40110
 #define IDS_BOOKMARK_LINES_WITH_MISSPELLING 40111
 #define IDS_DOWNLOAD_ERRORS_ENCOUNTERED 40112
-#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
@@ -218,7 +223,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        102
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_CONTROL_VALUE         1008
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

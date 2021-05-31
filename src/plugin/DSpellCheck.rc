@@ -1,16 +1,65 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-/////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
 
 #define APSTUDIO_READONLY_SYMBOLS
-#include <winres.h>
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -115,7 +164,7 @@ BEGIN
                     "SysLink",WS_TABSTOP,7,131,108,19
 END
 
-IDD_ADVANCED DIALOGEX 0, 0, 205, 250
+IDD_ADVANCED DIALOGEX 0, 0, 206, 267
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
@@ -126,12 +175,12 @@ BEGIN
     CONTROL         "Split CamelCase Words",IDC_CAMEL_CASE_SPLITTING_CB,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,37,89,8
     CONTROL         "Treat starting/ending apostrophe as delimiter",IDC_REMOVE_ENDING_APOSTROPHE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,49,156,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,55,156,8
     LTEXT           "Typing Recheck Delay (ms):",IDC_STATIC,3,64,90,8
     EDITTEXT        IDC_RECHECK_DELAY,153,62,40,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Check default UDL style",IDC_CHECK_DEFAULT_UDL_STYLE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,78,93,8
-    GROUPBOX        "Ignore Words",IDC_STATIC,3,92,190,53
+    GROUPBOX        "Ignore Words",IDC_STATIC,3,92,190,68
     CONTROL         "Containing Numbers",IDC_IGNORE_NUMBERS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,104,80,10
     CONTROL         "Starting with Capital Letter",IDC_IGNORE_CSTART,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,104,98,10
     CONTROL         "Having not First Capital Letter ",IDC_IGNORE_CHAVE,
@@ -141,20 +190,22 @@ BEGIN
     CONTROL         "That Start or End with '",IDC_IGNORE_SE_APOSTROPHE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,52,131,86,10
     CONTROL         "One Letter",IDC_IGNORE_ONE_LETTER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,142,131,46,8
-    GROUPBOX        "Underline Style",IDC_STATIC,3,146,118,29
-    CONTROL         "",IDC_UNDERLINE_COLOR,"Button",BS_OWNERDRAW | BS_FLAT | WS_TABSTOP,13,155,20,15
-    COMBOBOX        IDC_UNDERLINE_STYLE,47,156,66,15,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Suggestion Button",IDC_STATIC,128,146,65,72
-    LTEXT           "Size:",IDC_STATIC,131,158,16,8
-    CONTROL         "",IDC_SLIDER_SIZE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,131,167,53,12
-    LTEXT           "Opacity:",IDC_STATIC,131,180,27,8
-    CONTROL         "",IDC_SLIDER_TRANSPARENCY,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,131,189,53,12
-    GROUPBOX        "Conversion Settings",IDC_STATIC,3,179,118,39
+    GROUPBOX        "Underline Style",IDC_STATIC,3,164,118,29
+    CONTROL         "",IDC_UNDERLINE_COLOR,"Button",BS_OWNERDRAW | BS_FLAT | WS_TABSTOP,13,173,20,15
+    COMBOBOX        IDC_UNDERLINE_STYLE,47,174,66,15,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Suggestion Button",IDC_STATIC,128,164,65,72
+    LTEXT           "Size:",IDC_STATIC,131,176,16,8
+    CONTROL         "",IDC_SLIDER_SIZE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,131,185,53,12
+    LTEXT           "Opacity:",IDC_STATIC,131,198,27,8
+    CONTROL         "",IDC_SLIDER_TRANSPARENCY,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,131,207,53,12
+    GROUPBOX        "Conversion Settings",IDC_STATIC,3,197,118,39
     CONTROL         "Cyrillic: Convert io (\\u0451) to e",IDC_COUNT_YO_AS_YE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,190,103,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,208,103,8
     CONTROL         "Convert ’ to '",IDC_COUNT_SINGLE_QUOTES_AS_APOSTROPHE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,203,55,10
-    PUSHBUTTON      "Reset to Default...",IDC_RESET_SETTINGS,113,221,80,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,221,55,10
+    PUSHBUTTON      "Reset to Default...",IDC_RESET_SETTINGS,113,239,80,14
+    LTEXT           "RegExp:",IDC_IGNORE_REGEXP_STATIC,10,146,28,8
+    EDITTEXT        IDC_IGNORE_REGEXP_EDIT,41,144,148,14,ES_AUTOHSCROLL
 END
 
 IDD_CHOOSE_MULTIPLE_LANGUAGES DIALOGEX 0, 0, 177, 237
@@ -290,31 +341,6 @@ IDR_DOWNARROW_HOVER     BITMAP                  "..\\..\\Resources\\downArrowBut
 IDR_DOWNARROW_PUSH      BITMAP                  "..\\..\\Resources\\downArrowButton_push.bmp"
 
 
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE
-BEGIN
-    "\0"
-END
-
-3 TEXTINCLUDE
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // DESIGNINFO
@@ -323,6 +349,14 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO
 BEGIN
+    IDD_ASPELL_OPTIONS, DIALOG
+    BEGIN
+    END
+
+    IDD_CONNECTION_SETTINGS_DIALOG, DIALOG
+    BEGIN
+    END
+
     IDD_DOWNLOADDICS, DIALOG
     BEGIN
     END
@@ -332,6 +366,18 @@ BEGIN
     END
 
     IDD_ADVANCED, DIALOG
+    BEGIN
+    END
+
+    IDD_CHOOSE_MULTIPLE_LANGUAGES, DIALOG
+    BEGIN
+    END
+
+    IDD_SETTINGS, DIALOG
+    BEGIN
+    END
+
+    IDD_SIMPLE, DIALOG
     BEGIN
     END
 END
@@ -380,7 +426,7 @@ BEGIN
     IDS_DOWNLOAD_LANG       "Download Languages..."
     IDS_STATUS_BAD_CONNECTION "Status: Connection cannot be established"
     IDS_STATUS_CANT_LIST_FILES "Status: Can't list directory files"
-    IDS_STATUS_HTTP_CLIENT_INIT_FAIL
+    IDS_STATUS_HTTP_CLIENT_INIT_FAIL 
                             "Status: HTTP client cannot be initialize"
     IDS_REMOVE_LANG         "Remove Unneeded Languages..."
 END
@@ -396,11 +442,11 @@ BEGIN
     IDS_ASPELL              "Aspell"
     IDS_ASPELL_LIBRARY      "Aspell Library"
     IDS_USER_DICT_CANT_SAVE_TITLE "User dictionary cannot be saved"
-    IDS_SPLIT_WORDS_BY_NON_ALPHA
+    IDS_SPLIT_WORDS_BY_NON_ALPHA 
                             "Split Words by Non-Alphabetic Characters Except:"
     IDS_SPLIT_WORDS_BY_DELIMS "Split Words by the Following Delimiters:"
     IDS_DASH                "Dash"
-    IDS_USER_DICT_CANT_SAVE_BODY
+    IDS_USER_DICT_CANT_SAVE_BODY 
                             "User dictionary cannot be written, please check if you have access for writing into your dictionary directory, otherwise you can change it or run Notepad++ as administrator."
     IDS_SQUIGGLE_LOW        "Squiggle Low"
     IDS_NATIVE_WINDOWS      "Native (Windows)"
@@ -436,7 +482,7 @@ BEGIN
     IDS_TT                  "TT"
     IDC_ERROR_BAD_ENCODING  "Sadly, this word contains symbols out of current dictionary encoding, thus it cannot be added to user dictionary. You can convert this dictionary to UTF-8 (don't forget to change the line `SET {encoding}` in .aff file) or choose the different one with appropriate encoding."
     IDS_PLAIN               "Plain"
-    IDS_PD_DICTIONARIES_REMOVED
+    IDS_PD_DICTIONARIES_REMOVED 
                             "%d dictionary(ies) has(ve) been successfully removed"
     IDS_AUTO_SPELL_CHECK    "Spell Check Document Automatically"
     IDS_FIND_NEXT_ERROR     "Find Next Misspelling"
@@ -455,12 +501,12 @@ BEGIN
     IDS_DICT_EXISTS_HEADER  "Dictionary already exists"
     IDS_DICTS_COPIED        "Dictionaries copied:\n"
     IDS_TEMPORARY_PATH_INVALID_HEADER "Temporary Path is Broken"
-    IDS_TEMPORARY_PATH_INVALID_BODY
+    IDS_TEMPORARY_PATH_INVALID_BODY 
                             "Path defined as temporary dir doesn't exist and couldn't be created, probably one of subdirectories have limited access, please make temporary path valid."
     IDS_NO_DICTS_DOWNLOADED "Dictionaries Haven't Been Downloaded"
-    IDS_CANT_CREATE_DOWNLOAD_DIR
+    IDS_CANT_CREATE_DOWNLOAD_DIR 
                             "Directory for dictionaries doesn't exist and couldn't be created, probably one of subdirectories have limited access, please choose accessible directory for dictionaries"
-    IDS_CANT_WRITE_DICT_FILES
+    IDS_CANT_WRITE_DICT_FILES 
                             "Access denied to dictionaries directory, either try to run Notepad++ as administrator or select some different, accessible dictionary path"
     IDS_DICTS_DOWNLOADED    "Dictionaries Downloaded"
     IDS_ZERO_DICTS_DOWNLOAD "Sadly, no dictionaries were copied, please try again"
@@ -474,13 +520,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_DELIMITER_TOOLTIP   "Standard white-space symbols such as New Line ('\\n'), Carriage Return ('\\r'), Tab ('\\t'), Space (' ') are always counted as delimiters"
-    IDS_RECHECK_DELAY_TOOLTIP
+    IDS_RECHECK_DELAY_TOOLTIP 
                             "Delay between the end of typing and rechecking the the text after it"
-    IDS_FIRST_CAPITAL_IGNORE_TOOLTIP
+    IDS_FIRST_CAPITAL_IGNORE_TOOLTIP 
                             "Remember that words at the beginning of sentences would also be ignored that way."
-    IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP
+    IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP 
                             "Words like this sadly cannot be added to Aspell user dictionary"
-    IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP
+    IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP 
                             "Words like this are mostly mean plural possessive form in English, if you want to add such forms of words to dictionary manually, please uncheck"
     IDS_PS_OF_PS_BYTES_EXTRACTED_PS "%d / %d bytes extracted (%d %%)"
     IDS_IGNORE_PS_FOR_CURRENT_SESSION "Ignore ""%s"" for Current Session"
@@ -498,12 +544,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_STATUS_NETWORK_ERROR_PS "Status: Network error (%s)"
-    IDS_GITHUB_API_RATE_LIMIT_EXCEEDED_PD_PS
+    IDS_GITHUB_API_RATE_LIMIT_EXCEEDED_PD_PS 
                             "GitHub API rate limit is exceeded for your ip address (%d tries per hour), please try again at %s"
-    IDS_ASPELL_INCORRECT_BITNESS
+    IDS_ASPELL_INCORRECT_BITNESS 
                             "Status: Incompatible DLL architecture (32-bit vs 64-bit)"
     IDS_ERASE_ALL_MISSPELLED "Erase All Misspelled Words"
-    IDS_SPLIT_WORDS_BY_NON_ANSI
+    IDS_SPLIT_WORDS_BY_NON_ANSI 
                             "Check Words Cont. ANSI Alphabetic Characters and:"
     IDS_LANGUAGE_NAME_STYLE_ORIGINAL "Short"
     IDS_LANGUAGE_NAME_STYLE_ENGLISH "English"
@@ -520,7 +566,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOAD_ERRORS_ENCOUNTERED
+    IDS_DOWNLOAD_ERRORS_ENCOUNTERED 
                             "\nThe following errors were encountered:\n"
 END
 

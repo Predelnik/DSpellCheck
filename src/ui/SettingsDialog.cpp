@@ -494,6 +494,7 @@ void AdvancedSettingsTab::set_sugg_box_settings(LRESULT size, LRESULT trans) {
 void AdvancedSettingsTab::update_controls(const Settings &settings) {
   Edit_SetText(m_h_edit_delimiters, settings.data.delimiters.c_str());
   Edit_SetText(m_delimiter_exclusions_le, m_settings.data.delimiter_exclusions.c_str());
+  Edit_SetText(m_ignore_regexp_edit, m_settings.data.ignore_regexp_str.c_str());
   Button_SetCheck(m_split_camel_case_cb, m_settings.data.split_camel_case);
   set_recheck_delay(settings.data.recheck_delay);
   set_conversion_opts(settings.data.ignore_yo, settings.data.convert_single_quotes, settings.data.remove_boundary_apostrophes);
@@ -543,6 +544,7 @@ INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l
     m_h_ignore_se_apostrophe = ::GetDlgItem(_hSelf, IDC_IGNORE_SE_APOSTROPHE);
     m_h_slider_size = ::GetDlgItem(_hSelf, IDC_SLIDER_SIZE);
     m_h_slider_sugg_button_opacity = ::GetDlgItem(_hSelf, IDC_SLIDER_TRANSPARENCY);
+    m_ignore_regexp_edit = ::GetDlgItem(_hSelf, IDC_IGNORE_REGEXP_EDIT);
     m_tokenization_style_cmb.init(::GetDlgItem(_hSelf, IDC_TOKENIZATION_STYLE_CMB));
     SendMessage(m_h_slider_size, TBM_SETRANGE, TRUE, MAKELPARAM(5, 22));
     SendMessage(m_h_slider_sugg_button_opacity, TBM_SETRANGE, TRUE, MAKELPARAM(5, 100));
@@ -702,6 +704,7 @@ void AdvancedSettingsTab::apply_settings(Settings &settings) {
   settings.data.tokenization_style = m_tokenization_style_cmb.current_data();
   settings.data.delimiter_exclusions = WinApi::get_edit_text(m_delimiter_exclusions_le);
   settings.data.split_camel_case = Button_GetCheck(m_split_camel_case_cb) == BST_CHECKED;
+  settings.data.ignore_regexp_str = WinApi::get_edit_text(m_ignore_regexp_edit);
 }
 
 SimpleSettingsTab *SettingsDialog::get_simple_dlg() { return &m_simple_dlg; }
@@ -770,6 +773,17 @@ void SimpleSettingsTab::init_speller_id_combobox(const SpellerContainer &speller
   }
 }
 
+void SettingsDialog::update_rect_offset_due_to_buttons(RECT &rc) {
+  auto ok_hwnd = GetDlgItem(_hSelf, IDOK);
+  RECT ok_rect;
+  RECT window_rect;
+  GetWindowRect(ok_hwnd, &ok_rect);
+  GetWindowRect(_hSelf, &window_rect);
+  auto offset = window_rect.bottom - ok_rect.bottom;
+  auto button_height = ok_rect.bottom - ok_rect.top;
+  rc.bottom -= (2 * offset + button_height);
+}
+
 INT_PTR SettingsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
@@ -790,9 +804,9 @@ INT_PTR SettingsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_para
     RECT rc;
     getClientRect(rc);
     m_controls_tab.reSizeTo(rc);
-    rc.bottom -= (rc.bottom - rc.top) / 10;
-    m_simple_dlg.reSizeTo(rc);
-    m_advanced_dlg.reSizeTo(rc);
+    rc.bottom = rc.top + m_simple_dlg.getHeight();
+    SetWindowPos (m_simple_dlg.getHSelf(), nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
+    SetWindowPos (m_advanced_dlg.getHSelf(), nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
 
     // This stuff is copied from npp source to make tabbed window looked totally
     // nice and white
