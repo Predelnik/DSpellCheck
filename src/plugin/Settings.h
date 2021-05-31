@@ -22,6 +22,7 @@
 #include "spellers/SpellerId.h"
 
 #include <regex>
+#include <variant>
 #include <experimental/string>
 
 class IniWorker;
@@ -83,7 +84,8 @@ public:
   Settings(std::wstring_view ini_filepath = L"");
   Settings(const Settings &) = delete;
   Settings &operator=(const Settings &) = delete;
-  const std::wregex &get_ignore_regexp() const;
+  const std::wregex *get_ignore_regexp() const;
+  const std::regex_error *get_regexp_error() const;
   Settings(Settings &&) = delete;
   Settings &operator=(Settings &&) = delete;
   void on_settings_changed();
@@ -201,7 +203,7 @@ public:
     // Derivatives:
   private:
     std::wstring processed_delimiters;
-    std::wregex ignore_regexp;
+    std::variant<std::wregex, std::regex_error> ignore_regexp;
 
     friend class Settings;
   } data;

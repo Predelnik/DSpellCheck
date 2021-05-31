@@ -134,10 +134,13 @@ Settings::Settings(std::wstring_view ini_filepath)
   settings_changed.connect([this] { on_settings_changed(); });
 }
 
-const std::wregex & Settings::get_ignore_regexp() const {
-  return data.ignore_regexp;
+const std::wregex *Settings::get_ignore_regexp() const {
+  return std::get_if<std::wregex> (&data.ignore_regexp);
 }
 
+const std::regex_error *Settings::get_regexp_error() const {
+  return std::get_if<std::regex_error> (&data.ignore_regexp);
+}
 
 void Settings::on_settings_changed() {
   update_cached_values();
@@ -145,7 +148,12 @@ void Settings::on_settings_changed() {
 
 void Settings::update_cached_values() {
   data.processed_delimiters = L" \n\r\t\v" + parse_string(data.delimiters.c_str());
-  data.ignore_regexp.assign(data.ignore_regexp_str);
+  try {
+    data.ignore_regexp = std::wregex (data.ignore_regexp_str);
+  }
+  catch (const std::regex_error &error) {
+    data.ignore_regexp = error;
+  }
 }
 
 constexpr auto app_name = L"SpellCheck";

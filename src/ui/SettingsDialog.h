@@ -103,7 +103,6 @@ public:
   void set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg,
                   bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
                   bool ignore_sa_apostrophe_arg, bool ignore_one_letter);
-  void set_buffer_size(int size);
   void update_controls(const Settings &settings);
 
 protected:
@@ -132,6 +131,7 @@ private:
   HWND m_delimiter_exclusions_le = nullptr;
   HWND m_split_camel_case_cb = nullptr;
   HWND m_h_check_default_udl_style = nullptr;
+  HWND m_ignore_regexp_edit {};
   WinApi::EnumComboBox<TokenizationStyle> m_tokenization_style_cmb;
   std::shared_ptr<WinApi::Button> m_reset_btn;
 
@@ -149,6 +149,7 @@ public:
   lsignal::signal<void ()> download_dics_dlg_requested;
 
 private:
+  void update_rect_offset_due_to_buttons(RECT &rc);
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
   void destroy() override;
   void apply_settings();

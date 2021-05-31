@@ -200,8 +200,9 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
       return false;
   }
 
-  if (std::regex_match(word.begin (), word.end (), settings.get_ignore_regexp ()))
-    return false;
+  if (const auto regexp_ptr = settings.get_ignore_regexp ())
+    if (std::regex_match(word.begin (), word.end (), *regexp_ptr))
+      return false;
 
   return true;
 }
