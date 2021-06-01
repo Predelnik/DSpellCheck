@@ -37,7 +37,6 @@
 #define IDC_COMBO_LANGUAGE              1005
 #define IDC_INSTALL_SYSTEM              1005
 #define IDC_ASPELLPATH                  1006
-#define IDC_RADIO2                      1006
 #define IDC_BROWSEASPELLPATH            1007
 #define IDC_HOSTNAME                    1007
 #define IDD_SIMPLE                      1007
