@@ -175,7 +175,7 @@ BEGIN
     CONTROL         "Split CamelCase Words",IDC_CAMEL_CASE_SPLITTING_CB,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,37,89,8
     CONTROL         "Treat starting/ending apostrophe as delimiter",IDC_REMOVE_ENDING_APOSTROPHE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,55,156,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,49,156,8
     LTEXT           "Typing Recheck Delay (ms):",IDC_STATIC,3,64,90,8
     EDITTEXT        IDC_RECHECK_DELAY,153,62,40,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Check default UDL style",IDC_CHECK_DEFAULT_UDL_STYLE,
