@@ -17,8 +17,8 @@
 #include "aspell.h"
 #include "AspellOptionsDialog.h"
 #include "DownloadDictionariesDialog.h"
-#include "SelectMultipleLanguagesDialog.h"
 #include "RemoveDictionariesDialog.h"
+#include "SelectMultipleLanguagesDialog.h"
 #include "common/IniWorker.h"
 #include "common/winapi.h"
 #include "common/WindowsDefs.h"
@@ -48,7 +48,8 @@ void SimpleSettingsTab::disable_language_combo(bool disable) {
   EnableWindow(m_h_remove_dics, enable);
 }
 
-void SimpleSettingsTab::update_language_controls(const Settings &settings, const SpellerContainer &speller_container, const std::wstring &selected_language_name) {
+void SimpleSettingsTab::update_language_controls(const Settings &settings, const SpellerContainer &speller_container,
+                                                 const std::wstring &selected_language_name) {
 
   if (!m_language_cmb)
     return;
@@ -476,7 +477,7 @@ void AdvancedSettingsTab::set_conversion_opts(bool convert_yo, bool convert_sing
 }
 
 void AdvancedSettingsTab::set_ignore(bool ignore_numbers_arg, bool ignore_c_start_arg, bool ignore_c_have_arg, bool ignore_c_all_arg, bool ignore_arg,
-                             bool ignore_sa_apostrophe_arg, bool ignore_one_letter) {
+                                     bool ignore_sa_apostrophe_arg, bool ignore_one_letter) {
   Button_SetCheck(m_h_ignore_numbers, ignore_numbers_arg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_ignore_c_start, ignore_c_start_arg ? BST_CHECKED : BST_UNCHECKED);
   Button_SetCheck(m_h_ignore_c_have, ignore_c_have_arg ? BST_CHECKED : BST_UNCHECKED);
@@ -520,8 +521,72 @@ void AdvancedSettingsTab::setup_delimiter_line_edit_visiblity() {
   ShowWindow(m_h_edit_delimiters, m_tokenization_style_cmb.current_data() == TokenizationStyle::by_delimiters ? TRUE : FALSE);
 }
 
-INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
+void AdvancedSettingsTab::on_recheck_delay_changed() {
+  auto text = WinApi::get_edit_text(m_h_recheck_delay);
+  if (text.empty())
+    return;
+
   wchar_t *end_ptr = nullptr;
+  auto x = wcstol(text.c_str(), &end_ptr, 10);
+  if (*end_ptr != 0u)
+    Edit_SetText(m_h_recheck_delay, L"0");
+  else if (x > 30000)
+    Edit_SetText(m_h_recheck_delay, L"30000");
+  else if (x < 0)
+    Edit_SetText(m_h_recheck_delay, L"0");
+}
+
+void AdvancedSettingsTab::on_default_delimiters_clicked() {
+  switch (m_tokenization_style_cmb.current_data()) {
+  case TokenizationStyle::by_non_alphabetic:
+  case TokenizationStyle::by_non_ansi:
+    Edit_SetText(m_delimiter_exclusions_le, default_delimiter_exclusions());
+    break;
+  case TokenizationStyle::by_delimiters:
+    Edit_SetText(m_h_edit_delimiters, default_delimiters());
+    break;
+  case TokenizationStyle::COUNT:
+    break;
+  }
+}
+
+void AdvancedSettingsTab::on_underline_color_button_clicked() {
+  CHOOSECOLOR cc;
+  static COLORREF acr_cust_clr[16];
+  memset(&cc, 0, sizeof(cc));
+  cc.hwndOwner = _hSelf;
+  cc.lStructSize = sizeof(CHOOSECOLOR);
+  cc.rgbResult = m_underline_color_btn;
+  cc.lpCustColors = acr_cust_clr;
+  cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+  if (ChooseColor(&cc)) {
+    m_underline_color_btn = cc.rgbResult;
+    RedrawWindow(m_h_underline_color, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE | RDW_ERASE);
+  }
+}
+
+INT_PTR AdvancedSettingsTab::get_underline_button_color(HDC h_dc) {
+  if (m_brush != nullptr)
+    DeleteObject(m_brush);
+
+  SetBkColor(h_dc, m_underline_color_btn);
+  SetBkMode(h_dc, TRANSPARENT);
+  m_brush = CreateSolidBrush(m_underline_color_btn);
+  return reinterpret_cast<INT_PTR>(m_brush);
+}
+
+void AdvancedSettingsTab::draw_underline_color_button(LPDRAWITEMSTRUCT ds) {
+  PAINTSTRUCT ps;
+  HDC dc = ds->hDC;
+  if ((ds->itemState & ODS_SELECTED) != 0u) {
+    DrawEdge(dc, &ds->rcItem, BDR_SUNKENINNER | BDR_SUNKENOUTER, BF_RECT);
+  } else {
+    DrawEdge(dc, &ds->rcItem, BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT);
+  }
+  EndPaint(m_h_underline_color, &ps);
+}
+
+INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) {
   switch (message) {
   case WM_INITDIALOG: {
     // Retrieving handles of dialog controls
@@ -575,33 +640,15 @@ INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l
   case WM_DRAWITEM:
     switch (w_param) {
     case IDC_UNDERLINE_COLOR:
-      PAINTSTRUCT ps;
       auto ds = reinterpret_cast<LPDRAWITEMSTRUCT>(l_param);
-      HDC dc = ds->hDC;
-      /*
-      Pen = CreatePen (PS_SOLID, 1, RGB (128, 128, 128));
-      SelectPen (Dc, Pen);
-      */
-      if ((ds->itemState & ODS_SELECTED) != 0u) {
-        DrawEdge(dc, &ds->rcItem, BDR_SUNKENINNER | BDR_SUNKENOUTER, BF_RECT);
-      } else {
-        DrawEdge(dc, &ds->rcItem, BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT);
-      }
-      // DeleteObject (Pen);
-      EndPaint(m_h_underline_color, &ps);
+      draw_underline_color_button(ds);
       return 1;
     }
     break;
   case WM_CTLCOLORBTN:
     if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) == reinterpret_cast<HWND>(l_param)) {
       auto h_dc = reinterpret_cast<HDC>(w_param);
-      if (m_brush != nullptr)
-        DeleteObject(m_brush);
-
-      SetBkColor(h_dc, m_underline_color_btn);
-      SetBkMode(h_dc, TRANSPARENT);
-      m_brush = CreateSolidBrush(m_underline_color_btn);
-      return reinterpret_cast<INT_PTR>(m_brush);
+      return get_underline_button_color(h_dc);
     }
     break;
   case WM_COMMAND:
@@ -611,57 +658,27 @@ INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l
     }
     case IDC_DEFAULT_DELIMITERS:
       if (HIWORD(w_param) == BN_CLICKED) {
-        switch (m_tokenization_style_cmb.current_data()) {
-        case TokenizationStyle::by_non_alphabetic:
-        case TokenizationStyle::by_non_ansi:
-          Edit_SetText(m_delimiter_exclusions_le, default_delimiter_exclusions());
-          break;
-        case TokenizationStyle::by_delimiters:
-          Edit_SetText(m_h_edit_delimiters, default_delimiters());
-          break;
-        case TokenizationStyle::COUNT:
-          break;
-        }
-        return 1;
+        on_default_delimiters_clicked();
+        return TRUE;
       }
-    case IDC_RECHECK_DELAY:
+    case IDC_RECHECK_DELAY: {
       if (HIWORD(w_param) == EN_CHANGE) {
-        auto text = WinApi::get_edit_text(m_h_recheck_delay);
-        if (text.empty())
-          return TRUE;
-
-        auto x = wcstol(text.c_str(), &end_ptr, 10);
-        if (*end_ptr != 0u)
-          Edit_SetText(m_h_recheck_delay, L"0");
-        else if (x > 30000)
-          Edit_SetText(m_h_recheck_delay, L"30000");
-        else if (x < 0)
-          Edit_SetText(m_h_recheck_delay, L"0");
-
-        return 1;
+        on_recheck_delay_changed();
+        return TRUE;
       }
-      break;
+    }
     case IDC_UNDERLINE_COLOR:
       if (HIWORD(w_param) == BN_CLICKED) {
-        CHOOSECOLOR cc;
-        static COLORREF acr_cust_clr[16];
-        memset(&cc, 0, sizeof(cc));
-        cc.hwndOwner = _hSelf;
-        cc.lStructSize = sizeof(CHOOSECOLOR);
-        cc.rgbResult = m_underline_color_btn;
-        cc.lpCustColors = acr_cust_clr;
-        cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-        if (ChooseColor(&cc)) {
-          m_underline_color_btn = cc.rgbResult;
-          RedrawWindow(m_h_underline_color, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE | RDW_ERASE);
-        }
+        on_underline_color_button_clicked();
       }
+      break;
+    default:
       break;
     }
   default:
     break;
   }
-  return 0;
+  return FALSE;
 }
 
 void AdvancedSettingsTab::set_delimeters_edit(const wchar_t *delimiters) {
@@ -805,8 +822,8 @@ INT_PTR SettingsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_para
     getClientRect(rc);
     m_controls_tab.reSizeTo(rc);
     rc.bottom = rc.top + m_simple_dlg.getHeight();
-    SetWindowPos (m_simple_dlg.getHSelf(), nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
-    SetWindowPos (m_advanced_dlg.getHSelf(), nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
+    SetWindowPos(m_simple_dlg.getHSelf(), nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
+    SetWindowPos(m_advanced_dlg.getHSelf(), nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
 
     // This stuff is copied from npp source to make tabbed window looked totally
     // nice and white

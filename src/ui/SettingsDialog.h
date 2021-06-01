@@ -107,6 +107,11 @@ public:
 
 protected:
   void setup_delimiter_line_edit_visiblity();
+  void on_recheck_delay_changed();
+  void on_default_delimiters_clicked();
+  void on_underline_color_button_clicked();
+  INT_PTR get_underline_button_color(HDC h_dc);
+  void draw_underline_color_button(LPDRAWITEMSTRUCT ds);
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 
 private:
