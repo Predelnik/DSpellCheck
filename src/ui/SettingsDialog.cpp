@@ -507,6 +507,7 @@ void AdvancedSettingsTab::update_controls(const Settings &settings) {
   set_sugg_box_settings(settings.data.suggestion_button_size, settings.data.suggestion_button_opacity);
   m_tokenization_style_cmb.set_current(settings.data.tokenization_style);
   setup_delimiter_line_edit_visiblity();
+  RedrawWindow(m_ignore_regexp_edit, nullptr, nullptr, RDW_UPDATENOW | RDW_INVALIDATE | RDW_ERASE);
 }
 
 const std::vector<std::wstring> &get_indic_names() {
@@ -565,14 +566,20 @@ void AdvancedSettingsTab::on_underline_color_button_clicked() {
   }
 }
 
-INT_PTR AdvancedSettingsTab::get_underline_button_color(HDC h_dc) {
-  if (m_brush != nullptr)
-    DeleteObject(m_brush);
+INT_PTR AdvancedSettingsTab::setup_underline_button_colors(HDC h_dc) {
 
   SetBkColor(h_dc, m_underline_color_btn);
   SetBkMode(h_dc, TRANSPARENT);
-  m_brush = CreateSolidBrush(m_underline_color_btn);
-  return reinterpret_cast<INT_PTR>(m_brush);
+  m_underline_color_brush = {CreateSolidBrush(m_underline_color_btn)};
+  return reinterpret_cast<INT_PTR>(m_underline_color_brush.get ());
+}
+
+constexpr COLORREF regex_error_color = RGB (255, 200, 200);
+
+INT_PTR AdvancedSettingsTab::setup_regexp_error_color(HDC h_dc) const {
+  SetBkColor(h_dc, regex_error_color);
+  SetBkMode(h_dc, TRANSPARENT);
+  return reinterpret_cast<INT_PTR> (m_regexp_error_color_brush.get ());
 }
 
 void AdvancedSettingsTab::draw_underline_color_button(LPDRAWITEMSTRUCT ds) {
@@ -617,14 +624,13 @@ INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l
     m_reset_btn = this->get_control<WinApi::Button>(IDC_RESET_SETTINGS);
     m_reset_btn->button_pressed.connect([this]() { reset_settings(); });
 
-    m_brush = nullptr;
-
     SetWindowText(m_h_ignore_yo, rc_str(IDS_CYRILLIC_YO_AS_YE).c_str());
     WinApi::create_tooltip(IDC_DELIMITERS, _hSelf, rc_str(IDS_DELIMITER_TOOLTIP).c_str());
     WinApi::create_tooltip(IDC_RECHECK_DELAY, _hSelf, rc_str(IDS_RECHECK_DELAY_TOOLTIP).c_str());
     WinApi::create_tooltip(IDC_IGNORE_CSTART, _hSelf, rc_str(IDS_FIRST_CAPITAL_IGNORE_TOOLTIP).c_str());
     WinApi::create_tooltip(IDC_IGNORE_SE_APOSTROPHE, _hSelf, rc_str(IDS_IGNORE_BOUND_APOSTROPHE_TOOLTIP).c_str());
     WinApi::create_tooltip(IDC_REMOVE_ENDING_APOSTROPHE, _hSelf, rc_str(IDS_REMOVE_ENDING_APOSTROPHE_TOOLTIP).c_str());
+    m_h_regexp_tooltip = WinApi::create_tooltip(IDC_IGNORE_REGEXP_EDIT, _hSelf, LPSTR_TEXTCALLBACKW);
 
     ComboBox_ResetContent(m_h_underline_style);
     for (const auto &name : get_indic_names())
@@ -632,8 +638,6 @@ INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l
     return TRUE;
   }
   case WM_CLOSE: {
-    if (m_brush != nullptr)
-      DeleteObject(m_brush);
     EndDialog(_hSelf, 0);
     return FALSE;
   }
@@ -646,11 +650,35 @@ INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l
     }
     break;
   case WM_CTLCOLORBTN:
-    if (GetDlgItem(_hSelf, IDC_UNDERLINE_COLOR) == reinterpret_cast<HWND>(l_param)) {
+    if (m_h_underline_color == reinterpret_cast<HWND>(l_param)) {
       auto h_dc = reinterpret_cast<HDC>(w_param);
-      return get_underline_button_color(h_dc);
+      return setup_underline_button_colors(h_dc);
     }
     break;
+  case WM_CTLCOLOREDIT:
+    if (m_ignore_regexp_edit == reinterpret_cast<HWND>(l_param)) {
+      if (m_settings.get_regexp_error())
+        {
+          auto h_dc = reinterpret_cast<HDC>(w_param);
+          return setup_regexp_error_color(h_dc);
+        }
+
+      break;
+    }
+    break;
+  case WM_NOTIFY:
+    {
+      NMHDR *nm = reinterpret_cast<NMHDR *> (l_param);
+      if (nm->hwndFrom == m_h_regexp_tooltip && nm->code == TTN_GETDISPINFOW) {
+          auto mb_err = m_settings.get_regexp_error();
+          if (!mb_err)
+            return FALSE;
+          static std::wstring regex_error;
+          regex_error = to_wstring (mb_err->what());
+          NMTTDISPINFOW *nmtdi = reinterpret_cast<NMTTDISPINFOW *> (l_param);
+          nmtdi->lpszText = const_cast<LPWSTR>(regex_error.c_str());
+      }
+    }
   case WM_COMMAND:
     switch (LOWORD(w_param)) {
     case IDC_TOKENIZATION_STYLE_CMB: {
@@ -698,6 +726,7 @@ int AdvancedSettingsTab::get_recheck_delay() {
 
 AdvancedSettingsTab::AdvancedSettingsTab(const Settings &settings)
   : m_settings(settings) {
+  m_regexp_error_color_brush = {CreateSolidBrush(regex_error_color)};
 }
 
 void AdvancedSettingsTab::apply_settings(Settings &settings) {
@@ -837,11 +866,13 @@ INT_PTR SettingsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_para
   }
   case WM_NOTIFY: {
     auto nmhdr = reinterpret_cast<NMHDR *>(l_param);
-    if (nmhdr->code == TCN_SELCHANGE) {
+    switch (nmhdr->code) {
+    case TCN_SELCHANGE:
       if (nmhdr->hwndFrom == m_controls_tab.getHSelf()) {
         m_controls_tab.clickedUpdate();
         return 0;
       }
+      break;
     }
     break;
   }

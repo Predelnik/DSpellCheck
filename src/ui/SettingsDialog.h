@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "common/winapi.h"
 #include "common/WinApiControls.h"
 #include "plugin/Settings.h"
 #include "TabBar/ControlsTab.h"
@@ -110,7 +111,8 @@ protected:
   void on_recheck_delay_changed();
   void on_default_delimiters_clicked();
   void on_underline_color_button_clicked();
-  INT_PTR get_underline_button_color(HDC h_dc);
+  INT_PTR setup_underline_button_colors(HDC h_dc);
+  INT_PTR setup_regexp_error_color(HDC h_dc) const;
   void draw_underline_color_button(LPDRAWITEMSTRUCT ds);
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_param) override;
 
@@ -137,10 +139,12 @@ private:
   HWND m_split_camel_case_cb = nullptr;
   HWND m_h_check_default_udl_style = nullptr;
   HWND m_ignore_regexp_edit {};
+  HWND m_h_regexp_tooltip {};
   WinApi::EnumComboBox<TokenizationStyle> m_tokenization_style_cmb;
   std::shared_ptr<WinApi::Button> m_reset_btn;
 
-  HBRUSH m_brush = nullptr;
+  WinApi::Brush m_underline_color_brush;
+  WinApi::Brush m_regexp_error_color_brush;
   COLORREF m_underline_color_btn = 0;
 };
 
