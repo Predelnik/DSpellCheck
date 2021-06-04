@@ -13,6 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #pragma once
+#include "move_only.h"
 
 // various winapi helpers
 namespace WinApi {
@@ -28,4 +29,20 @@ std::optional<int> library_bitness(const wchar_t *path);
 
 bool is_locale_info_available();
 std::wstring get_locale_info(const wchar_t *locale_name, LCTYPE type);
+
+class Brush {
+  using Self = Brush;
+public:
+  Brush () = default;
+  Brush (HBRUSH brush) : m_brush (brush) {}
+  HBRUSH get () const { return m_brush.get(); }
+  Brush (const Self&) = delete;
+  Brush &operator= (const Self&) = delete;
+  Brush (Self&&) = default;
+  Brush &operator= (Self&&) = default;
+  ~Brush () { DeleteObject (m_brush.get()); }
+
+private:
+  move_only<HBRUSH> m_brush;
+};
 } // namespace WinApi
