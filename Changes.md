@@ -1,3 +1,7 @@
+v1.4.21
+* Fix inability to ignore words with Windows spell-checker in some cases (#251)
+* Add ability to ignore words for spell-checking using regular expression.
+
 v1.4.20
 * Fix regression in 1.4.19 leading to too fast rechecking of new words during typing. (#240)
 
