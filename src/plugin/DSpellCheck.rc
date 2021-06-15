@@ -150,11 +150,11 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,40,172,50,14
-    LTEXT           "Built with",IDC_COMPILER_TEXT,7,153,115,9
     LTEXT           "DSpellCheck",IDC_STATIC,43,4,42,9
-    CTEXT           "Version: X.X.X.X",IDC_VERSION,21,19,87,8
-    LTEXT           "(Hopefully) Decent Spell-Checking Plug-in for Notepad++",IDC_STATIC,7,34,115,19
+    CTEXT           "Version: X.X.X.X",IDC_VERSION,21,17,87,8
+    CONTROL         "<a href=""https://github.com/Predelnik/DSpellCheck/blob/master/Changes.md"">(Changelog)</a>",IDC_SYSLINK4,
+                    "SysLink",WS_TABSTOP,39,27,60,10
+    LTEXT           "(Hopefully) Decent Spell-Checking Plug-in for Notepad++",IDC_STATIC,7,39,115,19
     CONTROL         "Created by: Sergey Semushin <a href=""mailto:predelnik@gmail.com"">[predelnik@gmail.com]</a>",IDC_SYSLINK1,
                     "SysLink",WS_TABSTOP,7,60,119,21
     LTEXT           "License: GPL",IDC_STATIC,7,88,41,8
@@ -162,6 +162,8 @@ BEGIN
                     "SysLink",WS_TABSTOP,7,103,119,27
     CONTROL         "Plug-in uses <a href=""http://aspell.net"">Aspell Library</a> and <a href=""http://hunspell.sourceforge.net"">Hunspell Library</a>",IDC_SYSLINK2,
                     "SysLink",WS_TABSTOP,7,131,108,19
+    LTEXT           "Built with",IDC_COMPILER_TEXT,7,153,115,9
+    DEFPUSHBUTTON   "OK",IDOK,40,172,50,14
 END
 
 IDD_ADVANCED DIALOGEX 0, 0, 206, 267
