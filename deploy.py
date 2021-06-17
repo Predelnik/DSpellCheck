@@ -13,6 +13,8 @@ from bs4 import BeautifulSoup
 import datetime
 from pygit2 import Repository, Config, Signature, GIT_OBJ_COMMIT
 
+rc_path = 'src/plugin/DSpellCheck.rc'
+
 def get_version_number (filename):
 	info = GetFileVersionInfo (filename, "\\")
 	ms = info['FileVersionMS']
@@ -23,7 +25,7 @@ version_str = re.compile (r'(\s*VALUE "FileVersion", ")([0-9.]*)(")')
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
 def get_rc_version ():
-	with open('src/DSpellCheck.rc', encoding='utf-16-le') as f:
+	with open(rc_path, encoding='utf-8') as f:
 		for line in f:
 			m = version_str.match (line)
 			if m:
@@ -36,8 +38,8 @@ re.compile (r'(\s*PRODUCTVERSION\s*)([0-9,]*)()')
 ]
 
 def replace_rc_version (version):
-	source_rc_path = 'src/DSpellCheck.rc'
-	target_rc_path = 'src/DSpellCheck.rc.tmp'
+	source_rc_path = rc_path
+	target_rc_path = rc_path + '.tmp'
 	with open(target_rc_path, 'w', encoding='utf-16-le') as fw, open(source_rc_path, 'r', encoding='utf-16-le') as f:
 			for line in f:
 				m = version_str.match (line)
