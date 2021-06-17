@@ -23,9 +23,10 @@ def get_version_number (filename):
 
 version_str = re.compile (r'(\s*VALUE "FileVersion", ")([0-9.]*)(")')
 script_dir = os.path.dirname(os.path.realpath(__file__))
+rc_encoding = 'cp1252'
 
 def get_rc_version ():
-	with open(rc_path, encoding='utf-8') as f:
+	with open(rc_path, encoding=rc_encoding) as f:
 		for line in f:
 			m = version_str.match (line)
 			if m:
@@ -40,7 +41,7 @@ re.compile (r'(\s*PRODUCTVERSION\s*)([0-9,]*)()')
 def replace_rc_version (version):
 	source_rc_path = rc_path
 	target_rc_path = rc_path + '.tmp'
-	with open(target_rc_path, 'w', encoding='utf-16-le') as fw, open(source_rc_path, 'r', encoding='utf-16-le') as f:
+	with open(target_rc_path, 'w', encoding='utf-16-le') as fw, open(source_rc_path, 'r', encoding=rc_encoding) as f:
 			for line in f:
 				m = version_str.match (line)
 				if m:
