@@ -79,7 +79,7 @@ def create_commit(repo, msg):
 	author = Signature(config['user.name'], config['user.email'])
 	commiter = author
 	tree = index.write_tree()
-	repo.create_commit ('HEAD', author, commiter, msg, tree, [repo.head.get_object().hex])
+	repo.create_commit ('HEAD', author, commiter, msg, tree, [repo.head.target])
 
 def add_version_commit():
 	repo = Repository (script_dir)
