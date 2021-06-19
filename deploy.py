@@ -23,7 +23,7 @@ def get_version_number (filename):
 
 version_str = re.compile (r'(\s*VALUE "FileVersion", ")([0-9.]*)(")')
 script_dir = os.path.dirname(os.path.realpath(__file__))
-rc_encoding = 'cp1252'
+rc_encoding = 'utf-16-le'
 
 def get_rc_version ():
 	with open(rc_path, encoding=rc_encoding) as f:
