@@ -89,6 +89,7 @@ def add_version_commit():
 
 def add_version_tag ():
 	repo = Repository (script_dir)
+	config = Config.get_global_config()
 	author = Signature(config['user.name'], config['user.email'])
 	repo.create_tag('v{}'.format (ver_str), repo.revparse_single('HEAD').id, GIT_OBJ_COMMIT, author, 'v{}'.format (ver_str))
 
