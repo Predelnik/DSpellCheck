@@ -13,7 +13,8 @@ from bs4 import BeautifulSoup
 import datetime
 from pygit2 import Repository, Config, Signature, GIT_OBJ_COMMIT
 
-rc_path = 'src/plugin/DSpellCheck.rc'
+script_dir = os.path.dirname(os.path.realpath(__file__))
+rc_path = os.path.join (script_dir, 'src/plugin/DSpellCheck.rc')
 
 def get_version_number (filename):
 	info = GetFileVersionInfo (filename, "\\")
@@ -22,7 +23,6 @@ def get_version_number (filename):
 	return '{}.{}.{}.{}'.format (HIWORD (ms), LOWORD (ms), HIWORD (ls), LOWORD (ls))
 
 version_str = re.compile (r'(\s*VALUE "FileVersion", ")([0-9.]*)(")')
-script_dir = os.path.dirname(os.path.realpath(__file__))
 rc_encoding = 'utf-16-le'
 
 def get_rc_version ():
@@ -123,7 +123,7 @@ x86_zip_path = ''
 for arch in ['x64', 'x86']:
 	dir = 'build-deploy-msvc2019-{}'.format (arch)
 	FNULL = open(os.devnull, 'w')
-	if call(['cmake', '..'], stdout= (None if options.verbose else FNULL), cwd=dir) != 0:
+	if call(['cmake', script_dir], stdout= (None if options.verbose else FNULL), cwd=dir) != 0:
 		print ('Error: Cmake error')
 		sys.exit (1)
 	build_args = ['cmake', '--build', dir, '--config', 'RelWithDebInfo']
