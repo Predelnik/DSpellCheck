@@ -921,6 +921,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
     case SCE_POWERSHELL_FUNCTION:
       return s::identifier;
     case SCE_POWERSHELL_COMMENT:
+    case SCE_POWERSHELL_COMMENTSTREAM:
       return s::comment;
     case SCE_POWERSHELL_STRING:
       return s::string;
