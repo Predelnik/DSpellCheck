@@ -83,6 +83,16 @@ TEST_CASE("Language Styles") {
     sc.recheck_visible_both_views();
     CHECK_FALSE(editor.get_underlined_words(spell_check_indicator_id).empty());
 
+    {
+      auto mut = settings.modify();
+      mut->data.check_comments = true;
+    }
+
+    editor.set_lexer(SCLEX_POWERSHELL);
+    editor.set_whole_text_style(SCE_POWERSHELL_COMMENTSTREAM);
+    sc.recheck_visible_both_views();
+    CHECK_FALSE(editor.get_underlined_words(spell_check_indicator_id).empty());
+
     editor.set_current_indicator(URL_INDIC);
     editor.indicator_fill_range(0, editor.get_active_document_length());
     sc.recheck_visible_both_views();
