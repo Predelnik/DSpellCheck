@@ -218,6 +218,8 @@ MappedWstring SpellChecker::get_visible_text() {
   auto len = m_editor.get_active_document_length();
   MappedWstring result;
   for (auto line = top_visible_line_index; line <= bottom_visible_line_index; ++line) {
+    if (!m_editor.is_line_visible(line))
+      continue;
     auto start = m_editor.get_line_start_position(line);
     if (start >= len) // skipping possible empty lines when document is too short
       continue;
