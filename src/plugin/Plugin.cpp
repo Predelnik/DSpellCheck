@@ -770,6 +770,10 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
   }
   break;
 
+  case SCN_FOLDINGSTATECHANGED:
+    update_on_visible_area_changed();
+    break;
+
   case SCN_UPDATEUI:
     if (!spell_checker)
       return;
