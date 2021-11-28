@@ -1,3 +1,8 @@
+v1.4.22
+* Fix settings dialog layout, sometimes buttons were not clickable (#266)
+* Support checking of multi-line comments in powershell (#267)
+* Recheck less content if some of it was folded (#273)
+
 v1.4.21
 * Fix inability to ignore words with Windows spell-checker in some cases (#251)
 * Add ability to ignore words for spell-checking using regular expression.
