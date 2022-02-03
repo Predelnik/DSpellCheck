@@ -1,3 +1,6 @@
+v1.4.23
+* Compatibility for Notepad++ starting with version 8.2.2
+
 v1.4.22
 * Fix settings dialog layout, sometimes buttons were not clickable (#266)
 * Support checking of multi-line comments in powershell (#267)
