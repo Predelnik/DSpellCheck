@@ -1,5 +1,6 @@
 v1.4.23
-* Compatibility for Notepad++ starting with version 8.2.2
+* Compatibility for Notepad++ starting with version 8.2.2 (x64 version)
+* Warning: Starting with version 1.4.23 plugin (x64 version) is no longer compatible with N++ versions older than 8.2.2.
 
 v1.4.22
 * Fix settings dialog layout, sometimes buttons were not clickable (#266)
