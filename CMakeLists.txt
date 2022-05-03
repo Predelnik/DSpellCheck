@@ -46,7 +46,6 @@ add_subdirectory (deps/catch)
 add_subdirectory (deps/json)
 
 if(MSVC)
-    add_definitions(/MP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /WX /w44062 /utf-8")
     set(DSpellCheck_USE_VLD "OFF" CACHE BOOL "Use Visual Leak Detector")
 endif()
@@ -89,7 +88,7 @@ target_compile_options (DSpellCheckStatic PUBLIC /std:c++latest /EHsc)
 add_library (DSpellCheck SHARED src/plugin/DllMain.cpp src/plugin/DSpellCheck.rc)
 target_link_libraries (DSpellCheck DSpellCheckStatic)
 
-set(DSpellCheck_DLL_OUTPUT_PATH "" CACHE STRING "Output for debug library (Possibly notepad++ plugin folder)")
+set(DSpellCheck_DLL_OUTPUT_PATH "" CACHE PATH "Output for debug library (Possibly notepad++ plugin folder)")
 if (NOT ${DSpellCheck_DLL_OUTPUT_PATH} STREQUAL "")
     set_target_properties (DSpellCheck PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${DSpellCheck_DLL_OUTPUT_PATH}
@@ -108,8 +107,6 @@ pvs_studio_add_target(TARGET DSpellCheck.analyze ALL
                       ANALYZE DSpellCheck
                       LOG DSpellCheck.psv-err)
 endif ()
-if (MSVC)
-  target_compile_options (DSpellCheckStatic PRIVATE "/Yucommon/PrecompiledHeader.h" "/FIcommon/PrecompiledHeader.h")
-  target_compile_options (DSpellCheckTest PRIVATE "/Yucommon/PrecompiledHeader.h" "/FIcommon/PrecompiledHeader.h")
-  SET_SOURCE_FILES_PROPERTIES("src/common/PrecompiledHeader.cpp" PROPERTIES COMPILE_FLAGS "/Yc")
-endif ()
+
+target_precompile_headers (DSpellCheckStatic PRIVATE "src/common/PrecompiledHeader.h")
+target_precompile_headers (DSpellCheckTest REUSE_FROM DSpellCheckStatic)
