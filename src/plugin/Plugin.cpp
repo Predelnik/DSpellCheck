@@ -194,8 +194,10 @@ void replace_with_1st_suggestion() {
     ACTIVE_VIEW_BLOCK(*npp);
     auto wstr = npp->get_mapped_wstring_range(pos, pos + length);
     auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str());
-    if (!suggestions.empty())
+    if (!suggestions.empty()) {
       npp->replace_text(pos, pos + length, npp->to_editor_encoding(suggestions.front()));
+      npp->set_cursor_pos(pos + suggestions.front().length());
+    }
   }
 }
 
