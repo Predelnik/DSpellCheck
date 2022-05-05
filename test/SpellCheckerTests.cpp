@@ -494,6 +494,20 @@ test_test
     sc.recheck_visible_both_views();
     CHECK (editor.get_underlined_words(indicator_id) == std::vector{"donotignore"s, "ALEXANDER"s, "abba"s});
   }
+  SECTION("Replace current word with topmost suggestion") {
+    {
+      editor.set_active_document_text(L"abcdef test");
+      editor.set_mouse_cursor_pos({});
+      editor.set_cursor_pos(1);
+      SpellCheckerHelpers::replace_current_word_with_topmost_suggestion(editor, sc, sp_container);
+      CHECK(editor.get_active_document_text() == "document test");
+      CHECK(editor.get_current_pos() == 8);
+      editor.set_cursor_pos(11);
+      SpellCheckerHelpers::replace_current_word_with_topmost_suggestion(editor, sc, sp_container);
+      CHECK(editor.get_active_document_text() == "document test");
+      CHECK(editor.get_current_pos() == 11);
+    }
+  }
   SECTION("Not called normally") {
     CHECK_FALSE (SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, L"", 0));
   }
