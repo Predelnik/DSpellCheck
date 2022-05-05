@@ -189,16 +189,7 @@ void show_spell_check_menu_at_cursor() {
 }
 
 void replace_with_1st_suggestion() {
-  TextPosition pos, length;
-  if (!spell_checker->is_word_under_cursor_correct(pos, length, true)) {
-    ACTIVE_VIEW_BLOCK(*npp);
-    auto wstr = npp->get_mapped_wstring_range(pos, pos + length);
-    auto suggestions = speller_container->active_speller().get_suggestions(wstr.str.c_str());
-    if (!suggestions.empty()) {
-      npp->replace_text(pos, pos + length, npp->to_editor_encoding(suggestions.front()));
-      npp->set_cursor_pos(pos + suggestions.front().length());
-    }
-  }
+  SpellCheckerHelpers::replace_current_word_with_topmost_suggestion(*npp, *spell_checker, *speller_container);
 }
 
 void ignore_for_current_session() {

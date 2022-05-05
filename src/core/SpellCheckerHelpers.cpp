@@ -14,11 +14,14 @@
 
 #include "SpellCheckerHelpers.h"
 
-#include "common/Utility.h"
 #include "common/string_utils.h"
+#include "common/Utility.h"
+#include "core/SpellChecker.h"
 #include "npp/EditorInterface.h"
 #include "npp/ScintillaUtils.h"
 #include "plugin/Settings.h"
+#include "spellers/SpellerContainer.h"
+#include "spellers/SpellerInterface.h"
 
 namespace SpellCheckerHelpers {
 static bool check_text_enabled_for_active_file(const EditorInterface &editor, const Settings &settings) {
@@ -205,5 +208,18 @@ bool is_word_spell_checking_needed(const Settings &settings, const EditorInterfa
       return false;
 
   return true;
+}
+
+void replace_current_word_with_topmost_suggestion(EditorInterface &editor, const SpellChecker &spell_checker, const SpellerContainer &speller_container) {
+  TextPosition pos, length;
+  if (!spell_checker.is_word_under_cursor_correct(pos, length, true)) {
+    ACTIVE_VIEW_BLOCK(editor);
+    auto wstr = editor.get_mapped_wstring_range(pos, pos + length);
+    auto suggestions = speller_container.active_speller().get_suggestions(wstr.str.c_str());
+    if (!suggestions.empty()) {
+      editor.replace_text(pos, pos + length, editor.to_editor_encoding(suggestions.front()));
+      editor.set_cursor_pos(pos + suggestions.front().length());
+    }
+  }
 }
 } // namespace SpellCheckerHelpers
