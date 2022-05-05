@@ -16,6 +16,7 @@
 
 class Settings;
 class EditorInterface;
+class SpellerContainer;
 enum class NppViewType;
 
 #include "plugin/Constants.h"
@@ -29,4 +30,5 @@ void cut_apostrophes(const Settings &settings, std::wstring_view &word);
 void replace_all_tokens(EditorInterface &editor, const Settings &settings, const char *from, std::wstring_view to, bool
                         is_proper_name);
 bool is_word_spell_checking_needed(const Settings &settings, const EditorInterface &editor, std::wstring_view word, TextPosition word_start);
+void replace_current_word_with_topmost_suggestion(EditorInterface &editor, const SpellChecker &spell_checker, const SpellerContainer &speller_container);
 } // namespace SpellCheckerHelpers
