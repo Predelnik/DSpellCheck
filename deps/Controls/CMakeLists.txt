@@ -1,5 +1,7 @@
-cmake_minimum_required (VERSION 3.7)
+cmake_minimum_required (VERSION 3.15)
 project (Controls)
 file (GLOB_RECURSE source_files *.cpp *.h)
 add_library (Controls STATIC ${source_files})
 target_include_directories(Controls PUBLIC .)
+target_compile_definitions(Controls PRIVATE UNICODE _UNICODE _CRT_NONSTDC_NO_DEPRECATE)
+set_property(TARGET Controls PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

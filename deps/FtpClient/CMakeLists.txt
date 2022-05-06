@@ -1,5 +1,7 @@
-cmake_minimum_required (VERSION 3.7)
+cmake_minimum_required (VERSION 3.15)
 project (ftpclient)
 file (GLOB_RECURSE source_files *.cpp *.h)
 add_library (ftpclient STATIC ${source_files})
+target_compile_definitions (ftpclient PRIVATE _UNICODE UNICODE)
 target_include_directories (ftpclient PUBLIC .)
+set_property(TARGET ftpclient PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
