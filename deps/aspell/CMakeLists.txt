@@ -1,5 +1,6 @@
-cmake_minimum_required (VERSION 3.7)
+cmake_minimum_required (VERSION 3.15)
 project (aspell)
 file (GLOB_RECURSE source_files *.cpp *.h)
 add_library (aspell STATIC ${source_files})
+set_property(TARGET aspell PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 target_include_directories(aspell PUBLIC .)

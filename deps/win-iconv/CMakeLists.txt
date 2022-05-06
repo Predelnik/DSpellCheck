@@ -1,6 +1,6 @@
 project(win_iconv)
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.15)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(CPACK_GENERATOR "TBZ2")
@@ -28,6 +28,7 @@ if(BUILD_EXECUTABLE)
 endif(BUILD_EXECUTABLE)
 
 add_library(iconv-static STATIC win_iconv.c)
+set_property(TARGET iconv-static PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set_target_properties(iconv-static PROPERTIES OUTPUT_NAME "iconv")
 if(WINCE)
     target_link_libraries(iconv-static ${WCECOMPAT_LIBRARIES})

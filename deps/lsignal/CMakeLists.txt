@@ -1,5 +1,6 @@
-cmake_minimum_required (VERSION 3.7)
+cmake_minimum_required (VERSION 3.15)
 project (lsignal)
 file (GLOB_RECURSE source_files *.cpp *.h)
 add_library (lsignal STATIC ${source_files})
 target_include_directories(lsignal PUBLIC .)
+set_property(TARGET lsignal PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

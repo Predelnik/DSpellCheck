@@ -1,5 +1,6 @@
-cmake_minimum_required (VERSION 3.7)
+cmake_minimum_required (VERSION 3.15)
 project (json)
 file (GLOB_RECURSE source_files *.hpp *.cpp)
 add_library (json STATIC ${source_files})
 target_include_directories(json PUBLIC .)
+set_property(TARGET json PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

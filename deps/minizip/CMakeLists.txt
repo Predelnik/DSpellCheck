@@ -1,5 +1,6 @@
-cmake_minimum_required (VERSION 3.7)
+cmake_minimum_required (VERSION 3.15)
 project (MiniZip)
 file (GLOB_RECURSE source_files *.c *.h)
 add_library (minizip STATIC ${source_files})
 target_include_directories(minizip PUBLIC .)
+set_property(TARGET minizip PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
