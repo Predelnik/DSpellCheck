@@ -142,8 +142,6 @@ HANDLE get_h_module() { return h_module; }
 
 void create_hooks() {
   h_mouse_hook = SetWindowsHookEx(WH_MOUSE, mouse_proc, nullptr, GetCurrentThreadId());
-  // HCmHook = SetWindowsHookExW(WH_CALLWNDPROC, ContextMenuProc, 0,
-  // GetCurrentThreadId());
 }
 
 void plugin_clean_up() {

@@ -144,18 +144,21 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
                                 m_word_under_cursor_length);
       } else if (result <= m_last_suggestions.size()) {
         std::string encoded_str;
+        auto &suggestion = m_last_suggestions[result - 1];
         if (m_editor.get_encoding() == EditorCodepage::ansi)
-          encoded_str = to_string(m_last_suggestions[result - 1].c_str());
+          encoded_str = to_string(suggestion.c_str());
         else
-          encoded_str = to_utf8_string(m_last_suggestions[result - 1]);
+          encoded_str = to_utf8_string(suggestion);
 
-        m_editor.replace_selection(encoded_str.c_str());
+        m_editor.replace_text(m_word_under_cursor_pos, m_word_under_cursor_pos + m_word_under_cursor_length, encoded_str.c_str());
+        m_editor.set_cursor_pos(m_word_under_cursor_pos + suggestion.length ());
       } else if (result <= menu_id::replace_all_start + m_last_suggestions.size()) {
         auto misspelled_text = m_editor.selected_text();
         auto &suggestion = m_last_suggestions[result - menu_id::replace_all_start - 1];
         UNDO_BLOCK(m_editor);
         // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion
-        m_editor.replace_selection(m_editor.to_editor_encoding(suggestion).c_str());
+        m_editor.replace_text(m_word_under_cursor_pos, m_word_under_cursor_pos + m_word_under_cursor_length, m_editor.to_editor_encoding(suggestion).c_str());
+        m_editor.set_cursor_pos(m_word_under_cursor_pos + suggestion.length());
 
         bool is_proper_name = true;
         if (!suggestion.empty()) {
@@ -288,7 +291,8 @@ ContextMenuHandler::get_suggestion_menu_items() {
 
   auto pos = m_word_under_cursor_pos;
   ACTIVE_VIEW_BLOCK(m_editor);
-  m_editor.set_selection(pos, pos + m_word_under_cursor_length);
+  if (m_settings.data.select_word_on_context_menu_click)
+    m_editor.set_selection(pos, pos + m_word_under_cursor_length);
   std::vector<MenuItem> suggestion_menu_items;
   m_selected_word = m_editor.get_mapped_wstring_range(m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
