@@ -290,4 +290,5 @@ void Settings::process(IniWorker &worker) {
   worker.process(L"Proxy_Type", data.proxy_type, ProxyType::web_proxy);
   worker.process(L"Write_Debug_Log", data.write_debug_log, false);
   worker.process(L"FTP_use_passive_mode", data.ftp_use_passive_mode, true);
+  worker.process(L"select_word_on_context_menu_click", data.select_word_on_context_menu_click, true);
 }

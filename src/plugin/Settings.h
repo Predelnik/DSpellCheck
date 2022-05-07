@@ -199,6 +199,7 @@ public:
     enum_array<SpellerId, std::wstring> speller_multi_languages;
     bool write_debug_log = false;
     LanguageNameStyle language_name_style = LanguageNameStyle::english;
+    bool select_word_on_context_menu_click = true;
 
     // Derivatives:
   private:
