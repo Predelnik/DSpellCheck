@@ -37,6 +37,12 @@ public:
 
 private:
   void do_plugin_menu_inclusion(bool invalidate = false);
+  void process_ignore_all();
+  void process_add_to_dictionary();
+  void process_replace(WPARAM result);
+  void process_replace_all(WPARAM result);
+  void process_plugin_menu_result(WPARAM menu_id);
+  void process_language_menu_result(WPARAM menu_id);
 
 private:
   const Settings &m_settings;
