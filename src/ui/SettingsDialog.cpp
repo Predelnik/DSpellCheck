@@ -117,6 +117,7 @@ void SimpleSettingsTab::apply_settings(Settings &settings, const SpellerContaine
   settings.data.check_strings = Button_GetCheck(m_h_check_strings) == BST_CHECKED;
   settings.data.check_variable_functions = Button_GetCheck(m_h_check_varfunc) == BST_CHECKED;
   settings.data.use_unified_dictionary = Button_GetCheck(m_h_one_user_dic) == BST_CHECKED;
+  settings.data.select_word_on_context_menu_click = Button_GetCheck(m_h_select_misspelled_on_menu_cb) == BST_CHECKED;
   settings.data.language_name_style = m_language_name_style_cmb.current_data();
 }
 
@@ -132,12 +133,12 @@ void SimpleSettingsTab::fill_lib_info(AspellStatus aspell_status, const Settings
   ShowWindow(m_h_hunspell_path_group_box, is_hunspell);
   ShowWindow(m_h_hunspell_path_type, is_hunspell);
   ShowWindow(m_h_system_path, 0);
-  ShowWindow(m_configure_aspell_btn, settings.data.active_speller_lib_id == SpellerId::aspell);
+  ShowWindow(m_h_configure_aspell_btn, settings.data.active_speller_lib_id == SpellerId::aspell);
   auto not_native = settings.data.active_speller_lib_id == SpellerId::native ? FALSE : TRUE;
   ShowWindow(m_h_lib_group_box, not_native);
   ShowWindow(m_h_lib_path, not_native);
   ShowWindow(m_h_reset_speller_path, not_native);
-  ShowWindow(m_browse_btn, not_native);
+  ShowWindow(m_h_browse_btn, not_native);
   BOOL configure_enabled = FALSE;
 
   switch (settings.data.active_speller_lib_id) {
@@ -163,7 +164,7 @@ void SimpleSettingsTab::fill_lib_info(AspellStatus aspell_status, const Settings
       Static_SetText(m_h_aspell_status, rc_str(IDS_ASPELL_INCORRECT_BITNESS).c_str());
       break;
     }
-    EnableWindow(m_configure_aspell_btn, configure_enabled);
+    EnableWindow(m_h_configure_aspell_btn, configure_enabled);
     Edit_SetText(m_h_lib_path, get_actual_aspell_path(settings.data.aspell_dll_path).c_str());
 
     Static_SetText(m_h_lib_group_box, rc_str(IDS_ASPELL_LOCATION).c_str());
@@ -237,6 +238,7 @@ INT_PTR SimpleSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
     m_suggestion_mode_cmb.init(GetDlgItem(_hSelf, IDC_SUGG_TYPE));
     m_speller_cmb.init(::GetDlgItem(_hSelf, IDC_LIBRARY));
     m_language_name_style_cmb.init(GetDlgItem(_hSelf, IDC_LANGUAGE_NAME_STYLE));
+    m_h_select_misspelled_on_menu_cb = ::GetDlgItem(_hSelf, IDC_SELECT_MISSPELLED_ON_MENU);
     m_language_name_style_cmb.clear();
     for (auto val : enum_range<LanguageNameStyle>()) {
       if ([&]() {
@@ -263,8 +265,8 @@ INT_PTR SimpleSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_p
     m_h_hunspell_path_type = ::GetDlgItem(_hSelf, IDC_HUNSPELL_PATH_TYPE);
     m_h_reset_speller_path = ::GetDlgItem(_hSelf, IDC_RESETSPELLERPATH);
     m_h_system_path = ::GetDlgItem(_hSelf, IDC_SYSTEMPATH);
-    m_configure_aspell_btn = GetDlgItem(_hSelf, IDC_CONFIGURE_ASPELL);
-    m_browse_btn = ::GetDlgItem(_hSelf, IDC_BROWSEASPELLPATH);
+    m_h_configure_aspell_btn = GetDlgItem(_hSelf, IDC_CONFIGURE_ASPELL);
+    m_h_browse_btn = ::GetDlgItem(_hSelf, IDC_BROWSEASPELLPATH);
 
     ComboBox_AddString(m_h_hunspell_path_type, rc_str(IDS_FOR_CURRENT_USER).c_str());
     ComboBox_AddString(m_h_hunspell_path_type, rc_str(IDS_FOR_ALL_USERS).c_str());
@@ -808,6 +810,7 @@ void SimpleSettingsTab::update_controls(const Settings &settings, const SpellerC
   set_sugg_type(settings.data.suggestions_mode);
   set_one_user_dic(settings.data.use_unified_dictionary);
   m_language_name_style_cmb.set_current(settings.data.language_name_style);
+  Button_SetCheck(m_h_select_misspelled_on_menu_cb, settings.data.select_word_on_context_menu_click);
 }
 
 void SimpleSettingsTab::init_speller_id_combobox(const SpellerContainer &speller_container) {

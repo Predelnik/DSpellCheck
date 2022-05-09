@@ -48,6 +48,8 @@
 #define IDC_ADDRESS                     1009
 #define IDC_PORT                        1009
 #define IDD_SETTINGS                    1009
+#define IDC_SELECT_MISSPELLED           1009
+#define IDC_SELECT_MISSPELLED_ON_MENU   1009
 #define IDC_FILE_LIST                   1010
 #define IDC_PASSWORD                    1010
 #define IDC_COUNT_YO_AS_YE              1011
@@ -221,9 +223,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        102
+#define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
