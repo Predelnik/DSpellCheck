@@ -569,12 +569,19 @@ LRESULT CALLBACK subclass_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM 
 
       if (LOWORD(w_param) == IDM_FILE_PRINTNOW || LOWORD(w_param) == IDM_FILE_PRINT) {
         // Disable autocheck while printing
-        bool prev_value = get_settings().data.auto_check_text;
+        const bool was_auto_check_on = get_settings().data.auto_check_text;
 
-        auto mut_settings = get_settings().modify();
-        mut_settings->data.auto_check_text = false;
+        if (was_auto_check_on) {
+          auto mut_settings = get_settings().modify_without_saving();
+          mut_settings->data.auto_check_text = false;
+        }
+
         ret = ::DefSubclassProc(h_wnd, message, w_param, l_param);
-        mut_settings->data.auto_check_text = prev_value;
+
+        if (was_auto_check_on) {
+          auto mut_settings = get_settings().modify_without_saving();
+          mut_settings->data.auto_check_text = true;
+        }
 
         return ret;
       }
