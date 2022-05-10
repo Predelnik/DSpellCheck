@@ -102,6 +102,103 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
   SetMenuItemInfo(dspellcheck_menu, action_index[Action::quick_language_change], TRUE, &mif);
 }
 
+void ContextMenuHandler::process_ignore_all() {
+  auto mut = m_speller_container.modify();
+  mut->ignore_word(m_selected_word.str);
+  m_word_under_cursor_length =
+      static_cast<TextPosition>(m_selected_word.str.length());
+  m_editor.set_cursor_pos(m_word_under_cursor_pos +
+                          m_word_under_cursor_length);
+}
+
+void ContextMenuHandler::process_add_to_dictionary() {
+  auto mut = m_speller_container.modify();
+  mut->add_to_dictionary(m_selected_word.str);
+  m_word_under_cursor_length =
+      static_cast<TextPosition>(m_selected_word.str.length());
+  m_editor.set_cursor_pos(m_word_under_cursor_pos +
+                          m_word_under_cursor_length);
+}
+
+void ContextMenuHandler::process_replace(WPARAM result) {
+  std::string encoded_str;
+  auto &suggestion = m_last_suggestions[result - 1];
+  if (m_editor.get_encoding() == EditorCodepage::ansi)
+    encoded_str = to_string(suggestion.c_str());
+  else
+    encoded_str = to_utf8_string(suggestion);
+
+  m_editor.replace_text(m_word_under_cursor_pos, m_word_under_cursor_pos + m_word_under_cursor_length, encoded_str.c_str());
+  m_editor.set_cursor_pos(m_word_under_cursor_pos + suggestion.length ());
+}
+
+void ContextMenuHandler::process_replace_all(WPARAM result) {
+  const auto misspelled_text = m_editor.selected_text();
+  const auto &suggestion = m_last_suggestions[result - menu_id::replace_all_start - 1];
+  UNDO_BLOCK(m_editor);
+  // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion
+  m_editor.replace_text(m_word_under_cursor_pos, m_word_under_cursor_pos + m_word_under_cursor_length, m_editor.to_editor_encoding(suggestion).c_str());
+  m_editor.set_cursor_pos(m_word_under_cursor_pos + suggestion.length());
+
+  bool is_proper_name = true;
+  if (!suggestion.empty()) {
+    auto suggestion_copy = suggestion;
+    to_lower_inplace(suggestion_copy);
+    // if lowercase version is incorrect - the word is not a proper name
+    if (m_speller_container.active_speller().check_word({suggestion_copy}))
+      is_proper_name = false;
+  }
+
+  SpellCheckerHelpers::replace_all_tokens(m_editor, m_settings, misspelled_text.c_str(), suggestion, is_proper_name);
+}
+
+void ContextMenuHandler::process_plugin_menu_result(WPARAM menu_id) {
+  WPARAM result;
+  if (!get_use_allocated_ids())
+    result = LOBYTE(menu_id);
+  else
+    result = menu_id - get_context_menu_id_start();
+
+  if (result == 0)
+    return;
+
+  if (result == menu_id::ignore_all)
+    return process_ignore_all();
+
+  if (result == menu_id::add_to_dictionary)
+    return process_add_to_dictionary();
+
+  if (result <= m_last_suggestions.size())
+    return process_replace(result);
+
+  if (result <= menu_id::replace_all_start + m_last_suggestions.size())
+    return process_replace_all(result);
+}
+
+void ContextMenuHandler::process_language_menu_result(WPARAM menu_id) {
+  WPARAM result;
+  if (!get_use_allocated_ids())
+    result = LOBYTE(menu_id);
+  else
+    result = menu_id - get_langs_menu_id_start();
+
+  std::wstring lang_string;
+  if (result == menu_id::multiple_languages) {
+    lang_string = multiple_language_alias;
+  } else if (result == menu_id::customize_multiple_languages || result == menu_id::download_dictionaries ||
+             result == menu_id::remove_dictionaries) {
+    // All actions are done in GUI thread in that case
+    return;
+  } else
+    lang_string =
+        m_speller_container.get_available_languages()[result].orig_name;
+  do_plugin_menu_inclusion(true);
+
+  auto mut_settings = m_settings.modify(SettingsModificationStyle::ignore_file_errors);
+  mut_settings->get_active_language() = lang_string;
+  return;
+}
+
 void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   if ((!get_use_allocated_ids() && HIBYTE(menu_id) != menu_id::plguin_menu &&
        HIBYTE(menu_id) != get_func_item()[action_index[Action::quick_language_change]].cmd_id) ||
@@ -120,79 +217,10 @@ void ContextMenuHandler::process_menu_result(WPARAM menu_id) {
   ACTIVE_VIEW_BLOCK(m_editor);
 
   switch (used_menu_id) {
-  case menu_id::plguin_menu: {
-    WPARAM result;
-    if (!get_use_allocated_ids())
-      result = LOBYTE(menu_id);
-    else
-      result = menu_id - get_context_menu_id_start();
-
-    if (result != 0) {
-      if (result == menu_id::ignore_all) {
-        auto mut = m_speller_container.modify();
-        mut->ignore_word(m_selected_word.str);
-        m_word_under_cursor_length =
-            static_cast<TextPosition>(m_selected_word.str.length());
-        m_editor.set_cursor_pos(m_word_under_cursor_pos +
-                                m_word_under_cursor_length);
-      } else if (result == menu_id::add_to_dictionary) {
-        auto mut = m_speller_container.modify();
-        mut->add_to_dictionary(m_selected_word.str);
-        m_word_under_cursor_length =
-            static_cast<TextPosition>(m_selected_word.str.length());
-        m_editor.set_cursor_pos(m_word_under_cursor_pos +
-                                m_word_under_cursor_length);
-      } else if (result <= m_last_suggestions.size()) {
-        std::string encoded_str;
-        if (m_editor.get_encoding() == EditorCodepage::ansi)
-          encoded_str = to_string(m_last_suggestions[result - 1].c_str());
-        else
-          encoded_str = to_utf8_string(m_last_suggestions[result - 1]);
-
-        m_editor.replace_selection(encoded_str.c_str());
-      } else if (result <= menu_id::replace_all_start + m_last_suggestions.size()) {
-        auto misspelled_text = m_editor.selected_text();
-        auto &suggestion = m_last_suggestions[result - menu_id::replace_all_start - 1];
-        UNDO_BLOCK(m_editor);
-        // not replacing originally selected word is unexpected behaviour, so we replace it with the exact suggestion
-        m_editor.replace_selection(m_editor.to_editor_encoding(suggestion).c_str());
-
-        bool is_proper_name = true;
-        if (!suggestion.empty()) {
-          auto suggestion_copy = suggestion;
-          to_lower_inplace(suggestion_copy);
-          // if lowercase version is incorrect - the word is not a proper name
-          if (m_speller_container.active_speller().check_word({suggestion_copy}))
-            is_proper_name = false;
-        }
-
-        SpellCheckerHelpers::replace_all_tokens(m_editor, m_settings, misspelled_text.c_str(), suggestion, is_proper_name);
-      }
-    }
-  }
-  break;
+  case menu_id::plguin_menu:
+    return process_plugin_menu_result(menu_id);
   case menu_id::language_menu: {
-    WPARAM result;
-    if (!get_use_allocated_ids())
-      result = LOBYTE(menu_id);
-    else
-      result = menu_id - get_langs_menu_id_start();
-
-    std::wstring lang_string;
-    if (result == menu_id::multiple_languages) {
-      lang_string = multiple_language_alias;
-    } else if (result == menu_id::customize_multiple_languages || result == menu_id::download_dictionaries ||
-               result == menu_id::remove_dictionaries) {
-      // All actions are done in GUI thread in that case
-      return;
-    } else
-      lang_string =
-          m_speller_container.get_available_languages()[result].orig_name;
-    do_plugin_menu_inclusion(true);
-
-    auto mut_settings = m_settings.modify(SettingsModificationStyle::ignore_file_errors);
-    mut_settings->get_active_language() = lang_string;
-    break;
+    return process_language_menu_result(menu_id);
   }
   default:
     break;
@@ -288,7 +316,8 @@ ContextMenuHandler::get_suggestion_menu_items() {
 
   auto pos = m_word_under_cursor_pos;
   ACTIVE_VIEW_BLOCK(m_editor);
-  m_editor.set_selection(pos, pos + m_word_under_cursor_length);
+  if (m_settings.data.select_word_on_context_menu_click)
+    m_editor.set_selection(pos, pos + m_word_under_cursor_length);
   std::vector<MenuItem> suggestion_menu_items;
   m_selected_word = m_editor.get_mapped_wstring_range(m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
   SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
