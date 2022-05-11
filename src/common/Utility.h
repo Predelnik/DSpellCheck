@@ -51,9 +51,6 @@ std::wstring wstring_printf(const wchar_t *format, ArgTypes &&... args) {
   return buf.data();
 }
 
-std::wstring read_ini_value(const wchar_t *app_name, const wchar_t *key_name, const wchar_t *default_value,
-                            const wchar_t *file_name);
-
 class MoveOnlyFlag {
   using Self = MoveOnlyFlag;
 public:
