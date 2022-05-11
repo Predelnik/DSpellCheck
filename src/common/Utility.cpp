@@ -392,14 +392,3 @@ void write_unicode_bom(FILE *fp) {
   WORD bom = 0xFEFF;
   fwrite(&bom, sizeof(bom), 1, fp);
 }
-
-std::wstring read_ini_value(const wchar_t *app_name, const wchar_t *key_name, const wchar_t *default_value, const wchar_t *file_name) {
-  constexpr int initial_buffer_size = 64;
-  std::vector<wchar_t> buffer(initial_buffer_size);
-  while (true) {
-    auto size_written = GetPrivateProfileString(app_name, key_name, default_value, buffer.data(), static_cast<DWORD>(buffer.size()), file_name);
-    if (size_written < buffer.size() - 1)
-      return buffer.data();
-    buffer.resize(buffer.size() * 2);
-  }
-}
