@@ -294,7 +294,7 @@ void NppInterface::add_toolbar_icon(int cmdId, const toolbarIcons *toolBarIconsP
 }
 
 std::string NppInterface::selected_text() const {
-  auto sel_buf_size = static_cast<int>(send_msg_to_scintilla(SCI_GETSELTEXT, 0, 0));
+  auto sel_buf_size = static_cast<int>(send_msg_to_scintilla(SCI_GETSELTEXT, 0, 0)) + 1;
   if (sel_buf_size > 1) // Because it includes terminating '\0'
   {
     std::vector<char> buf(sel_buf_size);
