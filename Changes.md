@@ -1,3 +1,10 @@
+v1.4.24
+* Compatibility with Notepad++ 8.4+. Previous versions of plugin will crash during certain operations. (#296)
+* Option to avoid selecting a misspelled word when menu on it is triggered, turn it on by default (#284)
+* Correct cursor positioning after applying `Replace with topmost suggestion` (#288)
+* Do not underline misspelled words during `Print Now` (#285)
+* Compilation is done by VS2022 starting this version.
+
 v1.4.23
 * Compatibility for Notepad++ starting with version 8.2.2 (x64 version)
 * Warning: Starting with version 1.4.23 plugin (x64 version) is no longer compatible with N++ versions older than 8.2.2.
