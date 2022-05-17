@@ -214,11 +214,12 @@ void replace_current_word_with_topmost_suggestion(EditorInterface &editor, const
   TextPosition pos, length;
   if (!spell_checker.is_word_under_cursor_correct(pos, length, true)) {
     ACTIVE_VIEW_BLOCK(editor);
-    auto wstr = editor.get_mapped_wstring_range(pos, pos + length);
-    auto suggestions = speller_container.active_speller().get_suggestions(wstr.str.c_str());
+    const auto wstr = editor.get_mapped_wstring_range(pos, pos + length);
+    const auto suggestions = speller_container.active_speller().get_suggestions(wstr.str.c_str());
     if (!suggestions.empty()) {
-      editor.replace_text(pos, pos + length, editor.to_editor_encoding(suggestions.front()));
-      editor.set_cursor_pos(pos + suggestions.front().length());
+      const auto converted_suggestion = editor.to_editor_encoding(suggestions.front());
+      editor.replace_text(pos, pos + length, converted_suggestion);
+      editor.set_cursor_pos(pos + converted_suggestion.length());
     }
   }
 }
