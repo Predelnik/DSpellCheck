@@ -20,5 +20,6 @@ void setup_speller(MockSpeller &speller) {
                             L"bear", L"with", L"me", L"И", L"ещё", L"немного", L"слов", L"Paris", L"D'Artagnan"}}});
   MockSpeller::SuggestionsDict dict;
   dict[L"English"][L"abcdef"] = {L"document", L"please"};
+  dict[L"English"][L"немонго"] = {L"немного", L"много"};
   speller.set_suggestions_dict(std::move (dict));
 }

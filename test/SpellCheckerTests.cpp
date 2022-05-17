@@ -319,6 +319,7 @@ test_test
       sc.recheck_visible_both_views();
       editor.set_cursor_pos(0);
       CHECK(sc.is_word_under_cursor_correct(pos, length, true));
+      editor.set_codepage(EditorCodepage::utf8);
     }
   }
 
@@ -436,6 +437,8 @@ test_test
 
     editor.set_codepage (static_cast<EditorCodepage> (-1));
     REQUIRE_THROWS_AS (editor.to_editor_encoding(L""), std::runtime_error);
+
+    editor.set_codepage(EditorCodepage::utf8);
   }
 
   SECTION("Bookmarks") {
@@ -506,6 +509,18 @@ test_test
       SpellCheckerHelpers::replace_current_word_with_topmost_suggestion(editor, sc, sp_container);
       CHECK(editor.get_active_document_text() == "document test");
       CHECK(editor.get_current_pos() == 11);
+    }
+    {
+      editor.set_active_document_text(L"немонго слов");
+      editor.set_mouse_cursor_pos({});
+      editor.set_cursor_pos(1);
+      SpellCheckerHelpers::replace_current_word_with_topmost_suggestion(editor, sc, sp_container);
+      CHECK(editor.get_active_document_text() == "немного слов");
+      CHECK(editor.get_current_pos() == 14);
+      editor.set_cursor_pos(20);
+      SpellCheckerHelpers::replace_current_word_with_topmost_suggestion(editor, sc, sp_container);
+      CHECK(editor.get_active_document_text() == "немного слов");
+      CHECK(editor.get_current_pos() == 20);
     }
   }
   SECTION("Not called normally") {
