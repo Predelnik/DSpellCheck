@@ -1,0 +1,61 @@
+name: build
+on:
+  pull_request:
+  release:
+    types: [published]
+  push:
+    tags:
+    branches:
+      - master
+
+jobs:
+  Test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os: windows-2022
+        generator:
+          - "Visual Studio 17 2022"
+          - "Visual Studio 17 2022 Win32"
+        build_type:
+          - Release
+          - Debug
+        compiler:
+          - msvc
+        package_generator:
+          - ZIP
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Cache
+        uses: ./.github/actions/setup_cache
+        with:
+          compiler: ${{ matrix.compiler }}
+          build_type: ${{ matrix.build_type }}
+          generator: ${{ matrix.generator }}
+
+      - name: Setup Cpp
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: ${{ matrix.compiler }}
+          vcvarsall: ${{ contains(matrix.os, 'windows' )}}
+          cmake: true
+          ninja: true
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B ./build -G "${{matrix.generator}}" -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}}
+
+      - name: Build
+        # Execute the build.  You can specify a specific target with "--target <NAME>"
+        run: |
+          cmake --build ./build --config ${{matrix.build_type}}
+
+      - name: CPack
+        if: matrix.build_type == 'Release'
+        working-directory: ./build
+        run: |
+          cpack -C ${{matrix.build_type}} -G ${{matrix.package_generator}}
