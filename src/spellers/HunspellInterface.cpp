@@ -258,6 +258,12 @@ DicInfo *HunspellInterface::create_hunspell(const AvailableLangInfo &lang_info) 
   return &target;
 }
 
+bool HunspellInterface::has_more_zeroes_after_conv(const DicInfo &dic, const std::string &word_to_check) {
+  static std::string buf;
+  dic.hunspell->input_conv(word_to_check, buf);
+  return std::ranges::count(word_to_check, '0') < std::ranges::count(buf, '0');
+}
+
 void HunspellInterface::set_language(const wchar_t *lang) {
   if (m_dic_list.empty()) {
     m_singular_speller = nullptr;
@@ -295,11 +301,18 @@ bool HunspellInterface::speller_check_word(const DicInfo &dic, WordForSpeller wo
     return true;
   if (word.data.ends_with_dot)
     word.str += L".";
-  auto word_to_check = dic.to_dictionary_encoding(word.str.c_str());
+  const auto word_to_check = dic.to_dictionary_encoding(word.str.c_str());
   if (word_to_check.empty())
     return false;
   // No additional check for memorized is needed since all words are already in
   // dictionary
+
+  // workaround for some dictionaries which replace certain characters with '0' digit
+  constexpr bool enable_zero_check = true;
+  if constexpr (enable_zero_check) {
+    if (has_more_zeroes_after_conv(dic, word_to_check))
+      return false;
+  }
 
   return dic.hunspell->spell(word_to_check);
 }

@@ -94,6 +94,7 @@ public:
 private:
   static std::wstring create_encoded_dict_version(const wchar_t *dict_path, const char *target_encoding);
   DicInfo *create_hunspell(const AvailableLangInfo &lang_info);
+  static bool has_more_zeroes_after_conv(const DicInfo &dic, const std::string &word_to_check);
   static bool speller_check_word(const DicInfo &dic, WordForSpeller word);
   void message_box_word_cannot_be_added();
 
