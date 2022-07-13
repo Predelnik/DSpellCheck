@@ -13,12 +13,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-
       matrix:
-        os: windows-2022
+        os:
+          - windows-latest
         generator:
           - "Visual Studio 17 2022"
-          - "Visual Studio 17 2022 Win32"
+        arch:
+          - x64
+          - Win32
         build_type:
           - Release
           - Debug
@@ -30,13 +32,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup Cache
-        uses: ./.github/actions/setup_cache
-        with:
-          compiler: ${{ matrix.compiler }}
-          build_type: ${{ matrix.build_type }}
-          generator: ${{ matrix.generator }}
-
       - name: Setup Cpp
         uses: aminya/setup-cpp@v1
         with:
@@ -47,12 +42,16 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -S . -B ./build -G "${{matrix.generator}}" -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}}
+          cmake -S . -B ./build -G "${{matrix.generator}}" -A "${{matrix.arch}}" -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}}
 
       - name: Build
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: |
           cmake --build ./build --config ${{matrix.build_type}}
+
+      - name: Test
+        run: |
+          ctest --build-and-test . ./build --build-generator "${{matrix.generator}}"
 
       - name: CPack
         if: matrix.build_type == 'Release'

@@ -69,6 +69,9 @@ list (APPEND test_source_files src/common/PrecompiledHeader.cpp)
 add_executable (DSpellCheckTest ${test_source_files})
 target_link_libraries (DSpellCheckTest DSpellCheckStatic catch)
 
+enable_testing()
+add_test(NAME DSpellCheckTest COMMAND DSpellCheckTest)
+
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   target_compile_options (DSpellCheckStatic PUBLIC /permissive- /Zc:twoPhase- /Zc:threadSafeInit-)
 endif ()
