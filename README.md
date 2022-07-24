@@ -1,4 +1,4 @@
-[![Build status](https://github.com/predelnik/DSpellCheck/actions/workflows/build.yml/badge.svg)](https://ci.appveyor.com/project/Predelnik/dspellcheck/branch/master)
+![Build status](https://github.com/predelnik/DSpellCheck/actions/workflows/build.yml/badge.svg)
 
 DSpellCheck
 ===========
