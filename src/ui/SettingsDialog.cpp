@@ -680,23 +680,24 @@ INT_PTR AdvancedSettingsTab::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l
           NMTTDISPINFOW *nmtdi = reinterpret_cast<NMTTDISPINFOW *> (l_param);
           nmtdi->lpszText = const_cast<LPWSTR>(regex_error.c_str());
       }
-    }
+    } break;
   case WM_COMMAND:
     switch (LOWORD(w_param)) {
     case IDC_TOKENIZATION_STYLE_CMB: {
       setup_delimiter_line_edit_visiblity();
-    }
+    } break;
     case IDC_DEFAULT_DELIMITERS:
       if (HIWORD(w_param) == BN_CLICKED) {
         on_default_delimiters_clicked();
         return TRUE;
       }
+      break;
     case IDC_RECHECK_DELAY: {
       if (HIWORD(w_param) == EN_CHANGE) {
         on_recheck_delay_changed();
         return TRUE;
       }
-    }
+    } break;
     case IDC_UNDERLINE_COLOR:
       if (HIWORD(w_param) == BN_CLICKED) {
         on_underline_color_button_clicked();
