@@ -62,7 +62,7 @@ void MockEditorInterface::move_active_document_to_other_view() {
       static_cast<int>(m_documents[other].size()) - 1;
 }
 
-void MockEditorInterface::add_toolbar_icon(int /*cmd_id*/, const ToolbarIconsWithDarkMode * /*tool_bar_icons_ptr*/) {}
+void MockEditorInterface::add_toolbar_icon(int /*cmd_id*/, const toolbarIconsWithDarkMode * /*tool_bar_icons_ptr*/) {}
 
 void MockEditorInterface::force_style_update(
     TextPosition /*from*/, TextPosition /*to*/) {
