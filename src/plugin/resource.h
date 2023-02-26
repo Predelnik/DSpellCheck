@@ -13,9 +13,11 @@
 #define IDD_DIALOGPROGRESS              111
 #define IDD_REMOVE_DICS                 113
 #define IDI_REFRESH                     128
-#define IDI_AUTOCHECK                   147
 #define IDD_CONNECTION_SETTINGS_DIALOG  148
+#define IDI_AUTOCHECK                   148
+#define IDI_AUTOCHECK_DARK              149
 #define IDD_ASPELL_OPTIONS              150
+#define IDB_AUTOCHECK_BMP               150
 #define IDC_VERSION                     1000
 #define IDC_EDIT1                       1000
 #define IDC_IGNORE_REGEXP_EDIT          1000
@@ -223,7 +225,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        103
+#define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           101

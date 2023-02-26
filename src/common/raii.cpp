@@ -16,10 +16,12 @@
 
 #include "Notepad_plus_msgs.h"
 
-ToolbarIconsWrapper::ToolbarIconsWrapper()
-  : m_icons{std::make_unique<ToolbarIcons>()} {
+#include <OleCtl.h>
+
+ToolbarIconsWrapper::ToolbarIconsWrapper() : m_icons{std::make_unique<toolbarIconsWithDarkMode>()} {
   m_icons->hToolbarBmp = nullptr;
   m_icons->hToolbarIcon = nullptr;
+  m_icons->hToolbarIconDarkMode = nullptr;
 }
 
 ToolbarIconsWrapper::~ToolbarIconsWrapper() {
@@ -28,17 +30,56 @@ ToolbarIconsWrapper::~ToolbarIconsWrapper() {
 
   if (m_icons->hToolbarIcon != nullptr)
     DeleteObject(m_icons->hToolbarIcon);
+
+  if (m_icons->hToolbarIconDarkMode != nullptr)
+    DeleteObject(m_icons->hToolbarIconDarkMode);
 }
 
-ToolbarIconsWrapper::
-ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR name, UINT type, int cx, int cy, UINT fu_load)
+HRESULT SaveIcon(HICON hIcon, const wchar_t *path) {
+  // Create the IPicture intrface
+  PICTDESC desc = {sizeof(PICTDESC)};
+  desc.picType = PICTYPE_ICON;
+  desc.icon.hicon = hIcon;
+  IPicture *pPicture = 0;
+  HRESULT hr = OleCreatePictureIndirect(&desc, IID_IPicture, FALSE, (void **)&pPicture);
+  if (FAILED(hr))
+    return hr;
+
+  // Create a stream and save the image
+  IStream *pStream = 0;
+  CreateStreamOnHGlobal(0, TRUE, &pStream);
+  LONG cbSize = 0;
+  hr = pPicture->SaveAsFile(pStream, TRUE, &cbSize);
+
+  // Write the stream content to the file
+  if (!FAILED(hr)) {
+    HGLOBAL hBuf = 0;
+    GetHGlobalFromStream(pStream, &hBuf);
+    void *buffer = GlobalLock(hBuf);
+    HANDLE hFile = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (!hFile)
+      hr = HRESULT_FROM_WIN32(GetLastError());
+    else {
+      DWORD written = 0;
+      WriteFile(hFile, buffer, cbSize, &written, 0);
+      CloseHandle(hFile);
+    }
+    GlobalUnlock(buffer);
+  }
+  // Cleanup
+  pStream->Release();
+  pPicture->Release();
+  return hr;
+}
+
+ToolbarIconsWrapper::ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR normal_name, LPCWSTR dark_mode_name, LPCWSTR bmp_name)
   : ToolbarIconsWrapper() {
-  m_icons->hToolbarIcon = static_cast<HICON>(::LoadImage(h_inst, name, type, cx, cy, fu_load));
-  ICONINFO iconinfo;
-  GetIconInfo(m_icons->hToolbarIcon, &iconinfo);
-  m_icons->hToolbarBmp = iconinfo.hbmColor;
+  m_icons->hToolbarBmp = ::LoadBitmap(h_inst, bmp_name);
+  m_icons->hToolbarIcon = ::LoadIcon(h_inst, normal_name);
+  m_icons->hToolbarIconDarkMode = ::LoadIcon(h_inst, dark_mode_name);
+  SaveIcon(m_icons->hToolbarIconDarkMode, L"c:\\tmp\\1.ico");
 }
 
-const ToolbarIcons *ToolbarIconsWrapper::get() {
+const toolbarIconsWithDarkMode *ToolbarIconsWrapper::get() {
   return m_icons.get();
 }

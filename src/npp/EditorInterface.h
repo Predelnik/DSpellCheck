@@ -25,7 +25,7 @@
 
 // To mock things and stuff
 
-struct toolbarIcons;
+struct toolbarIconsWithDarkMode;
 
 enum class EditorCodepage {
   ansi,
@@ -50,8 +50,7 @@ public:
   virtual void activate_document(const std::wstring &filepath) = 0;
   virtual void switch_to_file(const std::wstring &path) = 0;
   virtual void move_active_document_to_other_view() = 0;
-  virtual void add_toolbar_icon(int cmd_id,
-                                const toolbarIcons *tool_bar_icons_ptr) = 0;
+  virtual void add_toolbar_icon(int cmd_id, const toolbarIconsWithDarkMode *tool_bar_icons_ptr) = 0;
   virtual void force_style_update(TextPosition from, TextPosition to) = 0;
   virtual void set_selection(TextPosition from, TextPosition to) = 0;
   virtual TextPosition find_next(TextPosition from_position, const char *needle) = 0;

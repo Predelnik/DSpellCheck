@@ -336,10 +336,9 @@ void command_menu_init() {
 }
 
 void add_icons() {
-  auto dpi = GetDeviceCaps(GetWindowDC(npp->get_editor_hwnd()), LOGPIXELSX);
-  int size = 16 * dpi / 96;
-  static ToolbarIconsWrapper auto_check_icon{static_cast<HINSTANCE>(h_module), MAKEINTRESOURCE(IDI_AUTOCHECK), IMAGE_ICON, size, size, 0};
-  ::SendMessage(npp_data.npp_handle, NPPM_ADDTOOLBARICON, static_cast<WPARAM>(func_item[0].cmd_id), reinterpret_cast<LPARAM>(auto_check_icon.get()));
+  static ToolbarIconsWrapper auto_check_icon{static_cast<HINSTANCE>(h_module), MAKEINTRESOURCE(IDI_AUTOCHECK), MAKEINTRESOURCE(IDI_AUTOCHECK_DARK),
+                                             MAKEINTRESOURCE(IDB_AUTOCHECK_BMP)};
+  ::SendMessage(npp_data.npp_handle, NPPM_ADDTOOLBARICON_FORDARKMODE, static_cast<WPARAM>(func_item[0].cmd_id), reinterpret_cast<LPARAM>(auto_check_icon.get()));
 }
 
 static std::wstring get_menu_item_text(HMENU menu, UINT index) {

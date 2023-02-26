@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="256mm"
+   height="256mm"
+   viewBox="0 0 256 256"
+   version="1.1"
+   id="svg27"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="Autocheck-dark.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs21" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#000000"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.45254832"
+     inkscape:cx="439.73205"
+     inkscape:cy="753.5107"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="false"
+     inkscape:deskcolor="#d1d1d1"
+     showborder="true" />
+  <metadata
+     id="metadata24">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-41)"
+     style="display:inline">
+    <rect
+       style="fill:#000000;stroke:#e36262;stroke-width:0.1"
+       id="rect9898"
+       width="252.5697"
+       height="253.15436"
+       x="1.7539563"
+       y="42.169304" />
+    <path
+       style="fill:none;stroke:#e36262;stroke-width:39.74470139;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 245.40309,244.36097 c -14.87735,-8.14792 -29.70315,-45.63895 -50.13513,-47.91887 -23.33324,-2.60363 -40.30909,34.52791 -63.17711,41.28472 -27.79849,8.21363 -49.252028,-63.43753 -85.367731,-2.27064 -12.136439,20.5547 -36.137627,-1.13947 -36.137627,-1.13947"
+       id="path44"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="csasc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.918px;line-height:1.25;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.117431;stroke-dasharray:none"
+       x="3.1307755"
+       y="153.69543"
+       id="text4506"
+       transform="scale(0.87966386,1.1367979)"><tspan
+         sodipodi:role="line"
+         id="tspan4504"
+         x="3.1307755"
+         y="153.69543"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.918px;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic';fill:#ffffff;fill-opacity:1;stroke-width:0.117431;stroke-dasharray:none">ABC</tspan></text>
+  </g>
+</svg>

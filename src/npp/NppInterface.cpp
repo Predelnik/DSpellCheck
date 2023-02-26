@@ -289,8 +289,8 @@ std::string NppInterface::get_line(TextPosition line_number) const {
 
 void NppInterface::move_active_document_to_other_view() { do_command(IDM_VIEW_GOTO_ANOTHER_VIEW); }
 
-void NppInterface::add_toolbar_icon(int cmdId, const toolbarIcons *toolBarIconsPtr) {
-  send_msg_to_npp(NPPM_ADDTOOLBARICON, static_cast<WPARAM>(cmdId), reinterpret_cast<LPARAM>(toolBarIconsPtr));
+void NppInterface::add_toolbar_icon(int cmdId, const toolbarIconsWithDarkMode *toolBarIconsPtr) {
+  send_msg_to_npp(NPPM_ADDTOOLBARICON_FORDARKMODE, static_cast<WPARAM>(cmdId), reinterpret_cast<LPARAM>(toolBarIconsPtr));
 }
 
 std::string NppInterface::selected_text() const {
