@@ -148,7 +148,7 @@ std::wstring NppInterface::active_file_directory() const { return get_dir_msg(NP
 void NppInterface::do_command(int id) { send_msg_to_npp(WM_COMMAND, id); }
 
 // [!] constant from Notepad++ sources which might be subject to change
-constexpr auto MARK_BOOKMARK = 24;
+constexpr auto MARK_BOOKMARK = 20;
 
 void NppInterface::add_bookmark(TextPosition line) {
   send_msg_to_scintilla(SCI_MARKERADD, line, MARK_BOOKMARK);
