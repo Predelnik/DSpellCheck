@@ -857,12 +857,7 @@ INT_PTR SettingsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_para
     rc.bottom = rc.top + m_simple_dlg.getHeight();
     SetWindowPos(m_simple_dlg.getHSelf(), nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
     SetWindowPos(m_advanced_dlg.getHSelf(), nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE);
-
-    // This stuff is copied from npp source to make tabbed window looked totally
-    // nice and white
-    auto enable_dlg_theme = reinterpret_cast<ETDTProc>(::SendMessage(_hParent, NPPM_GETENABLETHEMETEXTUREFUNC, 0, 0));
-    if (enable_dlg_theme != nullptr)
-      enable_dlg_theme(_hSelf, ETDT_ENABLETAB);
+    EnableThemeDialogTexture(_hSelf, ETDT_ENABLETAB);
 
     update_controls();
     m_simple_dlg.update_language_controls(m_settings, m_speller_container, m_selected_language_name);

@@ -16,10 +16,12 @@
 
 #include "Notepad_plus_msgs.h"
 
-ToolbarIconsWrapper::ToolbarIconsWrapper()
-  : m_icons{std::make_unique<ToolbarIcons>()} {
+#include <OleCtl.h>
+
+ToolbarIconsWrapper::ToolbarIconsWrapper() : m_icons{std::make_unique<toolbarIconsWithDarkMode>()} {
   m_icons->hToolbarBmp = nullptr;
   m_icons->hToolbarIcon = nullptr;
+  m_icons->hToolbarIconDarkMode = nullptr;
 }
 
 ToolbarIconsWrapper::~ToolbarIconsWrapper() {
@@ -28,17 +30,18 @@ ToolbarIconsWrapper::~ToolbarIconsWrapper() {
 
   if (m_icons->hToolbarIcon != nullptr)
     DeleteObject(m_icons->hToolbarIcon);
+
+  if (m_icons->hToolbarIconDarkMode != nullptr)
+    DeleteObject(m_icons->hToolbarIconDarkMode);
 }
 
-ToolbarIconsWrapper::
-ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR name, UINT type, int cx, int cy, UINT fu_load)
+ToolbarIconsWrapper::ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR normal_name, LPCWSTR dark_mode_name, LPCWSTR bmp_name)
   : ToolbarIconsWrapper() {
-  m_icons->hToolbarIcon = static_cast<HICON>(::LoadImage(h_inst, name, type, cx, cy, fu_load));
-  ICONINFO iconinfo;
-  GetIconInfo(m_icons->hToolbarIcon, &iconinfo);
-  m_icons->hToolbarBmp = iconinfo.hbmColor;
+  m_icons->hToolbarBmp = ::LoadBitmap(h_inst, bmp_name);
+  m_icons->hToolbarIcon = ::LoadIcon(h_inst, normal_name);
+  m_icons->hToolbarIconDarkMode = ::LoadIcon(h_inst, dark_mode_name);
 }
 
-const ToolbarIcons *ToolbarIconsWrapper::get() {
+const toolbarIconsWithDarkMode *ToolbarIconsWrapper::get() {
   return m_icons.get();
 }

@@ -43,7 +43,7 @@ target_include_directories (DSpellCheckStatic PUBLIC src deps/win-iconv)
 target_include_directories (DSpellCheckStatic PRIVATE src/Controls)
 
 target_link_libraries (DSpellCheckStatic hunspell minizip ftpclient iconv-static Controls npp_extra lsignal aspell json)
-target_link_libraries (DSpellCheckStatic shlwapi comctl32 version wininet Ws2_32 dbghelp)
+target_link_libraries (DSpellCheckStatic shlwapi comctl32 version wininet Ws2_32 dbghelp UxTheme)
 
 if ( NOT ${DSpellCheck_SANITIZE} STREQUAL none)
   if ( ${DSpellCheck_SANITIZE} STREQUAL address)

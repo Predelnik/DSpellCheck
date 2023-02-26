@@ -18,6 +18,8 @@
 
 #include <vector>
 
+struct toolbarIconsWithDarkMode;
+
 enum class NppViewType {
   primary,
   secondary,
@@ -44,7 +46,7 @@ public:
   void activate_document(const std::wstring &filepath) override;
   void switch_to_file(const std::wstring &path) override;
   void move_active_document_to_other_view() override;
-  void add_toolbar_icon(int cmdId, const toolbarIcons *toolBarIconsPtr) override;
+  void add_toolbar_icon(int cmdId, const toolbarIconsWithDarkMode *toolBarIconsPtr) override;
   void set_selection(TextPosition from, TextPosition to) override;
   void replace_selection(const char *str) override;
   void set_indicator_style(int indicator_index, int style) override;

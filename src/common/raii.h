@@ -14,14 +14,14 @@
 
 #pragma once
 
-struct ToolbarIcons;
+struct toolbarIconsWithDarkMode;
 
 struct ToolbarIconsWrapper {
-  ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR name, UINT type, int cx, int cy, UINT fu_load);
-  const ToolbarIcons *get();
+  ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR normal_name, LPCWSTR dark_mode_name, LPCWSTR bmp_name);
+  const toolbarIconsWithDarkMode *get();
   ~ToolbarIconsWrapper();
 
 private:
   ToolbarIconsWrapper();
-  std::unique_ptr<ToolbarIcons> m_icons;
+  std::unique_ptr<toolbarIconsWithDarkMode> m_icons;
 };

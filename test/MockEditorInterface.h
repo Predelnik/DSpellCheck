@@ -56,8 +56,7 @@ class MockEditorInterface : public EditorInterface {
   static constexpr auto view_count = 2;
 public:
   void move_active_document_to_other_view() override;
-  void add_toolbar_icon(int cmd_id,
-                        const toolbarIcons *tool_bar_icons_ptr) override;
+  void add_toolbar_icon(int cmd_id, const toolbarIconsWithDarkMode *tool_bar_icons_ptr) override;
   void force_style_update(TextPosition from, TextPosition to) override;
   void set_selection(TextPosition from, TextPosition to) override;
   void replace_selection(const char *str) override;
