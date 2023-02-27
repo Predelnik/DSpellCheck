@@ -1,3 +1,8 @@
+v1.5
+* Fix editing of "Split Words by Non-Alphabetic Characters Except:" field (#307)
+* Fix toolbar icon in case of dark mode (#314)
+* Fix "Bookmark Lines with Misspellings" for newer Notepad++ versions (#313)
+
 v1.4.24
 * Compatibility with Notepad++ 8.4+. Previous versions of plugin will crash during certain operations. (#296)
 * Option to avoid selecting a misspelled word when menu on it is triggered, turn it on by default (#284)
