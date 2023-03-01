@@ -93,6 +93,14 @@ def add_version_tag ():
 	author = Signature(config['user.name'], config['user.email'])
 	repo.create_tag('v{}'.format (ver_str), repo.revparse_single('HEAD').id, GIT_OBJ_COMMIT, author, 'v{}'.format (ver_str))
 
+def to_msvc_arch(arch):
+	if arch == 'x64':
+		return 'x64'
+	elif arch == 'x86':
+		return 'Win32'
+	else:
+		raise ValueError('Unexpected architecture')
+
 new_ver_is_added = False
 if options.new_minor:
 	ver[-1]=str (int (ver[-1]) + 1)
@@ -123,7 +131,7 @@ x86_zip_path = ''
 for arch in ['x64', 'x86']:
 	dir = 'build-deploy-msvc2022-{}'.format (arch)
 	FNULL = open(os.devnull, 'w')
-	if call(['cmake', script_dir], stdout= (None if options.verbose else FNULL), cwd=dir) != 0:
+	if call(['cmake', script_dir, '-A', to_msvc_arch(arch)], stdout= (None if options.verbose else FNULL), cwd=dir) != 0:
 		print ('Error: Cmake error')
 		sys.exit (1)
 	build_args = ['cmake', '--build', dir, '--config', 'RelWithDebInfo']
