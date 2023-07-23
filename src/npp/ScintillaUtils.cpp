@@ -24,7 +24,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
   case SCLEX_CONTAINER:
   case SCLEX_NULL:
     return s::text;
-    // Meaning unclear:
+  // Meaning unclear:
   case SCLEX_AS:
   case SCLEX_SREC:
   case SCLEX_IHEX:
@@ -50,7 +50,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
       return settings.data.check_default_udl_style ? s::text : s::identifier;
     default:
       return s::unknown;
-    };
+    }
   case SCLEX_PYTHON:
     switch (style) {
     case SCE_P_COMMENTLINE:
@@ -65,7 +65,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
       return s::identifier;
     default:
       return s::unknown;
-    };
+    }
   case SCLEX_CPP:
   case SCLEX_OBJC:
   case SCLEX_BULLANT:
@@ -85,7 +85,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
       return s::identifier;
     default:
       return s::unknown;
-    };
+    }
   case SCLEX_HTML:
   case SCLEX_XML:
     switch (style) {
@@ -145,7 +145,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
       return s::identifier;
     default:
       return s::unknown;
-    };
+    }
   case SCLEX_SQL:
     switch (style) {
     case SCE_SQL_STRING:
@@ -310,7 +310,7 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
       return s::identifier;
     default:
       return s::unknown;
-    };
+    }
   case SCLEX_TCL:
     switch (style) {
     case SCE_TCL_COMMENT:
@@ -1234,7 +1234,172 @@ StyleCategory get_style_category(LRESULT lexer, LRESULT style, const Settings &s
     default:
       return s::unknown;
     }
-  };
+  }
+  case SCLEX_EDIFACT:
+  case SCLEX_INDENT:
+    return s::unknown;
+  case SCLEX_MAXIMA: {
+    switch (style) {
+    case SCE_MAXIMA_COMMENT:
+      return s::comment;
+    case SCE_MAXIMA_STRING:
+      return s::string;
+    case SCE_MAXIMA_VARIABLE:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_STATA: {
+    switch (style) {
+    case SCE_STATA_COMMENT:
+    case SCE_STATA_COMMENTBLOCK:
+    case SCE_STATA_COMMENTLINE:
+      return s::comment;
+    case SCE_STATA_STRING:
+      return s::string;
+    case SCE_STATA_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_SAS: {
+    switch (style) {
+    case SCE_SAS_COMMENT:
+    case SCE_SAS_COMMENTBLOCK:
+    case SCE_SAS_COMMENTLINE:
+      return s::comment;
+    case SCE_SAS_STRING:
+      return s::string;
+    case SCE_SAS_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_NIM: {
+    switch (style) {
+    case SCE_NIM_COMMENT:
+    case SCE_NIM_COMMENTDOC:
+    case SCE_NIM_COMMENTLINE:
+    case SCE_NIM_COMMENTLINEDOC:
+      return s::comment;
+    case SCE_NIM_STRING:
+    case SCE_NIM_STRINGEOL:
+      return s::string;
+    case SCE_NIM_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_CIL: {
+    switch (style) {
+    case SCE_CIL_COMMENT:
+    case SCE_CIL_COMMENTLINE:
+      return s::comment;
+    case SCE_CIL_STRING:
+    case SCE_CIL_STRINGEOL:
+      return s::string;
+    case SCE_CIL_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_X12:
+    return s::unknown;
+  case SCLEX_DATAFLEX: {
+    switch (style) {
+    case SCE_DF_COMMENTLINE:
+      return s::comment;
+    case SCE_DF_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_HOLLYWOOD: {
+    switch (style) {
+    case SCE_HOLLYWOOD_COMMENT:
+    case SCE_HOLLYWOOD_COMMENTBLOCK:
+      return s::comment;
+    case SCE_HOLLYWOOD_STRING:
+    case SCE_HOLLYWOOD_STRINGBLOCK:
+      return s::string;
+    case SCE_HOLLYWOOD_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_RAKU: {
+    switch (style) {
+    case SCE_RAKU_COMMENTLINE:
+    case SCE_RAKU_COMMENTEMBED:
+      return s::comment;
+    case SCE_RAKU_STRING:
+    case SCE_RAKU_STRING_Q:
+    case SCE_RAKU_STRING_QQ:
+    case SCE_RAKU_STRING_Q_LANG:
+    case SCE_RAKU_STRING_VAR:
+      return s::string;
+    case SCE_RAKU_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_FSHARP: {
+    switch (style) {
+    case SCE_FSHARP_COMMENT:
+    case SCE_FSHARP_COMMENTLINE:
+      return s::comment;
+    case SCE_FSHARP_STRING:
+      return s::string;
+    case SCE_FSHARP_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_JULIA: {
+    switch (style) {
+    case SCE_JULIA_COMMENT:
+      return s::comment;
+    case SCE_JULIA_STRING:
+    case SCE_JULIA_STRINGINTERP:
+    case SCE_JULIA_STRINGLITERAL:
+      return s::string;
+    case SCE_JULIA_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_ASCIIDOC: {
+    switch (style) {
+    case SCE_ASCIIDOC_COMMENT:
+    case SCE_ASCIIDOC_COMMENTBK:
+      return s::comment;
+    default:
+      return s::unknown;
+    }
+  }
+  case SCLEX_GDSCRIPT: {
+    switch (style) {
+    case SCE_GD_COMMENTLINE:
+    case SCE_GD_COMMENTBLOCK:
+      return s::comment;
+    case SCE_GD_STRING:
+      return s::string;
+    case SCE_GD_IDENTIFIER:
+      return s::identifier;
+    default:
+      return s::unknown;
+    }
+  }
   default:
     return s::unknown;
   }
