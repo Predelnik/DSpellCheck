@@ -716,6 +716,8 @@ void MockEditorInterface::set_mouse_cursor_pos(const std::optional<POINT> &pos) 
   m_cursor_pos = pos;
 }
 
+std::wstring MockEditorInterface::get_editor_directory() const { return {}; }
+
 MockedDocumentInfo *MockEditorInterface::active_document() {
   if (m_documents[m_target_view].empty())
     return nullptr;
