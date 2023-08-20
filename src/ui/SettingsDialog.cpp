@@ -814,15 +814,6 @@ void SimpleSettingsTab::update_controls(const Settings &settings, const SpellerC
   Button_SetCheck(m_h_select_misspelled_on_menu_cb, settings.data.select_word_on_context_menu_click);
 }
 
-void SimpleSettingsTab::init_speller_id_combobox(const SpellerContainer &speller_container) {
-  m_speller_cmb.clear();
-  for (auto id : enum_range<SpellerId>()) {
-    if (id == SpellerId::native && !speller_container.native_speller().is_working())
-      continue;
-    m_speller_cmb.add_item(id);
-  }
-}
-
 void SettingsDialog::update_rect_offset_due_to_buttons(RECT &rc) {
   auto ok_hwnd = GetDlgItem(_hSelf, IDOK);
   RECT ok_rect;
@@ -842,7 +833,6 @@ INT_PTR SettingsDialog::run_dlg_proc(UINT message, WPARAM w_param, LPARAM l_para
 
     m_simple_dlg.init_settings(_hInst, _hSelf);
     m_simple_dlg.create(IDD_SIMPLE, false, false);
-    m_simple_dlg.init_speller_id_combobox(m_speller_container);
     m_simple_dlg.display();
     m_advanced_dlg.init(_hInst, _hSelf);
     m_advanced_dlg.create(IDD_ADVANCED, false, false);

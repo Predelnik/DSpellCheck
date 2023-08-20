@@ -100,7 +100,6 @@ void SpellerContainer::add_to_dictionary(std::wstring wstr) {
 SpellerContainer::SpellerContainer(const Settings *settings, const NppData *npp_data)
   : m_settings(*settings) {
   init_spellers(*npp_data);
-  m_native_speller->init(); // just to allow checking if it's available or not
   m_settings.settings_changed.connect([this] { on_settings_changed(); });
 }
 
