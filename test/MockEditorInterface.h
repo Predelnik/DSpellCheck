@@ -141,13 +141,13 @@ public:
   void set_editor_rect(int left, int top, int right, int bottom);
   std::optional<POINT> get_mouse_cursor_pos() const override;
   void set_mouse_cursor_pos(const std::optional<POINT> &pos);
+  std::wstring get_editor_directory() const override;
 
 private:
   void set_target_view(int view_index) const override;
   int get_target_view() const override;
   const MockedDocumentInfo *active_document() const;
   MockedDocumentInfo *active_document();
-private:
   int active_view() const override;
 
 public:

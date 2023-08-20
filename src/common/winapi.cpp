@@ -82,7 +82,7 @@ std::optional<std::wstring> browse_for_directory(HWND parent_wnd, const wchar_t 
   bi.pidlRoot = pidl_root;
   bi.lpszTitle = title.c_str();
   bi.pszDisplayName = path.data();
-  bi.ulFlags = BIF_RETURNONLYFSDIRS;
+  bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
   bi.lpfn = browse_callback_proc;
   bi.lParam = reinterpret_cast<LPARAM>(initial_path);
   LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
@@ -94,8 +94,6 @@ std::optional<std::wstring> browse_for_directory(HWND parent_wnd, const wchar_t 
       ret = sz_path.data();
     CoTaskMemFree(pidl);
     // free memory used
-
-    CoUninitialize();
   }
   return ret;
 }

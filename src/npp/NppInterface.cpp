@@ -25,7 +25,7 @@ NppInterface::NppInterface(const NppData *nppData)
   : m_npp_data{*nppData} {
 }
 
-std::wstring NppInterface::get_npp_directory() {
+std::wstring NppInterface::get_npp_directory() const {
   std::vector<wchar_t> npp_path(MAX_PATH);
   send_msg_to_npp(NPPM_GETNPPDIRECTORY, MAX_PATH, reinterpret_cast<LPARAM>(npp_path.data()));
   return npp_path.data();
@@ -69,6 +69,8 @@ HWND NppInterface::get_view_hwnd() const {
   }
   return handle;
 }
+
+std::wstring NppInterface::get_editor_directory() const { return get_npp_directory(); }
 
 LRESULT NppInterface::send_msg_to_scintilla(UINT msg, WPARAM w_param, LPARAM l_param) const {
   assert(m_target_view != NppViewType::COUNT && "Outside view scope");
