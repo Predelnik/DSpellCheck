@@ -22,6 +22,8 @@
 
 #include <optional>
 
+class EditorInterface;
+
 enum class UrlType {
   ftp,
   ftp_web_proxy,
@@ -88,7 +90,7 @@ class DownloadDictionariesDialog : public StaticDialog {
 
 public:
   ~DownloadDictionariesDialog() override;
-  DownloadDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container);
+  DownloadDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container, const EditorInterface &editor);
   void do_dialog();
   // Maybe hunspell interface should be passed here
   INT_PTR WINAPI run_dlg_proc(UINT message, WPARAM w_param,
@@ -160,4 +162,5 @@ private:
   bool m_address_is_set = false;
   std::unique_ptr<GitHubFileListProvider> m_github_provider;
   const SpellerContainer &m_speller_container;
+  const EditorInterface &m_editor;
 };

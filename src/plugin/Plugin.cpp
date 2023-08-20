@@ -19,9 +19,9 @@
 //
 
 #include "Constants.h"
+#include "Settings.h"
 #include "menuCmdID.h"
 #include "resource.h"
-#include "Settings.h"
 #include "CheckedList/CheckedList.h"
 #include "common/raii.h"
 #include "common/winapi.h"
@@ -35,10 +35,10 @@
 #include "ui/ConnectionSettingsDialog.h"
 #include "ui/ContextMenuHandler.h"
 #include "ui/DownloadDictionariesDialog.h"
-#include "ui/SelectMultipleLanguagesDialog.h"
 #include "ui/MenuItem.h"
 #include "ui/ProgressDialog.h"
 #include "ui/RemoveDictionariesDialog.h"
+#include "ui/SelectMultipleLanguagesDialog.h"
 #include "ui/SettingsDialog.h"
 #include "ui/SuggestionMenuButton.h"
 
@@ -418,7 +418,7 @@ void init_classes() {
   suggestions_button->do_dialog();
 
   settings_dlg = std::make_unique<SettingsDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *npp, *settings, *speller_container);
-  download_dics_dlg = std::make_unique<DownloadDictionariesDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container);
+  download_dics_dlg = std::make_unique<DownloadDictionariesDialog>(static_cast<HINSTANCE>(h_module), npp_data.npp_handle, *settings, *speller_container, *npp);
 
   settings_dlg->download_dics_dlg_requested.connect([]() { download_dics_dlg->do_dialog(); });
 

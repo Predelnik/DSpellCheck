@@ -33,7 +33,7 @@ class NppData;
 class NppInterface : public EditorInterface {
 public:
   explicit NppInterface(const NppData *nppData);
-  std::wstring get_npp_directory();
+  std::wstring get_npp_directory() const;
   bool is_allocate_cmdid_supported() const;
   int allocate_cmdid(int requested_number);
   void set_menu_item_check(int cmd_id, bool checked);
@@ -109,9 +109,8 @@ public:
   HMENU get_menu_handle(int menu_type) const;
   int get_target_view() const override;
   int get_indicator_value_at(int indicator_id, TextPosition position) const override;
-
-public:
   HWND get_view_hwnd() const override;
+  std::wstring get_editor_directory() const override;
 
 private:
   LRESULT send_msg_to_npp(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0) const;
@@ -122,6 +121,7 @@ private:
   std::vector<std::wstring> get_open_filenames_helper(int enum_val, int msg) const;
   int active_view() const override;
   std::optional<POINT> get_mouse_cursor_pos() const override;
+
 private:
   const NppData &m_npp_data;
   mutable enum_array<NppViewType, std::optional<int>> m_lexer_cache;

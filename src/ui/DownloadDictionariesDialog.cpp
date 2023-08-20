@@ -21,24 +21,28 @@
 #include "ProgressDialog.h"
 #include "unzip.h"
 #include "CheckedList/CheckedList.h"
-#include "common/Utility.h"
 #include "common/ProgressData.h"
+#include "common/Utility.h"
+#include "common/WindowsDefs.h"
 #include "common/string_utils.h"
 #include "common/winapi.h"
-#include "common/WindowsDefs.h"
 #include "network/GithubFileListProvider.h"
 #include "network/UrlHelpers.h"
+#include "npp/EditorInterface.h"
 #include "plugin/Constants.h"
 #include "plugin/Plugin.h"
-#include "plugin/resource.h"
 #include "plugin/Settings.h"
+#include "plugin/resource.h"
 #include "spellers/HunspellInterface.h"
 #include "spellers/SpellerContainer.h"
 
+#include <Wininet.h>
 #include <fcntl.h>
+#include <filesystem>
 #include <io.h>
 #include <variant>
-#include <Wininet.h>
+
+namespace fs = std::filesystem;
 
 void DownloadDictionariesDialog::do_dialog() {
   if (!isCreated()) {
@@ -76,8 +80,8 @@ DownloadDictionariesDialog::~DownloadDictionariesDialog() {
     DestroyIcon(m_refresh_icon);
 }
 
-DownloadDictionariesDialog::DownloadDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container)
-  : m_settings(settings), m_github_provider(std::make_unique<GitHubFileListProvider>(parent, settings)), m_speller_container(speller_container) {
+DownloadDictionariesDialog::DownloadDictionariesDialog(HINSTANCE h_inst, HWND parent, const Settings &settings, const SpellerContainer &speller_container, const EditorInterface &editor)
+  : m_settings(settings), m_github_provider(std::make_unique<GitHubFileListProvider>(parent, settings)), m_speller_container(speller_container), m_editor(editor) {
   m_github_provider->file_list_received.connect([this](const std::vector<FileDescription> &list) { on_new_file_list(list); });
   m_github_provider->error_happened.connect([this](const std::string &description) {
     auto wstr = to_wstring(description);
@@ -135,8 +139,13 @@ bool DownloadDictionariesDialog::prepare_downloading() {
   p->get_progress_data()->set(0, L"");
   get_progress_dlg()->update();
   p->set_top_message(L"");
+  std::wstring dictionary_path;
+  if (m_settings.data.download_install_dictionaries_for_all_users)
+    dictionary_path = fs::weakly_canonical(fs::path(m_editor.get_editor_directory()) / m_settings.data.hunspell_system_path).wstring();
+  else
+    dictionary_path = m_settings.data.hunspell_user_path;
   if (!check_for_directory_existence(
-      m_settings.data.download_install_dictionaries_for_all_users ? m_settings.data.hunspell_system_path : m_settings.data.hunspell_user_path,
+      dictionary_path,
       false,
       _hParent)) // If path doesn't exist we're gonna try to create it
     // else it's finish

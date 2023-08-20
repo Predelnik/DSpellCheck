@@ -122,8 +122,8 @@ public:
   virtual TextPosition get_document_line_count() const = 0;
   virtual std::string get_active_document_text() const = 0;
   virtual RECT editor_rect() const = 0;
-
   virtual int get_view_count() const = 0;
+  virtual std::wstring get_editor_directory() const = 0;
 
   // winapi function moved here for easier testing
   virtual std::optional<POINT> get_mouse_cursor_pos() const = 0;
