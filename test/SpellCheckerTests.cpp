@@ -526,4 +526,47 @@ test_test
   SECTION("Not called normally") {
     CHECK_FALSE (SpellCheckerHelpers::is_word_spell_checking_needed(settings, editor, L"", 0));
   }
+  SECTION("Horizontally scrolled") {
+    editor.set_active_document_text(LR"(wrongword This is test document abaabs
+This is test document
+badword
+Badword      Wrongword)");
+    {
+      editor.make_all_visible();
+      sc.recheck_visible_both_views();
+      CHECK(editor.get_underlined_words(indicator_id) == std::vector<std::string>{"wrongword", "abaabs", "badword", "Badword", "Wrongword"});
+    }
+    {
+      editor.scroll_horizontally(1); // Scroll one column to the right
+      sc.recheck_visible_both_views();
+      CHECK(editor.get_underlined_words(indicator_id) == std::vector<std::string>{"wrongword", "abaabs", "badword", "Badword", "Wrongword"});
+    }
+    {
+      editor.scroll_horizontally(7); // Scroll until the end of the 3rd line ("badword" + newline character)
+      sc.recheck_visible_both_views();
+      // previously underlined words behind the new start column are still underlined
+      CHECK(editor.get_underlined_words(indicator_id) == std::vector<std::string>{"wrongword", "abaabs", "badword", "Badword", "Wrongword"});
+      editor.clear_indicator_info();
+      sc.recheck_visible_both_views();
+      CHECK(editor.get_underlined_words(indicator_id) == std::vector<std::string>{"wrongword", "abaabs", "Wrongword"});
+    }
+    {
+      editor.scroll_horizontally(6); // Scroll until "document" on the second line isn't completely visible (becomes "ocument")
+      editor.clear_indicator_info();
+      sc.recheck_visible_both_views();
+      // "document" is correct, so it's not underlined
+      CHECK(editor.get_underlined_words(indicator_id) == std::vector<std::string>{"abaabs", "Wrongword"});
+    }
+    {
+      editor.scroll_horizontally(-14); // Scroll back to the start
+      sc.recheck_visible_both_views();
+      CHECK(editor.get_underlined_words(indicator_id) == std::vector<std::string>{"wrongword", "abaabs", "badword", "Badword", "Wrongword"});
+    }
+    {
+      editor.scroll_horizontally(50); // Scroll enough to hide all words
+      editor.clear_indicator_info();
+      sc.recheck_visible_both_views();
+      CHECK(editor.get_underlined_words(indicator_id).empty());
+    }
+  }
 }

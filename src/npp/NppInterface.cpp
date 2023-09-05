@@ -53,6 +53,12 @@ int NppInterface::get_indicator_value_at(int indicator_id, TextPosition position
   return static_cast<int>(send_msg_to_scintilla(SCI_INDICATORVALUEAT, indicator_id, position));
 }
 
+int NppInterface::get_first_visible_column() const {
+  const int x_offset = static_cast<int>(send_msg_to_scintilla(SCI_GETXOFFSET));
+  const int pixel_width = static_cast<int>(send_msg_to_scintilla(SCI_TEXTWIDTH, STYLE_DEFAULT, reinterpret_cast<LPARAM>("P")));
+  return static_cast<int>(x_offset / pixel_width);
+}
+
 LRESULT NppInterface::send_msg_to_npp(UINT Msg, WPARAM wParam, LPARAM lParam) const { return SendMessage(m_npp_data.npp_handle, Msg, wParam, lParam); }
 
 HWND NppInterface::get_view_hwnd() const {

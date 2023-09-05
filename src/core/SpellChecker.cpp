@@ -210,40 +210,76 @@ TextPosition SpellChecker::next_token_end_in_document(TextPosition end) const {
   return end;
 }
 
-MappedWstring SpellChecker::get_visible_text() {
-  auto top_visible_line = m_editor.get_first_visible_line();
-  auto top_visible_line_index = m_editor.get_document_line_from_visible(top_visible_line);
-  auto bottom_visible_line_index = m_editor.get_document_line_from_visible(top_visible_line + m_editor.get_lines_on_screen() - 1);
-  auto rect = m_editor.editor_rect();
-  auto len = m_editor.get_active_document_length();
-  MappedWstring result;
+void SpellChecker::underline_misspelled_words_in_visible_text() {
+  const int optimal_range_len = 4096;
+
+  const auto top_visible_line = m_editor.get_first_visible_line();
+  const auto top_visible_line_index = m_editor.get_document_line_from_visible(top_visible_line);
+  const auto bottom_visible_line_index = m_editor.get_document_line_from_visible(top_visible_line + m_editor.get_lines_on_screen() - 1);
+  const auto rect = m_editor.editor_rect();
+  const auto len = m_editor.get_active_document_length();
+
+  const auto first_visible_column = m_editor.get_first_visible_column();
+  
   for (auto line = top_visible_line_index; line <= bottom_visible_line_index; ++line) {
     if (!m_editor.is_line_visible(line))
       continue;
     auto start = m_editor.get_line_start_position(line);
     if (start >= len) // skipping possible empty lines when document is too short
       continue;
-    auto start_point = m_editor.get_point_from_position(start);
-    if (start_point.y < rect.top) {
-      start = m_editor.char_position_from_point({0, 0});
-      start = prev_token_begin_in_document(start);
-    } else if (start_point.x < rect.left) {
-      start = m_editor.char_position_from_point({0, start_point.y});
-      start = prev_token_begin_in_document(start);
+
+    if (start == -1) // end of document
+      break;
+
+    const auto line_end = m_editor.get_line_end_position(line);
+
+    const auto line_start_point = m_editor.get_point_from_position(start);
+    const auto line_end_point = m_editor.get_point_from_position(line_end);
+
+    // If the line or file isn't being rendered, then all points will be at {0, 0}, so skip it
+    if (line_start_point.x == line_end_point.x && line_start_point.y == line_end_point.y)
+      continue;
+
+    // scroll horizontally
+    start += first_visible_column;
+  
+    if (start > line_end) // Skip lines that ended before the current horizontal scroll position
+      continue;
+
+    for (auto end = start + optimal_range_len; start < line_end; start = end + 1, end = start + optimal_range_len) {
+      const auto start_point = m_editor.get_point_from_position(start);
+      if (start_point.y < rect.top) {
+        start = m_editor.char_position_from_point({0, 0});
+        start = prev_token_begin_in_document(start);
+      } else if (start_point.x < rect.left) {
+        start = m_editor.char_position_from_point({0, start_point.y});
+        start = prev_token_begin_in_document(start);
+      } else if (first_visible_column > 0) {
+        start = prev_token_begin_in_document(start);
+      }
+  
+      if (end > line_end) {
+        end = line_end;
+      }
+  
+      const auto end_point = m_editor.get_point_from_position(end);
+      if (end_point.y > rect.bottom - rect.top) {
+        end = m_editor.char_position_from_point({rect.right - rect.left, rect.bottom - rect.top});
+        end = next_token_end_in_document(end);
+      } else if (end_point.x > rect.right) {
+        end = m_editor.char_position_from_point({rect.right - rect.left, end_point.y});
+        end = next_token_end_in_document(end);
+      }
+
+      // Stop if the start of this range is not visible
+      if (start > end)
+        break;
+  
+      const auto new_str = m_editor.get_mapped_wstring_range(start, end);
+  
+      underline_misspelled_words(new_str, start);
     }
-    auto end = m_editor.get_line_end_position(line);
-    auto end_point = m_editor.get_point_from_position(end);
-    if (end_point.y > rect.bottom - rect.top) {
-      end = m_editor.char_position_from_point({rect.right - rect.left, rect.bottom - rect.top});
-      end = next_token_end_in_document(end);
-    } else if (end_point.x > rect.right) {
-      end = m_editor.char_position_from_point({rect.right - rect.left, end_point.y});
-      end = next_token_end_in_document(end);
-    }
-    auto new_str = m_editor.get_mapped_wstring_range(start, end);
-    result.append(new_str);
   }
-  return result;
 }
 
 void SpellChecker::clear_all_underlines() const {
@@ -267,6 +303,10 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
   length = 0;
   pos = -1;
 
+  const auto doc_length = m_editor.get_active_document_length();
+  if (doc_length == 0)
+    return true;
+
   if (!use_text_cursor) {
     auto p = m_editor.get_mouse_cursor_pos();
     if (!p)
@@ -282,8 +322,10 @@ bool SpellChecker::is_word_under_cursor_correct(TextPosition &pos, TextPosition 
     init_char_pos = std::min(selection_start, selection_end);
   }
 
-  auto line = m_editor.line_from_position(init_char_pos);
-  auto mapped_str = m_editor.get_mapped_wstring_line(line);
+  const auto start = prev_token_begin_in_document(init_char_pos);
+  const auto end = next_token_end_in_document(start + 1);
+  
+  const auto mapped_str = m_editor.get_mapped_wstring_range(start, end);
   if (mapped_str.str.empty())
     return true;
   auto word = get_word_at(init_char_pos, mapped_str);
@@ -381,7 +423,7 @@ std::vector<SpellerWordData> SpellChecker::check_text(const MappedWstring &text_
   return words_to_check;
 }
 
-void SpellChecker::underline_misspelled_words(const MappedWstring &text_to_check) const {
+void SpellChecker::underline_misspelled_words(const MappedWstring &text_to_check, const TextPosition start_pos) const {
   std::vector<TextPosition> underline_buffer;
   auto words_to_check = check_text(text_to_check);
   for (auto &result : words_to_check) {
@@ -390,14 +432,16 @@ void SpellChecker::underline_misspelled_words(const MappedWstring &text_to_check
     std::array list{result.word_start, result.word_end};
     underline_buffer.insert(underline_buffer.end(), list.begin(), list.end());
   }
-  TextPosition prev_pos = 0;
+
+  TextPosition prev_pos = start_pos;
   for (TextPosition i = 0; i < static_cast<TextPosition>(underline_buffer.size()) - 1; i += 2) {
-    remove_underline(prev_pos, underline_buffer[i]);
+    remove_underline(prev_pos, underline_buffer[i]); // remove from end of last to start of new
     create_word_underline(underline_buffer[i], underline_buffer[i + 1]);
-    prev_pos = underline_buffer[i + 1];
+    prev_pos = underline_buffer[i + 1]; // update end of last
   }
+
   auto text_len = text_to_check.original_length();
-  remove_underline(prev_pos, text_len);
+  remove_underline(prev_pos, text_len); // remove from end of last word to end of text
 }
 
 std::vector<std::wstring_view> SpellChecker::get_misspelled_words(const MappedWstring &text_to_check) const {
@@ -437,8 +481,8 @@ std::optional<std::array<TextPosition, 2>> SpellChecker::find_last_misspelling(c
 
 void SpellChecker::check_visible() {
   print_to_log(L"void SpellChecker::check_visible(NppViewType view)", m_editor.get_editor_hwnd());
-  auto text = get_visible_text();
-  underline_misspelled_words(text);
+
+  underline_misspelled_words_in_visible_text();
 }
 
 void SpellChecker::recheck_visible() {
