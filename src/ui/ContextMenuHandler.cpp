@@ -324,13 +324,22 @@ ContextMenuHandler::get_suggestion_menu_items() {
 
   m_last_suggestions = m_speller_container.active_speller().get_suggestions(
       m_selected_word.str.c_str());
+  m_last_suggestions.resize(std::min(static_cast<int>(m_last_suggestions.size()), m_settings.data.suggestion_count));
 
-  for (int i = 0; i < static_cast<int>(m_last_suggestions.size()); i++) {
-    if (i >= m_settings.data.suggestion_count)
-      break;
-
+  int i = 0;
+  for (; i < static_cast<int>(m_last_suggestions.size()); ++i) {
     auto item = m_last_suggestions[i].c_str();
     suggestion_menu_items.emplace_back(item, static_cast<BYTE>(i + 1));
+  }
+
+  if (m_settings.data.always_suggest_capitalized_word && !m_selected_word.str.empty() && std::ranges::all_of(m_selected_word.str, &is_lower)) {
+    auto copy = m_selected_word.str;
+    copy.front() = make_upper(copy.front());
+    if (std::ranges::find(m_last_suggestions, copy) == m_last_suggestions.end()) {
+      auto &last = m_last_suggestions.emplace_back(std::move(copy));
+      ++i;
+      suggestion_menu_items.emplace_back(last.c_str(), static_cast<BYTE>(i + 1));
+    }
   }
 
   if (!m_last_suggestions.empty()) {
