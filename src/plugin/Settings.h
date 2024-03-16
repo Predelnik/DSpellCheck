@@ -200,6 +200,7 @@ public:
     bool write_debug_log = false;
     LanguageNameStyle language_name_style = LanguageNameStyle::english;
     bool select_word_on_context_menu_click = false;
+    bool always_suggest_capitalized_word = false;
 
     // Derivatives:
   private:
