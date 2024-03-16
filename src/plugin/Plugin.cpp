@@ -30,6 +30,7 @@
 #include "npp/NppInterface.h"
 #include "spellers/HunspellInterface.h"
 #include "spellers/SpellerContainer.h"
+#include "spellers/LanguageInfo.h"
 #include "ui/AboutDialog.h"
 #include "ui/AspellOptionsDialog.h"
 #include "ui/ConnectionSettingsDialog.h"
@@ -41,6 +42,7 @@
 #include "ui/SelectMultipleLanguagesDialog.h"
 #include "ui/SettingsDialog.h"
 #include "ui/SuggestionMenuButton.h"
+#include "PluginMsg.h"
 
 #include <chrono>
 
@@ -206,6 +208,9 @@ void copy_misspellings_to_clipboard() {
   auto str = spell_checker->get_all_misspellings_as_string();
   const size_t len = (str.length() + 1) * 2;
   HGLOBAL h_mem = GlobalAlloc(GMEM_MOVEABLE, len);
+  if (!h_mem) {
+    return;
+  }
   memcpy(GlobalLock(h_mem), str.c_str(), len);
   GlobalUnlock(h_mem);
   OpenClipboard(nullptr);
@@ -710,8 +715,10 @@ void print_to_log(std::wstring_view line, HWND parent_wnd) {
     MessageBox(parent_wnd, L"Error while writing to a log file", to_wstring(strerror(err)).c_str(), MB_OK);
     return;
   }
-  _fwprintf_p(fp, L"%.*s\n", static_cast<int>(line.length()), line.data());
-  fclose(fp);
+  if (fp) {
+    _fwprintf_p(fp, L"%.*s\n", static_cast<int>(line.length()), line.data());
+    fclose(fp);
+  }
 }
 
 void delete_log() {
@@ -815,8 +822,8 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     if (settings)
       print_to_log(L"NPPN_TBMODIFICATION", npp->get_editor_hwnd());
     add_icons();
+    break;
   }
-
   default:
     return;
   }
@@ -857,9 +864,31 @@ void init_needed_dialogs(WPARAM w_param) {
   }
 }
 
+bool process_internal_msg(const CommunicationInfo& communication_info) {
+  switch (communication_info.internalMsg) {
+  case DSPELLCHECK_SETLANG_MSG: {
+    if (const auto info = reinterpret_cast<DSpellCheckSetLangMsgInfo *>(communication_info.info)) {
+      const auto lang_list = speller_container->active_speller().get_language_list();
+      const auto exists =
+        std::ranges::find(lang_list, info->lang_name, &LanguageInfo::orig_name) != lang_list.end();
+      if (exists) {
+        auto mut = settings->modify();
+        mut->get_active_language() = info->lang_name;
+      }
+      if (info->was_success) {
+        *info->was_success = exists;
+      }
+      return true;
+    }
+    }
+    break;
+  }
+  return false;
+}
+
 extern "C" __declspec(dllexport) LRESULT
 // ReSharper disable once CppInconsistentNaming
-messageProc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
+messageProc(UINT message, WPARAM w_param, LPARAM l_param) {
   // NOLINT
   switch (message) {
   case WM_MOVE:
@@ -871,10 +900,14 @@ messageProc(UINT message, WPARAM w_param, LPARAM /*l_param*/) {
       init_needed_dialogs(w_param);
       context_menu_handler->process_menu_result(w_param);
     }
+    return FALSE;
+  }
+  case NPPM_MSGTOPLUGIN: {
+    if (const auto info_ptr = reinterpret_cast<const CommunicationInfo *>(l_param))
+      return process_internal_msg(*info_ptr) ? TRUE : FALSE;
   }
   break;
   }
-
   return FALSE;
 }
 

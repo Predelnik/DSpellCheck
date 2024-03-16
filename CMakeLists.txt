@@ -29,7 +29,7 @@ if(MSVC)
     set(DSpellCheck_USE_VLD "OFF" CACHE BOOL "Use Visual Leak Detector")
 endif()
 
-file (GLOB_RECURSE source_files src/**/*.cpp src/**/*.h)
+file (GLOB_RECURSE source_files src/**/*.cpp src/**/*.h include/**/*.h)
 list(REMOVE_ITEM source_files src/plugin/DllMain.cpp)
 
 add_library (DSpellCheckStatic STATIC ${source_files})
@@ -39,7 +39,7 @@ if ( DSpellCheck_USE_VLD )
   target_compile_definitions (DSpellCheckStatic PUBLIC VLD_BUILD)
 endif ()
 
-target_include_directories (DSpellCheckStatic PUBLIC src deps/win-iconv)
+target_include_directories (DSpellCheckStatic PUBLIC src deps/win-iconv include)
 target_include_directories (DSpellCheckStatic PRIVATE src/Controls)
 
 target_link_libraries (DSpellCheckStatic hunspell minizip ftpclient iconv-static Controls npp_extra lsignal aspell json)
