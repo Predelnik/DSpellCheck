@@ -64,7 +64,7 @@ public:
 class AvailableLangInfo {
 public:
   std::wstring name;
-  int type; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
+  int type = 0; // Type = 1 - System Dir Dictionary, 0 - Nomal Dictionary
   std::wstring full_path;
 
   bool operator<(const AvailableLangInfo &rhs) const { return name < rhs.name; }

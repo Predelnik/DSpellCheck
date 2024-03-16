@@ -57,7 +57,7 @@ public:
   std::wstring get_aspell_default_personal_dictionary_path() const;
   void cleanup();
   void ignore_word(std::wstring wstr);
-  void add_to_dictionary(std::wstring wstr);;
+  void add_to_dictionary(std::wstring wstr);
 
 public:
   mutable lsignal::signal<void()> speller_status_changed;

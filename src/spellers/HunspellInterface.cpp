@@ -171,7 +171,7 @@ void HunspellInterface::set_use_one_dic(bool value) { m_use_one_dic = value; }
 
 bool are_paths_equal(const wchar_t *path1, const wchar_t *path2) {
   BY_HANDLE_FILE_INFORMATION bhfi1, bhfi2;
-  HANDLE h2;
+  HANDLE h2 = nullptr;
   DWORD access = 0;
   DWORD share = FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE;
 
