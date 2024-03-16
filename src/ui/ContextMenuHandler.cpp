@@ -104,18 +104,18 @@ void ContextMenuHandler::do_plugin_menu_inclusion(bool invalidate) {
 
 void ContextMenuHandler::process_ignore_all() {
   auto mut = m_speller_container.modify();
-  mut->ignore_word(m_selected_word.str);
+  mut->ignore_word(m_last_selected_word.str);
   m_word_under_cursor_length =
-      static_cast<TextPosition>(m_selected_word.str.length());
+      static_cast<TextPosition>(m_last_selected_word.str.length());
   m_editor.set_cursor_pos(m_word_under_cursor_pos +
                           m_word_under_cursor_length);
 }
 
 void ContextMenuHandler::process_add_to_dictionary() {
   auto mut = m_speller_container.modify();
-  mut->add_to_dictionary(m_selected_word.str);
+  mut->add_to_dictionary(m_last_selected_word.str);
   m_word_under_cursor_length =
-      static_cast<TextPosition>(m_selected_word.str.length());
+      static_cast<TextPosition>(m_last_selected_word.str.length());
   m_editor.set_cursor_pos(m_word_under_cursor_pos +
                           m_word_under_cursor_length);
 }
@@ -243,7 +243,7 @@ void ContextMenuHandler::precalculate_menu() {
       m_settings.data.suggestions_mode == SuggestionMode::context_menu) {
     update_word_under_cursor_data();
     if (!m_word_under_cursor_is_correct) {
-      suggestion_menu_items = get_suggestion_menu_items();
+      suggestion_menu_items = select_word_and_get_suggestion_menu_items();
       suggestion_menu_items.emplace_back(MenuItem::Separator{});
     }
   }
@@ -309,21 +309,25 @@ void ContextMenuHandler::init_suggestions_box(
   suggestion_button.display(true, false);
 }
 
-std::vector<MenuItem>
-ContextMenuHandler::get_suggestion_menu_items() {
-  if (!m_speller_container.active_speller().is_working())
-    return {}; // Word is already off-screen
-
+bool ContextMenuHandler::select_word_under_cursor() {
   auto pos = m_word_under_cursor_pos;
   ACTIVE_VIEW_BLOCK(m_editor);
   if (m_settings.data.select_word_on_context_menu_click)
     m_editor.set_selection(pos, pos + m_word_under_cursor_length);
-  std::vector<MenuItem> suggestion_menu_items;
-  m_selected_word = m_editor.get_mapped_wstring_range(m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
-  SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
+  m_last_selected_word =
+      m_editor.get_mapped_wstring_range(m_word_under_cursor_pos, m_word_under_cursor_pos + static_cast<TextPosition>(m_word_under_cursor_length));
+  SpellCheckerHelpers::apply_word_conversions(m_settings, m_last_selected_word.str);
+  return true;
+}
 
+std::vector<MenuItem> ContextMenuHandler::select_word_and_get_suggestion_menu_items() {
+  if (!m_speller_container.active_speller().is_working())
+    return {}; // Word is already off-screen
+
+  select_word_under_cursor();
+  std::vector<MenuItem> suggestion_menu_items;
   m_last_suggestions = m_speller_container.active_speller().get_suggestions(
-      m_selected_word.str.c_str());
+      m_last_selected_word.str.c_str());
   m_last_suggestions.resize(std::min(static_cast<int>(m_last_suggestions.size()), m_settings.data.suggestion_count));
 
   int i = 0;
@@ -332,8 +336,8 @@ ContextMenuHandler::get_suggestion_menu_items() {
     suggestion_menu_items.emplace_back(item, static_cast<BYTE>(i + 1));
   }
 
-  if (m_settings.data.always_suggest_capitalized_word && !m_selected_word.str.empty() && std::ranges::all_of(m_selected_word.str, &is_lower)) {
-    auto copy = m_selected_word.str;
+  if (m_settings.data.always_suggest_capitalized_word && !m_last_selected_word.str.empty() && std::ranges::all_of(m_last_selected_word.str, &is_lower)) {
+    auto copy = m_last_selected_word.str;
     copy.front() = make_upper(copy.front());
     if (std::ranges::find(m_last_suggestions, copy) == m_last_suggestions.end()) {
       auto &last = m_last_suggestions.emplace_back(std::move(copy));
@@ -343,19 +347,19 @@ ContextMenuHandler::get_suggestion_menu_items() {
   }
 
   if (!m_last_suggestions.empty()) {
-    MenuItem replace_all_item(wstring_printf(rc_str(IDS_REPLACE_ALL_PS).c_str(), m_selected_word.str.c_str()).c_str(), -1);
+    MenuItem replace_all_item(wstring_printf(rc_str(IDS_REPLACE_ALL_PS).c_str(), m_last_selected_word.str.c_str()).c_str(), -1);
     replace_all_item.children = suggestion_menu_items;
     suggestion_menu_items.emplace_back(MenuItem::Separator{});
     std::for_each(replace_all_item.children.begin(), replace_all_item.children.end(), [](auto &item) { item.id += menu_id::replace_all_start; });
     suggestion_menu_items.push_back(std::move(replace_all_item));
   }
 
-  SpellCheckerHelpers::apply_word_conversions(m_settings, m_selected_word.str);
+  SpellCheckerHelpers::apply_word_conversions(m_settings, m_last_selected_word.str);
   auto menu_string = wstring_printf(rc_str(IDS_IGNORE_PS_FOR_CURRENT_SESSION).c_str(),
-                                    m_selected_word.str.c_str());
+                                    m_last_selected_word.str.c_str());
   suggestion_menu_items.emplace_back(menu_string.c_str(), menu_id::ignore_all);
   menu_string =
-      wstring_printf(rc_str(IDS_ADD_PS_TO_DICTIONARY).c_str(), m_selected_word.str.c_str());;
+      wstring_printf(rc_str(IDS_ADD_PS_TO_DICTIONARY).c_str(), m_last_selected_word.str.c_str());;
   suggestion_menu_items.emplace_back(menu_string.c_str(),
                                      menu_id::add_to_dictionary);
 

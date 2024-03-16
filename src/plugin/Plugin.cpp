@@ -172,7 +172,7 @@ void show_spell_check_menu_at_cursor() {
   context_menu_handler->update_word_under_cursor_data();
   if (context_menu_handler->is_word_under_cursor_correct())
     return;
-  MenuItem::append_to_menu(menu, context_menu_handler->get_suggestion_menu_items());
+  MenuItem::append_to_menu(menu, context_menu_handler->select_word_and_get_suggestion_menu_items());
 
   tagTPMPARAMS tpm_params;
   tpm_params.cbSize = sizeof(tagTPMPARAMS);

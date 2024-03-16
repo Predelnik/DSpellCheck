@@ -28,7 +28,7 @@ public:
                      const SpellerContainer &speller_container,
                      EditorInterface &editor,
                      const SpellChecker &spell_checker);
-  [[nodiscard]] std::vector<MenuItem> get_suggestion_menu_items();
+  [[nodiscard]] std::vector<MenuItem> select_word_and_get_suggestion_menu_items();
   void process_menu_result(WPARAM menu_id);
   void update_word_under_cursor_data();
   void precalculate_menu();
@@ -36,6 +36,7 @@ public:
   bool is_word_under_cursor_correct() const { return m_word_under_cursor_is_correct; }
 
 private:
+  bool select_word_under_cursor();
   void do_plugin_menu_inclusion(bool invalidate = false);
   void process_ignore_all();
   void process_add_to_dictionary();
@@ -48,7 +49,7 @@ private:
   const Settings &m_settings;
   const SpellerContainer &m_speller_container;
   EditorInterface &m_editor;
-  MappedWstring m_selected_word;
+  MappedWstring m_last_selected_word;
   TextPosition m_word_under_cursor_length = 0;
   TextPosition m_word_under_cursor_pos = 0;
   std::vector<std::wstring> m_last_suggestions;

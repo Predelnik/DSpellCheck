@@ -177,7 +177,7 @@ INT_PTR SuggestionMenuButton::run_dlg_proc(UINT message, WPARAM w_param,
     ClientToScreen(_hSelf, &p);
     m_state_menu = true;
     HMENU popup_menu = CreatePopupMenu();
-    MenuItem::append_to_menu(popup_menu, m_context_menu_handler.get_suggestion_menu_items());
+    MenuItem::append_to_menu(popup_menu, m_context_menu_handler.select_word_and_get_suggestion_menu_items());
     SetForegroundWindow(m_npp.get_editor_hwnd());
     TrackPopupMenuEx(popup_menu, TPM_HORIZONTAL | TPM_RIGHTALIGN, p.x,
                      p.y, _hSelf, &tpm_params);
