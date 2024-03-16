@@ -105,11 +105,11 @@ LRESULT CALLBACK mouse_proc(int n_code, WPARAM w_param, LPARAM l_param) {
   return CallNextHookEx(h_mouse_hook, n_code, w_param, l_param);;
 }
 
-void set_context_menu_id_start(int id) { context_menu_id_start = id; }
+static void set_context_menu_id_start(int id) { context_menu_id_start = id; }
 
-void set_langs_menu_id_start(int id) { langs_menu_id_start = id; }
+static void set_langs_menu_id_start(int id) { langs_menu_id_start = id; }
 
-void set_use_allocated_ids(bool value) { use_allocated_ids = value; }
+static void set_use_allocated_ids(bool value) { use_allocated_ids = value; }
 
 int get_context_menu_id_start() { return context_menu_id_start; }
 
@@ -117,7 +117,7 @@ int get_langs_menu_id_start() { return langs_menu_id_start; }
 
 bool get_use_allocated_ids() { return use_allocated_ids; }
 
-const Settings &get_settings() { return *settings; }
+static const Settings &get_settings() { return *settings; }
 
 std::wstring get_default_hunspell_path() {
   std::wstring path = ini_file_path;
@@ -142,11 +142,11 @@ DownloadDictionariesDialog *get_download_dics() { return download_dics_dlg.get()
 
 HANDLE get_h_module() { return h_module; }
 
-void create_hooks() {
+static void create_hooks() {
   h_mouse_hook = SetWindowsHookEx(WH_MOUSE, mouse_proc, nullptr, GetCurrentThreadId());
 }
 
-void plugin_clean_up() {
+static void plugin_clean_up() {
   {
     auto mut = speller_container->modify();
     mut->cleanup();
@@ -155,19 +155,31 @@ void plugin_clean_up() {
   WinApi::delete_file(get_debug_log_path().c_str());
 }
 
-void register_custom_messages() {
+static void register_custom_messages() {
   for (int i = 0; i < static_cast<int>(CustomGuiMessage::max); i++) {
     custom_gui_message_ids[i] = RegisterWindowMessage(custom_gui_messages_names[i]);
   }
 }
 
-void init_npp_interface() { npp = std::make_unique<NppInterface>(&npp_data); }
+static void init_npp_interface() { npp = std::make_unique<NppInterface>(&npp_data); }
 
-void notify(SCNotification *notify_code) { npp->notify(notify_code); }
+static void notify(SCNotification *notify_code) { npp->notify(notify_code); }
 
 NppInterface &npp_interface() { return *npp; }
 
-void erase_misspellings() { spell_checker->erase_all_misspellings(); }
+static bool check_if_any_language_available() {
+  if (!speller_container->active_speller().get_language_list().empty())
+    return true;
+
+  MessageBox(npp->get_editor_hwnd(), rc_str(IDC_WARNING_NO_DICTIONARIES_TEXT).c_str(), rc_str(IDC_WARNING_NO_DICTIONARIES_TITLE).c_str(),
+             MB_OK | MB_ICONWARNING);
+  return false;
+}
+
+void erase_misspellings() {
+  if (!check_if_any_language_available())
+    return;
+  spell_checker->erase_all_misspellings(); }
 
 void show_spell_check_menu_at_cursor() {
   auto menu = CreatePopupMenu();
@@ -189,6 +201,8 @@ void show_spell_check_menu_at_cursor() {
 }
 
 void replace_with_1st_suggestion() {
+  if (!check_if_any_language_available())
+    return;
   SpellCheckerHelpers::replace_current_word_with_topmost_suggestion(*npp, *spell_checker, *speller_container);
 }
 
@@ -205,6 +219,8 @@ void ignore_for_current_session() {
 }
 
 void copy_misspellings_to_clipboard() {
+  if (!check_if_any_language_available())
+    return;
   auto str = spell_checker->get_all_misspellings_as_string();
   const size_t len = (str.length() + 1) * 2;
   HGLOBAL h_mem = GlobalAlloc(GMEM_MOVEABLE, len);
@@ -220,6 +236,8 @@ void copy_misspellings_to_clipboard() {
 }
 
 void mark_lines_with_misspelling() {
+  if (!check_if_any_language_available())
+    return;
   spell_checker->mark_lines_with_misspelling();
 }
 
@@ -257,15 +275,23 @@ void start_about_dlg() { about_dlg->do_dialog(); }
 
 void start_language_list() { lang_list_instance->do_dialog(); }
 
-void recheck_visible() {
+static void recheck_visible() {
   print_to_log(L"recheck_visible ()", npp->get_editor_hwnd());
   ACTIVE_VIEW_BLOCK(npp_interface());
   spell_checker->recheck_visible();
 }
 
-void find_next_mistake() { spell_checker->find_next_mistake(); }
+void find_next_mistake() {
+  if (!check_if_any_language_available())
+    return;
+  spell_checker->find_next_mistake();
+}
 
-void find_prev_mistake() { spell_checker->find_prev_mistake(); }
+void find_prev_mistake() {
+  if (!check_if_any_language_available())
+    return;
+  spell_checker->find_prev_mistake();
+}
 
 void quick_lang_change_context() {
   POINT pos;
@@ -279,10 +305,28 @@ enum_array<Action, int> action_index = []() {
   return val;
 }();
 
-//
-// Initialization of your plug-in commands
-// You should fill your plug-ins commands here
-void command_menu_init() {
+static int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func) {
+  static int counter = 0;
+  if (counter >= nb_func) {
+    assert(false); // Less actions specified in nb_func constant than added
+    return -1;
+  }
+
+  if (p_func == nullptr) {
+    counter++;
+    return counter - 1;
+  }
+
+  lstrcpy(func_item[counter].item_name, cmd_name);
+  func_item[counter].p_func = p_func;
+  func_item[counter].init2_check = false;
+  func_item[counter].p_sh_key = nullptr;
+  counter++;
+
+  return counter - 1;
+}
+
+static void command_menu_init() {
   //
   // Firstly we get the parameters from your plugin config file (if any)
   //
@@ -340,7 +384,7 @@ void command_menu_init() {
   // add further set_next_command at the bottom to avoid breaking configured hotkeys
 }
 
-void add_icons() {
+static void add_icons() {
   static ToolbarIconsWrapper auto_check_icon{static_cast<HINSTANCE>(h_module), MAKEINTRESOURCE(IDI_AUTOCHECK), MAKEINTRESOURCE(IDI_AUTOCHECK_DARK),
                                              MAKEINTRESOURCE(IDB_AUTOCHECK_BMP)};
   ::SendMessage(npp_data.npp_handle, NPPM_ADDTOOLBARICON_FORDARKMODE, static_cast<WPARAM>(func_item[0].cmd_id), reinterpret_cast<LPARAM>(auto_check_icon.get()));
@@ -401,7 +445,7 @@ void on_settings_changed() {
   npp->set_menu_item_check(get_func_item()[action_index[Action::toggle_debug_logging]].cmd_id, settings->data.write_debug_log);
 }
 
-void init_classes() {
+static void init_classes() {
   INITCOMMONCONTROLSEX icc;
 
   icc.dwSize = sizeof(icc);
@@ -448,35 +492,8 @@ void init_classes() {
   resources_inited = true;
 }
 
-void command_menu_clean_up() {
-}
-
-//
-// Function that initializes plug-in commands
-//
-static int counter = 0;
-
 std::vector<std::unique_ptr<ShortcutKey>> shortcut_storage;
 
-int set_next_command(const wchar_t *cmd_name, Pfuncplugincmd p_func) {
-  if (counter >= nb_func) {
-    assert(false); // Less actions specified in nb_func constant than added
-    return -1;
-  }
-
-  if (p_func == nullptr) {
-    counter++;
-    return counter - 1;
-  }
-
-  lstrcpy(func_item[counter].item_name, cmd_name);
-  func_item[counter].p_func = p_func;
-  func_item[counter].init2_check = false;
-  func_item[counter].p_sh_key = nullptr;
-  counter++;
-
-  return counter - 1;
-}
 
 std::wstring get_debug_log_path() {
   std::vector<wchar_t> buf(MAX_PATH);
@@ -740,7 +757,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notify_code) {
     print_to_log(L"NPPN_SHUTDOWN", npp->get_editor_hwnd());
     edit_recheck_timer.reset();
     scroll_recheck_timer.reset();
-    command_menu_clean_up();
 
     plugin_clean_up();
     RemoveWindowSubclass(npp_data.npp_handle, subclass_proc, 0);
