@@ -132,8 +132,8 @@ public:
   TextPosition get_next_valid_end_pos(TextPosition pos) const;
   MappedWstring to_mapped_wstring(const std::string &str);
   MappedWstring get_mapped_wstring_range(TextPosition from, TextPosition to);
-  MappedWstring get_mapped_wstring_line(TextPosition line);
   std::string to_editor_encoding(std::wstring_view str) const;
+  virtual int get_first_visible_column() const = 0;
 
   virtual ~EditorInterface() = default;
 

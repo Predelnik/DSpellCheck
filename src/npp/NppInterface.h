@@ -109,6 +109,8 @@ public:
   HMENU get_menu_handle(int menu_type) const;
   int get_target_view() const override;
   int get_indicator_value_at(int indicator_id, TextPosition position) const override;
+  int get_first_visible_column() const override;
+
   HWND get_view_hwnd() const override;
   std::wstring get_editor_directory() const override;
 
