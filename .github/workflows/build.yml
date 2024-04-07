@@ -22,7 +22,7 @@ jobs:
           - x64
           - Win32
         build_type:
-          - Release
+          - RelWithDebInfo
           - Debug
         compiler:
           - msvc
@@ -45,16 +45,18 @@ jobs:
           cmake -S . -B ./build -G "${{matrix.generator}}" -A "${{matrix.arch}}" -DCMAKE_BUILD_TYPE:STRING=${{matrix.build_type}}
 
       - name: Build
-        # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: |
-          cmake --build ./build --config ${{matrix.build_type}}
+          cmake --build ./build --target DSpellCheck --config ${{matrix.build_type}}
 
       - name: Test
         run: |
           ctest --build-and-test . ./build --build-generator "${{matrix.generator}}"
 
-      - name: CPack
-        if: matrix.build_type == 'Release'
-        working-directory: ./build
-        run: |
-          cpack -C ${{matrix.build_type}} -G ${{matrix.package_generator}}
+      - name: Upload Artifacts
+        if: matrix.build_type == 'RelWithDebInfo'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DSpellCheck-${{matrix.arch}}
+          path: |
+            ./build/${{matrix.build_type}}/DSpellCheck.dll
+            ./build/${{matrix.build_type}}/DSpellCheck.pdb

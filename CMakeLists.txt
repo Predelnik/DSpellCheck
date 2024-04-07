@@ -87,5 +87,6 @@ pvs_studio_add_target(TARGET DSpellCheck.analyze ALL
 endif ()
 
 set_property(TARGET DSpellCheck DSpellCheckStatic DSpellCheckTest PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+install(FILES $<TARGET_PDB_FILE:DSpellCheck> DESTINATION bin OPTIONAL)
 target_precompile_headers (DSpellCheckStatic PRIVATE "src/common/PrecompiledHeader.h")
 target_precompile_headers (DSpellCheckTest REUSE_FROM DSpellCheckStatic)
