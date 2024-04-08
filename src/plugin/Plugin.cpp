@@ -898,6 +898,15 @@ bool process_internal_msg(const CommunicationInfo& communication_info) {
     }
     }
     break;
+    case DSPELLCHECK_GETLANGUAGELIST_MSG: {
+      if (const auto info = reinterpret_cast<DSpellCheckGetLanguageListMsgInfo *>(communication_info.info)) {
+          const auto lang_list = speller_container->active_speller().get_language_list();
+          for (auto &lang : lang_list) {
+            info->language_callback(info->payload, lang.orig_name.c_str());
+          }
+        }
+      }
+      return true;
   }
   return false;
 }
