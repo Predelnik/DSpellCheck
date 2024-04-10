@@ -907,6 +907,13 @@ bool process_internal_msg(const CommunicationInfo& communication_info) {
         }
       }
       return true;
+   case DSPELLCHECK_ENABLESPELLCHECK_MSG: {
+        if (const auto info = reinterpret_cast<DSpellCheckEnableSpellCheckMsgInfo *>(communication_info.info)) {
+          auto mut = settings->modify(SettingsModificationStyle::ignore_file_errors);
+          mut->data.auto_check_text = info->enabled;
+        }
+      }
+        return true;
   }
   return false;
 }

@@ -2,6 +2,7 @@
 
 #define DSPELLCHECK_SETLANG_MSG 1         // See DSpellCheckSetLangMsgInfo
 #define DSPELLCHECK_GETLANGUAGELIST_MSG 2 // See DSpellCheckGetLanguageListMsgInfo
+#define DSPELLCHECK_ENABLESPELLCHECK_MSG 3 // See DSpellCheckEnableSpellCheckMsgInfo
 
 // Set language to lang_name, if was_success non-zero, it will be set to true in case of success and fales in case of failure
 struct DSpellCheckSetLangMsgInfo {
@@ -13,4 +14,8 @@ struct DSpellCheckSetLangMsgInfo {
 struct DSpellCheckGetLanguageListMsgInfo {
   void (*language_callback)(void *payload, const wchar_t *lang_name);
   void *payload;
+};
+
+struct DSpellCheckEnableSpellCheckMsgInfo {
+  bool enabled;
 };
