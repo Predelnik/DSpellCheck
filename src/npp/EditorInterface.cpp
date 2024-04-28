@@ -74,11 +74,3 @@ MappedWstring EditorInterface::get_mapped_wstring_range(TextPosition from, TextP
     val += from;
   return result;
 }
-
-MappedWstring EditorInterface::get_mapped_wstring_line(TextPosition line) {
-  auto result = to_mapped_wstring(get_line(line));;
-  auto line_start = get_line_start_position(line);
-  for (auto &val : result.mapping)
-    val += line_start;
-  return result;
-}

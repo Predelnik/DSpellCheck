@@ -142,6 +142,8 @@ public:
   std::optional<POINT> get_mouse_cursor_pos() const override;
   void set_mouse_cursor_pos(const std::optional<POINT> &pos);
   std::wstring get_editor_directory() const override;
+  int get_first_visible_column() const override;
+  void scroll_horizontally(const int scroll_amount);
 
 private:
   void set_target_view(int view_index) const override;
@@ -162,4 +164,5 @@ private:
   mutable int m_target_view = -1;
   RECT m_editor_rect;
   std::optional<POINT> m_cursor_pos;
+  int m_first_visible_column = 0;
 };

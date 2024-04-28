@@ -718,6 +718,14 @@ void MockEditorInterface::set_mouse_cursor_pos(const std::optional<POINT> &pos) 
 
 std::wstring MockEditorInterface::get_editor_directory() const { return {}; }
 
+int MockEditorInterface::get_first_visible_column() const {
+  return m_first_visible_column;
+}
+
+void MockEditorInterface::scroll_horizontally(const int scroll_amount) {
+  m_first_visible_column += scroll_amount;
+}
+
 MockedDocumentInfo *MockEditorInterface::active_document() {
   if (m_documents[m_target_view].empty())
     return nullptr;
