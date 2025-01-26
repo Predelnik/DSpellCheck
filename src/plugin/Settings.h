@@ -23,7 +23,6 @@
 
 #include <regex>
 #include <variant>
-#include <experimental/string>
 
 class IniWorker;
 
