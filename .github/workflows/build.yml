@@ -21,6 +21,7 @@ jobs:
         arch:
           - x64
           - Win32
+          - ARM64
         build_type:
           - RelWithDebInfo
           - Debug
@@ -30,7 +31,7 @@ jobs:
           - ZIP
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup Cpp
         uses: aminya/setup-cpp@v1
