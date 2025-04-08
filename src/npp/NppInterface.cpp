@@ -267,7 +267,11 @@ std::optional<TextPosition> NppInterface::char_position_from_global_point(int x,
   if (WindowFromPoint(p) != hwnd)
     return std::nullopt;
   ScreenToClient(hwnd, &p);
-  return send_msg_to_scintilla(SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+  const auto result = send_msg_to_scintilla(SCI_CHARPOSITIONFROMPOINTCLOSE, p.x, p.y);
+  if (result < 0) { // -1 is returned if the point is outside the window or not close to any characters
+    return std::nullopt;
+  }
+  return result;
 }
 
 TextPosition NppInterface::char_position_from_point(const POINT &pnt) const {
