@@ -1,1 +1,0 @@
-magick convert -density 384 -background none %1.svg -define icon:auto-resize=64,48,32,16 %1.ico

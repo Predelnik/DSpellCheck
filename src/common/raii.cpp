@@ -17,6 +17,7 @@
 #include "Notepad_plus_msgs.h"
 
 #include <OleCtl.h>
+#include <cassert>
 
 ToolbarIconsWrapper::ToolbarIconsWrapper() : m_icons{std::make_unique<toolbarIconsWithDarkMode>()} {
   m_icons->hToolbarBmp = nullptr;
@@ -35,10 +36,23 @@ ToolbarIconsWrapper::~ToolbarIconsWrapper() {
     DeleteObject(m_icons->hToolbarIconDarkMode);
 }
 
-ToolbarIconsWrapper::ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR normal_name, LPCWSTR dark_mode_name, LPCWSTR bmp_name)
-  : ToolbarIconsWrapper() {
-  m_icons->hToolbarBmp = ::LoadBitmap(h_inst, bmp_name);
-  m_icons->hToolbarIcon = ::LoadIcon(h_inst, normal_name);
+ToolbarIconsWrapper::ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR normal_name, LPCWSTR dark_mode_name, std::span<const BmpData> bmp_icons)
+    : ToolbarIconsWrapper() {
+  HDC hdc = ::GetDC(NULL);
+  int icon_width = 0;
+  int icon_height = 0;
+  if (hdc) {
+    icon_width = ::MulDiv(16, GetDeviceCaps(hdc, LOGPIXELSX), 96);
+    icon_height = ::MulDiv(16, GetDeviceCaps(hdc, LOGPIXELSY), 96);
+  }
+  auto style = (LR_LOADTRANSPARENT | LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS);
+  assert(!bmp_icons.empty());
+  auto it = std::ranges::find_if(bmp_icons, [&](size_t size) { return size == icon_width && size == icon_height;  }, &BmpData::size);
+  if (it == std::cend(bmp_icons)) {
+    it = std::prev(it);
+  }
+  m_icons->hToolbarBmp = static_cast<HBITMAP>(::LoadImage(h_inst, it->name, IMAGE_BITMAP, icon_width, icon_height, style));
+  m_icons->hToolbarIcon = static_cast<HICON>(::LoadImage(h_inst, normal_name, IMAGE_ICON, icon_width, icon_height, style));
   m_icons->hToolbarIconDarkMode = ::LoadIcon(h_inst, dark_mode_name);
 }
 

@@ -14,10 +14,18 @@
 
 #pragma once
 
+#include <span>
+
 struct toolbarIconsWithDarkMode;
 
+struct BmpData
+{
+  size_t size;
+  LPCWSTR name;
+};
+
 struct ToolbarIconsWrapper {
-  ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR normal_name, LPCWSTR dark_mode_name, LPCWSTR bmp_name);
+  ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR normal_name, LPCWSTR dark_mode_name, std::span<const BmpData> bmp_icons);
   const toolbarIconsWithDarkMode *get();
   ~ToolbarIconsWrapper();
 
