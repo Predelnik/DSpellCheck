@@ -9,7 +9,11 @@
 #define IDR_DOWNARROW_PUSH              104
 #define IDD_CHOOSE_MULTIPLE_LANGUAGES   106
 #define IDD_ABOUT                       107
+#define IDB_AUTOCHECK_BMP_16            107
+#define IDB_AUTOCHECK_BMP_24            108
 #define IDD_DOWNLOADDICS                109
+#define IDB_AUTOCHECK_BMP_32            109
+#define IDB_AUTOCHECK_BMP_64            110
 #define IDD_DIALOGPROGRESS              111
 #define IDD_REMOVE_DICS                 113
 #define IDI_REFRESH                     128
@@ -227,7 +231,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        106
+#define _APS_NEXT_RESOURCE_VALUE        111
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           101

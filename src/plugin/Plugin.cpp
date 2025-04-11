@@ -385,8 +385,15 @@ static void command_menu_init() {
 }
 
 static void add_icons() {
-  static ToolbarIconsWrapper auto_check_icon{static_cast<HINSTANCE>(h_module), MAKEINTRESOURCE(IDI_AUTOCHECK), MAKEINTRESOURCE(IDI_AUTOCHECK_DARK),
-                                             MAKEINTRESOURCE(IDB_AUTOCHECK_BMP)};
+  static ToolbarIconsWrapper auto_check_icon{static_cast<HINSTANCE>(h_module),
+                                             MAKEINTRESOURCE(IDI_AUTOCHECK),
+                                             MAKEINTRESOURCE(IDI_AUTOCHECK_DARK),
+                                             std::array{
+                                                 BmpData{16, MAKEINTRESOURCE(IDB_AUTOCHECK_BMP_16)},
+                                                 BmpData{24, MAKEINTRESOURCE(IDB_AUTOCHECK_BMP_24)},
+                                                 BmpData{32, MAKEINTRESOURCE(IDB_AUTOCHECK_BMP_32)},
+                                                 BmpData{64, MAKEINTRESOURCE(IDB_AUTOCHECK_BMP_64)}
+                                             }};
   ::SendMessage(npp_data.npp_handle, NPPM_ADDTOOLBARICON_FORDARKMODE, static_cast<WPARAM>(func_item[0].cmd_id), reinterpret_cast<LPARAM>(auto_check_icon.get()));
 }
 
