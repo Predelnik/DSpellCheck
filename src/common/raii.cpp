@@ -47,7 +47,7 @@ ToolbarIconsWrapper::ToolbarIconsWrapper(HINSTANCE h_inst, LPCWSTR normal_name, 
   }
   auto style = (LR_LOADTRANSPARENT | LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS);
   assert(!bmp_icons.empty());
-  auto it = std::ranges::find_if(bmp_icons, [&](size_t size) { return size == icon_width && size == icon_height;  }, &BmpData::size);
+  auto it = std::ranges::find_if(bmp_icons, [&](size_t size) { return size == static_cast<size_t>(icon_width) && size == static_cast<size_t>(icon_height);  }, &BmpData::size);
   if (it == std::cend(bmp_icons)) {
     it = std::prev(it);
   }
