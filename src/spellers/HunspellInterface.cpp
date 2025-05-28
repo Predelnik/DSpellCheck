@@ -34,6 +34,8 @@ void append_word_to_user_dictionary(const wchar_t *dictionary_path, const char *
     return;
 
   auto fp = _wfopen(dictionary_path, L"a");
+  if (!fp)
+    return;
   fprintf(fp, "%s\n", word);
   fclose(fp);
 }
