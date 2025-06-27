@@ -386,12 +386,13 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
     auto fp = _wfopen(dic_path.c_str(), flags);
     if (!fp) {
       MessageBox(m_npp_window, rc_str(IDS_USER_DICT_CANT_SAVE_BODY).c_str(), rc_str(IDS_USER_DICT_CANT_SAVE_TITLE).c_str(), MB_OK | MB_ICONWARNING);
-      return;
+      return false;
     }
     if (flags == L"w"sv) {
       fprintf(fp, "0\n");
     }
     fclose(fp);
+    return true;
   };
 
   if (!PathFileExists(dic_path.c_str())) {
@@ -400,9 +401,13 @@ void HunspellInterface::add_to_dictionary(const wchar_t *word) {
       return;
     auto dir = dic_path.substr(0, last_slash_pos);
     check_for_directory_existence(dir);
-    check_open(L"w");
+    if (!check_open(L"w")) {
+      return;
+    }
   } else {
-    check_open(L"a");
+    if (!check_open(L"a")) {
+      return;
+    }
   }
 
   if (m_use_one_dic) {
