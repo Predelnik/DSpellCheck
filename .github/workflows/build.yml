@@ -31,7 +31,7 @@ jobs:
           - ZIP
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Cpp
         uses: aminya/setup-cpp@v1
